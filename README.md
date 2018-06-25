@@ -1,6 +1,6 @@
-# Plasma MVP
+# Plasma MVP Contracts
 
-This is a research implementation of [Minimal Viable Plasma](https://ethresear.ch/t/minimal-viable-plasma/426).
+This is a research implementation of the root chain contracts for [Minimal Viable Plasma](https://ethresear.ch/t/minimal-viable-plasma/426).
 
 ## Getting Started
 
