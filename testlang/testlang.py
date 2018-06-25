@@ -8,6 +8,15 @@ from plasma_core.plasma.utils.signatures import sign, get_null_sig_list
 
 
 def get_accounts(ethtester):
+    """Converts ethereum.tools.tester accounts into a list.
+
+    Args:
+        ethtester (ethereum.tools.tester): Ethereum tester instance.
+
+    Returns:
+        EthereumAccount[]: A list of EthereumAccounts.
+    """
+
     accounts = []
     for i in range(0, 10):
         address = getattr(ethtester, 'a{0}'.format(i))
@@ -41,6 +50,16 @@ class TestingLanguage(object):
         self.blocks = {}
 
     def submit_block(self, transactions, submitter=None):
+        """Submits a list of Transaction objects as a Block.
+
+        Args:
+            transactions (Transaction[]): List of transactions to submit.
+            submitter (EthereumAccount): Account to submit the block.
+
+        Returns:
+            int: Block number of the submitted block.
+        """
+
         submitter = submitter or self.accounts[0]
         block = Block(transactions)
         blknum = self.root_chain.nextChildBlock()
@@ -49,6 +68,16 @@ class TestingLanguage(object):
         return blknum
 
     def deposit(self, owner, amount):
+        """Creates a deposit transaction for a given owner and amount.
+
+        Args:
+            owner (EthereumAccount): Account to own the deposit.
+            amount (int): Deposit amount.
+
+        Returns:
+            int: Unique identifier of the deposit.
+        """
+
         deposit_tx = Transaction(outputs=[(owner.address, amount)])
         blknum = self.root_chain.getDepositBlockNumber()
         self.root_chain.deposit(deposit_tx.encoded, value=amount)
@@ -58,6 +87,17 @@ class TestingLanguage(object):
         return deposit_id
 
     def spend_utxo(self, inputs=[], outputs=[], signers=[]):
+        """Spends a set of inputs to create some set of outputs.
+
+        Args:
+            inputs (int[]): Unique IDs of the inputs.
+            outputs ((EthereumAccount, int)[]): Owners and amounts for each outputs.
+            signers (EthereumAccount[]): Accounts used to sign the respective output.
+
+        Returns:
+            int: Unique identifier of the spend.
+        """
+
         decoded_inputs = [decode_output_id(input_id) for input_id in inputs]
         decoded_outputs = [(owner.address, amount) for (owner, amount) in outputs]
         spending_tx = Transaction(inputs=decoded_inputs, outputs=decoded_outputs)
@@ -69,6 +109,17 @@ class TestingLanguage(object):
         return spend_id
 
     def confirm_tx(self, tx_id, input_index, signer):
+        """Allows the owner of an input to confirm a transaction.
+
+        Args:
+            tx_ud (int): Unique transaction identifier.
+            input_index (int): Which input to confirm.
+            signer (EthereumAccount): Account to sign the confirmation signature.
+
+        Returns:
+            str: The confirmation signature in bytes form.
+        """
+
         tx = self.transactions[tx_id]
         (blknum, _, _) = decode_output_id(tx_id)
         block = self.blocks[blknum]
@@ -80,6 +131,14 @@ class TestingLanguage(object):
         return confirmation_sig
 
     def start_exit(self, output_id, owner, bond=None):
+        """Starts an exit from a given output.
+
+        Args:
+            output_id (int): Unique identifier of the output.
+            owner (EthereumAccount): Account that owns the output.
+            bond (int): Bond amount to include.
+        """
+
         output_tx = self.transactions[decode_tx_id(output_id)]
         merkle = FixedMerkle(16, [output_tx.encoded])
         proof = merkle.create_membership_proof(output_tx.encoded)
@@ -87,6 +146,14 @@ class TestingLanguage(object):
         self.root_chain.startExit(output_id, output_tx.encoded, proof, value=bond, sender=owner.key)
 
     def challenge_exit(self, output_id, spend_id, challenger=None):
+        """Challenges an exit of a given output.
+
+        Args:
+            output_id (int): Unique identifier of the exiting output.
+            spend_id (int): Unique identifier of the tx spending the output.
+            challenger (EthereumAccount): Account from which to submit the challenge.
+        """
+
         challenger = challenger or self.accounts[0]
         spend_tx = self.transactions[spend_id]
         input_index = None
@@ -99,12 +166,33 @@ class TestingLanguage(object):
         self.root_chain.challengeExit(output_id, spend_tx.encoded, spend_id, input_index, confirmation_sig, sender=challenger.key)
 
     def process_exits(self):
+        """Processes any completed exits.
+        """
+
         self.root_chain.processExits()
 
     def get_plasma_exit(self, output_id):
+        """Returns exit data for an exiting UTXO.
+
+        Args:
+            output_id (int): Identifier of the exiting UTXO.
+
+        Returns:
+            PlasmaExit: Information about the exit.
+        """
+
         exit_info = self.root_chain.exits(output_id)
         return PlasmaExit(*exit_info)
 
     def get_plasma_block(self, blknum):
+        """Returns block data for a given block.
+
+        Args:
+            blknum (int): Number of the block to query.
+
+        Returns:
+            PlasmaBlock: Information about the block.
+        """
+
         block_info = self.root_chain.blocks(blknum)
         return PlasmaBlock(*block_info)
