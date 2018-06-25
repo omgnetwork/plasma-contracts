@@ -26,6 +26,12 @@ def get_accounts(ethtester):
 
 
 class PlasmaExit(object):
+    """Represents a Plasma exit.
+
+    Attributes:
+        owner (str): Address of the exit's owner.
+        amount (int): How much value is being exited.
+    """
 
     def __init__(self, owner, amount):
         self.owner = owner
@@ -33,6 +39,12 @@ class PlasmaExit(object):
 
 
 class PlasmaBlock(object):
+    """Represents a Plasma block.
+
+    Attributes:
+        root (str): Root hash of the block.
+        timestamp (int): Time when the block was created.
+    """
 
     def __init__(self, root, timestamp):
         self.root = root
@@ -40,6 +52,16 @@ class PlasmaBlock(object):
 
 
 class TestingLanguage(object):
+    """Mocks a Plasma client for testing.
+
+    Attributes:
+        root_chain (ABIContract): Root chain contract instance.
+        eththester (tester): Ethereum tester instance.
+        accounts (EthereumAccount[]): List of available accounts.
+        confirmations (dict): A mapping from transaction IDs to confirmation signatures.
+        transactions (dict): A mapping from transactions IDs to Transaction objects.
+        blocks (dict): A mapping from block numbers to Block objects.
+    """
 
     def __init__(self, root_chain, ethtester):
         self.root_chain = root_chain

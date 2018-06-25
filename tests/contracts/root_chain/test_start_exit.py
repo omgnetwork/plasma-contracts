@@ -41,6 +41,14 @@ def test_start_exit_twice_should_fail(testlang):
         testlang.start_exit(deposit_id, owner)
 
 
+def test_start_exit_invalid_owner_should_fail(testlang):
+    owner_1, owner_2, amount = testlang.accounts[0], testlang.accounts[1], 100
+    deposit_id = testlang.deposit(owner_1, amount)
+
+    with pytest.raises(TransactionFailed):
+        testlang.start_exit(deposit_id, owner_2)
+
+
 def test_start_exit_invalid_proof_should_fail(testlang):
     owner, amount = testlang.accounts[0], 100
     deposit_id = testlang.deposit(owner, amount)
