@@ -1,9 +1,10 @@
+import os
 import pytest
 from ethereum import utils
 from ethereum.tools import tester
 from ethereum.abi import ContractTranslator
 from ethereum.config import config_metropolis
-from deployer.compile import compile_all, get_contract_data
+from plasma_core.plasma.utils.compile import compile_all, get_contract_data
 from testlang import TestingLanguage
 
 
@@ -13,7 +14,9 @@ config_metropolis['BLOCK_GAS_LIMIT'] = GAS_LIMIT
 
 
 # Compile contracts before testing
-compile_all()
+OWN_DIR = os.path.dirname(os.path.realpath(__file__))
+CONTRACTS_DIR = os.path.abspath(os.path.realpath(os.path.join(OWN_DIR, '../contracts')))
+compile_all(CONTRACTS_DIR)
 
 
 @pytest.fixture

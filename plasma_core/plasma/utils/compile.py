@@ -3,12 +3,10 @@ import os
 from solc import compile_standard
 
 
-OWN_DIR = os.path.dirname(os.path.realpath(__file__))
-CONTRACTS_DIR = os.path.abspath(os.path.realpath(os.path.join(OWN_DIR, '../contracts')))
 OUTPUT_DIR = 'contract_data'
 
 
-def get_solc_input():
+def get_solc_input(contracts_dir):
     """Walks the contract directory and returns a Solidity input dict
 
     Learn more about Solidity input JSON here: https://goo.gl/7zKBvj
@@ -22,7 +20,7 @@ def get_solc_input():
         'sources': {
             file_name: {
                 'urls': [os.path.realpath(os.path.join(r, file_name))]
-            } for r, d, f in os.walk(CONTRACTS_DIR) for file_name in f
+            } for r, d, f in os.walk(contracts_dir) for file_name in f
         },
         'settings': {
             'outputSelection': {
@@ -46,7 +44,7 @@ def get_solc_input():
     return solc_input
 
 
-def compile_all():
+def compile_all(contracts_dir):
     """Compiles all of the contracts in the /contracts directory
 
     Creates {contract name}.json files in /build that contain
@@ -54,10 +52,10 @@ def compile_all():
     """
 
     # Solidity input JSON
-    solc_input = get_solc_input()
+    solc_input = get_solc_input(contracts_dir)
 
     # Compile the contracts
-    compilation_result = compile_standard(solc_input, allow_paths=CONTRACTS_DIR)
+    compilation_result = compile_standard(solc_input, allow_paths=contracts_dir)
 
     # Create the output folder if it doesn't already exist
     os.makedirs(OUTPUT_DIR, exist_ok=True)
