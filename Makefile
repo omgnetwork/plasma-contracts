@@ -25,7 +25,7 @@ clean-pyc:
 
 .PHONY: lint
 lint:
-	flake8 deployer testlang tests
+	flake8 testlang tests
 
 .PHONY: test
 test:
