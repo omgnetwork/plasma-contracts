@@ -7,12 +7,12 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name='plasma-mvp',
+    name='plasma-contracts',
     version='0.0.1',
-    description='Minimal Viable Plasma implementation',
+    description='Plasma root chain contracts',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    url='https://github.com/omisego/plasma-mvp',
+    url='https://github.com/omisego/plasma-contracts',
     author='OmiseGO',
     classifiers=[
         'Development Status :: 3 - Alpha',
@@ -21,7 +21,7 @@ setup(
         'License :: OSI Approved :: Apache Software License', # Apache License, Version 2.0 (Apache-2.0)
         'Programming Language :: Python :: 3'
     ],
-    keywords='plasma mpv ethereum development',
+    keywords='plasma contracts ethereum development solidity',
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
     install_requires=[
         'ethereum==2.3.0',
