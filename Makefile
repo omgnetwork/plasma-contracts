@@ -25,7 +25,7 @@ clean-pyc:
 
 .PHONY: lint
 lint:
-	flake8 testlang tests
+	flake8 testlang tests plasma_core
 
 .PHONY: test
 test:
