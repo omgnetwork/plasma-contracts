@@ -18,7 +18,7 @@ def get_accounts(ethtester):
     """
 
     accounts = []
-    for i in range(0, 10):
+    for i in range(10):
         address = getattr(ethtester, 'a{0}'.format(i))
         key = getattr(ethtester, 'k{0}'.format(i))
         accounts.append(EthereumAccount(address_to_hex(address), key))
@@ -123,7 +123,7 @@ class TestingLanguage(object):
         decoded_inputs = [decode_output_id(input_id) for input_id in inputs]
         decoded_outputs = [(owner.address, amount) for (owner, amount) in outputs]
         spending_tx = Transaction(inputs=decoded_inputs, outputs=decoded_outputs)
-        for i in range(0, len(inputs)):
+        for i in range(len(inputs)):
             spending_tx.sign(i, signers[i].key)
         blknum = self.submit_block([spending_tx])
         spend_id = encode_output_id(blknum, 0, 0)
@@ -161,10 +161,10 @@ class TestingLanguage(object):
             bond (int): Bond amount to include.
         """
 
+        bond = bond if bond is not None else self.root_chain.exitBond()
         output_tx = self.transactions[decode_tx_id(output_id)]
         merkle = FixedMerkle(16, [output_tx.encoded])
         proof = merkle.create_membership_proof(output_tx.encoded)
-        bond = bond if bond is not None else self.root_chain.exitBond()
         self.root_chain.startExit(output_id, output_tx.encoded, proof, value=bond, sender=owner.key)
 
     def challenge_exit(self, output_id, spend_id, challenger=None):
@@ -180,7 +180,7 @@ class TestingLanguage(object):
         spend_tx = self.transactions[spend_id]
         input_index = None
         confirmation_sig = NULL_SIGNATURE
-        for i in range(0, 4):
+        for i in range(4):
             input_index = i
             confirmation_sig = self.confirmations.get(spend_id, get_null_sig_list(4))[i]
             if (spend_tx.inputs[i].identifier == output_id and confirmation_sig != NULL_SIGNATURE):
