@@ -127,7 +127,7 @@ contract RootChain is BaseRootChain {
         onlyWithValue(exitBond)
     {
         // Check that the output transaction actually created the output.
-        require(_transactionIncluded(_outputTx, _outputId, _outputTxInclusionProof));
+        require(transactionIncluded(_outputTx, _outputId, _outputTxInclusionProof));
 
         // Decode the output ID.
         uint256 oindex = _outputId.getOindex();

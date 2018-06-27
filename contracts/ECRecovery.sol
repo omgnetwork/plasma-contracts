@@ -1,5 +1,11 @@
 pragma solidity ^0.4.0;
 
+
+/**
+ * @title ECRecovery
+ * @dev Elliptic curve signature operations.
+ * Based off of https://github.com/OpenZeppelin/openzeppelin-solidity/blob/master/contracts/ECRecovery.sol.
+ */
 library ECRecovery {
     /*
      * Internal functions

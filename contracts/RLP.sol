@@ -1,5 +1,11 @@
 pragma solidity ^0.4.0;
 
+
+/**
+ * @title RLP
+ * @dev Library for RLP decoding.
+ * Based off of https://github.com/androlo/standard-contracts/blob/master/contracts/src/codec/RLP.sol.
+ */
 library RLP {
     /*
      * Storage

@@ -1,10 +1,14 @@
 pragma solidity ^0.4.0;
 
+
+/**
+ * @title Math
+ * @dev Math utilities.
+ */
 library Math {
     /*
      * Internal functions
      */
-
 
     /**
      * @dev Returns the greater of two integers.

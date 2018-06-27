@@ -1,5 +1,11 @@
 pragma solidity ^0.4.0;
 
+
+/**
+ * @title SafeMath
+ * @dev Math operations with safety checks that throw an error.
+ * Based off of https://github.com/OpenZeppelin/openzeppelin-solidity/blob/master/contracts/math/SafeMath.sol.
+ */
 library SafeMath {
     /*
      * Internal functions

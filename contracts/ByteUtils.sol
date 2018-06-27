@@ -1,5 +1,10 @@
 pragma solidity ^0.4.0;
 
+
+/**
+ * @title ByteUtils
+ * @dev Utilties for working with bytes.
+ */
 library ByteUtils {
     /*
      * Internal functions

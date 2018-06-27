@@ -4,6 +4,11 @@ import "./Merkle.sol";
 import "./PriorityQueue.sol";
 import "./PlasmaCore.sol";
 
+
+/**
+ * @title BaseRootChain
+ * @dev A basic Plasma contract that exposes a few simple structures and operations.
+ */
 contract BaseRootChain {
     using PlasmaCore for bytes;
     using PlasmaCore for uint256;
@@ -72,7 +77,7 @@ contract BaseRootChain {
 
     
     /*
-     * Internal functions
+     * Public functions
      */
 
     /**
@@ -82,8 +87,8 @@ contract BaseRootChain {
      * @param _txInclusionProof Proof that the transaction was in a block.
      * @return True if the transaction was in a block and created the output. False otherwise.
      */
-    function _transactionIncluded(bytes _tx, uint256 _transactionId, bytes _txInclusionProof)
-        internal
+    function transactionIncluded(bytes _tx, uint256 _transactionId, bytes _txInclusionProof)
+        public
         view
         returns (bool)
     {

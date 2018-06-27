@@ -2,6 +2,11 @@ pragma solidity ^0.4.0;
 
 import "./SafeMath.sol";
 
+
+/**
+ * @title PriorityQueue
+ * @dev Min-heap priority queue implementation.
+ */
 contract PriorityQueue {
     using SafeMath for uint256;
 

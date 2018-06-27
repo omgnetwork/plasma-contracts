@@ -3,6 +3,11 @@ pragma solidity ^0.4.0;
 import "./ECRecovery.sol";
 import "./ByteUtils.sol";
 
+
+/**
+ * @title Merkle
+ * @dev Library for working with Merkle trees.
+ */
 library Merkle {
     /*
      * Storage

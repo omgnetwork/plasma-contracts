@@ -3,6 +3,11 @@ pragma solidity ^0.4.0;
 import "./ByteUtils.sol";
 import "./RLP.sol";
 
+
+/**
+ * @title PlasmaCore
+ * @dev Utilities for working with and decoding Plasma MVP transactions.
+ */
 library PlasmaCore {
     using ByteUtils for bytes;
     using RLP for bytes;
