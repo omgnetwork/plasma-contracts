@@ -42,26 +42,30 @@ class TransactionOutput(rlp.Serializable):
 
 class Transaction(rlp.Serializable):
 
-    NUM_TXOS = 4
     DEFAULT_INPUT = (0, 0, 0)
     DEFAULT_OUTPUT = (NULL_ADDRESS, 0)
     fields = (
-        ('inputs', CountableList(TransactionInput, NUM_TXOS)),
-        ('outputs', CountableList(TransactionOutput, NUM_TXOS)),
-        ('signatures', CountableList(binary, NUM_TXOS))
+        ('inputs', CountableList(TransactionInput)),
+        ('outputs', CountableList(TransactionOutput)),
+        ('signatures', CountableList(binary))
     )
 
     def __init__(self,
-                 inputs=[DEFAULT_INPUT] * NUM_TXOS,
-                 outputs=[DEFAULT_OUTPUT] * NUM_TXOS,
-                 signatures=[NULL_SIGNATURE] * NUM_TXOS):
-        padded_inputs = pad_list(inputs, self.DEFAULT_INPUT, self.NUM_TXOS)
-        padded_outputs = pad_list(outputs, self.DEFAULT_OUTPUT, self.NUM_TXOS)
+                 inputs=[],
+                 outputs=[],
+                 signatures=[],
+                 num_txos=4):
+        inputs = inputs or [self.DEFAULT_INPUT] * num_txos
+        outputs = outputs or [self.DEFAULT_OUTPUT] * num_txos
+        signatures = signatures or [NULL_SIGNATURE] * num_txos
+
+        padded_inputs = pad_list(inputs, self.DEFAULT_INPUT, num_txos)
+        padded_outputs = pad_list(outputs, self.DEFAULT_OUTPUT, num_txos)
 
         self.inputs = [TransactionInput(*i) for i in padded_inputs]
         self.outputs = [TransactionOutput(*o) for o in padded_outputs]
         self.signatures = signatures[:]
-        self.spent = [False] * self.NUM_TXOS
+        self.spent = [False] * num_txos
 
     @property
     def hash(self):
