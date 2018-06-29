@@ -1,0 +1,13 @@
+language: python
+
+python:
+  - "3.6"
+
+cache: pip
+
+install:
+  - wget https://github.com/ethereum/solidity/releases/download/v0.4.24/solc-static-linux && chmod +x ./solc-static-linux && sudo mv solc-static-linux /usr/bin/solc
+  - pip install --upgrade pip setuptools pytest flake8
+
+script:
+  - echo "nop"
