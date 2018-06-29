@@ -58,6 +58,7 @@ class Transaction(rlp.Serializable):
         inputs = inputs or [self.DEFAULT_INPUT] * num_txos
         outputs = outputs or [self.DEFAULT_OUTPUT] * num_txos
         signatures = signatures or [NULL_SIGNATURE] * num_txos
+        spent = [False] * num_txos
 
         padded_inputs = pad_list(inputs, self.DEFAULT_INPUT, num_txos)
         padded_outputs = pad_list(outputs, self.DEFAULT_OUTPUT, num_txos)
@@ -65,7 +66,7 @@ class Transaction(rlp.Serializable):
         self.inputs = [TransactionInput(*i) for i in padded_inputs]
         self.outputs = [TransactionOutput(*o) for o in padded_outputs]
         self.signatures = signatures[:]
-        self.spent = [False] * num_txos
+        self.spent = spent[:]
 
     @property
     def hash(self):
