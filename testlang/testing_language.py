@@ -3,7 +3,7 @@ import rlp
 from web3 import Web3, HTTPProvider
 from plasma.root_chain.deployer import Deployer
 from plasma.child_chain.child_chain import ChildChain
-from plasma.child_chain.transaction import Transaction, UnsignedTransaction
+from plasma_core.transaction import Transaction, UnsignedTransaction
 from plasma_core.utils.merkle.fixed_merkle import FixedMerkle
 from plasma_core.utils.utils import confirm_tx
 from plasma_core.constants import AUTHORITY, ACCOUNTS, NULL_ADDRESS, NULL_ADDRESS_HEX

@@ -1,6 +1,6 @@
 import pytest
 import rlp
-from plasma.child_chain.transaction import Transaction, UnsignedTransaction
+from plasma_core.transaction import Transaction, UnsignedTransaction
 from plasma_core.utils.merkle.fixed_merkle import FixedMerkle
 from plasma_core.utils.utils import confirm_tx, get_deposit_hash
 
