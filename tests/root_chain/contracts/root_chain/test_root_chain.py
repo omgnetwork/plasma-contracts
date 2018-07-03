@@ -3,7 +3,8 @@ import rlp
 from plasma_core.constants import NULL_ADDRESS, NULL_ADDRESS_HEX
 from plasma_core.transaction import Transaction, UnsignedTransaction
 from plasma_core.utils.merkle.fixed_merkle import FixedMerkle
-from plasma_core.utils.utils import confirm_tx, get_deposit_hash
+from plasma_core.utils.utils import get_deposit_hash
+from plasma_core.utils.address import address_to_hex
 
 
 @pytest.fixture
@@ -82,7 +83,7 @@ def test_start_exit(t, root_chain, assert_tx_failed):
     root_chain.deposit(value=value_1, sender=key)
     merkle = FixedMerkle(16, [deposit_tx_hash], True)
     proof = merkle.create_membership_proof(deposit_tx_hash)
-    confirmSig1 = confirm_tx(tx1, root_chain.getChildChain(dep_blknum)[0], key)
+    confirmSig1 = tx1.confirm(root_chain.getChildChain(dep_blknum)[0], key)
     priority1 = dep_blknum * 1000000000 + 10000 * 0 + 1
     snapshot = t.chain.snapshot()
     sigs = tx1.sig1 + tx1.sig2 + confirmSig1
@@ -94,7 +95,7 @@ def test_start_exit(t, root_chain, assert_tx_failed):
     # Cannot exit twice off of the same utxo
     utxo_pos1 = dep_blknum * 1000000000 + 10000 * 0 + 1
     assert_tx_failed(lambda: root_chain.startExit(utxo_pos1, deposit_tx_hash, proof, sigs, sender=key))
-    assert root_chain.getExit(priority1) == ['0x' + owner.hex(), NULL_ADDRESS_HEX, 100]
+    assert root_chain.getExit(priority1) == [address_to_hex(owner), NULL_ADDRESS_HEX, 100]
     t.chain.revert(snapshot)
 
     tx2 = Transaction(dep_blknum, 0, 0, 0, 0, 0,
@@ -107,14 +108,14 @@ def test_start_exit(t, root_chain, assert_tx_failed):
     child_blknum = root_chain.currentChildBlock()
     assert child_blknum == 1000
     root_chain.submitBlock(merkle.root)
-    confirmSig1 = confirm_tx(tx2, root_chain.getChildChain(child_blknum)[0], key)
+    confirmSig1 = tx2.confirm(root_chain.getChildChain(child_blknum)[0], key)
     priority2 = child_blknum * 1000000000 + 10000 * 0 + 0
     sigs = tx2.sig1 + tx2.sig2 + confirmSig1
     snapshot = t.chain.snapshot()
     # # Single input exit
     utxo_pos2 = child_blknum * 1000000000 + 10000 * 0 + 0
     root_chain.startExit(utxo_pos2, tx_bytes2, proof, sigs, sender=key)
-    assert root_chain.getExit(priority2) == ['0x' + owner.hex(), NULL_ADDRESS_HEX, 100]
+    assert root_chain.getExit(priority2) == [address_to_hex(owner), NULL_ADDRESS_HEX, 100]
     t.chain.revert(snapshot)
     dep2_blknum = root_chain.getDepositBlock()
     assert dep2_blknum == 1001
@@ -130,14 +131,14 @@ def test_start_exit(t, root_chain, assert_tx_failed):
     child2_blknum = root_chain.currentChildBlock()
     assert child2_blknum == 2000
     root_chain.submitBlock(merkle.root)
-    confirmSig1 = confirm_tx(tx3, root_chain.getChildChain(child2_blknum)[0], key)
-    confirmSig2 = confirm_tx(tx3, root_chain.getChildChain(child2_blknum)[0], key)
+    confirmSig1 = tx3.confirm(root_chain.getChildChain(child2_blknum)[0], key)
+    confirmSig2 = tx3.confirm(root_chain.getChildChain(child2_blknum)[0], key)
     priority3 = child2_blknum * 1000000000 + 10000 * 0 + 0
     sigs = tx3.sig1 + tx3.sig2 + confirmSig1 + confirmSig2
     # Double input exit
     utxoPos3 = child2_blknum * 1000000000 + 10000 * 0 + 0
     root_chain.startExit(utxoPos3, tx_bytes3, proof, sigs, sender=key)
-    assert root_chain.getExit(priority3) == ['0x' + owner.hex(), NULL_ADDRESS_HEX, 100]
+    assert root_chain.getExit(priority3) == [address_to_hex(owner), NULL_ADDRESS_HEX, 100]
 
 
 def test_challenge_exit(t, u, root_chain, assert_tx_failed):
@@ -152,7 +153,7 @@ def test_challenge_exit(t, u, root_chain, assert_tx_failed):
     root_chain.deposit(value=value_1, sender=key)
     merkle = FixedMerkle(16, [deposit_tx_hash], True)
     proof = merkle.create_membership_proof(deposit_tx_hash)
-    confirmSig1 = confirm_tx(tx1, root_chain.getChildChain(utxo_pos1)[0], key)
+    confirmSig1 = tx1.confirm(root_chain.getChildChain(utxo_pos1)[0], key)
     sigs = tx1.sig1 + tx1.sig2 + confirmSig1
     root_chain.startDepositExit(utxo_pos1, NULL_ADDRESS, tx1.amount1, sender=key)
     tx3 = Transaction(utxo_pos2, 0, 0, 0, 0, 0,
@@ -164,7 +165,7 @@ def test_challenge_exit(t, u, root_chain, assert_tx_failed):
     proof = merkle.create_membership_proof(tx3.merkle_hash)
     child_blknum = root_chain.currentChildBlock()
     root_chain.submitBlock(merkle.root)
-    confirmSig = confirm_tx(tx3, root_chain.getChildChain(child_blknum)[0], key)
+    confirmSig = tx3.confirm(root_chain.getChildChain(child_blknum)[0], key)
     sigs = tx3.sig1 + tx3.sig2
     utxo_pos3 = child_blknum * 1000000000 + 10000 * 0 + 0
     tx4 = Transaction(utxo_pos1, 0, 0, 0, 0, 0,
@@ -176,11 +177,11 @@ def test_challenge_exit(t, u, root_chain, assert_tx_failed):
     proof = merkle.create_membership_proof(tx4.merkle_hash)
     child_blknum = root_chain.currentChildBlock()
     root_chain.submitBlock(merkle.root)
-    confirmSig = confirm_tx(tx4, root_chain.getChildChain(child_blknum)[0], key)
+    confirmSig = tx4.confirm(root_chain.getChildChain(child_blknum)[0], key)
     sigs = tx4.sig1 + tx4.sig2
     utxo_pos4 = child_blknum * 1000000000 + 10000 * 0 + 0
     oindex1 = 0
-    assert root_chain.exits(utxo_pos1) == ['0x' + owner.hex(), NULL_ADDRESS_HEX, 100]
+    assert root_chain.exits(utxo_pos1) == [address_to_hex(owner), NULL_ADDRESS_HEX, 100]
     # Fails if transaction after exit doesn't reference the utxo being exited
     assert_tx_failed(lambda: root_chain.challengeExit(utxo_pos3, utxo_pos1, tx_bytes3, proof, sigs, confirmSig))
     # Fails if transaction proof is incorrect
@@ -202,7 +203,7 @@ def test_finalize_exits(t, u, root_chain):
     utxo_pos1 = dep1_blknum * 1000000000 + 10000 * 0 + 1
     root_chain.startDepositExit(utxo_pos1, NULL_ADDRESS, tx1.amount1, sender=key)
     t.chain.head_state.timestamp += two_weeks * 2
-    assert root_chain.exits(utxo_pos1) == ['0x' + owner.hex(), NULL_ADDRESS_HEX, 100]
+    assert root_chain.exits(utxo_pos1) == [address_to_hex(owner), NULL_ADDRESS_HEX, 100]
     pre_balance = t.chain.head_state.get_balance(owner)
     root_chain.finalizeExits(sender=t.k2)
     post_balance = t.chain.head_state.get_balance(owner)
