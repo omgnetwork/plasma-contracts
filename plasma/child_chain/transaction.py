@@ -1,7 +1,7 @@
 import rlp
 from rlp.sedes import big_endian_int, binary
 from ethereum import utils
-from plasma.utils.utils import get_sender, sign
+from plasma_core.utils.utils import get_sender, sign
 
 
 class Transaction(rlp.Serializable):

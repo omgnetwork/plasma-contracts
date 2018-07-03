@@ -1,7 +1,7 @@
 import rlp
 from ethereum import utils
-
-from plasma.utils.utils import unpack_utxo_pos
+from plasma_core.utils.utils import unpack_utxo_pos
+from plasma_core.constants import NULL_ADDRESS
 from .block import Block
 from .exceptions import (InvalidBlockMerkleException,
                          InvalidBlockSignatureException,
@@ -9,8 +9,6 @@ from .exceptions import (InvalidBlockMerkleException,
                          TxAmountMismatchException)
 from .transaction import Transaction
 from .root_event_listener import RootEventListener
-
-ZERO_ADDRESS = b'\x00' * 20
 
 
 class ChildChain(object):
@@ -44,9 +42,9 @@ class ChildChain(object):
 
         deposit_tx = Transaction(0, 0, 0,
                                  0, 0, 0,
-                                 ZERO_ADDRESS,
+                                 NULL_ADDRESS,
                                  depositor, amount,
-                                 ZERO_ADDRESS, 0)
+                                 NULL_ADDRESS, 0)
         deposit_block = Block([deposit_tx])
 
         self.blocks[blknum] = deposit_block
