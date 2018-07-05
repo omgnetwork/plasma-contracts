@@ -4,14 +4,15 @@ from ethereum.tools import tester, _solidity
 from ethereum.abi import ContractTranslator
 from ethereum import utils
 from plasma_core.utils import utils as plasma_utils
-from plasma.root_chain.deployer import Deployer
+from plasma_core.utils.deployer import Deployer
 from testlang.testing_language import TestingLanguage
 
 
 OWN_DIR = os.path.dirname(os.path.realpath(__file__))
+CONTRACTS_DIR = os.path.abspath(os.path.realpath(os.path.join(OWN_DIR, '../contracts')))
 
 # Compile contracts once before tests start
-deployer = Deployer()
+deployer = Deployer(CONTRACTS_DIR)
 deployer.compile_all()
 
 
