@@ -1,18 +1,15 @@
 import time
 import rlp
-from web3 import Web3, HTTPProvider
 from plasma.root_chain.deployer import Deployer
 from plasma.child_chain.child_chain import ChildChain
-from plasma.child_chain.transaction import Transaction, UnsignedTransaction
+from plasma_core.transaction import Transaction, UnsignedTransaction
 from plasma_core.utils.merkle.fixed_merkle import FixedMerkle
-from plasma_core.utils.utils import confirm_tx
 from plasma_core.constants import AUTHORITY, ACCOUNTS, NULL_ADDRESS, NULL_ADDRESS_HEX
 
 
 class TestingLanguage(object):
 
     def __init__(self):
-        self.w3 = Web3(HTTPProvider('http://localhost:8545'))
         self.root_chain = Deployer().deploy_contract('RootChain', concise=False)
         self.child_chain = ChildChain(AUTHORITY['address'], self.root_chain)
 
@@ -115,7 +112,7 @@ class TestingLanguage(object):
 
         confirm_sigs = b''
         for signatory in [x for x in [signatory1, signatory2] if x is not None]:
-            confirm_sigs += confirm_tx(tx, block_root, signatory['key'])
+            confirm_sigs += tx.confirm(block_root, signatory['key'])
 
         self.transactions[tx_id]['confirm_sigs'] = confirm_sigs
 

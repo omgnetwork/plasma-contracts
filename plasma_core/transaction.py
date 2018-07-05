@@ -1,7 +1,8 @@
 import rlp
 from rlp.sedes import big_endian_int, binary
 from ethereum import utils
-from plasma_core.utils.utils import get_sender, sign
+from plasma_core.constants import NULL_SIGNATURE
+from plasma_core.utils.signatures import sign, get_signer
 
 
 class Transaction(rlp.Serializable):
@@ -28,8 +29,8 @@ class Transaction(rlp.Serializable):
                  cur12,
                  newowner1, amount1,
                  newowner2, amount2,
-                 sig1=b'\x00' * 65,
-                 sig2=b'\x00' * 65):
+                 sig1=NULL_SIGNATURE,
+                 sig2=NULL_SIGNATURE):
         # Input 1
         self.blknum1 = blknum1
         self.txindex1 = txindex1
@@ -72,6 +73,9 @@ class Transaction(rlp.Serializable):
     def sign2(self, key):
         self.sig2 = sign(self.hash, key)
 
+    def confirm(self, root, key):
+        return sign(utils.sha3(self.hash + root), key)
+
     @property
     def is_single_utxo(self):
         if self.blknum2 == 0:
@@ -80,11 +84,11 @@ class Transaction(rlp.Serializable):
 
     @property
     def sender1(self):
-        return get_sender(self.hash, self.sig1)
+        return get_signer(self.hash, self.sig1)
 
     @property
     def sender2(self):
-        return get_sender(self.hash, self.sig2)
+        return get_signer(self.hash, self.sig2)
 
 
 UnsignedTransaction = Transaction.exclude(['sig1', 'sig2'])
