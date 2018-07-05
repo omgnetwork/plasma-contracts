@@ -61,11 +61,31 @@ class Transaction(rlp.Serializable):
 
     @property
     def hash(self):
-        return utils.sha3(rlp.encode(self, UnsignedTransaction))
+        return utils.sha3(self.encoded)
 
     @property
     def merkle_hash(self):
         return utils.sha3(self.hash + self.sig1 + self.sig2)
+
+    @property
+    def is_single_utxo(self):
+        return self.blknum2 == 0
+
+    @property
+    def is_deposit(self):
+        return self.blknum1 == 0 and self.blknum2 == 0
+
+    @property
+    def sender1(self):
+        return get_signer(self.hash, self.sig1)
+
+    @property
+    def sender2(self):
+        return get_signer(self.hash, self.sig2)
+
+    @property
+    def encoded(self):
+        return rlp.encode(self, UnsignedTransaction)
 
     def sign1(self, key):
         self.sig1 = sign(self.hash, key)
@@ -75,20 +95,6 @@ class Transaction(rlp.Serializable):
 
     def confirm(self, root, key):
         return sign(utils.sha3(self.hash + root), key)
-
-    @property
-    def is_single_utxo(self):
-        if self.blknum2 == 0:
-            return True
-        return False
-
-    @property
-    def sender1(self):
-        return get_signer(self.hash, self.sig1)
-
-    @property
-    def sender2(self):
-        return get_signer(self.hash, self.sig2)
 
 
 UnsignedTransaction = Transaction.exclude(['sig1', 'sig2'])
