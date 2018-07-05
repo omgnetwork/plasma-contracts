@@ -1,7 +1,7 @@
 import pytest
 from ethereum.utils import sha3
-from plasma.utils.merkle.fixed_merkle import FixedMerkle
-from plasma.utils.utils import get_empty_merkle_tree_hash
+from plasma_core.utils.merkle.fixed_merkle import FixedMerkle
+from plasma_core.utils.utils import get_empty_merkle_tree_hash
 
 
 def test_initial_state():

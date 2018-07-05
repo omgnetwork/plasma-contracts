@@ -1,5 +1,5 @@
 from ethereum import utils as u
-from plasma.utils.merkle.fixed_merkle import FixedMerkle
+from plasma_core.utils.merkle.fixed_merkle import FixedMerkle
 
 
 def get_empty_merkle_tree_hash(depth):

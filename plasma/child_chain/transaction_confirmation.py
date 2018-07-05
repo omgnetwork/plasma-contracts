@@ -1,7 +1,7 @@
 import rlp
 from etheruem import utils
 from rlp.sedes import big_endian_int, binary
-from plasma.utils.utils import sign, get_sender
+from plasma_core.utils.utils import sign, get_sender
 
 
 class TransactionConfirmation(rlp.Serializable):

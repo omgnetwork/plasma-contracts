@@ -1,8 +1,8 @@
 import rlp
 from rlp.sedes import binary, CountableList
 from ethereum import utils
-from plasma.utils.merkle.fixed_merkle import FixedMerkle
-from plasma.utils.utils import sign, get_sender
+from plasma_core.utils.merkle.fixed_merkle import FixedMerkle
+from plasma_core.utils.utils import sign, get_sender
 from plasma.child_chain.transaction import Transaction
 
 
