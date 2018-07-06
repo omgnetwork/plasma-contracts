@@ -1,77 +1,123 @@
 pragma solidity ^0.4.0;
 
-import "./SafeMath.sol";
+import "./Bits.sol";
+import "./ByteUtils.sol";
+import "./ECRecovery.sol";
 import "./Math.sol";
-import "./PlasmaRLP.sol";
 import "./Merkle.sol";
-import "./Validate.sol";
+import "./RLP.sol";
+import "./PlasmaCore.sol";
 import "./PriorityQueue.sol";
 
 
 /**
  * @title RootChain
- * @dev This contract secures a utxo payments plasma child chain to ethereum.
+ * @dev Represents a MoreVP Plasma chain.
  */
 contract RootChain {
-    using SafeMath for uint256;
-    using Merkle for bytes32;
-    using PlasmaRLP for bytes;
-
-
-    /*
-     * Events
-     */
-
-    event Deposit(
-        address indexed depositor,
-        uint256 indexed depositBlock,
-        address token,
-        uint256 amount
-    );
-
-    event ExitStarted(
-        address indexed exitor,
-        uint256 indexed utxoPos,
-        address token,
-        uint256 amount
-    );
-
-    event BlockSubmitted(
-        bytes32 root,
-        uint256 timestamp
-    );
-
-    event TokenAdded(
-        address token
-    );
+    using Bits for uint64;
+    using Bits for uint256;
+    using ByteUtils for bytes;
+    using RLP for bytes;
+    using RLP for RLP.RLPItem;
+    using PlasmaCore for bytes;
+    using PlasmaCore for PlasmaCore.TransactionInput;
+    using PlasmaCore for uint192;
+    using PlasmaCore for uint256;
 
 
     /*
      * Storage
      */
 
-    uint256 public constant CHILD_BLOCK_INTERVAL = 1000;
+    uint256 constant public MIN_EXIT_PERIOD = 1 weeks;
+    uint256 constant public CHILD_BLOCK_INTERVAL = 1000;
+
+    // WARNING: These placeholder bond values are entirely arbitrary.
+    uint256 public standardExitBond = 31415926535 wei;
+    uint256 public inFlightExitBond = 31415926535 wei;
+    uint256 public piggybackBond = 31415926535 wei;
 
     address public operator;
 
-    uint256 public currentChildBlock;
-    uint256 public currentDepositBlock;
-    uint256 public currentFeeExit;
+    uint256 public nextChildBlock;
+    uint256 public nextDepositBlock;
 
-    mapping (uint256 => ChildBlock) public childChain;
-    mapping (uint256 => Exit) public exits;
-    mapping (address => address) public exitsQueues;
+    mapping (uint256 => Block) public blocks;
+    mapping (uint192 => Exit) public exits;
+    mapping (uint192 => InFlightExit) public inFlightExits;
 
-    struct Exit {
-        address owner;
-        address token;
-        uint256 amount;
-    }
+    PriorityQueue exitQueue;
 
-    struct ChildBlock {
+    bytes32[16] zeroHashes;
+
+    struct Block {
         bytes32 root;
         uint256 timestamp;
     }
+
+    struct Exit {
+        address owner;
+        uint256 amount;
+    }
+
+    struct InFlightExit {
+        uint256 exitStartTimestamp;
+        uint256 exitMap;
+        PlasmaCore.TransactionOutput[4] inputs;
+        PlasmaCore.TransactionOutput[4] outputs;
+        address bondOwner;
+        uint256 oldestCompetitor;
+    }
+
+
+    /*
+     * Events
+     */
+
+    event BlockSubmitted(
+        uint256 number,
+        bytes32 root
+    );
+
+    event DepositCreated(
+        address indexed depositor,
+        uint256 amount
+    );
+
+    event ExitStarted(
+        address indexed owner,
+        uint256 outputId,
+        uint256 amount
+    );
+
+    event ExitBlocked(
+        address indexed challenger,
+        uint256 outputId
+    );
+
+    event InFlightExitStarted(
+        address indexed initiator,
+        bytes32 txHash
+    );
+
+    event InFlightExitPiggybacked(
+        address indexed owner,
+        bytes32 txHash,
+        uint256 outputIndex
+    );
+
+    event InFlightExitChallenged(
+        address indexed challenger,
+        bytes32 txHash,
+        uint256 challengeTxPosition
+    );
+
+    event InFlightExitOutputBlocked(
+        address indexed challenger,
+        bytes32 txHash,
+        uint256 outputId
+    );
 
 
     /*
@@ -80,6 +126,11 @@ contract RootChain {
 
     modifier onlyOperator() {
         require(msg.sender == operator);
+        _;
+    }
+
+    modifier onlyWithValue(uint256 _value) {
+        require(msg.value == _value);
         _;
     }
 
@@ -92,293 +143,766 @@ contract RootChain {
         public
     {
         operator = msg.sender;
-        currentChildBlock = CHILD_BLOCK_INTERVAL;
-        currentDepositBlock = 1;
-        currentFeeExit = 1;
-        // Support only ETH on deployment; other tokens need
-        // to be added explicitly.
-        exitsQueues[address(0)] = address(new PriorityQueue());
-    }
 
+        nextChildBlock = CHILD_BLOCK_INTERVAL;
+        nextDepositBlock = 1;
 
-    /*
-     * Public Functions
-     */
+        exitQueue = new PriorityQueue();
 
-    /**
-     * @dev Allows Plasma chain operator to submit block root.
-     * @param _root The root of a child chain block.
-     */
-    function submitBlock(bytes32 _root)
-        public
-        onlyOperator
-    {   
-        childChain[currentChildBlock] = ChildBlock({
-            root: _root,
-            timestamp: block.timestamp
-        });
-
-        // Update block numbers.
-        currentChildBlock = currentChildBlock.add(CHILD_BLOCK_INTERVAL);
-        currentDepositBlock = 1;
-
-        emit BlockSubmitted(_root, block.timestamp);
-    }
-
-    /**
-     * @dev Allows anyone to deposit funds into the Plasma chain.
-     */
-    function deposit()
-        public
-        payable
-    {
-        // Only allow up to CHILD_BLOCK_INTERVAL deposits per child block.
-        require(currentDepositBlock < CHILD_BLOCK_INTERVAL);
-
-        bytes32 root = keccak256(msg.sender, address(0), msg.value);
-        uint256 depositBlock = getDepositBlock();
-        childChain[depositBlock] = ChildBlock({
-            root: root,
-            timestamp: block.timestamp
-        });
-        currentDepositBlock = currentDepositBlock.add(1);
-
-        emit Deposit(msg.sender, depositBlock, address(0), msg.value);
-    }
-
-    /**
-     * @dev Starts an exit from a deposit.
-     * @param _depositPos UTXO position of the deposit.
-     * @param _token Token type to deposit.
-     * @param _amount Deposit amount.
-     */
-    function startDepositExit(uint256 _depositPos, address _token, uint256 _amount)
-        public
-    {
-        uint256 blknum = _depositPos / 1000000000;
-
-        // Check that the given UTXO is a deposit.
-        require(blknum % CHILD_BLOCK_INTERVAL != 0);
-
-        // Validate the given owner and amount.
-        bytes32 root = childChain[blknum].root;
-        bytes32 depositHash = keccak256(msg.sender, _token, _amount);
-        require(root == depositHash);
-
-        addExitToQueue(_depositPos, msg.sender, _token, _amount, childChain[blknum].timestamp);
-    }
-
-    /**
-     * @dev Allows the operator withdraw any allotted fees. Starts an exit to avoid theft.
-     * @param _token Token to withdraw.
-     * @param _amount Amount in fees to withdraw.
-     */
-    function startFeeExit(address _token, uint256 _amount)
-        public
-        onlyOperator
-    {
-        addExitToQueue(currentFeeExit, msg.sender, _token, _amount, block.timestamp + 1);
-        currentFeeExit = currentFeeExit.add(1);
-    }
-
-    /**
-     * @dev Starts to exit a specified utxo.
-     * @param _utxoPos The position of the exiting utxo in the format of blknum * 1000000000 + index * 10000 + oindex.
-     * @param _txBytes The transaction being exited in RLP bytes format.
-     * @param _proof Proof of the exiting transactions inclusion for the block specified by utxoPos.
-     * @param _sigs Both transaction signatures and confirmations signatures used to verify that the exiting transaction has been confirmed.
-     */
-    function startExit(
-        uint256 _utxoPos,
-        bytes _txBytes,
-        bytes _proof,
-        bytes _sigs
-    )
-        public
-    {
-        uint256 blknum = _utxoPos / 1000000000;
-        uint256 txindex = (_utxoPos % 1000000000) / 10000;
-        uint256 oindex = _utxoPos - blknum * 1000000000 - txindex * 10000; 
-
-        // Check the sender owns this UTXO.
-        var exitingTx = _txBytes.createExitingTx(oindex);
-        require(msg.sender == exitingTx.exitor);
-
-        // Check the transaction was included in the chain and is correctly signed.
-        bytes32 root = childChain[blknum].root; 
-        bytes32 merkleHash = keccak256(keccak256(_txBytes), ByteUtils.slice(_sigs, 0, 130));
-        require(Validate.checkSigs(keccak256(_txBytes), root, exitingTx.inputCount, _sigs));
-        require(merkleHash.checkMembership(txindex, root, _proof));
-
-        addExitToQueue(_utxoPos, exitingTx.exitor, exitingTx.token, exitingTx.amount, childChain[blknum].timestamp);
-    }
-
-    /**
-     * @dev Allows anyone to challenge an exiting transaction by submitting proof of a double spend on the child chain.
-     * @param _cUtxoPos The position of the challenging utxo.
-     * @param _eUtxoIndex The output position of the exiting utxo.
-     * @param _txBytes The challenging transaction in bytes RLP form.
-     * @param _proof Proof of inclusion for the transaction used to challenge.
-     * @param _sigs Signatures for the transaction used to challenge.
-     * @param _confirmationSig The confirmation signature for the transaction used to challenge.
-     */
-    function challengeExit(
-        uint256 _cUtxoPos,
-        uint256 _eUtxoIndex,
-        bytes _txBytes,
-        bytes _proof,
-        bytes _sigs,
-        bytes _confirmationSig
-    )
-        public
-    {
-        uint256 eUtxoPos = _txBytes.getUtxoPos(_eUtxoIndex);
-        uint256 txindex = (_cUtxoPos % 1000000000) / 10000;
-        bytes32 root = childChain[_cUtxoPos / 1000000000].root;
-        var txHash = keccak256(_txBytes);
-        var confirmationHash = keccak256(txHash, root);
-        var merkleHash = keccak256(txHash, _sigs);
-        address owner = exits[eUtxoPos].owner;
-
-        // Validate the spending transaction.
-        require(owner == ECRecovery.recover(confirmationHash, _confirmationSig));
-        require(merkleHash.checkMembership(txindex, root, _proof));
-
-        // Delete the owner but keep the amount to prevent another exit.
-        delete exits[eUtxoPos].owner;
-    }
-
-    /**
-     * @dev Processes any exits that have completed the challenge period. 
-     * @param _token Token type to process.
-     */
-    function finalizeExits(address _token)
-        public
-    {
-        uint256 utxoPos;
-        uint256 exitable_at;
-        (utxoPos, exitable_at) = getNextExit(_token);
-        Exit memory currentExit = exits[utxoPos];
-        PriorityQueue queue = PriorityQueue(exitsQueues[_token]);
-        while (exitable_at < block.timestamp) {
-            currentExit = exits[utxoPos];
-
-            // FIXME: handle ERC-20 transfer
-            require(address(0) == _token);
-
-            currentExit.owner.transfer(currentExit.amount);
-            queue.delMin();
-            delete exits[utxoPos].owner;
-
-            if (queue.currentSize() > 0) {
-                (utxoPos, exitable_at) = getNextExit(_token);
-            } else {
-                return;
-            }
+        // Pre-compute some hashes to save gas later.
+        bytes32 zeroHash = keccak256(abi.encodePacked(uint256(0)));
+        for (uint i = 0; i < 16; i++) {
+            zeroHashes[i] = zeroHash;
+            zeroHash = keccak256(abi.encodePacked(zeroHash, zeroHash));
         }
     }
 
 
-    /* 
-     * Public view functions
+    /*
+     * Public functions
      */
 
     /**
-     * @dev Queries the child chain.
-     * @param _blockNumber Number of the block to return.
-     * @return Child chain block at the specified block number.
+     * @dev Allows the operator to submit a child block.
+     * @param _blockRoot Merkle root of the block.
      */
-    function getChildChain(uint256 _blockNumber)
+    function submitBlock(bytes32 _blockRoot)
         public
-        view
-        returns (bytes32, uint256)
+        onlyOperator
     {
-        return (childChain[_blockNumber].root, childChain[_blockNumber].timestamp);
+        uint256 currentChildBlock = nextChildBlock;
+
+        // Create the block.
+        blocks[currentChildBlock] = Block({
+            root: _blockRoot,
+            timestamp: block.timestamp
+        });
+
+        // Update the next child and deposit blocks.
+        nextChildBlock += CHILD_BLOCK_INTERVAL;
+        nextDepositBlock = 1;
+
+        emit BlockSubmitted(currentChildBlock, _blockRoot);
     }
 
     /**
-     * @dev Determines the next deposit block number.
-     * @return Block number to be given to the next deposit block.
+     * @dev Allows a user to submit a deposit.
+     * @param _depositTx RLP encoded transaction to act as the deposit.
      */
-    function getDepositBlock()
+    function deposit(bytes _depositTx)
+        public
+        payable
+    {
+        // Only allow a limited number of deposits per child block. 
+        require(nextDepositBlock < CHILD_BLOCK_INTERVAL);
+
+        // Decode the transaction.
+        PlasmaCore.Transaction memory decodedTx = _depositTx.decode();
+
+        // Check that the first output has the correct balance.
+        require(decodedTx.outputs[0].amount == msg.value);
+
+        // Check that the remaining outputs are all 0.
+        for (uint i = 1; i < 4; i++) {
+            require(decodedTx.outputs[i].amount == 0);
+        }
+
+        // Calculate the block root.
+        bytes32 root = keccak256(_depositTx);
+        for (i = 0; i < 16; i++) {
+            root = keccak256(abi.encodePacked(root, zeroHashes[i]));
+        }
+
+        // Insert the deposit block.
+        uint256 blknum = getDepositBlockNumber();
+        blocks[blknum] = Block({
+            root: root,
+            timestamp: block.timestamp
+        });
+
+        nextDepositBlock++;
+
+        emit DepositCreated(decodedTx.outputs[0].owner, msg.value);
+    }
+
+    /**
+     * @dev Starts a standard withdrawal of a given output. Uses output-age priority.
+     * @param _outputId Identifier of the exiting output.
+     * @param _outputTx RLP encoded transaction that created the exiting output.
+     * @param _outputTxInclusionProof A Merkle proof showing that the transaction was included.
+     */
+    function startStandardExit(uint192 _outputId, bytes _outputTx, bytes _outputTxInclusionProof)
+        public
+        payable
+        onlyWithValue(standardExitBond)
+    {
+        // Check that the output transaction actually created the output.
+        require(_transactionIncluded(_outputTx, _outputId, _outputTxInclusionProof));
+
+        // Decode the output ID.
+        uint256 oindex = _outputId.getOindex();
+
+        // Parse outputTx.
+        PlasmaCore.TransactionOutput memory output = _outputTx.getOutput(oindex);
+
+        // Only output owner can start an exit.
+        require(msg.sender == output.owner);
+
+        // Make sure this exit is valid.
+        require(output.amount > 0);
+        require(exits[_outputId].amount == 0);
+
+        // Determine the exit's priority.
+        uint256 exitPriority = _getExitPriority(_outputId);
+
+        // Insert the exit into the queue and update the exit mapping.
+        exitQueue.insert(exitPriority);
+        exits[_outputId] = Exit({
+            owner: output.owner,
+            amount: output.amount
+        });
+
+        emit ExitStarted(output.owner, _outputId, output.amount);
+    }
+
+    /**
+     * @dev Blocks a standard exit by showing the exiting output was spent.
+     * @param _outputId Identifier of the exiting output to challenge.
+     * @param _challengeTx RLP encoded transaction that spends the exiting output.
+     * @param _inputIndex Which input to the challenging tx corresponds to the exiting output.
+     * @param _challengeTxSig Signature from the exiting output owner over the spend.
+     */
+    function challengeStandardExit(uint192 _outputId, bytes _challengeTx, uint256 _inputIndex, bytes _challengeTxSig)
+        public
+    {
+        // Check that the output is being used as an input to the challenging tx.
+        uint256 inputId = _challengeTx.getInputId(_inputIndex);
+        require(inputId == _outputId);
+
+        // Check that the challenging tx is signed by the output's owner.
+        address owner = exits[_outputId].owner;
+        bytes32 txHash = keccak256(_challengeTx);
+        require(owner == ECRecovery.recover(txHash, _challengeTxSig));
+
+        // Delete the exit.
+        delete exits[_outputId];
+
+        // Send a bond to the challenger.
+        msg.sender.transfer(standardExitBond);
+
+        emit ExitBlocked(msg.sender, _outputId);
+    }
+
+    /**
+     * @dev Starts an exit for an in-flight transaction.
+     * @param _inFlightTx RLP encoded in-flight transaction.
+     * @param _inputTxs Transactions that created the inputs to the in-flight transaction.
+     * @param _inputTxsInclusionProofs Merkle proofs that show the input-creating transactions are valid.
+     * @param _inFlightTxSigs Signatures from the owners of each input.
+     */
+    function startInFlightExit(
+        bytes _inFlightTx,
+        bytes _inputTxs,
+        bytes _inputTxsInclusionProofs,
+        bytes _inFlightTxSigs
+    )
+        public
+        payable
+        onlyWithValue(inFlightExitBond)
+    {
+        // Check that no exit for this transaction already exists.
+        InFlightExit storage inFlightExit = _getInFlightExit(_inFlightTx);
+        require(inFlightExit.exitStartTimestamp == 0);
+
+        // Get information about the outputs.
+        uint8 numInputs;
+        uint256 outputSum;
+        (numInputs, outputSum) = _getOutputInfo(_inFlightTx);
+
+        // Separate the inputs transactions.
+        RLP.RLPItem[] memory splitInputTxs = _inputTxs.toRLPItem().toList();
+
+        // Get information about the inputs.
+        uint256 inputId;
+        uint256 inputSum;
+        uint256 mostRecentInput = 0;
+        for (uint8 i = 0; i < numInputs; i++) {
+            (inFlightExit.inputs[i], inputId) = _getInputInfo(_inFlightTx, splitInputTxs, _inputTxsInclusionProofs, _inFlightTxSigs, i);
+            inputSum += inFlightExit.inputs[i].amount;
+            mostRecentInput = Math.max(mostRecentInput, inputId);
+        }
+
+        // Make sure the sums are valid.
+        require(inputSum >= outputSum);
+
+        // Determine when the exit can be processed. 
+        uint256 exitPriority = _getExitPriority(mostRecentInput, _inFlightTx);
+
+        // Set the left-most bit to 1 to flag that this is an in-flight exit.
+        exitPriority = exitPriority.setBit(255);
+
+        // Insert the exit into the queue.
+        exitQueue.insert(exitPriority);
+
+        // Update the exit mapping.
+        inFlightExit.exitStartTimestamp = block.timestamp;
+        inFlightExit.bondOwner = msg.sender;
+
+        emit InFlightExitStarted(msg.sender, keccak256(_inFlightTx));
+    }
+
+    /**
+     * @dev Allows a user to piggyback onto an in-flight transaction.
+     * @param _inFlightTx RLP encoded in-flight transaction.
+     * @param _outputIndex Index of the input/output to piggyback (0-7).
+     */
+    function piggybackInFlightExit(
+        bytes _inFlightTx,
+        uint8 _outputIndex
+    )
+        public
+        payable
+        onlyWithValue(piggybackBond)
+    {
+        // Check that the in-flight exit is currently active and in period 1.
+        InFlightExit storage inFlightExit = _getInFlightExit(_inFlightTx);
+        require(_getExitPeriod(inFlightExit) == 1);
+
+        // Check that the output index is valid.
+        require(_outputIndex < 8);
+
+        // Check that we're not piggybacking something that's already been piggybacked or already exited.
+        require(!inFlightExit.exitMap.bitSet(_outputIndex) && !inFlightExit.exitMap.bitSet(_outputIndex + 8));
+
+        // Check that the message sender owns the output.
+        PlasmaCore.TransactionOutput memory output;
+        if (_outputIndex < 4) {
+            output = inFlightExit.inputs[_outputIndex];
+        } else {
+            output = _inFlightTx.getOutput(_outputIndex - 4);
+
+            // Set the output so it can be exited later.
+            inFlightExit.outputs[_outputIndex - 4] = output;
+        }
+        require(output.owner == msg.sender);
+
+        // Set the output as piggybacked.
+        inFlightExit.exitMap = inFlightExit.exitMap.setBit(_outputIndex);
+
+        emit InFlightExitPiggybacked(msg.sender, keccak256(_inFlightTx), _outputIndex);
+    }
+
+    /**
+     * @dev Attempts to prove that an in-flight exit is not canonical.
+     * @param _inFlightTx RLP encoded in-flight transaction being exited.
+     * @param _inFlightTxInputIndex Index of the double-spent input in the in-flight transaction.
+     * @param _competingTx RLP encoded transaction that spent the input.
+     * @param _competingTxInputIndex Index of the double-spent input in the competing transaction.
+     * @param _competingTxId Position of the competing transaction.
+     * @param _competingTxInclusionProof Proof that the competing transaction was included.
+     * @param _competingTxSig Signature proving that the owner of the input signed the competitor.
+     */
+    function challengeInFlightExitNotCanonical(
+        bytes _inFlightTx,
+        uint8 _inFlightTxInputIndex,
+        bytes _competingTx,
+        uint8 _competingTxInputIndex,
+        uint256 _competingTxId,
+        bytes _competingTxInclusionProof,
+        bytes _competingTxSig
+    )
+        public
+    {
+        // Check that the exit is currently active and in period 1.
+        InFlightExit storage inFlightExit = _getInFlightExit(_inFlightTx);
+        require(_getExitPeriod(inFlightExit) == 1);
+
+        // Check that the two transactions are not the same.
+        require(keccak256(_inFlightTx) != keccak256(_competingTx));
+
+        // Check that the two transactions share an input.
+        uint256 inputId = _inFlightTx.getInputId(_inFlightTxInputIndex);
+        require(inputId == _competingTx.getInputId(_competingTxInputIndex));
+
+        // Check that the competing transaction is correctly signed.
+        PlasmaCore.TransactionOutput memory input = inFlightExit.inputs[_inFlightTxInputIndex];
+        require(input.owner == ECRecovery.recover(keccak256(_competingTx), _competingTxSig));
+
+        // Determine the position of the competing transaction.
+        uint256 competitorPosition = ~uint256(0);
+        if (_competingTxId != 0) {
+            // Check that the competing transaction was included in a block.
+            require(_transactionIncluded(_competingTx, _competingTxId, _competingTxInclusionProof));
+            competitorPosition = _competingTxId;
+        }
+
+        // Competitor must first or must be in the chain before the current oldest competitor.
+        require(inFlightExit.oldestCompetitor == 0 || inFlightExit.oldestCompetitor > competitorPosition);
+
+        // Set the oldest competitor and new bond owner.
+        inFlightExit.oldestCompetitor = competitorPosition;
+        inFlightExit.bondOwner = msg.sender;
+
+        // Set a flag so that only the inputs are exitable, unless a response is received.
+        inFlightExit.exitStartTimestamp = inFlightExit.exitStartTimestamp.setBit(255);
+
+        emit InFlightExitChallenged(msg.sender, keccak256(_inFlightTx), competitorPosition);
+    }
+
+    /**
+     * @dev Allows a user to respond to competitors to an in-flight exit by showing the transaction is included.
+     * @param _inFlightTx RLP encoded in-flight transaction being exited.
+     * @param _inFlightTxId Position of the in-flight transaction in the chain.
+     * @param _inFlightTxInclusionProof Proof that the in-flight transaction is included before the competitor.
+     */
+    function respondToNonCanonicalChallenge(
+        bytes _inFlightTx,
+        uint256 _inFlightTxId,
+        bytes _inFlightTxInclusionProof
+    )
+        public
+    {
+        // Check that the exit is currently active and in period 2.
+        InFlightExit storage inFlightExit = _getInFlightExit(_inFlightTx);
+        require(_getExitPeriod(inFlightExit) == 2);
+
+        // Check that the in-flight transaction was included.
+        require(_transactionIncluded(_inFlightTx, _inFlightTxId, _inFlightTxInclusionProof));
+
+        // Check that the in-flight transaction is older than its competitors.
+        require(inFlightExit.oldestCompetitor > _inFlightTxId);
+
+        // Fix the oldest competitor and new bond owner.
+        inFlightExit.oldestCompetitor = _inFlightTxId;
+        inFlightExit.bondOwner = msg.sender;
+
+        // Reset the flag so only the outputs are exitable.
+        inFlightExit.exitStartTimestamp = inFlightExit.exitStartTimestamp.clearBit(255);
+    }
+
+    /**
+     * @dev Removes an input from list of exitable outputs in an in-flight transaction.
+     * @param _inFlightTx RLP encoded in-flight transaction being exited.
+     * @param _inFlightTxInputIndex Input that's been spent.
+     * @param _spendingTx RLP encoded transaction that spends the input.
+     * @param _spendingTxInputIndex Which input to the spending transaction spends the input.
+     * @param _spendingTxSig Signature that shows the input owner signed the spending transaction.
+     */
+    function challengeInFlightExitInputSpent(
+        bytes _inFlightTx,
+        uint8 _inFlightTxInputIndex,
+        bytes _spendingTx,
+        uint8 _spendingTxInputIndex,
+        bytes _spendingTxSig
+    )
+        public
+    {
+        // Check that the exit is currently active and in period 2.
+        InFlightExit storage inFlightExit = _getInFlightExit(_inFlightTx);
+        require(_getExitPeriod(inFlightExit) == 2);
+
+        // Check that the input is piggybacked.
+        require(inFlightExit.exitMap.bitSet(_inFlightTxInputIndex));
+
+        // Check that the two transactions are not the same.
+        require(keccak256(_inFlightTx) != keccak256(_spendingTx));
+
+        // Check that the two transactions share an input.
+        uint256 inputId = _inFlightTx.getInputId(_inFlightTxInputIndex);
+        require(inputId == _spendingTx.getInputId(_spendingTxInputIndex));
+
+        // Check that the spending transaction is signed by the input owner.
+        PlasmaCore.TransactionOutput memory input = inFlightExit.inputs[_inFlightTxInputIndex];
+        require(input.owner == ECRecovery.recover(keccak256(_spendingTx), _spendingTxSig));
+
+        // Remove the input from the piggyback map and pay out the bond.
+        inFlightExit.exitMap = inFlightExit.exitMap.clearBit(_inFlightTxInputIndex);
+        msg.sender.transfer(piggybackBond);
+
+        emit InFlightExitOutputBlocked(msg.sender, keccak256(_inFlightTx), inputId);
+    }
+
+    /**
+     * @dev Removes an output from list of exitable outputs in an in-flight transaction.
+     * @param _inFlightTx RLP encoded in-flight transaction being exited.
+     * @param _inFlightTxOutputId Output that's been spent.
+     * @param _inFlightTxInclusionProof Proof that the in-flight transaction was included.
+     * @param _spendingTx RLP encoded transaction that spends the input.
+     * @param _spendingTxInputIndex Which input to the spending transaction spends the input.
+     * @param _spendingTxSig Signature that shows the input owner signed the spending transaction.
+     */
+    function challengeInFlightExitOutputSpent(
+        bytes _inFlightTx,
+        uint256 _inFlightTxOutputId,
+        bytes _inFlightTxInclusionProof,
+        bytes _spendingTx,
+        uint256 _spendingTxInputIndex,
+        bytes _spendingTxSig
+    )
+        public
+    {
+        // Check that the exit is currently active and in period 2.
+        InFlightExit storage inFlightExit = _getInFlightExit(_inFlightTx);
+        require(_getExitPeriod(inFlightExit) == 2);
+
+        // Check that the output is piggybacked.
+        uint8 oindex = _inFlightTxOutputId.getOindex();
+        require(inFlightExit.exitMap.bitSet(oindex + 4));
+
+        // Check that the in-flight transaction is included.
+        require(_transactionIncluded(_inFlightTx, _inFlightTxOutputId, _inFlightTxInclusionProof));
+
+        // Check that the spending transaction spends the output.
+        require(_inFlightTxOutputId == _spendingTx.getInputId(_spendingTxInputIndex));
+
+        // Check that the spending transaction is signed by the input owner.
+        PlasmaCore.TransactionOutput memory output = _inFlightTx.getOutput(oindex);
+        require(output.owner == ECRecovery.recover(keccak256(_spendingTx), _spendingTxSig));
+
+        // Remove the output from the piggyback map and pay out the bond.
+        inFlightExit.exitMap = inFlightExit.exitMap.clearBit(oindex + 4);
+        msg.sender.transfer(piggybackBond);
+
+        emit InFlightExitOutputBlocked(msg.sender, keccak256(_inFlightTx), _inFlightTxOutputId);
+    }
+    
+    /**
+     * @dev Processes any exits that have completed the challenge period.
+     */
+    function processExits()
+        public
+    {
+        uint192 uniqueId;
+        uint64 exitableTimestamp;
+
+        while (exitQueue.currentSize() > 0) {
+            // Pull the next exit.
+            (uniqueId, exitableTimestamp) = _getNextExit();
+
+            // Check that the exit can be processed.
+            if (exitableTimestamp.clearBit(63) > block.timestamp) {
+                return;
+            }
+
+            // Check for the in-flight exit flag.
+            if (exitableTimestamp.bitSet(63)) {
+                _processInFlightExit(inFlightExits[uniqueId]);
+            } else {
+                _processStandardExit(exits[uniqueId]);
+            }
+
+            // Delete the minimum from the queue.
+            exitQueue.delMin();
+        }
+    }
+
+    /**
+     * @dev Given an RLP encoded transaction, returns its unique ID.
+     * @param _tx RLP encoded transaction.
+     * @return _uniqueId A unique identifier.
+     */
+    function getUniqueId(bytes _tx)
+        public
+        pure
+        returns (uint192)
+    {
+        // Unique ID is the transaction's hash, shifted right 64 bits.
+        return uint192(keccak256(_tx) >> 64);
+    }
+
+    /**
+     * @dev Returns the data associated with an input or output to an in-flight transaction.
+     * @param _tx RLP encoded in-flight transaction.
+     * @param _outputIndex Index of the output to query.
+     * @return A tuple containing the output's owner and amount.
+     */
+    function getInFlightExitOutput(bytes _tx, uint256 _outputIndex)
+        public
+        view
+        returns (address, uint256)
+    {
+        InFlightExit memory inFlightExit = _getInFlightExit(_tx);
+        PlasmaCore.TransactionOutput memory output;
+        if (_outputIndex < 4) {
+            output = inFlightExit.inputs[_outputIndex];
+        } else {
+            output = inFlightExit.outputs[_outputIndex - 4];
+        }
+        return (output.owner, output.amount);
+    }
+
+    /**
+     * @dev Calculates the next deposit block.
+     * @return Next deposit block number.
+     */
+    function getDepositBlockNumber()
         public
         view
         returns (uint256)
     {
-        return currentChildBlock.sub(CHILD_BLOCK_INTERVAL).add(currentDepositBlock);
+        return nextChildBlock - CHILD_BLOCK_INTERVAL + nextDepositBlock;
     }
 
     /**
-     * @dev Returns information about an exit.
-     * @param _utxoPos Position of the UTXO in the chain.
-     * @return A tuple representing the active exit for the given UTXO.
+     * @dev Checks if the left-most bit of an integer is set.
+     * @param _value Integer to check.
+     * @return True if left-most bit is set. False otherwise.
      */
-    function getExit(uint256 _utxoPos)
+    function flagSet(uint256 _value)
         public
-        view
-        returns (address, address, uint256)
+        pure
+        returns (bool)
     {
-        return (exits[_utxoPos].owner, exits[_utxoPos].token, exits[_utxoPos].amount);
-    }
-
-    /**
-     * @dev Determines the next exit to be processed.
-     * @param _token Asset type to be exited.
-     * @return A tuple of the position and time when this exit can be processed.
-     */
-    function getNextExit(address _token)
-        public
-        view
-        returns (uint256, uint256)
-    {
-        uint256 priority = PriorityQueue(exitsQueues[_token]).getMin();
-        uint256 utxoPos = uint256(uint128(priority));
-        uint256 exitable_at = priority >> 128;
-        return (utxoPos, exitable_at);
+        return _value.bitSet(255);
     }
 
 
     /*
-     * Private functions
+     * Internal functions
      */
 
     /**
-     * @dev Adds an exit to the exit queue.
-     * @param _utxoPos Position of the UTXO in the child chain.
-     * @param _exitor Owner of the UTXO.
-     * @param _token Token to be exited.
-     * @param _amount Amount to be exited.
-     * @param _created_at Time when the UTXO was created.
+     * @dev Given an output ID, determines when it's exitable, if it were to be exited now.
+     * @param _outputId Output identifier.
+     * @return uint256 Timestamp after which this output is exitable.
      */
-    function addExitToQueue(
-        uint256 _utxoPos,
-        address _exitor,
-        address _token,
-        uint256 _amount,
-        uint256 _created_at
-    )
-        private
+    function _getExitableTimestamp(uint256 _outputId)
+        internal
+        view
+        returns (uint256)
     {
-        // Check that we're exiting a known token.
-        require(exitsQueues[_token] != address(0));
+        uint256 blknum = _outputId.getBlknum();
+        return Math.max(blocks[blknum].timestamp + (MIN_EXIT_PERIOD * 2), block.timestamp + MIN_EXIT_PERIOD);
+    }
 
-        // Calculate priority.
-        uint256 exitable_at = Math.max(_created_at + 2 weeks, block.timestamp + 1 weeks);
-        uint256 priority = exitable_at << 128 | _utxoPos;
-        
-        // Check exit is valid and doesn't already exist.
-        require(_amount > 0);
-        require(exits[_utxoPos].amount == 0);
+    /**
+     * @dev Given a output ID and a unique ID, returns an exit priority.
+     * @param _outputId Position of the exit in the blockchain.
+     * @param _uniqueId Unique exit identifier.
+     * @return An exit priority.
+     */
+    function _getExitPriority(uint256 _outputId, uint192 _uniqueId)
+        internal
+        view
+        returns (uint256)
+    {
+        return _getExitableTimestamp(_outputId) << 192 | _uniqueId;
+    }
 
-        PriorityQueue queue = PriorityQueue(exitsQueues[_token]);
-        queue.insert(priority);
+    /**
+     * @dev Given an output ID, returns an exit priority.
+     * @param _outputId Position of the exit in the blockchain.
+     * @return An exit priority.
+     */
+    function _getExitPriority(uint256 _outputId)
+        internal
+        view
+        returns (uint256)
+    {
+        return _getExitPriority(_outputId, uint192(_outputId));
+    }
 
-        exits[_utxoPos] = Exit({
-            owner: _exitor,
-            token: _token,
-            amount: _amount
-        });
+    /**
+     * @dev Given a transaction and the ID for a output in the transaction, returns an exit priority.
+     * @param _outputId Identifier of an output in the transaction.
+     * @param _tx RLP encoded transaction.
+     * @return An exit priority.
+     */
+    function _getExitPriority(uint256 _outputId, bytes _tx)
+        internal
+        view
+        returns (uint256)
+    {
+        return _getExitPriority(_outputId, getUniqueId(_tx));
+    }
 
-        emit ExitStarted(msg.sender, _utxoPos, _token, _amount);
+    /**
+     * @dev Checks that a given transaction was included in a block and created a specified output.
+     * @param _tx RLP encoded transaction to verify.
+     * @param _transactionId Unique transaction identifier for the encoded transaction.
+     * @param _txInclusionProof Proof that the transaction was in a block.
+     * @return True if the transaction was in a block and created the output. False otherwise.
+     */
+    function _transactionIncluded(bytes _tx, uint256 _transactionId, bytes _txInclusionProof)
+        internal
+        view
+        returns (bool)
+    {
+        // Decode the transaction ID.
+        uint256 blknum = _transactionId.getBlknum();
+        uint256 txindex = _transactionId.getTxindex();
+
+        // Check that the transaction was correctly included.
+        bytes32 blockRoot = blocks[blknum].root;
+        bytes32 leafHash = keccak256(_tx);
+        return Merkle.checkMembership(leafHash, txindex, blockRoot, _txInclusionProof);
+    }
+
+    /**
+     * @dev Returns the in-flight exit for a given in-flight transaction.
+     * @param _inFlightTx RLP encoded in-flight transaction.
+     * @return An InFlightExit reference.
+     */
+    function _getInFlightExit(bytes _inFlightTx)
+        internal
+        view
+        returns (InFlightExit storage)
+    {
+        return inFlightExits[getUniqueId(_inFlightTx)];
+    }
+
+    /**
+     * @dev Returns the period an exit period is currently in.
+     * @param _inFlightExit Exit to check.
+     * @return The current period for the specified exit.
+     */
+    function _getExitPeriod(InFlightExit _inFlightExit)
+        internal
+        view
+        returns (uint256)
+    {
+        uint256 periodTime = MIN_EXIT_PERIOD / 2;
+        return ((block.timestamp - _inFlightExit.exitStartTimestamp.clearBit(255)) / periodTime) + 1;
+    }
+
+    /**
+     * @dev Returns the next exit to be processed.
+     * @return A tuple containing the unique exit ID and timestamp for when the next exit is processable.
+     */
+    function _getNextExit()
+        internal
+        view
+        returns (uint192, uint64)
+    {
+        uint256 priority = exitQueue.getMin();
+        uint192 uniqueId = uint192(priority);
+        uint64 exitableTimestamp = uint64(priority >> 192);
+        return (uniqueId, exitableTimestamp);
+    }
+
+    /**
+     * @dev Returns the number of required inputs and sum of the outputs for a transaction.
+     * @param _tx RLP encoded transaction.
+     * @return A tuple containing the number of inputs and the sum of the outputs of tx.
+     */
+    function _getOutputInfo(bytes _tx)
+        internal
+        view
+        returns (uint8, uint256)
+    {
+        // Loop through each input.
+        uint8 numInputs = 0;
+        uint256 outputSum = 0;
+        PlasmaCore.TransactionOutput memory output;
+        PlasmaCore.TransactionOutput[] memory outputs = new PlasmaCore.TransactionOutput[](4);
+        for (uint8 i = 0; i < 4; i++) {
+            if (_tx.getInputId(i) > 0) {
+                numInputs++;
+            }
+
+            output = _tx.getOutput(i);
+            outputSum += output.amount;
+            outputs[i] = output;
+        }
+
+        return (numInputs, outputSum);
+    }
+
+    /**
+     * @dev Returns information about an input to a transaction.
+     * @param _tx RLP encoded transaction.
+     * @param _txInputTxs RLP encoded transactions that created the inputs to the transaction.
+     * @param _txInputTxsInclusionProofs Proofs of inclusion for each input creation transaction.
+     * @param _txSigs Signatures that prove the transaction is valid.
+     * @param _inputIndex Which input to access.
+     * @return A tuple containing information about the inputs.
+     */
+    function _getInputInfo(
+        bytes _tx,
+        RLP.RLPItem[] _txInputTxs,
+        bytes _txInputTxsInclusionProofs,
+        bytes _txSigs,
+        uint8 _inputIndex
+    )
+        internal
+        view
+        returns (PlasmaCore.TransactionOutput, uint256)
+    {
+        // Slice off the relevant transaction information.
+        bytes memory inputTx = _txInputTxs[_inputIndex].toBytes();
+        bytes memory inputTxInclusionProof = _txInputTxsInclusionProofs.sliceProof(_inputIndex);
+        bytes memory inputSig = _txSigs.sliceSignature(_inputIndex);
+
+        // Pull information about the the input.
+        uint256 inputId = _tx.getInputId(_inputIndex);
+        uint256 oindex = inputId.getOindex();
+        PlasmaCore.TransactionOutput memory input = inputTx.getOutput(oindex);
+
+        // Check that the transaction is valid.
+        require(_transactionIncluded(inputTx, inputId, inputTxInclusionProof));
+        require(input.owner == ECRecovery.recover(keccak256(_tx), inputSig));
+
+        return (input, inputId);
+    }
+
+    /**
+     * @dev Processes a standard exit.
+     * @param _standardExit Exit to process.
+     */
+    function _processStandardExit(Exit storage _standardExit)
+        internal
+    {
+        // If the exit is valid, pay out the exit and refund the bond.
+        if (_standardExit.owner != address(0)) {
+            _standardExit.owner.transfer(_standardExit.amount + standardExitBond);
+        }
+
+        // Only delete the owner so someone can't exit from the same output twice.
+        delete _standardExit.owner;
+    }
+
+    /**
+     * @dev Processes a in-flight exit.
+     * @param _inFlightExit Exit to process.
+     */
+    function _processInFlightExit(InFlightExit storage _inFlightExit)
+        internal
+    {
+        // Determine whether the inputs or the outputs are the exitable set.
+        bool inputsExitable = flagSet(_inFlightExit.exitStartTimestamp);
+
+        // Process the inputs or outputs.
+        PlasmaCore.TransactionOutput memory output;
+        uint256 transferAmount;
+        for (uint8 i = 0; i < 8; i++) {
+            // Check if the "to exit" bit is not set or if the "already exited" bit is set.
+            if (!_inFlightExit.exitMap.bitSet(i) || _inFlightExit.exitMap.bitSet(i + 8)) {
+                continue;
+            }
+            _inFlightExit.exitMap = _inFlightExit.exitMap.clearBit(i).setBit(i + 8);
+
+            if (i < 4) {
+                output = _inFlightExit.inputs[i];
+            } else {
+                output = _inFlightExit.outputs[i - 4];
+            }
+
+            // Pay out any unchallenged and exitable inputs or outputs, refund the rest.
+            transferAmount = piggybackBond;
+            if ((i < 4 && inputsExitable) || (i >= 4 && !inputsExitable)) {
+                transferAmount += output.amount;
+            }
+            output.owner.transfer(transferAmount);
+        }
+
+        // Refund the current bond owner.
+        _inFlightExit.bondOwner.transfer(inFlightExitBond);
+
+        // Delete everything but the exitmap to block additional exits.
+        delete _inFlightExit.exitStartTimestamp;
+        delete _inFlightExit.inputs;
+        delete _inFlightExit.outputs;
+        delete _inFlightExit.bondOwner;
+        delete _inFlightExit.oldestCompetitor;
     }
 }

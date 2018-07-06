@@ -1,4 +1,4 @@
-from plasma_core.utils.transactions import decode_utxo_id, encode_utxo_id
+from plasma_core.utils.transactions import decode_utxo_id
 from plasma_core.utils.address import address_to_hex
 from plasma_core.constants import NULL_SIGNATURE
 from plasma_core.exceptions import (InvalidBlockSignatureException,
@@ -54,34 +54,27 @@ class ChildChain(object):
 
     def validate_transaction(self, tx, temp_spent={}):
         input_amount = 0
-        output_amount = tx.amount1 + tx.amount2
+        output_amount = sum([o.amount for o in tx.outputs])
 
-        inputs = [(tx.blknum1, tx.txindex1, tx.oindex1), (tx.blknum2, tx.txindex2, tx.oindex2)]
-        for (blknum, txindex, oindex) in inputs:
+        for x in range(len(tx.inputs)):
+            i = tx.inputs[x]
+
             # Transactions coming from block 0 are valid.
-            if blknum == 0:
+            if i.blknum == 0:
                 continue
 
-            input_tx = self.blocks[blknum].transaction_set[txindex]
-
-            if oindex == 0:
-                valid_signature = tx.sig1 != NULL_SIGNATURE and input_tx.newowner1 == tx.sender1
-                spent = input_tx.spent1
-                input_amount += input_tx.amount1
-            else:
-                valid_signature = tx.sig2 != NULL_SIGNATURE and input_tx.newowner2 == tx.sender2
-                spent = input_tx.spent2
-                input_amount += input_tx.amount2
-
-            # Check to see if the input is already spent.
-            utxo_id = encode_utxo_id(blknum, txindex, oindex)
-            if spent or utxo_id in temp_spent:
-                raise TxAlreadySpentException('failed to validate tx')
+            input_tx = self.get_transaction(i.identifier)
 
             # Check for a valid signature.
-            if not valid_signature:
+            if tx.signatures[x] == NULL_SIGNATURE or tx.signers[x] != input_tx.outputs[i.oindex].owner:
                 raise InvalidTxSignatureException('failed to validate tx')
 
+            # Check to see if the input is already spent.
+            if input_tx.spent[i.oindex] or i.identifier in temp_spent:
+                raise TxAlreadySpentException('failed to validate tx')
+            input_amount += input_tx.outputs[i.oindex].amount
+
+        # Check if the input and output amounts mismatch.
         if not tx.is_deposit and input_amount < output_amount:
             raise TxAmountMismatchException('failed to validate tx')
 
@@ -90,30 +83,24 @@ class ChildChain(object):
 
     def get_transaction(self, transaction_id):
         (blknum, txindex, _) = decode_utxo_id(transaction_id)
-        return self.blocks[blknum].transaction_set[txindex]
+        return self.blocks[blknum].transactions[txindex]
 
     def get_current_block_num(self):
         return self.next_child_block
 
     def __apply_transaction(self, tx):
-        inputs = [(tx.blknum1, tx.txindex1, tx.oindex1), (tx.blknum2, tx.txindex2, tx.oindex2)]
-        for i in inputs:
-            (blknum, _, oindex) = i
-            if blknum == 0:
+        for i in tx.inputs:
+            if i.blknum == 0:
                 continue
-            input_id = encode_utxo_id(*i)
-            input_tx = self.get_transaction(input_id)
-            if oindex == 0:
-                input_tx.spent1 = True
-            else:
-                input_tx.spent2 = True
+            input_tx = self.get_transaction(i.identifier)
+            input_tx.spent[i.oindex] = True
 
     def __apply_block(self, block):
         # Check for a valid signature.
-        if not block.is_deposit_block and (block.sig == NULL_SIGNATURE or address_to_hex(block.signer) != self.operator):
+        if not block.is_deposit_block and (block.signature == NULL_SIGNATURE or address_to_hex(block.signer) != self.operator):
             raise InvalidBlockSignatureException('failed to validate block')
 
         # Validate each transaction in the block.
-        for tx in block.transaction_set:
+        for tx in block.transactions:
             self.validate_transaction(tx)
             self.__apply_transaction(tx)

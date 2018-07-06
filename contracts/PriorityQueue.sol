@@ -5,27 +5,35 @@ import "./SafeMath.sol";
 
 /**
  * @title PriorityQueue
- * @dev A priority queue implementation
+ * @dev Min-heap priority queue implementation.
  */
 contract PriorityQueue {
     using SafeMath for uint256;
 
+    /* 
+     *  Storage
+     */
+
+    address owner;
+    uint256[] heapList;
+    uint256 public currentSize;
+
+
     /*
      *  Modifiers
      */
+
     modifier onlyOwner() {
         require(msg.sender == owner);
         _;
     }
 
-    /* 
-     *  Storage
-     */
-    address owner;
-    uint256[] heapList;
-    uint256 public currentSize;
 
-    function PriorityQueue()
+    /*
+     * Constructor
+     */
+
+    constructor()
         public
     {
         owner = msg.sender;
@@ -33,31 +41,28 @@ contract PriorityQueue {
         currentSize = 0;
     }
 
-    function insert(uint256 k) 
+
+    /*
+     * Internal functions
+     */
+
+    /**
+     * @dev Inserts an element into the priority queue.
+     * @param _element Integer to insert.
+     */
+    function insert(uint256 _element) 
         public
         onlyOwner
     {
-        heapList.push(k);
+        heapList.push(_element);
         currentSize = currentSize.add(1);
-        percUp(currentSize);
+        _percUp(currentSize);
     }
 
-    function minChild(uint256 i)
-        public
-        view
-        returns (uint256)
-    {
-        if (i.mul(2).add(1) > currentSize) {
-            return i.mul(2);
-        } else {
-            if (heapList[i.mul(2)] < heapList[i.mul(2).add(1)]) {
-                return i.mul(2);
-            } else {
-                return i.mul(2).add(1);
-            }
-        }
-    }
-
+    /**
+     * @dev Returns the top element of the heap.
+     * @return The smallest element in the priority queue.
+     */
     function getMin()
         public
         view
@@ -66,6 +71,10 @@ contract PriorityQueue {
         return heapList[1];
     }
 
+    /**
+     * @dev Deletes the top element of the heap and shifts everything up.
+     * @return The smallest element in the priorty queue.
+     */
     function delMin()
         public
         onlyOwner
@@ -75,34 +84,68 @@ contract PriorityQueue {
         heapList[1] = heapList[currentSize];
         delete heapList[currentSize];
         currentSize = currentSize.sub(1);
-        percDown(1);
+        _percDown(1);
         heapList.length = heapList.length.sub(1);
         return retVal;
     }
 
-    function percUp(uint256 i) 
+
+    /*
+     * Private functions
+     */
+
+    /**
+     * @dev Determines the minimum child of a given node in the tree.
+     * @param _index Index of the node in the tree.
+     * @return The smallest child node.
+     */
+    function _minChild(uint256 _index)
         private
+        view
+        returns (uint256)
     {
-        uint256 j = i;
-        uint256 newVal = heapList[i];
-        while (newVal < heapList[i.div(2)]) {
-            heapList[i] = heapList[i.div(2)];
-            i = i.div(2);
+        if (_index.mul(2).add(1) > currentSize) {
+            return _index.mul(2);
+        } else {
+            if (heapList[_index.mul(2)] < heapList[_index.mul(2).add(1)]) {
+                return _index.mul(2);
+            } else {
+                return _index.mul(2).add(1);
+            }
         }
-        if (i != j) heapList[i] = newVal;
     }
 
-    function percDown(uint256 i)
+    /**
+     * @dev Bubbles the element at some index up.
+     */
+    function _percUp(uint256 _index)
         private
     {
-        uint256 j = i;
-        uint256 newVal = heapList[i];
-        uint256 mc = minChild(i);
-        while (mc <= currentSize && newVal > heapList[mc]) {
-            heapList[i] = heapList[mc];
-            i = mc;
-            mc = minChild(i);
+        uint256 index = _index;
+        uint256 j = index;
+        uint256 newVal = heapList[index];
+        while (newVal < heapList[index.div(2)]) {
+            heapList[index] = heapList[index.div(2)];
+            index = index.div(2);
         }
-        if (i != j) heapList[i] = newVal;
+        if (index != j) heapList[index] = newVal;
+    }
+
+    /**
+     * @dev Bubbles the element at some index down.
+     */
+    function _percDown(uint256 _index)
+        private
+    {
+        uint256 index = _index;
+        uint256 j = index;
+        uint256 newVal = heapList[index];
+        uint256 mc = _minChild(index);
+        while (mc <= currentSize && newVal > heapList[mc]) {
+            heapList[index] = heapList[mc];
+            index = mc;
+            mc = _minChild(index);
+        }
+        if (index != j) heapList[index] = newVal;
     }
 }

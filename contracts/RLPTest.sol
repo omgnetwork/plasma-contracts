@@ -3,13 +3,17 @@ pragma solidity ^0.4.0;
 import "./RLP.sol";
 
 
+/**
+ * @title RLPTest
+ * @dev Contract for testing RLP decoding.
+ */
 contract RLPTest {
     function eight(bytes tx_bytes)
         public
         view
         returns (uint256, address, address)
     {
-        var txList = RLP.toList(RLP.toRlpItem(tx_bytes));
+        var txList = RLP.toList(RLP.toRLPItem(tx_bytes));
         return (
             RLP.toUint(txList[5]),
             RLP.toAddress(txList[6]),
@@ -22,7 +26,7 @@ contract RLPTest {
         view
         returns (uint256, address, address, address)
     {
-        var txList = RLP.toList(RLP.toRlpItem(tx_bytes));
+        var txList = RLP.toList(RLP.toRLPItem(tx_bytes));
         return (
             RLP.toUint(txList[7]),
             RLP.toAddress(txList[8]),
