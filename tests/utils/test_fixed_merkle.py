@@ -34,20 +34,20 @@ def test_hash_empty_tree():
     assert FixedMerkle(16, [], True).root == get_empty_merkle_tree_hash(16)
 
 
-def test_check_membership(u):
+def test_check_membership(ethutils):
     leaf_1 = b'\xff' * 31 + b'\x01'
     leaf_2 = b'\xff' * 31 + b'\x02'
     leaf_3 = b'\xff' * 31 + b'\x03'
     leaf_4 = b'\xff' * 31 + b'\x04'
-    root = u.sha3(u.sha3(leaf_1 + leaf_2) + u.sha3(leaf_3 + leaf_4))
+    root = ethutils.sha3(ethutils.sha3(leaf_1 + leaf_2) + ethutils.sha3(leaf_3 + leaf_4))
     zeros_hashes = get_empty_merkle_tree_hash(2)
     for _ in range(13):
-        root = u.sha3(root + zeros_hashes[-32:])
-        zeros_hashes += u.sha3(zeros_hashes[-32:] + zeros_hashes[-32:])
-    left_proof = leaf_2 + u.sha3(leaf_3 + leaf_4) + zeros_hashes
-    left_middle_proof = leaf_1 + u.sha3(leaf_3 + leaf_4) + zeros_hashes
-    right_middle_proof = leaf_4 + u.sha3(leaf_1 + leaf_2) + zeros_hashes
-    right_proof = leaf_3 + u.sha3(leaf_1 + leaf_2) + zeros_hashes
+        root = ethutils.sha3(root + zeros_hashes[-32:])
+        zeros_hashes += ethutils.sha3(zeros_hashes[-32:] + zeros_hashes[-32:])
+    left_proof = leaf_2 + ethutils.sha3(leaf_3 + leaf_4) + zeros_hashes
+    left_middle_proof = leaf_1 + ethutils.sha3(leaf_3 + leaf_4) + zeros_hashes
+    right_middle_proof = leaf_4 + ethutils.sha3(leaf_1 + leaf_2) + zeros_hashes
+    right_proof = leaf_3 + ethutils.sha3(leaf_1 + leaf_2) + zeros_hashes
     fixed_merkle = FixedMerkle(16, [leaf_1, leaf_2, leaf_3, leaf_4], True)
     assert fixed_merkle.check_membership(leaf_1, 0, left_proof) is True
     assert fixed_merkle.check_membership(leaf_2, 1, left_middle_proof) is True

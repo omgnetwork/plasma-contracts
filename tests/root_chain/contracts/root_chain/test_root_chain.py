@@ -1,9 +1,9 @@
 import pytest
 from ethereum.tools.tester import TransactionFailed
-from plasma_core.utils.transactions import encode_utxo_id, decode_utxo_id
+from plasma_core.utils.transactions import encode_utxo_id
 from plasma_core.utils.address import address_to_bytes
 from plasma_core.utils.utils import get_deposit_hash
-from plasma_core.constants import NULL_ADDRESS, NULL_ADDRESS_HEX
+from plasma_core.constants import NULL_ADDRESS, NULL_ADDRESS_HEX, WEEK
 
 
 # deposit
@@ -194,22 +194,17 @@ def test_challenge_exit_invalid_confirmation_should_fail(testlang):
         testlang.root_chain.challengeExit(spend_id_1, input_index, encoded_spend, proof, sigs, confirmation_sig)
 
 
-'''
-def test_finalize_exits(t, u, root_chain):
-    two_weeks = 60 * 60 * 24 * 14
-    owner, value_1, key = t.a1, 100, t.k1
-    tx1 = Transaction(0, 0, 0, 0, 0, 0,
-                      NULL_ADDRESS,
-                      owner, value_1, NULL_ADDRESS, 0)
-    dep1_blknum = root_chain.getDepositBlock()
-    root_chain.deposit(value=value_1, sender=key)
-    utxo_pos1 = dep1_blknum * 1000000000 + 10000 * 0 + 1
-    root_chain.startDepositExit(utxo_pos1, NULL_ADDRESS, tx1.amount1, sender=key)
-    t.chain.head_state.timestamp += two_weeks * 2
-    assert root_chain.exits(utxo_pos1) == [address_to_hex(owner), NULL_ADDRESS_HEX, 100]
-    pre_balance = t.chain.head_state.get_balance(owner)
-    root_chain.finalizeExits(sender=t.k2)
-    post_balance = t.chain.head_state.get_balance(owner)
-    assert post_balance == pre_balance + value_1
-    assert root_chain.exits(utxo_pos1) == [NULL_ADDRESS_HEX, NULL_ADDRESS_HEX, value_1]
-'''
+# finalizeExits
+def test_finalize_exits_should_succeed(testlang):
+    owner, amount = testlang.accounts[1], 100
+    deposit_blknum = testlang.deposit(owner, amount)
+    testlang.start_deposit_exit(owner, deposit_blknum, amount)
+    testlang.forward_timestamp(2 * WEEK + 1)
+
+    pre_balance = testlang.get_balance(owner)
+    testlang.finalize_exits()
+
+    deposit_id = encode_utxo_id(deposit_blknum, 0, 0)
+    plasma_exit = testlang.get_plasma_exit(deposit_id)
+    assert plasma_exit.owner == NULL_ADDRESS_HEX
+    assert testlang.get_balance(owner) == pre_balance + amount

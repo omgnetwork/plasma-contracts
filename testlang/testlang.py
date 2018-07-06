@@ -125,6 +125,9 @@ class TestingLanguage(object):
     def challenge_exit(self, utxo_id, spend_id):
         self.root_chain.challengeExit(spend_id, *self.get_challenge_proof(utxo_id, spend_id))
 
+    def finalize_exits(self):
+        self.root_chain.finalizeExits(NULL_ADDRESS)
+
     def get_challenge_proof(self, utxo_id, spend_id):
         spend_tx = self.child_chain.get_transaction(spend_id)
         inputs = [(spend_tx.blknum1, spend_tx.txindex1, spend_tx.oindex1), (spend_tx.blknum2, spend_tx.txindex2, spend_tx.oindex2)]
@@ -146,6 +149,12 @@ class TestingLanguage(object):
     def get_plasma_exit(self, utxo_id):
         exit_info = self.root_chain.exits(utxo_id)
         return PlasmaExit(*exit_info)
+
+    def get_balance(self, account):
+        return self.ethtester.chain.head_state.get_balance(account.address)
+
+    def forward_timestamp(self, amount):
+        self.ethtester.chain.head_state.timestamp += amount
 
     @property
     def timestamp(self):
