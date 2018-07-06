@@ -1,5 +1,5 @@
 from ethereum.utils import sha3
-from plasma.child_chain.child_chain import ChildChain
+from plasma_core.child_chain import ChildChain
 from plasma_core.account import EthereumAccount
 from plasma_core.block import Block
 from plasma_core.transaction import Transaction

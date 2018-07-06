@@ -1,10 +1,10 @@
 from plasma_core.utils.transactions import decode_utxo_id, encode_utxo_id
 from plasma_core.utils.address import address_to_hex
 from plasma_core.constants import NULL_SIGNATURE
-from .exceptions import (InvalidBlockSignatureException,
-                         InvalidTxSignatureException,
-                         TxAlreadySpentException,
-                         TxAmountMismatchException)
+from plasma_core.exceptions import (InvalidBlockSignatureException,
+                                    InvalidTxSignatureException,
+                                    TxAlreadySpentException,
+                                    TxAmountMismatchException)
 
 
 class ChildChain(object):
