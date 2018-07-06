@@ -54,7 +54,7 @@ library PlasmaCore {
         view
         returns (Transaction)
     {
-        RLP.RLPItem[] memory txList = _tx.toRlpItem().toList();
+        RLP.RLPItem[] memory txList = _tx.toRLPItem().toList();
         RLP.RLPItem[] memory inputs = txList[0].toList();
         RLP.RLPItem[] memory outputs = txList[1].toList();
 

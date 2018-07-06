@@ -13,19 +13,17 @@ class MerkleNode(object):
 
 class FixedMerkle(object):
 
-    def __init__(self, depth, leaves=[], hashed=False):
+    def __init__(self, depth, leaves=[]):
         if depth < 1:
             raise ValueError('depth must be at least 1')
 
         self.depth = depth
         self.leaf_count = 2 ** depth
-        self.hashed = hashed
 
         if len(leaves) > self.leaf_count:
             raise ValueError('number of leaves should be at most depth ** 2')
 
-        if not hashed:
-            leaves = [sha3(leaf) for leaf in leaves]
+        leaves = [sha3(leaf) for leaf in leaves]
 
         self.leaves = leaves + [sha3(NULL_HASH)] * (self.leaf_count - len(leaves))
         self.tree = [self.__create_nodes(self.leaves)]
@@ -51,13 +49,12 @@ class FixedMerkle(object):
         self.__create_tree(tree_level)
 
     def check_membership(self, leaf, index, proof):
-        if not self.hashed:
-            leaf = sha3(leaf)
-        computed_hash = leaf
+        hashed_leaf = sha3(leaf)
+        computed_hash = hashed_leaf
         computed_index = index
 
         for i in range(0, self.depth * 32, 32):
-            proof_segment = proof[i:(i + 32)]
+            proof_segment = proof[i:i + 32]
 
             if computed_index % 2 == 0:
                 computed_hash = sha3(computed_hash + proof_segment)
@@ -68,12 +65,11 @@ class FixedMerkle(object):
         return computed_hash == self.root
 
     def create_membership_proof(self, leaf):
-        if not self.hashed:
-            leaf = sha3(leaf)
-        if not self.__is_member(leaf):
+        hashed_leaf = sha3(leaf)
+        if not self.__is_member(hashed_leaf):
             raise MemberNotExistException('leaf is not in the merkle tree')
 
-        index = self.leaves.index(leaf)
+        index = self.leaves.index(hashed_leaf)
         proof = b''
 
         for i in range(0, self.depth, 1):

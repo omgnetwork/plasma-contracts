@@ -9,16 +9,16 @@ from plasma_core.constants import NULL_SIGNATURE
 
 class Block(rlp.Serializable):
 
-    fields = [
-        ('transaction_set', CountableList(Transaction)),
-        ('sig', binary),
-        ('number', big_endian_int)
-    ]
+    fields = (
+        ('transactions', CountableList(Transaction)),
+        ('number', big_endian_int),
+        ('signature', binary)
+    )
 
-    def __init__(self, transaction_set=[], sig=NULL_SIGNATURE, number=0):
-        self.transaction_set = transaction_set
-        self.sig = sig
+    def __init__(self, transactions=[], number=0, signature=NULL_SIGNATURE):
+        self.transactions = transactions
         self.number = number
+        self.signature = signature
 
     @property
     def hash(self):
@@ -26,12 +26,12 @@ class Block(rlp.Serializable):
 
     @property
     def signer(self):
-        return get_signer(self.hash, self.sig)
+        return get_signer(self.hash, self.signature)
 
     @property
     def merklized_transaction_set(self):
-        hashed_transactions = [tx.merkle_hash for tx in self.transaction_set]
-        return FixedMerkle(16, hashed_transactions, hashed=True)
+        encoded_transactions = [tx.encoded for tx in self.transactions]
+        return FixedMerkle(16, encoded_transactions)
 
     @property
     def root(self):
@@ -43,10 +43,12 @@ class Block(rlp.Serializable):
 
     @property
     def is_deposit_block(self):
-        return len(self.transaction_set) == 1 and self.transaction_set[0].is_deposit
+        return len(self.transactions) == 1 and self.transactions[0].is_deposit
 
     def sign(self, key):
-        self.sig = sign(self.hash, key)
+        self.signature = sign(self.hash, key)
 
 
-UnsignedBlock = Block.exclude(['sig'])
+class UnsignedBlock(rlp.Serializable):
+
+    fields = Block.fields[:-1]

@@ -3,15 +3,24 @@ pragma solidity ^0.4.0;
 
 /**
  * @title Math
- * @dev Math operations with safety checks that throw on error
+ * @dev Math utilities.
  */
 library Math {
+    /*
+     * Internal functions
+     */
 
-    function max(uint256 a, uint256 b)
+    /**
+     * @dev Returns the greater of two integers.
+     * @param _a First integer.
+     * @param _b Second integer.
+     * @return Greater of the two.
+     */
+    function max(uint256 _a, uint256 _b)
         internal
         pure
         returns (uint256) 
     {
-        return a >= b ? a : b;
+        return _a >= _b ? _a : _b;
     }
 }

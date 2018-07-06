@@ -34,32 +34,29 @@ def test_challenge_standard_exit_mature_valid_spend_should_succeed(testlang):
 def test_challenge_standard_exit_invalid_spend_should_fail(testlang):
     owner_1, owner_2, amount = testlang.accounts[0], testlang.accounts[1], 100
     deposit_id = testlang.deposit(owner_1.address, amount)
-    spend_id = testlang.spend_utxo(deposit_id, owner_1, 100, owner_1)
-
-    testlang.start_standard_exit(owner_1, spend_id)
-    fake_challenge_id = testlang.spend_utxo(spend_id, owner_2, 100, owner_2, force_invalid=True)
+    testlang.start_standard_exit(deposit_id, owner_1.key)
+    spend_id = testlang.spend_utxo([deposit_id], [owner_2.key], force_invalid=True)
 
     with pytest.raises(TransactionFailed):
-        testlang.challenge_standard_exit(spend_id, fake_challenge_id)
+        testlang.challenge_standard_exit(deposit_id, spend_id)
 
 
 def test_challenge_standard_exit_unrelated_spend_should_fail(testlang):
     owner, amount = testlang.accounts[0], 100
     deposit_id_1 = testlang.deposit(owner.address, amount)
-    spend_id_1 = testlang.spend_utxo(deposit_id_1, owner, amount, owner)
-    testlang.start_standard_exit(owner, spend_id_1)
+    testlang.start_standard_exit(deposit_id_1, owner.key)
 
     deposit_id_2 = testlang.deposit(owner.address, amount)
-    spend_id_2 = testlang.spend_utxo(deposit_id_2, owner, amount, owner)
+    spend_id = testlang.spend_utxo([deposit_id_2], [owner.key])
 
     with pytest.raises(TransactionFailed):
-        testlang.challenge_standard_exit(deposit_id_1, spend_id_2)
+        testlang.challenge_standard_exit(deposit_id_1, spend_id)
 
 
 def test_challenge_standard_exit_not_started_should_fail(testlang):
     owner, amount = testlang.accounts[0], 100
     deposit_id = testlang.deposit(owner.address, amount)
-    spend_id = testlang.spend_utxo(deposit_id, owner, amount, owner)
+    spend_id = testlang.spend_utxo([deposit_id], [owner.key])
 
     with pytest.raises(TransactionFailed):
         testlang.challenge_standard_exit(deposit_id, spend_id)

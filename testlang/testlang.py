@@ -1,13 +1,17 @@
+import rlp
 from plasma_core.child_chain import ChildChain
 from plasma_core.account import EthereumAccount
 from plasma_core.block import Block
-from plasma_core.transaction import Transaction
-from plasma_core.constants import NULL_ADDRESS
-from plasma_core.utils.signatures import sign
+from plasma_core.transaction import Transaction, TransactionOutput, UnsignedTransaction
+from plasma_core.constants import WEEK, NULL_SIGNATURE, NULL_ADDRESS
 from plasma_core.utils.transactions import decode_utxo_id, encode_utxo_id
 from plasma_core.utils.address import address_to_hex
-from ethereum.utils import sha3
+from plasma_core.utils.merkle.fixed_merkle import FixedMerkle
 import conftest
+
+
+MIN_EXIT_PERIOD = 1 * WEEK
+IN_FLIGHT_PERIOD = MIN_EXIT_PERIOD // 2
 
 
 def get_accounts(ethtester):
@@ -37,9 +41,8 @@ class StandardExit(object):
         amount (int): How much value is being exited.
     """
 
-    def __init__(self, owner, token, amount):
+    def __init__(self, owner, amount):
         self.owner = owner
-        self.token = token
         self.amount = amount
 
 
@@ -54,6 +57,40 @@ class PlasmaBlock(object):
     def __init__(self, root, timestamp):
         self.root = root
         self.timestamp = timestamp
+
+
+class InFlightExit(object):
+
+    def __init__(self, root_chain, in_flight_tx, exit_start_timestamp, exit_map, bond_owner, oldest_competitor):
+        self.root_chain = root_chain
+        self.in_flight_tx = in_flight_tx
+        self.exit_start_timestamp = exit_start_timestamp
+        self.exit_map = exit_map
+        self.bond_owner = bond_owner
+        self.oldest_competitor = oldest_competitor
+        self.inputs = {}
+        self.outputs = {}
+
+    @property
+    def challenge_flag_set(self):
+        return self.root_chain.flagSet(self.exit_start_timestamp)
+
+    def get_input(self, index):
+        input_info = self.inputs.get(index)
+        if not input_info:
+            input_info = TransactionOutput(*self.root_chain.getInFlightExitOutput(self.in_flight_tx.encoded, index))
+            input_info.owner = address_to_hex(input_info.owner)
+            self.inputs[index] = input_info
+        return input_info
+
+    def get_output(self, index):
+        return self.get_input(index + 4)
+
+    def input_piggybacked(self, index):
+        return (self.exit_map >> index & 1) == 1
+
+    def output_piggybacked(self, index):
+        return self.input_piggybacked(index + 4)
 
 
 class TestingLanguage(object):
@@ -73,11 +110,21 @@ class TestingLanguage(object):
         self.ethtester = ethtester
         self.accounts = get_accounts(ethtester)
         self.operator = self.accounts[0]
-        self.child_chain = ChildChain(self.accounts[0].address)
-        self.confirmations = {}
+        self.child_chain = ChildChain(operator=self.operator.address)
 
-        # morevp semantic
-        self.root_chain.blocks = self.root_chain.childChain
+    def submit_block(self, transactions, signer=None, force_invalid=False):
+        signer = signer or self.operator
+        blknum = self.root_chain.nextChildBlock()
+        block = Block(transactions, number=blknum)
+        block.sign(signer.key)
+        self.root_chain.submitBlock(block.root, sender=signer.key)
+        if force_invalid:
+            self.child_chain.blocks[self.child_chain.next_child_block] = block
+            self.child_chain.next_deposit_block = self.child_chain.next_child_block + 1
+            self.child_chain.next_child_block += self.child_chain.child_block_interval
+        else:
+            assert self.child_chain.add_block(block)
+        return blknum
 
     @property
     def timestamp(self):
@@ -92,35 +139,49 @@ class TestingLanguage(object):
                     break
             if isinstance(owner, str):
                 raise ValueError("owner must be a known account")
-        blknum = self.deposit_pre_morevp(owner, amount)
+        blknum = self.deposit_morevp(owner, amount)
         return encode_utxo_id(blknum, 0, 0)
 
-    def deposit_pre_morevp(self, owner, amount):
-        """Creates a deposit transaction for a given owner and amount.
-
-        Args:
-            owner (EthereumAccount): Account to own the deposit.
-            amount (int): Deposit amount.
-
-        Returns:
-            int: Unique identifier of the deposit.
-        """
-
-        deposit_tx = Transaction(0, 0, 0,
-                                 0, 0, 0,
-                                 NULL_ADDRESS,
-                                 owner.address, amount,
-                                 NULL_ADDRESS, 0)
-
-        blknum = self.root_chain.getDepositBlock()
-        pre_balance = self.get_balance(self.root_chain)
-        self.root_chain.deposit(value=amount, sender=owner.key)
-        balance = self.get_balance(self.root_chain)
-        assert balance == pre_balance + amount
-
-        block = Block(transaction_set=[deposit_tx], number=blknum)
+    def deposit_morevp(self, owner, amount):
+        deposit_tx = Transaction(outputs=[(owner, amount)])
+        blknum = self.root_chain.getDepositBlockNumber()
+        self.root_chain.deposit(deposit_tx.encoded, value=amount)
+        deposit_id = encode_utxo_id(blknum, 0, 0)
+        block = Block([deposit_tx], number=blknum)
         self.child_chain.add_block(block)
-        return blknum
+        return deposit_id
+
+    def spend_utxo(self, input_ids, keys, outputs=[], force_invalid=False):
+        inputs = [decode_utxo_id(input_id) for input_id in input_ids]
+        spend_tx = Transaction(inputs=inputs, outputs=outputs)
+        for i in range(0, len(inputs)):
+            spend_tx.sign(i, keys[i])
+        blknum = self.submit_block([spend_tx], force_invalid=force_invalid)
+        spend_id = encode_utxo_id(blknum, 0, 0)
+        return spend_id
+
+    def start_standard_exit(self, output_id, key, bond=None):
+        output_tx = self.child_chain.get_transaction(output_id)
+        merkle = FixedMerkle(16, [output_tx.encoded])
+        proof = merkle.create_membership_proof(output_tx.encoded)
+        bond = bond if bond is not None else self.root_chain.standardExitBond()
+        self.root_chain.startStandardExit(output_id, output_tx.encoded, proof, value=bond, sender=key)
+
+    def challenge_standard_exit(self, output_id, spend_id):
+        spend_tx = self.child_chain.get_transaction(spend_id)
+        input_index = None
+        signature = NULL_SIGNATURE
+        for i in range(0, 4):
+            input_index = i
+            signature = spend_tx.signatures[i]
+            if (spend_tx.inputs[i].identifier == output_id and signature != NULL_SIGNATURE):
+                break
+        self.root_chain.challengeStandardExit(output_id, spend_tx.encoded, input_index, signature)
+
+    def start_in_flight_exit(self, tx_id, bond=None):
+        (encoded_spend, encoded_inputs, proofs, signatures) = self.get_in_flight_exit_info(tx_id)
+        bond = bond if bond is not None else self.root_chain.inFlightExitBond()
+        self.root_chain.startInFlightExit(encoded_spend, encoded_inputs, proofs, signatures, value=bond)
 
     def deposit_token(self, owner, token, amount):
         """Mints, approves and deposits token for given owner and amount
@@ -154,62 +215,6 @@ class TestingLanguage(object):
         self.child_chain.add_block(block)
         return encode_utxo_id(blknum, 0, 0)
 
-    def spend_utxo(self, utxo_id, new_owner, amount, signer, force_invalid=False, auto_confirm=True):
-        """Creates a spending transaction and inserts it into the chain.
-
-        Args:
-            utxo_id (int): Identifier of the UTXO to spend.
-            new_owner (EthereumAccount): Account to own the output of this spend.
-            amount (int): Amount to spend.
-            signer (EthereumAccount): Account to sign this transaction.
-            force_invalid (Bool) : Skip validity checks
-            auto_confirm (Bool) : Generate confirmation sig when mining block.
-
-        Returns:
-            int: Unique identifier of the spend.
-        """
-
-        utxo = self.child_chain.get_transaction(utxo_id)
-        spend_tx = Transaction(*decode_utxo_id(utxo_id),
-                               0, 0, 0,
-                               utxo.cur12,
-                               new_owner.address, amount,
-                               NULL_ADDRESS, 0)
-        spend_tx.sign1(signer.key)
-        blknum = self.submit_block([spend_tx], force_invalid=force_invalid)
-        tx_id = encode_utxo_id(blknum, 0, 0)
-        if auto_confirm:
-            self.confirm_spend(tx_id, signer)
-        return tx_id
-
-    def submit_block(self, transactions, signer=None, force_invalid=False):
-        signer = signer or self.operator
-        blknum = self.root_chain.currentChildBlock()
-        block = Block(transactions, number=blknum)
-        block.sign(signer.key)
-        self.root_chain.submitBlock(block.root, sender=signer.key)
-        if force_invalid:
-            self.child_chain.blocks[self.child_chain.next_child_block] = block
-            self.child_chain.next_deposit_block = self.child_chain.next_child_block + 1
-            self.child_chain.next_child_block += self.child_chain.child_block_interval
-        else:
-            assert self.child_chain.add_block(block)
-        return blknum
-
-    def confirm_spend(self, tx_id, signer):
-        """Signs a confirmation signature for a spend.
-
-        Args:
-            tx_id (int): Identifier of the transaction.
-            signer (EthereumAccount): Account to sign this confirmation.
-        """
-
-        spend_tx = self.child_chain.get_transaction(tx_id)
-        (blknum, _, _) = decode_utxo_id(tx_id)
-        block = self.child_chain.blocks[blknum]
-        confirmation_hash = sha3(spend_tx.hash + block.root)
-        self.confirmations[tx_id] = sign(confirmation_hash, signer.key)
-
     def create_utxo(self, token=NULL_ADDRESS):
         class Utxo(object):
             def __init__(self, deposit_id, owner, token, amount, spend, spend_id):
@@ -227,7 +232,7 @@ class TestingLanguage(object):
         else:
             deposit_id = self.deposit_token(owner, token, amount)
             token_address = token.address
-        spend_id = self.spend_utxo(deposit_id, owner, 100, owner)
+        spend_id = self.spend_utxo([deposit_id], [owner.key], [(owner.address, 100)])
         spend = self.child_chain.get_transaction(spend_id)
         return Utxo(deposit_id, owner, token_address, amount, spend, spend_id)
 
@@ -256,33 +261,6 @@ class TestingLanguage(object):
         fee_exit_id = self.root_chain.currentFeeExit()
         self.root_chain.startFeeExit(NULL_ADDRESS, amount, sender=operator.key)
         return fee_exit_id
-
-    def start_standard_exit(self, owner, utxo_id, sender=None):
-        """Starts a standard exit.
-
-        Args:
-            owner (EthereumAccount): Account to attempt the exit.
-            utxo_id (int): Unique identifier of the UTXO to be exited.
-        """
-
-        if sender is None:
-            sender = owner
-        spend_tx = self.child_chain.get_transaction(utxo_id)
-        (blknum, _, _) = decode_utxo_id(utxo_id)
-        block = self.child_chain.blocks[blknum]
-        proof = block.merklized_transaction_set.create_membership_proof(spend_tx.merkle_hash)
-        sigs = spend_tx.sig1 + spend_tx.sig2
-        self.root_chain.startExit(utxo_id, spend_tx.encoded, proof, sigs, sender=sender.key)
-
-    def challenge_standard_exit(self, utxo_id, spend_id):
-        """Challenges an exit with a double spend.
-
-        Args:
-            utxo_id (int): Identifier of the UTXO being exited.
-            spend_id (int): Identifier of the transaction that spent the UTXO.
-        """
-
-        self.root_chain.challengeExit(spend_id, *self.get_challenge_proof(utxo_id, spend_id))
 
     def finalize_exits(self, token, utxo_id, count, **kwargs):
         """Finalizes exits that have completed the exit period.
@@ -328,20 +306,20 @@ class TestingLanguage(object):
             PlasmaBlock: Formatted plasma block information.
         """
 
-        block_info = self.root_chain.childChain(blknum)
+        block_info = self.root_chain.blocks(blknum)
         return PlasmaBlock(*block_info)
 
-    def get_standard_exit(self, utxo_id):
+    def get_standard_exit(self, exit_id):
         """Queries a plasma exit by its ID.
 
         Args:
-            utxo_id (int): Identifier of the exit to query.
+            exit_id (int): Identifier of the exit to query.
 
         Returns:
             StandardExit: Formatted plasma exit information.
         """
 
-        exit_info = self.root_chain.exits(utxo_id)
+        exit_info = self.root_chain.exits(exit_id)
         return StandardExit(*exit_info)
 
     def get_balance(self, account, token=NULL_ADDRESS):
@@ -371,3 +349,96 @@ class TestingLanguage(object):
         """
 
         self.ethtester.chain.head_state.timestamp += amount
+
+    def get_in_flight_exit_info(self, tx_id):
+        spend_tx = self.child_chain.get_transaction(tx_id)
+        input_txs = []
+        proofs = b''
+        signatures = b''
+        for i in range(0, len(spend_tx.inputs)):
+            tx_input = spend_tx.inputs[i]
+            (blknum, _, _) = decode_utxo_id(tx_input.identifier)
+            if (blknum == 0):
+                continue
+            input_tx = self.child_chain.get_transaction(tx_input.identifier)
+            input_txs.append(input_tx)
+            proofs += self.get_merkle_proof(tx_input.identifier)
+            signatures += spend_tx.signatures[i]
+        encoded_inputs = rlp.encode(input_txs, rlp.sedes.CountableList(UnsignedTransaction, 4))
+        return (spend_tx.encoded, encoded_inputs, proofs, signatures)
+
+    def get_merkle_proof(self, tx_id):
+        tx = self.child_chain.get_transaction(tx_id)
+        (blknum, _, _) = decode_utxo_id(tx_id)
+        block = self.child_chain.get_block(blknum)
+        merkle = block.merklized_transaction_set
+        return merkle.create_membership_proof(tx.encoded)
+
+    def piggyback_in_flight_exit_input(self, tx_id, input_index, key, bond=None):
+        spend_tx = self.child_chain.get_transaction(tx_id)
+        bond = bond if bond is not None else self.root_chain.piggybackBond()
+        self.root_chain.piggybackInFlightExit(spend_tx.encoded, input_index, sender=key, value=bond)
+
+    def piggyback_in_flight_exit_output(self, tx_id, output_index, key, bond=None):
+        return self.piggyback_in_flight_exit_input(tx_id, output_index + 4, key, bond)
+
+    def find_shared_input(self, tx_a, tx_b):
+        tx_a_input_index = 0
+        tx_b_input_index = 0
+        for i in range(0, 4):
+            for j in range(0, 4):
+                tx_a_input = tx_a.inputs[i].identifier
+                tx_b_input = tx_b.inputs[j].identifier
+                if (tx_a_input == tx_b_input and tx_a_input != 0):
+                    tx_a_input_index = i
+                    tx_b_input_index = j
+        return (tx_a_input_index, tx_b_input_index)
+
+    def find_input_index(self, output_id, tx_b):
+        tx_b_input_index = 0
+        for i in range(0, 4):
+            tx_b_input = tx_b.inputs[i].identifier
+            if tx_b_input == output_id:
+                tx_b_input_index = i
+        return tx_b_input_index
+
+    def challenge_in_flight_exit_not_canonical(self, in_flight_tx_id, competing_tx_id, key):
+        in_flight_tx = self.child_chain.get_transaction(in_flight_tx_id)
+        competing_tx = self.child_chain.get_transaction(competing_tx_id)
+        (in_flight_tx_input_index, competing_tx_input_index) = self.find_shared_input(in_flight_tx, competing_tx)
+        proof = self.get_merkle_proof(competing_tx_id)
+        signature = competing_tx.signatures[competing_tx_input_index]
+        self.root_chain.challengeInFlightExitNotCanonical(in_flight_tx.encoded, in_flight_tx_input_index, competing_tx.encoded, competing_tx_input_index, competing_tx_id, proof, signature, sender=key)
+
+    def respond_to_non_canonical_challenge(self, in_flight_tx_id, key):
+        in_flight_tx = self.child_chain.get_transaction(in_flight_tx_id)
+        proof = self.get_merkle_proof(in_flight_tx_id)
+        self.root_chain.respondToNonCanonicalChallenge(in_flight_tx.encoded, in_flight_tx_id, proof)
+
+    def forward_to_period(self, period):
+        self.forward_timestamp((period - 1) * IN_FLIGHT_PERIOD)
+
+    def challenge_in_flight_exit_input_spent(self, in_flight_tx_id, spend_tx_id, key):
+        in_flight_tx = self.child_chain.get_transaction(in_flight_tx_id)
+        spend_tx = self.child_chain.get_transaction(spend_tx_id)
+        (in_flight_tx_input_index, spend_tx_input_index) = self.find_shared_input(in_flight_tx, spend_tx)
+        signature = spend_tx.signatures[spend_tx_input_index]
+        self.root_chain.challengeInFlightExitInputSpent(in_flight_tx.encoded, in_flight_tx_input_index, spend_tx.encoded, spend_tx_input_index, signature, sender=key)
+
+    def challenge_in_flight_exit_output_spent(self, in_flight_tx_id, spending_tx_id, output_index, key):
+        in_flight_tx = self.child_chain.get_transaction(in_flight_tx_id)
+        spending_tx = self.child_chain.get_transaction(spending_tx_id)
+        in_flight_tx_output_id = in_flight_tx_id + output_index
+        spending_tx_input_index = self.find_input_index(in_flight_tx_output_id, spending_tx)
+        in_flight_tx_inclusion_proof = self.get_merkle_proof(in_flight_tx_id)
+        spending_tx_sig = spending_tx.signatures[spending_tx_input_index]
+        self.root_chain.challengeInFlightExitOutputSpent(in_flight_tx.encoded, in_flight_tx_output_id, in_flight_tx_inclusion_proof, spending_tx.encoded, spending_tx_input_index, spending_tx_sig, sender=key)
+
+    def process_exits(self):
+        self.root_chain.processExits()
+
+    def get_in_flight_exit(self, in_flight_tx_id):
+        in_flight_tx = self.child_chain.get_transaction(in_flight_tx_id)
+        unique_id = self.root_chain.getUniqueId(in_flight_tx.encoded)
+        exit_info = self.root_chain.inFlightExits(unique_id)
+        return InFlightExit(self.root_chain, in_flight_tx, *exit_info)

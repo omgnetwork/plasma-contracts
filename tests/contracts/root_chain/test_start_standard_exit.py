@@ -1,6 +1,5 @@
 import pytest
 from ethereum.tools.tester import TransactionFailed
-
 from plasma_core.constants import NULL_ADDRESS, NULL_ADDRESS_HEX, WEEK
 
 
@@ -9,18 +8,44 @@ def test_start_standard_exit_should_succeed(testlang, utxo):
     assert testlang.root_chain.exits(utxo.spend_id) == [utxo.owner.address, NULL_ADDRESS_HEX, utxo.amount]
 
 
+@pytest.mark.parametrize("num_outputs", [1, 2, 3, 4])
+def test_start_standard_exit_multiple_outputs_should_succeed(testlang, num_outputs):
+    owners, amount, outputs = [], 100, []
+    for i in range(0, num_outputs):
+        owners.append(testlang.accounts[i])
+        outputs.append((owners[i].address, 1))
+    deposit_id = testlang.deposit(owners[0].address, amount)
+    spend_id = testlang.spend_utxo([deposit_id], [owners[0].key], outputs)
+
+    output_index = num_outputs - 1
+    output_id = spend_id + output_index
+    testlang.start_standard_exit(output_id, owners[output_index].key)
+
+    assert testlang.root_chain.exits(output_id) == [owners[output_index].address, 1]
+
+
 def test_start_standard_exit_twice_should_fail(testlang, utxo):
     testlang.start_standard_exit(utxo.owner, utxo.spend_id)
     with pytest.raises(TransactionFailed):
         testlang.start_standard_exit(utxo.owner, utxo.spend_id)
 
 
-def test_start_standard_exit_invalid_proof_should_fail(testlang, utxo):
-    spend_tx = testlang.child_chain.get_transaction(utxo.spend_id)
-    proof = b''
-    sigs = utxo.spend.sig1 + utxo.spend.sig2 + testlang.confirmations[utxo.spend_id]
+def test_start_standard_exit_invalid_proof_should_fail(testlang):
+    owner, amount = testlang.accounts[0], 100
+    deposit_id = testlang.deposit(owner.address, amount)
+    deposit_tx = testlang.child_chain.get_transaction(deposit_id)
+    bond = testlang.root_chain.standardExitBond()
+
     with pytest.raises(TransactionFailed):
-        testlang.root_chain.startExit(utxo.spend_id, spend_tx.encoded, proof, sigs, sender=utxo.owner.key)
+        testlang.root_chain.startStandardExit(deposit_id, deposit_tx.encoded, b'', value=bond)
+
+
+def test_start_standard_exit_invalid_bond_should_fail(testlang):
+    owner, amount = testlang.accounts[0], 100
+    deposit_id = testlang.deposit(owner.address, amount)
+
+    with pytest.raises(TransactionFailed):
+        testlang.start_standard_exit(deposit_id, owner.key, bond=0)
 
 
 def test_start_standard_exit_by_non_owner_should_fail(testlang, utxo):
