@@ -23,12 +23,14 @@ class ChildChain(object):
         if is_next_child_block or block.number == self.next_deposit_block:
             # Validate the block.
             try:
-                self.__apply_block(block)
+                self._validate_block(block)
             except (InvalidBlockSignatureException, InvalidTxSignatureException, TxAlreadySpentException, TxAmountMismatchException):
                 return False
 
+            # Insert the block into the chain.
+            self._apply_block(block)
+
             # Update the head state.
-            self.blocks[block.number] = block
             if is_next_child_block:
                 self.next_deposit_block = self.next_child_block + 1
                 self.next_child_block += self.child_block_interval
@@ -78,7 +80,6 @@ class ChildChain(object):
             if spent or utxo_id in temp_spent:
                 raise TxAlreadySpentException('failed to validate tx')
 
-            # Check for a valid signature.
             if not valid_signature:
                 raise InvalidTxSignatureException('failed to validate tx')
 
@@ -95,7 +96,7 @@ class ChildChain(object):
     def get_current_block_num(self):
         return self.next_child_block
 
-    def __apply_transaction(self, tx):
+    def _apply_transaction(self, tx):
         inputs = [(tx.blknum1, tx.txindex1, tx.oindex1), (tx.blknum2, tx.txindex2, tx.oindex2)]
         for i in inputs:
             (blknum, _, oindex) = i
@@ -108,12 +109,15 @@ class ChildChain(object):
             else:
                 input_tx.spent2 = True
 
-    def __apply_block(self, block):
+    def _validate_block(self, block):
         # Check for a valid signature.
         if not block.is_deposit_block and (block.sig == NULL_SIGNATURE or address_to_hex(block.signer) != self.operator):
             raise InvalidBlockSignatureException('failed to validate block')
 
-        # Validate each transaction in the block.
         for tx in block.transaction_set:
             self.validate_transaction(tx)
-            self.__apply_transaction(tx)
+
+    def _apply_block(self, block):
+        for tx in block.transaction_set:
+            self._apply_transaction(tx)
+        self.blocks[block.number] = block
