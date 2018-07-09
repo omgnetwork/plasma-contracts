@@ -21,10 +21,10 @@ library PlasmaRLP {
     {
         var txList = RLP.toList(RLP.toRlpItem(challengingTxBytes));
         uint256 oIndexShift = oIndex * 3;
-        return
-            RLP.toUint(txList[0 + oIndexShift]) +
-            RLP.toUint(txList[1 + oIndexShift]) +
-            RLP.toUint(txList[2 + oIndexShift]);
+        uint256 blknum = RLP.toUint(txList[0 + oIndexShift]);
+        uint256 txindex = RLP.toUint(txList[1 + oIndexShift]);
+        uint256 oindex = RLP.toUint(txList[2 + oIndexShift]);
+        return (blknum * 1000000000) + (txindex * 10000) + oindex;
     }
 
     function createExitingTx(bytes memory exitingTxBytes, uint256 oindex)

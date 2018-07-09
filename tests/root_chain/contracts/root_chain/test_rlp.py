@@ -64,19 +64,19 @@ class Eleven(rlp.Serializable):
 
 
 @pytest.fixture
-def rlp_test(t, get_contract):
+def rlp_test(ethtester, get_contract):
     contract = get_contract('RLPTest')
-    t.chain.mine()
+    ethtester.chain.mine()
     return contract
 
 
-def test_rlp_tx_eight(t, u, rlp_test):
-    tx = Eight(0, 1, 2, 3, 4, 5, t.a0, t.a1)
+def test_rlp_tx_eight(ethtester, rlp_test):
+    tx = Eight(0, 1, 2, 3, 4, 5, ethtester.a0, ethtester.a1)
     tx_bytes = rlp.encode(tx, Eight)
-    assert [5, encode_hex(t.a0), encode_hex(t.a1)] == rlp_test.eight(tx_bytes)
+    assert [5, encode_hex(ethtester.a0), encode_hex(ethtester.a1)] == rlp_test.eight(tx_bytes)
 
 
-def test_rlp_tx_eleven(t, u, rlp_test):
-    tx = Eleven(0, 1, 2, 3, 4, 5, 6, 7, t.a0, t.a1, t.a2)
+def test_rlp_tx_eleven(ethtester, rlp_test):
+    tx = Eleven(0, 1, 2, 3, 4, 5, 6, 7, ethtester.a0, ethtester.a1, ethtester.a2)
     tx_bytes = rlp.encode(tx, Eleven)
-    assert [7, encode_hex(t.a0), encode_hex(t.a1), encode_hex(t.a2)] == rlp_test.eleven(tx_bytes)
+    assert [7, encode_hex(ethtester.a0), encode_hex(ethtester.a1), encode_hex(ethtester.a2)] == rlp_test.eleven(tx_bytes)
