@@ -1,16 +1,21 @@
+import os
 import time
 import rlp
-from plasma.root_chain.deployer import Deployer
 from plasma.child_chain.child_chain import ChildChain
 from plasma_core.transaction import Transaction, UnsignedTransaction
 from plasma_core.utils.merkle.fixed_merkle import FixedMerkle
+from plasma_core.utils.deployer import Deployer
 from plasma_core.constants import AUTHORITY, ACCOUNTS, NULL_ADDRESS, NULL_ADDRESS_HEX
+
+
+OWN_DIR = os.path.dirname(os.path.realpath(__file__))
+CONTRACTS_DIR = os.path.abspath(os.path.realpath(os.path.join(OWN_DIR, '../contracts')))
 
 
 class TestingLanguage(object):
 
     def __init__(self):
-        self.root_chain = Deployer().deploy_contract('RootChain', concise=False)
+        self.root_chain = Deployer(CONTRACTS_DIR).deploy_contract('RootChain', concise=False)
         self.child_chain = ChildChain(AUTHORITY['address'], self.root_chain)
 
         self.transactions = []

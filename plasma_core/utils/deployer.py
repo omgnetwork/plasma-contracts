@@ -4,18 +4,17 @@ from solc import compile_standard
 from web3.contract import ConciseContract
 from web3 import Web3, HTTPProvider
 
-OWN_DIR = os.path.dirname(os.path.realpath(__file__))
-CONTRACTS_DIR = OWN_DIR + '/contracts'
+
 OUTPUT_DIR = 'contract_data'
 
 
 class Deployer(object):
 
-    def __init__(self, provider=HTTPProvider('http://localhost:8545')):
+    def __init__(self, contracts_dir, provider=HTTPProvider('http://localhost:8545')):
+        self.contracts_dir = contracts_dir
         self.w3 = Web3(provider)
 
-    @staticmethod
-    def get_solc_input():
+    def get_solc_input(self):
         """Walks the contract directory and returns a Solidity input dict
 
         Learn more about Solidity input JSON here: https://goo.gl/7zKBvj
@@ -29,7 +28,7 @@ class Deployer(object):
             'sources': {
                 file_name: {
                     'urls': [os.path.realpath(os.path.join(r, file_name))]
-                } for r, d, f in os.walk(CONTRACTS_DIR) for file_name in f
+                } for r, d, f in os.walk(self.contracts_dir) for file_name in f
             },
             'settings': {
                 'outputSelection': {
@@ -63,7 +62,7 @@ class Deployer(object):
         solc_input = self.get_solc_input()
 
         # Compile the contracts
-        compilation_result = compile_standard(solc_input, allow_paths=CONTRACTS_DIR)
+        compilation_result = compile_standard(solc_input, allow_paths=self.contracts_dir)
 
         # Create the output folder if it doesn't already exist
         os.makedirs(OUTPUT_DIR, exist_ok=True)
