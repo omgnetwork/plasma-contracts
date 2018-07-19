@@ -7,6 +7,8 @@ import "./Merkle.sol";
 import "./Validate.sol";
 import "./PriorityQueue.sol";
 
+import "./ERC20.sol";
+
 
 /**
  * @title RootChain
@@ -145,15 +147,22 @@ contract RootChain {
         // Only allow up to CHILD_BLOCK_INTERVAL deposits per child block.
         require(currentDepositBlock < CHILD_BLOCK_INTERVAL);
 
-        bytes32 root = keccak256(msg.sender, address(0), msg.value);
-        uint256 depositBlock = getDepositBlock();
-        childChain[depositBlock] = ChildBlock({
-            root: root,
-            timestamp: block.timestamp
-        });
-        currentDepositBlock = currentDepositBlock.add(1);
+        emitDepositBlock(msg.sender, address(0), msg.value);
+    }
 
-        emit Deposit(msg.sender, depositBlock, address(0), msg.value);
+
+    /**
+     * @dev Deposits approved amount of ERC20 token. Approve must be called first. Note: does not check if token was added.
+     */
+    function depositFrom(address _owner, address _token, uint256 _amount)
+        public
+    {
+        // Only allow up to CHILD_BLOCK_INTERVAL deposits per child block.
+        require(currentDepositBlock < CHILD_BLOCK_INTERVAL);
+
+        // Warning, check your ERC20 implementation. TransferFrom should return bool
+        require(ERC20(_token).transferFrom(_owner, address(this), _amount));
+        emitDepositBlock(_owner, _token, _amount);
     }
 
     /**
@@ -363,6 +372,28 @@ contract RootChain {
     /*
      * Private functions
      */
+
+
+    /**
+     * @dev Adds deposit block to chain of blocks.
+     * @param _owner Owner of deposit and created UTXO.
+     * @param _token Deposited token (0x0 represents ETH).
+     * @param _amount The amount deposited.
+     */
+    function emitDepositBlock(address _owner, address _token, uint256 _amount)
+        private
+    {
+        bytes32 root = keccak256(_owner, _token, _amount);
+        uint256 depositBlock = getDepositBlock();
+        childChain[depositBlock] = ChildBlock({
+            root: root,
+                    timestamp: block.timestamp
+                    });
+        currentDepositBlock = currentDepositBlock.add(1);
+
+        emit Deposit(_owner, depositBlock, _token, _amount);
+    }
+
 
     /**
      * @dev Adds an exit to the exit queue.

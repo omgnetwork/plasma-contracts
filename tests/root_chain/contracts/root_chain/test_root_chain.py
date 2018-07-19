@@ -27,6 +27,18 @@ def test_deposit_should_succeed(testlang):
     assert testlang.root_chain.currentDepositBlock() == 2
 
 
+# deposit ERC20 token
+def test_deposit_token(testlang, ethtester, root_chain, token):
+    owner, amount = testlang.accounts[0], 100
+
+    deposit_blknum = testlang.deposit_token(owner, token, amount)
+
+    plasma_block = testlang.get_plasma_block(deposit_blknum)
+    assert plasma_block.root == get_deposit_hash(address_to_bytes(owner.address), token.address, amount)
+    assert plasma_block.timestamp == testlang.timestamp
+    assert testlang.root_chain.currentDepositBlock() == 2
+
+
 # startDepositExit
 def test_start_deposit_exit_should_succeed(testlang):
     owner, amount = testlang.accounts[0], 100

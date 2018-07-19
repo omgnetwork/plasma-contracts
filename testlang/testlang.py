@@ -104,6 +104,26 @@ class TestingLanguage(object):
         self.child_chain.add_block(block)
         return blknum
 
+    def deposit_token(self, owner, token, amount):
+        """Mints, approves and deposits token for given owner and amount
+
+        Args:
+            owner (EthereumAccount): Account to own the deposit.
+            token (Contract: ERC20, MintableToken): Token to be deposited.
+            amount (int): Deposit amount.
+
+        Returns:
+            int: Unique identifier of the deposit.
+        """
+
+        token.mint(owner.address, amount)
+        self.ethtester.chain.mine()
+        token.approve(self.root_chain.address, amount, sender=owner.key)
+        self.ethtester.chain.mine()
+        blknum = self.root_chain.getDepositBlock()
+        self.root_chain.depositFrom(owner.address, token.address, amount, sender=owner.key)
+        return blknum
+
     def spend_utxo(self, utxo_id, new_owner, amount, signer):
         """Creates a spending transaction and inserts it into the chain.
 
