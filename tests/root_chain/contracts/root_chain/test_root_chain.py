@@ -6,6 +6,15 @@ from plasma_core.utils.utils import get_deposit_hash
 from plasma_core.constants import NULL_ADDRESS, NULL_ADDRESS_HEX, WEEK
 
 
+# add token
+def test_token_adding(ethtester, token, root_chain):
+    assert not root_chain.hasToken(token.address)
+    root_chain.addToken(token.address)
+    assert root_chain.hasToken(token.address)
+    with pytest.raises(TransactionFailed):
+        root_chain.addToken(token.address)
+
+
 # deposit
 def test_deposit_should_succeed(testlang):
     owner, amount = testlang.accounts[0], 100
