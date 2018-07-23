@@ -165,7 +165,7 @@ class TestingLanguage(object):
         confirmation_hash = sha3(spend_tx.hash + block.root)
         self.confirmations[tx_id] = sign(confirmation_hash, signer.key)
 
-    def start_deposit_exit(self, owner, blknum, amount):
+    def start_deposit_exit(self, owner, blknum, amount, token_addr=NULL_ADDRESS):
         """Starts an exit for a deposit.
 
         Args:
@@ -175,7 +175,7 @@ class TestingLanguage(object):
         """
 
         deposit_id = encode_utxo_id(blknum, 0, 0)
-        self.root_chain.startDepositExit(deposit_id, NULL_ADDRESS, amount, sender=owner.key)
+        self.root_chain.startDepositExit(deposit_id, token_addr, amount, sender=owner.key)
 
     def start_fee_exit(self, operator, amount):
         """Starts a fee exit.
