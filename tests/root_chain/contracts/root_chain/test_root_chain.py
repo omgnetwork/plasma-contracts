@@ -215,7 +215,7 @@ def test_challenge_exit_invalid_confirmation_should_fail(testlang):
         testlang.root_chain.challengeExit(spend_id_1, input_index, encoded_spend, proof, sigs, confirmation_sig)
 
 
-# finalizeExits
+# finalizeExits for ETH
 def test_finalize_exits_should_succeed(testlang):
     owner, amount = testlang.accounts[1], 100
     deposit_blknum = testlang.deposit(owner, amount)
@@ -229,3 +229,21 @@ def test_finalize_exits_should_succeed(testlang):
     plasma_exit = testlang.get_plasma_exit(deposit_id)
     assert plasma_exit.owner == NULL_ADDRESS_HEX
     assert testlang.get_balance(owner) == pre_balance + amount
+
+
+# finalizeExists for tokens
+def test_finalize_exits_for_ERC20_should_succeed(testlang, ethtester, root_chain, token):
+    owner, amount = testlang.accounts[0], 100
+    root_chain.addToken(token.address)
+    deposit_blknum = testlang.deposit_token(owner, token, amount)
+
+    testlang.start_deposit_exit(owner, deposit_blknum, amount, token.address)
+    testlang.forward_timestamp(2 * WEEK + 1)
+
+    pre_balance = token.balanceOf(owner.address)
+    testlang.finalize_exits(token.address)
+
+    deposit_id = encode_utxo_id(deposit_blknum, 0, 0)
+    plasma_exit = testlang.get_plasma_exit(deposit_id)
+    assert plasma_exit.owner == NULL_ADDRESS_HEX
+    assert token.balanceOf(owner.address) == pre_balance + amount

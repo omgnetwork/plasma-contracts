@@ -217,10 +217,10 @@ class TestingLanguage(object):
 
         self.root_chain.challengeExit(spend_id, *self.get_challenge_proof(utxo_id, spend_id))
 
-    def finalize_exits(self):
+    def finalize_exits(self, token=NULL_ADDRESS):
         """Finalizes any exits that have completed the exit period"""
 
-        self.root_chain.finalizeExits(NULL_ADDRESS)
+        self.root_chain.finalizeExits(token)
 
     def get_challenge_proof(self, utxo_id, spend_id):
         """Returns information required to submit a challenge.

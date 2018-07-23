@@ -282,10 +282,13 @@ contract RootChain {
         while (exitable_at < block.timestamp) {
             currentExit = exits[utxoPos];
 
-            // FIXME: handle ERC20 transfer
-            require(address(0) == _token);
+            if (_token == address(0)) {
+                currentExit.owner.transfer(currentExit.amount);
+            }
+            else {
+                require(ERC20(_token).transfer(currentExit.owner, currentExit.amount));
+            }
 
-            currentExit.owner.transfer(currentExit.amount);
             queue.delMin();
             delete exits[utxoPos].owner;
 
