@@ -282,15 +282,15 @@ contract RootChain {
         while (exitable_at < block.timestamp) {
             currentExit = exits[utxoPos];
 
+            queue.delMin();
+            delete exits[utxoPos].owner;
+
             if (_token == address(0)) {
                 currentExit.owner.transfer(currentExit.amount);
             }
             else {
                 require(ERC20(_token).transfer(currentExit.owner, currentExit.amount));
             }
-
-            queue.delMin();
-            delete exits[utxoPos].owner;
 
             if (queue.currentSize() > 0) {
                 (utxoPos, exitable_at) = getNextExit(_token);
