@@ -390,8 +390,8 @@ contract RootChain {
         uint256 depositBlock = getDepositBlock();
         childChain[depositBlock] = ChildBlock({
             root: root,
-                    timestamp: block.timestamp
-                    });
+            timestamp: block.timestamp
+        });
         currentDepositBlock = currentDepositBlock.add(1);
 
         emit Deposit(_owner, depositBlock, _token, _amount);
