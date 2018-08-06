@@ -147,7 +147,7 @@ contract RootChain {
         // Only allow up to CHILD_BLOCK_INTERVAL deposits per child block.
         require(currentDepositBlock < CHILD_BLOCK_INTERVAL);
 
-        emitDepositBlock(msg.sender, address(0), msg.value);
+        writeDepositBlock(msg.sender, address(0), msg.value);
     }
 
 
@@ -162,7 +162,7 @@ contract RootChain {
 
         // Warning, check your ERC20 implementation. TransferFrom should return bool
         require(ERC20(_token).transferFrom(_owner, address(this), _amount));
-        emitDepositBlock(_owner, _token, _amount);
+        writeDepositBlock(_owner, _token, _amount);
     }
 
     /**
@@ -383,7 +383,7 @@ contract RootChain {
      * @param _token Deposited token (0x0 represents ETH).
      * @param _amount The amount deposited.
      */
-    function emitDepositBlock(address _owner, address _token, uint256 _amount)
+    function writeDepositBlock(address _owner, address _token, uint256 _amount)
         private
     {
         bytes32 root = keccak256(_owner, _token, _amount);
