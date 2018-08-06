@@ -111,7 +111,8 @@ contract RootChain {
     function submitBlock(bytes32 _root)
         public
         onlyOperator
-    {   
+    {
+        uint256 submittedBlockNumber = currentChildBlock;
         childChain[currentChildBlock] = ChildBlock({
             root: _root,
             timestamp: block.timestamp
@@ -121,7 +122,7 @@ contract RootChain {
         currentChildBlock = currentChildBlock.add(CHILD_BLOCK_INTERVAL);
         currentDepositBlock = 1;
 
-        emit BlockSubmitted(currentChildBlock);
+        emit BlockSubmitted(submittedBlockNumber);
     }
 
     /**
@@ -197,14 +198,14 @@ contract RootChain {
     {
         uint256 blknum = _utxoPos / 1000000000;
         uint256 txindex = (_utxoPos % 1000000000) / 10000;
-        uint256 oindex = _utxoPos - blknum * 1000000000 - txindex * 10000; 
+        uint256 oindex = _utxoPos - blknum * 1000000000 - txindex * 10000;
 
         // Check the sender owns this UTXO.
         var exitingTx = _txBytes.createExitingTx(oindex);
         require(msg.sender == exitingTx.exitor);
 
         // Check the transaction was included in the chain and is correctly signed.
-        bytes32 root = childChain[blknum].root; 
+        bytes32 root = childChain[blknum].root;
         bytes32 merkleHash = keccak256(keccak256(_txBytes), ByteUtils.slice(_sigs, 0, 130));
         require(Validate.checkSigs(keccak256(_txBytes), root, exitingTx.inputCount, _sigs));
         require(merkleHash.checkMembership(txindex, root, _proof));
@@ -248,7 +249,7 @@ contract RootChain {
     }
 
     /**
-     * @dev Processes any exits that have completed the challenge period. 
+     * @dev Processes any exits that have completed the challenge period.
      * @param _token Token type to process.
      */
     function finalizeExits(address _token)
@@ -278,7 +279,7 @@ contract RootChain {
     }
 
 
-    /* 
+    /*
      * Public view functions
      */
 
@@ -364,7 +365,7 @@ contract RootChain {
         // Calculate priority.
         uint256 exitable_at = Math.max(_created_at + 2 weeks, block.timestamp + 1 weeks);
         uint256 priority = exitable_at << 128 | _utxoPos;
-        
+
         // Check exit is valid and doesn't already exist.
         require(_amount > 0);
         require(exits[_utxoPos].amount == 0);
