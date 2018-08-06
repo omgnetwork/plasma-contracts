@@ -112,7 +112,7 @@ contract RootChain {
     function addToken(address _token)
         public
     {
-        require(exitsQueues[_token] == address(0));
+        require(!hasToken(_token));
         exitsQueues[_token] = address(new PriorityQueue());
         TokenAdded(_token);
     }
