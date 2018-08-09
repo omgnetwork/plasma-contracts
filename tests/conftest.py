@@ -4,7 +4,7 @@ from ethereum import utils
 from ethereum.tools import tester
 from ethereum.abi import ContractTranslator
 from ethereum.config import config_metropolis
-from plasma_core.utils.deployer import Deployer
+from solc_simple import Deployer
 from testlang.testlang import TestingLanguage
 
 
@@ -16,7 +16,8 @@ config_metropolis['BLOCK_GAS_LIMIT'] = GAS_LIMIT
 # Compile contracts before testing
 OWN_DIR = os.path.dirname(os.path.realpath(__file__))
 CONTRACTS_DIR = os.path.abspath(os.path.realpath(os.path.join(OWN_DIR, '../contracts')))
-deployer = Deployer(CONTRACTS_DIR)
+OUTPUT_DIR = os.path.abspath(os.path.realpath(os.path.join(OWN_DIR, '../build')))
+deployer = Deployer(CONTRACTS_DIR, OUTPUT_DIR)
 deployer.compile_all()
 
 

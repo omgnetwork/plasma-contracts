@@ -27,6 +27,7 @@ setup(
         'ethereum==2.3.0',
         'web3==4.3.0',
         'rlp==0.6.0',
-        'py-solc==3.1.0'
+        'py-solc==3.1.0',
+        'py-solc-simple==0.0.5'
     ]
 )
