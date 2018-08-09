@@ -7,6 +7,8 @@ import "./Merkle.sol";
 import "./Validate.sol";
 import "./PriorityQueue.sol";
 
+import "./ERC20.sol";
+
 
 /**
  * @title RootChain
@@ -105,6 +107,16 @@ contract RootChain {
      * Public Functions
      */
 
+    // @dev Allows anyone to add new token to Plasma chain
+    // @param token The address of the ERC20 token
+    function addToken(address _token)
+        public
+    {
+        require(!hasToken(_token));
+        exitsQueues[_token] = address(new PriorityQueue());
+        TokenAdded(_token);
+    }
+
     /**
      * @dev Allows Plasma chain operator to submit block root.
      * @param _root The root of a child chain block.
@@ -135,15 +147,22 @@ contract RootChain {
         // Only allow up to CHILD_BLOCK_INTERVAL deposits per child block.
         require(currentDepositBlock < CHILD_BLOCK_INTERVAL);
 
-        bytes32 root = keccak256(msg.sender, address(0), msg.value);
-        uint256 depositBlock = getDepositBlock();
-        childChain[depositBlock] = ChildBlock({
-            root: root,
-            timestamp: block.timestamp
-        });
-        currentDepositBlock = currentDepositBlock.add(1);
+        writeDepositBlock(msg.sender, address(0), msg.value);
+    }
 
-        emit Deposit(msg.sender, depositBlock, address(0), msg.value);
+
+    /**
+     * @dev Deposits approved amount of ERC20 token. Approve must be called first. Note: does not check if token was added.
+     */
+    function depositFrom(address _owner, address _token, uint256 _amount)
+        public
+    {
+        // Only allow up to CHILD_BLOCK_INTERVAL deposits per child block.
+        require(currentDepositBlock < CHILD_BLOCK_INTERVAL);
+
+        // Warning, check your ERC20 implementation. TransferFrom should return bool
+        require(ERC20(_token).transferFrom(_owner, address(this), _amount));
+        writeDepositBlock(_owner, _token, _amount);
     }
 
     /**
@@ -263,12 +282,15 @@ contract RootChain {
         while (exitable_at < block.timestamp) {
             currentExit = exits[utxoPos];
 
-            // FIXME: handle ERC-20 transfer
-            require(address(0) == _token);
-
-            currentExit.owner.transfer(currentExit.amount);
             queue.delMin();
             delete exits[utxoPos].owner;
+
+            if (_token == address(0)) {
+                currentExit.owner.transfer(currentExit.amount);
+            }
+            else {
+                require(ERC20(_token).transfer(currentExit.owner, currentExit.amount));
+            }
 
             if (queue.currentSize() > 0) {
                 (utxoPos, exitable_at) = getNextExit(_token);
@@ -282,6 +304,18 @@ contract RootChain {
     /* 
      * Public view functions
      */
+
+    /**
+     * @dev Checks if queue for particular token was created.
+     * @param _token Address of the token.
+     */
+    function hasToken(address _token)
+        view
+        public
+        returns (bool)
+    {
+        return exitsQueues[_token] != address(0);
+    }
 
     /**
      * @dev Queries the child chain.
@@ -341,6 +375,28 @@ contract RootChain {
     /*
      * Private functions
      */
+
+
+    /**
+     * @dev Adds deposit block to chain of blocks.
+     * @param _owner Owner of deposit and created UTXO.
+     * @param _token Deposited token (0x0 represents ETH).
+     * @param _amount The amount deposited.
+     */
+    function writeDepositBlock(address _owner, address _token, uint256 _amount)
+        private
+    {
+        bytes32 root = keccak256(_owner, _token, _amount);
+        uint256 depositBlock = getDepositBlock();
+        childChain[depositBlock] = ChildBlock({
+            root: root,
+            timestamp: block.timestamp
+        });
+        currentDepositBlock = currentDepositBlock.add(1);
+
+        emit Deposit(_owner, depositBlock, _token, _amount);
+    }
+
 
     /**
      * @dev Adds an exit to the exit queue.
