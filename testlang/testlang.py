@@ -104,6 +104,26 @@ class TestingLanguage(object):
         self.child_chain.add_block(block)
         return blknum
 
+    def deposit_token(self, owner, token, amount):
+        """Mints, approves and deposits token for given owner and amount
+
+        Args:
+            owner (EthereumAccount): Account to own the deposit.
+            token (Contract: ERC20, MintableToken): Token to be deposited.
+            amount (int): Deposit amount.
+
+        Returns:
+            int: Unique identifier of the deposit.
+        """
+
+        token.mint(owner.address, amount)
+        self.ethtester.chain.mine()
+        token.approve(self.root_chain.address, amount, sender=owner.key)
+        self.ethtester.chain.mine()
+        blknum = self.root_chain.getDepositBlock()
+        self.root_chain.depositFrom(owner.address, token.address, amount, sender=owner.key)
+        return blknum
+
     def spend_utxo(self, utxo_id, new_owner, amount, signer):
         """Creates a spending transaction and inserts it into the chain.
 
@@ -145,7 +165,7 @@ class TestingLanguage(object):
         confirmation_hash = sha3(spend_tx.hash + block.root)
         self.confirmations[tx_id] = sign(confirmation_hash, signer.key)
 
-    def start_deposit_exit(self, owner, blknum, amount):
+    def start_deposit_exit(self, owner, blknum, amount, token_addr=NULL_ADDRESS):
         """Starts an exit for a deposit.
 
         Args:
@@ -155,7 +175,7 @@ class TestingLanguage(object):
         """
 
         deposit_id = encode_utxo_id(blknum, 0, 0)
-        self.root_chain.startDepositExit(deposit_id, NULL_ADDRESS, amount, sender=owner.key)
+        self.root_chain.startDepositExit(deposit_id, token_addr, amount, sender=owner.key)
 
     def start_fee_exit(self, operator, amount):
         """Starts a fee exit.
@@ -197,10 +217,10 @@ class TestingLanguage(object):
 
         self.root_chain.challengeExit(spend_id, *self.get_challenge_proof(utxo_id, spend_id))
 
-    def finalize_exits(self):
+    def finalize_exits(self, token=NULL_ADDRESS):
         """Finalizes any exits that have completed the exit period"""
 
-        self.root_chain.finalizeExits(NULL_ADDRESS)
+        self.root_chain.finalizeExits(token)
 
     def get_challenge_proof(self, utxo_id, spend_id):
         """Returns information required to submit a challenge.
