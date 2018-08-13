@@ -17,3 +17,8 @@ contract_data/
 
 *.pyc
 build/
+
+# IDE
+.idea/
+*.iml
+
