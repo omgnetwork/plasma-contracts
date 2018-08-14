@@ -213,7 +213,7 @@ class TestingLanguage(object):
         spend_tx = self.child_chain.get_transaction(utxo_id)
         (blknum, _, _) = decode_utxo_id(utxo_id)
         block = self.child_chain.blocks[blknum]
-        proof = block.merkle_tree.create_membership_proof(spend_tx.merkle_hash)
+        proof = block.merklized_transaction_set.create_membership_proof(spend_tx.merkle_hash)
         sigs = spend_tx.sig1 + spend_tx.sig2 + self.confirmations[utxo_id]
         self.root_chain.startExit(utxo_id, spend_tx.encoded, proof, sigs, sender=owner.key)
 
@@ -251,7 +251,7 @@ class TestingLanguage(object):
             input_index = 0
         (blknum, _, _) = decode_utxo_id(spend_id)
         block = self.child_chain.blocks[blknum]
-        proof = block.merkle_tree.create_membership_proof(spend_tx.merkle_hash)
+        proof = block.merklized_transaction_set.create_membership_proof(spend_tx.merkle_hash)
         sigs = spend_tx.sig1 + spend_tx.sig2
         confirmation_sig = self.confirmations[spend_id]
         return (input_index, spend_tx.encoded, proof, sigs, confirmation_sig)
