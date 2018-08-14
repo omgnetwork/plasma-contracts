@@ -2,10 +2,21 @@ pragma solidity ^0.4.0;
 
 
 /**
- * @title Bytes operations
- * @dev Based on https://github.com/GNSPS/solidity-bytes-utils/blob/master/contracts/BytesLib.sol
+ * @title ByteUtils
+ * @dev Utilties for working with bytes.
  */
 library ByteUtils {
+    /*
+     * Internal functions
+     */
+
+    /**
+     * @dev Slices off bytes from a byte string.
+     * @param _bytes Byte string to slice.
+     * @param _start Starting index of the slice.
+     * @param _length Length of the slice.
+     * @return The slice of the byte string.
+     */
     function slice(bytes _bytes, uint _start, uint _length)
         internal
         pure
