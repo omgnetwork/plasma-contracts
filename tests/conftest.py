@@ -5,6 +5,7 @@ from ethereum.tools import tester
 from ethereum.abi import ContractTranslator
 from ethereum.config import config_metropolis
 from plasma_core.utils.deployer import Deployer
+from solc_simple import Builder
 from testlang.testlang import TestingLanguage
 
 
@@ -16,8 +17,10 @@ config_metropolis['BLOCK_GAS_LIMIT'] = GAS_LIMIT
 # Compile contracts before testing
 OWN_DIR = os.path.dirname(os.path.realpath(__file__))
 CONTRACTS_DIR = os.path.abspath(os.path.realpath(os.path.join(OWN_DIR, '../contracts')))
-deployer = Deployer(CONTRACTS_DIR)
-deployer.compile_all()
+OUTPUT_DIR = os.path.abspath(os.path.realpath(os.path.join(OWN_DIR, '../build')))
+builder = Builder(CONTRACTS_DIR, OUTPUT_DIR)
+builder.compile_all()
+deployer = Deployer(builder)
 
 
 @pytest.fixture
@@ -34,7 +37,7 @@ def ethutils():
 @pytest.fixture
 def get_contract(ethtester, ethutils):
     def create_contract(path, args=(), sender=ethtester.k0):
-        abi, hexcode = deployer.get_contract_data(path)
+        abi, hexcode = deployer.builder.get_contract_data(path)
         bytecode = ethutils.decode_hex(hexcode)
         encoded_args = (ContractTranslator(abi).encode_constructor_arguments(args) if args else b'')
         code = bytecode + encoded_args
