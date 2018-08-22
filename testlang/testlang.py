@@ -146,9 +146,10 @@ class TestingLanguage(object):
             int: Unique identifier of the spend.
         """
 
+        utxo = self.child_chain.get_transaction(utxo_id)
         spend_tx = Transaction(*decode_utxo_id(utxo_id),
                                0, 0, 0,
-                               NULL_ADDRESS,
+                               utxo.cur12,
                                new_owner.address, amount,
                                NULL_ADDRESS, 0)
         spend_tx.sign1(signer.key)
