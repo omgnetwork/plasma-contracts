@@ -46,3 +46,14 @@ def test_start_standard_exit_by_non_owner_should_fail(testlang):
 
     with pytest.raises(TransactionFailed):
         testlang.start_standard_exit(owner, spend_id, sender=mallory)
+
+
+def test_start_standard_exit_unknown_token_should_fail(testlang, token):
+    owner, amount = testlang.accounts[0], 100
+
+    deposit_id = testlang.deposit_token(owner, token, amount)
+    spend_id = testlang.spend_utxo(deposit_id, owner, 100, owner)
+    testlang.confirm_spend(spend_id, owner)
+
+    with pytest.raises(TransactionFailed):
+        testlang.start_standard_exit(owner, spend_id)
