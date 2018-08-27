@@ -51,3 +51,12 @@ def test_token_deposit_should_succeed(testlang, root_chain, token):
     assert plasma_block.root == get_deposit_hash(address_to_bytes(owner.address), token.address, amount)
     assert plasma_block.timestamp == testlang.timestamp
     assert testlang.root_chain.currentDepositBlock() == 2
+
+
+def test_token_deposit_no_approve_should_fail(testlang, token):
+    owner, amount = testlang.accounts[0], 100
+
+    token.mint(owner.address, amount)
+    testlang.ethtester.chain.mine()
+    with pytest.raises(TransactionFailed):
+        testlang.root_chain.depositFrom(owner.address, token.address, amount, sender=owner.key)
