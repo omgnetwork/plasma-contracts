@@ -18,6 +18,21 @@ def test_deposit_valid_values_should_succeed(testlang):
     assert testlang.root_chain.currentDepositBlock() == 2
 
 
+def test_at_most_999_deposits_per_child_block(testlang):
+    owner = testlang.accounts[0]
+    child_block_interval = testlang.root_chain.CHILD_BLOCK_INTERVAL()
+    for i in range(0, child_block_interval - 1):
+        deposit_id = testlang.deposit(owner, 1)
+        if i % 50 == 0:
+            testlang.ethtester.chain.mine()
+
+    with pytest.raises(TransactionFailed):
+        testlang.deposit(owner, 1)
+
+    testlang.spend_utxo(deposit_id, owner, 1, owner)
+    testlang.deposit(owner, 1)
+
+
 def test_token_adding(token, root_chain):
     assert not root_chain.hasToken(token.address)
     root_chain.addToken(token.address)
