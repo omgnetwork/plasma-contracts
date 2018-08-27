@@ -223,7 +223,7 @@ class TestingLanguage(object):
         self.root_chain.startFeeExit(NULL_ADDRESS, amount, sender=operator.key)
         return fee_exit_id
 
-    def start_standard_exit(self, owner, utxo_id):
+    def start_standard_exit(self, owner, utxo_id, sender=None):
         """Starts a standard exit.
 
         Args:
@@ -231,12 +231,14 @@ class TestingLanguage(object):
             utxo_id (int): Unique identifier of the UTXO to be exited.
         """
 
+        if sender is None:
+            sender = owner
         spend_tx = self.child_chain.get_transaction(utxo_id)
         (blknum, _, _) = decode_utxo_id(utxo_id)
         block = self.child_chain.blocks[blknum]
         proof = block.merklized_transaction_set.create_membership_proof(spend_tx.merkle_hash)
         sigs = spend_tx.sig1 + spend_tx.sig2 + self.confirmations[utxo_id]
-        self.root_chain.startExit(utxo_id, spend_tx.encoded, proof, sigs, sender=owner.key)
+        self.root_chain.startExit(utxo_id, spend_tx.encoded, proof, sigs, sender=sender.key)
 
     def challenge_standard_exit(self, utxo_id, spend_id):
         """Challenges an exit with a double spend.
