@@ -36,3 +36,13 @@ def test_start_standard_exit_invalid_proof_should_fail(testlang):
 
     with pytest.raises(TransactionFailed):
         testlang.root_chain.startExit(spend_id, deposit_tx.encoded, b'')
+
+
+def test_start_standard_exit_by_non_owner_should_fail(testlang):
+    owner, mallory, amount = testlang.accounts[0], testlang.accounts[1], 100
+    deposit_id = testlang.deposit(owner, amount)
+    spend_id = testlang.spend_utxo(deposit_id, owner, 100, owner)
+    testlang.confirm_spend(spend_id, owner)
+
+    with pytest.raises(TransactionFailed):
+        testlang.start_standard_exit(owner, spend_id, sender=mallory)
