@@ -1,5 +1,6 @@
 import pytest
 from ethereum.tools.tester import TransactionFailed
+import math
 
 
 @pytest.fixture
@@ -52,3 +53,41 @@ def test_priority_queue_delete_then_insert(priority_queue):
     assert priority_queue.delMin() == 2
     priority_queue.insert(5)
     assert priority_queue.getMin() == 5
+
+
+def run_test(ethtester, priority_queue, values):
+    for i, value in enumerate(values):
+        if i % 10 == 0:
+            ethtester.chain.mine()
+        priority_queue.insert(value)
+        gas = ethtester.chain.last_gas_used()
+        assert gas <= op_cost(i + 1)
+    for i in range(1, len(values)):
+        if i % 10 == 0:
+            ethtester.chain.mine()
+        assert i == priority_queue.delMin()
+        gas = ethtester.chain.last_gas_used()
+        assert gas <= op_cost(len(values) - i)
+
+
+def op_cost(n):
+    return 21000 + 26538 + 6638 * math.floor(math.log(n, 2))
+
+
+def test_priority_queue_worst_case_gas_cost(ethtester, priority_queue):
+    values = list(range(1, 100))
+    values.reverse()
+    run_test(ethtester, priority_queue, values)
+
+
+def test_priority_queue_average_case_gas_cost(ethtester, priority_queue):
+    import random
+    random.seed(a=0)
+    values = list(range(1, 100))
+    random.shuffle(values)
+    run_test(ethtester, priority_queue, values)
+
+
+def test_priority_queue_best_case_gas_cost(ethtester, priority_queue):
+    values = list(range(1, 100))
+    run_test(ethtester, priority_queue, values)
