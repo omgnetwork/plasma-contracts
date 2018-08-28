@@ -271,15 +271,17 @@ contract RootChain {
      * @dev Processes any exits that have completed the challenge period.
      * @param _token Token type to process.
      */
-    function finalizeExits(address _token)
+    function finalizeExits(address _token, uint256 _topUtxoPos, uint256 _exitsToProcess)
         public
     {
         uint256 utxoPos;
         uint256 exitable_at;
+        uint256 _exitsLeft = _exitsToProcess;
         (utxoPos, exitable_at) = getNextExit(_token);
+        require(_topUtxoPos == utxoPos);
         Exit memory currentExit = exits[utxoPos];
         PriorityQueue queue = PriorityQueue(exitsQueues[_token]);
-        while (exitable_at < block.timestamp) {
+        while (exitable_at < block.timestamp && _exitsLeft > 0) {
             currentExit = exits[utxoPos];
 
             queue.delMin();
@@ -294,6 +296,7 @@ contract RootChain {
 
             if (queue.currentSize() > 0) {
                 (utxoPos, exitable_at) = getNextExit(_token);
+                _exitsLeft = _exitsLeft.sub(1);
             } else {
                 return;
             }
