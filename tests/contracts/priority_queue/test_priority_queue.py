@@ -52,3 +52,48 @@ def test_priority_queue_delete_then_insert(priority_queue):
     assert priority_queue.delMin() == 2
     priority_queue.insert(5)
     assert priority_queue.getMin() == 5
+
+
+def run_test(ethtester, priority_queue, values):
+    max_gas = 0
+    for i, value in enumerate(values):
+        if i % 10 == 0:
+            ethtester.chain.mine()
+        priority_queue.insert(value)
+        gas = ethtester.chain.last_gas_used()
+        max_gas = max(max_gas, gas)
+    max_gas_insert = max_gas
+    max_gas = 0
+    for i in range(1, len(values)):
+        if i % 10 == 0:
+            ethtester.chain.mine()
+        assert i == priority_queue.delMin()
+        gas = ethtester.chain.last_gas_used()
+        max_gas = max(max_gas, gas)
+    return (max_gas_insert, max_gas)
+
+
+# insert_cost_max = lambda n: 21000 + 26538 + 6638 * math.floor(math.log(n, 2))
+def test_priority_queue_worst_case_gas_cost(ethtester, priority_queue):
+    values = list(range(1, 100))
+    values.reverse()
+    mgi, mgd = run_test(ethtester, priority_queue, values)
+    assert mgi == 77666
+    assert mgd == 65144
+
+
+def test_priority_queue_average_case_gas_cost(ethtester, priority_queue):
+    import random
+    random.seed(a=0)
+    values = list(range(1, 100))
+    random.shuffle(values)
+    mgi, mgd = run_test(ethtester, priority_queue, values)
+    assert mgi == 71028
+    assert mgd == 73292
+
+
+def test_priority_queue_best_case_gas_cost(ethtester, priority_queue):
+    values = list(range(1, 100))
+    mgi, mgd = run_test(ethtester, priority_queue, values)
+    assert mgi == 47538
+    assert mgd == 73188
