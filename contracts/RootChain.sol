@@ -278,7 +278,7 @@ contract RootChain {
         uint256 exitable_at;
         uint256 _exitsLeft = _exitsToProcess;
         (utxoPos, exitable_at) = getNextExit(_token);
-        require(_topUtxoPos == utxoPos);
+        require(_topUtxoPos == utxoPos || _topUtxoPos == 0);
         Exit memory currentExit = exits[utxoPos];
         PriorityQueue queue = PriorityQueue(exitsQueues[_token]);
         while (exitable_at < block.timestamp && _exitsLeft > 0) {
