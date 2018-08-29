@@ -132,7 +132,7 @@ def test_finalize_exits_partial_queue_processing(testlang):
     assert plasma_exit.owner == owner.address
 
 
-def test_finalize_exits_tx_race(testlang, token):
+def test_finalize_exits_tx_race(testlang):
     owner, amount = testlang.accounts[0], 100
 
     deposit_id_1 = testlang.deposit(owner.address, amount)
@@ -151,7 +151,24 @@ def test_finalize_exits_tx_race(testlang, token):
         testlang.finalize_exits(NULL_ADDRESS, spend_id_1, 2)
 
 
-def test_finalize_skipping_top_utxo_check_is_possible(testlang, token):
+def test_finalize_exits_empty_queue_should_crash(testlang, ethtester):
+    owner, amount = testlang.accounts[0], 100
+
+    deposit_id_1 = testlang.deposit(owner.address, amount)
+    spend_id_1 = testlang.spend_utxo(deposit_id_1, owner, 100, owner)
+    testlang.confirm_spend(spend_id_1, owner)
+    testlang.start_standard_exit(owner, spend_id_1)
+
+    testlang.forward_timestamp(2 * WEEK + 1)
+    testlang.finalize_exits(NULL_ADDRESS, spend_id_1, 1)
+
+    with pytest.raises(TransactionFailed):
+        testlang.finalize_exits(NULL_ADDRESS, spend_id_1, 1)
+    with pytest.raises(TransactionFailed):
+        testlang.finalize_exits(NULL_ADDRESS, 0, 1)
+
+
+def test_finalize_skipping_top_utxo_check_is_possible(testlang):
     owner, amount = testlang.accounts[0], 100
 
     deposit_id_1 = testlang.deposit(owner.address, amount)
