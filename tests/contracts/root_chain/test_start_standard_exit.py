@@ -1,6 +1,7 @@
 import pytest
-from plasma_core.constants import NULL_ADDRESS_HEX
 from ethereum.tools.tester import TransactionFailed
+
+from plasma_core.constants import NULL_ADDRESS, NULL_ADDRESS_HEX, WEEK
 
 
 def test_start_standard_exit_should_succeed(testlang):
@@ -57,3 +58,25 @@ def test_start_standard_exit_unknown_token_should_fail(testlang, token):
 
     with pytest.raises(TransactionFailed):
         testlang.start_standard_exit(owner, spend_id)
+
+
+def test_start_standard_exit_old_utxo_has_required_exit_period_to_start_exit(testlang):
+    required_exit_period = WEEK  # see tesuji blockchain design
+    minimal_required_period = WEEK  # see tesuji blockchain design
+    owner, mallory, amount = testlang.accounts[0], testlang.accounts[1], 100
+
+    deposit_id = testlang.deposit(owner, amount)
+    spend_id = testlang.spend_utxo(deposit_id, owner, amount, owner)
+    testlang.confirm_spend(spend_id, owner)
+
+    testlang.forward_timestamp(required_exit_period + minimal_required_period)
+
+    steal_id = testlang.spend_utxo(deposit_id, mallory, amount, mallory, force_invalid=True)
+    testlang.confirm_spend(steal_id, mallory)
+    testlang.start_standard_exit(mallory, steal_id)
+
+    testlang.forward_timestamp(minimal_required_period - 1)
+    testlang.start_standard_exit(owner, spend_id)
+
+    [utxoPos, _] = testlang.root_chain.getNextExit(NULL_ADDRESS)
+    assert utxoPos == spend_id
