@@ -149,3 +149,18 @@ def test_finalize_exits_tx_race(testlang, token):
     testlang.finalize_exits(NULL_ADDRESS, spend_id_1, 1)
     with pytest.raises(TransactionFailed):
         testlang.finalize_exits(NULL_ADDRESS, spend_id_1, 2)
+
+
+def test_finalize_skipping_top_utxo_check_is_possible(testlang, token):
+    owner, amount = testlang.accounts[0], 100
+
+    deposit_id_1 = testlang.deposit(owner.address, amount)
+    spend_id_1 = testlang.spend_utxo(deposit_id_1, owner, 100, owner)
+    testlang.confirm_spend(spend_id_1, owner)
+    testlang.start_standard_exit(owner, spend_id_1)
+
+    testlang.forward_timestamp(2 * WEEK + 1)
+    testlang.finalize_exits(NULL_ADDRESS, 0, 1)
+
+    standard_exit = testlang.get_standard_exit(spend_id_1)
+    assert standard_exit.owner == NULL_ADDRESS_HEX
