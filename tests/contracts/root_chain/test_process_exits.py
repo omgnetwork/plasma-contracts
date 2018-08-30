@@ -6,7 +6,6 @@ def test_process_exits_standard_exit_should_succeed(testlang):
     owner, amount = testlang.accounts[0], 100
     deposit_id = testlang.deposit(owner.address, amount)
     spend_id = testlang.spend_utxo(deposit_id, owner, 100, owner)
-    testlang.confirm_spend(spend_id, owner)
 
     pre_balance = testlang.get_balance(owner)
 
@@ -28,7 +27,6 @@ def test_finalize_exits_for_ERC20_should_succeed(testlang, root_chain, token):
     assert root_chain.hasToken(token.address)
     deposit_id = testlang.deposit_token(owner, token, amount)
     spend_id = testlang.spend_utxo(deposit_id, owner, 100, owner)
-    testlang.confirm_spend(spend_id, owner)
 
     testlang.start_standard_exit(owner, spend_id)
 
@@ -54,7 +52,6 @@ def test_finalize_exits_old_utxo_is_mature_after_single_mfp(testlang):
 
     deposit_id = testlang.deposit(owner, amount)
     spend_id = testlang.spend_utxo(deposit_id, owner, amount, owner)
-    testlang.confirm_spend(spend_id, owner)
 
     testlang.forward_timestamp(required_exit_period)
     testlang.start_standard_exit(owner, spend_id)
@@ -75,7 +72,6 @@ def test_finalize_exits_new_utxo_is_mature_after_mfp_pls_rep(testlang):
 
     deposit_id = testlang.deposit(owner, amount)
     spend_id = testlang.spend_utxo(deposit_id, owner, amount, owner)
-    testlang.confirm_spend(spend_id, owner)
 
     testlang.start_standard_exit(owner, spend_id)
 
@@ -96,7 +92,6 @@ def test_finalize_exits_only_mature_exits_are_processed(testlang):
 
     deposit_id_1 = testlang.deposit(owner, amount)
     spend_id_1 = testlang.spend_utxo(deposit_id_1, owner, amount, owner)
-    testlang.confirm_spend(spend_id_1, owner)
 
     testlang.start_standard_exit(owner, spend_id_1)
 
@@ -104,7 +99,6 @@ def test_finalize_exits_only_mature_exits_are_processed(testlang):
 
     deposit_id_2 = testlang.deposit(owner, amount)
     spend_id_2 = testlang.spend_utxo(deposit_id_2, owner, amount, owner)
-    testlang.confirm_spend(spend_id_2, owner)
 
     testlang.start_standard_exit(owner, spend_id_2)
 

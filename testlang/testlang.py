@@ -146,7 +146,7 @@ class TestingLanguage(object):
         self.child_chain.add_block(block)
         return encode_utxo_id(blknum, 0, 0)
 
-    def spend_utxo(self, utxo_id, new_owner, amount, signer, force_invalid=False):
+    def spend_utxo(self, utxo_id, new_owner, amount, signer, force_invalid=False, auto_confirm=True):
         """Creates a spending transaction and inserts it into the chain.
 
         Args:
@@ -154,6 +154,8 @@ class TestingLanguage(object):
             new_owner (EthereumAccount): Account to own the output of this spend.
             amount (int): Amount to spend.
             signer (EthereumAccount): Account to sign this transaction.
+            force_invalid (Bool) : Skip validity checks
+            auto_confirm (Bool) : Generate confirmation sig when mining block.
 
         Returns:
             int: Unique identifier of the spend.
@@ -167,7 +169,10 @@ class TestingLanguage(object):
                                NULL_ADDRESS, 0)
         spend_tx.sign1(signer.key)
         blknum = self.submit_block([spend_tx], force_invalid=force_invalid)
-        return encode_utxo_id(blknum, 0, 0)
+        tx_id = encode_utxo_id(blknum, 0, 0)
+        if auto_confirm:
+            self.confirm_spend(tx_id, signer)
+        return tx_id
 
     def submit_block(self, transactions, signer=None, force_invalid=False):
         signer = signer or self.operator
