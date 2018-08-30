@@ -8,6 +8,8 @@ def test_process_exits_standard_exit_should_succeed(testlang):
     spend_id = testlang.spend_utxo(deposit_id, owner, 100, owner)
     testlang.confirm_spend(spend_id, owner)
 
+    pre_balance = testlang.get_balance(owner)
+
     testlang.start_standard_exit(owner, spend_id)
     testlang.forward_timestamp(2 * WEEK + 1)
 
@@ -17,6 +19,7 @@ def test_process_exits_standard_exit_should_succeed(testlang):
     assert standard_exit.owner == NULL_ADDRESS_HEX
     assert standard_exit.token == NULL_ADDRESS_HEX
     assert standard_exit.amount == amount
+    assert testlang.get_balance(owner) == pre_balance + amount
 
 
 def test_finalize_exits_for_ERC20_should_succeed(testlang, root_chain, token):
