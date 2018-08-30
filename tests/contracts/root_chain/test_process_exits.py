@@ -42,3 +42,45 @@ def test_finalize_exits_for_ERC20_should_succeed(testlang, root_chain, token):
     assert plasma_exit.owner == NULL_ADDRESS_HEX
     assert standard_exit.amount == amount
     assert token.balanceOf(owner.address) == pre_balance + amount
+
+
+def test_finalize_exits_old_utxo_is_mature_after_single_mfp(testlang):
+    minimal_finalization_period = WEEK  # aka MFP - see tesuji blockchain design
+    required_exit_period = WEEK  # aka REP - see tesuji blockchain design
+    owner, amount = testlang.accounts[0], 100
+
+    deposit_id = testlang.deposit(owner, amount)
+    spend_id = testlang.spend_utxo(deposit_id, owner, amount, owner)
+    testlang.confirm_spend(spend_id, owner)
+
+    testlang.forward_timestamp(required_exit_period)
+    testlang.start_standard_exit(owner, spend_id)
+    testlang.forward_timestamp(minimal_finalization_period)
+
+    assert testlang.get_standard_exit(spend_id).owner == owner.address
+    testlang.finalize_exits(NULL_ADDRESS)
+    testlang.forward_timestamp(1)
+    assert testlang.get_standard_exit(spend_id).owner == owner.address
+    testlang.finalize_exits(NULL_ADDRESS)
+    assert testlang.get_standard_exit(spend_id).owner == NULL_ADDRESS_HEX
+
+
+def test_finalize_exits_new_utxo_is_mature_after_mfp_pls_rep(testlang):
+    minimal_finalization_period = WEEK  # aka MFP - see tesuji blockchain design
+    required_exit_period = WEEK  # aka REP - see tesuji blockchain design
+    owner, amount = testlang.accounts[0], 100
+
+    deposit_id = testlang.deposit(owner, amount)
+    spend_id = testlang.spend_utxo(deposit_id, owner, amount, owner)
+    testlang.confirm_spend(spend_id, owner)
+
+    testlang.start_standard_exit(owner, spend_id)
+
+    testlang.forward_timestamp(required_exit_period)
+    assert testlang.get_standard_exit(spend_id).owner == owner.address
+    testlang.finalize_exits(NULL_ADDRESS)
+    assert testlang.get_standard_exit(spend_id).owner == owner.address
+
+    testlang.forward_timestamp(minimal_finalization_period + 1)
+    testlang.finalize_exits(NULL_ADDRESS)
+    assert testlang.get_standard_exit(spend_id).owner == NULL_ADDRESS_HEX
