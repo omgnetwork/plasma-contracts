@@ -87,3 +87,29 @@ def test_finalize_exits_new_utxo_is_mature_after_mfp_pls_rep(testlang):
     testlang.forward_timestamp(minimal_finalization_period + 1)
     testlang.finalize_exits(NULL_ADDRESS)
     assert testlang.get_standard_exit(spend_id).owner == NULL_ADDRESS_HEX
+
+
+def test_finalize_exits_only_mature_exits_are_processed(testlang):
+    minimal_finalization_period = WEEK  # aka MFP - see tesuji blockchain design
+    required_exit_period = WEEK  # aka REP - see tesuji blockchain design
+    owner, amount = testlang.accounts[0], 100
+
+    deposit_id_1 = testlang.deposit(owner, amount)
+    spend_id_1 = testlang.spend_utxo(deposit_id_1, owner, amount, owner)
+    testlang.confirm_spend(spend_id_1, owner)
+
+    testlang.start_standard_exit(owner, spend_id_1)
+
+    testlang.forward_timestamp(required_exit_period + minimal_finalization_period + 1)
+
+    deposit_id_2 = testlang.deposit(owner, amount)
+    spend_id_2 = testlang.spend_utxo(deposit_id_2, owner, amount, owner)
+    testlang.confirm_spend(spend_id_2, owner)
+
+    testlang.start_standard_exit(owner, spend_id_2)
+
+    assert testlang.get_standard_exit(spend_id_1).owner == owner.address
+    assert testlang.get_standard_exit(spend_id_2).owner == owner.address
+    testlang.finalize_exits(NULL_ADDRESS)
+    assert testlang.get_standard_exit(spend_id_1).owner == NULL_ADDRESS_HEX
+    assert testlang.get_standard_exit(spend_id_2).owner == owner.address
