@@ -36,7 +36,6 @@ def test_start_deposit_exit_from_child_block_should_fail(testlang):
     owner, amount = testlang.accounts[0], 100
     deposit_id = testlang.deposit(owner, amount)
     spend_id = testlang.spend_utxo(deposit_id, owner, 100, owner)
-    testlang.confirm_spend(spend_id, owner)
 
     with pytest.raises(TransactionFailed):
         testlang.start_deposit_exit(owner, spend_id, 100)
