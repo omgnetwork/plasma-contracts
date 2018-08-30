@@ -55,6 +55,16 @@ def test_priority_queue_delete_then_insert(priority_queue):
     assert priority_queue.getMin() == 5
 
 
+def test_priority_queue_insert_spam_does_not_elevate_gas_cost_above_200k(priority_queue):
+    two_weeks_of_gas = 8000000 * 4 * 60 * 24 * 14
+    gas_left = two_weeks_of_gas
+    size = 1
+    while gas_left < 0:
+        gas_left = gas_left - op_cost(size)
+        size = size + 1
+    assert op_cost(size) < 200000
+
+
 def run_test(ethtester, priority_queue, values):
     for i, value in enumerate(values):
         if i % 10 == 0:
