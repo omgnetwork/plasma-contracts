@@ -202,6 +202,25 @@ class TestingLanguage(object):
         confirmation_hash = sha3(spend_tx.hash + block.root)
         self.confirmations[tx_id] = sign(confirmation_hash, signer.key)
 
+    def create_utxo(self, token=NULL_ADDRESS):
+        class Utxo(object):
+            def __init__(self, deposit_id, owner, token, amount, spend_id):
+                self.deposit_id = deposit_id
+                self.owner = owner
+                self.amount = amount
+                self.token = token
+                self.spend_id = spend_id
+
+        owner, amount = self.accounts[0], 100
+        if token == NULL_ADDRESS:
+            deposit_id = self.deposit(owner, amount)
+            token_address = NULL_ADDRESS
+        else:
+            deposit_id = self.deposit_token(owner, token, amount)
+            token_address = token.address
+        spend_id = self.spend_utxo(deposit_id, owner, 100, owner)
+        return Utxo(deposit_id, owner, token_address, amount, spend_id)
+
     def start_deposit_exit(self, owner, deposit_id, amount, token_addr=NULL_ADDRESS):
         """Starts an exit for a deposit.
 
