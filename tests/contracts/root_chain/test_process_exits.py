@@ -14,7 +14,7 @@ def test_process_exits_standard_exit_should_succeed(testlang):
     testlang.start_standard_exit(owner, spend_id)
     testlang.forward_timestamp(2 * WEEK + 1)
 
-    testlang.finalize_exits(NULL_ADDRESS, spend_id, 1)
+    testlang.finalize_exits(NULL_ADDRESS, spend_id, 100)
 
     standard_exit = testlang.get_standard_exit(spend_id)
     assert standard_exit.owner == NULL_ADDRESS_HEX
