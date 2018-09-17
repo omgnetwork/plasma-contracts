@@ -139,22 +139,26 @@ def test_finalize_exits_partial_queue_processing(testlang):
 
 
 def test_finalize_exits_tx_race(testlang):
-    owner, amount = testlang.accounts[0], 100
-
-    deposit_id_1 = testlang.deposit(owner.address, amount)
-    spend_id_1 = testlang.spend_utxo(deposit_id_1, owner, 100, owner)
-    testlang.confirm_spend(spend_id_1, owner)
-    testlang.start_standard_exit(owner, spend_id_1)
-
-    deposit_id_2 = testlang.deposit(owner.address, amount)
-    spend_id_2 = testlang.spend_utxo(deposit_id_2, owner, 100, owner)
-    testlang.confirm_spend(spend_id_2, owner)
-    testlang.start_standard_exit(owner, spend_id_2)
+    utxo1 = testlang.create_utxo()
+    utxo2 = testlang.create_utxo()
+    utxo3 = testlang.create_utxo()
+    utxo4 = testlang.create_utxo()
+    testlang.start_standard_exit(utxo1.owner, utxo1.spend_id)
+    testlang.start_standard_exit(utxo2.owner, utxo2.spend_id)
+    testlang.start_standard_exit(utxo3.owner, utxo3.spend_id)
+    testlang.start_standard_exit(utxo4.owner, utxo4.spend_id)
 
     testlang.forward_timestamp(2 * WEEK + 1)
-    testlang.finalize_exits(NULL_ADDRESS, spend_id_1, 1)
+    testlang.finalize_exits(NULL_ADDRESS, utxo1.spend_id, 1)
+    snapshot = testlang.ethtester.chain.snapshot()
     with pytest.raises(TransactionFailed):
-        testlang.finalize_exits(NULL_ADDRESS, spend_id_1, 2)
+        testlang.finalize_exits(NULL_ADDRESS, utxo1.spend_id, 3, startgas=1000000)
+    gas1 = testlang.ethtester.chain.last_gas_used()
+    testlang.ethtester.chain.revert(snapshot)
+    testlang.finalize_exits(NULL_ADDRESS, utxo2.spend_id, 3)
+    gas2 = testlang.ethtester.chain.last_gas_used()
+    assert gas1 < 4000
+    assert gas2 > 30000
 
 
 def test_finalize_exits_empty_queue_should_crash(testlang, ethtester):

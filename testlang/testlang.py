@@ -277,7 +277,7 @@ class TestingLanguage(object):
 
         self.root_chain.challengeExit(spend_id, *self.get_challenge_proof(utxo_id, spend_id))
 
-    def finalize_exits(self, token, utxo_id, count):
+    def finalize_exits(self, token, utxo_id, count, **kwargs):
         """Finalizes exits that have completed the exit period.
 
         Args:
@@ -286,7 +286,7 @@ class TestingLanguage(object):
             count (int): Maximum number of exits to be processed.
         """
 
-        self.root_chain.finalizeExits(token, utxo_id, count)
+        self.root_chain.finalizeExits(token, utxo_id, count, **kwargs)
 
     def get_challenge_proof(self, utxo_id, spend_id):
         """Returns information required to submit a challenge.
