@@ -111,6 +111,12 @@ def test_finalize_exits_only_mature_exits_are_processed(testlang):
     assert testlang.get_standard_exit(spend_id_2).owner == owner.address
 
 
+def test_finalize_exits_for_uninitialized_ERC20_should_fail(testlang, root_chain, token):
+    assert not root_chain.hasToken(token.address)
+    with pytest.raises(TransactionFailed):
+        testlang.finalize_exits(token.address, 0, 100)
+
+
 def test_finalize_exits_partial_queue_processing(testlang):
     owner, amount = testlang.accounts[0], 100
 
