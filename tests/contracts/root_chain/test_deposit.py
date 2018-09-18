@@ -41,6 +41,12 @@ def test_token_adding(token, root_chain):
         root_chain.addToken(token.address)
 
 
+def test_token_adding_eth_token_should_fail(root_chain):
+    assert root_chain.hasToken(NULL_ADDRESS)
+    with pytest.raises(TransactionFailed):
+        root_chain.addToken(NULL_ADDRESS)
+
+
 def test_token_deposit_should_succeed(testlang, root_chain, token):
     owner, amount = testlang.accounts[0], 100
 
