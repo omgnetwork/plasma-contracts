@@ -72,3 +72,12 @@ def test_token_deposit_no_approve_should_fail(testlang, token):
     testlang.ethtester.chain.mine()
     with pytest.raises(TransactionFailed):
         testlang.root_chain.depositFrom(owner.address, token.address, amount, sender=owner.key)
+
+
+def test_token_deposit_insufficient_approve_should_fail(testlang, token):
+    owner, amount = testlang.accounts[0], 100
+
+    token.mint(owner.address, amount)
+    token.approve(testlang.root_chain.address, amount, sender=owner.key)
+    with pytest.raises(TransactionFailed):
+        testlang.root_chain.depositFrom(owner.address, token.address, amount * 5, sender=owner.key)
