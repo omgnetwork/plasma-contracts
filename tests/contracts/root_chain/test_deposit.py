@@ -59,6 +59,12 @@ def test_token_deposit_should_succeed(testlang, root_chain, token):
     assert testlang.root_chain.currentDepositBlock() == 2
 
 
+def test_token_deposit_non_existing_token_should_fail(testlang):
+    owner, amount = testlang.accounts[0], 100
+    with pytest.raises(TransactionFailed):
+        testlang.root_chain.depositFrom(owner.address, NULL_ADDRESS, amount, sender=owner.key)
+
+
 def test_token_deposit_no_approve_should_fail(testlang, token):
     owner, amount = testlang.accounts[0], 100
 
