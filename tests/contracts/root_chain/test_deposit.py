@@ -18,6 +18,18 @@ def test_deposit_valid_values_should_succeed(testlang):
     assert testlang.root_chain.currentDepositBlock() == 2
 
 
+def test_deposit_zero_amount_should_succeed(testlang):
+    owner, amount = testlang.accounts[0], 0
+
+    deposit_id = testlang.deposit(owner, amount)
+    deposit_blknum, _, _ = decode_utxo_id(deposit_id)
+
+    plasma_block = testlang.get_plasma_block(deposit_blknum)
+    assert plasma_block.root == get_deposit_hash(address_to_bytes(owner.address), NULL_ADDRESS, amount)
+    assert plasma_block.timestamp == testlang.timestamp
+    assert testlang.root_chain.currentDepositBlock() == 2
+
+
 def test_at_most_999_deposits_per_child_block(testlang):
     owner = testlang.accounts[0]
     child_block_interval = testlang.root_chain.CHILD_BLOCK_INTERVAL()

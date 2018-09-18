@@ -19,4 +19,5 @@ def bytes_fill_left(inp, length):
 
 
 def get_deposit_hash(owner, token, value):
-    return u.sha3(owner + token + b'\x00' * 31 + u.int_to_bytes(value))
+    value_bytes = u.int_to_bytes(value) if value != 0 else b'\x00'
+    return u.sha3(owner + token + b'\x00' * 31 + value_bytes)
