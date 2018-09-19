@@ -191,3 +191,22 @@ def test_finalize_skipping_top_utxo_check_is_possible(testlang):
 
     standard_exit = testlang.get_standard_exit(spend_id_1)
     assert standard_exit.owner == NULL_ADDRESS_HEX
+
+
+def test_finalize_challenged_exit_will_not_send_funds(testlang):
+    owner, finalizer, amount = testlang.accounts[0], testlang.accounts[0], 100
+    deposit_id = testlang.deposit(owner.address, amount)
+    spend_id = testlang.spend_utxo(deposit_id, owner, 100, owner)
+
+    testlang.start_standard_exit(owner, spend_id)
+    doublespend_id = testlang.spend_utxo(spend_id, owner, 100, owner)
+
+    testlang.challenge_standard_exit(spend_id, doublespend_id)
+    testlang.root_chain.exits(spend_id) == [NULL_ADDRESS_HEX, NULL_ADDRESS_HEX, 0]
+
+    testlang.forward_timestamp(2 * WEEK + 1)
+
+    pre_balance = testlang.get_balance(testlang.root_chain)
+    testlang.finalize_exits(NULL_ADDRESS, 0, 1, sender=finalizer.key)
+    post_balance = testlang.get_balance(testlang.root_chain)
+    assert post_balance == pre_balance
