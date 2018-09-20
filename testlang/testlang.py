@@ -116,12 +116,21 @@ class TestingLanguage(object):
             int: Unique identifier of the deposit.
         """
 
+        deposit_tx = Transaction(0, 0, 0,
+                                 0, 0, 0,
+                                 token.address,
+                                 owner.address, amount,
+                                 NULL_ADDRESS, 0)
+
         token.mint(owner.address, amount)
         self.ethtester.chain.mine()
         token.approve(self.root_chain.address, amount, sender=owner.key)
         self.ethtester.chain.mine()
         blknum = self.root_chain.getDepositBlock()
         self.root_chain.depositFrom(owner.address, token.address, amount, sender=owner.key)
+
+        block = Block(transaction_set=[deposit_tx], number=blknum)
+        self.child_chain.add_block(block)
         return blknum
 
     def spend_utxo(self, utxo_id, new_owner, amount, signer):
@@ -137,9 +146,10 @@ class TestingLanguage(object):
             int: Unique identifier of the spend.
         """
 
+        utxo = self.child_chain.get_transaction(utxo_id)
         spend_tx = Transaction(*decode_utxo_id(utxo_id),
                                0, 0, 0,
-                               NULL_ADDRESS,
+                               utxo.cur12,
                                new_owner.address, amount,
                                NULL_ADDRESS, 0)
         spend_tx.sign1(signer.key)
