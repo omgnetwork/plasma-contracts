@@ -285,14 +285,17 @@ contract RootChain {
             currentExit = exits[utxoPos];
 
             queue.delMin();
-            delete exits[utxoPos].owner;
 
-            if (_token == address(0)) {
-                currentExit.owner.transfer(currentExit.amount);
+            // Send funds only if exit was not successfully challenged.
+            if (exits[utxoPos].owner != address(0)) {
+                if (_token == address(0)) {
+                    currentExit.owner.transfer(currentExit.amount);
+                }
+                else {
+                    require(ERC20(_token).transfer(currentExit.owner, currentExit.amount));
+                }
             }
-            else {
-                require(ERC20(_token).transfer(currentExit.owner, currentExit.amount));
-            }
+            delete exits[utxoPos].owner;
 
             if (queue.currentSize() > 0) {
                 (utxoPos, exitable_at) = getNextExit(_token);
