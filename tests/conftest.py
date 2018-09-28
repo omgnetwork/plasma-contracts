@@ -63,3 +63,8 @@ def token(ethtester, get_contract):
 @pytest.fixture
 def testlang(root_chain, ethtester):
     return TestingLanguage(root_chain, ethtester)
+
+
+@pytest.fixture
+def utxo(testlang):
+    return testlang.create_utxo()

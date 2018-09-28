@@ -1,4 +1,3 @@
-from ethereum.utils import sha3
 from plasma_core.child_chain import ChildChain
 from plasma_core.account import EthereumAccount
 from plasma_core.block import Block
@@ -7,6 +6,7 @@ from plasma_core.constants import NULL_ADDRESS
 from plasma_core.utils.signatures import sign
 from plasma_core.utils.transactions import decode_utxo_id, encode_utxo_id
 from plasma_core.utils.address import address_to_hex
+from ethereum.utils import sha3
 
 
 def get_accounts(ethtester):
@@ -27,7 +27,7 @@ def get_accounts(ethtester):
     return accounts
 
 
-class PlasmaExit(object):
+class StandardExit(object):
     """Represents a Plasma exit.
 
     Attributes:
@@ -75,12 +75,26 @@ class TestingLanguage(object):
         self.child_chain = ChildChain(self.accounts[0].address)
         self.confirmations = {}
 
+        # morevp semantic
+        self.root_chain.blocks = self.root_chain.childChain
+
     @property
     def timestamp(self):
         """Current chain timestamp"""
         return self.ethtester.chain.head_state.timestamp
 
     def deposit(self, owner, amount):
+        if isinstance(owner, str):
+            for acc in self.accounts:
+                if owner == acc.address:
+                    owner = acc
+                    break
+            if isinstance(owner, str):
+                raise ValueError("owner must be a known account")
+        blknum = self.deposit_pre_morevp(owner, amount)
+        return encode_utxo_id(blknum, 0, 0)
+
+    def deposit_pre_morevp(self, owner, amount):
         """Creates a deposit transaction for a given owner and amount.
 
         Args:
@@ -131,9 +145,9 @@ class TestingLanguage(object):
 
         block = Block(transaction_set=[deposit_tx], number=blknum)
         self.child_chain.add_block(block)
-        return blknum
+        return encode_utxo_id(blknum, 0, 0)
 
-    def spend_utxo(self, utxo_id, new_owner, amount, signer):
+    def spend_utxo(self, utxo_id, new_owner, amount, signer, force_invalid=False, auto_confirm=True):
         """Creates a spending transaction and inserts it into the chain.
 
         Args:
@@ -141,6 +155,8 @@ class TestingLanguage(object):
             new_owner (EthereumAccount): Account to own the output of this spend.
             amount (int): Amount to spend.
             signer (EthereumAccount): Account to sign this transaction.
+            force_invalid (Bool) : Skip validity checks
+            auto_confirm (Bool) : Generate confirmation sig when mining block.
 
         Returns:
             int: Unique identifier of the spend.
@@ -153,13 +169,25 @@ class TestingLanguage(object):
                                new_owner.address, amount,
                                NULL_ADDRESS, 0)
         spend_tx.sign1(signer.key)
+        blknum = self.submit_block([spend_tx], force_invalid=force_invalid)
+        tx_id = encode_utxo_id(blknum, 0, 0)
+        if auto_confirm:
+            self.confirm_spend(tx_id, signer)
+        return tx_id
 
+    def submit_block(self, transactions, signer=None, force_invalid=False):
+        signer = signer or self.operator
         blknum = self.root_chain.currentChildBlock()
-        block = Block(transaction_set=[spend_tx], number=blknum)
-        block.sign(self.operator.key)
-        self.root_chain.submitBlock(block.root)
-        self.child_chain.add_block(block)
-        return encode_utxo_id(blknum, 0, 0)
+        block = Block(transactions, number=blknum)
+        block.sign(signer.key)
+        self.root_chain.submitBlock(block.root, sender=signer.key)
+        if force_invalid:
+            self.child_chain.blocks[self.child_chain.next_child_block] = block
+            self.child_chain.next_deposit_block = self.child_chain.next_child_block + 1
+            self.child_chain.next_child_block += self.child_chain.child_block_interval
+        else:
+            assert self.child_chain.add_block(block)
+        return blknum
 
     def confirm_spend(self, tx_id, signer):
         """Signs a confirmation signature for a spend.
@@ -175,7 +203,28 @@ class TestingLanguage(object):
         confirmation_hash = sha3(spend_tx.hash + block.root)
         self.confirmations[tx_id] = sign(confirmation_hash, signer.key)
 
-    def start_deposit_exit(self, owner, blknum, amount, token_addr=NULL_ADDRESS):
+    def create_utxo(self, token=NULL_ADDRESS):
+        class Utxo(object):
+            def __init__(self, deposit_id, owner, token, amount, spend, spend_id):
+                self.deposit_id = deposit_id
+                self.owner = owner
+                self.amount = amount
+                self.token = token
+                self.spend_id = spend_id
+                self.spend = spend
+
+        owner, amount = self.accounts[0], 100
+        if token == NULL_ADDRESS:
+            deposit_id = self.deposit(owner, amount)
+            token_address = NULL_ADDRESS
+        else:
+            deposit_id = self.deposit_token(owner, token, amount)
+            token_address = token.address
+        spend_id = self.spend_utxo(deposit_id, owner, 100, owner)
+        spend = self.child_chain.get_transaction(spend_id)
+        return Utxo(deposit_id, owner, token_address, amount, spend, spend_id)
+
+    def start_deposit_exit(self, owner, deposit_id, amount, token_addr=NULL_ADDRESS):
         """Starts an exit for a deposit.
 
         Args:
@@ -184,7 +233,6 @@ class TestingLanguage(object):
             amount (int): Deposit amount.
         """
 
-        deposit_id = encode_utxo_id(blknum, 0, 0)
         self.root_chain.startDepositExit(deposit_id, token_addr, amount, sender=owner.key)
 
     def start_fee_exit(self, operator, amount):
@@ -202,7 +250,7 @@ class TestingLanguage(object):
         self.root_chain.startFeeExit(NULL_ADDRESS, amount, sender=operator.key)
         return fee_exit_id
 
-    def start_exit(self, owner, utxo_id):
+    def start_standard_exit(self, owner, utxo_id, sender=None):
         """Starts a standard exit.
 
         Args:
@@ -210,14 +258,16 @@ class TestingLanguage(object):
             utxo_id (int): Unique identifier of the UTXO to be exited.
         """
 
+        if sender is None:
+            sender = owner
         spend_tx = self.child_chain.get_transaction(utxo_id)
         (blknum, _, _) = decode_utxo_id(utxo_id)
         block = self.child_chain.blocks[blknum]
-        proof = block.merkle_tree.create_membership_proof(spend_tx.merkle_hash)
+        proof = block.merklized_transaction_set.create_membership_proof(spend_tx.merkle_hash)
         sigs = spend_tx.sig1 + spend_tx.sig2 + self.confirmations[utxo_id]
-        self.root_chain.startExit(utxo_id, spend_tx.encoded, proof, sigs, sender=owner.key)
+        self.root_chain.startExit(utxo_id, spend_tx.encoded, proof, sigs, sender=sender.key)
 
-    def challenge_exit(self, utxo_id, spend_id):
+    def challenge_standard_exit(self, utxo_id, spend_id):
         """Challenges an exit with a double spend.
 
         Args:
@@ -251,7 +301,7 @@ class TestingLanguage(object):
             input_index = 0
         (blknum, _, _) = decode_utxo_id(spend_id)
         block = self.child_chain.blocks[blknum]
-        proof = block.merkle_tree.create_membership_proof(spend_tx.merkle_hash)
+        proof = block.merklized_transaction_set.create_membership_proof(spend_tx.merkle_hash)
         sigs = spend_tx.sig1 + spend_tx.sig2
         confirmation_sig = self.confirmations[spend_id]
         return (input_index, spend_tx.encoded, proof, sigs, confirmation_sig)
@@ -269,18 +319,18 @@ class TestingLanguage(object):
         block_info = self.root_chain.childChain(blknum)
         return PlasmaBlock(*block_info)
 
-    def get_plasma_exit(self, utxo_id):
+    def get_standard_exit(self, utxo_id):
         """Queries a plasma exit by its ID.
 
         Args:
             utxo_id (int): Identifier of the exit to query.
 
         Returns:
-            PlasmaExit: Formatted plasma exit information.
+            StandardExit: Formatted plasma exit information.
         """
 
         exit_info = self.root_chain.exits(utxo_id)
-        return PlasmaExit(*exit_info)
+        return StandardExit(*exit_info)
 
     def get_balance(self, account):
         """Queries the balance of an account.
