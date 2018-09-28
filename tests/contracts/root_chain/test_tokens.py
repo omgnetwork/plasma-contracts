@@ -1,0 +1,17 @@
+import pytest
+from ethereum.tools.tester import TransactionFailed
+from plasma_core.constants import NULL_ADDRESS
+
+
+def test_token_adding(token, root_chain):
+    assert not root_chain.hasToken(token.address)
+    root_chain.addToken(token.address)
+    assert root_chain.hasToken(token.address)
+    with pytest.raises(TransactionFailed):
+        root_chain.addToken(token.address)
+
+
+def test_token_adding_eth_token_should_fail(root_chain):
+    assert root_chain.hasToken(NULL_ADDRESS)
+    with pytest.raises(TransactionFailed):
+        root_chain.addToken(NULL_ADDRESS)

@@ -5,7 +5,7 @@ from eth_utils import encode_hex
 def test_process_exits_standard_exit_should_succeed(testlang):
     owner, amount = testlang.accounts[0], 100
     deposit_id = testlang.deposit(owner.address, amount)
-    spend_id = testlang.spend_utxo(deposit_id, owner, 100, owner)
+    spend_id = testlang.spend_utxo(deposit_id, owner, amount, owner)
 
     pre_balance = testlang.get_balance(owner)
 
@@ -65,7 +65,7 @@ def test_finalize_exits_old_utxo_is_mature_after_single_mfp(testlang):
     assert testlang.get_standard_exit(spend_id).owner == NULL_ADDRESS_HEX
 
 
-def test_finalize_exits_new_utxo_is_mature_after_mfp_pls_rep(testlang):
+def test_finalize_exits_new_utxo_is_mature_after_mfp_plus_rep(testlang):
     minimal_finalization_period = WEEK  # aka MFP - see tesuji blockchain design
     required_exit_period = WEEK  # aka REP - see tesuji blockchain design
     owner, amount = testlang.accounts[0], 100

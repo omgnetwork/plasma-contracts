@@ -57,7 +57,7 @@ class FixedMerkle(object):
         computed_index = index
 
         for i in range(0, self.depth * 32, 32):
-            proof_segment = proof[i:i + 32]
+            proof_segment = proof[i:(i + 32)]
 
             if computed_index % 2 == 0:
                 computed_hash = sha3(computed_hash + proof_segment)

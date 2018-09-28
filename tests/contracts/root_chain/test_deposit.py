@@ -45,20 +45,6 @@ def test_at_most_999_deposits_per_child_block(testlang):
     testlang.deposit(owner, 1)
 
 
-def test_token_adding(token, root_chain):
-    assert not root_chain.hasToken(token.address)
-    root_chain.addToken(token.address)
-    assert root_chain.hasToken(token.address)
-    with pytest.raises(TransactionFailed):
-        root_chain.addToken(token.address)
-
-
-def test_token_adding_eth_token_should_fail(root_chain):
-    assert root_chain.hasToken(NULL_ADDRESS)
-    with pytest.raises(TransactionFailed):
-        root_chain.addToken(NULL_ADDRESS)
-
-
 def test_token_deposit_should_succeed(testlang, root_chain, token):
     owner, amount = testlang.accounts[0], 100
 
@@ -68,7 +54,7 @@ def test_token_deposit_should_succeed(testlang, root_chain, token):
     plasma_block = testlang.get_plasma_block(deposit_blknum)
     assert plasma_block.root == get_deposit_hash(address_to_bytes(owner.address), token.address, amount)
     assert plasma_block.timestamp == testlang.timestamp
-    assert testlang.root_chain.currentDepositBlock() == 2
+    assert root_chain.currentDepositBlock() == 2
 
 
 def test_token_deposit_non_existing_token_should_fail(testlang):

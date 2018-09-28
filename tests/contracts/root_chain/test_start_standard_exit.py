@@ -17,8 +17,10 @@ def test_start_standard_exit_twice_should_fail(testlang, utxo):
 
 def test_start_standard_exit_invalid_proof_should_fail(testlang, utxo):
     spend_tx = testlang.child_chain.get_transaction(utxo.spend_id)
+    proof = b''
+    sigs = utxo.spend.sig1 + utxo.spend.sig2 + testlang.confirmations[utxo.spend_id]
     with pytest.raises(TransactionFailed):
-        testlang.root_chain.startExit(utxo.spend_id, spend_tx.encoded, b'')
+        testlang.root_chain.startExit(utxo.spend_id, spend_tx.encoded, proof, sigs, sender=utxo.owner.key)
 
 
 def test_start_standard_exit_spend_without_valid_confirmation_should_fail(testlang):

@@ -86,8 +86,9 @@ class TestingLanguage(object):
     def deposit(self, owner, amount):
         if isinstance(owner, str):
             for acc in self.accounts:
-                if acc.address == owner:
+                if owner == acc.address:
                     owner = acc
+                    break
             if isinstance(owner, str):
                 raise ValueError("owner must be a known account")
         blknum = self.deposit_pre_morevp(owner, amount)
@@ -204,12 +205,13 @@ class TestingLanguage(object):
 
     def create_utxo(self, token=NULL_ADDRESS):
         class Utxo(object):
-            def __init__(self, deposit_id, owner, token, amount, spend_id):
+            def __init__(self, deposit_id, owner, token, amount, spend, spend_id):
                 self.deposit_id = deposit_id
                 self.owner = owner
                 self.amount = amount
                 self.token = token
                 self.spend_id = spend_id
+                self.spend = spend
 
         owner, amount = self.accounts[0], 100
         if token == NULL_ADDRESS:
@@ -219,7 +221,8 @@ class TestingLanguage(object):
             deposit_id = self.deposit_token(owner, token, amount)
             token_address = token.address
         spend_id = self.spend_utxo(deposit_id, owner, 100, owner)
-        return Utxo(deposit_id, owner, token_address, amount, spend_id)
+        spend = self.child_chain.get_transaction(spend_id)
+        return Utxo(deposit_id, owner, token_address, amount, spend, spend_id)
 
     def start_deposit_exit(self, owner, deposit_id, amount, token_addr=NULL_ADDRESS):
         """Starts an exit for a deposit.

@@ -55,7 +55,7 @@ def test_priority_queue_delete_then_insert(priority_queue):
     assert priority_queue.getMin() == 5
 
 
-def test_priority_queue_insert_spam_does_not_elevate_gas_cost_above_200k(priority_queue):
+def test_priority_queue_insert_spam_does_not_elevate_gas_cost_above_200k():
     two_weeks_of_gas = 8000000 * 4 * 60 * 24 * 14
     gas_left = two_weeks_of_gas
     size = 1
@@ -81,7 +81,10 @@ def run_test(ethtester, priority_queue, values):
 
 
 def op_cost(n):
-    return 21000 + 26538 + 6638 * math.floor(math.log(n, 2))
+    tx_base_cost = 21000
+    # Numbers were discovered experimentally. They represent upper bound of
+    # gas cost of execution of delMin or insert operations.
+    return tx_base_cost + 26538 + 6638 * math.floor(math.log(n, 2))
 
 
 def test_priority_queue_worst_case_gas_cost(ethtester, priority_queue):
