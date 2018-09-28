@@ -277,10 +277,16 @@ class TestingLanguage(object):
 
         self.root_chain.challengeExit(spend_id, *self.get_challenge_proof(utxo_id, spend_id))
 
-    def finalize_exits(self, token=NULL_ADDRESS):
-        """Finalizes any exits that have completed the exit period"""
+    def finalize_exits(self, token, utxo_id, count, **kwargs):
+        """Finalizes exits that have completed the exit period.
 
-        self.root_chain.finalizeExits(token)
+        Args:
+            token (address): Address of the token to be processed.
+            utxo_id (int): Identifier of the UTXO being exited.
+            count (int): Maximum number of exits to be processed.
+        """
+
+        self.root_chain.finalizeExits(token, utxo_id, count, **kwargs)
 
     def get_challenge_proof(self, utxo_id, spend_id):
         """Returns information required to submit a challenge.

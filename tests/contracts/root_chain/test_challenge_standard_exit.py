@@ -1,7 +1,6 @@
 import pytest
 from ethereum.tools.tester import TransactionFailed
-from plasma_core.constants import NULL_ADDRESS
-from testlang.testlang import address_to_hex
+from plasma_core.constants import NULL_ADDRESS_HEX
 
 
 def test_challenge_standard_exit_valid_spend_should_succeed(testlang):
@@ -14,7 +13,7 @@ def test_challenge_standard_exit_valid_spend_should_succeed(testlang):
 
     testlang.challenge_standard_exit(spend_id, doublespend_id)
 
-    assert testlang.root_chain.exits(spend_id) == [address_to_hex(NULL_ADDRESS), address_to_hex(NULL_ADDRESS), 100]
+    assert testlang.root_chain.exits(spend_id) == [NULL_ADDRESS_HEX, NULL_ADDRESS_HEX, 100]
 
 
 def test_challenge_standard_exit_invalid_spend_should_fail(testlang):
@@ -49,3 +48,19 @@ def test_challenge_standard_exit_not_started_should_fail(testlang):
 
     with pytest.raises(TransactionFailed):
         testlang.challenge_standard_exit(deposit_id, spend_id)
+
+
+def test_restarting_challenged_exit_should_fail(testlang):
+    owner, amount = testlang.accounts[0], 100
+    deposit_id = testlang.deposit(owner.address, amount)
+    spend_id = testlang.spend_utxo(deposit_id, owner, 100, owner)
+
+    testlang.start_standard_exit(owner, spend_id)
+    doublespend_id = testlang.spend_utxo(spend_id, owner, 100, owner)
+
+    testlang.challenge_standard_exit(spend_id, doublespend_id)
+
+    assert testlang.root_chain.exits(spend_id) == [NULL_ADDRESS_HEX, NULL_ADDRESS_HEX, 100]
+
+    with pytest.raises(TransactionFailed):
+        testlang.start_standard_exit(owner, spend_id)

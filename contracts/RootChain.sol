@@ -268,32 +268,40 @@ contract RootChain {
     }
 
     /**
-     * @dev Processes any exits that have completed the challenge period.
+     * @dev Processes exits that have completed the challenge period.
      * @param _token Token type to process.
+     * @param _topUtxoPos First exit that should be processed. Set to zero to skip the check.
+     * @param _exitsToProcess Maximal number of exits to process.
      */
-    function finalizeExits(address _token)
+    function finalizeExits(address _token, uint256 _topUtxoPos, uint256 _exitsToProcess)
         public
     {
         uint256 utxoPos;
         uint256 exitable_at;
+        uint256 _exitsLeft = _exitsToProcess;
         (utxoPos, exitable_at) = getNextExit(_token);
+        require(_topUtxoPos == utxoPos || _topUtxoPos == 0);
         Exit memory currentExit = exits[utxoPos];
         PriorityQueue queue = PriorityQueue(exitsQueues[_token]);
-        while (exitable_at < block.timestamp) {
+        while (exitable_at < block.timestamp && _exitsLeft > 0) {
             currentExit = exits[utxoPos];
 
             queue.delMin();
-            delete exits[utxoPos].owner;
 
-            if (_token == address(0)) {
-                currentExit.owner.transfer(currentExit.amount);
+            // Send funds only if exit was not successfully challenged.
+            if (exits[utxoPos].owner != address(0)) {
+                if (_token == address(0)) {
+                    currentExit.owner.transfer(currentExit.amount);
+                }
+                else {
+                    require(ERC20(_token).transfer(currentExit.owner, currentExit.amount));
+                }
             }
-            else {
-                require(ERC20(_token).transfer(currentExit.owner, currentExit.amount));
-            }
+            delete exits[utxoPos].owner;
 
             if (queue.currentSize() > 0) {
                 (utxoPos, exitable_at) = getNextExit(_token);
+                _exitsLeft = _exitsLeft.sub(1);
             } else {
                 return;
             }
