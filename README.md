@@ -3,24 +3,24 @@
 Root chain contracts for Plasma MVP, work in progress.
 
 ## Contents
-This version of the contract implements [Plasma MVP](https://ethresear.ch/t/minimal-viable-plasma/426) (Buterin, Poon, Knott). This implementation PoA scheme with one operator and multiple watchers (users). Detailed description of our child chain design is in [Tesuji document](https://github.com/omisego/elixir-omg/blob/develop/docs/tesuji_blockchain_design.md).
+This version of the contract implements [Plasma MVP](https://ethresear.ch/t/minimal-viable-plasma/426) (Buterin, Poon, Knott). This implementation is a PoA scheme with one operator and multiple watchers (users). Detailed description of our child chain design is in [Tesuji document](https://github.com/omisego/elixir-omg/blob/develop/docs/tesuji_blockchain_design.md).
 
 Implementation differs from MVP in few regards:
 
 * Added protection against chain re-orgs (https://github.com/omisego/plasma-mvp/pull/51).  
 * Added collected fee exiting for PoA operator.  
-* Added ERC20 handling.
-* Merkle tree used is of variable depth.
+* Added ERC20 handling.  
+* Merkle tree used is of variable depth.  
 * Transaction fee is implicit, not explicit.
 
 
 ### Plasma MVP, confirmations, and MoreVP
-While this implementation contains confirmations, this is a temporary state as we are going to replace confirmations with [MoreVP](https://ethresear.ch/t/more-viable-plasma/2160) (Fichter, Jones) in the future. Reasons include:
+While this implementation contains confirmations, this is a temporary state as we are going to replace confirmations with the exit game defined in [MoreVP](https://ethresear.ch/t/more-viable-plasma/2160) (Fichter, Jones) in the future. Reasons include:
 
-* bad UX, need to propagate confirm sigs somehow;  
-* receiver can lie about receiving money; to prove sending, sender needs to publish confirmation to Ethereum;  
-* additional signature check per tx is needed;  
-* no good way of doing partially signed transactions / atomic swaps.
+* Bad UX, need to propagate confirm sigs somehow.  
+* Receiver can lie about receiving money; to prove sending, sender needs to publish confirmation to Ethereum.  
+* Additional signature check per tx is needed.  
+* No good way of doing partially signed transactions / atomic swaps.
 
 ### Re-org protection
 See [here](https://github.com/omisego/elixir-omg/blob/develop/docs/tesuji_blockchain_design.md#reorgs).
