@@ -113,7 +113,10 @@ class TestingLanguage(object):
                                  NULL_ADDRESS, 0)
 
         blknum = self.root_chain.getDepositBlock()
+        pre_balance = self.get_balance(self.root_chain)
         self.root_chain.deposit(value=amount, sender=owner.key)
+        balance = self.get_balance(self.root_chain)
+        assert balance == pre_balance + amount
 
         block = Block(transaction_set=[deposit_tx], number=blknum)
         self.child_chain.add_block(block)
@@ -142,7 +145,10 @@ class TestingLanguage(object):
         token.approve(self.root_chain.address, amount, sender=owner.key)
         self.ethtester.chain.mine()
         blknum = self.root_chain.getDepositBlock()
+        pre_balance = self.get_balance(self.root_chain, token)
         self.root_chain.depositFrom(owner.address, token.address, amount, sender=owner.key)
+        balance = self.get_balance(self.root_chain, token)
+        assert balance == pre_balance + amount
 
         block = Block(transaction_set=[deposit_tx], number=blknum)
         self.child_chain.add_block(block)
