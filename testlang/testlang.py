@@ -7,6 +7,7 @@ from plasma_core.utils.signatures import sign
 from plasma_core.utils.transactions import decode_utxo_id, encode_utxo_id
 from plasma_core.utils.address import address_to_hex
 from ethereum.utils import sha3
+import conftest
 
 
 def get_accounts(ethtester):
@@ -337,17 +338,24 @@ class TestingLanguage(object):
         exit_info = self.root_chain.exits(utxo_id)
         return StandardExit(*exit_info)
 
-    def get_balance(self, account):
-        """Queries the balance of an account.
+    def get_balance(self, account, token=NULL_ADDRESS):
+        """Queries ETH or token balance of an account.
 
         Args:
             account (EthereumAccount): Account to query,
+            token (str OR ABIContract OR NULL_ADDRESS):
+                MintableToken contract: its address or ABIContract representation.
 
         Returns:
             int: The account's balance.
         """
-
-        return self.ethtester.chain.head_state.get_balance(account.address)
+        if token == NULL_ADDRESS:
+            return self.ethtester.chain.head_state.get_balance(account.address)
+        if hasattr(token, "balanceOf"):
+            return token.balanceOf(account.address)
+        else:
+            token_contract = conftest.watch_contract(self.ethtester, 'MintableToken', token)
+            return token_contract.balanceOf(account.address)
 
     def forward_timestamp(self, amount):
         """Forwards the chain's timestamp.

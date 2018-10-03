@@ -83,3 +83,8 @@ def testlang(root_chain, ethtester):
 @pytest.fixture
 def utxo(testlang):
     return testlang.create_utxo()
+
+
+def watch_contract(ethtester, path, address):
+    abi, _ = deployer.builder.get_contract_data(path)
+    return ethtester.ABIContract(ethtester.chain, abi, address)
