@@ -1,6 +1,6 @@
 import pytest
 from ethereum.tools.tester import TransactionFailed
-from plasma_core.constants import NULL_ADDRESS_HEX
+from plasma_core.constants import NULL_ADDRESS_HEX, WEEK
 
 
 def test_challenge_standard_exit_valid_spend_should_succeed(testlang):
@@ -10,6 +10,21 @@ def test_challenge_standard_exit_valid_spend_should_succeed(testlang):
 
     testlang.start_standard_exit(owner, spend_id)
     doublespend_id = testlang.spend_utxo(spend_id, owner, amount, owner)
+
+    testlang.challenge_standard_exit(spend_id, doublespend_id)
+
+    assert testlang.root_chain.exits(spend_id) == [NULL_ADDRESS_HEX, NULL_ADDRESS_HEX, 100]
+
+
+def test_challenge_standard_exit_mature_valid_spend_should_succeed(testlang):
+    owner, amount = testlang.accounts[0], 100
+    deposit_id = testlang.deposit(owner.address, amount)
+    spend_id = testlang.spend_utxo(deposit_id, owner, amount, owner)
+
+    testlang.start_standard_exit(owner, spend_id)
+    doublespend_id = testlang.spend_utxo(spend_id, owner, amount, owner)
+
+    testlang.forward_timestamp(2 * WEEK + 1)
 
     testlang.challenge_standard_exit(spend_id, doublespend_id)
 
