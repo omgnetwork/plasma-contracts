@@ -45,3 +45,8 @@ Building and running tests:
 ```
 make test
 ```
+
+Running slow (overnight) tests:
+```
+make runslow | tee raport.txt
+```
