@@ -2,7 +2,7 @@ from plasma_core.child_chain import ChildChain
 from plasma_core.account import EthereumAccount
 from plasma_core.block import Block
 from plasma_core.transaction import Transaction
-from plasma_core.constants import NULL_ADDRESS
+from plasma_core.constants import NULL_ADDRESS, NULL_SIGNATURE
 from plasma_core.utils.signatures import sign
 from plasma_core.utils.transactions import decode_utxo_id, encode_utxo_id
 from plasma_core.utils.address import address_to_hex
@@ -109,7 +109,8 @@ class TestingLanguage(object):
                                  0, 0, 0,
                                  NULL_ADDRESS,
                                  owner.address, amount,
-                                 NULL_ADDRESS, 0)
+                                 NULL_ADDRESS, 0,
+                                 NULL_SIGNATURE, NULL_SIGNATURE)
 
         blknum = self.root_chain.getDepositBlock()
         self.root_chain.deposit(value=amount, sender=owner.key)
@@ -134,7 +135,8 @@ class TestingLanguage(object):
                                  0, 0, 0,
                                  token.address,
                                  owner.address, amount,
-                                 NULL_ADDRESS, 0)
+                                 NULL_ADDRESS, 0,
+                                 NULL_SIGNATURE, NULL_SIGNATURE)
 
         token.mint(owner.address, amount)
         self.ethtester.chain.mine()
@@ -167,7 +169,8 @@ class TestingLanguage(object):
                                0, 0, 0,
                                utxo.cur12,
                                new_owner.address, amount,
-                               NULL_ADDRESS, 0)
+                               NULL_ADDRESS, 0,
+                               NULL_SIGNATURE, NULL_SIGNATURE)
         spend_tx.sign1(signer.key)
         blknum = self.submit_block([spend_tx], force_invalid=force_invalid)
         tx_id = encode_utxo_id(blknum, 0, 0)
@@ -178,7 +181,9 @@ class TestingLanguage(object):
     def submit_block(self, transactions, signer=None, force_invalid=False):
         signer = signer or self.operator
         blknum = self.root_chain.currentChildBlock()
+        print("creating Block")
         block = Block(transactions, number=blknum)
+        print("creating Block ... DONE")
         block.sign(signer.key)
         self.root_chain.submitBlock(block.root, sender=signer.key)
         if force_invalid:

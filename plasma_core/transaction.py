@@ -1,11 +1,31 @@
 import rlp
 from rlp.sedes import big_endian_int, binary
+from rlp.sedes.serializable import Serializable
 from ethereum import utils
 from plasma_core.constants import NULL_SIGNATURE
 from plasma_core.utils.signatures import sign, get_signer
 
 
-class Transaction(rlp.Serializable):
+class _UnsignedTransaction(Serializable):
+
+    fields = [
+        ('blknum1', big_endian_int),
+        ('txindex1', big_endian_int),
+        ('oindex1', big_endian_int),
+        ('blknum2', big_endian_int),
+        ('txindex2', big_endian_int),
+        ('oindex2', big_endian_int),
+        ('cur12', utils.address),
+        ('newowner1', utils.address),
+        ('amount1', big_endian_int),
+        ('newowner2', utils.address),
+        ('amount2', big_endian_int),
+    ]
+    spent1 = False
+    spent2 = False
+
+
+class _SignedTransaction(Serializable):
 
     fields = [
         ('blknum1', big_endian_int),
@@ -22,6 +42,9 @@ class Transaction(rlp.Serializable):
         ('sig1', binary),
         ('sig2', binary),
     ]
+
+
+class Transaction():
 
     def __init__(self,
                  blknum1, txindex1, oindex1,
@@ -85,7 +108,8 @@ class Transaction(rlp.Serializable):
 
     @property
     def encoded(self):
-        return rlp.encode(self, UnsignedTransaction)
+        unsigned = _UnsignedTransaction(self.blknum1, self.txindex1, self.oindex1, self.blknum2, self.txindex2, self.oindex2, self.cur12, self.newowner1, self.amount1, self.newowner2, self.amount2)
+        return rlp.encode(_UnsignedTransaction.serialize(unsigned))
 
     def sign1(self, key):
         self.sig1 = sign(self.hash, key)
@@ -96,5 +120,6 @@ class Transaction(rlp.Serializable):
     def confirm(self, root, key):
         return sign(utils.sha3(self.hash + root), key)
 
-
-UnsignedTransaction = Transaction.exclude(['sig1', 'sig2'])
+    def serialize(self):
+        signed = _SignedTransaction(self.blknum1, self.txindex1, self.oindex1, self.blknum2, self.txindex2, self.oindex2, self.cur12, self.newowner1, self.amount1, self.newowner2, self.amount2, self.sig1, self.sig2)
+        return _SignedTransaction.serialize(signed)

@@ -24,9 +24,9 @@ setup(
     keywords='plasma contracts ethereum development solidity',
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
     install_requires=[
-        'ethereum==2.3.0',
-        'web3==4.5.0',
-        'rlp==0.6.0',
+        'ethereum==2.3.2',
+        'web3==4.7.2',
+        'rlp==1.0.3',
         'py-solc-simple==0.0.10'
     ]
 )
