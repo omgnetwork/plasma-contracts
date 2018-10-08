@@ -84,7 +84,7 @@ def op_cost(n):
     tx_base_cost = 21000
     # Numbers were discovered experimentally. They represent upper bound of
     # gas cost of execution of delMin or insert operations.
-    return tx_base_cost + 26538 + 6638 * math.floor(math.log(n, 2))
+    return tx_base_cost + 26588 + 6638 * math.floor(math.log(n, 2))
 
 
 def test_priority_queue_worst_case_gas_cost(ethtester, priority_queue):
