@@ -33,6 +33,11 @@ test:
 	python -m pytest
 	rm -fr .pytest_cache
 
+.PHONY: runslow
+runslow:
+	python -m pytest -s --runslow
+	rm -fr .pytest_cache
+
 .PHONY: dev
 dev:
 	pip install pylint pytest flake8
