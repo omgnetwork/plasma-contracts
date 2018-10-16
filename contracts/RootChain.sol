@@ -394,6 +394,12 @@ contract RootChain {
     function writeDepositBlock(address _owner, address _token, uint256 _amount)
         private
     {
+        // Following check is needed since writeDepositBlock
+        // can be called on stack unwinding during re-entrance attack,
+        // with currentDepositBlock == 999, producing
+        // deposit with blknum ending with 000.
+        require(currentDepositBlock < CHILD_BLOCK_INTERVAL);
+
         bytes32 root = keccak256(_owner, _token, _amount);
         uint256 depositBlock = getDepositBlock();
         childChain[depositBlock] = ChildBlock({
