@@ -23,17 +23,6 @@ def test_start_standard_exit_invalid_proof_should_fail(testlang, utxo):
         testlang.root_chain.startExit(utxo.spend_id, spend_tx.encoded, proof, sigs, sender=utxo.owner.key)
 
 
-def test_start_standard_exit_spend_without_valid_confirmation_should_fail(testlang):
-    owner, owner2, amount = testlang.accounts[0], testlang.accounts[1], 100
-    deposit_id = testlang.deposit(owner.address, amount)
-
-    spend_id = testlang.spend_utxo(deposit_id, owner, 100, owner, auto_confirm=False)
-    testlang.confirm_spend(spend_id, owner2)
-
-    with pytest.raises(TransactionFailed):
-        testlang.start_standard_exit(owner, spend_id)
-
-
 def test_start_standard_exit_by_non_owner_should_fail(testlang, utxo):
     mallory = testlang.accounts[1]
     with pytest.raises(TransactionFailed):
@@ -73,3 +62,32 @@ def test_start_standard_exit_on_finalized_exit_should_fail(testlang, utxo):
 
     with pytest.raises(TransactionFailed):
         testlang.start_standard_exit(utxo.owner, utxo.spend_id)
+
+
+def test_start_standard_exit_wrong_oindex_should_fail(testlang):
+    from plasma_core.utils.transactions import decode_utxo_id, encode_utxo_id
+    from plasma_core.transaction import Transaction
+    alice, bob, alice_money, bob_money = testlang.accounts[0], testlang.accounts[1], 10, 90
+
+    deposit_id = testlang.deposit(alice, alice_money + bob_money)
+    deposit_blknum, _, _ = decode_utxo_id(deposit_id)
+
+    utxo = testlang.child_chain.get_transaction(deposit_id)
+    spend_tx = Transaction(*decode_utxo_id(deposit_id),
+                           0, 0, 0,
+                           utxo.cur12,
+                           alice.address, alice_money,
+                           bob.address, bob_money)
+    spend_tx.sign1(alice.key)
+    blknum = testlang.submit_block([spend_tx])
+    alice_utxo = encode_utxo_id(blknum, 0, 0)
+    bob_utxo = encode_utxo_id(blknum, 0, 1)
+
+    with pytest.raises(TransactionFailed):
+        testlang.start_standard_exit(alice, bob_utxo)
+
+    with pytest.raises(TransactionFailed):
+        testlang.start_standard_exit(bob, alice_utxo)
+
+    testlang.start_standard_exit(alice, alice_utxo)
+    testlang.start_standard_exit(bob, bob_utxo)

@@ -64,3 +64,33 @@ def test_restarting_challenged_exit_should_fail(testlang):
 
     with pytest.raises(TransactionFailed):
         testlang.start_standard_exit(owner, spend_id)
+
+
+def test_challenge_standard_exit_wrong_oindex_should_fail(testlang):
+    from plasma_core.utils.transactions import decode_utxo_id, encode_utxo_id
+    from plasma_core.transaction import Transaction
+    alice, bob, alice_money, bob_money = testlang.accounts[0], testlang.accounts[1], 10, 90
+
+    deposit_id = testlang.deposit(alice, alice_money + bob_money)
+    deposit_blknum, _, _ = decode_utxo_id(deposit_id)
+
+    utxo = testlang.child_chain.get_transaction(deposit_id)
+    spend_tx = Transaction(*decode_utxo_id(deposit_id),
+                           0, 0, 0,
+                           utxo.cur12,
+                           alice.address, alice_money,
+                           bob.address, bob_money)
+    spend_tx.sign1(alice.key)
+    blknum = testlang.submit_block([spend_tx])
+    alice_utxo = encode_utxo_id(blknum, 0, 0)
+    bob_utxo = encode_utxo_id(blknum, 0, 1)
+
+    testlang.start_standard_exit(alice, alice_utxo)
+
+    bob_spend_id = testlang.spend_utxo(bob_utxo, bob, bob_money, bob)
+    alice_spend_id = testlang.spend_utxo(alice_utxo, alice, alice_money, alice)
+
+    with pytest.raises(TransactionFailed):
+        testlang.challenge_standard_exit(alice_utxo, bob_spend_id)
+
+    testlang.challenge_standard_exit(alice_utxo, alice_spend_id)
