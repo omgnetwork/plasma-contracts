@@ -16,13 +16,14 @@ library Validate {
     {
         require(sigs.length % 65 == 0 && sigs.length <= 130);
 
-        if (oindex > 0) {
+        if (oindex == 1) {
             bytes memory sig2 = ByteUtils.slice(sigs, 65, 65);
             return exitor == ECRecovery.recover(txHash, sig2);
         }
-        else {
+        if (oindex == 0) {
             bytes memory sig1 = ByteUtils.slice(sigs, 0, 65);
             return exitor == ECRecovery.recover(txHash, sig1);
         }
+        assert(oindex < 2);
     }
 }
