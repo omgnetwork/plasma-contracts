@@ -154,15 +154,15 @@ contract RootChain {
     /**
      * @dev Deposits approved amount of ERC20 token. Approve must be called first. Note: does not check if token was added.
      */
-    function depositFrom(address _owner, address _token, uint256 _amount)
+    function depositFrom(address _token, uint256 _amount)
         public
     {
         // Only allow up to CHILD_BLOCK_INTERVAL deposits per child block.
         require(currentDepositBlock < CHILD_BLOCK_INTERVAL);
 
         // Warning, check your ERC20 implementation. TransferFrom should return bool
-        require(ERC20(_token).transferFrom(_owner, address(this), _amount));
-        writeDepositBlock(_owner, _token, _amount);
+        require(ERC20(_token).transferFrom(msg.sender, address(this), _amount));
+        writeDepositBlock(msg.sender, _token, _amount);
     }
 
     /**
