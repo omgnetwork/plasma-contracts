@@ -170,8 +170,8 @@ def test_finalize_exits_tx_race_normal(testlang):
     testlang.finalize_exits(NULL_ADDRESS, utxo1.spend_id, 1)
 
     testlang.finalize_exits(NULL_ADDRESS, utxo2.spend_id, 3)
-    three_exits_gas = testlang.ethtester.chain.last_gas_used()
-    assert three_exits_gas > 3516  # value from _tx_race_short_circuit
+    three_exits_tx_gas = testlang.ethtester.chain.last_gas_used()
+    assert three_exits_tx_gas > 3516  # value from _tx_race_short_circuit
 
 
 def test_finalize_exits_empty_queue_should_crash(testlang, ethtester):
@@ -223,3 +223,19 @@ def test_finalize_challenged_exit_will_not_send_funds(testlang):
     testlang.finalize_exits(NULL_ADDRESS, 0, 1, sender=finalizer.key)
     post_balance = testlang.get_balance(testlang.root_chain)
     assert post_balance == pre_balance
+
+
+def test_finalized_exit_challenge_will_fail(testlang):
+    owner, amount = testlang.accounts[0], 100
+    deposit_id = testlang.deposit(owner.address, amount)
+    spend_id = testlang.spend_utxo(deposit_id, owner, amount, owner)
+
+    testlang.start_standard_exit(owner, spend_id)
+    testlang.forward_timestamp(2 * WEEK + 1)
+
+    testlang.finalize_exits(NULL_ADDRESS, spend_id, 100)
+    standard_exit = testlang.get_standard_exit(spend_id)
+    assert standard_exit.owner == NULL_ADDRESS_HEX
+    doublespend_id = testlang.spend_utxo(spend_id, owner, 100, owner)
+    with pytest.raises(TransactionFailed):
+        testlang.challenge_standard_exit(spend_id, doublespend_id)
