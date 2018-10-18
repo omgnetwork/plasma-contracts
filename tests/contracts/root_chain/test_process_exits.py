@@ -170,8 +170,8 @@ def test_finalize_exits_tx_race_normal(testlang):
     testlang.finalize_exits(NULL_ADDRESS, utxo1.spend_id, 1)
 
     testlang.finalize_exits(NULL_ADDRESS, utxo2.spend_id, 3)
-    three_exits_gas = testlang.ethtester.chain.last_gas_used()
-    assert three_exits_gas > 3516  # value from _tx_race_short_circuit
+    three_exits_tx_gas = testlang.ethtester.chain.last_gas_used()
+    assert three_exits_tx_gas > 3516  # value from _tx_race_short_circuit
 
 
 def test_finalize_exits_empty_queue_should_crash(testlang, ethtester):
