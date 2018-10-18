@@ -146,7 +146,7 @@ class TestingLanguage(object):
         self.ethtester.chain.mine()
         blknum = self.root_chain.getDepositBlock()
         pre_balance = self.get_balance(self.root_chain, token)
-        self.root_chain.depositFrom(owner.address, token.address, amount, sender=owner.key)
+        self.root_chain.depositFrom(token.address, amount, sender=owner.key)
         balance = self.get_balance(self.root_chain, token)
         assert balance == pre_balance + amount
 
