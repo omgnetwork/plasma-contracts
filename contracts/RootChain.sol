@@ -205,7 +205,7 @@ contract RootChain {
      * @param _utxoPos The position of the exiting utxo in the format of blknum * 1000000000 + index * 10000 + oindex.
      * @param _txBytes The transaction being exited in RLP bytes format.
      * @param _proof Proof of the exiting transactions inclusion for the block specified by utxoPos.
-     * @param _sigs Both transaction signatures and confirmations signatures used to verify that the exiting transaction has been confirmed.
+     * @param _sigs Transaction signatures are needed to check tx inclusion.
      */
     function startExit(
         uint256 _utxoPos,
@@ -223,10 +223,9 @@ contract RootChain {
         var exitingTx = _txBytes.createExitingTx(oindex);
         require(msg.sender == exitingTx.exitor);
 
-        // Check the transaction was included in the chain and is correctly signed.
+        // Check the transaction was included in the chain.
         bytes32 root = childChain[blknum].root;
         bytes32 merkleHash = keccak256(keccak256(_txBytes), ByteUtils.slice(_sigs, 0, 130));
-        require(Validate.checkSigs(keccak256(_txBytes), root, exitingTx.inputCount, _sigs));
         require(merkleHash.checkMembership(txindex, root, _proof));
 
         addExitToQueue(_utxoPos, exitingTx.exitor, exitingTx.token, exitingTx.amount, childChain[blknum].timestamp);
@@ -239,28 +238,29 @@ contract RootChain {
      * @param _txBytes The challenging transaction in bytes RLP form.
      * @param _proof Proof of inclusion for the transaction used to challenge.
      * @param _sigs Signatures for the transaction used to challenge.
-     * @param _confirmationSig The confirmation signature for the transaction used to challenge.
      */
     function challengeExit(
         uint256 _cUtxoPos,
         uint256 _eUtxoIndex,
         bytes _txBytes,
         bytes _proof,
-        bytes _sigs,
-        bytes _confirmationSig
+        bytes _sigs
     )
         public
     {
-        uint256 eUtxoPos = _txBytes.getUtxoPos(_eUtxoIndex);
-        uint256 txindex = (_cUtxoPos % 1000000000) / 10000;
-        bytes32 root = childChain[_cUtxoPos / 1000000000].root;
         var txHash = keccak256(_txBytes);
-        var confirmationHash = keccak256(txHash, root);
-        var merkleHash = keccak256(txHash, _sigs);
+        uint256 eUtxoPos = _txBytes.getUtxoPos(_eUtxoIndex);
         address owner = exits[eUtxoPos].owner;
+        uint256 blknum = _cUtxoPos / 1000000000;
+        uint256 txindex = (_cUtxoPos % 1000000000) / 10000;
+        uint256 oindex = _cUtxoPos - blknum * 1000000000 - txindex * 10000;
 
-        // Validate the spending transaction.
-        require(owner == ECRecovery.recover(confirmationHash, _confirmationSig));
+        // Check if double-spend was signed by utxo owner.
+        require(Validate.checkSigs(txHash, owner, oindex, _sigs));
+
+        // Check if spending transaction was included.
+        bytes32 root = childChain[_cUtxoPos / 1000000000].root;
+        var merkleHash = keccak256(txHash, _sigs);
         require(merkleHash.checkMembership(txindex, root, _proof));
 
         // Delete the owner but keep the amount to prevent another exit.

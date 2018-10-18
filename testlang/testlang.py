@@ -264,7 +264,7 @@ class TestingLanguage(object):
         (blknum, _, _) = decode_utxo_id(utxo_id)
         block = self.child_chain.blocks[blknum]
         proof = block.merklized_transaction_set.create_membership_proof(spend_tx.merkle_hash)
-        sigs = spend_tx.sig1 + spend_tx.sig2 + self.confirmations[utxo_id]
+        sigs = spend_tx.sig1 + spend_tx.sig2
         self.root_chain.startExit(utxo_id, spend_tx.encoded, proof, sigs, sender=sender.key)
 
     def challenge_standard_exit(self, utxo_id, spend_id):
@@ -296,7 +296,7 @@ class TestingLanguage(object):
             spend_id (int): Identifier of the transaction that spent the UTXO.
 
         Returns:
-            int, bytes, bytes, bytes, bytes: Information necessary to create a challenge proof.
+            int, bytes, bytes, bytes: Information necessary to create a challenge proof.
         """
 
         spend_tx = self.child_chain.get_transaction(spend_id)
@@ -309,8 +309,7 @@ class TestingLanguage(object):
         block = self.child_chain.blocks[blknum]
         proof = block.merklized_transaction_set.create_membership_proof(spend_tx.merkle_hash)
         sigs = spend_tx.sig1 + spend_tx.sig2
-        confirmation_sig = self.confirmations[spend_id]
-        return (input_index, spend_tx.encoded, proof, sigs, confirmation_sig)
+        return (input_index, spend_tx.encoded, proof, sigs)
 
     def get_plasma_block(self, blknum):
         """Queries a plasma block by its number.

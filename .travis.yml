@@ -13,7 +13,7 @@ install:
   - npm install --global ganache-cli
   - wget https://github.com/ethereum/solidity/releases/download/v0.4.24/solc-static-linux && chmod +x ./solc-static-linux && sudo mv solc-static-linux /usr/bin/solc
   - pip install --upgrade pip setuptools flake8
-  - make
+  - pip install -r requirements.txt
 
 script:
   - (ganache-cli -m="plasma_mvp" &) && while ! curl -s localhost:8545 >/dev/null; do sleep 1; done

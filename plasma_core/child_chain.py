@@ -59,21 +59,18 @@ class ChildChain(object):
         output_amount = tx.amount1 + tx.amount2
 
         inputs = [(tx.blknum1, tx.txindex1, tx.oindex1), (tx.blknum2, tx.txindex2, tx.oindex2)]
-        for (blknum, txindex, oindex) in inputs:
+        for input_index, (blknum, txindex, oindex) in enumerate(inputs):
             # Transactions coming from block 0 are valid.
             if blknum == 0:
                 continue
 
             input_tx = self.blocks[blknum].transaction_set[txindex]
 
-            if oindex == 0:
-                valid_signature = tx.sig1 != NULL_SIGNATURE and input_tx.newowner1 == tx.sender1
-                spent = input_tx.spent1
-                input_amount += input_tx.amount1
-            else:
-                valid_signature = tx.sig2 != NULL_SIGNATURE and input_tx.newowner2 == tx.sender2
-                spent = input_tx.spent2
-                input_amount += input_tx.amount2
+            not_null_sig = tx.sig(input_index) != NULL_SIGNATURE
+            correct_signer = input_tx.newowner(oindex) == tx.sender(input_index)
+            valid_signature = not_null_sig and correct_signer
+            spent = input_tx.spent(oindex)
+            input_amount += input_tx.amount(oindex)
 
             # Check to see if the input is already spent.
             utxo_id = encode_utxo_id(blknum, txindex, oindex)
