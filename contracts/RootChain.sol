@@ -279,6 +279,8 @@ contract RootChain {
         uint256 utxoPos;
         uint256 exitable_at;
         uint256 _exitsLeft = _exitsToProcess;
+
+        // Getting the next exit if any exists, if not, then revert
         (utxoPos, exitable_at) = getNextExit(_token);
         require(_topUtxoPos == utxoPos || _topUtxoPos == 0);
         Exit memory currentExit = exits[utxoPos];
@@ -438,6 +440,8 @@ contract RootChain {
 
         // Check exit is valid and doesn't already exist.
         require(_amount > 0);
+        // Maps in Solidity are complete, and lookups of
+        // missing elements return 0-initialized values
         require(exits[_utxoPos].amount == 0);
 
         PriorityQueue queue = PriorityQueue(exitsQueues[_token]);

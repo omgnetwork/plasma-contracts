@@ -58,6 +58,10 @@ contract PriorityQueue {
         }
     }
 
+    /**
+     * @dev Determines the next exit to be processed.
+     * @return The min element of the priority queue, or reverts if empty queue.
+     */
     function getMin()
         public
         view
