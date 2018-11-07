@@ -1,5 +1,6 @@
 from plasma_core.utils.transactions import decode_utxo_id, encode_utxo_id
 from plasma_core.utils.address import address_to_hex
+from plasma_core.utils.signatures import get_signer
 from plasma_core.constants import NULL_SIGNATURE
 from plasma_core.exceptions import (InvalidBlockSignatureException,
                                     InvalidTxSignatureException,
@@ -31,11 +32,7 @@ class ChildChain(object):
             self._apply_block(block)
 
             # Update the head state.
-            if is_next_child_block:
-                self.next_deposit_block = self.next_child_block + 1
-                self.next_child_block += self.child_block_interval
-            else:
-                self.next_deposit_block += 1
+            self._update_headstate(is_next_child_block)
         # Or does the block not yet have a parent?
         elif block.number > self.next_deposit_block:
             parent_block_number = block.number - 1
@@ -56,21 +53,38 @@ class ChildChain(object):
 
     def validate_transaction(self, tx, temp_spent={}):
         input_amount = 0
-        output_amount = tx.amount1 + tx.amount2
+        if  hasattr(tx, "outputs"):
+            output_amount = sum(output.amount for output in tx.outputs)
+            inputs = [(tx.inputs[0].blknum, tx.inputs[0].txindex, tx.inputs[0].oindex), (tx.inputs[1].blknum, tx.inputs[1].txindex, tx.inputs[1].oindex)]
+        else:
+            output_amount = tx.amount1 + tx.amount2
+            inputs = [(tx.blknum1, tx.txindex1, tx.oindex1), (tx.blknum2, tx.txindex2, tx.oindex2)]
 
-        inputs = [(tx.blknum1, tx.txindex1, tx.oindex1), (tx.blknum2, tx.txindex2, tx.oindex2)]
         for input_index, (blknum, txindex, oindex) in enumerate(inputs):
             # Transactions coming from block 0 are valid.
             if blknum == 0:
                 continue
 
-            input_tx = self.blocks[blknum].transaction_set[txindex]
+            input_id = encode_utxo_id(blknum, txindex, oindex)
+            input_tx = self.get_transaction(input_id)
 
-            not_null_sig = tx.sig(input_index) != NULL_SIGNATURE
-            correct_signer = input_tx.newowner(oindex) == tx.sender(input_index)
+            if hasattr(input_tx, "outputs"):
+                signature = tx.signatures[input_index]
+                not_null_sig = signature != NULL_SIGNATURE
+                correct_signer = input_tx.outputs[oindex].owner == get_signer(input_tx.hash, signature)
+                spent = input_tx.spent[oindex]
+                input_amount += input_tx.outputs[oindex].amount
+            else:
+                not_null_sig = tx.sig(input_index) 
+                correct_signer = input_tx.newowner(oindex) == tx.sender(input_index)
+                spent = input_tx.spent(oindex)
+                input_amount += input_tx.amount(oindex)
+
             valid_signature = not_null_sig and correct_signer
-            spent = input_tx.spent(oindex)
-            input_amount += input_tx.amount(oindex)
+            
+            # Deposit transaction signatures are checked at the block level
+            if self.blocks[blknum].is_deposit_block:
+                valid_signature = True 
 
             # Check to see if the input is already spent.
             utxo_id = encode_utxo_id(blknum, txindex, oindex)
@@ -94,14 +108,18 @@ class ChildChain(object):
         return self.next_child_block
 
     def _apply_transaction(self, tx):
-        inputs = [(tx.blknum1, tx.txindex1, tx.oindex1), (tx.blknum2, tx.txindex2, tx.oindex2)]
-        for i in inputs:
-            (blknum, _, oindex) = i
+        if hasattr(tx, "outputs"):
+            inputs = [(tx.inputs[0].blknum, tx.inputs[0].txindex, tx.inputs[0].oindex), (tx.inputs[1].blknum, tx.inputs[1].txindex, tx.inputs[1].oindex)]
+        else:
+            inputs = [(tx.blknum1, tx.txindex1, tx.oindex1), (tx.blknum2, tx.txindex2, tx.oindex2)]
+        for (blknum, txindex, oindex) in inputs:
             if blknum == 0:
                 continue
-            input_id = encode_utxo_id(*i)
+            input_id = encode_utxo_id(blknum, txindex, oindex)
             input_tx = self.get_transaction(input_id)
-            if oindex == 0:
+            if hasattr(input_tx, "outputs"):
+                input_tx.spent[oindex] = True
+            elif oindex == 0:
                 input_tx.spent1 = True
             else:
                 input_tx.spent2 = True
@@ -118,3 +136,11 @@ class ChildChain(object):
         for tx in block.transaction_set:
             self._apply_transaction(tx)
         self.blocks[block.number] = block
+
+    def _update_headstate(self, is_next_child_block):
+        if is_next_child_block:
+            self.next_deposit_block = self.next_child_block + 1
+            self.next_child_block += self.child_block_interval
+        else:
+            self.next_deposit_block += 1
+
