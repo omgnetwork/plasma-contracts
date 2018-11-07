@@ -100,11 +100,6 @@ contract RootChain {
         address token
     );
 
-    event ExitBlocked(
-        address indexed challenger,
-        uint256 outputId
-    );
-
     event InFlightExitStarted(
         address indexed initiator,
         bytes32 txHash
@@ -128,6 +123,13 @@ contract RootChain {
         uint256 outputId
     );
 
+    event ExitFinalized(
+        uint256 indexed utxoPos
+    );
+
+    event ExitChallenged(
+        uint256 indexed utxoPos
+    );
 
     /*
      * Modifiers
@@ -360,7 +362,7 @@ contract RootChain {
         // Send a bond to the challenger.
         msg.sender.transfer(standardExitBond);
 
-        emit ExitBlocked(msg.sender, _outputId);
+        emit ExitChallenged(_outputId);
     }
 
     /**
@@ -713,8 +715,10 @@ contract RootChain {
             if (isInFlight) {
                 // handle ERC20 transfers for InFlight exits
                 _processInFlightExit(inFlightExits[exitId]);
+                // think of useful event scheme for in-flight outputs finalization
             } else {
                 _processStandardExit(exits[exitId]);
+                emit ExitFinalized(exitId >> 1);
             }
 
             // Pull the next exit.
@@ -1115,6 +1119,7 @@ contract RootChain {
             transferAmount = piggybackBond;
             if ((i < 4 && inputsExitable) || (i >= 4 && !inputsExitable)) {
                 transferAmount += output.amount;
+                // TODO: emit event here?
             }
             output.owner.transfer(transferAmount);
         }
