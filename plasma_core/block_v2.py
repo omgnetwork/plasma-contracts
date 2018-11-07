@@ -3,7 +3,7 @@ from rlp.sedes import binary, CountableList, big_endian_int
 from ethereum import utils
 from plasma_core.utils.signatures import sign, get_signer
 from plasma_core.utils.merkle.fixed_merkle import FixedMerkle
-from plasma_core.transaction import Transaction
+from plasma_core.transaction_v2 import Transaction
 from plasma_core.constants import NULL_SIGNATURE
 
 
@@ -30,8 +30,8 @@ class Block(rlp.Serializable):
 
     @property
     def merklized_transaction_set(self):
-        hashed_transactions = [tx.merkle_hash for tx in self.transaction_set]
-        return FixedMerkle(16, hashed_transactions)
+        encoded_transactions = [tx.encoded for tx in self.transaction_set]
+        return FixedMerkle(16, encoded_transactions)
 
     @property
     def root(self):
@@ -50,4 +50,3 @@ class Block(rlp.Serializable):
 
 
 UnsignedBlock = Block.exclude(['sig'])
-
