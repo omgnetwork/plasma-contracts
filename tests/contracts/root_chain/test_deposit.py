@@ -41,7 +41,7 @@ def test_at_most_999_deposits_per_child_block(testlang):
     with pytest.raises(TransactionFailed):
         testlang.deposit(owner, 1)
 
-    testlang.spend_utxo(deposit_id, owner, 1, owner)
+    testlang.spend_utxo([deposit_id], [owner.key], [(owner.address, 1)])
     testlang.deposit(owner, 1)
 
 
