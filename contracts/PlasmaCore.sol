@@ -32,6 +32,7 @@ library PlasmaCore {
     struct TransactionOutput {
         address owner;
         uint256 amount;
+        address currency;
     }
 
     struct Transaction {
@@ -70,7 +71,8 @@ library PlasmaCore {
             RLP.RLPItem[] memory output = outputs[i].toList();
             decodedTx.outputs[i] = TransactionOutput({
                 owner: output[0].toAddress(),
-                amount: output[1].toUint()
+                amount: output[1].toUint(),
+                currency: output[2].toAddress()
             });
         }
 
