@@ -3,6 +3,7 @@ pragma solidity ^0.4.0;
 import "./SafeMath.sol";
 import "./Math.sol";
 import "./PlasmaRLP.sol";
+import "./PlasmaCore.sol";
 import "./Merkle.sol";
 import "./Validate.sol";
 import "./PriorityQueue.sol";
@@ -18,6 +19,8 @@ contract RootChain {
     using SafeMath for uint256;
     using Merkle for bytes32;
     using PlasmaRLP for bytes;
+    using PlasmaCore for bytes;
+    using PlasmaCore for uint256;
 
 
     /*
@@ -201,34 +204,38 @@ contract RootChain {
     }
 
     /**
-     * @dev Starts to exit a specified utxo.
-     * @param _utxoPos The position of the exiting utxo in the format of blknum * 1000000000 + index * 10000 + oindex.
-     * @param _txBytes The transaction being exited in RLP bytes format.
-     * @param _proof Proof of the exiting transactions inclusion for the block specified by utxoPos.
-     * @param _sigs Transaction signatures are needed to check tx inclusion.
+     * @dev Starts a standard withdrawal of a given output. Uses output-age priority.
+     * @param _outputId Identifier of the exiting output.
+     * @param _outputTx RLP encoded transaction that created the exiting output.
+     * @param _outputTxInclusionProof A Merkle proof showing that the transaction was included.
      */
     function startExit(
-        uint256 _utxoPos,
-        bytes _txBytes,
-        bytes _proof,
-        bytes _sigs
+        uint256 _outputId,
+        bytes _outputTx,
+        bytes _outputTxInclusionProof
     )
         public
+        returns (address)
     {
-        uint256 blknum = _utxoPos / 1000000000;
-        uint256 txindex = (_utxoPos % 1000000000) / 10000;
-        uint256 oindex = _utxoPos - blknum * 1000000000 - txindex * 10000;
+         // Check that the output transaction actually created the output.
+        require(_transactionIncluded(_outputTx, _outputId, _outputTxInclusionProof));
+
+        // Decode the output ID.
+        uint256 oindex = _outputId.getOindex();
 
         // Check the sender owns this UTXO.
-        var exitingTx = _txBytes.createExitingTx(oindex);
-        require(msg.sender == exitingTx.exitor);
+        // var exitingTx = _txBytes.createExitingTx(oindex);
+        // Parse outputTx.
+        PlasmaCore.TransactionOutput memory output = _outputTx.getOutput(oindex);
+        require(msg.sender == output.owner);
 
-        // Check the transaction was included in the chain.
-        bytes32 root = childChain[blknum].root;
-        bytes32 merkleHash = keccak256(keccak256(_txBytes), ByteUtils.slice(_sigs, 0, 130));
-        require(merkleHash.checkMembership(txindex, root, _proof));
-
-        addExitToQueue(_utxoPos, exitingTx.exitor, exitingTx.token, exitingTx.amount, childChain[blknum].timestamp);
+        // // Check the transaction was included in the chain.
+        // bytes32 root = childChain[blknum].root;
+        // bytes32 merkleHash = keccak256(keccak256(_txBytes), ByteUtils.slice(_sigs, 0, 130));
+        // require(merkleHash.checkMembership(txindex, root, _proof));
+        uint256 blknum = _outputId / 1000000000;
+        addExitToQueue(_outputId, output.owner, output.currency, output.amount, childChain[blknum].timestamp);
+        return output.currency;
     }
 
     /**
@@ -342,7 +349,7 @@ contract RootChain {
      * @dev Determines the next deposit block number.
      * @return Block number to be given to the next deposit block.
      */
-    function getDepositBlock()
+    function getDepositBlockNumber()
         public
         view
         returns (uint256)
@@ -384,6 +391,27 @@ contract RootChain {
      * Private functions
      */
 
+    /**
+     * @dev Checks that a given transaction was included in a block and created a specified output.
+     * @param _tx RLP encoded transaction to verify.
+     * @param _transactionId Unique transaction identifier for the encoded transaction.
+     * @param _txInclusionProof Proof that the transaction was in a block.
+     * @return True if the transaction was in a block and created the output. False otherwise.
+     */
+    function _transactionIncluded(bytes _tx, uint256 _transactionId, bytes _txInclusionProof)
+        private
+        view
+        returns (bool)
+    {
+        // Decode the transaction ID.
+        uint256 blknum = _transactionId.getBlknum();
+        uint256 txindex = _transactionId.getTxindex();
+
+        // Check that the transaction was correctly included.
+        bytes32 blockRoot = childChain[blknum].root;
+        bytes32 leafHash = keccak256(_tx);
+        return Merkle.checkMembership(leafHash, txindex, blockRoot, _txInclusionProof);
+    }
 
     /**
      * @dev Adds deposit block to chain of blocks.
@@ -401,14 +429,14 @@ contract RootChain {
         require(currentDepositBlock < CHILD_BLOCK_INTERVAL);
 
         bytes32 root = keccak256(_owner, _token, _amount);
-        uint256 depositBlock = getDepositBlock();
-        childChain[depositBlock] = ChildBlock({
+        uint256 depositBlockNumber = getDepositBlockNumber();
+        childChain[depositBlockNumber] = ChildBlock({
             root: root,
             timestamp: block.timestamp
         });
         currentDepositBlock = currentDepositBlock.add(1);
 
-        emit Deposit(_owner, depositBlock, _token, _amount);
+        emit Deposit(_owner, depositBlockNumber, _token, _amount);
     }
 
 
