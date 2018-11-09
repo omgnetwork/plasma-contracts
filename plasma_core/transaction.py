@@ -71,21 +71,6 @@ class Transaction(rlp.Serializable):
     def signers(self):
         return [get_signer(self.hash, sig) if sig != NULL_SIGNATURE else NULL_ADDRESS for sig in self.signatures]
 
-    def sender(self, index):
-        return get_signer(self.hash, self.sig(index))
-
-    def newowner(self, index):
-        return getattr(self, "newowner" + str(index + 1))
-
-    def amount(self, index):
-        return getattr(self, "amount" + str(index + 1))
-
-    def sig(self, index):
-        return getattr(self, "sig" + str(index + 1))
-
-    def spent(self, index):
-        return getattr(self, "spent" + str(index + 1))
-
     @property
     def encoded(self):
         return rlp.encode(self, UnsignedTransaction)

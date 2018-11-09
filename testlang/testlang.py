@@ -132,17 +132,6 @@ class TestingLanguage(object):
         return self.ethtester.chain.head_state.timestamp
 
     def deposit(self, owner, amount):
-        if isinstance(owner, str):
-            for acc in self.accounts:
-                if owner == acc.address:
-                    owner = acc
-                    break
-            if isinstance(owner, str):
-                raise ValueError("owner must be a known account")
-        blknum = self.deposit_morevp(owner, amount)
-        return encode_utxo_id(blknum, 0, 0)
-
-    def deposit_morevp(self, owner, amount):
         deposit_tx = Transaction(outputs=[(owner, amount)])
         blknum = self.root_chain.getDepositBlockNumber()
         self.root_chain.deposit(deposit_tx.encoded, value=amount)
@@ -211,7 +200,7 @@ class TestingLanguage(object):
         balance = self.get_balance(self.root_chain, token)
         assert balance == pre_balance + amount
 
-        block = Block(transaction_set=[deposit_tx], number=blknum)
+        block = Block(transactions=[deposit_tx], number=blknum)
         self.child_chain.add_block(block)
         return encode_utxo_id(blknum, 0, 0)
 

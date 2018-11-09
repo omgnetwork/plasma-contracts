@@ -17,7 +17,7 @@ library PlasmaCore {
     /*
      * Storage
      */
-    uint256 constant internal NUM_TXS = 2;
+    uint256 constant internal NUM_TXS = 4;
     uint256 constant internal BLOCK_OFFSET = 1000000000;
     uint256 constant internal TX_OFFSET = 10000;
     uint256 constant internal PROOF_SIZE_BYTES = 32;

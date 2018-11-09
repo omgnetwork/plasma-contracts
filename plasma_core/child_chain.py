@@ -28,7 +28,7 @@ class ChildChain(object):
                 return False
 
             # Insert the block into the chain.
-            self._apply_block(block)
+            self.__apply_block(block)
 
             # Update the head state.
             if is_next_child_block:
@@ -105,7 +105,7 @@ class ChildChain(object):
         for tx in block.transactions:
             self.validate_transaction(tx)
 
-    def _apply_block(self, block):
-        for tx in block.transaction_set:
-            self._apply_transaction(tx)
+    def __apply_block(self, block):
+        for tx in block.transactions:
+            self.__apply_transaction(tx)
         self.blocks[block.number] = block

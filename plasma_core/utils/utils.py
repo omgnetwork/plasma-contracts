@@ -16,9 +16,3 @@ def get_merkle_of_leaves(depth, leaves):
 
 def bytes_fill_left(inp, length):
     return bytes(length - len(inp)) + inp
-
-
-def get_deposit_hash(owner, token, value):
-    assert value < 256, "Bad argument"  # rewrite function to allow passing larger value
-    value_bytes = u.int_to_bytes(value) if value != 0 else b'\x00'
-    return u.sha3(owner + token + b'\x00' * 31 + value_bytes)

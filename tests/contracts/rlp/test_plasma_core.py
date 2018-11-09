@@ -1,5 +1,5 @@
 import pytest
-from plasma_core.transaction_v2 import Transaction
+from plasma_core.transaction import Transaction
 
 
 @pytest.fixture
