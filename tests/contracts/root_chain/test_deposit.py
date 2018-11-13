@@ -72,25 +72,30 @@ def test_token_deposit_should_succeed(testlang, root_chain, token):
     assert root_chain.nextDepositBlock() == 2
 
 
-def test_token_deposit_non_existing_token_should_fail(testlang):
+def test_token_deposit_non_existing_token_should_fail(testlang, token):
     owner, amount = testlang.accounts[0], 100
-    with pytest.raises(TransactionFailed):
-        testlang.root_chain.depositFrom(NULL_ADDRESS, amount, sender=owner.key)
-
-
-def test_token_deposit_no_approve_should_fail(testlang, token):
-    owner, amount = testlang.accounts[0], 100
-
-    token.mint(owner.address, amount)
-    testlang.ethtester.chain.mine()
-    with pytest.raises(TransactionFailed):
-        testlang.root_chain.depositFrom(token.address, amount, sender=owner.key)
-
-
-def test_token_deposit_insufficient_approve_should_fail(testlang, token):
-    owner, amount = testlang.accounts[0], 100
+    deposit_tx = Transaction(outputs=[(owner.address, NULL_ADDRESS, amount)])
 
     token.mint(owner.address, amount)
     token.approve(testlang.root_chain.address, amount, sender=owner.key)
     with pytest.raises(TransactionFailed):
-        testlang.root_chain.depositFrom(token.address, amount * 5, sender=owner.key)
+        testlang.root_chain.depositFrom(deposit_tx.encoded, sender=owner.key)
+
+
+def test_token_deposit_no_approve_should_fail(testlang, token):
+    owner, amount = testlang.accounts[0], 100
+    deposit_tx = Transaction(outputs=[(owner.address, token.address, amount)])
+
+    token.mint(owner.address, amount)
+    with pytest.raises(TransactionFailed):
+        testlang.root_chain.depositFrom(deposit_tx.encoded, sender=owner.key)
+
+
+def test_token_deposit_insufficient_approve_should_fail(testlang, token):
+    owner, amount = testlang.accounts[0], 100
+    deposit_tx = Transaction(outputs=[(owner.address, token.address, amount * 5)])
+
+    token.mint(owner.address, amount)
+    token.approve(testlang.root_chain.address, amount, sender=owner.key)
+    with pytest.raises(TransactionFailed):
+        testlang.root_chain.depositFrom(deposit_tx.encoded, sender=owner.key)

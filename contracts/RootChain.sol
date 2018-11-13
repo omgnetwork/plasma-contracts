@@ -222,7 +222,41 @@ contract RootChain {
         // Check that the first output has the correct balance.
         require(decodedTx.outputs[0].amount == msg.value);
 
-        // Check that the remaining outputs are all 0.
+        // Check that the first output has correct currency (ETH).
+        require(decodedTx.outputs[0].token == address(0));
+
+        // Perform other checks and create a deposit block.
+        _processDeposit(_depositTx, decodedTx);
+
+        emit DepositCreated(decodedTx.outputs[0].owner, decodedTx.outputs[0].token, msg.value);
+    }
+
+    /**
+     * @dev Deposits approved amount of ERC20 token. Approve must be called first. Note: does not check if token was added.
+     * @param _depositTx RLP encoded transaction to act as the deposit.
+     */
+    function depositFrom(bytes _depositTx)
+        public
+    {
+        // Only allow up to CHILD_BLOCK_INTERVAL deposits per child block.
+        require(nextDepositBlock < CHILD_BLOCK_INTERVAL);
+
+        // Decode the transaction.
+        PlasmaCore.Transaction memory decodedTx = _depositTx.decode();
+
+        // Warning, check your ERC20 implementation. TransferFrom should return bool
+        require(ERC20(decodedTx.outputs[0].token).transferFrom(msg.sender, address(this), decodedTx.outputs[0].amount));
+
+        // Perform other checks and create a deposit block.
+        _processDeposit(_depositTx, decodedTx);
+
+        emit DepositCreated(decodedTx.outputs[0].owner, decodedTx.outputs[0].token, decodedTx.outputs[0].amount);
+    }
+
+    function _processDeposit(bytes _depositTx, PlasmaCore.Transaction memory decodedTx)
+        internal
+    {
+        // Check that all but first inputs are 0.
         for (uint i = 1; i < 4; i++) {
             require(decodedTx.outputs[i].amount == 0);
         }
@@ -237,29 +271,10 @@ contract RootChain {
         uint256 blknum = getDepositBlockNumber();
         blocks[blknum] = Block({
             root: root,
-            timestamp: block.timestamp
-        });
+                    timestamp: block.timestamp
+                    });
 
         nextDepositBlock++;
-
-        emit DepositCreated(decodedTx.outputs[0].owner, msg.value);
-    }
-
-    /**
-     * @dev Deposits approved amount of ERC20 token. Approve must be called first. Note: does not check if token was added.
-     * @param _token Address of the token that implements the currency of the deposit.
-     * @param _amount An amount to be deposited.
-     */
-    function depositFrom(address _token, uint256 _amount)
-        public
-    {
-        // TODO: rework to accept _depositTx bytes
-        // Only allow up to CHILD_BLOCK_INTERVAL deposits per child block.
-        require(nextDepositBlock < CHILD_BLOCK_INTERVAL);
-
-        // Warning, check your ERC20 implementation. TransferFrom should return bool
-        require(ERC20(_token).transferFrom(msg.sender, address(this), _amount));
-        writeDepositBlock(msg.sender, _token, _amount);
     }
 
     /**
@@ -885,36 +900,6 @@ contract RootChain {
 
         return (numInputs, outputSum);
     }
-
-
-    /**
-     * @dev Adds deposit block to chain of blocks.
-     * @param _owner Owner of deposit and created UTXO.
-     * @param _token Deposited token (0x0 represents ETH).
-     * @param _amount The amount deposited.
-     */
-    // TODO: rework deposit token to accept RLP encoded txBytes
-    function writeDepositBlock(address _owner, address _token, uint256 _amount)
-        private
-    {
-        // Following check is needed since writeDepositBlock
-        // can be called on stack unwinding during re-entrance attack,
-        // with nextDepositBlock == 999, producing
-        // deposit with blknum ending with 000.
-        require(nextDepositBlock < CHILD_BLOCK_INTERVAL);
-
-        bytes32 root = keccak256(_owner, _token, _amount);
-        uint256 depositBlock = getDepositBlockNumber();
-        blocks[depositBlock] = Block({
-            root: root,
-            timestamp: block.timestamp
-        });
-        nextDepositBlock = nextDepositBlock.add(1);
-
-        // TODO: emit tx body here
-        /* emit DepositCreated(_owner, depositBlock, _token, _amount); */
-    }
-
 
     /**
      * @dev Returns information about an input to a transaction.

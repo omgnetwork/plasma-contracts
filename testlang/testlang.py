@@ -140,6 +140,32 @@ class TestingLanguage(object):
         self.child_chain.add_block(block)
         return deposit_id
 
+    def deposit_token(self, owner, token, amount):
+        """Mints, approves and deposits token for given owner and amount
+
+        Args:
+            owner (EthereumAccount): Account to own the deposit.
+            token (Contract: ERC20, MintableToken): Token to be deposited.
+            amount (int): Deposit amount.
+
+        Returns:
+            int: Unique identifier of the deposit.
+        """
+
+        deposit_tx = Transaction(outputs=[(owner.address, token.address, amount)])
+        token.mint(owner.address, amount)
+        self.ethtester.chain.mine()
+        token.approve(self.root_chain.address, amount, sender=owner.key)
+        self.ethtester.chain.mine()
+        blknum = self.root_chain.getDepositBlockNumber()
+        pre_balance = self.get_balance(self.root_chain, token)
+        self.root_chain.depositFrom(deposit_tx.encoded, sender=owner.key)
+        balance = self.get_balance(self.root_chain, token)
+        assert balance == pre_balance + amount
+        block = Block(transactions=[deposit_tx], number=blknum)
+        self.child_chain.add_block(block)
+        return encode_utxo_id(blknum, 0, 0)
+
     def spend_utxo(self, input_ids, keys, outputs=[], force_invalid=False):
         inputs = [decode_utxo_id(input_id) for input_id in input_ids]
         spend_tx = Transaction(inputs=inputs, outputs=outputs)
@@ -171,38 +197,6 @@ class TestingLanguage(object):
         (encoded_spend, encoded_inputs, proofs, signatures) = self.get_in_flight_exit_info(tx_id)
         bond = bond if bond is not None else self.root_chain.inFlightExitBond()
         self.root_chain.startInFlightExit(encoded_spend, encoded_inputs, proofs, signatures, value=bond)
-
-    def deposit_token(self, owner, token, amount):
-        """Mints, approves and deposits token for given owner and amount
-
-        Args:
-            owner (EthereumAccount): Account to own the deposit.
-            token (Contract: ERC20, MintableToken): Token to be deposited.
-            amount (int): Deposit amount.
-
-        Returns:
-            int: Unique identifier of the deposit.
-        """
-
-        deposit_tx = Transaction(0, 0, 0,
-                                 0, 0, 0,
-                                 token.address,
-                                 owner.address, amount,
-                                 NULL_ADDRESS, 0)
-
-        token.mint(owner.address, amount)
-        self.ethtester.chain.mine()
-        token.approve(self.root_chain.address, amount, sender=owner.key)
-        self.ethtester.chain.mine()
-        blknum = self.root_chain.getDepositBlock()
-        pre_balance = self.get_balance(self.root_chain, token)
-        self.root_chain.depositFrom(token.address, amount, sender=owner.key)
-        balance = self.get_balance(self.root_chain, token)
-        assert balance == pre_balance + amount
-
-        block = Block(transactions=[deposit_tx], number=blknum)
-        self.child_chain.add_block(block)
-        return encode_utxo_id(blknum, 0, 0)
 
     def create_utxo(self, token=NULL_ADDRESS):
         class Utxo(object):
