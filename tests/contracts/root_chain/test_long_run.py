@@ -64,7 +64,7 @@ def test_slow(testlang):
 
         testlang.ethtester.chain.mine()
         # 4. attempt to finalize
-        testlang.finalize_exits(NULL_ADDRESS, 0, 3)
+        testlang.process_exits(NULL_ADDRESS, 0, 3)
         max_gas = max(max_gas, testlang.ethtester.chain.last_gas_used())
         print("max_gas is {}".format(max_gas))
 

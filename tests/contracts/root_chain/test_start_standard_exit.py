@@ -83,7 +83,7 @@ def test_start_standard_exit_on_finalized_exit_should_fail(testlang, utxo):
     minimal_required_period = WEEK  # see tesuji blockchain design
     testlang.start_standard_exit(utxo.spend_id, utxo.owner.key)
     testlang.forward_timestamp(required_exit_period + minimal_required_period)
-    testlang.finalize_exits(NULL_ADDRESS, utxo.spend_id, 100)
+    testlang.process_exits(NULL_ADDRESS, utxo.spend_id, 100)
 
     with pytest.raises(TransactionFailed):
         testlang.start_standard_exit(utxo.spend_id, utxo.owner.key)

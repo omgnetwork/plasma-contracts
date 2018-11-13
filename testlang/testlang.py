@@ -247,7 +247,7 @@ class TestingLanguage(object):
         self.root_chain.startFeeExit(NULL_ADDRESS, amount, sender=operator.key)
         return fee_exit_id
 
-    def finalize_exits(self, token, utxo_id, count, **kwargs):
+    def process_exits(self, token, utxo_id, count, **kwargs):
         """Finalizes exits that have completed the exit period.
 
         Args:
@@ -418,9 +418,6 @@ class TestingLanguage(object):
         in_flight_tx_inclusion_proof = self.get_merkle_proof(in_flight_tx_id)
         spending_tx_sig = spending_tx.signatures[spending_tx_input_index]
         self.root_chain.challengeInFlightExitOutputSpent(in_flight_tx.encoded, in_flight_tx_output_id, in_flight_tx_inclusion_proof, spending_tx.encoded, spending_tx_input_index, spending_tx_sig, sender=key)
-
-    def process_exits(self):
-        self.root_chain.processExits()
 
     def get_in_flight_exit(self, in_flight_tx_id):
         in_flight_tx = self.child_chain.get_transaction(in_flight_tx_id)
