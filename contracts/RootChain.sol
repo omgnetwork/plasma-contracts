@@ -89,6 +89,7 @@ contract RootChain {
 
     event DepositCreated(
         address indexed depositor,
+        address indexed token,
         uint256 amount
     );
 

@@ -31,6 +31,7 @@ library PlasmaCore {
 
     struct TransactionOutput {
         address owner;
+        address token;
         uint256 amount;
     }
 
@@ -39,11 +40,11 @@ library PlasmaCore {
         TransactionOutput[NUM_TXS] outputs;
     }
 
-    
+
     /*
      * Internal functions
      */
-    
+
     /**
      * @dev Decodes an RLP encoded transaction.
      * @param _tx RLP encoded transaction.
@@ -70,7 +71,8 @@ library PlasmaCore {
             RLP.RLPItem[] memory output = outputs[i].toList();
             decodedTx.outputs[i] = TransactionOutput({
                 owner: output[0].toAddress(),
-                amount: output[1].toUint()
+                token: output[1].toAddress(),
+                amount: output[2].toUint()
             });
         }
 

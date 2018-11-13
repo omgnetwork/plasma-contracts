@@ -32,11 +32,13 @@ class TransactionOutput(rlp.Serializable):
 
     fields = (
         ('owner', utils.address),
+        ('token', utils.address),
         ('amount', big_endian_int)
     )
 
-    def __init__(self, owner=NULL_ADDRESS, amount=0):
+    def __init__(self, owner=NULL_ADDRESS, token=NULL_ADDRESS, amount=0):
         self.owner = utils.normalize_address(owner)
+        self.token = utils.normalize_address(token)
         self.amount = amount
 
 
@@ -44,7 +46,7 @@ class Transaction(rlp.Serializable):
 
     NUM_TXOS = 4
     DEFAULT_INPUT = (0, 0, 0)
-    DEFAULT_OUTPUT = (NULL_ADDRESS, 0)
+    DEFAULT_OUTPUT = (NULL_ADDRESS, NULL_ADDRESS, 0)
     fields = (
         ('inputs', CountableList(TransactionInput, NUM_TXOS)),
         ('outputs', CountableList(TransactionOutput, NUM_TXOS)),

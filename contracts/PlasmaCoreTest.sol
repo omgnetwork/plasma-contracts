@@ -29,10 +29,10 @@ contract PlasmaCoreTest {
     function getOutput(bytes _tx, uint256 _outputIndex)
         public
         view
-        returns (address, uint256)
+        returns (address, address, uint256)
     {
         PlasmaCore.TransactionOutput memory output = PlasmaCore.getOutput(_tx, _outputIndex);
-        return (output.owner, output.amount);
+        return (output.owner, output.token, output.amount);
     }
 
     function getInputId(bytes _tx, uint256 _inputIndex)
