@@ -10,7 +10,7 @@ def test_piggyback_in_flight_exit_valid_input_owner_should_succeed(testlang, num
     deposit_ids = []
     for i in range(0, num_inputs):
         owners.append(testlang.accounts[i])
-        deposit_ids.append(testlang.deposit(owners[i].address, amount))
+        deposit_ids.append(testlang.deposit(owners[i], amount))
 
     owner_keys = [owner.key for owner in owners]
     spend_id = testlang.spend_utxo(deposit_ids, owner_keys)
@@ -27,7 +27,7 @@ def test_piggyback_in_flight_exit_valid_input_owner_should_succeed(testlang, num
 @pytest.mark.parametrize("num_outputs", [1, 2, 3, 4])
 def test_piggyback_in_flight_exit_valid_output_owner_should_succeed(testlang, num_outputs):
     owner_1, amount = testlang.accounts[0], 100
-    deposit_id = testlang.deposit(owner_1.address, amount)
+    deposit_id = testlang.deposit(owner_1, amount)
     outputs = []
     for i in range(0, num_outputs):
         outputs.append((testlang.accounts[i].address, 1))
@@ -44,7 +44,7 @@ def test_piggyback_in_flight_exit_valid_output_owner_should_succeed(testlang, nu
 
 def test_piggyback_in_flight_exit_invalid_owner_should_fail(testlang):
     owner_1, owner_2, amount = testlang.accounts[0], testlang.accounts[1], 100
-    deposit_id = testlang.deposit(owner_1.address, amount)
+    deposit_id = testlang.deposit(owner_1, amount)
     spend_id = testlang.spend_utxo([deposit_id], [owner_1.key])
 
     testlang.start_in_flight_exit(spend_id)
@@ -55,7 +55,7 @@ def test_piggyback_in_flight_exit_invalid_owner_should_fail(testlang):
 
 def test_piggyback_in_flight_exit_different_exits_different_outputs_should_succeed(testlang):
     owner, amount = testlang.accounts[0], 100
-    deposit_id = testlang.deposit(owner.address, amount)
+    deposit_id = testlang.deposit(owner, amount)
     spend_id = testlang.spend_utxo([deposit_id], [owner.key], [(owner.address, 50), (owner.address, 50)])
 
     # First time should succeed
@@ -74,7 +74,7 @@ def test_piggyback_in_flight_exit_different_exits_different_outputs_should_succe
 
 def test_piggyback_in_flight_exit_different_exits_same_output_should_fail(testlang):
     owner, amount = testlang.accounts[0], 100
-    deposit_id = testlang.deposit(owner.address, amount)
+    deposit_id = testlang.deposit(owner, amount)
     spend_id = testlang.spend_utxo([deposit_id], [owner.key], [(owner.address, 50), (owner.address, 50)])
 
     # First time should succeed
@@ -91,7 +91,7 @@ def test_piggyback_in_flight_exit_different_exits_same_output_should_fail(testla
 
 def test_piggyback_in_flight_exit_non_existant_exit_should_fail(testlang):
     owner, amount = testlang.accounts[0], 100
-    deposit_id = testlang.deposit(owner.address, amount)
+    deposit_id = testlang.deposit(owner, amount)
     spend_id = testlang.spend_utxo([deposit_id], [owner.key])
 
     with pytest.raises(TransactionFailed):
@@ -100,7 +100,7 @@ def test_piggyback_in_flight_exit_non_existant_exit_should_fail(testlang):
 
 def test_piggyback_in_flight_exit_wrong_period_should_fail(testlang):
     owner, amount = testlang.accounts[0], 100
-    deposit_id = testlang.deposit(owner.address, amount)
+    deposit_id = testlang.deposit(owner, amount)
     spend_id = testlang.spend_utxo([deposit_id], [owner.key])
 
     testlang.start_in_flight_exit(spend_id)
@@ -112,7 +112,7 @@ def test_piggyback_in_flight_exit_wrong_period_should_fail(testlang):
 
 def test_piggyback_in_flight_exit_invalid_index_should_fail(testlang):
     owner, amount = testlang.accounts[0], 100
-    deposit_id = testlang.deposit(owner.address, amount)
+    deposit_id = testlang.deposit(owner, amount)
     spend_id = testlang.spend_utxo([deposit_id], [owner.key])
 
     testlang.start_in_flight_exit(spend_id)
@@ -123,7 +123,7 @@ def test_piggyback_in_flight_exit_invalid_index_should_fail(testlang):
 
 def test_piggyback_in_flight_exit_twice_should_fail(testlang):
     owner, amount = testlang.accounts[0], 100
-    deposit_id = testlang.deposit(owner.address, amount)
+    deposit_id = testlang.deposit(owner, amount)
     spend_id = testlang.spend_utxo([deposit_id], [owner.key])
 
     testlang.start_in_flight_exit(spend_id)

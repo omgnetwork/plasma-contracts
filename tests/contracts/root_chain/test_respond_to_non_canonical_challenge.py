@@ -4,7 +4,7 @@ from ethereum.tools.tester import TransactionFailed
 
 def test_respond_to_non_canonical_challenge_should_succeed(testlang):
     owner_1, owner_2, amount = testlang.accounts[0], testlang.accounts[1], 100
-    deposit_id = testlang.deposit(owner_1.address, amount)
+    deposit_id = testlang.deposit(owner_1, amount)
     spend_id = testlang.spend_utxo([deposit_id], [owner_1.key])
     double_spend_id = testlang.spend_utxo([deposit_id], [owner_1.key], [(owner_1.address, 100)], force_invalid=True)
     testlang.start_in_flight_exit(spend_id)
@@ -22,7 +22,7 @@ def test_respond_to_non_canonical_challenge_should_succeed(testlang):
 
 def test_respond_to_non_canonical_challenge_wrong_period_should_fail(testlang):
     owner_1, owner_2, amount = testlang.accounts[0], testlang.accounts[1], 100
-    deposit_id = testlang.deposit(owner_1.address, amount)
+    deposit_id = testlang.deposit(owner_1, amount)
     spend_id = testlang.spend_utxo([deposit_id], [owner_1.key])
     double_spend_id = testlang.spend_utxo([deposit_id], [owner_1.key], [(owner_1.address, 100)], force_invalid=True)
     testlang.start_in_flight_exit(spend_id)
@@ -34,7 +34,7 @@ def test_respond_to_non_canonical_challenge_wrong_period_should_fail(testlang):
 
 def test_respond_to_non_canonical_challenge_not_older_should_fail(testlang):
     owner_1, owner_2, amount = testlang.accounts[0], testlang.accounts[1], 100
-    deposit_id = testlang.deposit(owner_1.address, amount)
+    deposit_id = testlang.deposit(owner_1, amount)
     double_spend_id = testlang.spend_utxo([deposit_id], [owner_1.key], [(owner_1.address, 100)], force_invalid=True)
     spend_id = testlang.spend_utxo([deposit_id], [owner_1.key])
     testlang.start_in_flight_exit(spend_id)
@@ -48,7 +48,7 @@ def test_respond_to_non_canonical_challenge_not_older_should_fail(testlang):
 
 def test_respond_to_non_canonical_challenge_invalid_proof_should_fail(testlang):
     owner_1, owner_2, amount = testlang.accounts[0], testlang.accounts[1], 100
-    deposit_id = testlang.deposit(owner_1.address, amount)
+    deposit_id = testlang.deposit(owner_1, amount)
     spend_id = testlang.spend_utxo([deposit_id], [owner_1.key])
     double_spend_id = testlang.spend_utxo([deposit_id], [owner_1.key], [(owner_1.address, 100)], force_invalid=True)
     testlang.start_in_flight_exit(spend_id)

@@ -6,7 +6,7 @@ from ethereum.tools.tester import TransactionFailed
 
 def test_process_exits_standard_exit_should_succeed(testlang):
     owner, amount = testlang.accounts[0], 100
-    deposit_id = testlang.deposit(owner.address, amount)
+    deposit_id = testlang.deposit(owner, amount)
     spend_id = testlang.spend_utxo(deposit_id, owner, amount, owner)
 
     pre_balance = testlang.get_balance(owner)
@@ -25,7 +25,7 @@ def test_process_exits_standard_exit_should_succeed(testlang):
 
 def test_process_exits_in_flight_exit_should_succeed(testlang):
     owner, amount = testlang.accounts[0], 100
-    deposit_id = testlang.deposit(owner.address, amount)
+    deposit_id = testlang.deposit(owner, amount)
     spend_id = testlang.spend_utxo([deposit_id], [owner.key], [(owner.address, 100)])
     testlang.start_in_flight_exit(spend_id)
     testlang.piggyback_in_flight_exit_output(spend_id, 0, owner.key)
@@ -148,12 +148,12 @@ def test_finalize_exits_for_uninitialized_ERC20_should_fail(testlang, root_chain
 def test_finalize_exits_partial_queue_processing(testlang):
     owner, amount = testlang.accounts[0], 100
 
-    deposit_id_1 = testlang.deposit(owner.address, amount)
+    deposit_id_1 = testlang.deposit(owner, amount)
     spend_id_1 = testlang.spend_utxo(deposit_id_1, owner, 100, owner)
     testlang.confirm_spend(spend_id_1, owner)
     testlang.start_standard_exit(owner, spend_id_1)
 
-    deposit_id_2 = testlang.deposit(owner.address, amount)
+    deposit_id_2 = testlang.deposit(owner, amount)
     spend_id_2 = testlang.spend_utxo(deposit_id_2, owner, 100, owner)
     testlang.confirm_spend(spend_id_2, owner)
     testlang.start_standard_exit(owner, spend_id_2)
@@ -205,7 +205,7 @@ def test_finalize_exits_tx_race_normal(testlang):
 def test_finalize_exits_empty_queue_should_crash(testlang, ethtester):
     owner, amount = testlang.accounts[0], 100
 
-    deposit_id_1 = testlang.deposit(owner.address, amount)
+    deposit_id_1 = testlang.deposit(owner, amount)
     spend_id_1 = testlang.spend_utxo(deposit_id_1, owner, 100, owner)
     testlang.confirm_spend(spend_id_1, owner)
     testlang.start_standard_exit(owner, spend_id_1)
@@ -222,7 +222,7 @@ def test_finalize_exits_empty_queue_should_crash(testlang, ethtester):
 def test_finalize_skipping_top_utxo_check_is_possible(testlang):
     owner, amount = testlang.accounts[0], 100
 
-    deposit_id_1 = testlang.deposit(owner.address, amount)
+    deposit_id_1 = testlang.deposit(owner, amount)
     spend_id_1 = testlang.spend_utxo(deposit_id_1, owner, 100, owner)
     testlang.confirm_spend(spend_id_1, owner)
     testlang.start_standard_exit(owner, spend_id_1)
@@ -236,7 +236,7 @@ def test_finalize_skipping_top_utxo_check_is_possible(testlang):
 
 def test_finalize_challenged_exit_will_not_send_funds(testlang):
     owner, finalizer, amount = testlang.accounts[0], testlang.accounts[0], 100
-    deposit_id = testlang.deposit(owner.address, amount)
+    deposit_id = testlang.deposit(owner, amount)
     spend_id = testlang.spend_utxo(deposit_id, owner, 100, owner)
 
     testlang.start_standard_exit(owner, spend_id)
@@ -255,7 +255,7 @@ def test_finalize_challenged_exit_will_not_send_funds(testlang):
 
 def test_finalized_exit_challenge_will_fail(testlang):
     owner, amount = testlang.accounts[0], 100
-    deposit_id = testlang.deposit(owner.address, amount)
+    deposit_id = testlang.deposit(owner, amount)
     spend_id = testlang.spend_utxo(deposit_id, owner, amount, owner)
 
     testlang.start_standard_exit(owner, spend_id)

@@ -304,23 +304,22 @@ contract RootChain {
         require(output.amount > 0);
         require(exits[_outputId].amount == 0);
 
-        // TODO: add token address field to tx output; handle tokens here
-        PriorityQueue queue = PriorityQueue(exitsQueues[address(0)]);
+        // Make sure queue for this token exists.
+        require(hasToken(output.token));
 
         // Determine the exit's priority.
         uint256 exitPriority = _getExitPriority(_outputId);
 
         // Insert the exit into the queue and update the exit mapping.
+        PriorityQueue queue = PriorityQueue(exitsQueues[output.token]);
         queue.insert(exitPriority);
         exits[_outputId] = Exit({
             owner: output.owner,
-            // TODO: put real token address here
-            token: address(0),
+            token: output.token,
             amount: output.amount
         });
 
-        // TODO: add real token address here
-        emit ExitStarted(output.owner, _outputId, output.amount, address(0));
+        emit ExitStarted(output.owner, _outputId, output.amount, output.token);
     }
 
     /**
@@ -644,7 +643,7 @@ contract RootChain {
     {
         uint192 uniqueId;
         uint64 exitableTimestamp;
-        (uniqueId, exitableTimestamp) = _getNextExit(_token);
+        (uniqueId, exitableTimestamp) = getNextExit(_token);
         require(_topUtxoPos == uniqueId || _topUtxoPos == 0);
         Exit memory currentExit = exits[uniqueId];
         PriorityQueue queue = PriorityQueue(exitsQueues[_token]);
@@ -668,7 +667,7 @@ contract RootChain {
 
             // Pull the next exit.
             if (queue.currentSize() > 0) {
-                (uniqueId, exitableTimestamp) = _getNextExit(_token);
+                (uniqueId, exitableTimestamp) = getNextExit(_token);
                 _exitsToProcess = _exitsToProcess.sub(1);
             } else {
                 return;
@@ -861,8 +860,8 @@ contract RootChain {
      * @dev Returns the next exit to be processed.
      * @return A tuple containing the unique exit ID and timestamp for when the next exit is processable.
      */
-    function _getNextExit(address _token)
-        internal
+    function getNextExit(address _token)
+        public
         view
         returns (uint192, uint64)
     {

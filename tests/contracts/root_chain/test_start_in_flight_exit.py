@@ -11,7 +11,7 @@ def test_start_in_flight_exit_should_succeed(ethtester, testlang, num_inputs):
     deposit_ids = []
     for i in range(0, num_inputs):
         owners.append(testlang.accounts[i])
-        deposit_ids.append(testlang.deposit(owners[i].address, amount))
+        deposit_ids.append(testlang.deposit(owners[i], amount))
 
     owner_keys = [owner.key for owner in owners]
     spend_id = testlang.spend_utxo(deposit_ids, owner_keys)
@@ -40,7 +40,7 @@ def test_start_in_flight_exit_should_succeed(ethtester, testlang, num_inputs):
 
 def test_start_in_flight_exit_invalid_bond_should_fail(testlang):
     owner, amount = testlang.accounts[0], 100
-    deposit_id = testlang.deposit(owner.address, amount)
+    deposit_id = testlang.deposit(owner, amount)
     spend_id = testlang.spend_utxo([deposit_id], [owner.key])
 
     with pytest.raises(TransactionFailed):
@@ -49,7 +49,7 @@ def test_start_in_flight_exit_invalid_bond_should_fail(testlang):
 
 def test_start_in_flight_exit_invalid_spend_should_fail(testlang):
     owner_1, owner_2, amount = testlang.accounts[0], testlang.accounts[1], 100
-    deposit_id = testlang.deposit(owner_1.address, amount)
+    deposit_id = testlang.deposit(owner_1, amount)
     spend_id = testlang.spend_utxo([deposit_id], [owner_2.key], force_invalid=True)
 
     with pytest.raises(TransactionFailed):
@@ -58,7 +58,7 @@ def test_start_in_flight_exit_invalid_spend_should_fail(testlang):
 
 def test_start_in_flight_exit_invalid_proof_should_fail(testlang):
     owner, amount = testlang.accounts[0], 100
-    deposit_id = testlang.deposit(owner.address, amount)
+    deposit_id = testlang.deposit(owner, amount)
     spend_id = testlang.spend_utxo([deposit_id], [owner.key])
 
     proofs = b''
@@ -71,7 +71,7 @@ def test_start_in_flight_exit_invalid_proof_should_fail(testlang):
 
 def test_start_in_flight_exit_twice_should_fail(testlang):
     owner, amount = testlang.accounts[0], 100
-    deposit_id = testlang.deposit(owner.address, amount)
+    deposit_id = testlang.deposit(owner, amount)
     spend_id = testlang.spend_utxo([deposit_id], [owner.key])
 
     # First time should succeed
@@ -84,7 +84,7 @@ def test_start_in_flight_exit_twice_should_fail(testlang):
 
 def test_start_in_flight_exit_twice_different_piggybacks_should_succeed(testlang):
     owner, amount = testlang.accounts[0], 100
-    deposit_id = testlang.deposit(owner.address, amount)
+    deposit_id = testlang.deposit(owner, amount)
     spend_id = testlang.spend_utxo([deposit_id], [owner.key], [(owner.address, 50), (owner.address, 50)])
 
     # First time should succeed
@@ -106,7 +106,7 @@ def test_start_in_flight_exit_twice_different_piggybacks_should_succeed(testlang
 
 def test_start_in_flight_exit_invalid_outputs_should_fail(testlang):
     owner_1, owner_2, amount = testlang.accounts[0], testlang.accounts[1], 100
-    deposit_id = testlang.deposit(owner_1.address, amount)
+    deposit_id = testlang.deposit(owner_1, amount)
 
     # Create a transaction with outputs greater than inputs
     output = (owner_2.address, amount * 2)

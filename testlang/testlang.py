@@ -132,7 +132,7 @@ class TestingLanguage(object):
         return self.ethtester.chain.head_state.timestamp
 
     def deposit(self, owner, amount):
-        deposit_tx = Transaction(outputs=[(owner, NULL_ADDRESS, amount)])
+        deposit_tx = Transaction(outputs=[(owner.address, NULL_ADDRESS, amount)])
         blknum = self.root_chain.getDepositBlockNumber()
         self.root_chain.deposit(deposit_tx.encoded, value=amount)
         deposit_id = encode_utxo_id(blknum, 0, 0)
@@ -175,12 +175,14 @@ class TestingLanguage(object):
         spend_id = encode_utxo_id(blknum, 0, 0)
         return spend_id
 
-    def start_standard_exit(self, output_id, key, bond=None):
+    def start_standard_exit(self, output_id, key, bond=None, sender=None):
+        if sender is None:
+            sender = key
         output_tx = self.child_chain.get_transaction(output_id)
         merkle = FixedMerkle(16, [output_tx.encoded])
         proof = merkle.create_membership_proof(output_tx.encoded)
         bond = bond if bond is not None else self.root_chain.standardExitBond()
-        self.root_chain.startStandardExit(output_id, output_tx.encoded, proof, value=bond, sender=key)
+        self.root_chain.startStandardExit(output_id, output_tx.encoded, proof, value=bond, sender=sender)
 
     def challenge_standard_exit(self, output_id, spend_id):
         spend_tx = self.child_chain.get_transaction(spend_id)
@@ -254,7 +256,7 @@ class TestingLanguage(object):
             count (int): Maximum number of exits to be processed.
         """
 
-        self.root_chain.finalizeExits(token, utxo_id, count, **kwargs)
+        self.root_chain.processExits(token, utxo_id, count, **kwargs)
 
     def get_challenge_proof(self, utxo_id, spend_id):
         """Returns information required to submit a challenge.

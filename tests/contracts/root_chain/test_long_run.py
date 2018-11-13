@@ -30,7 +30,7 @@ def test_slow(testlang):
         print("[{}]: iteration {}".format(datetime.datetime.now(), i))
         # 1. deposit few
         for _ in range(5):
-            deposit_id = testlang.deposit(owner.address, amount)
+            deposit_id = testlang.deposit(owner, amount)
             max_gas = max(max_gas, testlang.ethtester.chain.last_gas_used())
             spend_id = testlang.spend_utxo(deposit_id, owner, amount, owner)
             max_gas = max(max_gas, testlang.ethtester.chain.last_gas_used())
