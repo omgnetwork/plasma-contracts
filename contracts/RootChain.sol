@@ -256,6 +256,12 @@ contract RootChain {
     function _processDeposit(bytes _depositTx, PlasmaCore.Transaction memory decodedTx)
         internal
     {
+        // Following check is needed since _processDeposit
+        // can be called on stack unwinding during re-entrance attack,
+        // with nextDepositBlock == 999, producing
+        // deposit with blknum ending with 000.
+        require(nextDepositBlock < CHILD_BLOCK_INTERVAL);
+
         // Check that all but first inputs are 0.
         for (uint i = 1; i < 4; i++) {
             require(decodedTx.outputs[i].amount == 0);
