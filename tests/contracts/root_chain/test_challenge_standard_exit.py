@@ -16,6 +16,20 @@ def test_challenge_standard_exit_valid_spend_should_succeed(testlang):
     assert testlang.root_chain.exits(spend_id) == [NULL_ADDRESS_HEX, NULL_ADDRESS_HEX, 0]
 
 
+def test_challenge_standard_exit_if_successful_awards_the_bond(testlang):
+    owner, amount = testlang.accounts[0], 100
+    deposit_id = testlang.deposit(owner, amount)
+    spend_id = testlang.spend_utxo([deposit_id], [owner.key], outputs=[(owner.address, NULL_ADDRESS, amount)])
+
+    testlang.start_standard_exit(spend_id, owner.key)
+    doublespend_id = testlang.spend_utxo([spend_id], [owner.key], outputs=[(owner.address, NULL_ADDRESS, amount)])
+
+    pre_balance = testlang.get_balance(owner)
+    testlang.challenge_standard_exit(spend_id, doublespend_id)
+    post_balance = testlang.get_balance(owner)
+    assert post_balance > pre_balance
+
+
 def test_challenge_standard_exit_mature_valid_spend_should_succeed(testlang):
     owner, amount = testlang.accounts[0], 100
     deposit_id = testlang.deposit(owner, amount)
