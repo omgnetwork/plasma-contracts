@@ -62,22 +62,6 @@ def test_challenge_standard_exit_not_started_should_fail(testlang):
         testlang.challenge_standard_exit(deposit_id, spend_id)
 
 
-def test_restarting_challenged_exit_should_fail(testlang):
-    owner, amount = testlang.accounts[0], 100
-    deposit_id = testlang.deposit(owner, amount)
-    spend_id = testlang.spend_utxo([deposit_id], [owner.key], outputs=[(owner.address, NULL_ADDRESS, amount)])
-
-    testlang.start_standard_exit(spend_id, owner.key)
-    doublespend_id = testlang.spend_utxo([deposit_id], [owner.key], outputs=[(owner.address, NULL_ADDRESS, amount)])
-
-    testlang.challenge_standard_exit(spend_id, doublespend_id)
-
-    assert testlang.root_chain.exits(spend_id) == [NULL_ADDRESS_HEX, NULL_ADDRESS_HEX, 100]
-
-    with pytest.raises(TransactionFailed):
-        testlang.start_standard_exit(spend_id, owner.key)
-
-
 def test_challenge_standard_exit_wrong_oindex_should_fail(testlang):
     from plasma_core.utils.transactions import decode_utxo_id, encode_utxo_id
     from plasma_core.transaction import Transaction
