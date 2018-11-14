@@ -2,6 +2,10 @@ import pytest
 from ethereum.tools.tester import TransactionFailed
 from plasma_core.constants import NULL_ADDRESS_HEX
 
+# TODO: test priority of fee exits. It should wait for 2 weeks!
+# TODO: test if fee exit actually transfers funds after finalization
+# TODO: test if fee exit generates events
+
 
 def test_start_fee_exit_should_succeed(testlang):
     operator, amount = testlang.accounts[0], 100

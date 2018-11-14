@@ -41,8 +41,9 @@ class StandardExit(object):
         amount (int): How much value is being exited.
     """
 
-    def __init__(self, owner, amount):
+    def __init__(self, owner, token, amount):
         self.owner = owner
+        self.token = token
         self.amount = amount
 
 
@@ -243,7 +244,7 @@ class TestingLanguage(object):
             int: Unique identifier of the exit.
         """
 
-        fee_exit_id = self.root_chain.currentFeeExit()
+        fee_exit_id = self.root_chain.nextFeeExit()
         self.root_chain.startFeeExit(NULL_ADDRESS, amount, sender=operator.key)
         return fee_exit_id
 

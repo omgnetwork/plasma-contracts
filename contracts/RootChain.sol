@@ -47,6 +47,8 @@ contract RootChain {
     uint256 public nextChildBlock;
     uint256 public nextDepositBlock;
 
+    uint192 public nextFeeExit;
+
     mapping (uint256 => Block) public blocks;
     mapping (uint192 => Exit) public exits;
     mapping (uint192 => InFlightExit) public inFlightExits;
@@ -155,6 +157,8 @@ contract RootChain {
 
         nextChildBlock = CHILD_BLOCK_INTERVAL;
         nextDepositBlock = 1;
+
+        nextFeeExit = 1;
 
         // Support only ETH on deployment; other tokens need
         // to be added explicitly.
@@ -354,6 +358,37 @@ contract RootChain {
         msg.sender.transfer(standardExitBond);
 
         emit ExitBlocked(msg.sender, _outputId);
+    }
+
+    /**
+     * @dev Allows the operator withdraw any allotted fees. Starts an exit to avoid theft.
+     * @param _token Token to withdraw.
+     * @param _amount Amount in fees to withdraw.
+     */
+    function startFeeExit(address _token, uint256 _amount)
+        public
+        onlyOperator
+    {
+        // Make sure queue for this token exists.
+        require(hasToken(_token));
+
+        uint192 currentFeeExit = nextFeeExit;
+
+        // FIXME: make sure that period for fee exit is two weeks!
+        // Determine the exit's priority.
+        uint256 exitPriority = _getExitPriority(currentFeeExit);
+
+        // Insert the exit into the queue and update the exit mapping.
+        PriorityQueue queue = PriorityQueue(exitsQueues[_token]);
+        queue.insert(exitPriority);
+        exits[currentFeeExit] = Exit({
+            owner: operator,
+            token: _token,
+            amount: _amount
+        });
+
+        nextFeeExit++;
+        emit ExitStarted(operator, currentFeeExit, _amount, _token);
     }
 
     /**
