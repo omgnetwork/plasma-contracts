@@ -66,6 +66,7 @@ class TestingLanguage(object):
         operator (EthereumAccount): The operator's account.
         child_chain (ChildChain): Child chain instance.
         confirmations (dict): A mapping from transaction IDs to confirmation signatures.
+        owntime: Our own clock, since ethtester internal timestamp manipulation is broken.
     """
 
     def __init__(self, root_chain, ethtester):
@@ -75,6 +76,7 @@ class TestingLanguage(object):
         self.operator = self.accounts[0]
         self.child_chain = ChildChain(self.accounts[0].address)
         self.confirmations = {}
+        self.owntime = self.ethtester.chain.head_state.timestamp
 
         # morevp semantic
         self.root_chain.blocks = self.root_chain.childChain
@@ -369,5 +371,17 @@ class TestingLanguage(object):
         Args:
             amount (int): Number of seconds to move forward time.
         """
+        self.owntime += amount
+        self.ethtester.chain.head_state.timestamp = self.owntime
 
-        self.ethtester.chain.head_state.timestamp += amount
+    def mine(self, number_of_blocks=1, timedelta=14):
+        """Mine one or more blocks.
+
+        Args:
+            number_of_blocks (int): Number of blocks to be mined.
+            timedelta (int): Number of seconds to move forward time per block.
+        """
+        for i in range(1, number_of_blocks):
+            self.owntime += timedelta
+            self.ethtester.chain.head_state.timestamp = self.owntime
+            self.ethtester.chain.mine()
