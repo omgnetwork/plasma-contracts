@@ -18,7 +18,11 @@ def test_slow(testlang):
     utxos = []
     random.seed(a=0)
     owner, amount = testlang.accounts[0], 100
-    max_gas = 0
+    deposit_gas = 0
+    submit_gas = 0
+    exit_gas = 0
+    challenge_gas = 0
+    finalize_gas = 0
 
     # Loop:
     # 1. deposit few
@@ -34,10 +38,10 @@ def test_slow(testlang):
         for _ in range(6):
             testlang.ethtester.chain.mine()
             deposit_id = testlang.deposit(owner.address, amount)
-            max_gas = max(max_gas, testlang.ethtester.chain.last_gas_used())
+            deposit_gas = max(deposit_gas, testlang.ethtester.chain.last_gas_used())
             testlang.ethtester.chain.mine()
             spend_id = testlang.spend_utxo(deposit_id, owner, amount, owner)
-            max_gas = max(max_gas, testlang.ethtester.chain.last_gas_used())
+            submit_gas = max(submit_gas, testlang.ethtester.chain.last_gas_used())
             utxos.append(spend_id)
 
         testlang.forward_timestamp(DAY * 2)
@@ -48,7 +52,7 @@ def test_slow(testlang):
             testlang.ethtester.chain.mine()
             utxos, pos = pick(utxos)
             spend_id = testlang.spend_utxo(pos, owner, amount, owner)
-            max_gas = max(max_gas, testlang.ethtester.chain.last_gas_used())
+            submit_gas = max(submit_gas, testlang.ethtester.chain.last_gas_used())
             utxos.append(spend_id)
 
         print("done spending")
@@ -58,14 +62,14 @@ def test_slow(testlang):
             testlang.ethtester.chain.mine()
             utxos, pos = pick(utxos)
             spend_id = testlang.spend_utxo(pos, owner, amount, owner)
-            max_gas = max(max_gas, testlang.ethtester.chain.last_gas_used())
+            submit_gas = max(submit_gas, testlang.ethtester.chain.last_gas_used())
             utxos.append(spend_id)
             testlang.ethtester.chain.mine()
             testlang.start_standard_exit(owner, pos)
-            max_gas = max(max_gas, testlang.ethtester.chain.last_gas_used())
+            exit_gas = max(exit_gas, testlang.ethtester.chain.last_gas_used())
             testlang.ethtester.chain.mine()
             testlang.challenge_standard_exit(pos, spend_id)
-            max_gas = max(max_gas, testlang.ethtester.chain.last_gas_used())
+            challenge_gas = max(challenge_gas, testlang.ethtester.chain.last_gas_used())
 
         print("done double-spending")
         # 4. exit
@@ -73,14 +77,22 @@ def test_slow(testlang):
             testlang.ethtester.chain.mine()
             utxos, pos = pick(utxos)
             testlang.start_standard_exit(owner, pos)
-            max_gas = max(max_gas, testlang.ethtester.chain.last_gas_used())
+            exit_gas = max(exit_gas, testlang.ethtester.chain.last_gas_used())
 
         print("done exiting")
         testlang.ethtester.chain.mine()
         # 4. attempt to finalize
         testlang.finalize_exits(NULL_ADDRESS, 0, 3)
-        max_gas = max(max_gas, testlang.ethtester.chain.last_gas_used())
-        print("max_gas is {}".format(max_gas))
+        finalize_gas = max(finalize_gas, testlang.ethtester.chain.last_gas_used())
+        print("deposit gas is {}".format(deposit_gas))
+        print("submit gas is {}".format(submit_gas))
+        print("exit gas is {}".format(exit_gas))
+        print("challenge gas is {}".format(challenge_gas))
+        print("finalize (x3) gas is {}".format(finalize_gas))
         print("done finalizing")
 
-    assert max_gas < 200000
+    assert deposit_gas <= 49300
+    assert submit_gas <= 52365
+    assert exit_gas <= 132018
+    assert challenge_gas <= 18635
+    assert finalize_gas <= 4328
