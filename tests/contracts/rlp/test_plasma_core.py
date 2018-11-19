@@ -10,9 +10,9 @@ def plasma_core_test(ethtester, get_contract):
 
 
 def test_slice_proof(plasma_core_test):
-    proof = b'\x00' * 63 + b'\x01'
-    assert plasma_core_test.sliceProof(proof, 0) == proof[0:32]
-    assert plasma_core_test.sliceProof(proof, 1) == proof[32:64]
+    proof = b'\x00' * 1023 + b'\x01'
+    assert plasma_core_test.sliceProof(proof, 0) == proof[0:512]
+    assert plasma_core_test.sliceProof(proof, 1) == proof[512:1024]
 
 
 def test_slice_signature(plasma_core_test):
