@@ -111,3 +111,16 @@ def test_start_standard_exit_wrong_oindex_should_fail(testlang):
 
     testlang.start_standard_exit(alice_utxo, alice.key)
     testlang.start_standard_exit(bob_utxo, bob.key)
+
+
+def test_start_standard_exit_from_deposit_must_be_exitable_in_minimal_finalization_period(testlang):
+    owner, amount = testlang.accounts[0], 100
+    deposit_id = testlang.deposit(owner, amount)
+
+    testlang.start_standard_exit(deposit_id, owner.key)
+
+    required_exit_period = WEEK  # see tesuji blockchain design
+    testlang.forward_timestamp(required_exit_period + 1)
+    testlang.process_exits(NULL_ADDRESS, 0, 1)
+
+    assert testlang.root_chain.exits(deposit_id << 1) == [NULL_ADDRESS_HEX, NULL_ADDRESS_HEX, amount]

@@ -804,7 +804,13 @@ contract RootChain {
         returns (uint256)
     {
         uint256 blknum = _outputId.getBlknum();
-        return Math.max(blocks[blknum].timestamp + (MIN_EXIT_PERIOD * 2), block.timestamp + MIN_EXIT_PERIOD);
+        if (blknum % CHILD_BLOCK_INTERVAL == 0) {
+            return Math.max(blocks[blknum].timestamp + (MIN_EXIT_PERIOD * 2), block.timestamp + MIN_EXIT_PERIOD);
+        }
+        else {
+            // High priority exit for the deposit.
+            return block.timestamp + MIN_EXIT_PERIOD;
+        }
     }
 
     /**
