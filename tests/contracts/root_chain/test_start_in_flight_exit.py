@@ -29,6 +29,7 @@ def test_start_in_flight_exit_should_succeed(ethtester, testlang, num_inputs):
     for i in range(0, num_inputs):
         input_info = in_flight_exit.get_input(i)
         assert input_info.owner == owners[i].address
+        assert input_info.token == NULL_ADDRESS
         assert input_info.amount == amount
 
     # Remaining inputs are still unset

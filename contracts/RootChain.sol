@@ -751,7 +751,7 @@ contract RootChain {
     function getInFlightExitOutput(bytes _tx, uint256 _outputIndex)
         public
         view
-        returns (address, uint256)
+        returns (address, address, uint256)
     {
         InFlightExit memory inFlightExit = _getInFlightExit(_tx);
         PlasmaCore.TransactionOutput memory output;
@@ -760,7 +760,7 @@ contract RootChain {
         } else {
             output = inFlightExit.outputs[_outputIndex - 4];
         }
-        return (output.owner, output.amount);
+        return (output.owner, output.token, output.amount);
     }
 
     /**

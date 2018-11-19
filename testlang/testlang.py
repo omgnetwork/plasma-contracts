@@ -103,7 +103,6 @@ class TestingLanguage(object):
         accounts (EthereumAccount[]): List of available accounts.
         operator (EthereumAccount): The operator's account.
         child_chain (ChildChain): Child chain instance.
-        confirmations (dict): A mapping from transaction IDs to confirmation signatures.
     """
 
     def __init__(self, root_chain, ethtester):
