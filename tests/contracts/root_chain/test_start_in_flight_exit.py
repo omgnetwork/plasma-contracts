@@ -92,7 +92,7 @@ def test_start_in_flight_exit_twice_different_piggybacks_should_succeed(testlang
     testlang.start_in_flight_exit(spend_id)
     testlang.piggyback_in_flight_exit_input(spend_id, 0, owner.key)
     testlang.forward_timestamp(2 * WEEK)
-    testlang.process_exits()
+    testlang.process_exits(NULL_ADDRESS, 0, 10)
 
     # Second time should also succeed
     testlang.start_in_flight_exit(spend_id)

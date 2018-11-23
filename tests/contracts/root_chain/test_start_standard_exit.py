@@ -5,7 +5,7 @@ from plasma_core.constants import NULL_ADDRESS, NULL_ADDRESS_HEX, WEEK
 
 def test_start_standard_exit_should_succeed(testlang, utxo):
     testlang.start_standard_exit(utxo.spend_id, utxo.owner.key)
-    assert testlang.root_chain.exits(utxo.spend_id) == [utxo.owner.address, NULL_ADDRESS_HEX, utxo.amount]
+    assert testlang.root_chain.exits(utxo.spend_id << 1) == [utxo.owner.address, NULL_ADDRESS_HEX, utxo.amount]
 
 
 @pytest.mark.parametrize("num_outputs", [1, 2, 3, 4])
@@ -20,8 +20,7 @@ def test_start_standard_exit_multiple_outputs_should_succeed(testlang, num_outpu
     output_index = num_outputs - 1
     output_id = spend_id + output_index
     testlang.start_standard_exit(output_id, owners[output_index].key)
-
-    assert testlang.root_chain.exits(output_id) == [owners[output_index].address, NULL_ADDRESS_HEX, 1]
+    assert testlang.root_chain.exits(output_id << 1) == [owners[output_index].address, NULL_ADDRESS_HEX, 1]
 
 
 def test_start_standard_exit_twice_should_fail(testlang, utxo):
@@ -74,8 +73,8 @@ def test_start_standard_exit_old_utxo_has_required_exit_period_to_start_exit(tes
     testlang.forward_timestamp(minimal_required_period - 1)
     testlang.start_standard_exit(utxo.spend_id, utxo.owner.key)
 
-    [utxoPos, _] = testlang.root_chain.getNextExit(NULL_ADDRESS)
-    assert utxoPos == utxo.spend_id
+    [_, exitId, _] = testlang.root_chain.getNextExit(NULL_ADDRESS)
+    assert exitId >> 1 == utxo.spend_id
 
 
 def test_start_standard_exit_on_finalized_exit_should_fail(testlang, utxo):

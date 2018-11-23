@@ -18,7 +18,7 @@ import "./ERC20.sol";
  * @dev Represents a MoreVP Plasma chain.
  */
 contract RootChain {
-    using Bits for uint64;
+    using Bits for uint192;
     using Bits for uint256;
     using SafeMath for uint256;
     using ByteUtils for bytes;
@@ -47,7 +47,7 @@ contract RootChain {
     uint256 public nextChildBlock;
     uint256 public nextDepositBlock;
 
-    uint192 public nextFeeExit;
+    uint256 public nextFeeExit;
 
     mapping (uint256 => Block) public blocks;
     mapping (uint192 => Exit) public exits;
@@ -310,20 +310,23 @@ contract RootChain {
         // Only output owner can start an exit.
         require(msg.sender == output.owner);
 
+        uint192 exitId = getStandardExitId(_outputId);
+
         // Make sure this exit is valid.
         require(output.amount > 0);
-        require(exits[_outputId].amount == 0);
+        require(exits[exitId].amount == 0);
 
         // Make sure queue for this token exists.
         require(hasToken(output.token));
 
         // Determine the exit's priority.
-        uint256 exitPriority = _getExitPriority(_outputId);
+        uint256 exitPriority = getExitPriority(exitId, _outputId);
+        exitPriority = markStandard(exitPriority);
 
         // Insert the exit into the queue and update the exit mapping.
         PriorityQueue queue = PriorityQueue(exitsQueues[output.token]);
         queue.insert(exitPriority);
-        exits[_outputId] = Exit({
+        exits[exitId] = Exit({
             owner: output.owner,
             token: output.token,
             amount: output.amount
@@ -346,13 +349,15 @@ contract RootChain {
         uint256 inputId = _challengeTx.getInputId(_inputIndex);
         require(inputId == _outputId);
 
+        uint192 exitId = getStandardExitId(_outputId);
+
         // Check that the challenging tx is signed by the output's owner.
-        address owner = exits[_outputId].owner;
+        address owner = exits[exitId].owner;
         bytes32 txHash = keccak256(_challengeTx);
         require(owner == ECRecovery.recover(txHash, _challengeTxSig));
 
         // Delete the exit.
-        delete exits[_outputId];
+        delete exits[exitId];
 
         // Send a bond to the challenger.
         msg.sender.transfer(standardExitBond);
@@ -372,23 +377,24 @@ contract RootChain {
         // Make sure queue for this token exists.
         require(hasToken(_token));
 
-        uint192 currentFeeExit = nextFeeExit;
+        uint192 exitId = getStandardExitId(nextFeeExit);
 
         // FIXME: make sure that period for fee exit is two weeks!
         // Determine the exit's priority.
-        uint256 exitPriority = _getExitPriority(currentFeeExit);
+        uint256 exitPriority = getExitPriority(exitId, exitId);
+        exitPriority = markStandard(exitPriority);
 
         // Insert the exit into the queue and update the exit mapping.
         PriorityQueue queue = PriorityQueue(exitsQueues[_token]);
         queue.insert(exitPriority);
-        exits[currentFeeExit] = Exit({
+        exits[exitId] = Exit({
             owner: operator,
             token: _token,
             amount: _amount
         });
 
         nextFeeExit++;
-        emit ExitStarted(operator, currentFeeExit, _amount, _token);
+        emit ExitStarted(operator, exitId, _amount, _token);
     }
 
     /**
@@ -408,7 +414,7 @@ contract RootChain {
         payable
         onlyWithValue(inFlightExitBond)
     {
-        // Check that no exit for this transaction already exists.
+        // Check if there is an active in-flight exit from this transaction?
         InFlightExit storage inFlightExit = _getInFlightExit(_inFlightTx);
         require(inFlightExit.exitStartTimestamp == 0);
 
@@ -434,10 +440,8 @@ contract RootChain {
         require(inputSum >= outputSum);
 
         // Determine when the exit can be processed.
-        uint256 exitPriority = _getExitPriority(mostRecentInput, _inFlightTx);
-
-        // Set the left-most bit to 1 to flag that this is an in-flight exit.
-        exitPriority = exitPriority.setBit(255);
+        uint256 exitPriority = getExitPriority(mostRecentInput, _inFlightTx);
+        exitPriority = markInFlight(exitPriority);
 
         // Insert the exit into the queue.
         // TODO: in-flight exits for tokens other than ETH
@@ -551,7 +555,7 @@ contract RootChain {
         inFlightExit.bondOwner = msg.sender;
 
         // Set a flag so that only the inputs are exitable, unless a response is received.
-        inFlightExit.exitStartTimestamp = inFlightExit.exitStartTimestamp.setBit(255);
+        inFlightExit.exitStartTimestamp = setFlag(inFlightExit.exitStartTimestamp);
 
         emit InFlightExitChallenged(msg.sender, keccak256(_inFlightTx), competitorPosition);
     }
@@ -584,7 +588,7 @@ contract RootChain {
         inFlightExit.bondOwner = msg.sender;
 
         // Reset the flag so only the outputs are exitable.
-        inFlightExit.exitStartTimestamp = inFlightExit.exitStartTimestamp.clearBit(255);
+        inFlightExit.exitStartTimestamp = clearFlag(inFlightExit.exitStartTimestamp);
     }
 
     /**
@@ -682,33 +686,36 @@ contract RootChain {
     function processExits(address _token, uint256 _topUtxoPos, uint256 _exitsToProcess)
         public
     {
-        uint192 uniqueId;
         uint64 exitableTimestamp;
-        (uniqueId, exitableTimestamp) = getNextExit(_token);
-        require(_topUtxoPos == uniqueId || _topUtxoPos == 0);
-        Exit memory currentExit = exits[uniqueId];
+        uint192 exitId;
+        bool isInFlight;
+        uint256 topUtxoExitId = getStandardExitId(_topUtxoPos);
+        (exitableTimestamp, exitId, isInFlight) = getNextExit(_token);
+        require(topUtxoExitId == exitId || topUtxoExitId == 0);
+        Exit memory currentExit = exits[exitId];
         PriorityQueue queue = PriorityQueue(exitsQueues[_token]);
         while (exitableTimestamp < block.timestamp && _exitsToProcess > 0) {
-            currentExit = exits[uniqueId];
+            currentExit = exits[exitId];
 
             // Delete the minimum from the queue.
             queue.delMin();
 
             // Check that the exit can be processed.
-            if (exitableTimestamp.clearBit(63) > block.timestamp) {
+            if (isMature(exitableTimestamp)) {
                 return;
             }
 
             // Check for the in-flight exit flag.
-            if (exitableTimestamp.bitSet(63)) {
-                _processInFlightExit(inFlightExits[uniqueId]);
+            if (isInFlight) {
+                // handle ERC20 transfers for InFlight exits
+                _processInFlightExit(inFlightExits[exitId]);
             } else {
-                _processStandardExit(exits[uniqueId]);
+                _processStandardExit(exits[exitId]);
             }
 
             // Pull the next exit.
             if (queue.currentSize() > 0) {
-                (uniqueId, exitableTimestamp) = getNextExit(_token);
+                (exitableTimestamp, exitId, isInFlight) = getNextExit(_token);
                 _exitsToProcess = _exitsToProcess.sub(1);
             } else {
                 return;
@@ -716,18 +723,67 @@ contract RootChain {
         }
     }
 
+    function isMature(uint64 exitableTimestamp)
+        public
+        view
+        returns (bool)
+    {
+        // Ignore the value of the flag here.
+        return exitableTimestamp > block.timestamp;
+    }
+
+    // Least significant bit of uniqueId flags in-flight exits.
+    function isInFlight(uint192 uniqueId)
+        public
+        pure
+        returns (bool)
+    {
+        return uniqueId.bitSet(0);
+    }
+
+    // Set the least significant bit of uniqueId to flag it as in-flight exit.
+    function markInFlight(uint256 priority)
+        public
+        pure
+        returns (uint256)
+    {
+        return priority.setBit(0);
+    }
+
+    // Clear the least significant bit of uniqueId to flag it as standard exit.
+    function markStandard(uint256 priority)
+        public
+        pure
+        returns (uint256)
+    {
+        return priority.clearBit(0);
+    }
+
     /**
-     * @dev Given an RLP encoded transaction, returns its unique ID.
+     * @dev Given an RLP encoded transaction, returns its exit ID.
      * @param _tx RLP encoded transaction.
-     * @return _uniqueId A unique identifier.
+     * @return _uniqueId A unique identifier of an in-flight exit.
      */
-    function getUniqueId(bytes _tx)
+    function getInFlightExitId(bytes _tx)
         public
         pure
         returns (uint192)
     {
-        // Unique ID is the transaction's hash, shifted right 64 bits.
-        return uint192(keccak256(_tx) >> 64);
+        // Exit ID of in-flight transaction is 191 bits of the transaction's hash, padded with zero on the right.
+        return uint192(keccak256(_tx) << 1);
+    }
+
+    /**
+     * @dev Given UTXO's position, returns its exit ID.
+     * @param _outputId UTXO position.
+     * @return _uniqueId A unique identifier of an standard exit.
+     */
+    function getStandardExitId(uint256 _outputId)
+        public
+        pure
+        returns (uint192)
+    {
+        return uint192(_outputId << 1);
     }
 
     /**
@@ -780,7 +836,7 @@ contract RootChain {
      * @param _value Integer to check.
      * @return True if left-most bit is set. False otherwise.
      */
-    function flagSet(uint256 _value)
+    function flagged(uint256 _value)
         public
         pure
         returns (bool)
@@ -788,6 +844,21 @@ contract RootChain {
         return _value.bitSet(255);
     }
 
+    function setFlag(uint256 _value)
+        public
+        pure
+        returns (uint256)
+    {
+        return _value.setBit(255);
+    }
+
+    function clearFlag(uint256 _value)
+        public
+        pure
+        returns (uint256)
+    {
+        return _value.clearBit(255);
+    }
 
     /*
      * Internal functions
@@ -798,8 +869,8 @@ contract RootChain {
      * @param _outputId Output identifier.
      * @return uint256 Timestamp after which this output is exitable.
      */
-    function _getExitableTimestamp(uint256 _outputId)
-        internal
+    function getExitableTimestamp(uint256 _outputId)
+        public
         view
         returns (uint256)
     {
@@ -815,29 +886,16 @@ contract RootChain {
 
     /**
      * @dev Given a output ID and a unique ID, returns an exit priority.
-     * @param _outputId Position of the exit in the blockchain.
-     * @param _uniqueId Unique exit identifier.
-     * @return An exit priority.
-     */
-    function _getExitPriority(uint256 _outputId, uint192 _uniqueId)
-        internal
-        view
-        returns (uint256)
-    {
-        return _getExitableTimestamp(_outputId) << 192 | _uniqueId;
-    }
-
-    /**
-     * @dev Given an output ID, returns an exit priority.
+     * @param _exitId Unique exit identifier.
      * @param _outputId Position of the exit in the blockchain.
      * @return An exit priority.
      */
-    function _getExitPriority(uint256 _outputId)
-        internal
+    function getExitPriority(uint192 _exitId, uint256 _outputId)
+        public
         view
         returns (uint256)
     {
-        return _getExitPriority(_outputId, uint192(_outputId));
+        return (getExitableTimestamp(_outputId) << 192) | _exitId;
     }
 
     /**
@@ -846,12 +904,11 @@ contract RootChain {
      * @param _tx RLP encoded transaction.
      * @return An exit priority.
      */
-    function _getExitPriority(uint256 _outputId, bytes _tx)
-        internal
+    function getExitPriority(uint256 _outputId, bytes _tx)
         view
         returns (uint256)
     {
-        return _getExitPriority(_outputId, getUniqueId(_tx));
+        return getExitPriority(getInFlightExitId(_tx), _outputId);
     }
 
     /**
@@ -886,7 +943,7 @@ contract RootChain {
         view
         returns (InFlightExit storage)
     {
-        return inFlightExits[getUniqueId(_inFlightTx)];
+        return inFlightExits[getInFlightExitId(_inFlightTx)];
     }
 
     /**
@@ -900,23 +957,25 @@ contract RootChain {
         returns (uint256)
     {
         uint256 periodTime = MIN_EXIT_PERIOD / 2;
-        return ((block.timestamp - _inFlightExit.exitStartTimestamp.clearBit(255)) / periodTime) + 1;
+        return ((block.timestamp - clearFlag(_inFlightExit.exitStartTimestamp)) / periodTime) + 1;
     }
 
     /**
      * @dev Returns the next exit to be processed.
-     * @return A tuple containing the unique exit ID and timestamp for when the next exit is processable.
+     * @return A tuple with timestamp for when the next exit is processable, its unique exit id
+               and flag determining if exit is in-flight one.
      */
     function getNextExit(address _token)
         public
         view
-        returns (uint192, uint64)
+        returns (uint64, uint192, bool)
     {
         PriorityQueue queue = PriorityQueue(exitsQueues[_token]);
         uint256 priority = queue.getMin();
-        uint192 uniqueId = uint192(priority);
         uint64 exitableTimestamp = uint64(priority >> 192);
-        return (uniqueId, exitableTimestamp);
+        uint192 exitId = uint192(priority.clearBit(0));
+        bool isInFlight = priority.getBit(0) == 1;
+        return (exitableTimestamp, exitId, isInFlight);
     }
 
     /**
@@ -1016,7 +1075,7 @@ contract RootChain {
         internal
     {
         // Determine whether the inputs or the outputs are the exitable set.
-        bool inputsExitable = flagSet(_inFlightExit.exitStartTimestamp);
+        bool inputsExitable = flagged(_inFlightExit.exitStartTimestamp);
 
         // Process the inputs or outputs.
         PlasmaCore.TransactionOutput memory output;
@@ -1045,7 +1104,7 @@ contract RootChain {
         // Refund the current bond owner.
         _inFlightExit.bondOwner.transfer(inFlightExitBond);
 
-        // Delete everything but the exitmap to block additional exits.
+        // Delete everything but the exitmap to block exits from already processed outputs.
         delete _inFlightExit.exitStartTimestamp;
         delete _inFlightExit.inputs;
         delete _inFlightExit.outputs;

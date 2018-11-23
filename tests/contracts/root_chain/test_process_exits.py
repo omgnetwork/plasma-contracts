@@ -7,31 +7,31 @@ from ethereum.tools.tester import TransactionFailed
 def test_process_exits_standard_exit_should_succeed(testlang):
     owner, amount = testlang.accounts[0], 100
     deposit_id = testlang.deposit(owner, amount)
-    spend_id = testlang.spend_utxo(deposit_id, owner, amount, owner)
+    spend_id = testlang.spend_utxo([deposit_id], [owner.key], [(owner.address, NULL_ADDRESS, amount)])
 
     pre_balance = testlang.get_balance(owner)
 
-    testlang.start_standard_exit(owner, spend_id)
+    testlang.start_standard_exit(spend_id, owner.key)
     testlang.forward_timestamp(2 * WEEK + 1)
 
-    testlang.process_exits(NULL_ADDRESS, spend_id, 100)
+    testlang.process_exits(NULL_ADDRESS, 0, 100)
 
     standard_exit = testlang.get_standard_exit(spend_id)
     assert standard_exit.owner == NULL_ADDRESS_HEX
     assert standard_exit.token == NULL_ADDRESS_HEX
-    assert standard_exit.amount == amount
+    assert standard_exit.amount == 100
     assert testlang.get_balance(owner) == pre_balance + amount
 
 
 def test_process_exits_in_flight_exit_should_succeed(testlang):
     owner, amount = testlang.accounts[0], 100
     deposit_id = testlang.deposit(owner, amount)
-    spend_id = testlang.spend_utxo([deposit_id], [owner.key], [(owner.address, 100)])
+    spend_id = testlang.spend_utxo([deposit_id], [owner.key], [(owner.address, NULL_ADDRESS, 100)])
     testlang.start_in_flight_exit(spend_id)
     testlang.piggyback_in_flight_exit_output(spend_id, 0, owner.key)
-    testlang.forward_timestamp(2 * WEEK)
+    testlang.forward_timestamp(2 * WEEK + 1)
 
-    testlang.process_exits()
+    testlang.process_exits(NULL_ADDRESS, 0, 100)
 
     in_flight_exit = testlang.get_in_flight_exit(spend_id)
     assert in_flight_exit.exit_start_timestamp == 0
@@ -53,26 +53,24 @@ def test_finalize_exits_for_ERC20_should_succeed(testlang, root_chain, token):
     root_chain.addToken(token.address)
     assert root_chain.hasToken(token.address)
     deposit_id = testlang.deposit_token(owner, token, amount)
-    spend_id = testlang.spend_utxo(deposit_id, owner, 100, owner)
+    spend_id = testlang.spend_utxo([deposit_id], [owner.key], [(owner.address, token.address, amount)])
 
-    testlang.start_standard_exit(owner, spend_id)
+    testlang.start_standard_exit(spend_id, owner.key)
 
     standard_exit = testlang.get_standard_exit(spend_id)
+    assert standard_exit.amount == amount
     assert standard_exit.token == encode_hex(token.address)
     assert standard_exit.owner == owner.address
     testlang.forward_timestamp(2 * WEEK + 1)
 
     pre_balance = token.balanceOf(owner.address)
-    testlang.process_exits(token.address, spend_id, 100)
+    testlang.process_exits(token.address, 0, 100)
 
-    plasma_exit = testlang.get_standard_exit(spend_id)
-    assert plasma_exit.token == encode_hex(token.address)
-    assert plasma_exit.owner == NULL_ADDRESS_HEX
+    standard_exit = testlang.get_standard_exit(spend_id)
     assert standard_exit.amount == amount
+    assert standard_exit.token == NULL_ADDRESS_HEX
+    assert standard_exit.owner == NULL_ADDRESS_HEX
     assert token.balanceOf(owner.address) == pre_balance + amount
-
-
-# TODO: add test_process_exits_in_flight_for_ERC20_should_succeed
 
 
 def test_finalize_exits_old_utxo_is_mature_after_single_mfp(testlang):
@@ -81,10 +79,10 @@ def test_finalize_exits_old_utxo_is_mature_after_single_mfp(testlang):
     owner, amount = testlang.accounts[0], 100
 
     deposit_id = testlang.deposit(owner, amount)
-    spend_id = testlang.spend_utxo(deposit_id, owner, amount, owner)
+    spend_id = testlang.spend_utxo([deposit_id], [owner.key], [(owner.address, NULL_ADDRESS, amount)])
 
     testlang.forward_timestamp(required_exit_period)
-    testlang.start_standard_exit(owner, spend_id)
+    testlang.start_standard_exit(spend_id, owner.key)
     testlang.forward_timestamp(minimal_finalization_period)
 
     assert testlang.get_standard_exit(spend_id).owner == owner.address
@@ -101,9 +99,9 @@ def test_finalize_exits_new_utxo_is_mature_after_mfp_plus_rep(testlang):
     owner, amount = testlang.accounts[0], 100
 
     deposit_id = testlang.deposit(owner, amount)
-    spend_id = testlang.spend_utxo(deposit_id, owner, amount, owner)
+    spend_id = testlang.spend_utxo([deposit_id], [owner.key], [(owner.address, NULL_ADDRESS, amount)])
 
-    testlang.start_standard_exit(owner, spend_id)
+    testlang.start_standard_exit(spend_id, owner.key)
 
     testlang.forward_timestamp(required_exit_period)
     assert testlang.get_standard_exit(spend_id).owner == owner.address
@@ -121,16 +119,16 @@ def test_finalize_exits_only_mature_exits_are_processed(testlang):
     owner, amount = testlang.accounts[0], 100
 
     deposit_id_1 = testlang.deposit(owner, amount)
-    spend_id_1 = testlang.spend_utxo(deposit_id_1, owner, amount, owner)
+    spend_id_1 = testlang.spend_utxo([deposit_id_1], [owner.key], [(owner.address, NULL_ADDRESS, amount)])
 
-    testlang.start_standard_exit(owner, spend_id_1)
+    testlang.start_standard_exit(spend_id_1, owner.key)
 
     testlang.forward_timestamp(required_exit_period + minimal_finalization_period + 1)
 
     deposit_id_2 = testlang.deposit(owner, amount)
-    spend_id_2 = testlang.spend_utxo(deposit_id_2, owner, amount, owner)
+    spend_id_2 = testlang.spend_utxo([deposit_id_2], [owner.key], [(owner.address, NULL_ADDRESS, amount)])
 
-    testlang.start_standard_exit(owner, spend_id_2)
+    testlang.start_standard_exit(spend_id_2, owner.key)
 
     assert testlang.get_standard_exit(spend_id_1).owner == owner.address
     assert testlang.get_standard_exit(spend_id_2).owner == owner.address
@@ -149,14 +147,12 @@ def test_finalize_exits_partial_queue_processing(testlang):
     owner, amount = testlang.accounts[0], 100
 
     deposit_id_1 = testlang.deposit(owner, amount)
-    spend_id_1 = testlang.spend_utxo(deposit_id_1, owner, 100, owner)
-    testlang.confirm_spend(spend_id_1, owner)
-    testlang.start_standard_exit(owner, spend_id_1)
+    spend_id_1 = testlang.spend_utxo([deposit_id_1], [owner.key], [(owner.address, NULL_ADDRESS, 100)])
+    testlang.start_standard_exit(spend_id_1, owner.key)
 
     deposit_id_2 = testlang.deposit(owner, amount)
-    spend_id_2 = testlang.spend_utxo(deposit_id_2, owner, 100, owner)
-    testlang.confirm_spend(spend_id_2, owner)
-    testlang.start_standard_exit(owner, spend_id_2)
+    spend_id_2 = testlang.spend_utxo([deposit_id_2], [owner.key], [(owner.address, NULL_ADDRESS, 100)])
+    testlang.start_standard_exit(spend_id_2, owner.key)
 
     testlang.forward_timestamp(2 * WEEK + 1)
     testlang.process_exits(NULL_ADDRESS, spend_id_1, 1)
@@ -171,10 +167,10 @@ def test_finalize_exits_tx_race_short_circuit(testlang):
     utxo2 = testlang.create_utxo()
     utxo3 = testlang.create_utxo()
     utxo4 = testlang.create_utxo()
-    testlang.start_standard_exit(utxo1.owner, utxo1.spend_id)
-    testlang.start_standard_exit(utxo2.owner, utxo2.spend_id)
-    testlang.start_standard_exit(utxo3.owner, utxo3.spend_id)
-    testlang.start_standard_exit(utxo4.owner, utxo4.spend_id)
+    testlang.start_standard_exit(utxo1.spend_id, utxo1.owner.key)
+    testlang.start_standard_exit(utxo2.spend_id, utxo2.owner.key)
+    testlang.start_standard_exit(utxo3.spend_id, utxo3.owner.key)
+    testlang.start_standard_exit(utxo4.spend_id, utxo4.owner.key)
 
     testlang.forward_timestamp(2 * WEEK + 1)
     testlang.process_exits(NULL_ADDRESS, utxo1.spend_id, 1)
@@ -189,10 +185,10 @@ def test_finalize_exits_tx_race_normal(testlang):
     utxo2 = testlang.create_utxo()
     utxo3 = testlang.create_utxo()
     utxo4 = testlang.create_utxo()
-    testlang.start_standard_exit(utxo1.owner, utxo1.spend_id)
-    testlang.start_standard_exit(utxo2.owner, utxo2.spend_id)
-    testlang.start_standard_exit(utxo3.owner, utxo3.spend_id)
-    testlang.start_standard_exit(utxo4.owner, utxo4.spend_id)
+    testlang.start_standard_exit(utxo1.spend_id, utxo1.owner.key)
+    testlang.start_standard_exit(utxo2.spend_id, utxo2.owner.key)
+    testlang.start_standard_exit(utxo3.spend_id, utxo3.owner.key)
+    testlang.start_standard_exit(utxo4.spend_id, utxo4.owner.key)
 
     testlang.forward_timestamp(2 * WEEK + 1)
     testlang.process_exits(NULL_ADDRESS, utxo1.spend_id, 1)
@@ -206,9 +202,8 @@ def test_finalize_exits_empty_queue_should_crash(testlang, ethtester):
     owner, amount = testlang.accounts[0], 100
 
     deposit_id_1 = testlang.deposit(owner, amount)
-    spend_id_1 = testlang.spend_utxo(deposit_id_1, owner, 100, owner)
-    testlang.confirm_spend(spend_id_1, owner)
-    testlang.start_standard_exit(owner, spend_id_1)
+    spend_id_1 = testlang.spend_utxo([deposit_id_1], [owner.key], [(owner.address, NULL_ADDRESS, 100)])
+    testlang.start_standard_exit(spend_id_1, owner.key)
 
     testlang.forward_timestamp(2 * WEEK + 1)
     testlang.process_exits(NULL_ADDRESS, spend_id_1, 1)
@@ -223,9 +218,8 @@ def test_finalize_skipping_top_utxo_check_is_possible(testlang):
     owner, amount = testlang.accounts[0], 100
 
     deposit_id_1 = testlang.deposit(owner, amount)
-    spend_id_1 = testlang.spend_utxo(deposit_id_1, owner, 100, owner)
-    testlang.confirm_spend(spend_id_1, owner)
-    testlang.start_standard_exit(owner, spend_id_1)
+    spend_id_1 = testlang.spend_utxo([deposit_id_1], [owner.key], [(owner.address, NULL_ADDRESS, 100)])
+    testlang.start_standard_exit(spend_id_1, owner.key)
 
     testlang.forward_timestamp(2 * WEEK + 1)
     testlang.process_exits(NULL_ADDRESS, 0, 1)
@@ -237,10 +231,10 @@ def test_finalize_skipping_top_utxo_check_is_possible(testlang):
 def test_finalize_challenged_exit_will_not_send_funds(testlang):
     owner, finalizer, amount = testlang.accounts[0], testlang.accounts[0], 100
     deposit_id = testlang.deposit(owner, amount)
-    spend_id = testlang.spend_utxo(deposit_id, owner, 100, owner)
+    spend_id = testlang.spend_utxo([deposit_id], [owner.key], [(owner.address, NULL_ADDRESS, 100)])
 
-    testlang.start_standard_exit(owner, spend_id)
-    doublespend_id = testlang.spend_utxo(spend_id, owner, 100, owner)
+    testlang.start_standard_exit(spend_id, owner.key)
+    doublespend_id = testlang.spend_utxo([spend_id], [owner.key], [(owner.address, NULL_ADDRESS, 100)])
 
     testlang.challenge_standard_exit(spend_id, doublespend_id)
     testlang.root_chain.exits(spend_id) == [NULL_ADDRESS_HEX, NULL_ADDRESS_HEX, 0]
@@ -256,14 +250,37 @@ def test_finalize_challenged_exit_will_not_send_funds(testlang):
 def test_finalized_exit_challenge_will_fail(testlang):
     owner, amount = testlang.accounts[0], 100
     deposit_id = testlang.deposit(owner, amount)
-    spend_id = testlang.spend_utxo(deposit_id, owner, amount, owner)
+    spend_id = testlang.spend_utxo([deposit_id], [owner.key], [(owner.address, NULL_ADDRESS, amount)])
 
-    testlang.start_standard_exit(owner, spend_id)
+    testlang.start_standard_exit(spend_id, owner.key)
     testlang.forward_timestamp(2 * WEEK + 1)
 
     testlang.process_exits(NULL_ADDRESS, spend_id, 100)
     standard_exit = testlang.get_standard_exit(spend_id)
     assert standard_exit.owner == NULL_ADDRESS_HEX
-    doublespend_id = testlang.spend_utxo(spend_id, owner, 100, owner)
+    doublespend_id = testlang.spend_utxo([spend_id], [owner.key], [(owner.address, NULL_ADDRESS, 100)])
     with pytest.raises(TransactionFailed):
         testlang.challenge_standard_exit(spend_id, doublespend_id)
+
+
+def test_finalize_for_in_flight_exit_should_transfer_funds(testlang):
+    owner, amount = testlang.accounts[0], 100
+    first_utxo = 100 - 33
+    deposit_id = testlang.deposit(owner, amount)
+    spend_id = testlang.spend_utxo([deposit_id], [owner.key], [(owner.address, NULL_ADDRESS, first_utxo), (owner.address, NULL_ADDRESS, 33)])
+
+    # start an in-flight exit and piggyback it
+    testlang.start_in_flight_exit(spend_id)
+    testlang.piggyback_in_flight_exit_output(spend_id, 0, owner.key)
+
+    testlang.forward_timestamp(2 * WEEK + 1)
+
+    exitable_timestamp, _, _ = testlang.root_chain.getNextExit(NULL_ADDRESS)
+    pre_balance = testlang.get_balance(owner)
+
+    testlang.process_exits(NULL_ADDRESS, 0, 10)
+    assert testlang.get_balance(owner) == pre_balance + first_utxo + testlang.root_chain.inFlightExitBond() + testlang.root_chain.piggybackBond()
+
+
+# TODO: add test_process_exits_in_flight_for_ERC20_should_succeed
+# TODO: check if order of processing of in-flight and standard exits is correct

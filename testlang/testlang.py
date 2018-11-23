@@ -74,7 +74,7 @@ class InFlightExit(object):
 
     @property
     def challenge_flag_set(self):
-        return self.root_chain.flagSet(self.exit_start_timestamp)
+        return self.root_chain.flagged(self.exit_start_timestamp)
 
     def get_input(self, index):
         input_info = self.inputs.get(index)
@@ -294,16 +294,17 @@ class TestingLanguage(object):
         block_info = self.root_chain.blocks(blknum)
         return PlasmaBlock(*block_info)
 
-    def get_standard_exit(self, exit_id):
+    def get_standard_exit(self, utxo_pos):
         """Queries a plasma exit by its ID.
 
         Args:
-            exit_id (int): Identifier of the exit to query.
+            utxo_pos (int): position of utxo being exited
 
         Returns:
             StandardExit: Formatted plasma exit information.
         """
 
+        exit_id = self.root_chain.getStandardExitId(utxo_pos)
         exit_info = self.root_chain.exits(exit_id)
         return StandardExit(*exit_info)
 
@@ -421,6 +422,6 @@ class TestingLanguage(object):
 
     def get_in_flight_exit(self, in_flight_tx_id):
         in_flight_tx = self.child_chain.get_transaction(in_flight_tx_id)
-        unique_id = self.root_chain.getUniqueId(in_flight_tx.encoded)
-        exit_info = self.root_chain.inFlightExits(unique_id)
+        exit_id = self.root_chain.getInFlightExitId(in_flight_tx.encoded)
+        exit_info = self.root_chain.inFlightExits(exit_id)
         return InFlightExit(self.root_chain, in_flight_tx, *exit_info)
