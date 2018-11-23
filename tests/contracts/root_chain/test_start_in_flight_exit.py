@@ -91,7 +91,7 @@ def test_start_in_flight_exit_twice_different_piggybacks_should_succeed(testlang
     # First time should succeed
     testlang.start_in_flight_exit(spend_id)
     testlang.piggyback_in_flight_exit_input(spend_id, 0, owner.key)
-    testlang.forward_timestamp(2 * WEEK)
+    testlang.forward_timestamp(2 * WEEK + 1)
     testlang.process_exits(NULL_ADDRESS, 0, 10)
 
     # Second time should also succeed
@@ -110,7 +110,7 @@ def test_start_in_flight_exit_invalid_outputs_should_fail(testlang):
     deposit_id = testlang.deposit(owner_1, amount)
 
     # Create a transaction with outputs greater than inputs
-    output = (owner_2.address, amount * 2)
+    output = (owner_2.address, NULL_ADDRESS, amount * 2)
 
     spend_id = testlang.spend_utxo([deposit_id], [owner_1.key], [output], force_invalid=True)
 
