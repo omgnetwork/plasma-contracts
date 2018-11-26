@@ -4,7 +4,6 @@ import "./Bits.sol";
 import "./ByteUtils.sol";
 import "./ECRecovery.sol";
 import "./Math.sol";
-import "./SafeMath.sol";
 import "./Merkle.sol";
 import "./RLP.sol";
 import "./PlasmaCore.sol";
@@ -20,7 +19,6 @@ import "./ERC20.sol";
 contract RootChain {
     using Bits for uint192;
     using Bits for uint256;
-    using SafeMath for uint256;
     using ByteUtils for bytes;
     using RLP for bytes;
     using RLP for RLP.RLPItem;
@@ -716,7 +714,7 @@ contract RootChain {
             // Pull the next exit.
             if (queue.currentSize() > 0) {
                 (exitableTimestamp, exitId, isInFlight) = getNextExit(_token);
-                _exitsToProcess = _exitsToProcess.sub(1);
+                _exitsToProcess--;
             } else {
                 return;
             }
