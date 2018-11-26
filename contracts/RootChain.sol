@@ -148,35 +148,42 @@ contract RootChain {
 
 
     /*
-     * Constructor
+     * Constructor. Empty because see `function init()`
      */
 
     constructor()
         public
     {
-        operator = msg.sender;
 
-        nextChildBlock = CHILD_BLOCK_INTERVAL;
-        nextDepositBlock = 1;
-
-        nextFeeExit = 1;
-
-        // Support only ETH on deployment; other tokens need
-        // to be added explicitly.
-        exitsQueues[address(0)] = address(new PriorityQueue());
-
-        // Pre-compute some hashes to save gas later.
-        bytes32 zeroHash = keccak256(abi.encodePacked(uint256(0)));
-        for (uint i = 0; i < 16; i++) {
-            zeroHashes[i] = zeroHash;
-            zeroHash = keccak256(abi.encodePacked(zeroHash, zeroHash));
-        }
     }
-
 
     /*
      * Public functions
      */
+
+    // @dev Required to be called before any operations on the contract
+    //      Split from `constructor` to fit into block gas limit
+    function init()
+        public
+    {
+      _initOperator();
+
+      nextChildBlock = CHILD_BLOCK_INTERVAL;
+      nextDepositBlock = 1;
+
+      nextFeeExit = 1;
+
+      // Support only ETH on deployment; other tokens need
+      // to be added explicitly.
+      exitsQueues[address(0)] = address(new PriorityQueue());
+
+      // Pre-compute some hashes to save gas later.
+      bytes32 zeroHash = keccak256(abi.encodePacked(uint256(0)));
+      for (uint i = 0; i < 16; i++) {
+          zeroHashes[i] = zeroHash;
+          zeroHash = keccak256(abi.encodePacked(zeroHash, zeroHash));
+      }
+    }
 
     // @dev Allows anyone to add new token to Plasma chain
     // @param token The address of the ERC20 token
@@ -1138,5 +1145,14 @@ contract RootChain {
         delete _inFlightExit.outputs;
         delete _inFlightExit.bondOwner;
         delete _inFlightExit.oldestCompetitor;
+    }
+
+    /**
+     * @dev Can be called only once in `init`.
+     */
+    function _initOperator()
+    {
+      require(operator == address(0));
+      operator = msg.sender;
     }
 }
