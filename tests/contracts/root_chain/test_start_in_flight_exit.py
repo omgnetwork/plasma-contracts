@@ -86,7 +86,7 @@ def test_start_in_flight_exit_twice_should_fail(testlang):
 def test_start_in_flight_exit_twice_different_piggybacks_should_succeed(testlang):
     owner, amount = testlang.accounts[0], 100
     deposit_id = testlang.deposit(owner, amount)
-    spend_id = testlang.spend_utxo([deposit_id], [owner.key], [(owner.address, 50), (owner.address, 50)])
+    spend_id = testlang.spend_utxo([deposit_id], [owner.key], [(owner.address, NULL_ADDRESS, 50), (owner.address, NULL_ADDRESS, 50)])
 
     # First time should succeed
     testlang.start_in_flight_exit(spend_id)
@@ -113,6 +113,17 @@ def test_start_in_flight_exit_invalid_outputs_should_fail(testlang):
     output = (owner_2.address, NULL_ADDRESS, amount * 2)
 
     spend_id = testlang.spend_utxo([deposit_id], [owner_1.key], [output], force_invalid=True)
+
+    with pytest.raises(TransactionFailed):
+        testlang.start_in_flight_exit(spend_id)
+
+
+def test_start_in_flight_exit_with_ERC20_tokens_should_fail(testlang, token):
+    # this is a temporary limitation, will be fixed later
+    owner, amount = testlang.accounts[0], 100
+    deposit_eth_id = testlang.deposit(owner, amount)
+    deposit_token_id = testlang.deposit_token(owner, token, amount)
+    spend_id = testlang.spend_utxo([deposit_eth_id, deposit_token_id], [owner.key, owner.key], [(owner.address, NULL_ADDRESS, 100), (owner.address, token.address, 50)])
 
     with pytest.raises(TransactionFailed):
         testlang.start_in_flight_exit(spend_id)

@@ -419,6 +419,7 @@ contract RootChain {
         // Get information about the outputs.
         uint8 numInputs;
         uint256 outputSum;
+        // TODO: re-write to support ERC20 tokens
         (numInputs, outputSum) = _getOutputInfo(_inFlightTx);
 
         // Separate the inputs transactions.
@@ -430,6 +431,7 @@ contract RootChain {
         uint256 mostRecentInput = 0;
         for (uint8 i = 0; i < numInputs; i++) {
             (inFlightExit.inputs[i], inputId) = _getInputInfo(_inFlightTx, splitInputTxs, _inputTxsInclusionProofs, _inFlightTxSigs, i);
+            require(inFlightExit.inputs[i].token == address(0));
             inputSum += inFlightExit.inputs[i].amount;
             mostRecentInput = Math.max(mostRecentInput, inputId);
         }
