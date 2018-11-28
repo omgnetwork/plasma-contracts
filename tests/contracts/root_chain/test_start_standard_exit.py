@@ -50,7 +50,7 @@ def test_start_standard_exit_invalid_bond_should_fail(testlang):
 def test_start_standard_exit_by_non_owner_should_fail(testlang, utxo):
     mallory = testlang.accounts[1]
     with pytest.raises(TransactionFailed):
-        testlang.start_standard_exit(utxo.spend_id, utxo.owner.key, sender=mallory.key)
+        testlang.start_standard_exit(utxo.spend_id, mallory.key)
 
 
 def test_start_standard_exit_unknown_token_should_fail(testlang, token):

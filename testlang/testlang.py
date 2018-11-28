@@ -175,14 +175,12 @@ class TestingLanguage(object):
         spend_id = encode_utxo_id(blknum, 0, 0)
         return spend_id
 
-    def start_standard_exit(self, output_id, key, bond=None, sender=None):
-        if sender is None:
-            sender = key
+    def start_standard_exit(self, output_id, key, bond=None):
         output_tx = self.child_chain.get_transaction(output_id)
         merkle = FixedMerkle(16, [output_tx.encoded])
         proof = merkle.create_membership_proof(output_tx.encoded)
         bond = bond if bond is not None else self.root_chain.standardExitBond()
-        self.root_chain.startStandardExit(output_id, output_tx.encoded, proof, value=bond, sender=sender)
+        self.root_chain.startStandardExit(output_id, output_tx.encoded, proof, value=bond, sender=key)
 
     def challenge_standard_exit(self, output_id, spend_id):
         spend_tx = self.child_chain.get_transaction(spend_id)
