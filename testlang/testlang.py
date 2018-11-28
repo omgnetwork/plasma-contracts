@@ -221,17 +221,6 @@ class TestingLanguage(object):
         spend = self.child_chain.get_transaction(spend_id)
         return Utxo(deposit_id, owner, token_address, amount, spend, spend_id)
 
-    def start_deposit_exit(self, owner, deposit_id, amount, token_addr=NULL_ADDRESS):
-        """Starts an exit for a deposit.
-
-        Args:
-            owner (EthereumAccount): Account that owns this deposit.
-            blknum (int): Deposit block number.
-            amount (int): Deposit amount.
-        """
-
-        self.root_chain.startDepositExit(deposit_id, token_addr, amount, sender=owner.key)
-
     def start_fee_exit(self, operator, amount, token=NULL_ADDRESS, bond=None):
         """Starts a fee exit.
 
