@@ -89,6 +89,7 @@ contract RootChain {
 
     event DepositCreated(
         address indexed depositor,
+        uint256 indexed blknum,
         address indexed token,
         uint256 amount
     );
@@ -231,8 +232,6 @@ contract RootChain {
 
         // Perform other checks and create a deposit block.
         _processDeposit(_depositTx, decodedTx);
-
-        emit DepositCreated(decodedTx.outputs[0].owner, decodedTx.outputs[0].token, msg.value);
     }
 
     /**
@@ -254,7 +253,6 @@ contract RootChain {
         // Perform other checks and create a deposit block.
         _processDeposit(_depositTx, decodedTx);
 
-        emit DepositCreated(decodedTx.outputs[0].owner, decodedTx.outputs[0].token, decodedTx.outputs[0].amount);
     }
 
     function _processDeposit(bytes _depositTx, PlasmaCore.Transaction memory decodedTx)
@@ -283,6 +281,13 @@ contract RootChain {
             root: root,
                     timestamp: block.timestamp
                     });
+
+        emit DepositCreated(
+            decodedTx.outputs[0].owner,
+            blknum,
+            decodedTx.outputs[0].token,
+            decodedTx.outputs[0].amount
+        );
 
         nextDepositBlock++;
     }
