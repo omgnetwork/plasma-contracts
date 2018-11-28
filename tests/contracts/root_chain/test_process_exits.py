@@ -2,6 +2,7 @@ from plasma_core.constants import NULL_ADDRESS, NULL_ADDRESS_HEX, WEEK
 from eth_utils import encode_hex
 import pytest
 from ethereum.tools.tester import TransactionFailed
+from plasma_core.utils.transactions import decode_utxo_id, encode_utxo_id
 
 
 def test_process_exits_standard_exit_should_succeed(testlang):
@@ -282,5 +283,39 @@ def test_finalize_for_in_flight_exit_should_transfer_funds(testlang):
     assert testlang.get_balance(owner) == pre_balance + first_utxo + testlang.root_chain.inFlightExitBond() + testlang.root_chain.piggybackBond()
 
 
+def test_finalize_exits_priority_for_in_flight_exits_corresponds_to_the_age_of_youngest_input(testlang):
+    owner, amount = testlang.accounts[0], 100
+    deposit_0_id = testlang.deposit(owner, amount)
+    deposit_1_id = testlang.deposit(owner, amount)
+
+    spend_00_id = testlang.spend_utxo([deposit_0_id], [owner.key], [(owner.address, NULL_ADDRESS, 30), (owner.address, NULL_ADDRESS, 70)])
+    blknum, txindex, zero = decode_utxo_id(spend_00_id)
+    assert zero == 0
+    spend_01_id = encode_utxo_id(blknum, txindex, 1)
+    spend_1_id = testlang.spend_utxo([spend_01_id], [owner.key], [(owner.address, NULL_ADDRESS, 70)])
+    testlang.ethtester.chain.mine()
+    spend_2_id = testlang.spend_utxo([deposit_1_id], [owner.key], [(owner.address, NULL_ADDRESS, 100)])
+
+    testlang.start_standard_exit(spend_00_id, owner.key)
+
+    testlang.start_in_flight_exit(spend_1_id)
+    testlang.piggyback_in_flight_exit_output(spend_1_id, 0, owner.key)
+
+    testlang.start_standard_exit(spend_2_id, owner.key)
+
+    testlang.forward_timestamp(2 * WEEK + 1)
+
+    balance = testlang.get_balance(owner)
+    testlang.process_exits(NULL_ADDRESS, 0, 1)
+    assert testlang.get_balance(owner) == balance + 30 + testlang.root_chain.standardExitBond()
+
+    balance = testlang.get_balance(owner)
+    testlang.process_exits(NULL_ADDRESS, 0, 1)
+    assert testlang.get_balance(owner) == balance + 70 + testlang.root_chain.inFlightExitBond() + testlang.root_chain.piggybackBond()
+
+    balance = testlang.get_balance(owner)
+    testlang.process_exits(NULL_ADDRESS, 0, 1)
+    assert testlang.get_balance(owner) == balance + 100 + testlang.root_chain.standardExitBond()
+
+
 # TODO: add test_process_exits_in_flight_for_ERC20_should_succeed
-# TODO: check if order of processing of in-flight and standard exits is correct
