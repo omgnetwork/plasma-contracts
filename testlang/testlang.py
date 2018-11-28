@@ -232,7 +232,7 @@ class TestingLanguage(object):
 
         self.root_chain.startDepositExit(deposit_id, token_addr, amount, sender=owner.key)
 
-    def start_fee_exit(self, operator, amount):
+    def start_fee_exit(self, operator, amount, token=NULL_ADDRESS, bond=None):
         """Starts a fee exit.
 
         Args:
@@ -244,7 +244,8 @@ class TestingLanguage(object):
         """
 
         fee_exit_id = self.root_chain.nextFeeExit()
-        self.root_chain.startFeeExit(NULL_ADDRESS, amount, sender=operator.key)
+        bond = bond if bond is not None else self.root_chain.standardExitBond()
+        self.root_chain.startFeeExit(token, amount, value=bond, sender=operator.key)
         return fee_exit_id
 
     def process_exits(self, token, utxo_id, count, **kwargs):

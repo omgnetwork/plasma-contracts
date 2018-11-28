@@ -318,7 +318,7 @@ contract RootChain {
         require(hasToken(output.token));
 
         // Determine the exit's priority.
-        uint256 exitPriority = getExitPriority(exitId, _outputId);
+        uint256 exitPriority = getStandardExitPriority(exitId, _outputId);
         exitPriority = markStandard(exitPriority);
 
         // Insert the exit into the queue and update the exit mapping.
@@ -370,16 +370,20 @@ contract RootChain {
      */
     function startFeeExit(address _token, uint256 _amount)
         public
+        payable
         onlyOperator
+        onlyWithValue(standardExitBond)
     {
         // Make sure queue for this token exists.
         require(hasToken(_token));
 
+        // Make sure this exit is valid.
+        require(_amount > 0);
+
         uint192 exitId = getStandardExitId(nextFeeExit);
 
-        // FIXME: make sure that period for fee exit is two weeks!
         // Determine the exit's priority.
-        uint256 exitPriority = getExitPriority(exitId, exitId);
+        uint256 exitPriority = getFeeExitPriority(exitId);
         exitPriority = markStandard(exitPriority);
 
         // Insert the exit into the queue and update the exit mapping.
@@ -440,7 +444,7 @@ contract RootChain {
         require(inputSum >= outputSum);
 
         // Determine when the exit can be processed.
-        uint256 exitPriority = getExitPriority(mostRecentInput, _inFlightTx);
+        uint256 exitPriority = getInFlightExitPriority(mostRecentInput, _inFlightTx);
         exitPriority = markInFlight(exitPriority);
 
         // Insert the exit into the queue.
@@ -885,12 +889,26 @@ contract RootChain {
     }
 
     /**
+     * @dev Given a fee exit ID returns an exit priority.
+     * @param _feeExitId Fee exit identifier.
+     * @return An exit priority.
+     */
+    function getFeeExitPriority(uint256 _feeExitId)
+        public
+        view
+        returns (uint256)
+    {
+        return ((block.timestamp + (2 * MIN_EXIT_PERIOD)) << 192) | _feeExitId;
+    }
+
+
+    /**
      * @dev Given a output ID and a unique ID, returns an exit priority.
      * @param _exitId Unique exit identifier.
      * @param _outputId Position of the exit in the blockchain.
      * @return An exit priority.
      */
-    function getExitPriority(uint192 _exitId, uint256 _outputId)
+    function getStandardExitPriority(uint192 _exitId, uint256 _outputId)
         public
         view
         returns (uint256)
@@ -904,11 +922,11 @@ contract RootChain {
      * @param _tx RLP encoded transaction.
      * @return An exit priority.
      */
-    function getExitPriority(uint256 _outputId, bytes _tx)
+    function getInFlightExitPriority(uint256 _outputId, bytes _tx)
         view
         returns (uint256)
     {
-        return getExitPriority(getInFlightExitId(_tx), _outputId);
+        return getStandardExitPriority(getInFlightExitId(_tx), _outputId);
     }
 
     /**
