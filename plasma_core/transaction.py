@@ -85,6 +85,4 @@ class Transaction(rlp.Serializable):
         self.signatures[index] = sign(self.hash, key)
 
 
-class UnsignedTransaction(rlp.Serializable):
-
-    fields = Transaction.fields[:-1]
+UnsignedTransaction = Transaction.exclude(['signatures'])

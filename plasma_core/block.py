@@ -49,6 +49,4 @@ class Block(rlp.Serializable):
         self.signature = sign(self.hash, key)
 
 
-class UnsignedBlock(rlp.Serializable):
-
-    fields = Block.fields[:-1]
+UnsignedBlock = Block.exclude(['signature'])
