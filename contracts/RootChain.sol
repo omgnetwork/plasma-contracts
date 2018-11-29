@@ -46,6 +46,14 @@ contract RootChain {
         address token
     );
 
+    event ExitFinalized(
+      uint256 indexed utxoPos
+    );
+
+    event ExitChallenged(
+      uint256 indexed utxoPos
+    );
+
 
     /*
      * Storage
@@ -265,6 +273,7 @@ contract RootChain {
 
         // Delete the owner but keep the amount to prevent another exit.
         delete exits[eUtxoPos].owner;
+        emit ExitChallenged(eUtxoPos);
     }
 
     /**
@@ -298,6 +307,7 @@ contract RootChain {
                 }
             }
             delete exits[utxoPos].owner;
+            emit ExitFinalized(utxoPos);
 
             if (queue.currentSize() > 0) {
                 (utxoPos, exitable_at) = getNextExit(_token);
