@@ -39,6 +39,9 @@ def test_start_in_flight_exit_should_succeed(ethtester, testlang, num_inputs):
         assert input_info.amount == 0
 
 
+# TODO: add test_start_in_flight_exit_invalid_signature_should_fail
+
+
 def test_start_in_flight_exit_invalid_bond_should_fail(testlang):
     owner, amount = testlang.accounts[0], 100
     deposit_id = testlang.deposit(owner, amount)
