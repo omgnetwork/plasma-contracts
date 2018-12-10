@@ -1,6 +1,7 @@
 import pytest
 from ethereum.tools.tester import TransactionFailed
 from plasma_core.constants import NULL_ADDRESS, NULL_ADDRESS_HEX, WEEK
+from plasma_core.utils.transactions import decode_utxo_id, encode_utxo_id
 
 
 def test_start_standard_exit_should_succeed(testlang, utxo):
@@ -89,7 +90,6 @@ def test_start_standard_exit_on_finalized_exit_should_fail(testlang, utxo):
 
 
 def test_start_standard_exit_wrong_oindex_should_fail(testlang):
-    from plasma_core.utils.transactions import decode_utxo_id, encode_utxo_id
     from plasma_core.transaction import Transaction
     alice, bob, alice_money, bob_money = testlang.accounts[0], testlang.accounts[1], 10, 90
 
@@ -123,3 +123,27 @@ def test_start_standard_exit_from_deposit_must_be_exitable_in_minimal_finalizati
     testlang.process_exits(NULL_ADDRESS, 0, 1)
 
     assert testlang.root_chain.exits(deposit_id << 1) == [NULL_ADDRESS_HEX, NULL_ADDRESS_HEX, amount]
+
+
+@pytest.mark.parametrize("num_outputs", [1, 2, 3, 4])
+def test_start_standard_exit_on_piggyback_in_flight_exit_valid_output_owner_should_fail(testlang, num_outputs):
+    owner_1, amount = testlang.accounts[0], 100
+    deposit_id = testlang.deposit(owner_1, amount)
+    outputs = []
+    for i in range(0, num_outputs):
+        outputs.append((testlang.accounts[i].address, NULL_ADDRESS, 1))
+    spend_id = testlang.spend_utxo([deposit_id], [owner_1.key], outputs)
+
+    testlang.start_in_flight_exit(spend_id)
+
+    output_index = num_outputs - 1
+    testlang.piggyback_in_flight_exit_output(spend_id, output_index, testlang.accounts[output_index].key)
+
+    in_flight_exit = testlang.get_in_flight_exit(spend_id)
+    assert in_flight_exit.output_piggybacked(output_index)
+
+    blknum, txindex, _ = decode_utxo_id(spend_id)
+    output_id = encode_utxo_id(blknum, txindex, output_index)
+
+    with pytest.raises(TransactionFailed):
+        testlang.start_standard_exit(output_id, testlang.accounts[output_index].key)
