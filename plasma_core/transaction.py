@@ -57,6 +57,7 @@ class Transaction(rlp.Serializable):
                  inputs=[DEFAULT_INPUT] * NUM_TXOS,
                  outputs=[DEFAULT_OUTPUT] * NUM_TXOS,
                  signatures=[NULL_SIGNATURE] * NUM_TXOS):
+        assert all(len(o) == 3 for o in outputs)
         padded_inputs = pad_list(inputs, self.DEFAULT_INPUT, self.NUM_TXOS)
         padded_outputs = pad_list(outputs, self.DEFAULT_OUTPUT, self.NUM_TXOS)
 
