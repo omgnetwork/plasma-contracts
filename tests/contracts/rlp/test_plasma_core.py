@@ -1,5 +1,6 @@
 import pytest
-from plasma_core.transaction_v2 import Transaction
+from ethereum.tools.tester import TransactionFailed
+from plasma_core.transaction import Transaction
 
 
 @pytest.fixture
@@ -10,9 +11,9 @@ def plasma_core_test(ethtester, get_contract):
 
 
 def test_slice_proof(plasma_core_test):
-    proof = b'\x00' * 63 + b'\x01'
-    assert plasma_core_test.sliceProof(proof, 0) == proof[0:32]
-    assert plasma_core_test.sliceProof(proof, 1) == proof[32:64]
+    proof = b'\x00' * 1023 + b'\x01'
+    assert plasma_core_test.sliceProof(proof, 0) == proof[0:512]
+    assert plasma_core_test.sliceProof(proof, 1) == proof[512:1024]
 
 
 def test_slice_signature(plasma_core_test):
@@ -22,11 +23,25 @@ def test_slice_signature(plasma_core_test):
 
 
 def test_get_output(plasma_core_test):
+    null = '0x0000000000000000000000000000000000000000'
     owner = b'0x82a978b3f5962a5b0957d9ee9eef472ee55b42f1'
     amount = 100
-    tx = Transaction(outputs=[(owner, amount)])
-    assert plasma_core_test.getOutput(tx.encoded, 0) == [owner.decode("utf-8"), amount]
-    assert plasma_core_test.getOutput(tx.encoded, 1) == ['0x0000000000000000000000000000000000000000', 0]
+    tx = Transaction(outputs=[(owner, null, amount)])
+    tx = Transaction(outputs=[(owner, null, amount)])
+    assert plasma_core_test.getOutput(tx.encoded, 0) == [owner.decode("utf-8"), null, amount]
+    assert plasma_core_test.getOutput(tx.encoded, 1) == [null, null, 0]
+
+
+def test_decode_mallability(testlang, plasma_core_test):
+    owner, amount = testlang.accounts[0], 100
+    null = '0x0000000000000000000000000000000000000000'
+    tx = Transaction(outputs=[(owner.address, null, amount)])
+    tx.sign(0, owner.key)
+    import rlp
+    encoded_with_signatures = rlp.encode(tx, Transaction)
+
+    with pytest.raises(TransactionFailed):
+        plasma_core_test.getOutput(encoded_with_signatures, 0)
 
 
 def test_get_input_id(plasma_core_test):

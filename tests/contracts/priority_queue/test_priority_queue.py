@@ -48,6 +48,14 @@ def test_priority_queue_delete_all(priority_queue):
         priority_queue.getMin()
 
 
+def test_priority_insert_is_not_idempotent(priority_queue):
+    priority_queue.insert(2)
+    priority_queue.insert(2)
+    assert priority_queue.delMin() == 2
+    assert priority_queue.delMin() == 2
+    assert priority_queue.currentSize() == 0
+
+
 def test_priority_queue_delete_then_insert(priority_queue):
     priority_queue.insert(2)
     assert priority_queue.delMin() == 2

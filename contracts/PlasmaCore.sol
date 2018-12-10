@@ -17,10 +17,10 @@ library PlasmaCore {
     /*
      * Storage
      */
-    uint256 constant internal NUM_TXS = 2;
+    uint256 constant internal NUM_TXS = 4;
     uint256 constant internal BLOCK_OFFSET = 1000000000;
     uint256 constant internal TX_OFFSET = 10000;
-    uint256 constant internal PROOF_SIZE_BYTES = 32;
+    uint256 constant internal PROOF_SIZE_BYTES = 512;
     uint256 constant internal SIGNATURE_SIZE_BYTES = 65;
 
     struct TransactionInput {
@@ -31,6 +31,7 @@ library PlasmaCore {
 
     struct TransactionOutput {
         address owner;
+        address token;
         uint256 amount;
     }
 
@@ -39,11 +40,11 @@ library PlasmaCore {
         TransactionOutput[NUM_TXS] outputs;
     }
 
-    
+
     /*
      * Internal functions
      */
-    
+
     /**
      * @dev Decodes an RLP encoded transaction.
      * @param _tx RLP encoded transaction.
@@ -54,7 +55,8 @@ library PlasmaCore {
         view
         returns (Transaction)
     {
-        RLP.RLPItem[] memory txList = _tx.toRlpItem().toList();
+        RLP.RLPItem[] memory txList = _tx.toRLPItem().toList();
+        require(txList.length == 2);
         RLP.RLPItem[] memory inputs = txList[0].toList();
         RLP.RLPItem[] memory outputs = txList[1].toList();
 
@@ -70,7 +72,8 @@ library PlasmaCore {
             RLP.RLPItem[] memory output = outputs[i].toList();
             decodedTx.outputs[i] = TransactionOutput({
                 owner: output[0].toAddress(),
-                amount: output[1].toUint()
+                token: output[1].toAddress(),
+                amount: output[2].toUint()
             });
         }
 

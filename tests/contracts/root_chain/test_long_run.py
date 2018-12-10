@@ -30,7 +30,7 @@ def test_slow(testlang):
         print("[{}]: iteration {}".format(datetime.datetime.now(), i))
         # 1. deposit few
         for _ in range(5):
-            deposit_id = testlang.deposit(owner.address, amount)
+            deposit_id = testlang.deposit(owner, amount)
             max_gas = max(max_gas, testlang.ethtester.chain.last_gas_used())
             spend_id = testlang.spend_utxo(deposit_id, owner, amount, owner)
             max_gas = max(max_gas, testlang.ethtester.chain.last_gas_used())
@@ -64,7 +64,7 @@ def test_slow(testlang):
 
         testlang.ethtester.chain.mine()
         # 4. attempt to finalize
-        testlang.finalize_exits(NULL_ADDRESS, 0, 3)
+        testlang.process_exits(NULL_ADDRESS, 0, 3)
         max_gas = max(max_gas, testlang.ethtester.chain.last_gas_used())
         print("max_gas is {}".format(max_gas))
 
