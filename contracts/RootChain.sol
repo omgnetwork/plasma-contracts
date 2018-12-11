@@ -384,8 +384,23 @@ contract RootChain {
         bytes32 txHash = keccak256(_challengeTx);
         require(owner == ECRecovery.recover(txHash, _challengeTxSig));
 
+        processChallengeStandardExit(_outputId, exitId);
+    }
+
+    function maybeChallengeStandardExitOnInput(uint256 _inputId)
+        internal
+    {
+        uint192 standardExitId = getStandardExitId(_inputId);
+        if (exits[standardExitId].owner != address(0)) {
+            processChallengeStandardExit(_inputId, standardExitId);
+        }
+    }
+
+    function processChallengeStandardExit(uint256 _outputId, uint192 _exitId)
+        internal
+    {
         // Delete the exit.
-        delete exits[exitId];
+        delete exits[_exitId];
 
         // Send a bond to the challenger.
         msg.sender.transfer(standardExitBond);
@@ -468,6 +483,8 @@ contract RootChain {
             require(inFlightExit.inputs[i].token == address(0));
             inputSum += inFlightExit.inputs[i].amount;
             mostRecentInput = Math.max(mostRecentInput, inputId);
+            // Challenge exiting standard exits from inputs
+            maybeChallengeStandardExitOnInput(inputId);
         }
 
         // Make sure the sums are valid.
