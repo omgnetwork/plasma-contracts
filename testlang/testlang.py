@@ -195,10 +195,12 @@ class TestingLanguage(object):
                 break
         self.root_chain.challengeStandardExit(output_id, spend_tx.encoded, input_index, signature)
 
-    def start_in_flight_exit(self, tx_id, bond=None):
+    def start_in_flight_exit(self, tx_id, bond=None, sender=None):
+        if sender is None:
+            sender = self.accounts[0]
         (encoded_spend, encoded_inputs, proofs, signatures) = self.get_in_flight_exit_info(tx_id)
         bond = bond if bond is not None else self.root_chain.inFlightExitBond()
-        self.root_chain.startInFlightExit(encoded_spend, encoded_inputs, proofs, signatures, value=bond)
+        self.root_chain.startInFlightExit(encoded_spend, encoded_inputs, proofs, signatures, value=bond, sender=sender.key)
 
     def create_utxo(self, token=NULL_ADDRESS):
         class Utxo(object):
