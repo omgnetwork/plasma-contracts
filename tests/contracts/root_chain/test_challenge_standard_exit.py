@@ -13,7 +13,7 @@ def test_challenge_standard_exit_valid_spend_should_succeed(testlang):
 
     testlang.challenge_standard_exit(spend_id, doublespend_id)
 
-    assert testlang.root_chain.exits(spend_id) == [NULL_ADDRESS_HEX, NULL_ADDRESS_HEX, 0]
+    assert testlang.get_standard_exit(spend_id) == [NULL_ADDRESS_HEX, NULL_ADDRESS_HEX, 0]
 
 
 def test_challenge_standard_exit_if_successful_awards_the_bond(testlang):
@@ -42,7 +42,7 @@ def test_challenge_standard_exit_mature_valid_spend_should_succeed(testlang):
 
     testlang.challenge_standard_exit(spend_id, doublespend_id)
 
-    assert testlang.root_chain.exits(spend_id) == [NULL_ADDRESS_HEX, NULL_ADDRESS_HEX, 0]
+    assert testlang.get_standard_exit(spend_id) == [NULL_ADDRESS_HEX, NULL_ADDRESS_HEX, 0]
 
 
 def test_challenge_standard_exit_invalid_spend_should_fail(testlang):

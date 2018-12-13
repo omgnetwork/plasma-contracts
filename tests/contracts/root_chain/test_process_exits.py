@@ -238,7 +238,7 @@ def test_finalize_challenged_exit_will_not_send_funds(testlang):
     doublespend_id = testlang.spend_utxo([spend_id], [owner.key], [(owner.address, NULL_ADDRESS, 100)])
 
     testlang.challenge_standard_exit(spend_id, doublespend_id)
-    testlang.root_chain.exits(spend_id) == [NULL_ADDRESS_HEX, NULL_ADDRESS_HEX, 0]
+    testlang.get_standard_exit(spend_id) == [NULL_ADDRESS_HEX, NULL_ADDRESS_HEX, 0]
 
     testlang.forward_timestamp(2 * WEEK + 1)
 
