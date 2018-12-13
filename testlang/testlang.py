@@ -38,13 +38,28 @@ class StandardExit(object):
         owner (str): Address of the exit's owner.
         token (str): Address of the token being exited.
         amount (int): How much value is being exited.
+        position (int): UTXO position.
     """
 
-    def __init__(self, owner, token, amount):
+    def __init__(self, owner, token, amount, position=0):
         self.owner = owner
         self.token = token
         self.amount = amount
+        self.position = position
 
+    def to_list(self):
+        return [self.owner, self.token, self.amount, self.position]
+
+    def __str__(self):
+        return self.to_list().__str__()
+
+    def __repr__(self):
+        return self.to_list().__repr__()
+
+    def __eq__(self, other):
+        if hasattr(other, "to_list"):
+            return self.to_list() == other.to_list()
+        return (self.to_list() == other) or (self.to_list()[:3] == other)
 
 class PlasmaBlock(object):
     """Represents a Plasma block.
@@ -293,10 +308,12 @@ class TestingLanguage(object):
             utxo_pos (int): position of utxo being exited
 
         Returns:
-            StandardExit: Formatted plasma exit information.
+            tuple: (owner (address), token (address), amount (int))
         """
 
-        exit_id = self.root_chain.getStandardExitId(utxo_pos)
+        tx = self.child_chain.get_transaction(utxo_pos)
+        _, _, oindex = decode_utxo_id(utxo_pos)
+        exit_id = self.root_chain.getStandardExitId(tx.hash, oindex)
         exit_info = self.root_chain.exits(exit_id)
         return StandardExit(*exit_info)
 

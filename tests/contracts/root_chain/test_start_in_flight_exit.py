@@ -149,7 +149,7 @@ def test_start_in_flight_exit_cancelling_standard_exits_from_inputs(testlang, nu
         testlang.start_standard_exit(deposit_ids[i], owners[i].key)
 
     for i in range(0, num_inputs):
-        assert testlang.root_chain.exits(deposit_ids[i] << 1) == [owners[i].address, NULL_ADDRESS_HEX, 100]
+        assert testlang.get_standard_exit(deposit_ids[i]) == [owners[i].address, NULL_ADDRESS_HEX, 100]
 
     challenger = testlang.accounts[5]
     balance = testlang.get_balance(challenger)
@@ -158,4 +158,4 @@ def test_start_in_flight_exit_cancelling_standard_exits_from_inputs(testlang, nu
 
     # Standard exits are correctly challenged
     for i in range(0, num_inputs):
-        assert testlang.root_chain.exits(deposit_ids[i]) == [NULL_ADDRESS_HEX, NULL_ADDRESS_HEX, 0]
+        assert testlang.get_standard_exit(deposit_ids[i]) == [NULL_ADDRESS_HEX, NULL_ADDRESS_HEX, 0]

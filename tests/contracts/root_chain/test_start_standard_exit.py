@@ -6,7 +6,7 @@ from plasma_core.utils.transactions import decode_utxo_id, encode_utxo_id
 
 def test_start_standard_exit_should_succeed(testlang, utxo):
     testlang.start_standard_exit(utxo.spend_id, utxo.owner.key)
-    assert testlang.root_chain.exits(utxo.spend_id << 1) == [utxo.owner.address, NULL_ADDRESS_HEX, utxo.amount]
+    assert testlang.get_standard_exit(utxo.spend_id) == [utxo.owner.address, NULL_ADDRESS_HEX, utxo.amount]
 
 
 @pytest.mark.parametrize("num_outputs", [1, 2, 3, 4])
@@ -21,7 +21,7 @@ def test_start_standard_exit_multiple_outputs_should_succeed(testlang, num_outpu
     output_index = num_outputs - 1
     output_id = spend_id + output_index
     testlang.start_standard_exit(output_id, owners[output_index].key)
-    assert testlang.root_chain.exits(output_id << 1) == [owners[output_index].address, NULL_ADDRESS_HEX, 1]
+    assert testlang.get_standard_exit(output_id) == [owners[output_index].address, NULL_ADDRESS_HEX, 1]
 
 
 def test_start_standard_exit_twice_should_fail(testlang, utxo):
@@ -122,7 +122,7 @@ def test_start_standard_exit_from_deposit_must_be_exitable_in_minimal_finalizati
     testlang.forward_timestamp(required_exit_period + 1)
     testlang.process_exits(NULL_ADDRESS, 0, 1)
 
-    assert testlang.root_chain.exits(deposit_id << 1) == [NULL_ADDRESS_HEX, NULL_ADDRESS_HEX, amount]
+    assert testlang.get_standard_exit(deposit_id) == [NULL_ADDRESS_HEX, NULL_ADDRESS_HEX, amount]
 
 
 @pytest.mark.parametrize("num_outputs", [1, 2, 3, 4])
