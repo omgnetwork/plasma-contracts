@@ -1,6 +1,6 @@
 import pytest
 from ethereum.tools.tester import TransactionFailed
-from plasma_core.constants import NULL_ADDRESS, NULL_ADDRESS_HEX, WEEK
+from plasma_core.constants import NULL_ADDRESS, NULL_ADDRESS_HEX, WEEK, NULL_SIGNATURE
 
 
 def test_challenge_standard_exit_valid_spend_should_succeed(testlang):
@@ -65,6 +65,17 @@ def test_challenge_standard_exit_unrelated_spend_should_fail(testlang):
 
     with pytest.raises(TransactionFailed):
         testlang.challenge_standard_exit(deposit_id_1, spend_id)
+
+
+def test_challenge_standard_exit_uninitialized_memory_and_zero_sig_should_fail(testlang):
+    bond = testlang.root_chain.standardExitBond()
+    owner, amount = testlang.accounts[0], 100 * bond
+    deposit_id = testlang.deposit(owner, amount)
+    spend_id = testlang.spend_utxo([deposit_id], [owner.key])
+    tx = testlang.child_chain.get_transaction(spend_id)
+
+    with pytest.raises(TransactionFailed):
+        testlang.root_chain.challengeStandardExit(0, tx.encoded, 3, NULL_SIGNATURE)
 
 
 def test_challenge_standard_exit_not_started_should_fail(testlang):

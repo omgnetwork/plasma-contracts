@@ -47,7 +47,11 @@ library ECRecovery {
         if (v != 27 && v != 28) {
             revert();
         } else {
-            return ecrecover(_hash, v, r, s);
+            address result = ecrecover(_hash, v, r, s);
+            if (address(0) == result) {
+                revert();
+            }
+            return result;
         }
     }
 }
