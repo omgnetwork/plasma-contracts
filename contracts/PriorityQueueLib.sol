@@ -29,9 +29,9 @@ library PriorityQueueLib {
         return msg.sender == self.owner;
     }
 
-    function init(Queue storage self)
+    function init(Queue storage self, address _owner)
     {
-        self.owner = msg.sender;
+        self.owner = _owner;
         self.heapList = [0];
         self.currentSize = 0;
     }

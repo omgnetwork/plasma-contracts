@@ -28,10 +28,11 @@ contract PriorityQueue {
      *  Public functions
      */
 
-    constructor()
+    constructor(address _owner)
         public
     {
-        queue.init();
+        queue.init(_owner);
+    }
 
     function currentSize()
         external
