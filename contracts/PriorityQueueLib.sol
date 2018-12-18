@@ -30,7 +30,6 @@ library PriorityQueueLib {
     }
 
     function init(Queue storage self)
-        internal
     {
         self.owner = msg.sender;
         self.heapList = [0];
@@ -38,7 +37,6 @@ library PriorityQueueLib {
     }
 
     function insert(Queue storage self, uint256 k)
-        internal
     {
         self.heapList.push(k);
         self.currentSize = self.currentSize.add(1);
@@ -47,7 +45,6 @@ library PriorityQueueLib {
 
     function minChild(Queue storage self, uint256 i)
         view
-        internal
         returns (uint256)
     {
         if (i.mul(2).add(1) > self.currentSize) {
@@ -70,7 +67,6 @@ library PriorityQueueLib {
     }
 
     function delMin(Queue storage self)
-        internal
         returns (uint256)
     {
         uint256 retVal = self.heapList[1];
@@ -83,6 +79,7 @@ library PriorityQueueLib {
     }
 
     function getCurrentSize(Queue storage self)
+        view
         internal
         returns (uint256)
     {
@@ -118,4 +115,3 @@ library PriorityQueueLib {
         if (i != j) self.heapList[i] = newVal;
     }
 }
-

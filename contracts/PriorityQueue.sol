@@ -9,15 +9,6 @@ import "./PriorityQueueLib.sol";
 contract PriorityQueue {
     using PriorityQueueLib for PriorityQueueLib.Queue;
 
-    /* 
-     *  Storage
-     */
-
-    address owner;
-    uint256[] heapList;
-    uint256 public currentSize;
-
-
     /*
      *  Modifiers
      */
@@ -41,6 +32,13 @@ contract PriorityQueue {
         public
     {
         queue.init();
+
+    function currentSize()
+        external
+        view
+        returns (uint256)
+    {
+        queue.getCurrentSize();
     }
 
     function insert(uint256 _element)
@@ -76,7 +74,6 @@ contract PriorityQueue {
      */
     function delMin()
         public
-        view
         returns (uint256)
     {
         return queue.delMin();
