@@ -65,6 +65,8 @@ def get_contract(ethtester, ethutils):
 def root_chain(ethtester, get_contract):
     contract = get_contract('RootChain')
     ethtester.chain.mine()
+    contract.init(sender=ethtester.k0)
+    ethtester.chain.mine()
     return contract
 
 
