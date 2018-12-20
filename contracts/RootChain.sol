@@ -752,15 +752,6 @@ contract RootChain {
         return exitableTimestamp > block.timestamp;
     }
 
-    // Least significant bit of uniqueId flags in-flight exits.
-    function isInFlight(uint192 uniqueId)
-        public
-        pure
-        returns (bool)
-    {
-        return uniqueId.bitSet(0);
-    }
-
     // Set the least significant bit of uniqueId to flag it as in-flight exit.
     function markInFlight(uint256 priority)
         public
@@ -1008,8 +999,8 @@ contract RootChain {
         uint256 priority = queue.getMin();
         uint64 exitableTimestamp = uint64(priority >> 192);
         uint192 exitId = uint192(priority.clearBit(0));
-        bool isInFlight = priority.getBit(0) == 1;
-        return (exitableTimestamp, exitId, isInFlight);
+        bool inFlight = priority.getBit(0) == 1;
+        return (exitableTimestamp, exitId, inFlight);
     }
 
     /**
