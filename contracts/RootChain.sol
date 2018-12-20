@@ -706,9 +706,9 @@ contract RootChain {
     {
         uint64 exitableTimestamp;
         uint192 exitId;
-        bool isInFlight;
+        bool inFlight;
         uint256 topUtxoExitId = getStandardExitId(_topUtxoPos);
-        (exitableTimestamp, exitId, isInFlight) = getNextExit(_token);
+        (exitableTimestamp, exitId, inFlight) = getNextExit(_token);
         require(topUtxoExitId == exitId || topUtxoExitId == 0);
         Exit memory currentExit = exits[exitId];
         PriorityQueue queue = PriorityQueue(exitsQueues[_token]);
@@ -724,7 +724,7 @@ contract RootChain {
             }
 
             // Check for the in-flight exit flag.
-            if (isInFlight) {
+            if (inFlight) {
                 // handle ERC20 transfers for InFlight exits
                 _processInFlightExit(inFlightExits[exitId]);
                 // think of useful event scheme for in-flight outputs finalization
@@ -735,7 +735,7 @@ contract RootChain {
 
             // Pull the next exit.
             if (queue.currentSize() > 0) {
-                (exitableTimestamp, exitId, isInFlight) = getNextExit(_token);
+                (exitableTimestamp, exitId, inFlight) = getNextExit(_token);
                 _exitsToProcess--;
             } else {
                 return;
