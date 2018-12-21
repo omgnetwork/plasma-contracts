@@ -7,13 +7,8 @@ from plasma_core.constants import NULL_ADDRESS, NULL_ADDRESS_HEX, WEEK
 
 def test_start_fee_exit_should_succeed(testlang):
     operator, amount = testlang.accounts[0], 100
-
-    fee_exit_id = testlang.start_fee_exit(operator, amount)
-
-    plasma_exit = testlang.get_standard_exit(fee_exit_id)
-    assert plasma_exit.owner == operator.address
-    assert plasma_exit.token == NULL_ADDRESS_HEX
-    assert plasma_exit.amount == amount
+    exit_id = testlang.start_fee_exit(operator, amount)
+    assert testlang.root_chain.exits(exit_id) == [operator.address, NULL_ADDRESS_HEX, amount, 1]
 
 
 def test_start_fee_exit_non_operator_should_fail(testlang):
@@ -26,8 +21,8 @@ def test_start_fee_exit_non_operator_should_fail(testlang):
 def test_start_fee_exit_finalizes_after_two_weeks(testlang):
     operator, amount = testlang.accounts[0], 100
     testlang.deposit(operator, amount)
-    fee_exit_id = testlang.start_fee_exit(operator, 100)
-    testlang.get_standard_exit(fee_exit_id)
+    testlang.start_fee_exit(operator, amount)
+
     balance = testlang.get_balance(testlang.root_chain)
 
     testlang.forward_timestamp(WEEK + 1)

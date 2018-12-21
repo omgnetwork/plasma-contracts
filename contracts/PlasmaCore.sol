@@ -120,6 +120,19 @@ library PlasmaCore {
     }
 
     /**
+     * @dev Given an output ID, returns transaction position.
+     * @param _outputId Output identifier to decode.
+     * @return The transaction position.
+     */
+    function getTxpos(uint256 _outputId)
+        internal
+        pure
+        returns (uint256)
+    {
+        return _outputId / TX_OFFSET;
+    }
+
+    /**
      * @dev Returns the identifier for an input to a transaction.
      * @param _tx RLP encoded input.
      * @param _inputIndex Index of the input to return.

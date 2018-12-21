@@ -27,7 +27,6 @@ def test_get_output(plasma_core_test):
     owner = b'0x82a978b3f5962a5b0957d9ee9eef472ee55b42f1'
     amount = 100
     tx = Transaction(outputs=[(owner, null, amount)])
-    tx = Transaction(outputs=[(owner, null, amount)])
     assert plasma_core_test.getOutput(tx.encoded, 0) == [owner.decode("utf-8"), null, amount]
     assert plasma_core_test.getOutput(tx.encoded, 1) == [null, null, 0]
 
@@ -48,7 +47,9 @@ def test_get_input_id(plasma_core_test):
     input_id = (2, 2, 2)
     tx = Transaction(inputs=[input_id])
     assert plasma_core_test.getInputId(tx.encoded, 0) == tx.inputs[0].identifier
-    assert plasma_core_test.getInputId(tx.encoded, 1) == tx.inputs[1].identifier
+    assert plasma_core_test.getInputId(tx.encoded, 1) == 0
+    assert plasma_core_test.getInputId(tx.encoded, 2) == 0
+    assert plasma_core_test.getInputId(tx.encoded, 3) == 0
 
 
 def test_get_output_index(plasma_core_test):
@@ -64,3 +65,8 @@ def test_get_tx_index(plasma_core_test):
 def test_get_blknum(plasma_core_test):
     output_id = 1000020003
     assert plasma_core_test.getBlknum(output_id) == 1
+
+
+def test_get_txpos_index(plasma_core_test):
+    output_id = 1000020003
+    assert plasma_core_test.getTxpos(output_id) == 100002
