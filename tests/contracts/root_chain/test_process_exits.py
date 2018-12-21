@@ -176,7 +176,7 @@ def test_finalize_exits_partial_queue_processing(testlang):
     testlang.start_standard_exit(spend_id_2, owner.key)
 
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
-    testlang.process_exits(NULL_ADDRESS, spend_id_1, 1)
+    testlang.process_exits(NULL_ADDRESS, testlang.get_standard_exit_id(spend_id_1), 1)
     plasma_exit = testlang.get_standard_exit(spend_id_1)
     assert plasma_exit.owner == NULL_ADDRESS_HEX
     plasma_exit = testlang.get_standard_exit(spend_id_2)
@@ -194,9 +194,9 @@ def test_finalize_exits_tx_race_short_circuit(testlang):
     testlang.start_standard_exit(utxo4.spend_id, utxo4.owner.key)
 
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
-    testlang.process_exits(NULL_ADDRESS, utxo1.spend_id, 1)
+    testlang.process_exits(NULL_ADDRESS, testlang.get_standard_exit_id(utxo1.spend_id), 1)
     with pytest.raises(TransactionFailed):
-        testlang.process_exits(NULL_ADDRESS, utxo1.spend_id, 3, startgas=1000000)
+        testlang.process_exits(NULL_ADDRESS, testlang.get_standard_exit_id(utxo1.spend_id), 3, startgas=1000000)
     short_circuit_gas = testlang.ethtester.chain.last_gas_used()
     assert short_circuit_gas < 67291  # value from _tx_race_normal
 
@@ -212,9 +212,10 @@ def test_finalize_exits_tx_race_normal(testlang):
     testlang.start_standard_exit(utxo4.spend_id, utxo4.owner.key)
 
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
-    testlang.process_exits(NULL_ADDRESS, utxo1.spend_id, 1)
+    testlang.process_exits(NULL_ADDRESS, testlang.get_standard_exit_id(utxo1.spend_id), 1)
+    testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
 
-    testlang.process_exits(NULL_ADDRESS, utxo2.spend_id, 3)
+    testlang.process_exits(NULL_ADDRESS, testlang.get_standard_exit_id(utxo2.spend_id), 3)
     three_exits_tx_gas = testlang.ethtester.chain.last_gas_used()
     assert three_exits_tx_gas > 3516  # value from _tx_race_short_circuit
 
@@ -227,10 +228,10 @@ def test_finalize_exits_empty_queue_should_crash(testlang, ethtester):
     testlang.start_standard_exit(spend_id_1, owner.key)
 
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
-    testlang.process_exits(NULL_ADDRESS, spend_id_1, 1)
+    testlang.process_exits(NULL_ADDRESS, testlang.get_standard_exit_id(spend_id_1), 1)
 
     with pytest.raises(TransactionFailed):
-        testlang.process_exits(NULL_ADDRESS, spend_id_1, 1)
+        testlang.process_exits(NULL_ADDRESS, testlang.get_standard_exit_id(spend_id_1), 1)
     with pytest.raises(TransactionFailed):
         testlang.process_exits(NULL_ADDRESS, 0, 1)
 
@@ -268,7 +269,7 @@ def test_finalize_challenged_exit_will_not_send_funds(testlang):
     assert post_balance == pre_balance
 
 
-def test_finalized_exit_challenge_will_fail(testlang):
+def test_finalize_exit_challenge_of_finalized_will_fail(testlang):
     owner, amount = testlang.accounts[0], 100
     deposit_id = testlang.deposit(owner, amount)
     spend_id = testlang.spend_utxo([deposit_id], [owner.key], [(owner.address, NULL_ADDRESS, amount)])
@@ -276,7 +277,7 @@ def test_finalized_exit_challenge_will_fail(testlang):
     testlang.start_standard_exit(spend_id, owner.key)
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
 
-    testlang.process_exits(NULL_ADDRESS, spend_id, 100)
+    testlang.process_exits(NULL_ADDRESS, testlang.get_standard_exit_id(spend_id), 100)
     standard_exit = testlang.get_standard_exit(spend_id)
     assert standard_exit.owner == NULL_ADDRESS_HEX
     doublespend_id = testlang.spend_utxo([spend_id], [owner.key], [(owner.address, NULL_ADDRESS, 100)])
@@ -284,7 +285,7 @@ def test_finalized_exit_challenge_will_fail(testlang):
         testlang.challenge_standard_exit(spend_id, doublespend_id)
 
 
-def test_finalize_for_in_flight_exit_should_transfer_funds(testlang):
+def test_finalize_exits_for_in_flight_exit_should_transfer_funds(testlang):
     owner, amount = testlang.accounts[0], 100
     first_utxo = 100 - 33
     deposit_id = testlang.deposit(owner, amount)
@@ -309,8 +310,7 @@ def test_finalize_exits_priority_for_in_flight_exits_corresponds_to_the_age_of_y
     deposit_1_id = testlang.deposit(owner, amount)
 
     spend_00_id = testlang.spend_utxo([deposit_0_id], [owner.key], [(owner.address, NULL_ADDRESS, 30), (owner.address, NULL_ADDRESS, 70)])
-    blknum, txindex, zero = decode_utxo_id(spend_00_id)
-    assert zero == 0
+    blknum, txindex, _ = decode_utxo_id(spend_00_id)
     spend_01_id = encode_utxo_id(blknum, txindex, 1)
     spend_1_id = testlang.spend_utxo([spend_01_id], [owner.key], [(owner.address, NULL_ADDRESS, 70)])
     testlang.ethtester.chain.mine()
@@ -320,12 +320,12 @@ def test_finalize_exits_priority_for_in_flight_exits_corresponds_to_the_age_of_y
 
     testlang.start_in_flight_exit(spend_1_id)
     testlang.piggyback_in_flight_exit_output(spend_1_id, 0, owner.key)
-
     testlang.start_standard_exit(spend_2_id, owner.key)
 
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
 
     balance = testlang.get_balance(owner)
+
     testlang.process_exits(NULL_ADDRESS, 0, 1)
     assert testlang.get_balance(owner) == balance + 30 + testlang.root_chain.standardExitBond()
 

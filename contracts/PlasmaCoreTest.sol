@@ -51,6 +51,14 @@ contract PlasmaCoreTest {
         return PlasmaCore.getOindex(_outputId);
     }
 
+    function getTxpos(uint256 _outputId)
+        public
+        pure
+        returns (uint256)
+    {
+        return PlasmaCore.getTxpos(_outputId);
+    }
+
     function getTxindex(uint256 _outputId)
         public
         pure

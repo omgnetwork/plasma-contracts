@@ -12,7 +12,7 @@ from solc import link_code
 
 
 EXIT_PERIOD = 4 * 60  # 4 minutes
-GAS_LIMIT = 8000000
+GAS_LIMIT = 10000000
 START_GAS = GAS_LIMIT - 1000000
 config_metropolis['BLOCK_GAS_LIMIT'] = GAS_LIMIT
 

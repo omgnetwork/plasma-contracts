@@ -10,7 +10,6 @@ def test_challenge_standard_exit_valid_spend_should_succeed(testlang):
 
     testlang.start_standard_exit(spend_id, owner.key)
     doublespend_id = testlang.spend_utxo([spend_id], [owner.key], outputs=[(owner.address, NULL_ADDRESS, amount)])
-
     testlang.challenge_standard_exit(spend_id, doublespend_id)
 
     assert testlang.get_standard_exit(spend_id) == [NULL_ADDRESS_HEX, NULL_ADDRESS_HEX, 0]
@@ -41,7 +40,6 @@ def test_challenge_standard_exit_mature_valid_spend_should_succeed(testlang):
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
 
     testlang.challenge_standard_exit(spend_id, doublespend_id)
-
     assert testlang.get_standard_exit(spend_id) == [NULL_ADDRESS_HEX, NULL_ADDRESS_HEX, 0]
 
 
@@ -102,11 +100,15 @@ def test_challenge_standard_exit_wrong_oindex_should_fail(testlang):
     bob_utxo = encode_utxo_id(blknum, 0, 1)
 
     testlang.start_standard_exit(alice_utxo, alice.key)
+    testlang.start_standard_exit(bob_utxo, bob.key)
 
     bob_spend_id = testlang.spend_utxo([bob_utxo], [bob.key], outputs=[(bob.address, NULL_ADDRESS, bob_money)])
     alice_spend_id = testlang.spend_utxo([alice_utxo], [alice.key], outputs=[(alice.address, NULL_ADDRESS, alice_money)])
 
     with pytest.raises(TransactionFailed):
         testlang.challenge_standard_exit(alice_utxo, bob_spend_id)
+
+    with pytest.raises(TransactionFailed):
+        testlang.challenge_standard_exit(bob_utxo, alice_spend_id)
 
     testlang.challenge_standard_exit(alice_utxo, alice_spend_id)

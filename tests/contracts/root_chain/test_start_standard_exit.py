@@ -75,7 +75,8 @@ def test_start_standard_exit_old_utxo_has_required_exit_period_to_start_exit(tes
     testlang.start_standard_exit(utxo.spend_id, utxo.owner.key)
 
     [_, exitId, _] = testlang.root_chain.getNextExit(NULL_ADDRESS)
-    assert exitId >> 1 == utxo.spend_id
+    [_, _, _, position] = testlang.root_chain.exits(exitId)
+    assert position == utxo.spend_id
 
 
 def test_start_standard_exit_on_finalized_exit_should_fail(testlang, utxo):
@@ -83,7 +84,7 @@ def test_start_standard_exit_on_finalized_exit_should_fail(testlang, utxo):
     minimal_required_period = MIN_EXIT_PERIOD  # see tesuji blockchain design
     testlang.start_standard_exit(utxo.spend_id, utxo.owner.key)
     testlang.forward_timestamp(required_exit_period + minimal_required_period)
-    testlang.process_exits(NULL_ADDRESS, utxo.spend_id, 100)
+    testlang.process_exits(NULL_ADDRESS, 0, 100)
 
     with pytest.raises(TransactionFailed):
         testlang.start_standard_exit(utxo.spend_id, utxo.owner.key)
