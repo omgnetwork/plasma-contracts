@@ -148,35 +148,42 @@ contract RootChain {
 
 
     /*
-     * Constructor
+     * Constructor. Empty because see `function init()`
      */
 
     constructor()
         public
     {
-        operator = msg.sender;
 
-        nextChildBlock = CHILD_BLOCK_INTERVAL;
-        nextDepositBlock = 1;
-
-        nextFeeExit = 1;
-
-        // Support only ETH on deployment; other tokens need
-        // to be added explicitly.
-        exitsQueues[address(0)] = address(new PriorityQueue());
-
-        // Pre-compute some hashes to save gas later.
-        bytes32 zeroHash = keccak256(abi.encodePacked(uint256(0)));
-        for (uint i = 0; i < 16; i++) {
-            zeroHashes[i] = zeroHash;
-            zeroHash = keccak256(abi.encodePacked(zeroHash, zeroHash));
-        }
     }
-
 
     /*
      * Public functions
      */
+
+    // @dev Required to be called before any operations on the contract
+    //      Split from `constructor` to fit into block gas limit
+    function init()
+        public
+    {
+      _initOperator();
+
+      nextChildBlock = CHILD_BLOCK_INTERVAL;
+      nextDepositBlock = 1;
+
+      nextFeeExit = 1;
+
+      // Support only ETH on deployment; other tokens need
+      // to be added explicitly.
+      exitsQueues[address(0)] = address(new PriorityQueue());
+
+      // Pre-compute some hashes to save gas later.
+      bytes32 zeroHash = keccak256(abi.encodePacked(uint256(0)));
+      for (uint i = 0; i < 16; i++) {
+          zeroHashes[i] = zeroHash;
+          zeroHash = keccak256(abi.encodePacked(zeroHash, zeroHash));
+      }
+    }
 
     // @dev Allows anyone to add new token to Plasma chain
     // @param token The address of the ERC20 token
@@ -699,9 +706,9 @@ contract RootChain {
     {
         uint64 exitableTimestamp;
         uint192 exitId;
-        bool isInFlight;
+        bool inFlight;
         uint256 topUtxoExitId = getStandardExitId(_topUtxoPos);
-        (exitableTimestamp, exitId, isInFlight) = getNextExit(_token);
+        (exitableTimestamp, exitId, inFlight) = getNextExit(_token);
         require(topUtxoExitId == exitId || topUtxoExitId == 0);
         Exit memory currentExit = exits[exitId];
         PriorityQueue queue = PriorityQueue(exitsQueues[_token]);
@@ -717,7 +724,7 @@ contract RootChain {
             }
 
             // Check for the in-flight exit flag.
-            if (isInFlight) {
+            if (inFlight) {
                 // handle ERC20 transfers for InFlight exits
                 _processInFlightExit(inFlightExits[exitId]);
                 // think of useful event scheme for in-flight outputs finalization
@@ -728,7 +735,7 @@ contract RootChain {
 
             // Pull the next exit.
             if (queue.currentSize() > 0) {
-                (exitableTimestamp, exitId, isInFlight) = getNextExit(_token);
+                (exitableTimestamp, exitId, inFlight) = getNextExit(_token);
                 _exitsToProcess--;
             } else {
                 return;
@@ -743,15 +750,6 @@ contract RootChain {
     {
         // Ignore the value of the flag here.
         return exitableTimestamp > block.timestamp;
-    }
-
-    // Least significant bit of uniqueId flags in-flight exits.
-    function isInFlight(uint192 uniqueId)
-        public
-        pure
-        returns (bool)
-    {
-        return uniqueId.bitSet(0);
     }
 
     // Set the least significant bit of uniqueId to flag it as in-flight exit.
@@ -1001,8 +999,8 @@ contract RootChain {
         uint256 priority = queue.getMin();
         uint64 exitableTimestamp = uint64(priority >> 192);
         uint192 exitId = uint192(priority.clearBit(0));
-        bool isInFlight = priority.getBit(0) == 1;
-        return (exitableTimestamp, exitId, isInFlight);
+        bool inFlight = priority.getBit(0) == 1;
+        return (exitableTimestamp, exitId, inFlight);
     }
 
     /**
@@ -1138,5 +1136,14 @@ contract RootChain {
         delete _inFlightExit.outputs;
         delete _inFlightExit.bondOwner;
         delete _inFlightExit.oldestCompetitor;
+    }
+
+    /**
+     * @dev Can be called only once in `init`.
+     */
+    function _initOperator()
+    {
+      require(operator == address(0));
+      operator = msg.sender;
     }
 }
