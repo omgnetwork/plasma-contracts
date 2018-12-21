@@ -1,11 +1,16 @@
 import pytest
 from ethereum.tools.tester import TransactionFailed
+from plasma_core.utils.address import address_to_hex
 import math
 
 
 @pytest.fixture
-def priority_queue(get_contract):
-    return get_contract('PriorityQueue')
+def priority_queue(get_contract, ethtester):
+    pql = get_contract('PriorityQueueLib')
+    return get_contract(
+        'PriorityQueue',
+        args=[address_to_hex(ethtester.a0)], libraries={'PriorityQueueLib': pql.address}
+    )
 
 
 def test_priority_queue_get_min_empty_should_fail(priority_queue):
@@ -92,7 +97,7 @@ def op_cost(n):
     tx_base_cost = 21000
     # Numbers were discovered experimentally. They represent upper bound of
     # gas cost of execution of delMin or insert operations.
-    return tx_base_cost + 26677 + 6638 * math.floor(math.log(n, 2))
+    return tx_base_cost + 28677 + 6638 * math.floor(math.log(n, 2))
 
 
 def test_priority_queue_worst_case_gas_cost(ethtester, priority_queue):

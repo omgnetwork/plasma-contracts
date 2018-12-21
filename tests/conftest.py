@@ -4,9 +4,11 @@ from ethereum import utils
 from ethereum.tools import tester
 from ethereum.abi import ContractTranslator
 from ethereum.config import config_metropolis
+from plasma_core.utils.address import address_to_hex
 from plasma_core.utils.deployer import Deployer
 from solc_simple import Builder
 from testlang.testlang import TestingLanguage
+from solc import link_code
 
 
 GAS_LIMIT = 8000000
@@ -51,11 +53,14 @@ def ethutils():
 
 @pytest.fixture
 def get_contract(ethtester, ethutils):
-    def create_contract(path, args=(), sender=ethtester.k0):
+    def create_contract(path, args=(), sender=ethtester.k0, libraries=dict()):
         abi, hexcode = deployer.builder.get_contract_data(path)
-        bytecode = ethutils.decode_hex(hexcode)
         encoded_args = (ContractTranslator(abi).encode_constructor_arguments(args) if args else b'')
-        code = bytecode + encoded_args
+
+        libraries = _encode_libs(libraries)
+        linked_hexcode = link_code(hexcode, libraries)
+
+        code = ethutils.decode_hex(linked_hexcode) + encoded_args
         address = ethtester.chain.tx(sender=sender, to=b'', startgas=START_GAS, data=code)
         return ethtester.ABIContract(ethtester.chain, abi, address)
     return create_contract
@@ -63,7 +68,10 @@ def get_contract(ethtester, ethutils):
 
 @pytest.fixture
 def root_chain(ethtester, get_contract):
-    contract = get_contract('RootChain')
+    pql = get_contract('PriorityQueueLib')
+    pqf = get_contract('PriorityQueueFactory', libraries={'PriorityQueueLib': pql.address})
+    ethtester.chain.mine()
+    contract = get_contract('RootChain', libraries={'PriorityQueueFactory': pqf.address})
     ethtester.chain.mine()
     contract.init(sender=ethtester.k0)
     ethtester.chain.mine()
@@ -90,3 +98,10 @@ def utxo(testlang):
 def watch_contract(ethtester, path, address):
     abi, _ = deployer.builder.get_contract_data(path)
     return ethtester.ABIContract(ethtester.chain, abi, address)
+
+
+def _encode_libs(libraries):
+    return {
+        libname + '.sol' + ':' + libname: address_to_hex(libaddress)
+        for libname, libaddress in libraries.items()
+    }

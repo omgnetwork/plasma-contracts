@@ -39,7 +39,7 @@ contract PriorityQueue {
         view
         returns (uint256)
     {
-        queue.getCurrentSize();
+        return queue.getCurrentSize();
     }
 
     function insert(uint256 _element)
