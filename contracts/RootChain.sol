@@ -901,7 +901,7 @@ contract RootChain {
         pure
         returns (bool)
     {
-        return _value.bitSet(255);
+        return _value.bitSet(255) || _value.bitSet(254);
     }
 
     function setFlag(uint256 _value)
@@ -918,6 +918,14 @@ contract RootChain {
         returns (uint256)
     {
         return _value.clearBit(255);
+    }
+
+    function flagSpentInput(uint256 _value)
+        public
+        pure
+        returns (uint256)
+    {
+        return _value.setBit(254);
     }
 
     /*
