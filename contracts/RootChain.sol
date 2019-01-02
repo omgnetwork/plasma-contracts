@@ -1060,16 +1060,11 @@ contract RootChain {
         // Loop through each input.
         uint8 numInputs = 0;
         uint256 outputSum = 0;
-        PlasmaCore.TransactionOutput memory output;
-        PlasmaCore.TransactionOutput[] memory outputs = new PlasmaCore.TransactionOutput[](4);
         for (uint8 i = 0; i < 4; i++) {
             if (_tx.getInputId(i) > 0) {
                 numInputs++;
             }
-
-            output = _tx.getOutput(i);
-            outputSum += output.amount;
-            outputs[i] = output;
+            outputSum += _tx.getOutput(i).amount;
         }
 
         return (numInputs, outputSum);
