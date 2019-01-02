@@ -483,16 +483,13 @@ contract RootChain {
 
         // Get information about the inputs.
         uint256 inputId;
-        bytes memory inputTx;
         uint256 inputSum;
         uint256 mostRecentInput = 0;
         for (uint8 i = 0; i < numInputs; i++) {
-            (inFlightExit.inputs[i], inputId, inputTx) = _getInputInfo(_inFlightTx, splitInputTxs, _inputTxsInclusionProofs, _inFlightTxSigs, i);
+            (inFlightExit.inputs[i], inputId) = _getInputInfo(_inFlightTx, splitInputTxs[i].toBytes(), _inputTxsInclusionProofs, _inFlightTxSigs.sliceSignature(i), i);
             require(inFlightExit.inputs[i].token == address(0));
             inputSum += inFlightExit.inputs[i].amount;
             mostRecentInput = Math.max(mostRecentInput, inputId);
-            // Challenge exiting standard exits from inputs
-            maybeChallengeStandardExitOnInput(inputId, inputTx);
         }
 
         // Make sure the sums are valid.
@@ -1075,38 +1072,35 @@ contract RootChain {
     /**
      * @dev Returns information about an input to a transaction.
      * @param _tx RLP encoded transaction.
-     * @param _txInputTxs RLP encoded transactions that created the inputs to the transaction.
+     * @param _inputTx RLP encoded transaction that created particular input to this transaction.
      * @param _txInputTxsInclusionProofs Proofs of inclusion for each input creation transaction.
-     * @param _txSigs Signatures that prove the transaction is valid.
+     * @param _inputSig Signature for spent output of the input transaction.
      * @param _inputIndex Which input to access.
      * @return A tuple containing information about the inputs.
      */
     function _getInputInfo(
         bytes _tx,
-        RLP.RLPItem[] _txInputTxs,
+        bytes memory _inputTx,
         bytes _txInputTxsInclusionProofs,
-        bytes _txSigs,
+        bytes _inputSig,
         uint8 _inputIndex
     )
         internal
         view
-        returns (PlasmaCore.TransactionOutput, uint256, bytes)
+        returns (PlasmaCore.TransactionOutput, uint256)
     {
-        // Slice off the relevant transaction information.
-        bytes memory inputTx = _txInputTxs[_inputIndex].toBytes();
-        bytes memory inputTxInclusionProof = _txInputTxsInclusionProofs.sliceProof(_inputIndex);
-        bytes memory inputSig = _txSigs.sliceSignature(_inputIndex);
-
         // Pull information about the the input.
         uint256 inputId = _tx.getInputId(_inputIndex);
-        uint256 oindex = inputId.getOindex();
-        PlasmaCore.TransactionOutput memory input = inputTx.getOutput(oindex);
+        PlasmaCore.TransactionOutput memory input = _inputTx.getOutput(inputId.getOindex());
 
         // Check that the transaction is valid.
-        require(_transactionIncluded(inputTx, inputId, inputTxInclusionProof));
-        require(input.owner == ECRecovery.recover(keccak256(_tx), inputSig));
+        require(_transactionIncluded(_inputTx, inputId, _txInputTxsInclusionProofs.sliceProof(_inputIndex)));
+        require(input.owner == ECRecovery.recover(keccak256(_tx), _inputSig));
 
-        return (input, inputId, inputTx);
+        // Challenge exiting standard exits from inputs
+        maybeChallengeStandardExitOnInput(inputId, _inputTx);
+
+        return (input, inputId);
     }
 
     /**
