@@ -8,6 +8,7 @@ import "./Merkle.sol";
 import "./RLP.sol";
 import "./PlasmaCore.sol";
 import "./PriorityQueue.sol";
+import "./PriorityQueueFactory.sol";
 
 import "./ERC20.sol";
 
@@ -175,7 +176,7 @@ contract RootChain {
 
       // Support only ETH on deployment; other tokens need
       // to be added explicitly.
-      exitsQueues[address(0)] = address(new PriorityQueue());
+      exitsQueues[address(0)] = PriorityQueueFactory.deploy(this);
 
       // Pre-compute some hashes to save gas later.
       bytes32 zeroHash = keccak256(abi.encodePacked(uint256(0)));
@@ -191,7 +192,7 @@ contract RootChain {
         public
     {
         require(!hasToken(_token));
-        exitsQueues[_token] = address(new PriorityQueue());
+        exitsQueues[_token] = PriorityQueueFactory.deploy(this);
         TokenAdded(_token);
     }
 
