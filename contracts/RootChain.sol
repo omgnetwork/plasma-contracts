@@ -389,12 +389,15 @@ contract RootChain {
 
     function maybeChallengeStandardExitOnInput(uint256 _outputId, bytes _txbytes)
         internal
+        returns (bool)
     {
         uint8 oindex = _outputId.getOindex();
         uint192 standardExitId = getStandardExitId(keccak256(_txbytes), oindex);
         if (exits[standardExitId].owner != address(0)) {
             processChallengeStandardExit(_outputId, standardExitId);
+            return false;
         }
+        return exits[standardExitId].amount != 0;
     }
 
     function processChallengeStandardExit(uint256 _outputId, uint192 _exitId)
@@ -475,25 +478,34 @@ contract RootChain {
         // Separate the inputs transactions.
         RLP.RLPItem[] memory splitInputTxs = _inputTxs.toRLPItem().toList();
 
+        uint256[3] memory vars;
         // Get information about the inputs.
-        uint256 inputId;
-        uint256 inputSum;
-        uint256 mostRecentInput = 0;
+        // uint256 inputId; // vars[0]
+        // uint256 inputSum; // vars[1]
+        // uint256 mostRecentInput = 0; // vars[2]
+        bool finalized;
+        bool any_finalized;
         for (uint8 i = 0; i < numInputs; i++) {
-            (inFlightExit.inputs[i], inputId) = _getInputInfo(_inFlightTx, splitInputTxs[i].toBytes(), _inputTxsInclusionProofs, _inFlightTxSigs.sliceSignature(i), i);
+            (inFlightExit.inputs[i], vars[0], finalized) = _getInputInfo(_inFlightTx, splitInputTxs[i].toBytes(), _inputTxsInclusionProofs, _inFlightTxSigs.sliceSignature(i), i);
             require(inFlightExit.inputs[i].token == address(0));
-            inputSum += inFlightExit.inputs[i].amount;
-            mostRecentInput = Math.max(mostRecentInput, inputId);
+            vars[1] += inFlightExit.inputs[i].amount;
+            vars[2] = Math.max(vars[2], vars[0]);
+            any_finalized = any_finalized || finalized;
         }
 
         // Make sure the sums are valid.
-        require(inputSum >= outputSum);
+        require(vars[1] >= outputSum);
 
         // Determine when the exit can be processed.
-        _enqueueInFlightExit(mostRecentInput, _inFlightTx);
+        _enqueueInFlightExit(vars[2], _inFlightTx);
         // Update the exit mapping.
-        inFlightExit.exitStartTimestamp = block.timestamp;
         inFlightExit.bondOwner = msg.sender;
+        inFlightExit.exitStartTimestamp = block.timestamp;
+        // If any of the inputs were finalized via standard exit, consider it non-canonical
+        // and flag as not taking part in further canonicity game.
+        if (any_finalized) {
+            inFlightExit.exitStartTimestamp = flagSpentInput(inFlightExit.exitStartTimestamp);
+        }
 
         emit InFlightExitStarted(msg.sender, keccak256(_inFlightTx));
     }
@@ -1081,8 +1093,10 @@ contract RootChain {
     )
         internal
         view
-        returns (PlasmaCore.TransactionOutput, uint256)
+        returns (PlasmaCore.TransactionOutput, uint256, bool)
     {
+        bool finalized;
+
         // Pull information about the the input.
         uint256 inputId = _tx.getInputId(_inputIndex);
         PlasmaCore.TransactionOutput memory input = _inputTx.getOutput(inputId.getOindex());
@@ -1092,9 +1106,9 @@ contract RootChain {
         require(input.owner == ECRecovery.recover(keccak256(_tx), _inputSig));
 
         // Challenge exiting standard exits from inputs
-        maybeChallengeStandardExitOnInput(inputId, _inputTx);
+        finalized = maybeChallengeStandardExitOnInput(inputId, _inputTx);
 
-        return (input, inputId);
+        return (input, inputId, finalized);
     }
 
     /**
