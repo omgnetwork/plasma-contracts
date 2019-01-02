@@ -159,3 +159,34 @@ def test_start_in_flight_exit_cancelling_standard_exits_from_inputs(testlang, nu
     # Standard exits are correctly challenged
     for i in range(0, num_inputs):
         assert testlang.get_standard_exit(deposit_ids[i]) == [NULL_ADDRESS_HEX, NULL_ADDRESS_HEX, 0]
+
+
+@pytest.mark.parametrize("num_inputs", [1, 2, 3, 4])
+def test_start_in_flight_exit_with_finalized_standard_exits_from_inputs_flags_exit(testlang, num_inputs):
+    amount = 100
+    owners = []
+    deposit_ids = []
+    for i in range(0, num_inputs):
+        owners.append(testlang.accounts[i])
+        deposit_id = testlang.deposit(owners[i], amount)
+        deposit_ids.append(deposit_id)
+
+    owner_keys = [owner.key for owner in owners]
+    spend_id = testlang.spend_utxo(deposit_ids, owner_keys)
+
+    for i in range(0, num_inputs):
+        testlang.start_standard_exit(deposit_ids[i], owners[i].key)
+
+    for i in range(0, num_inputs):
+        assert testlang.get_standard_exit(deposit_ids[i]) == [owners[i].address, NULL_ADDRESS_HEX, 100]
+
+    testlang.forward_timestamp(2 * WEEK + 1)
+    testlang.process_exits(NULL_ADDRESS, 0, 10)
+
+    challenger = testlang.accounts[5]
+    testlang.start_in_flight_exit(spend_id, sender=challenger)
+    exit_id = testlang.get_in_flight_exit_id(spend_id)
+    [ife_start_timestamp, _, _, _] = testlang.root_chain.inFlightExits(exit_id)
+
+    # IFE is marked as SpentInput
+    assert testlang.root_chain.flagged(ife_start_timestamp)

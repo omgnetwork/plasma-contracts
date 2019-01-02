@@ -370,6 +370,10 @@ class TestingLanguage(object):
         encoded_inputs = rlp.encode(input_txs, rlp.sedes.CountableList(Transaction, 4))
         return (spend_tx.encoded, encoded_inputs, proofs, signatures)
 
+    def get_in_flight_exit_id(self, tx_id):
+        spend_tx = self.child_chain.get_transaction(tx_id)
+        return self.root_chain.getInFlightExitId(spend_tx.encoded)
+
     def get_merkle_proof(self, tx_id):
         tx = self.child_chain.get_transaction(tx_id)
         (blknum, _, _) = decode_utxo_id(tx_id)
