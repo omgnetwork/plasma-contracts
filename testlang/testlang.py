@@ -359,8 +359,9 @@ class TestingLanguage(object):
 
         self.ethtester.chain.head_state.timestamp += amount
 
-    def get_in_flight_exit_info(self, tx_id):
-        spend_tx = self.child_chain.get_transaction(tx_id)
+    def get_in_flight_exit_info(self, tx_id, spend_tx=None):
+        if spend_tx is None:
+            spend_tx = self.child_chain.get_transaction(tx_id)
         input_txs = []
         proofs = b''
         signatures = b''
