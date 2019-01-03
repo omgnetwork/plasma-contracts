@@ -119,6 +119,12 @@ contract RootChain {
         uint256 challengeTxPosition
     );
 
+    event InFlightExitChallengeResponded(
+        address indexed challenger,
+        bytes32 txHash,
+        uint256 challengeTxPosition
+    );
+
     event InFlightExitOutputBlocked(
         address indexed challenger,
         bytes32 txHash,
@@ -608,6 +614,9 @@ contract RootChain {
 
         // Reset the flag so only the outputs are exitable.
         inFlightExit.exitStartTimestamp = clearFlag(inFlightExit.exitStartTimestamp);
+
+        emit InFlightExitChallengeResponded(msg.sender, keccak256(_inFlightTx), _inFlightTxId);
+
     }
 
     /**
