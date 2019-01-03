@@ -180,7 +180,7 @@ def test_start_in_flight_exit_with_finalized_standard_exits_from_inputs_flags_ex
     for i in range(0, num_inputs):
         assert testlang.get_standard_exit(deposit_ids[i]) == [owners[i].address, NULL_ADDRESS_HEX, 100]
 
-    testlang.forward_timestamp(2 * WEEK + 1)
+    testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
     testlang.process_exits(NULL_ADDRESS, 0, 10)
 
     challenger = testlang.accounts[5]

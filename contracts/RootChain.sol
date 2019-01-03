@@ -546,6 +546,10 @@ contract RootChain {
         payable
         onlyWithValue(piggybackBond)
     {
+        bytes32 txhash = keccak256(_inFlightTx);
+        // Check if SE is not started nor finalized
+        require(exits[getStandardExitId(txhash, _outputIndex)].amount == 0);
+
         // Check that the in-flight exit is currently active and in period 1.
         InFlightExit storage inFlightExit = _getInFlightExit(_inFlightTx);
         require(_getExitPeriod(inFlightExit) == 1);
@@ -571,7 +575,7 @@ contract RootChain {
         // Set the output as piggybacked.
         inFlightExit.exitMap = inFlightExit.exitMap.setBit(_outputIndex);
 
-        emit InFlightExitPiggybacked(msg.sender, keccak256(_inFlightTx), _outputIndex);
+        emit InFlightExitPiggybacked(msg.sender, txhash, _outputIndex);
     }
 
 
