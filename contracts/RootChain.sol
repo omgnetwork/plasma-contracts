@@ -347,9 +347,13 @@ contract RootChain {
         require(output.amount > 0);
         require(exits[exitId].amount == 0);
 
-        // Check if this output was piggybacked or exited in in-flight exit
         InFlightExit storage inFlightExit = _getInFlightExit(_outputTx);
-        require(!inFlightExit.exitMap.bitSet(oindex + 4) && !inFlightExit.exitMap.bitSet(oindex + 4 + 8));
+        if (inFlightExit.exitStartTimestamp != 0) {
+            // Check if this output was piggybacked or exited in in-flight exit
+            require(!inFlightExit.exitMap.bitSet(oindex + 4) && !inFlightExit.exitMap.bitSet(oindex + 4 + 8));
+            // Prevent future piggybacks on this output
+            inFlightExit.exitMap = inFlightExit.exitMap.setBit(oindex + 4 + 8);
+        }
 
         // Make sure queue for this token exists.
         require(hasToken(output.token));

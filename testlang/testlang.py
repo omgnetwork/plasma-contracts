@@ -108,6 +108,12 @@ class InFlightExit(object):
     def output_piggybacked(self, index):
         return self.input_piggybacked(index + 4)
 
+    def input_blocked(self, index):
+        return self.input_piggybacked(index + 8)
+
+    def output_blocked(self, index):
+        return self.input_blocked(index + 4)
+
 
 class TestingLanguage(object):
     """Represents the testing language.

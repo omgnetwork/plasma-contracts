@@ -148,3 +148,28 @@ def test_start_standard_exit_on_piggyback_in_flight_exit_valid_output_owner_shou
 
     with pytest.raises(TransactionFailed):
         testlang.start_standard_exit(output_id, testlang.accounts[output_index].key)
+
+
+@pytest.mark.parametrize("num_outputs", [1, 2, 3, 4])
+def test_start_standard_exit_on_in_flight_exit_output_should_block_future_piggybacks(testlang, num_outputs):
+    owner_1, amount = testlang.accounts[0], 100
+    deposit_id = testlang.deposit(owner_1, amount)
+    outputs = []
+    for i in range(0, num_outputs):
+        outputs.append((testlang.accounts[i].address, NULL_ADDRESS, 1))
+    spend_id = testlang.spend_utxo([deposit_id], [owner_1.key], outputs)
+
+    testlang.start_in_flight_exit(spend_id)
+
+    output_index = num_outputs - 1
+
+    blknum, txindex, _ = decode_utxo_id(spend_id)
+    output_id = encode_utxo_id(blknum, txindex, output_index)
+    testlang.start_standard_exit(output_id, key=testlang.accounts[output_index].key)
+
+    with pytest.raises(TransactionFailed):
+        testlang.piggyback_in_flight_exit_output(spend_id, output_index, testlang.accounts[output_index].key)
+
+    in_flight_exit = testlang.get_in_flight_exit(spend_id)
+    assert not in_flight_exit.output_piggybacked(output_index)
+    assert in_flight_exit.output_blocked(output_index)
