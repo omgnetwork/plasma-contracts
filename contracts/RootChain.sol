@@ -137,7 +137,7 @@ contract RootChain {
     event InFlightExitOutputBlocked(
         address indexed challenger,
         bytes32 txHash,
-        uint256 outputId
+        uint256 outputIndex
     );
 
     event InFlightExitFinalized(
