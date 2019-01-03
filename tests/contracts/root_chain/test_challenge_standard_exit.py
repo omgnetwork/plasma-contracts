@@ -1,6 +1,8 @@
 import pytest
 from ethereum.tools.tester import TransactionFailed
 from plasma_core.constants import NULL_ADDRESS, NULL_ADDRESS_HEX, WEEK, NULL_SIGNATURE
+from plasma_core.transaction import Transaction
+from plasma_core.utils.transactions import decode_utxo_id
 
 
 def test_challenge_standard_exit_valid_spend_should_succeed(testlang):
@@ -111,3 +113,25 @@ def test_challenge_standard_exit_wrong_oindex_should_fail(testlang):
         testlang.challenge_standard_exit(bob_utxo, alice_spend_id)
 
     testlang.challenge_standard_exit(alice_utxo, alice_spend_id)
+
+
+def test_challenge_standard_exit_with_in_flight_exit_tx_should_succeed(ethtester, testlang):
+    owner, amount = testlang.accounts[0], 100
+    deposit_id = testlang.deposit(owner, amount)
+    spend_id = testlang.spend_utxo([deposit_id], [owner.key], outputs=[(owner.address, NULL_ADDRESS, amount)])
+
+    ife_tx = Transaction(inputs=[decode_utxo_id(spend_id)], outputs=[(owner.address, NULL_ADDRESS, amount)])
+    ife_tx.sign(0, owner.key)
+
+    (encoded_spend, encoded_inputs, proofs, signatures) = testlang.get_in_flight_exit_info(None, spend_tx=ife_tx)
+    bond = testlang.root_chain.inFlightExitBond()
+    testlang.root_chain.startInFlightExit(encoded_spend, encoded_inputs, proofs, signatures, value=bond, sender=owner.key)
+
+    testlang.start_standard_exit(spend_id, owner.key)
+    assert testlang.get_standard_exit(spend_id).amount == 100
+
+    exit_id = testlang.get_standard_exit_id(spend_id)
+    # FIXME a proper way of getting encoded body of IFE tx is to get it out of generated events
+    testlang.root_chain.challengeStandardExit(exit_id, ife_tx.encoded, 0, ife_tx.signatures[0])
+
+    assert testlang.get_standard_exit(spend_id) == [NULL_ADDRESS_HEX, NULL_ADDRESS_HEX, 0, 0]
