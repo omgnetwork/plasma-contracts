@@ -102,6 +102,14 @@ contract RootChain {
         address token
     );
 
+    event ExitFinalized(
+        uint256 indexed utxoPos
+    );
+
+    event ExitChallenged(
+        uint256 indexed utxoPos
+    );
+
     event InFlightExitStarted(
         address indexed initiator,
         bytes32 txHash
@@ -131,12 +139,9 @@ contract RootChain {
         uint256 outputId
     );
 
-    event ExitFinalized(
-        uint256 indexed utxoPos
-    );
-
-    event ExitChallenged(
-        uint256 indexed utxoPos
+    event InFlightExitFinalized(
+        uint192 inFlightExitId,
+        uint256 outputId
     );
 
     /*
@@ -736,7 +741,7 @@ contract RootChain {
             // Check for the in-flight exit flag.
             if (inFlight) {
                 // handle ERC20 transfers for InFlight exits
-                _processInFlightExit(inFlightExits[exitId]);
+                _processInFlightExit(inFlightExits[exitId], exitId);
                 // think of useful event scheme for in-flight outputs finalization
             } else {
                 _processStandardExit(exits[exitId]);
@@ -1105,8 +1110,9 @@ contract RootChain {
     /**
      * @dev Processes a in-flight exit.
      * @param _inFlightExit Exit to process.
+     * @param _inFlightExitId Id of the exit process
      */
-    function _processInFlightExit(InFlightExit storage _inFlightExit)
+    function _processInFlightExit(InFlightExit storage _inFlightExit, uint192 _inFlightExitId)
         internal
     {
         // Determine whether the inputs or the outputs are the exitable set.
@@ -1132,7 +1138,7 @@ contract RootChain {
             transferAmount = piggybackBond;
             if ((i < 4 && inputsExitable) || (i >= 4 && !inputsExitable)) {
                 transferAmount += output.amount;
-                // TODO: emit event here?
+                emit InFlightExitFinalized(uint192(0), i);
             }
             output.owner.transfer(transferAmount);
         }
