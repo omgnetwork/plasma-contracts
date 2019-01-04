@@ -128,7 +128,7 @@ contract RootChain {
     );
 
     event InFlightExitChallengeResponded(
-        address indexed challenger,
+        address challenger,
         bytes32 txHash,
         uint256 challengeTxPosition
     );
@@ -593,12 +593,12 @@ contract RootChain {
     /**
      * @dev Allows a user to respond to competitors to an in-flight exit by showing the transaction is included.
      * @param _inFlightTx RLP encoded in-flight transaction being exited.
-     * @param _inFlightTxId Position of the in-flight transaction in the chain.
+     * @param _inFlightTxPos Position of the in-flight transaction in the chain.
      * @param _inFlightTxInclusionProof Proof that the in-flight transaction is included before the competitor.
      */
     function respondToNonCanonicalChallenge(
         bytes _inFlightTx,
-        uint256 _inFlightTxId,
+        uint256 _inFlightTxPos,
         bytes _inFlightTxInclusionProof
     )
         public
@@ -608,19 +608,19 @@ contract RootChain {
         require(_getExitPeriod(inFlightExit) == 2);
 
         // Check that the in-flight transaction was included.
-        require(_transactionIncluded(_inFlightTx, _inFlightTxId, _inFlightTxInclusionProof));
+        require(_transactionIncluded(_inFlightTx, _inFlightTxPos, _inFlightTxInclusionProof));
 
         // Check that the in-flight transaction is older than its competitors.
-        require(inFlightExit.oldestCompetitor > _inFlightTxId);
+        require(inFlightExit.oldestCompetitor > _inFlightTxPos);
 
         // Fix the oldest competitor and new bond owner.
-        inFlightExit.oldestCompetitor = _inFlightTxId;
+        inFlightExit.oldestCompetitor = _inFlightTxPos;
         inFlightExit.bondOwner = msg.sender;
 
         // Reset the flag so only the outputs are exitable.
         inFlightExit.exitStartTimestamp = clearFlag(inFlightExit.exitStartTimestamp);
 
-        emit InFlightExitChallengeResponded(msg.sender, keccak256(_inFlightTx), _inFlightTxId);
+        emit InFlightExitChallengeResponded(msg.sender, keccak256(_inFlightTx), _inFlightTxPos);
 
     }
 
