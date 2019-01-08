@@ -1,6 +1,6 @@
 import pytest
 from ethereum.tools.tester import TransactionFailed
-from plasma_core.constants import NULL_ADDRESS
+from plasma_core.constants import NULL_ADDRESS, WEEK
 
 
 def test_respond_to_non_canonical_challenge_should_succeed(testlang):
@@ -61,3 +61,22 @@ def test_respond_to_non_canonical_challenge_invalid_proof_should_fail(testlang):
     proof = b''
     with pytest.raises(TransactionFailed):
         testlang.root_chain.respondToNonCanonicalChallenge(spend_tx.encoded, spend_id, proof)
+
+
+def test_respond_to_not_canonical_challenge_with_inputs_spent_should_fail(testlang):
+    owner_1, owner_2, amount = testlang.accounts[0], testlang.accounts[1], 100
+    deposit_id = testlang.deposit(owner_1, amount)
+    testlang.start_standard_exit(deposit_id, owner_1.key)
+    spend_id = testlang.spend_utxo([deposit_id], [owner_1.key])
+    double_spend_id = testlang.spend_utxo([deposit_id], [owner_1.key], [(owner_1.address, NULL_ADDRESS, 100)], force_invalid=True)
+
+    testlang.forward_timestamp(2 * WEEK + 1)
+    testlang.process_exits(NULL_ADDRESS, 0, 1)
+
+    testlang.start_in_flight_exit(spend_id)
+
+    testlang.forward_to_period(2)
+
+    # Since IFE can be exited only from inputs, no further canonicity game required
+    with pytest.raises(TransactionFailed):
+        testlang.challenge_in_flight_exit_not_canonical(spend_id, double_spend_id, key=owner_2.key)

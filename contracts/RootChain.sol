@@ -602,6 +602,9 @@ contract RootChain {
         InFlightExit storage inFlightExit = _getInFlightExit(_inFlightTx);
         require(_getExitPeriod(inFlightExit) == 1);
 
+        // Check if exit's input were spent via MVP exit
+        require(!isSpentInput(inFlightExit.exitStartTimestamp));
+
         // Check that the two transactions are not the same.
         require(keccak256(_inFlightTx) != keccak256(_competingTx));
 
@@ -650,6 +653,9 @@ contract RootChain {
         // Check that the exit is currently active and in period 2.
         InFlightExit storage inFlightExit = _getInFlightExit(_inFlightTx);
         require(_getExitPeriod(inFlightExit) == 2);
+
+        // Check if exit's input were spent via MVP exit
+        require(!isSpentInput(inFlightExit.exitStartTimestamp));
 
         // Check that the in-flight transaction was included.
         require(_transactionIncluded(_inFlightTx, _inFlightTxPos, _inFlightTxInclusionProof));
@@ -937,6 +943,14 @@ contract RootChain {
         returns (uint256)
     {
         return _value.setBit(254);
+    }
+
+    function isSpentInput(uint256 _value)
+        public
+        pure
+        returns (bool)
+    {
+        return _value.bitSet(254);
     }
 
     /*
