@@ -1138,7 +1138,7 @@ contract RootChain {
             transferAmount = piggybackBond;
             if ((i < 4 && inputsExitable) || (i >= 4 && !inputsExitable)) {
                 transferAmount += output.amount;
-                emit InFlightExitFinalized(uint192(0), i);
+                emit InFlightExitFinalized(_inFlightExitId, i);
             }
             output.owner.transfer(transferAmount);
         }
