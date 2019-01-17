@@ -36,6 +36,9 @@ contract RootChain {
     uint256 constant public MIN_EXIT_PERIOD = 1 weeks;
     uint256 constant public CHILD_BLOCK_INTERVAL = 1000;
 
+    // Applies to outputs too
+    uint8 constant public MAX_INPUTS = 4;
+
     // WARNING: These placeholder bond values are entirely arbitrary.
     uint256 public standardExitBond = 31415926535 wei;
     uint256 public inFlightExitBond = 31415926535 wei;
@@ -70,8 +73,8 @@ contract RootChain {
     struct InFlightExit {
         uint256 exitStartTimestamp;
         uint256 exitMap;
-        PlasmaCore.TransactionOutput[4] inputs;
-        PlasmaCore.TransactionOutput[4] outputs;
+        PlasmaCore.TransactionOutput[MAX_INPUTS] inputs;
+        PlasmaCore.TransactionOutput[MAX_INPUTS] outputs;
         address bondOwner;
         uint256 oldestCompetitor;
     }
@@ -285,7 +288,7 @@ contract RootChain {
         require(nextDepositBlock < CHILD_BLOCK_INTERVAL);
 
         // Check that all but first inputs are 0.
-        for (uint i = 1; i < 4; i++) {
+        for (uint i = 1; i < MAX_INPUTS; i++) {
             require(decodedTx.outputs[i].amount == 0);
         }
 
@@ -344,9 +347,9 @@ contract RootChain {
         InFlightExit storage inFlightExit = _getInFlightExit(_outputTx);
         if (inFlightExit.exitStartTimestamp != 0) {
             // Check if this output was piggybacked or exited in in-flight exit
-            require(!inFlightExit.exitMap.bitSet(oindex + 4) && !inFlightExit.exitMap.bitSet(oindex + 4 + 8));
+            require(!inFlightExit.exitMap.bitSet(oindex + MAX_INPUTS) && !inFlightExit.exitMap.bitSet(oindex + MAX_INPUTS + MAX_INPUTS*2));
             // Prevent future piggybacks on this output
-            inFlightExit.exitMap = inFlightExit.exitMap.setBit(oindex + 4 + 8);
+            inFlightExit.exitMap = inFlightExit.exitMap.setBit(oindex + MAX_INPUTS + MAX_INPUTS*2);
         }
 
         // Make sure queue for this token exists.
@@ -560,13 +563,13 @@ contract RootChain {
 
         // Check that the message sender owns the output.
         PlasmaCore.TransactionOutput memory output;
-        if (_outputIndex < 4) {
+        if (_outputIndex < MAX_INPUTS) {
             output = inFlightExit.inputs[_outputIndex];
         } else {
-            output = _inFlightTx.getOutput(_outputIndex - 4);
+            output = _inFlightTx.getOutput(_outputIndex - MAX_INPUTS);
 
             // Set the output so it can be exited later.
-            inFlightExit.outputs[_outputIndex - 4] = output;
+            inFlightExit.outputs[_outputIndex - MAX_INPUTS] = output;
         }
         require(output.owner == msg.sender);
 
@@ -741,7 +744,7 @@ contract RootChain {
 
         // Check that the output is piggybacked.
         uint8 oindex = _inFlightTxOutputId.getOindex();
-        require(inFlightExit.exitMap.bitSet(oindex + 4));
+        require(inFlightExit.exitMap.bitSet(oindex + MAX_INPUTS));
 
         // Check that the in-flight transaction is included.
         require(_transactionIncluded(_inFlightTx, _inFlightTxOutputId, _inFlightTxInclusionProof));
@@ -754,7 +757,7 @@ contract RootChain {
         require(output.owner == ECRecovery.recover(keccak256(_spendingTx), _spendingTxSig));
 
         // Remove the output from the piggyback map and pay out the bond.
-        inFlightExit.exitMap = inFlightExit.exitMap.clearBit(oindex + 4);
+        inFlightExit.exitMap = inFlightExit.exitMap.clearBit(oindex + MAX_INPUTS);
         msg.sender.transfer(piggybackBond);
 
         emit InFlightExitOutputBlocked(msg.sender, keccak256(_inFlightTx), _inFlightTxOutputId);
@@ -894,10 +897,10 @@ contract RootChain {
     {
         InFlightExit memory inFlightExit = _getInFlightExit(_tx);
         PlasmaCore.TransactionOutput memory output;
-        if (_outputIndex < 4) {
+        if (_outputIndex < MAX_INPUTS) {
             output = inFlightExit.inputs[_outputIndex];
         } else {
-            output = inFlightExit.outputs[_outputIndex - 4];
+            output = inFlightExit.outputs[_outputIndex - MAX_INPUTS];
         }
         return (output.owner, output.token, output.amount);
     }
@@ -1094,7 +1097,7 @@ contract RootChain {
         // Loop through each input.
         uint8 numInputs = 0;
         uint256 outputSum = 0;
-        for (uint8 i = 0; i < 4; i++) {
+        for (uint8 i = 0; i < MAX_INPUTS; i++) {
             if (_tx.getInputId(i) > 0) {
                 numInputs++;
             }
@@ -1186,15 +1189,15 @@ contract RootChain {
             }
             _inFlightExit.exitMap = _inFlightExit.exitMap.clearBit(i).setBit(i + 8);
 
-            if (i < 4) {
+            if (i < MAX_INPUTS) {
                 output = _inFlightExit.inputs[i];
             } else {
-                output = _inFlightExit.outputs[i - 4];
+                output = _inFlightExit.outputs[i - MAX_INPUTS];
             }
 
             // Pay out any unchallenged and exitable inputs or outputs, refund the rest.
             transferAmount = piggybackBond;
-            if ((i < 4 && inputsExitable) || (i >= 4 && !inputsExitable)) {
+            if ((i < MAX_INPUTS && inputsExitable) || (i >= MAX_INPUTS && !inputsExitable)) {
                 transferAmount += output.amount;
                 emit InFlightExitFinalized(_inFlightExitId, i);
             }
