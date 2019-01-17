@@ -323,6 +323,7 @@ contract RootChain {
 
     /**
      * @dev Starts a standard withdrawal of a given output. Uses output-age priority.
+            Crosschecks in-flight exit existence.
      * @param _outputId Identifier of the exiting output.
      * @param _outputTx RLP encoded transaction that created the exiting output.
      * @param _outputTxInclusionProof A Merkle proof showing that the transaction was included.
@@ -400,7 +401,7 @@ contract RootChain {
         processChallengeStandardExit(inputId, _standardExitId);
     }
 
-    function maybeChallengeStandardExitOnInput(uint256 _outputId, bytes _txbytes)
+    function cleanupDoublespendingStandardExits(uint256 _outputId, bytes _txbytes)
         internal
         returns (bool)
     {
@@ -1114,7 +1115,7 @@ contract RootChain {
     }
 
     /**
-     * @dev Returns information about an input to a transaction.
+     * @dev Returns information about an input to a in-flight transaction.
      * @param _tx RLP encoded transaction.
      * @param _inputTx RLP encoded transaction that created particular input to this transaction.
      * @param _txInputTxsInclusionProofs Proofs of inclusion for each input creation transaction.
@@ -1133,7 +1134,7 @@ contract RootChain {
         view
         returns (PlasmaCore.TransactionOutput, uint256, bool)
     {
-        bool finalized;
+        bool already_finalized;
 
         // Pull information about the the input.
         uint256 inputId = _tx.getInputId(_inputIndex);
@@ -1144,9 +1145,9 @@ contract RootChain {
         require(input.owner == ECRecovery.recover(keccak256(_tx), _inputSig));
 
         // Challenge exiting standard exits from inputs
-        finalized = maybeChallengeStandardExitOnInput(inputId, _inputTx);
+        already_finalized = cleanupDoublespendingStandardExits(inputId, _inputTx);
 
-        return (input, inputId, finalized);
+        return (input, inputId, already_finalized);
     }
 
     /**
