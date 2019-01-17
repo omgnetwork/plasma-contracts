@@ -492,17 +492,17 @@ contract RootChain {
         // Separate the inputs transactions.
         RLP.RLPItem[] memory splitInputTxs = _inputTxs.toRLPItem().toList();
 
+        // `vars` is an ugly hack - workaround for "stack too deep" error
         uint256[3] memory vars;
-        // Get information about the inputs.
-        // uint256 inputId; // vars[0]
-        // uint256 inputSum; // vars[1]
-        // uint256 mostRecentInput = 0; // vars[2]
         bool finalized;
         bool any_finalized;
         for (uint8 i = 0; i < numInputs; i++) {
+            // vars[0] contains inputId
             (inFlightExit.inputs[i], vars[0], finalized) = _getInputInfo(_inFlightTx, splitInputTxs[i].toBytes(), _inputTxsInclusionProofs, _inFlightTxSigs.sliceSignature(i), i);
             require(inFlightExit.inputs[i].token == address(0));
+            // vars[1] tracks sum of the inputs
             vars[1] += inFlightExit.inputs[i].amount;
+            // vars[2] tracks youngest of inputs for this in-flight exit
             vars[2] = Math.max(vars[2], vars[0]);
             any_finalized = any_finalized || finalized;
         }
