@@ -809,13 +809,16 @@ contract RootChain {
      * @dev Given an RLP encoded transaction, returns its exit ID.
      * @param _tx RLP encoded transaction.
      * @return _uniqueId A unique identifier of an in-flight exit.
+     *     Anatomy of returned value, most significant bits first:
+     *     8 bits - set to zero
+     *     1 bit - in-flight flag
+     *     151 bit - tx hash
      */
     function getInFlightExitId(bytes _tx)
         public
         pure
         returns (uint192)
     {
-        // uses 160 least significant bits, where most significant 8 are all zero
         return uint192((uint256(keccak256(_tx)) >> 151).setBit(152));
     }
 
@@ -824,6 +827,10 @@ contract RootChain {
      * @param _txhash Transaction hash.
      * @param _oindex Output index.
      * @return _standardExitId Unique standard exit id.
+     *     Anatomy of returned value, most significant bits first:
+     *     8 bits - oindex
+     *     1 bit - in-flight flag
+     *     151 bit - tx hash
      */
 
     function getStandardExitId(bytes32 _txhash, uint8 _oindex)
@@ -831,7 +838,6 @@ contract RootChain {
         pure
         returns (uint192)
     {
-        // uses 160 least significant bits
         return uint192((uint256(_txhash) >> 105) | (uint256(_oindex) << 152));
     }
 
@@ -1003,6 +1009,12 @@ contract RootChain {
      * @param _exitId Unique exit identifier.
      * @param _outputId Position of the exit in the blockchain.
      * @return An exit priority.
+     *   Anatomy of returned value, most significant bits first
+     *   42 bits - timestamp (exitable_at); unix timestamp fits into 32 bits
+     *   54 bits - blknum * 10^9 + txindex; to represent all utxo for 10 years we need only 54 bits
+     *   8 bits - oindex; set to zero for in-flight tx
+     *   1 bit - in-flight flag
+     *   151 bit - tx hash
      */
     function getStandardExitPriority(uint192 _exitId, uint256 _outputId)
         public
