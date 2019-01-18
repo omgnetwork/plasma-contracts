@@ -128,6 +128,7 @@ def test_start_standard_exit_from_deposit_must_be_exitable_in_minimal_finalizati
 
 @pytest.mark.parametrize("num_outputs", [1, 2, 3, 4])
 def test_start_standard_exit_on_piggyback_in_flight_exit_valid_output_owner_should_fail(testlang, num_outputs):
+    # exit cross-spend test, case 9
     owner_1, amount = testlang.accounts[0], 100
     deposit_id = testlang.deposit(owner_1, amount)
     outputs = []
@@ -152,6 +153,7 @@ def test_start_standard_exit_on_piggyback_in_flight_exit_valid_output_owner_shou
 
 @pytest.mark.parametrize("num_outputs", [1, 2, 3, 4])
 def test_start_standard_exit_on_in_flight_exit_output_should_block_future_piggybacks(testlang, num_outputs):
+    # exit cross-spend test, case 7
     owner_1, amount = testlang.accounts[0], 100
     deposit_id = testlang.deposit(owner_1, amount)
     outputs = []

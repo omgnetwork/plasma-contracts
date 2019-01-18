@@ -137,6 +137,7 @@ def test_piggyback_in_flight_exit_twice_should_fail(testlang):
 
 @pytest.mark.parametrize("num_outputs", [1, 2, 3, 4])
 def test_piggyback_in_flight_exit_output_with_preexisting_standard_exit_should_fail(testlang, num_outputs):
+    # exit cross-spend test, case 5
     owner_1, amount = testlang.accounts[0], 100
     deposit_id = testlang.deposit(owner_1, amount)
     outputs = []
@@ -162,6 +163,7 @@ def test_piggyback_in_flight_exit_output_with_preexisting_standard_exit_should_f
 
 @pytest.mark.parametrize("num_outputs", [1, 2, 3, 4])
 def test_piggyback_in_flight_exit_output_with_preexisting_finalized_standard_exit_should_fail(testlang, num_outputs):
+    # exit cross-spend test, case 6
     owner_1, amount = testlang.accounts[0], 100
     deposit_id = testlang.deposit(owner_1, amount)
     outputs = []
