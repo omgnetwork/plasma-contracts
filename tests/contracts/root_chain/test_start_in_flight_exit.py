@@ -134,6 +134,7 @@ def test_start_in_flight_exit_with_ERC20_tokens_should_fail(testlang, token):
 
 @pytest.mark.parametrize("num_inputs", [1, 2, 3, 4])
 def test_start_in_flight_exit_cancelling_standard_exits_from_inputs(testlang, num_inputs):
+    # exit cross-spend test, case 1
     amount = 100
     owners = []
     deposit_ids = []
@@ -163,6 +164,7 @@ def test_start_in_flight_exit_cancelling_standard_exits_from_inputs(testlang, nu
 
 @pytest.mark.parametrize("num_inputs", [1, 2, 3, 4])
 def test_start_in_flight_exit_with_finalized_standard_exits_from_inputs_flags_exit(testlang, num_inputs):
+    # exit cross-spend test, case 2
     amount = 100
     owners = []
     deposit_ids = []
