@@ -81,55 +81,55 @@ library PlasmaCore {
     }
 
     /**
-     * @dev Given an output ID, returns the block number.
-     * @param _outputId Output identifier to decode.
+     * @dev Given an UTXO position, returns the block number.
+     * @param _utxoPos Output identifier to decode.
      * @return The output's block number.
      */
-    function getBlknum(uint256 _outputId)
+    function getBlknum(uint256 _utxoPos)
         internal
         pure
         returns (uint256)
     {
-        return _outputId / BLOCK_OFFSET;
+        return _utxoPos / BLOCK_OFFSET;
     }
 
     /**
-     * @dev Given an output ID, returns the transaction index.
-     * @param _outputId Output identifier to decode.
+     * @dev Given an UTXO position, returns the transaction index.
+     * @param _utxoPos Output identifier to decode.
      * @return The output's transaction index.
      */
-    function getTxindex(uint256 _outputId)
+    function getTxIndex(uint256 _utxoPos)
         internal
         pure
         returns (uint256)
     {
-        return (_outputId % BLOCK_OFFSET) / TX_OFFSET;
+        return (_utxoPos % BLOCK_OFFSET) / TX_OFFSET;
     }
 
     /**
-     * @dev Given an output ID, returns the output index.
-     * @param _outputId Output identifier to decode.
+     * @dev Given an UTXO position, returns the output index.
+     * @param _utxoPos Output identifier to decode.
      * @return The output's index.
      */
-    function getOindex(uint256 _outputId)
+    function getOindex(uint256 _utxoPos)
         internal
         pure
         returns (uint8)
     {
-        return uint8(_outputId % TX_OFFSET);
+        return uint8(_utxoPos % TX_OFFSET);
     }
 
     /**
-     * @dev Given an output ID, returns transaction position.
-     * @param _outputId Output identifier to decode.
+     * @dev Given an UTXO position, returns transaction position.
+     * @param _utxoPos Output identifier to decode.
      * @return The transaction position.
      */
-    function getTxpos(uint256 _outputId)
+    function getTxPos(uint256 _utxoPos)
         internal
         pure
         returns (uint256)
     {
-        return _outputId / TX_OFFSET;
+        return _utxoPos / TX_OFFSET;
     }
 
     /**
@@ -138,7 +138,7 @@ library PlasmaCore {
      * @param _inputIndex Index of the input to return.
      * @return A combined identifier.
      */
-    function getInputId(bytes memory _tx, uint256 _inputIndex)
+    function getInputUtxoPosition(bytes memory _tx, uint8 _inputIndex)
         internal
         view
         returns (uint256)
@@ -154,7 +154,7 @@ library PlasmaCore {
      * @param _outputIndex Index of the output to return.
      * @return The transaction output.
      */
-    function getOutput(bytes memory _tx, uint256 _outputIndex)
+    function getOutput(bytes memory _tx, uint8 _outputIndex)
         internal
         view
         returns (TransactionOutput)

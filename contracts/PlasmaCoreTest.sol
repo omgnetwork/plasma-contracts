@@ -26,7 +26,7 @@ contract PlasmaCoreTest {
         return PlasmaCore.sliceSignature(_signatures, _index);
     }
 
-    function getOutput(bytes _tx, uint256 _outputIndex)
+    function getOutput(bytes _tx, uint8 _outputIndex)
         public
         view
         returns (address, address, uint256)
@@ -35,43 +35,43 @@ contract PlasmaCoreTest {
         return (output.owner, output.token, output.amount);
     }
 
-    function getInputId(bytes _tx, uint256 _inputIndex)
+    function getInputUtxoPosition(bytes _tx, uint8 _inputIndex)
         public
         view
         returns (uint256)
     {
-        return PlasmaCore.getInputId(_tx, _inputIndex);
+        return PlasmaCore.getInputUtxoPosition(_tx, _inputIndex);
     }
 
-    function getOindex(uint256 _outputId)
+    function getOindex(uint256 _utxoPos)
         public
         pure
         returns (uint8)
     {
-        return PlasmaCore.getOindex(_outputId);
+        return PlasmaCore.getOindex(_utxoPos);
     }
 
-    function getTxpos(uint256 _outputId)
+    function getTxPos(uint256 _utxoPos)
         public
         pure
         returns (uint256)
     {
-        return PlasmaCore.getTxpos(_outputId);
+        return PlasmaCore.getTxPos(_utxoPos);
     }
 
-    function getTxindex(uint256 _outputId)
+    function getTxIndex(uint256 _utxoPos)
         public
         pure
         returns (uint256)
     {
-        return PlasmaCore.getTxindex(_outputId);
+        return PlasmaCore.getTxIndex(_utxoPos);
     }
 
-    function getBlknum(uint256 _outputId)
+    function getBlknum(uint256 _utxoPos)
         public
         pure
         returns (uint256)
     {
-        return PlasmaCore.getBlknum(_outputId);
+        return PlasmaCore.getBlknum(_utxoPos);
     }
 }
