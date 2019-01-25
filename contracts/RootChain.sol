@@ -603,9 +603,9 @@ contract RootChain {
     )
         public
     {
-        // Check that the exit is currently active and in period 2.
+        // Check that the exit is currently active and first two periods.
         InFlightExit storage inFlightExit = _getInFlightExit(_inFlightTx);
-        require(_getExitPeriod(inFlightExit) == 2);
+        require(_getExitPeriod(inFlightExit) < 3);
 
         // Check that the in-flight transaction was included.
         require(_transactionIncluded(_inFlightTx, _inFlightTxPos, _inFlightTxInclusionProof));
@@ -641,9 +641,9 @@ contract RootChain {
     )
         public
     {
-        // Check that the exit is currently active and in period 2.
+        // Check that the exit is currently active and in first two periods.
         InFlightExit storage inFlightExit = _getInFlightExit(_inFlightTx);
-        require(_getExitPeriod(inFlightExit) == 2);
+        require(_getExitPeriod(inFlightExit) < 3);
 
         // Check that the input is piggybacked.
         require(inFlightExit.exitMap.bitSet(_inFlightTxInputIndex));
@@ -685,9 +685,9 @@ contract RootChain {
     )
         public
     {
-        // Check that the exit is currently active and in period 2.
+        // Check that the exit is currently active and in first two periods.
         InFlightExit storage inFlightExit = _getInFlightExit(_inFlightTx);
-        require(_getExitPeriod(inFlightExit) == 2);
+        require(_getExitPeriod(inFlightExit) < 3);
 
         // Check that the output is piggybacked.
         uint8 oindex = _inFlightTxOutputId.getOindex();
