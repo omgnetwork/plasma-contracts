@@ -38,6 +38,7 @@ library Merkle {
         bytes32 proofElement;
         bytes32 computedHash = leaf;
         uint256 j = index;
+        // NOTE: we're skipping the first 32 bytes of `proof`, which holds the size of the dynamically sized `bytes`
         for (uint256 i = 32; i <= proof.length; i += 32) {
             assembly {
                 proofElement := mload(add(proof, i))
