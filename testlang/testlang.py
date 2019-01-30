@@ -3,14 +3,13 @@ from plasma_core.child_chain import ChildChain
 from plasma_core.account import EthereumAccount
 from plasma_core.block import Block
 from plasma_core.transaction import Transaction, TransactionOutput, UnsignedTransaction
-from plasma_core.constants import WEEK, NULL_SIGNATURE, NULL_ADDRESS
+from plasma_core.constants import MIN_EXIT_PERIOD, NULL_SIGNATURE, NULL_ADDRESS
 from plasma_core.utils.transactions import decode_utxo_id, encode_utxo_id
 from plasma_core.utils.address import address_to_hex
 from plasma_core.utils.merkle.fixed_merkle import FixedMerkle
 import conftest
 
 
-MIN_EXIT_PERIOD = 1 * WEEK
 IN_FLIGHT_PERIOD = MIN_EXIT_PERIOD // 2
 
 

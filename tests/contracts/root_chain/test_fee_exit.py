@@ -1,6 +1,6 @@
 import pytest
 from ethereum.tools.tester import TransactionFailed
-from plasma_core.constants import NULL_ADDRESS, NULL_ADDRESS_HEX, WEEK
+from plasma_core.constants import NULL_ADDRESS, NULL_ADDRESS_HEX, MIN_EXIT_PERIOD
 
 # TODO: test if fee exit generates events
 
@@ -23,17 +23,17 @@ def test_start_fee_exit_non_operator_should_fail(testlang):
         testlang.start_fee_exit(testlang.accounts[1], amount)
 
 
-def test_start_fee_exit_finalizes_after_two_weeks(testlang):
+def test_start_fee_exit_finalizes_after_two_MFPs(testlang):
     operator, amount = testlang.accounts[0], 100
     testlang.deposit(operator, amount)
     fee_exit_id = testlang.start_fee_exit(operator, 100)
     testlang.get_standard_exit(fee_exit_id)
     balance = testlang.get_balance(testlang.root_chain)
 
-    testlang.forward_timestamp(WEEK + 1)
+    testlang.forward_timestamp(MIN_EXIT_PERIOD + 1)
     testlang.process_exits(NULL_ADDRESS, 0, 1)
     assert testlang.get_balance(testlang.root_chain) == balance
 
-    testlang.forward_timestamp(2 * WEEK + 1)
+    testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
     testlang.process_exits(NULL_ADDRESS, 0, 1)
     assert testlang.get_balance(testlang.root_chain) == 0

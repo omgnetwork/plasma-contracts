@@ -1,4 +1,4 @@
-from plasma_core.constants import NULL_ADDRESS, NULL_ADDRESS_HEX, WEEK
+from plasma_core.constants import NULL_ADDRESS, NULL_ADDRESS_HEX, MIN_EXIT_PERIOD
 from eth_utils import encode_hex
 import pytest
 from ethereum.tools.tester import TransactionFailed
@@ -13,7 +13,7 @@ def test_process_exits_standard_exit_should_succeed(testlang):
     pre_balance = testlang.get_balance(owner)
 
     testlang.start_standard_exit(spend_id, owner.key)
-    testlang.forward_timestamp(2 * WEEK + 1)
+    testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
 
     testlang.process_exits(NULL_ADDRESS, 0, 100)
 
@@ -30,7 +30,7 @@ def test_process_exits_in_flight_exit_should_succeed(testlang):
     spend_id = testlang.spend_utxo([deposit_id], [owner.key], [(owner.address, NULL_ADDRESS, 100)])
     testlang.start_in_flight_exit(spend_id)
     testlang.piggyback_in_flight_exit_output(spend_id, 0, owner.key)
-    testlang.forward_timestamp(2 * WEEK + 1)
+    testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
 
     testlang.process_exits(NULL_ADDRESS, 0, 100)
 
@@ -62,7 +62,7 @@ def test_finalize_exits_for_ERC20_should_succeed(testlang, root_chain, token):
     assert standard_exit.amount == amount
     assert standard_exit.token == encode_hex(token.address)
     assert standard_exit.owner == owner.address
-    testlang.forward_timestamp(2 * WEEK + 1)
+    testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
 
     pre_balance = token.balanceOf(owner.address)
     testlang.process_exits(token.address, 0, 100)
@@ -75,8 +75,8 @@ def test_finalize_exits_for_ERC20_should_succeed(testlang, root_chain, token):
 
 
 def test_finalize_exits_old_utxo_is_mature_after_single_mfp(testlang):
-    minimal_finalization_period = WEEK  # aka MFP - see tesuji blockchain design
-    required_exit_period = WEEK  # aka REP - see tesuji blockchain design
+    minimal_finalization_period = MIN_EXIT_PERIOD  # aka MFP - see tesuji blockchain design
+    required_exit_period = MIN_EXIT_PERIOD  # aka REP - see tesuji blockchain design
     owner, amount = testlang.accounts[0], 100
 
     deposit_id = testlang.deposit(owner, amount)
@@ -95,8 +95,8 @@ def test_finalize_exits_old_utxo_is_mature_after_single_mfp(testlang):
 
 
 def test_finalize_exits_new_utxo_is_mature_after_mfp_plus_rep(testlang):
-    minimal_finalization_period = WEEK  # aka MFP - see tesuji blockchain design
-    required_exit_period = WEEK  # aka REP - see tesuji blockchain design
+    minimal_finalization_period = MIN_EXIT_PERIOD  # aka MFP - see tesuji blockchain design
+    required_exit_period = MIN_EXIT_PERIOD  # aka REP - see tesuji blockchain design
     owner, amount = testlang.accounts[0], 100
 
     deposit_id = testlang.deposit(owner, amount)
@@ -115,8 +115,8 @@ def test_finalize_exits_new_utxo_is_mature_after_mfp_plus_rep(testlang):
 
 
 def test_finalize_exits_only_mature_exits_are_processed(testlang):
-    minimal_finalization_period = WEEK  # aka MFP - see tesuji blockchain design
-    required_exit_period = WEEK  # aka REP - see tesuji blockchain design
+    minimal_finalization_period = MIN_EXIT_PERIOD  # aka MFP - see tesuji blockchain design
+    required_exit_period = MIN_EXIT_PERIOD  # aka REP - see tesuji blockchain design
     owner, amount = testlang.accounts[0], 100
 
     deposit_id_1 = testlang.deposit(owner, amount)
@@ -155,7 +155,7 @@ def test_finalize_exits_partial_queue_processing(testlang):
     spend_id_2 = testlang.spend_utxo([deposit_id_2], [owner.key], [(owner.address, NULL_ADDRESS, 100)])
     testlang.start_standard_exit(spend_id_2, owner.key)
 
-    testlang.forward_timestamp(2 * WEEK + 1)
+    testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
     testlang.process_exits(NULL_ADDRESS, spend_id_1, 1)
     plasma_exit = testlang.get_standard_exit(spend_id_1)
     assert plasma_exit.owner == NULL_ADDRESS_HEX
@@ -173,7 +173,7 @@ def test_finalize_exits_tx_race_short_circuit(testlang):
     testlang.start_standard_exit(utxo3.spend_id, utxo3.owner.key)
     testlang.start_standard_exit(utxo4.spend_id, utxo4.owner.key)
 
-    testlang.forward_timestamp(2 * WEEK + 1)
+    testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
     testlang.process_exits(NULL_ADDRESS, utxo1.spend_id, 1)
     with pytest.raises(TransactionFailed):
         testlang.process_exits(NULL_ADDRESS, utxo1.spend_id, 3, startgas=1000000)
@@ -191,7 +191,7 @@ def test_finalize_exits_tx_race_normal(testlang):
     testlang.start_standard_exit(utxo3.spend_id, utxo3.owner.key)
     testlang.start_standard_exit(utxo4.spend_id, utxo4.owner.key)
 
-    testlang.forward_timestamp(2 * WEEK + 1)
+    testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
     testlang.process_exits(NULL_ADDRESS, utxo1.spend_id, 1)
 
     testlang.process_exits(NULL_ADDRESS, utxo2.spend_id, 3)
@@ -206,7 +206,7 @@ def test_finalize_exits_empty_queue_should_crash(testlang, ethtester):
     spend_id_1 = testlang.spend_utxo([deposit_id_1], [owner.key], [(owner.address, NULL_ADDRESS, 100)])
     testlang.start_standard_exit(spend_id_1, owner.key)
 
-    testlang.forward_timestamp(2 * WEEK + 1)
+    testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
     testlang.process_exits(NULL_ADDRESS, spend_id_1, 1)
 
     with pytest.raises(TransactionFailed):
@@ -222,7 +222,7 @@ def test_finalize_skipping_top_utxo_check_is_possible(testlang):
     spend_id_1 = testlang.spend_utxo([deposit_id_1], [owner.key], [(owner.address, NULL_ADDRESS, 100)])
     testlang.start_standard_exit(spend_id_1, owner.key)
 
-    testlang.forward_timestamp(2 * WEEK + 1)
+    testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
     testlang.process_exits(NULL_ADDRESS, 0, 1)
 
     standard_exit = testlang.get_standard_exit(spend_id_1)
@@ -240,7 +240,7 @@ def test_finalize_challenged_exit_will_not_send_funds(testlang):
     testlang.challenge_standard_exit(spend_id, doublespend_id)
     testlang.root_chain.exits(spend_id) == [NULL_ADDRESS_HEX, NULL_ADDRESS_HEX, 0]
 
-    testlang.forward_timestamp(2 * WEEK + 1)
+    testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
 
     pre_balance = testlang.get_balance(testlang.root_chain)
     testlang.process_exits(NULL_ADDRESS, 0, 1, sender=finalizer.key)
@@ -254,7 +254,7 @@ def test_finalized_exit_challenge_will_fail(testlang):
     spend_id = testlang.spend_utxo([deposit_id], [owner.key], [(owner.address, NULL_ADDRESS, amount)])
 
     testlang.start_standard_exit(spend_id, owner.key)
-    testlang.forward_timestamp(2 * WEEK + 1)
+    testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
 
     testlang.process_exits(NULL_ADDRESS, spend_id, 100)
     standard_exit = testlang.get_standard_exit(spend_id)
@@ -274,7 +274,7 @@ def test_finalize_for_in_flight_exit_should_transfer_funds(testlang):
     testlang.start_in_flight_exit(spend_id)
     testlang.piggyback_in_flight_exit_output(spend_id, 0, owner.key)
 
-    testlang.forward_timestamp(2 * WEEK + 1)
+    testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
 
     exitable_timestamp, _, _ = testlang.root_chain.getNextExit(NULL_ADDRESS)
     pre_balance = testlang.get_balance(owner)
@@ -303,7 +303,7 @@ def test_finalize_exits_priority_for_in_flight_exits_corresponds_to_the_age_of_y
 
     testlang.start_standard_exit(spend_2_id, owner.key)
 
-    testlang.forward_timestamp(2 * WEEK + 1)
+    testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
 
     balance = testlang.get_balance(owner)
     testlang.process_exits(NULL_ADDRESS, 0, 1)

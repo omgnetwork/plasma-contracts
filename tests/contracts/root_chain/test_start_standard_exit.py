@@ -1,6 +1,6 @@
 import pytest
 from ethereum.tools.tester import TransactionFailed
-from plasma_core.constants import NULL_ADDRESS, NULL_ADDRESS_HEX, WEEK
+from plasma_core.constants import NULL_ADDRESS, NULL_ADDRESS_HEX, MIN_EXIT_PERIOD
 
 
 def test_start_standard_exit_should_succeed(testlang, utxo):
@@ -61,8 +61,8 @@ def test_start_standard_exit_unknown_token_should_fail(testlang, token):
 
 
 def test_start_standard_exit_old_utxo_has_required_exit_period_to_start_exit(testlang, utxo):
-    required_exit_period = WEEK  # see tesuji blockchain design
-    minimal_required_period = WEEK  # see tesuji blockchain design
+    required_exit_period = MIN_EXIT_PERIOD  # see tesuji blockchain design
+    minimal_required_period = MIN_EXIT_PERIOD  # see tesuji blockchain design
     mallory = testlang.accounts[1]
 
     testlang.forward_timestamp(required_exit_period + minimal_required_period)
@@ -78,8 +78,8 @@ def test_start_standard_exit_old_utxo_has_required_exit_period_to_start_exit(tes
 
 
 def test_start_standard_exit_on_finalized_exit_should_fail(testlang, utxo):
-    required_exit_period = WEEK  # see tesuji blockchain design
-    minimal_required_period = WEEK  # see tesuji blockchain design
+    required_exit_period = MIN_EXIT_PERIOD  # see tesuji blockchain design
+    minimal_required_period = MIN_EXIT_PERIOD  # see tesuji blockchain design
     testlang.start_standard_exit(utxo.spend_id, utxo.owner.key)
     testlang.forward_timestamp(required_exit_period + minimal_required_period)
     testlang.process_exits(NULL_ADDRESS, utxo.spend_id, 100)
@@ -118,7 +118,7 @@ def test_start_standard_exit_from_deposit_must_be_exitable_in_minimal_finalizati
 
     testlang.start_standard_exit(deposit_id, owner.key)
 
-    required_exit_period = WEEK  # see tesuji blockchain design
+    required_exit_period = MIN_EXIT_PERIOD  # see tesuji blockchain design
     testlang.forward_timestamp(required_exit_period + 1)
     testlang.process_exits(NULL_ADDRESS, 0, 1)
 

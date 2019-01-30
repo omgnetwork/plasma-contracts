@@ -33,7 +33,9 @@ contract RootChain {
      * Storage
      */
 
-    uint256 constant public MIN_EXIT_PERIOD = 1 weeks;
+    // NOTE: this is the "middle" period. Exit period for fresh utxos we'll double that while IFE phase is half that
+    // TODO: this is a value sensible only for testing and demo purposes, **DO NOT DEPLOY TO MAINNET**
+    uint256 constant public MIN_EXIT_PERIOD = 4 minutes;
     uint256 constant public CHILD_BLOCK_INTERVAL = 1000;
 
     // WARNING: These placeholder bond values are entirely arbitrary.

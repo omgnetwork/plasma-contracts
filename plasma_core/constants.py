@@ -50,5 +50,10 @@ NULL_SIGNATURE = NULL_BYTE * 65
 NULL_ADDRESS = NULL_BYTE * 20
 NULL_ADDRESS_HEX = '0x' + NULL_ADDRESS.hex()
 
+MINUTE = 60
 WEEK = 60 * 60 * 24 * 7
 DAY = 60 * 60 * 24
+
+# TODO: this is dictated by the hard-coded constant in RootChain.sol for now. After parametrized, it could be used for
+#       suitable test contract instantiation and can even be shorter.
+MIN_EXIT_PERIOD = 4 * MINUTE
