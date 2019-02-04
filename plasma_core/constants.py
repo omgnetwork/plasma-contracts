@@ -54,6 +54,5 @@ MINUTE = 60
 WEEK = 60 * 60 * 24 * 7
 DAY = 60 * 60 * 24
 
-# TODO: this is dictated by the hard-coded constant in RootChain.sol for now. After parametrized, it could be used for
-#       suitable test contract instantiation and can even be shorter.
+# used for suitable test contract instantiation
 MIN_EXIT_PERIOD = 4 * MINUTE

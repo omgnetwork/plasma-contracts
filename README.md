@@ -1,10 +1,5 @@
 # Plasma Contracts
 
-**IMPORTANT NOTICE** / **TODO**:
-This implementation includes a brute-force shortening of the exit periods, see [here](https://github.com/omisego/plasma-contracts/blob/master/contracts/RootChain.sol#L36).
-This will be made configurable on contract deployment and should be _much longer_ for any secure deployment.
-**DO NOT DEPLOY TO MAINNET**
-
 Root chain contracts for Plasma MVP, work in progress.
 
 ## Contents
