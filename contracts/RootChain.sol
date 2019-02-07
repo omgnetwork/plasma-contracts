@@ -80,6 +80,11 @@ contract RootChain {
         uint256 oldestCompetitor;
     }
 
+    struct InputSum {
+        address token;
+        uint256 amount;
+    }
+
 
     /*
      * Events
@@ -212,7 +217,7 @@ contract RootChain {
     {
         require(!hasToken(_token));
         exitsQueues[_token] = PriorityQueueFactory.deploy(this);
-        TokenAdded(_token);
+        emit TokenAdded(_token);
     }
 
     /**
@@ -396,23 +401,23 @@ contract RootChain {
         bytes32 txHash = keccak256(_challengeTx);
         require(owner == ECRecovery.recover(txHash, _challengeTxSig));
 
-        processChallengeStandardExit(challengedUtxoPos, _standardExitId);
+        _processChallengeStandardExit(challengedUtxoPos, _standardExitId);
     }
 
-    function cleanupDoubleSpendingStandardExits(uint256 _utxoPos, bytes _txbytes)
+    function _cleanupDoubleSpendingStandardExits(uint256 _utxoPos, bytes _txbytes)
         internal
         returns (bool)
     {
         uint8 oindex = _utxoPos.getOindex();
         uint192 standardExitId = getStandardExitId(keccak256(_txbytes), oindex);
         if (exits[standardExitId].owner != address(0)) {
-            processChallengeStandardExit(_utxoPos, standardExitId);
+            _processChallengeStandardExit(_utxoPos, standardExitId);
             return false;
         }
         return exits[standardExitId].amount != 0;
     }
 
-    function processChallengeStandardExit(uint256 _utxoPos, uint192 _exitId)
+    function _processChallengeStandardExit(uint256 _utxoPos, uint192 _exitId)
         internal
     {
         // Delete the exit.
@@ -481,35 +486,30 @@ contract RootChain {
         InFlightExit storage inFlightExit = _getInFlightExit(_inFlightTx);
         require(inFlightExit.exitStartTimestamp == 0);
 
-        // Get information about the outputs.
-        uint8 numInputs;
-        uint256 outputSum;
-        // TODO: re-write to support ERC20 tokens
-        (numInputs, outputSum) = _getOutputInfo(_inFlightTx);
-
         // Separate the inputs transactions.
         RLP.RLPItem[] memory splitInputTxs = _inputTxs.toRLPItem().toList();
 
-        // `vars` is an ugly hack - workaround for "stack too deep" error
-        uint256[3] memory vars;
+        uint256 inputTxoPos;
+        uint256 youngestInputTxoPos;
         bool finalized;
-        bool any_finalized;
-        for (uint8 i = 0; i < numInputs; i++) {
-            // vars[0] contains txo position of the input
-            (inFlightExit.inputs[i], vars[0], finalized) = _getInputInfo(_inFlightTx, splitInputTxs[i].toBytes(), _inputTxsInclusionProofs, _inFlightTxSigs.sliceSignature(i), i);
-            require(inFlightExit.inputs[i].token == address(0));
-            // vars[1] tracks sum of the inputs
-            vars[1] += inFlightExit.inputs[i].amount;
-            // vars[2] tracks youngest of inputs for this in-flight exit
-            vars[2] = Math.max(vars[2], vars[0]);
+        bool any_finalized = false;
+        uint8 inputsCount;
+        for (uint8 i = 0; i < MAX_INPUTS; i++) {
+            if (_inFlightTx.getInputUtxoPosition(i) == 0) break;
+
+            ++inputsCount;
+
+            (inFlightExit.inputs[i], inputTxoPos, finalized) = _getInputInfo(_inFlightTx, splitInputTxs[i].toBytes(), _inputTxsInclusionProofs, _inFlightTxSigs.sliceSignature(i), i);
+
+            youngestInputTxoPos = Math.max(youngestInputTxoPos, inputTxoPos);
             any_finalized = any_finalized || finalized;
         }
 
-        // Make sure the sums are valid.
-        require(vars[1] >= outputSum);
+        // Validate sums of inputs against sum of outputs token-wise
+        _validateInputsOutputsSumUp(inFlightExit, _inFlightTx, inputsCount);
 
         // Determine when the exit can be processed.
-        _enqueueInFlightExit(vars[2], _inFlightTx);
+        _enqueueInFlightExit(youngestInputTxoPos, _inFlightTx);
         // Update the exit mapping.
         inFlightExit.bondOwner = msg.sender;
         inFlightExit.exitStartTimestamp = block.timestamp;
@@ -1094,23 +1094,55 @@ contract RootChain {
      * @param _tx RLP encoded transaction.
      * @return A tuple containing the number of inputs and the sum of the outputs of tx.
      */
-    function _getOutputInfo(bytes _tx)
+    function _validateInputsOutputsSumUp(InFlightExit storage _inFlightExit, bytes _tx, uint8 inputsCount)
         internal
         view
-        returns (uint8, uint256)
     {
+
+        InputSum[MAX_INPUTS] memory sums;
+        uint8 allocatedSums = 0;
+
+        InputSum memory tokenSum;
+
+        uint8 i;
         // Loop through each input.
-        uint8 numInputs = 0;
-        uint256 outputSum = 0;
-        for (uint8 i = 0; i < MAX_INPUTS; i++) {
-            if (_tx.getInputUtxoPosition(i) > 0) {
-                numInputs++;
-            }
-            outputSum += _tx.getOutput(i).amount;
+        for (i = 0; i < inputsCount; ++i){
+            PlasmaCore.TransactionOutput memory input = _inFlightExit.inputs[i];
+            (tokenSum, allocatedSums) = _getInputSumByToken(sums, input.token, allocatedSums);
+            tokenSum.amount += input.amount;
         }
 
-        return (numInputs, outputSum);
+        for (i = 0; i < MAX_INPUTS; ++i) {
+            PlasmaCore.TransactionOutput memory output = _tx.getOutput(i);
+            (tokenSum, allocatedSums) = _getInputSumByToken(sums, output.token, allocatedSums);
+
+            require(tokenSum.amount >= output.amount);
+
+            tokenSum.amount -= output.amount;
+        }
+
     }
+
+    function _getInputSumByToken(InputSum[MAX_INPUTS] memory sums, address token, uint8 allocated)
+        internal
+        pure
+        returns (InputSum, uint8)
+    {
+        for (uint8 i = 0; i < allocated; ++i){
+
+            if (sums[i].token == token){
+                return (sums[i], allocated);
+            }
+        }
+
+        if (allocated < MAX_INPUTS){
+            sums[allocated].token = token;
+            return (sums[allocated], allocated + 1);
+        }
+
+        return (InputSum(0, 0), MAX_INPUTS);
+    }
+
 
     /**
      * @dev Returns information about an input to a in-flight transaction.
@@ -1143,7 +1175,7 @@ contract RootChain {
         require(input.owner == ECRecovery.recover(keccak256(_tx), _inputSig));
 
         // Challenge exiting standard exits from inputs
-        already_finalized = cleanupDoubleSpendingStandardExits(inputUtxoPos, _inputTx);
+        already_finalized = _cleanupDoubleSpendingStandardExits(inputUtxoPos, _inputTx);
 
         return (input, inputUtxoPos, already_finalized);
     }

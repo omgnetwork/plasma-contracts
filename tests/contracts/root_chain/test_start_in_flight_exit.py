@@ -39,7 +39,19 @@ def test_start_in_flight_exit_should_succeed(ethtester, testlang, num_inputs):
         assert input_info.amount == 0
 
 
+# TODO: the two following cases could probably be done by parametrisation of the test above
+# TODO: add test_start_in_flight_exit_with_ERC20_token_should_succeed
+# TODO: add test_start_in_flight_exit_with_ERC20_tokens_should_succeed
+
+# TODO: add test_start_in_flight_exit_with_holes_in_inputs_should_fail
+
+# TODO: add test_start_in_flight_exit_with_output_with_a_token_not_from_inputs_should_fail
+
+# TODO: add test_invalid_inputs_vs_outputs_sums_should_fail
+
 # TODO: add test_start_in_flight_exit_invalid_signature_should_fail
+
+# TODO: add test_all_outputs_should_have_the_same_priority
 
 
 def test_start_in_flight_exit_invalid_bond_should_fail(testlang):
