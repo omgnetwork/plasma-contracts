@@ -4,6 +4,7 @@ from ethereum import utils
 from plasma_core.utils.signatures import sign, get_signer
 from plasma_core.utils.transactions import encode_utxo_id
 from plasma_core.constants import NULL_SIGNATURE, NULL_ADDRESS
+from rlp.exceptions import (SerializationError, DeserializationError)
 
 
 def pad_list(to_pad, value, required_length):
@@ -50,18 +51,20 @@ class Transaction(rlp.Serializable):
     fields = (
         ('inputs', CountableList(TransactionInput, NUM_TXOS)),
         ('outputs', CountableList(TransactionOutput, NUM_TXOS)),
-        ('signatures', CountableList(binary, NUM_TXOS))
+        ('metadata', binary)
     )
 
     def __init__(self,
                  inputs=[DEFAULT_INPUT] * NUM_TXOS,
                  outputs=[DEFAULT_OUTPUT] * NUM_TXOS,
+                 metadata=None,
                  signatures=[NULL_SIGNATURE] * NUM_TXOS):
         padded_inputs = pad_list(inputs, self.DEFAULT_INPUT, self.NUM_TXOS)
         padded_outputs = pad_list(outputs, self.DEFAULT_OUTPUT, self.NUM_TXOS)
 
         self.inputs = [TransactionInput(*i) for i in padded_inputs]
         self.outputs = [TransactionOutput(*o) for o in padded_outputs]
+        self.metadata = metadata
         self.signatures = signatures[:]
         self.spent = [False] * self.NUM_TXOS
 
@@ -75,7 +78,7 @@ class Transaction(rlp.Serializable):
 
     @property
     def encoded(self):
-        return rlp.encode(self, UnsignedTransaction)
+        return rlp.encode(self)
 
     @property
     def is_deposit(self):
@@ -84,5 +87,15 @@ class Transaction(rlp.Serializable):
     def sign(self, index, key):
         self.signatures[index] = sign(self.hash, key)
 
+    @staticmethod
+    def serialize(obj):
+        try:
+            cls = Transaction.exclude(['metadata']) if obj.metadata is None else Transaction
+            field_value = [getattr(obj, field) for field, _ in cls.fields]
+            return cls.get_sedes().serialize(field_value)
+        except Exception as e:
+            raise SerializationError(e.format_exc, obj)
 
-UnsignedTransaction = Transaction.exclude(['signatures'])
+    @staticmethod
+    def deserialize(obj):
+        raise DeserializationError("not yet implemented", obj)

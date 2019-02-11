@@ -32,18 +32,6 @@ def test_get_output(plasma_core_test):
     assert plasma_core_test.getOutput(tx.encoded, 1) == [null, null, 0]
 
 
-def test_decode_mallability(testlang, plasma_core_test):
-    owner, amount = testlang.accounts[0], 100
-    null = '0x0000000000000000000000000000000000000000'
-    tx = Transaction(outputs=[(owner.address, null, amount)])
-    tx.sign(0, owner.key)
-    import rlp
-    encoded_with_signatures = rlp.encode(tx, Transaction)
-
-    with pytest.raises(TransactionFailed):
-        plasma_core_test.getOutput(encoded_with_signatures, 0)
-
-
 def test_get_input_id(plasma_core_test):
     input_id = (2, 2, 2)
     tx = Transaction(inputs=[input_id])
