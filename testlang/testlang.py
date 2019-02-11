@@ -2,7 +2,7 @@ import rlp
 from plasma_core.child_chain import ChildChain
 from plasma_core.account import EthereumAccount
 from plasma_core.block import Block
-from plasma_core.transaction import Transaction, TransactionOutput, UnsignedTransaction
+from plasma_core.transaction import Transaction, TransactionOutput
 from plasma_core.constants import MIN_EXIT_PERIOD, NULL_SIGNATURE, NULL_ADDRESS
 from plasma_core.utils.transactions import decode_utxo_id, encode_utxo_id
 from plasma_core.utils.address import address_to_hex
@@ -165,7 +165,7 @@ class TestingLanguage(object):
         self.child_chain.add_block(block)
         return encode_utxo_id(blknum, 0, 0)
 
-    def spend_utxo(self, input_ids, keys, outputs=[], metadata=None, force_invalid=False):
+    def spend_utxo(self, input_ids, keys, outputs=[], metadata="", force_invalid=False):
         inputs = [decode_utxo_id(input_id) for input_id in input_ids]
         spend_tx = Transaction(inputs=inputs, outputs=outputs, metadata=metadata)
         for i in range(0, len(inputs)):

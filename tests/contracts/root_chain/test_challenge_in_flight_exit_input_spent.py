@@ -6,7 +6,7 @@ def test_challenge_in_flight_exit_input_spent_should_succeed(testlang):
     owner_1, owner_2, amount = testlang.accounts[0], testlang.accounts[1], 100
     deposit_id = testlang.deposit(owner_1, amount)
     spend_id = testlang.spend_utxo([deposit_id], [owner_1.key])
-    double_spend_id = testlang.spend_utxo([deposit_id], [owner_1.key], [(owner_1.address, 100)], None, force_invalid=True)
+    double_spend_id = testlang.spend_utxo([deposit_id], [owner_1.key], [(owner_1.address, 100)], "", force_invalid=True)
     testlang.start_in_flight_exit(spend_id)
     testlang.piggyback_in_flight_exit_input(spend_id, 0, owner_1.key)
     testlang.forward_to_period(2)
