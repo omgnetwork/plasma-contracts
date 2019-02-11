@@ -32,14 +32,15 @@ contract RootChain {
     /*
      * Storage
      */
-
-    uint256 constant public MIN_EXIT_PERIOD = 1 weeks;
     uint256 constant public CHILD_BLOCK_INTERVAL = 1000;
 
     // WARNING: These placeholder bond values are entirely arbitrary.
     uint256 public standardExitBond = 31415926535 wei;
     uint256 public inFlightExitBond = 31415926535 wei;
     uint256 public piggybackBond = 31415926535 wei;
+
+    // NOTE: this is the "middle" period. Exit period for fresh utxos we'll double that while IFE phase is half that
+    uint256 public minExitPeriod;
 
     address public operator;
 
@@ -173,12 +174,17 @@ contract RootChain {
      * Public functions
      */
 
-    // @dev Required to be called before any operations on the contract
-    //      Split from `constructor` to fit into block gas limit
-    function init()
+    /**
+     * @dev Required to be called before any operations on the contract
+     * Split from `constructor` to fit into block gas limit
+     * @param _minExitPeriod standard exit period in seconds
+     */
+    function init(uint256 _minExitPeriod)
         public
     {
       _initOperator();
+
+      minExitPeriod = _minExitPeriod;
 
       nextChildBlock = CHILD_BLOCK_INTERVAL;
       nextDepositBlock = 1;
@@ -902,11 +908,11 @@ contract RootChain {
     {
         uint256 blknum = _outputId.getBlknum();
         if (blknum % CHILD_BLOCK_INTERVAL == 0) {
-            return Math.max(blocks[blknum].timestamp + (MIN_EXIT_PERIOD * 2), block.timestamp + MIN_EXIT_PERIOD);
+            return Math.max(blocks[blknum].timestamp + (minExitPeriod * 2), block.timestamp + minExitPeriod);
         }
         else {
             // High priority exit for the deposit.
-            return block.timestamp + MIN_EXIT_PERIOD;
+            return block.timestamp + minExitPeriod;
         }
     }
 
@@ -920,7 +926,7 @@ contract RootChain {
         view
         returns (uint256)
     {
-        return ((block.timestamp + (2 * MIN_EXIT_PERIOD)) << 192) | _feeExitId;
+        return ((block.timestamp + (2 * minExitPeriod)) << 192) | _feeExitId;
     }
 
 
@@ -996,7 +1002,7 @@ contract RootChain {
         view
         returns (uint256)
     {
-        uint256 periodTime = MIN_EXIT_PERIOD / 2;
+        uint256 periodTime = minExitPeriod / 2;
         return ((block.timestamp - clearFlag(_inFlightExit.exitStartTimestamp)) / periodTime) + 1;
     }
 

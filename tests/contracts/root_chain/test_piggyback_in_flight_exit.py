@@ -1,6 +1,6 @@
 import pytest
 from ethereum.tools.tester import TransactionFailed
-from plasma_core.constants import WEEK, NULL_ADDRESS
+from plasma_core.constants import MIN_EXIT_PERIOD, NULL_ADDRESS
 
 
 @pytest.mark.parametrize("num_inputs", [1, 2, 3, 4])
@@ -61,7 +61,7 @@ def test_piggyback_in_flight_exit_different_exits_different_outputs_should_succe
     # First time should succeed
     testlang.start_in_flight_exit(spend_id)
     testlang.piggyback_in_flight_exit_output(spend_id, 0, owner.key)
-    testlang.forward_timestamp(2 * WEEK + 1)
+    testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
     testlang.process_exits(NULL_ADDRESS, 0, 100)
 
     # Second time should also succeed
@@ -80,7 +80,7 @@ def test_piggyback_in_flight_exit_different_exits_same_output_should_fail(testla
     # First time should succeed
     testlang.start_in_flight_exit(spend_id)
     testlang.piggyback_in_flight_exit_output(spend_id, 0, owner.key)
-    testlang.forward_timestamp(2 * WEEK + 1)
+    testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
     testlang.process_exits(NULL_ADDRESS, 0, 100)
 
     # Second time should also succeed

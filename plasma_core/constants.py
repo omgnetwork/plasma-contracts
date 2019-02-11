@@ -50,5 +50,9 @@ NULL_SIGNATURE = NULL_BYTE * 65
 NULL_ADDRESS = NULL_BYTE * 20
 NULL_ADDRESS_HEX = '0x' + NULL_ADDRESS.hex()
 
+MINUTE = 60
 WEEK = 60 * 60 * 24 * 7
 DAY = 60 * 60 * 24
+
+# used for suitable test contract instantiation
+MIN_EXIT_PERIOD = 4 * MINUTE

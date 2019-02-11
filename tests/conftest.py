@@ -11,6 +11,7 @@ from testlang.testlang import TestingLanguage
 from solc import link_code
 
 
+EXIT_PERIOD = 4 * 60  # 4 minutes
 GAS_LIMIT = 8000000
 START_GAS = GAS_LIMIT - 1000000
 config_metropolis['BLOCK_GAS_LIMIT'] = GAS_LIMIT
@@ -68,12 +69,16 @@ def get_contract(ethtester, ethutils):
 
 @pytest.fixture
 def root_chain(ethtester, get_contract):
+    return initialized_contract(ethtester, get_contract, EXIT_PERIOD)
+
+
+def initialized_contract(ethtester, get_contract, exit_period):
     pql = get_contract('PriorityQueueLib')
     pqf = get_contract('PriorityQueueFactory', libraries={'PriorityQueueLib': pql.address})
     ethtester.chain.mine()
     contract = get_contract('RootChain', libraries={'PriorityQueueFactory': pqf.address})
     ethtester.chain.mine()
-    contract.init(sender=ethtester.k0)
+    contract.init(exit_period, sender=ethtester.k0)
     ethtester.chain.mine()
     return contract
 
@@ -88,6 +93,16 @@ def token(ethtester, get_contract):
 @pytest.fixture
 def testlang(root_chain, ethtester):
     return TestingLanguage(root_chain, ethtester)
+
+
+@pytest.fixture
+def root_chain_short_exit_period(ethtester, get_contract):
+    return initialized_contract(ethtester, get_contract, 0)
+
+
+@pytest.fixture
+def testlang_root_chain_short_exit_period(root_chain_short_exit_period, ethtester):
+    return TestingLanguage(root_chain_short_exit_period, ethtester)
 
 
 @pytest.fixture
