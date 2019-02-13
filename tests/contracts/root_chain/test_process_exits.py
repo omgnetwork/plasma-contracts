@@ -48,6 +48,7 @@ def test_process_exits_in_flight_exit_should_succeed(testlang):
     testlang.piggyback_in_flight_exit_output(spend_id, 0, owner.key)
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
 
+    pre_balance = testlang.get_balance(owner)
     testlang.process_exits(NULL_ADDRESS, 0, 100)
 
     in_flight_exit = testlang.get_in_flight_exit(spend_id)
@@ -63,6 +64,9 @@ def test_process_exits_in_flight_exit_should_succeed(testlang):
         output_info = in_flight_exit.get_output(i)
         assert output_info.owner == NULL_ADDRESS_HEX
         assert output_info.amount == 0
+
+    expected_balance = pre_balance + amount + testlang.root_chain.inFlightExitBond() + testlang.root_chain.piggybackBond()
+    assert testlang.get_balance(owner) == expected_balance
 
 
 def test_finalize_exits_for_ERC20_should_succeed(testlang, root_chain, token):
