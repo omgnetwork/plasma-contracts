@@ -176,9 +176,9 @@ class TestingLanguage(object):
 
     def start_standard_exit(self, output_id, key, bond=None):
         output_tx = self.child_chain.get_transaction(output_id)
-        self.start_standard_exit_transaction(output_id, output_tx, key, bond)
+        self.start_standard_exit_with_tx_body(output_id, output_tx, key, bond)
 
-    def start_standard_exit_transaction(self, output_id, output_tx, key, bond=None):
+    def start_standard_exit_with_tx_body(self, output_id, output_tx, key, bond=None):
         merkle = FixedMerkle(16, [output_tx.encoded])
         proof = merkle.create_membership_proof(output_tx.encoded)
         bond = bond if bond is not None else self.root_chain.standardExitBond()

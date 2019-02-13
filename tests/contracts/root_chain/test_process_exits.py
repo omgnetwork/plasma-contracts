@@ -37,7 +37,7 @@ def test_metadata_is_part_of_the_proof(testlang):
     inputs = [decode_utxo_id(input_id) for input_id in input_ids]
     bad_spend_tx = Transaction(inputs=inputs, outputs=outputs, metadata="other information")
     with pytest.raises(TransactionFailed):
-        testlang.start_standard_exit_transaction(spend_id, bad_spend_tx, owner.key)
+        testlang.start_standard_exit_with_tx_body(spend_id, bad_spend_tx, owner.key)
 
 
 def test_process_exits_in_flight_exit_should_succeed(testlang):
