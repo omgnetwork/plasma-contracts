@@ -56,7 +56,7 @@ library PlasmaCore {
         returns (Transaction)
     {
         RLP.RLPItem[] memory txList = _tx.toRLPItem().toList();
-        require(txList.length == 2);
+        require(txList.length == 3);
         RLP.RLPItem[] memory inputs = txList[0].toList();
         RLP.RLPItem[] memory outputs = txList[1].toList();
 

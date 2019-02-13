@@ -50,18 +50,20 @@ class Transaction(rlp.Serializable):
     fields = (
         ('inputs', CountableList(TransactionInput, NUM_TXOS)),
         ('outputs', CountableList(TransactionOutput, NUM_TXOS)),
-        ('signatures', CountableList(binary, NUM_TXOS))
+        ('metadata', binary)
     )
 
     def __init__(self,
                  inputs=[DEFAULT_INPUT] * NUM_TXOS,
                  outputs=[DEFAULT_OUTPUT] * NUM_TXOS,
+                 metadata="",
                  signatures=[NULL_SIGNATURE] * NUM_TXOS):
         padded_inputs = pad_list(inputs, self.DEFAULT_INPUT, self.NUM_TXOS)
         padded_outputs = pad_list(outputs, self.DEFAULT_OUTPUT, self.NUM_TXOS)
 
         self.inputs = [TransactionInput(*i) for i in padded_inputs]
         self.outputs = [TransactionOutput(*o) for o in padded_outputs]
+        self.metadata = metadata
         self.signatures = signatures[:]
         self.spent = [False] * self.NUM_TXOS
 
@@ -75,7 +77,7 @@ class Transaction(rlp.Serializable):
 
     @property
     def encoded(self):
-        return rlp.encode(self, UnsignedTransaction)
+        return rlp.encode(self)
 
     @property
     def is_deposit(self):
@@ -83,6 +85,3 @@ class Transaction(rlp.Serializable):
 
     def sign(self, index, key):
         self.signatures[index] = sign(self.hash, key)
-
-
-UnsignedTransaction = Transaction.exclude(['signatures'])

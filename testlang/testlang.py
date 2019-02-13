@@ -2,7 +2,7 @@ import rlp
 from plasma_core.child_chain import ChildChain
 from plasma_core.account import EthereumAccount
 from plasma_core.block import Block
-from plasma_core.transaction import Transaction, TransactionOutput, UnsignedTransaction
+from plasma_core.transaction import Transaction, TransactionOutput
 from plasma_core.constants import MIN_EXIT_PERIOD, NULL_SIGNATURE, NULL_ADDRESS
 from plasma_core.utils.transactions import decode_utxo_id, encode_utxo_id
 from plasma_core.utils.address import address_to_hex
@@ -165,9 +165,9 @@ class TestingLanguage(object):
         self.child_chain.add_block(block)
         return encode_utxo_id(blknum, 0, 0)
 
-    def spend_utxo(self, input_ids, keys, outputs=[], force_invalid=False):
+    def spend_utxo(self, input_ids, keys, outputs=[], metadata="", force_invalid=False):
         inputs = [decode_utxo_id(input_id) for input_id in input_ids]
-        spend_tx = Transaction(inputs=inputs, outputs=outputs)
+        spend_tx = Transaction(inputs=inputs, outputs=outputs, metadata=metadata)
         for i in range(0, len(inputs)):
             spend_tx.sign(i, keys[i])
         blknum = self.submit_block([spend_tx], force_invalid=force_invalid)
@@ -176,6 +176,9 @@ class TestingLanguage(object):
 
     def start_standard_exit(self, output_id, key, bond=None):
         output_tx = self.child_chain.get_transaction(output_id)
+        self.start_standard_exit_with_tx_body(output_id, output_tx, key, bond)
+
+    def start_standard_exit_with_tx_body(self, output_id, output_tx, key, bond=None):
         merkle = FixedMerkle(16, [output_tx.encoded])
         proof = merkle.create_membership_proof(output_tx.encoded)
         bond = bond if bond is not None else self.root_chain.standardExitBond()
@@ -337,7 +340,7 @@ class TestingLanguage(object):
             input_txs.append(input_tx)
             proofs += self.get_merkle_proof(tx_input.identifier)
             signatures += spend_tx.signatures[i]
-        encoded_inputs = rlp.encode(input_txs, rlp.sedes.CountableList(UnsignedTransaction, 4))
+        encoded_inputs = rlp.encode(input_txs, rlp.sedes.CountableList(Transaction, 4))
         return (spend_tx.encoded, encoded_inputs, proofs, signatures)
 
     def get_merkle_proof(self, tx_id):
