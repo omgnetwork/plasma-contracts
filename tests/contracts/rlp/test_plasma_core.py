@@ -37,10 +37,10 @@ def test_decode_mallability(testlang, plasma_core_test):
     null = '0x0000000000000000000000000000000000000000'
     tx = Transaction(outputs=[(owner.address, null, amount)])
     import rlp
-    encoded_with_extra_value = rlp.encode([tx.inputs, tx.outputs, tx.metadata, 0])
+    encoded_with_extra_field = rlp.encode([tx.inputs, tx.outputs, tx.metadata, 0])
 
     with pytest.raises(TransactionFailed):
-        plasma_core_test.getOutput(encoded_with_extra_value, 0)
+        plasma_core_test.getOutput(encoded_with_extra_field, 0)
 
 
 def test_get_input_id(plasma_core_test):
