@@ -38,12 +38,28 @@ class StandardExit(object):
         owner (str): Address of the exit's owner.
         token (str): Address of the token being exited.
         amount (int): How much value is being exited.
+        position (int): UTXO position.
     """
 
-    def __init__(self, owner, token, amount):
+    def __init__(self, owner, token, amount, position=0):
         self.owner = owner
         self.token = token
         self.amount = amount
+        self.position = position
+
+    def to_list(self):
+        return [self.owner, self.token, self.amount, self.position]
+
+    def __str__(self):
+        return self.to_list().__str__()
+
+    def __repr__(self):
+        return self.to_list().__repr__()
+
+    def __eq__(self, other):
+        if hasattr(other, "to_list"):
+            return self.to_list() == other.to_list()
+        return (self.to_list() == other) or (self.to_list()[:3] == other)
 
 
 class PlasmaBlock(object):
@@ -91,6 +107,12 @@ class InFlightExit(object):
 
     def output_piggybacked(self, index):
         return self.input_piggybacked(index + 4)
+
+    def input_blocked(self, index):
+        return self.input_piggybacked(index + 8)
+
+    def output_blocked(self, index):
+        return self.input_blocked(index + 4)
 
 
 class TestingLanguage(object):
@@ -184,21 +206,27 @@ class TestingLanguage(object):
         bond = bond if bond is not None else self.root_chain.standardExitBond()
         self.root_chain.startStandardExit(output_id, output_tx.encoded, proof, value=bond, sender=key)
 
-    def challenge_standard_exit(self, output_id, spend_id):
+    def challenge_standard_exit(self, output_id, spend_id, input_index=None):
         spend_tx = self.child_chain.get_transaction(spend_id)
-        input_index = None
         signature = NULL_SIGNATURE
-        for i in range(0, 4):
-            input_index = i
-            signature = spend_tx.signatures[i]
-            if (spend_tx.inputs[i].identifier == output_id and signature != NULL_SIGNATURE):
-                break
-        self.root_chain.challengeStandardExit(output_id, spend_tx.encoded, input_index, signature)
+        if input_index is None:
+            for i in range(0, 4):
+                signature = spend_tx.signatures[i]
+                if (spend_tx.inputs[i].identifier == output_id and signature != NULL_SIGNATURE):
+                    input_index = i
+                    break
+        if input_index is None:
+            input_index = 3
+        output_tx = self.child_chain.get_transaction(output_id)
+        exit_id = self.root_chain.getStandardExitId(output_tx.hash, input_index)
+        self.root_chain.challengeStandardExit(exit_id, spend_tx.encoded, input_index, signature)
 
-    def start_in_flight_exit(self, tx_id, bond=None):
+    def start_in_flight_exit(self, tx_id, bond=None, sender=None):
+        if sender is None:
+            sender = self.accounts[0]
         (encoded_spend, encoded_inputs, proofs, signatures) = self.get_in_flight_exit_info(tx_id)
         bond = bond if bond is not None else self.root_chain.inFlightExitBond()
-        self.root_chain.startInFlightExit(encoded_spend, encoded_inputs, proofs, signatures, value=bond)
+        self.root_chain.startInFlightExit(encoded_spend, encoded_inputs, proofs, signatures, value=bond, sender=sender.key)
 
     def create_utxo(self, token=NULL_ADDRESS):
         class Utxo(object):
@@ -232,21 +260,21 @@ class TestingLanguage(object):
             int: Unique identifier of the exit.
         """
 
-        fee_exit_id = self.root_chain.nextFeeExit()
+        fee_exit_id = self.root_chain.getFeeExitId(self.root_chain.nextFeeExit())
         bond = bond if bond is not None else self.root_chain.standardExitBond()
         self.root_chain.startFeeExit(token, amount, value=bond, sender=operator.key)
         return fee_exit_id
 
-    def process_exits(self, token, utxo_id, count, **kwargs):
+    def process_exits(self, token, exit_id, count, **kwargs):
         """Finalizes exits that have completed the exit period.
 
         Args:
             token (address): Address of the token to be processed.
-            utxo_id (int): Identifier of the UTXO being exited.
+            exit_id (int): Identifier of an exit (optional, pass 0 to ignore the check)
             count (int): Maximum number of exits to be processed.
         """
 
-        self.root_chain.processExits(token, utxo_id, count, **kwargs)
+        self.root_chain.processExits(token, exit_id, count, **kwargs)
 
     def get_challenge_proof(self, utxo_id, spend_id):
         """Returns information required to submit a challenge.
@@ -291,12 +319,17 @@ class TestingLanguage(object):
             utxo_pos (int): position of utxo being exited
 
         Returns:
-            StandardExit: Formatted plasma exit information.
+            tuple: (owner (address), token (address), amount (int))
         """
 
-        exit_id = self.root_chain.getStandardExitId(utxo_pos)
+        exit_id = self.get_standard_exit_id(utxo_pos)
         exit_info = self.root_chain.exits(exit_id)
         return StandardExit(*exit_info)
+
+    def get_standard_exit_id(self, utxo_pos):
+        tx = self.child_chain.get_transaction(utxo_pos)
+        _, _, oindex = decode_utxo_id(utxo_pos)
+        return self.root_chain.getStandardExitId(tx.hash, oindex)
 
     def get_balance(self, account, token=NULL_ADDRESS):
         """Queries ETH or token balance of an account.
@@ -326,8 +359,9 @@ class TestingLanguage(object):
 
         self.ethtester.chain.head_state.timestamp += amount
 
-    def get_in_flight_exit_info(self, tx_id):
-        spend_tx = self.child_chain.get_transaction(tx_id)
+    def get_in_flight_exit_info(self, tx_id, spend_tx=None):
+        if spend_tx is None:
+            spend_tx = self.child_chain.get_transaction(tx_id)
         input_txs = []
         proofs = b''
         signatures = b''
@@ -342,6 +376,10 @@ class TestingLanguage(object):
             signatures += spend_tx.signatures[i]
         encoded_inputs = rlp.encode(input_txs, rlp.sedes.CountableList(Transaction, 4))
         return (spend_tx.encoded, encoded_inputs, proofs, signatures)
+
+    def get_in_flight_exit_id(self, tx_id):
+        spend_tx = self.child_chain.get_transaction(tx_id)
+        return self.root_chain.getInFlightExitId(spend_tx.encoded)
 
     def get_merkle_proof(self, tx_id):
         tx = self.child_chain.get_transaction(tx_id)

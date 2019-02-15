@@ -62,8 +62,10 @@ def test_metadata_is_part_of_the_proof(testlang):
 def test_get_input_id(plasma_core_test):
     input_id = (2, 2, 2)
     tx = Transaction(inputs=[input_id])
-    assert plasma_core_test.getInputId(tx.encoded, 0) == tx.inputs[0].identifier
-    assert plasma_core_test.getInputId(tx.encoded, 1) == tx.inputs[1].identifier
+    assert plasma_core_test.getInputUtxoPosition(tx.encoded, 0) == tx.inputs[0].identifier
+    assert plasma_core_test.getInputUtxoPosition(tx.encoded, 1) == 0
+    assert plasma_core_test.getInputUtxoPosition(tx.encoded, 2) == 0
+    assert plasma_core_test.getInputUtxoPosition(tx.encoded, 3) == 0
 
 
 def test_get_output_index(plasma_core_test):
@@ -73,9 +75,14 @@ def test_get_output_index(plasma_core_test):
 
 def test_get_tx_index(plasma_core_test):
     output_id = 1000020003
-    assert plasma_core_test.getTxindex(output_id) == 2
+    assert plasma_core_test.getTxIndex(output_id) == 2
 
 
 def test_get_blknum(plasma_core_test):
     output_id = 1000020003
     assert plasma_core_test.getBlknum(output_id) == 1
+
+
+def test_get_txpos_index(plasma_core_test):
+    output_id = 1000020003
+    assert plasma_core_test.getTxPos(output_id) == 100002

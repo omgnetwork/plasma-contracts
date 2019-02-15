@@ -1,11 +1,12 @@
 import pytest
 from ethereum.tools.tester import TransactionFailed
 from plasma_core.constants import NULL_ADDRESS, NULL_ADDRESS_HEX, MIN_EXIT_PERIOD
+from plasma_core.utils.transactions import decode_utxo_id, encode_utxo_id
 
 
 def test_start_standard_exit_should_succeed(testlang, utxo):
     testlang.start_standard_exit(utxo.spend_id, utxo.owner.key)
-    assert testlang.root_chain.exits(utxo.spend_id << 1) == [utxo.owner.address, NULL_ADDRESS_HEX, utxo.amount]
+    assert testlang.get_standard_exit(utxo.spend_id) == [utxo.owner.address, NULL_ADDRESS_HEX, utxo.amount]
 
 
 @pytest.mark.parametrize("num_outputs", [1, 2, 3, 4])
@@ -20,7 +21,7 @@ def test_start_standard_exit_multiple_outputs_should_succeed(testlang, num_outpu
     output_index = num_outputs - 1
     output_id = spend_id + output_index
     testlang.start_standard_exit(output_id, owners[output_index].key)
-    assert testlang.root_chain.exits(output_id << 1) == [owners[output_index].address, NULL_ADDRESS_HEX, 1]
+    assert testlang.get_standard_exit(output_id) == [owners[output_index].address, NULL_ADDRESS_HEX, 1]
 
 
 def test_start_standard_exit_twice_should_fail(testlang, utxo):
@@ -74,7 +75,8 @@ def test_start_standard_exit_old_utxo_has_required_exit_period_to_start_exit(tes
     testlang.start_standard_exit(utxo.spend_id, utxo.owner.key)
 
     [_, exitId, _] = testlang.root_chain.getNextExit(NULL_ADDRESS)
-    assert exitId >> 1 == utxo.spend_id
+    [_, _, _, position] = testlang.root_chain.exits(exitId)
+    assert position == utxo.spend_id
 
 
 def test_start_standard_exit_on_finalized_exit_should_fail(testlang, utxo):
@@ -82,14 +84,13 @@ def test_start_standard_exit_on_finalized_exit_should_fail(testlang, utxo):
     minimal_required_period = MIN_EXIT_PERIOD  # see tesuji blockchain design
     testlang.start_standard_exit(utxo.spend_id, utxo.owner.key)
     testlang.forward_timestamp(required_exit_period + minimal_required_period)
-    testlang.process_exits(NULL_ADDRESS, utxo.spend_id, 100)
+    testlang.process_exits(NULL_ADDRESS, 0, 100)
 
     with pytest.raises(TransactionFailed):
         testlang.start_standard_exit(utxo.spend_id, utxo.owner.key)
 
 
 def test_start_standard_exit_wrong_oindex_should_fail(testlang):
-    from plasma_core.utils.transactions import decode_utxo_id, encode_utxo_id
     from plasma_core.transaction import Transaction
     alice, bob, alice_money, bob_money = testlang.accounts[0], testlang.accounts[1], 10, 90
 
@@ -122,4 +123,55 @@ def test_start_standard_exit_from_deposit_must_be_exitable_in_minimal_finalizati
     testlang.forward_timestamp(required_exit_period + 1)
     testlang.process_exits(NULL_ADDRESS, 0, 1)
 
-    assert testlang.root_chain.exits(deposit_id << 1) == [NULL_ADDRESS_HEX, NULL_ADDRESS_HEX, amount]
+    assert testlang.get_standard_exit(deposit_id) == [NULL_ADDRESS_HEX, NULL_ADDRESS_HEX, amount]
+
+
+@pytest.mark.parametrize("num_outputs", [1, 2, 3, 4])
+def test_start_standard_exit_on_piggyback_in_flight_exit_valid_output_owner_should_fail(testlang, num_outputs):
+    # exit cross-spend test, case 9
+    owner_1, amount = testlang.accounts[0], 100
+    deposit_id = testlang.deposit(owner_1, amount)
+    outputs = []
+    for i in range(0, num_outputs):
+        outputs.append((testlang.accounts[i].address, NULL_ADDRESS, 1))
+    spend_id = testlang.spend_utxo([deposit_id], [owner_1.key], outputs)
+
+    testlang.start_in_flight_exit(spend_id)
+
+    output_index = num_outputs - 1
+    testlang.piggyback_in_flight_exit_output(spend_id, output_index, testlang.accounts[output_index].key)
+
+    in_flight_exit = testlang.get_in_flight_exit(spend_id)
+    assert in_flight_exit.output_piggybacked(output_index)
+
+    blknum, txindex, _ = decode_utxo_id(spend_id)
+    output_id = encode_utxo_id(blknum, txindex, output_index)
+
+    with pytest.raises(TransactionFailed):
+        testlang.start_standard_exit(output_id, testlang.accounts[output_index].key)
+
+
+@pytest.mark.parametrize("num_outputs", [1, 2, 3, 4])
+def test_start_standard_exit_on_in_flight_exit_output_should_block_future_piggybacks(testlang, num_outputs):
+    # exit cross-spend test, case 7
+    owner_1, amount = testlang.accounts[0], 100
+    deposit_id = testlang.deposit(owner_1, amount)
+    outputs = []
+    for i in range(0, num_outputs):
+        outputs.append((testlang.accounts[i].address, NULL_ADDRESS, 1))
+    spend_id = testlang.spend_utxo([deposit_id], [owner_1.key], outputs)
+
+    testlang.start_in_flight_exit(spend_id)
+
+    output_index = num_outputs - 1
+
+    blknum, txindex, _ = decode_utxo_id(spend_id)
+    output_id = encode_utxo_id(blknum, txindex, output_index)
+    testlang.start_standard_exit(output_id, key=testlang.accounts[output_index].key)
+
+    with pytest.raises(TransactionFailed):
+        testlang.piggyback_in_flight_exit_output(spend_id, output_index, testlang.accounts[output_index].key)
+
+    in_flight_exit = testlang.get_in_flight_exit(spend_id)
+    assert not in_flight_exit.output_piggybacked(output_index)
+    assert in_flight_exit.output_blocked(output_index)
