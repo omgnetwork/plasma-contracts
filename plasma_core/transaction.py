@@ -4,6 +4,7 @@ from ethereum import utils
 from plasma_core.utils.signatures import sign, get_signer
 from plasma_core.utils.transactions import encode_utxo_id
 from plasma_core.constants import NULL_SIGNATURE, NULL_ADDRESS
+from rlp.exceptions import (SerializationError, DeserializationError)
 
 
 def pad_list(to_pad, value, required_length):
@@ -56,7 +57,7 @@ class Transaction(rlp.Serializable):
     def __init__(self,
                  inputs=[DEFAULT_INPUT] * NUM_TXOS,
                  outputs=[DEFAULT_OUTPUT] * NUM_TXOS,
-                 metadata="",
+                 metadata=None,
                  signatures=[NULL_SIGNATURE] * NUM_TXOS):
         assert all(len(o) == 3 for o in outputs)
         padded_inputs = pad_list(inputs, self.DEFAULT_INPUT, self.NUM_TXOS)
@@ -86,3 +87,17 @@ class Transaction(rlp.Serializable):
 
     def sign(self, index, key):
         self.signatures[index] = sign(self.hash, key)
+
+    @staticmethod
+    def serialize(obj):
+        try:
+            cls = Transaction.exclude(['metadata']) if obj.metadata is None else Transaction
+            field_value = [getattr(obj, field) for field, _ in cls.fields]
+            ret = cls.get_sedes().serialize(field_value)
+            return ret
+        except Exception as e:
+            raise SerializationError(e.format_exc, obj)
+
+    @staticmethod
+    def deserialize(obj):
+        raise DeserializationError("not yet implemented", obj)

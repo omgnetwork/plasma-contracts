@@ -1,6 +1,8 @@
 import pytest
+from plasma_core.constants import NULL_ADDRESS
 from ethereum.tools.tester import TransactionFailed
 from plasma_core.transaction import Transaction
+from plasma_core.utils.transactions import decode_utxo_id
 
 
 @pytest.fixture
@@ -34,12 +36,27 @@ def test_get_output(plasma_core_test):
 def test_decode_mallability(testlang, plasma_core_test):
     owner, amount = testlang.accounts[0], 100
     null = '0x0000000000000000000000000000000000000000'
-    tx = Transaction(outputs=[(owner.address, null, amount)])
+    tx = Transaction(outputs=[(owner.address, null, amount)], metadata="")
     import rlp
     encoded_with_extra_field = rlp.encode([tx.inputs, tx.outputs, tx.metadata, 0])
 
     with pytest.raises(TransactionFailed):
         plasma_core_test.getOutput(encoded_with_extra_field, 0)
+
+
+def test_metadata_is_part_of_the_proof(testlang):
+    owner, amount = testlang.accounts[0], 100
+    deposit_id = testlang.deposit(owner, amount)
+
+    input_ids = [deposit_id]
+    keys = [owner.key]
+    outputs = [(owner.address, NULL_ADDRESS, amount)]
+    spend_id = testlang.spend_utxo(input_ids, keys, outputs, "metadata info")
+
+    inputs = [decode_utxo_id(input_id) for input_id in input_ids]
+    bad_spend_tx = Transaction(inputs=inputs, outputs=outputs, metadata="other information")
+    with pytest.raises(TransactionFailed):
+        testlang.start_standard_exit_with_tx_body(spend_id, bad_spend_tx, owner.key)
 
 
 def test_get_input_id(plasma_core_test):

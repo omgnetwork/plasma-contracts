@@ -56,7 +56,11 @@ library PlasmaCore {
         returns (Transaction)
     {
         RLP.RLPItem[] memory txList = _tx.toRLPItem().toList();
-        require(txList.length == 3);
+        require(txList.length == 2 || txList.length == 3);
+        if (txList.length == 3){
+           //ensuring that metadata isn't larger than 32 bytes
+           txList[2].toBytes32();
+        }
         RLP.RLPItem[] memory inputs = txList[0].toList();
         RLP.RLPItem[] memory outputs = txList[1].toList();
 
