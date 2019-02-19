@@ -280,7 +280,7 @@ def test_start_in_flight_exit_with_finalized_standard_exits_from_inputs_flags_ex
     challenger = testlang.accounts[5]
     testlang.start_in_flight_exit(spend_id, sender=challenger)
     exit_id = testlang.get_in_flight_exit_id(spend_id)
-    [ife_start_timestamp, _, _, _] = testlang.root_chain.inFlightExits(exit_id)
+    [ife_start_timestamp, _, _, _, _] = testlang.root_chain.inFlightExits(exit_id)
 
     # IFE is marked as SpentInput
     assert testlang.root_chain.flagged(ife_start_timestamp)

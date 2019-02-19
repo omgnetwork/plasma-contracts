@@ -73,6 +73,7 @@ contract RootChain {
 
     struct InFlightExit {
         uint256 exitStartTimestamp;
+        uint256 exitPriority;
         uint256 exitMap;
         PlasmaCore.TransactionOutput[MAX_INPUTS] inputs;
         PlasmaCore.TransactionOutput[MAX_INPUTS] outputs;
@@ -189,25 +190,25 @@ contract RootChain {
     function init(uint256 _minExitPeriod)
         public
     {
-      _initOperator();
+        _initOperator();
 
-      minExitPeriod = _minExitPeriod;
+        minExitPeriod = _minExitPeriod;
 
-      nextChildBlock = CHILD_BLOCK_INTERVAL;
-      nextDepositBlock = 1;
+        nextChildBlock = CHILD_BLOCK_INTERVAL;
+        nextDepositBlock = 1;
 
-      nextFeeExit = 1;
+        nextFeeExit = 1;
 
-      // Support only ETH on deployment; other tokens need
-      // to be added explicitly.
-      exitsQueues[address(0)] = PriorityQueueFactory.deploy(this);
+        // Support only ETH on deployment; other tokens need
+        // to be added explicitly.
+        exitsQueues[address(0)] = PriorityQueueFactory.deploy(this);
 
-      // Pre-compute some hashes to save gas later.
-      bytes32 zeroHash = keccak256(abi.encodePacked(uint256(0)));
-      for (uint i = 0; i < 16; i++) {
-          zeroHashes[i] = zeroHash;
-          zeroHash = keccak256(abi.encodePacked(zeroHash, zeroHash));
-      }
+        // Pre-compute some hashes to save gas later.
+        bytes32 zeroHash = keccak256(abi.encodePacked(uint256(0)));
+        for (uint i = 0; i < 16; i++) {
+            zeroHashes[i] = zeroHash;
+            zeroHash = keccak256(abi.encodePacked(zeroHash, zeroHash));
+        }
     }
 
     // @dev Allows anyone to add new token to Plasma chain
@@ -362,15 +363,11 @@ contract RootChain {
             inFlightExit.exitMap = inFlightExit.exitMap.setBit(oindex + MAX_INPUTS + MAX_INPUTS*2);
         }
 
-        // Make sure queue for this token exists.
-        require(hasToken(output.token));
-
         // Determine the exit's priority.
         uint256 exitPriority = getStandardExitPriority(exitId, _utxoPos);
 
-        // Insert the exit into the queue and update the exit mapping.
-        PriorityQueue queue = PriorityQueue(exitsQueues[output.token]);
-        queue.insert(exitPriority);
+        // Enqueue the exit into the queue and update the exit mapping.
+        _enqueueExit(output.token, exitPriority);
         exits[exitId] = Exit({
             owner: output.owner,
             token: output.token,
@@ -499,20 +496,22 @@ contract RootChain {
 
             ++inputsCount;
 
-            (inFlightExit.inputs[i], inputTxoPos, finalized) = _getInputInfo(_inFlightTx, splitInputTxs[i].toBytes(), _inputTxsInclusionProofs, _inFlightTxSigs.sliceSignature(i), i);
+            (inFlightExit.inputs[i], inputTxoPos, finalized) = _getInputInfo(
+                _inFlightTx, splitInputTxs[i].toBytes(), _inputTxsInclusionProofs, _inFlightTxSigs.sliceSignature(i), i
+            );
 
             youngestInputTxoPos = Math.max(youngestInputTxoPos, inputTxoPos);
             any_finalized = any_finalized || finalized;
         }
 
         // Validate sums of inputs against sum of outputs token-wise
-        _validateInputsOutputsSumUp(inFlightExit, _inFlightTx, inputsCount);
+        _validateInputsOutputsSumUp(inFlightExit, _inFlightTx);
 
-        // Determine when the exit can be processed.
-        _enqueueInFlightExit(youngestInputTxoPos, _inFlightTx);
         // Update the exit mapping.
         inFlightExit.bondOwner = msg.sender;
         inFlightExit.exitStartTimestamp = block.timestamp;
+        inFlightExit.exitPriority = getInFlightExitPriority(_inFlightTx, youngestInputTxoPos);
+
         // If any of the inputs were finalized via standard exit, consider it non-canonical
         // and flag as not taking part in further canonicity game.
         if (any_finalized) {
@@ -522,19 +521,12 @@ contract RootChain {
         emit InFlightExitStarted(msg.sender, keccak256(_inFlightTx));
     }
 
-    function _enqueueInFlightExit(uint256 _txoPos, bytes _tx)
-        private
-    {
-        uint256 exitPriority = getInFlightExitPriority(_tx, _txoPos);
-
-        // Insert the exit into the queue.
-        // TODO: in-flight exits for tokens other than ETH
-        _enqueueExit(address(0), exitPriority);
-    }
-
     function _enqueueExit(address _token, uint256 _exitPriority)
         private
     {
+        // Make sure queue for this token exists.
+        require(hasToken(_token));
+
         PriorityQueue queue = PriorityQueue(exitsQueues[_token]);
         queue.insert(_exitPriority);
     }
@@ -581,7 +573,31 @@ contract RootChain {
         // Set the output as piggybacked.
         inFlightExit.exitMap = inFlightExit.exitMap.setBit(_outputIndex);
 
+        // Enqueue the exit in a corresponding queue, if not already enqueued.
+        if (_shouldEnqueueInFlightExit(inFlightExit, output.token, _outputIndex)) {
+            _enqueueExit(output.token, inFlightExit.exitPriority);
+        }
+
         emit InFlightExitPiggybacked(msg.sender, txhash, _outputIndex);
+    }
+
+    function _shouldEnqueueInFlightExit(InFlightExit memory _inFlightExit, address _token, uint8 _outputIndex)
+        internal
+        pure
+        returns (bool)
+    {
+
+        for (uint8 i = 0; i < MAX_INPUTS; ++i){
+            if (
+                (i != _outputIndex && _inFlightExit.exitMap.bitSet(i) && _inFlightExit.inputs[i].token == _token)
+                ||
+                (i + MAX_INPUTS != _outputIndex && _inFlightExit.exitMap.bitSet(i + MAX_INPUTS) && _inFlightExit.outputs[i].token == _token)
+            ){
+                return false;
+            }
+        }
+
+        return true;
     }
 
 
@@ -873,7 +889,8 @@ contract RootChain {
     {
         uint64 exitableTimestamp = uint64(priority >> 214);
         bool inFlight = priority.getBit(152) == 1;
-        uint192 exitId = uint192((priority << 96) >> 96); // get 160 least significant bits
+        uint192 exitId = uint192((priority << 96) >> 96);
+        // get 160 least significant bits
         return (exitableTimestamp, exitId, inFlight);
     }
 
@@ -1094,7 +1111,7 @@ contract RootChain {
      * @param _tx RLP encoded transaction.
      * @return A tuple containing the number of inputs and the sum of the outputs of tx.
      */
-    function _validateInputsOutputsSumUp(InFlightExit storage _inFlightExit, bytes _tx, uint8 inputsCount)
+    function _validateInputsOutputsSumUp(InFlightExit storage _inFlightExit, bytes _tx)
         internal
         view
     {
@@ -1106,9 +1123,10 @@ contract RootChain {
 
         uint8 i;
         // Loop through each input.
-        for (i = 0; i < inputsCount; ++i){
+        for (i = 0; i < MAX_INPUTS; ++i) {
             PlasmaCore.TransactionOutput memory input = _inFlightExit.inputs[i];
             (tokenSum, allocatedSums) = _getInputSumByToken(sums, input.token, allocatedSums);
+
             tokenSum.amount += input.amount;
         }
 
@@ -1117,7 +1135,6 @@ contract RootChain {
             (tokenSum, allocatedSums) = _getInputSumByToken(sums, output.token, allocatedSums);
 
             require(tokenSum.amount >= output.amount);
-
             tokenSum.amount -= output.amount;
         }
 
@@ -1128,19 +1145,19 @@ contract RootChain {
         pure
         returns (InputSum, uint8)
     {
-        for (uint8 i = 0; i < allocated; ++i){
+        for (uint8 i = 0; i < allocated; ++i) {
 
-            if (sums[i].token == token){
+            if (sums[i].token == token) {
                 return (sums[i], allocated);
             }
         }
 
-        if (allocated < MAX_INPUTS){
+        if (allocated < MAX_INPUTS) {
             sums[allocated].token = token;
             return (sums[allocated], allocated + 1);
         }
 
-        return (InputSum(0, 0), MAX_INPUTS);
+        return (InputSum(address(0), 0), MAX_INPUTS);
     }
 
 
@@ -1246,6 +1263,7 @@ contract RootChain {
 
         // Delete everything but the exitmap to block exits from already processed outputs.
         delete _inFlightExit.exitStartTimestamp;
+        delete _inFlightExit.exitPriority;
         delete _inFlightExit.inputs;
         delete _inFlightExit.outputs;
         delete _inFlightExit.bondOwner;
@@ -1257,7 +1275,7 @@ contract RootChain {
      */
     function _initOperator()
     {
-      require(operator == address(0));
-      operator = msg.sender;
+        require(operator == address(0));
+        operator = msg.sender;
     }
 }

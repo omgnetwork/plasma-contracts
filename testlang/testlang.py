@@ -77,10 +77,13 @@ class PlasmaBlock(object):
 
 class InFlightExit(object):
 
-    def __init__(self, root_chain, in_flight_tx, exit_start_timestamp, exit_map, bond_owner, oldest_competitor):
+    def __init__(self, root_chain, in_flight_tx, exit_start_timestamp, exit_priority, exit_map, bond_owner,
+                 oldest_competitor):
+
         self.root_chain = root_chain
         self.in_flight_tx = in_flight_tx
         self.exit_start_timestamp = exit_start_timestamp
+        self.exit_priority = exit_priority
         self.exit_map = exit_map
         self.bond_owner = bond_owner
         self.oldest_competitor = oldest_competitor
@@ -223,7 +226,7 @@ class TestingLanguage(object):
         if input_index is None:
             for i in range(0, 4):
                 signature = spend_tx.signatures[i]
-                if (spend_tx.inputs[i].identifier == output_id and signature != NULL_SIGNATURE):
+                if spend_tx.inputs[i].identifier == output_id and signature != NULL_SIGNATURE:
                     input_index = i
                     break
         if input_index is None:
