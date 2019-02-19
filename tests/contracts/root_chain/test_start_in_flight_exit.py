@@ -79,9 +79,10 @@ def test_start_in_flight_exit_with_ERC20_token_and_Eth_should_succeed(ethtester,
     deposit_eth_id = testlang.deposit(owner, 100)
     deposit_token_id = testlang.deposit_token(owner, token, 110)
     spend_id = testlang.spend_utxo(
-            [deposit_eth_id, deposit_token_id], 
-            [owner.key, owner.key], 
-            [(owner.address, NULL_ADDRESS, 100), (owner.address, token.address, 110)])
+        [deposit_eth_id, deposit_token_id],
+        [owner.key, owner.key],
+        [(owner.address, NULL_ADDRESS, 100), (owner.address, token.address, 110)]
+    )
 
     testlang.start_in_flight_exit(spend_id)
 
@@ -108,6 +109,7 @@ def test_start_in_flight_exit_with_ERC20_token_and_Eth_should_succeed(ethtester,
         input_info = in_flight_exit.get_input(i)
         assert input_info.owner == address_to_hex(NULL_ADDRESS)
         assert input_info.amount == 0
+
 
 def test_start_in_flight_exit_with_output_with_a_token_not_from_outputs_should_fail(testlang, token):
     owner, amount = testlang.accounts[0], 100
@@ -192,7 +194,8 @@ def test_start_in_flight_exit_twice_should_fail(testlang):
 def test_start_in_flight_exit_twice_different_piggybacks_should_succeed(testlang):
     owner, amount = testlang.accounts[0], 100
     deposit_id = testlang.deposit(owner, amount)
-    spend_id = testlang.spend_utxo([deposit_id], [owner.key], [(owner.address, NULL_ADDRESS, 50), (owner.address, NULL_ADDRESS, 50)])
+    spend_id = testlang.spend_utxo([deposit_id], [owner.key],
+                                   [(owner.address, NULL_ADDRESS, 50), (owner.address, NULL_ADDRESS, 50)])
 
     # First time should succeed
     testlang.start_in_flight_exit(spend_id)
@@ -247,7 +250,8 @@ def test_start_in_flight_exit_cancelling_standard_exits_from_inputs(testlang, nu
     challenger = testlang.accounts[5]
     balance = testlang.get_balance(challenger)
     testlang.start_in_flight_exit(spend_id, sender=challenger)
-    assert testlang.get_balance(challenger) == balance + num_inputs * testlang.root_chain.standardExitBond() - testlang.root_chain.inFlightExitBond()
+    assert testlang.get_balance(
+        challenger) == balance + num_inputs * testlang.root_chain.standardExitBond() - testlang.root_chain.inFlightExitBond()
 
     # Standard exits are correctly challenged
     for i in range(0, num_inputs):
@@ -284,6 +288,5 @@ def test_start_in_flight_exit_with_finalized_standard_exits_from_inputs_flags_ex
 
     # IFE is marked as SpentInput
     assert testlang.root_chain.flagged(ife_start_timestamp)
-
 
 # TODO: add test_start_in_flight_exit_with_holes_in_inputs_should_fail

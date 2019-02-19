@@ -311,7 +311,7 @@ class TestingLanguage(object):
         block = self.child_chain.blocks[blknum]
         proof = block.merklized_transaction_set.create_membership_proof(spend_tx.merkle_hash)
         sigs = spend_tx.sig1 + spend_tx.sig2
-        return (input_index, spend_tx.encoded, proof, sigs)
+        return input_index, spend_tx.encoded, proof, sigs
 
     def get_plasma_block(self, blknum):
         """Queries a plasma block by its number.
@@ -382,14 +382,14 @@ class TestingLanguage(object):
         for i in range(0, len(spend_tx.inputs)):
             tx_input = spend_tx.inputs[i]
             (blknum, _, _) = decode_utxo_id(tx_input.identifier)
-            if (blknum == 0):
+            if blknum == 0:
                 continue
             input_tx = self.child_chain.get_transaction(tx_input.identifier)
             input_txs.append(input_tx)
             proofs += self.get_merkle_proof(tx_input.identifier)
             signatures += spend_tx.signatures[i]
         encoded_inputs = rlp.encode(input_txs, rlp.sedes.CountableList(Transaction, 4))
-        return (spend_tx.encoded, encoded_inputs, proofs, signatures)
+        return spend_tx.encoded, encoded_inputs, proofs, signatures
 
     def get_in_flight_exit_id(self, tx_id):
         spend_tx = self.child_chain.get_transaction(tx_id)
@@ -410,19 +410,21 @@ class TestingLanguage(object):
     def piggyback_in_flight_exit_output(self, tx_id, output_index, key, bond=None):
         return self.piggyback_in_flight_exit_input(tx_id, output_index + 4, key, bond)
 
-    def find_shared_input(self, tx_a, tx_b):
+    @staticmethod
+    def find_shared_input(tx_a, tx_b):
         tx_a_input_index = 0
         tx_b_input_index = 0
         for i in range(0, 4):
             for j in range(0, 4):
                 tx_a_input = tx_a.inputs[i].identifier
                 tx_b_input = tx_b.inputs[j].identifier
-                if (tx_a_input == tx_b_input and tx_a_input != 0):
+                if tx_a_input == tx_b_input and tx_a_input != 0:
                     tx_a_input_index = i
                     tx_b_input_index = j
-        return (tx_a_input_index, tx_b_input_index)
+        return tx_a_input_index, tx_b_input_index
 
-    def find_input_index(self, output_id, tx_b):
+    @staticmethod
+    def find_input_index(output_id, tx_b):
         tx_b_input_index = 0
         for i in range(0, 4):
             tx_b_input = tx_b.inputs[i].identifier
