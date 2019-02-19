@@ -806,7 +806,7 @@ contract RootChain {
             // Check for the in-flight exit flag.
             if (inFlight) {
                 // handle ERC20 transfers for InFlight exits
-                _processInFlightExit(inFlightExits[exitId], exitId);
+                _processInFlightExit(inFlightExits[exitId], exitId, _token);
                 // think of useful event scheme for in-flight outputs finalization
             } else {
                 _processStandardExit(exits[exitId]);
@@ -1223,11 +1223,12 @@ contract RootChain {
     }
 
     /**
-     * @dev Processes a in-flight exit.
+     * @dev Processes an in-flight exit.
      * @param _inFlightExit Exit to process.
      * @param _inFlightExitId Id of the exit process
+     * @param _token Token from which exits are to be processed
      */
-    function _processInFlightExit(InFlightExit storage _inFlightExit, uint192 _inFlightExitId)
+    function _processInFlightExit(InFlightExit storage _inFlightExit, uint192 _inFlightExitId, address _token)
         internal
     {
         // Determine whether the inputs or the outputs are the exitable set.
@@ -1235,29 +1236,61 @@ contract RootChain {
 
         // Process the inputs or outputs.
         PlasmaCore.TransactionOutput memory output;
-        uint256 transferAmount;
+        uint256 ethTransferAmount;
         for (uint8 i = 0; i < 8; i++) {
-            // Check if the "to exit" bit is not set or if the "already exited" bit is set.
-            if (!_inFlightExit.exitMap.bitSet(i) || _inFlightExit.exitMap.bitSet(i + 8)) {
-                continue;
-            }
-            _inFlightExit.exitMap = _inFlightExit.exitMap.clearBit(i).setBit(i + 8);
-
             if (i < MAX_INPUTS) {
                 output = _inFlightExit.inputs[i];
             } else {
                 output = _inFlightExit.outputs[i - MAX_INPUTS];
             }
 
+            // Check if the output's token, the "to exit" bit is not set or if the "already exited" bit is set.
+            if ( output.token != _token
+                || !_inFlightExit.exitMap.bitSet(i)
+                || _inFlightExit.exitMap.bitSet(i + 8)
+            ) {
+                continue;
+            }
+            _inFlightExit.exitMap = _inFlightExit.exitMap.clearBit(i).setBit(i + 8);
+
+
             // Pay out any unchallenged and exitable inputs or outputs, refund the rest.
-            transferAmount = piggybackBond;
+            ethTransferAmount = piggybackBond;
             if ((i < MAX_INPUTS && inputsExitable) || (i >= MAX_INPUTS && !inputsExitable)) {
-                transferAmount += output.amount;
+
+                if (_token == address(0)){
+                    ethTransferAmount += output.amount;
+                }
+                else{
+                    require(ERC20(_token).transfer(output.owner, output.amount));
+                }
                 emit InFlightExitFinalized(_inFlightExitId, i);
             }
-            output.owner.transfer(transferAmount);
+            output.owner.transfer(ethTransferAmount);
         }
 
+        if (_shouldClearInFlightExit(_inFlightExit)){
+            _clearInFlightExit(_inFlightExit);
+        }
+
+    }
+
+    function _shouldClearInFlightExit(InFlightExit memory _inFlightExit)
+        internal
+        returns (bool)
+    {
+        for (uint8 i  = 0; i < MAX_INPUTS * 2; ++i){
+            // Check if any output is still piggybacked and awaits processing
+            if (_inFlightExit.exitMap.bitSet(i)){
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function _clearInFlightExit(InFlightExit storage _inFlightExit)
+        internal
+    {
         // Refund the current bond owner.
         _inFlightExit.bondOwner.transfer(inFlightExitBond);
 
