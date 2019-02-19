@@ -328,3 +328,4 @@ def test_finalize_exits_priority_for_in_flight_exits_corresponds_to_the_age_of_y
 
 
 # TODO: add test_process_exits_in_flight_for_ERC20_should_succeed
+# TODO: add test_all_outputs_should_have_the_same_priority

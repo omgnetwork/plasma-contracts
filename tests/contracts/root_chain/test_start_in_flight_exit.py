@@ -39,19 +39,110 @@ def test_start_in_flight_exit_should_succeed(ethtester, testlang, num_inputs):
         assert input_info.amount == 0
 
 
-# TODO: the two following cases could probably be done by parametrisation of the test above
-# TODO: add test_start_in_flight_exit_with_ERC20_token_should_succeed
-# TODO: add test_start_in_flight_exit_with_ERC20_tokens_should_succeed
+@pytest.mark.parametrize("num_inputs", [1, 2, 3, 4])
+def test_start_in_flight_exit_with_ERC20_tokens_should_succeed(ethtester, testlang, token, num_inputs):
+    amount = 100
+    owners = []
+    deposit_ids = []
+    for i in range(0, num_inputs):
+        owners.append(testlang.accounts[i])
+        deposit_ids.append(testlang.deposit_token(owners[i], token, amount))
 
-# TODO: add test_start_in_flight_exit_with_holes_in_inputs_should_fail
+    owner_keys = [owner.key for owner in owners]
+    spend_id = testlang.spend_utxo(deposit_ids, owner_keys)
 
-# TODO: add test_start_in_flight_exit_with_output_with_a_token_not_from_inputs_should_fail
+    testlang.start_in_flight_exit(spend_id)
 
-# TODO: add test_invalid_inputs_vs_outputs_sums_should_fail
+    # Exit was created
+    in_flight_exit = testlang.get_in_flight_exit(spend_id)
+    assert in_flight_exit.exit_start_timestamp == ethtester.chain.head_state.timestamp
+    assert in_flight_exit.exit_map == 0
+    assert in_flight_exit.bond_owner == owners[0].address
+    assert in_flight_exit.oldest_competitor == 0
 
-# TODO: add test_start_in_flight_exit_invalid_signature_should_fail
+    # Inputs are correctly set
+    for i in range(0, num_inputs):
+        input_info = in_flight_exit.get_input(i)
+        assert input_info.owner == owners[i].address
+        assert input_info.token == token.address
+        assert input_info.amount == amount
 
-# TODO: add test_all_outputs_should_have_the_same_priority
+    # Remaining inputs are still unset
+    for i in range(num_inputs, 4):
+        input_info = in_flight_exit.get_input(i)
+        assert input_info.owner == address_to_hex(NULL_ADDRESS)
+        assert input_info.amount == 0
+
+
+def test_start_in_flight_exit_with_ERC20_token_and_Eth_should_succeed(ethtester, testlang, token):
+    owner = testlang.accounts[0]
+    deposit_eth_id = testlang.deposit(owner, 100)
+    deposit_token_id = testlang.deposit_token(owner, token, 110)
+    spend_id = testlang.spend_utxo(
+            [deposit_eth_id, deposit_token_id], 
+            [owner.key, owner.key], 
+            [(owner.address, NULL_ADDRESS, 100), (owner.address, token.address, 110)])
+
+    testlang.start_in_flight_exit(spend_id)
+
+    # Exit was created
+    in_flight_exit = testlang.get_in_flight_exit(spend_id)
+    assert in_flight_exit.exit_start_timestamp == ethtester.chain.head_state.timestamp
+    assert in_flight_exit.exit_map == 0
+    assert in_flight_exit.bond_owner == owner.address
+    assert in_flight_exit.oldest_competitor == 0
+
+    # Inputs are correctly set
+    input_info = in_flight_exit.get_input(0)
+    assert input_info.owner == owner.address
+    assert input_info.token == NULL_ADDRESS
+    assert input_info.amount == 100
+
+    input_info = in_flight_exit.get_input(1)
+    assert input_info.owner == owner.address
+    assert input_info.token == token.address
+    assert input_info.amount == 110
+
+    # Remaining inputs are still unset
+    for i in range(2, 4):
+        input_info = in_flight_exit.get_input(i)
+        assert input_info.owner == address_to_hex(NULL_ADDRESS)
+        assert input_info.amount == 0
+
+def test_start_in_flight_exit_with_output_with_a_token_not_from_outputs_should_fail(testlang, token):
+    owner, amount = testlang.accounts[0], 100
+    deposit_id = testlang.deposit_token(owner, token, amount)
+    spend_id = testlang.spend_utxo([deposit_id], [owner.key], [(owner.address, NULL_ADDRESS, 50)])
+
+    with pytest.raises(TransactionFailed):
+        testlang.start_in_flight_exit(spend_id)
+
+
+def test_start_in_flight_exit_with_output_with_a_token_not_from_inputs_should_fail(testlang, token):
+    owner, amount = testlang.accounts[0], 100
+    deposit_id = testlang.deposit(owner, amount)
+    spend_id = testlang.spend_utxo([deposit_id], [owner.key], [(owner.address, token.address, 100)])
+
+    with pytest.raises(TransactionFailed):
+        testlang.start_in_flight_exit(spend_id)
+
+
+def test_start_in_flight_exit_with_spend_more_than_deposit_should_fail(testlang, token):
+    owner, amount = testlang.accounts[0], 100
+    deposit_id = testlang.deposit_token(owner, token, amount)
+    spend_id = testlang.spend_utxo([deposit_id], [owner.key], [(owner.address, token.address, 101)], force_invalid=True)
+
+    with pytest.raises(TransactionFailed):
+        testlang.start_in_flight_exit(spend_id)
+
+
+def test_start_in_flight_exit_invalid_signature_should_fail(testlang, token):
+    owner_1, owner_2, amount = testlang.accounts[0], testlang.accounts[1], 100
+    deposit_id = testlang.deposit_token(owner_1, token, amount)
+    spend_id = testlang.spend_utxo([deposit_id], [owner_2.key], force_invalid=True)
+
+    with pytest.raises(TransactionFailed):
+        testlang.start_in_flight_exit(spend_id)
 
 
 def test_start_in_flight_exit_invalid_bond_should_fail(testlang):
@@ -133,17 +224,6 @@ def test_start_in_flight_exit_invalid_outputs_should_fail(testlang):
         testlang.start_in_flight_exit(spend_id)
 
 
-def test_start_in_flight_exit_with_ERC20_tokens_should_fail(testlang, token):
-    # this is a temporary limitation, will be fixed later
-    owner, amount = testlang.accounts[0], 100
-    deposit_eth_id = testlang.deposit(owner, amount)
-    deposit_token_id = testlang.deposit_token(owner, token, amount)
-    spend_id = testlang.spend_utxo([deposit_eth_id, deposit_token_id], [owner.key, owner.key], [(owner.address, NULL_ADDRESS, 100), (owner.address, token.address, 50)])
-
-    with pytest.raises(TransactionFailed):
-        testlang.start_in_flight_exit(spend_id)
-
-
 @pytest.mark.parametrize("num_inputs", [1, 2, 3, 4])
 def test_start_in_flight_exit_cancelling_standard_exits_from_inputs(testlang, num_inputs):
     # exit cross-spend test, case 1
@@ -204,3 +284,6 @@ def test_start_in_flight_exit_with_finalized_standard_exits_from_inputs_flags_ex
 
     # IFE is marked as SpentInput
     assert testlang.root_chain.flagged(ife_start_timestamp)
+
+
+# TODO: add test_start_in_flight_exit_with_holes_in_inputs_should_fail
