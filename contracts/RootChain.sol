@@ -545,15 +545,19 @@ contract RootChain {
         onlyWithValue(piggybackBond)
     {
         bytes32 txhash = keccak256(_inFlightTx);
-        // Check if SE is not started nor finalized
-        require(exits[getStandardExitId(txhash, _outputIndex)].amount == 0);
+
+        // Check that the output index is valid.
+        require(_outputIndex < 8);
+
+        // Check if SE from the output is not started nor finalized
+        if (_outputIndex >= MAX_INPUTS){
+            require(exits[getStandardExitId(txhash, _outputIndex - MAX_INPUTS)].amount == 0);
+        }
 
         // Check that the in-flight exit is currently active and in period 1.
         InFlightExit storage inFlightExit = _getInFlightExit(_inFlightTx);
         require(_getExitPeriod(inFlightExit) == 1);
 
-        // Check that the output index is valid.
-        require(_outputIndex < 8);
 
         // Check that we're not piggybacking something that's already been piggybacked or already exited.
         require(!inFlightExit.exitMap.bitSet(_outputIndex) && !inFlightExit.exitMap.bitSet(_outputIndex + 8));

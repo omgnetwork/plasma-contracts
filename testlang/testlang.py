@@ -109,6 +109,7 @@ class InFlightExit(object):
         return (self.exit_map >> index & 1) == 1
 
     def output_piggybacked(self, index):
+        assert index in range(4)
         return self.input_piggybacked(index + 4)
 
     def input_blocked(self, index):
@@ -201,7 +202,9 @@ class TestingLanguage(object):
         self.child_chain.add_block(block)
         return encode_utxo_id(blknum, 0, 0)
 
-    def spend_utxo(self, input_ids, keys, outputs=[], metadata=None, force_invalid=False):
+    def spend_utxo(self, input_ids, keys, outputs=None, metadata=None, force_invalid=False):
+        if outputs is None:
+            outputs = []
         inputs = [decode_utxo_id(input_id) for input_id in input_ids]
         spend_tx = Transaction(inputs=inputs, outputs=outputs, metadata=metadata)
         for i in range(0, len(inputs)):
@@ -408,6 +411,7 @@ class TestingLanguage(object):
         self.root_chain.piggybackInFlightExit(spend_tx.encoded, input_index, sender=key, value=bond)
 
     def piggyback_in_flight_exit_output(self, tx_id, output_index, key, bond=None):
+        assert output_index in range(4)
         return self.piggyback_in_flight_exit_input(tx_id, output_index + 4, key, bond)
 
     @staticmethod

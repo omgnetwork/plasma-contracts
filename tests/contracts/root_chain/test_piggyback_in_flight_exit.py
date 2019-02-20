@@ -90,7 +90,7 @@ def test_piggyback_in_flight_exit_different_exits_same_output_should_fail(testla
         testlang.piggyback_in_flight_exit_output(spend_id, 0, owner.key)
 
 
-def test_piggyback_in_flight_exit_non_existant_exit_should_fail(testlang):
+def test_piggyback_in_flight_exit_non_existent_exit_should_fail(testlang):
     owner, amount = testlang.accounts[0], 100
     deposit_id = testlang.deposit(owner, amount)
     spend_id = testlang.spend_utxo([deposit_id], [owner.key])
@@ -119,7 +119,7 @@ def test_piggyback_in_flight_exit_invalid_index_should_fail(testlang):
     testlang.start_in_flight_exit(spend_id)
 
     with pytest.raises(TransactionFailed):
-        testlang.piggyback_in_flight_exit_output(spend_id, 5, owner.key)
+        testlang.piggyback_in_flight_exit_input(spend_id, 8, owner.key)
 
 
 def test_piggyback_in_flight_exit_twice_should_fail(testlang):
@@ -155,7 +155,7 @@ def test_piggyback_in_flight_exit_output_with_preexisting_standard_exit_should_f
     bond = testlang.root_chain.piggybackBond()
 
     with pytest.raises(TransactionFailed):
-        testlang.piggyback_in_flight_exit_output(spend_id, 4 + num_outputs - 1, testlang.accounts[num_outputs - 1].key, bond)
+        testlang.piggyback_in_flight_exit_output(spend_id, num_outputs - 1, testlang.accounts[num_outputs - 1].key, bond)
 
     in_flight_exit = testlang.get_in_flight_exit(spend_id)
     assert not in_flight_exit.output_piggybacked(num_outputs - 1)
@@ -164,12 +164,12 @@ def test_piggyback_in_flight_exit_output_with_preexisting_standard_exit_should_f
 @pytest.mark.parametrize("num_outputs", [1, 2, 3, 4])
 def test_piggyback_in_flight_exit_output_with_preexisting_finalized_standard_exit_should_fail(testlang, num_outputs):
     # exit cross-spend test, case 6
-    owner_1, amount = testlang.accounts[0], 100
-    deposit_id = testlang.deposit(owner_1, amount)
+    owner, amount = testlang.accounts[0], 100
+    deposit_id = testlang.deposit(owner, amount)
     outputs = []
-    for i in range(0, num_outputs):
+    for i in range(num_outputs):
         outputs.append((testlang.accounts[i].address, NULL_ADDRESS, 1))
-    spend_id = testlang.spend_utxo([deposit_id], [owner_1.key], outputs)
+    spend_id = testlang.spend_utxo([deposit_id], [owner.key], outputs)
 
     blknum, txindex, _ = decode_utxo_id(spend_id)
     exit_pos = encode_utxo_id(blknum, txindex, num_outputs - 1)
@@ -184,7 +184,36 @@ def test_piggyback_in_flight_exit_output_with_preexisting_finalized_standard_exi
     bond = testlang.root_chain.piggybackBond()
 
     with pytest.raises(TransactionFailed):
-        testlang.piggyback_in_flight_exit_output(spend_id, 4 + num_outputs - 1, testlang.accounts[num_outputs - 1].key, bond)
+        testlang.piggyback_in_flight_exit_output(spend_id, num_outputs - 1, testlang.accounts[num_outputs - 1].key, bond)
 
     in_flight_exit = testlang.get_in_flight_exit(spend_id)
     assert not in_flight_exit.output_piggybacked(num_outputs - 1)
+
+
+@pytest.mark.parametrize("output", [0, 4])
+def test_piggybacking_an_output_of_unsupported_token_should_fail(testlang, token, output):
+    owner, amount = testlang.accounts[0], 100
+    deposit_id = testlang.deposit_token(owner, token, amount)
+    spend_id = testlang.spend_utxo([deposit_id], [owner.key], [(owner.address, token.address, amount)])
+    testlang.start_in_flight_exit(spend_id)
+
+    with pytest.raises(TransactionFailed):
+        testlang.piggyback_in_flight_exit_input(spend_id, output, owner.key)
+
+
+@pytest.mark.parametrize("output", [0, 4])
+def test_piggybacking_an_output_of_supported_token_should_succeed(testlang, token, output):
+
+    owner, amount = testlang.accounts[0], 100
+    deposit_id = testlang.deposit_token(owner, token, amount)
+    spend_id = testlang.spend_utxo([deposit_id], [owner.key], [(owner.address, token.address, amount)])
+    testlang.start_in_flight_exit(spend_id)
+
+    testlang.root_chain.addToken(token.address)
+
+    testlang.piggyback_in_flight_exit_input(spend_id, output, owner.key)
+
+    in_flight_exit = testlang.get_in_flight_exit(spend_id)
+    assert in_flight_exit.input_piggybacked(output)
+
+# TODO: IFE should be only once in each queue

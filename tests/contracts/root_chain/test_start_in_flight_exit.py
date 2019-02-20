@@ -111,16 +111,7 @@ def test_start_in_flight_exit_with_ERC20_token_and_Eth_should_succeed(ethtester,
         assert input_info.amount == 0
 
 
-def test_start_in_flight_exit_with_output_with_a_token_not_from_outputs_should_fail(testlang, token):
-    owner, amount = testlang.accounts[0], 100
-    deposit_id = testlang.deposit_token(owner, token, amount)
-    spend_id = testlang.spend_utxo([deposit_id], [owner.key], [(owner.address, NULL_ADDRESS, 50)])
-
-    with pytest.raises(TransactionFailed):
-        testlang.start_in_flight_exit(spend_id)
-
-
-def test_start_in_flight_exit_with_output_with_a_token_not_from_inputs_should_fail(testlang, token):
+def test_start_in_flight_exit_with_an_output_with_a_token_not_from_inputs_should_fail(testlang, token):
     owner, amount = testlang.accounts[0], 100
     deposit_id = testlang.deposit(owner, amount)
     spend_id = testlang.spend_utxo([deposit_id], [owner.key], [(owner.address, token.address, 100)])
@@ -129,10 +120,16 @@ def test_start_in_flight_exit_with_output_with_a_token_not_from_inputs_should_fa
         testlang.start_in_flight_exit(spend_id)
 
 
-def test_start_in_flight_exit_with_spend_more_than_deposit_should_fail(testlang, token):
+@pytest.mark.parametrize(
+    "output_values", [
+        [401], [400, 1], [50, 50, 301], [100, 100, 100, 101]
+    ]
+)
+def test_start_in_flight_exit_that_spends_more_than_deposit_should_fail(testlang, token, output_values):
     owner, amount = testlang.accounts[0], 100
-    deposit_id = testlang.deposit_token(owner, token, amount)
-    spend_id = testlang.spend_utxo([deposit_id], [owner.key], [(owner.address, token.address, 101)], force_invalid=True)
+    outputs = [(owner.address, token.address, value) for value in output_values]
+    deposits = [testlang.deposit_token(owner, token, amount) for _ in range(4)]
+    spend_id = testlang.spend_utxo(deposits, [owner.key] * 4, outputs, force_invalid=True)
 
     with pytest.raises(TransactionFailed):
         testlang.start_in_flight_exit(spend_id)
