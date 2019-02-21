@@ -132,6 +132,17 @@ class TestingLanguage(object):
         self.accounts = get_accounts(ethtester)
         self.operator = self.accounts[0]
         self.child_chain = ChildChain(operator=self.operator.address)
+        self.events = []
+
+        def gather_events(event):
+            all_contract_topics = self.root_chain.translator.event_data.keys()
+            if self.root_chain.address is event.address and event.topics[0] in all_contract_topics:
+                self.events.append(self.root_chain.translator.decode_event(event.topics, event.data))
+        self.ethtester.chain.head_state.log_listeners.append(gather_events)
+
+    def flush_events(self):
+        events, self.events = self.events, []
+        return events
 
     def submit_block(self, transactions, signer=None, force_invalid=False):
         signer = signer or self.operator
