@@ -25,7 +25,7 @@ setup(
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
     install_requires=[
         'ethereum==2.3.0',
-        'web3==4.3.0',
+        'web3==4.8.2',
         'rlp==0.6.0',
         'py-solc-simple==0.0.13'
     ]
