@@ -102,13 +102,11 @@ contract RootChain {
 
     event ExitStarted(
         address indexed owner,
-        uint256 utxoPos,
-        uint256 amount,
-        address token
+        uint192 exitId
     );
 
     event ExitFinalized(
-        uint256 indexed utxoPos
+        uint192 indexed exitId
     );
 
     event ExitChallenged(
@@ -375,7 +373,7 @@ contract RootChain {
             position: _utxoPos
         });
 
-        emit ExitStarted(output.owner, _utxoPos, output.amount, output.token);
+        emit ExitStarted(output.owner, exitId);
     }
 
     /**
@@ -459,7 +457,7 @@ contract RootChain {
         });
 
         nextFeeExit++;
-        emit ExitStarted(operator, exitId, _amount, _token);
+        emit ExitStarted(operator, exitId);
     }
 
     /**
