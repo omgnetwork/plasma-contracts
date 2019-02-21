@@ -135,8 +135,8 @@ class TestingLanguage(object):
         self.events = []
 
         def gather_events(event):
-            topics = self.root_chain.translator.event_data.keys()
-            if self.root_chain.address is event.address and event.topics[0] in topics:
+            all_contract_topics = self.root_chain.translator.event_data.keys()
+            if self.root_chain.address is event.address and event.topics[0] in all_contract_topics:
                 self.events.append(self.root_chain.translator.decode_event(event.topics, event.data))
         self.ethtester.chain.head_state.log_listeners.append(gather_events)
 
