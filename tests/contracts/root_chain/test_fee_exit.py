@@ -13,6 +13,7 @@ def test_start_fee_exit_should_succeed(testlang):
     assert {"owner": operator.address, "_event_type": b'ExitStarted'}.items() <= exit.items()
     assert testlang.root_chain.exits(exit_id) == [operator.address, NULL_ADDRESS_HEX, amount, 1]
 
+
 def test_start_fee_exit_non_operator_should_fail(testlang):
     amount = 100
 
