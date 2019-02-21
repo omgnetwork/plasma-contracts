@@ -84,7 +84,7 @@ def test_piggyback_in_flight_exit_different_exits_same_output_should_fail(testla
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
     testlang.process_exits(NULL_ADDRESS, 0, 100)
 
-    # Second time should also succeed
+    # Second time should also fail
     testlang.start_in_flight_exit(spend_id)
     with pytest.raises(TransactionFailed):
         testlang.piggyback_in_flight_exit_output(spend_id, 0, owner.key)
@@ -97,6 +97,22 @@ def test_piggyback_in_flight_exit_non_existent_exit_should_fail(testlang):
 
     with pytest.raises(TransactionFailed):
         testlang.piggyback_in_flight_exit_input(spend_id, 0, owner.key)
+
+
+def test_piggyback_unpiggybacked_output_of_finalized_in_flight_exit_should_fail(testlang):
+    owner, amount = testlang.accounts[0], 100
+    deposit_id = testlang.deposit(owner, amount)
+    spend_id = testlang.spend_utxo([deposit_id], [owner.key], [(owner.address, NULL_ADDRESS, 50), (owner.address, NULL_ADDRESS, 50)])
+
+    # First time should succeed
+    testlang.start_in_flight_exit(spend_id)
+    testlang.piggyback_in_flight_exit_output(spend_id, 0, owner.key)
+    testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
+    testlang.process_exits(NULL_ADDRESS, 0, 100)
+
+    # Piggybacking already finalized IFE should fail
+    with pytest.raises(TransactionFailed):
+        testlang.piggyback_in_flight_exit_output(spend_id, 1, owner.key)
 
 
 def test_piggyback_in_flight_exit_wrong_period_should_fail(testlang):
@@ -201,9 +217,8 @@ def test_piggybacking_an_output_of_unsupported_token_should_fail(testlang, token
         testlang.piggyback_in_flight_exit_input(spend_id, output, owner.key)
 
 
-@pytest.mark.parametrize("output", [0, 4])
+@pytest.mark.parametrize("output", [0, 4])  # first input and first output
 def test_piggybacking_an_output_of_supported_token_should_succeed(testlang, token, output):
-
     owner, amount = testlang.accounts[0], 100
     deposit_id = testlang.deposit_token(owner, token, amount)
     spend_id = testlang.spend_utxo([deposit_id], [owner.key], [(owner.address, token.address, amount)])
@@ -215,5 +230,27 @@ def test_piggybacking_an_output_of_supported_token_should_succeed(testlang, toke
 
     in_flight_exit = testlang.get_in_flight_exit(spend_id)
     assert in_flight_exit.input_piggybacked(output)
+
+
+@pytest.mark.parametrize("outputs", [(0, 1), (4, 5), (0, 4), (0, 1, 4, 5)])  # inputs and outputs
+def test_piggybacking_outputs_of_different_tokens_should_succeed(testlang, token, outputs):
+    owner, amount = testlang.accounts[0], 100
+    testlang.root_chain.addToken(token.address)
+    token_deposit_id = testlang.deposit_token(owner, token, amount)
+    eth_deposit_id = testlang.deposit(owner, amount)
+
+    spend_id = testlang.spend_utxo([token_deposit_id, eth_deposit_id], [owner.key] * 2,
+                                   [(owner.address, NULL_ADDRESS, amount), (owner.address, token.address, amount)])
+
+    testlang.start_in_flight_exit(spend_id)
+
+    for i in outputs:
+        testlang.piggyback_in_flight_exit_input(spend_id, i, owner.key)
+
+    in_flight_exit = testlang.get_in_flight_exit(spend_id)
+
+    for i in outputs:
+        assert in_flight_exit.input_piggybacked(i)
+
 
 # TODO: IFE should be only once in each queue

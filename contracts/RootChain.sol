@@ -577,7 +577,7 @@ contract RootChain {
         // Set the output as piggybacked.
         inFlightExit.exitMap = inFlightExit.exitMap.setBit(_outputIndex);
 
-        // Enqueue the exit in a corresponding queue, if not already enqueued.
+        // Enqueue the exit in a right queue, if not already enqueued.
         if (_shouldEnqueueInFlightExit(inFlightExit, output.token, _outputIndex)) {
             _enqueueExit(output.token, inFlightExit.exitPriority);
         }
