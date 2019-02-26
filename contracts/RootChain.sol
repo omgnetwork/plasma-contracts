@@ -502,6 +502,11 @@ contract RootChain {
 
             youngestInputTxoPos = Math.max(youngestInputTxoPos, inputTxoPos);
             any_finalized = any_finalized || finalized;
+
+            // check whether IFE spends one UTXO twice
+            for (uint8 j = 0; j < i; ++j){
+                require(inputTxoPos[i] != inputTxoPos[j]);
+            }
         }
 
         // Validate sums of inputs against sum of outputs token-wise

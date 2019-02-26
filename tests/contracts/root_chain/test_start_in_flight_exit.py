@@ -286,4 +286,21 @@ def test_start_in_flight_exit_with_finalized_standard_exits_from_inputs_flags_ex
     # IFE is marked as SpentInput
     assert testlang.root_chain.flagged(ife_start_timestamp)
 
+
+def test_start_in_flight_exit_spending_the_same_input_twice_should_fail(testlang):
+    owner, amount = testlang.accounts[0], 100
+
+    deposit_id = testlang.deposit(owner, amount)
+    spend_id = testlang.spend_utxo([deposit_id] * 2,
+                                   [owner.key] * 2,
+                                   [(owner.address, NULL_ADDRESS, amount)],
+                                   force_invalid=True)
+
+    with pytest.raises(TransactionFailed):
+        testlang.start_in_flight_exit(spend_id)
+
+
+def test_start_in_flight_exit_with_four_different_tokens_should_succeed(testlang):
+    assert False
+
 # TODO: add test_start_in_flight_exit_with_holes_in_inputs_should_fail
