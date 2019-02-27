@@ -3,7 +3,7 @@
 Root chain contracts for Plasma MVP, work in progress.
 
 ## Contents
-This version of the contract implements [Plasma MVP](https://ethresear.ch/t/minimal-viable-plasma/426) (Buterin, Poon, Knott). This implementation is a PoA scheme with one operator and multiple watchers (users). Detailed description of our child chain design is in [Tesuji document](https://github.com/omisego/elixir-omg/blob/develop/docs/tesuji_blockchain_design.md).
+This version of the contract implements [Plasma MVP](https://ethresear.ch/t/minimal-viable-plasma/426) (Buterin, Poon, Knott). This implementation is a PoA scheme with one operator and multiple watchers (users). Detailed description of our child chain design is in [Tesuji document](https://github.com/omisego/elixir-omg/blob/master/docs/tesuji_blockchain_design.md).
 
 Implementation differs from MVP in few regards:
 
