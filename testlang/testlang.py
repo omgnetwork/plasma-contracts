@@ -103,6 +103,7 @@ class InFlightExit(object):
         return input_info
 
     def get_output(self, index):
+        assert index in range(4)
         return self.get_input(index + 4)
 
     def input_piggybacked(self, index):

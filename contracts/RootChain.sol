@@ -356,8 +356,8 @@ contract RootChain {
         require(exits[exitId].amount == 0);
 
         InFlightExit storage inFlightExit = _getInFlightExit(_outputTx);
-        if (inFlightExit.exitStartTimestamp != 0) {
-            // Check if this output was piggybacked or exited in in-flight exit
+        if (!flagged(inFlightExit.exitMap)) {
+            // Check if this output was piggybacked or exited in an in-flight exit
             require(!inFlightExit.exitMap.bitSet(oindex + MAX_INPUTS) && !inFlightExit.exitMap.bitSet(oindex + MAX_INPUTS + MAX_INPUTS*2));
             // Prevent future piggybacks on this output
             inFlightExit.exitMap = inFlightExit.exitMap.setBit(oindex + MAX_INPUTS + MAX_INPUTS*2);
@@ -483,24 +483,25 @@ contract RootChain {
         InFlightExit storage inFlightExit = _getInFlightExit(_inFlightTx);
         require(inFlightExit.exitStartTimestamp == 0);
 
+        // Check if such an in-flight exit has already been finalized
+        require(!flagged(inFlightExit.exitMap));
+
         // Separate the inputs transactions.
         RLP.RLPItem[] memory splitInputTxs = _inputTxs.toRLPItem().toList();
 
-        uint256 inputTxoPos;
+        uint256 [MAX_INPUTS] memory inputTxoPos;
         uint256 youngestInputTxoPos;
         bool finalized;
         bool any_finalized = false;
-        uint8 inputsCount;
         for (uint8 i = 0; i < MAX_INPUTS; i++) {
             if (_inFlightTx.getInputUtxoPosition(i) == 0) break;
 
-            ++inputsCount;
 
-            (inFlightExit.inputs[i], inputTxoPos, finalized) = _getInputInfo(
+            (inFlightExit.inputs[i], inputTxoPos[i], finalized) = _getInputInfo(
                 _inFlightTx, splitInputTxs[i].toBytes(), _inputTxsInclusionProofs, _inFlightTxSigs.sliceSignature(i), i
             );
 
-            youngestInputTxoPos = Math.max(youngestInputTxoPos, inputTxoPos);
+            youngestInputTxoPos = Math.max(youngestInputTxoPos, inputTxoPos[i]);
             any_finalized = any_finalized || finalized;
 
             // check whether IFE spends one UTXO twice
@@ -805,11 +806,14 @@ contract RootChain {
         uint64 exitableTimestamp;
         uint192 exitId;
         bool inFlight;
+
         (exitableTimestamp, exitId, inFlight) = getNextExit(_token);
         require(_topExitId == exitId || _topExitId == 0);
         PriorityQueue queue = PriorityQueue(exitsQueues[_token]);
+
         while (exitableTimestamp < block.timestamp && _exitsToProcess > 0) {
             // Delete the minimum from the queue.
+            require(queue.currentSize() > 0);
             queue.delMin();
 
             // Check for the in-flight exit flag.
@@ -1256,11 +1260,11 @@ contract RootChain {
             // Check if the output's token, the "to exit" bit is not set or if the "already exited" bit is set.
             if ( output.token != _token
                 || !_inFlightExit.exitMap.bitSet(i)
-                || _inFlightExit.exitMap.bitSet(i + 8)
+                || _inFlightExit.exitMap.bitSet(i + 2 * MAX_INPUTS)
             ) {
                 continue;
             }
-            _inFlightExit.exitMap = _inFlightExit.exitMap.clearBit(i).setBit(i + 8);
+            _inFlightExit.exitMap = _inFlightExit.exitMap.clearBit(i).setBit(i + 2 * MAX_INPUTS);
 
 
             // Pay out any unchallenged and exitable inputs or outputs, refund the rest.
@@ -1303,7 +1307,10 @@ contract RootChain {
         // Refund the current bond owner.
         _inFlightExit.bondOwner.transfer(inFlightExitBond);
 
-        // Delete everything but the exitmap to block exits from already processed outputs.
+        // Flag as finalized
+        _inFlightExit.exitMap = setFlag(_inFlightExit.exitMap);
+
+        // Delete everything but the exit map to block exits from already processed outputs.
         delete _inFlightExit.exitStartTimestamp;
         delete _inFlightExit.exitPriority;
         delete _inFlightExit.inputs;

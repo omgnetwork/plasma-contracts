@@ -40,7 +40,7 @@ def test_start_in_flight_exit_should_succeed(ethtester, testlang, num_inputs):
 
 
 @pytest.mark.parametrize("num_inputs", [1, 2, 3, 4])
-def test_start_in_flight_exit_with_ERC20_tokens_should_succeed(ethtester, testlang, token, num_inputs):
+def test_start_in_flight_exit_with_erc20_tokens_should_succeed(ethtester, testlang, token, num_inputs):
     amount = 100
     owners = []
     deposit_ids = []
@@ -74,7 +74,7 @@ def test_start_in_flight_exit_with_ERC20_tokens_should_succeed(ethtester, testla
         assert input_info.amount == 0
 
 
-def test_start_in_flight_exit_with_ERC20_token_and_Eth_should_succeed(ethtester, testlang, token):
+def test_start_in_flight_exit_with_erc20_token_and_eth_should_succeed(ethtester, testlang, token):
     owner = testlang.accounts[0]
     deposit_eth_id = testlang.deposit(owner, 100)
     deposit_token_id = testlang.deposit_token(owner, token, 110)
@@ -188,7 +188,7 @@ def test_start_in_flight_exit_twice_should_fail(testlang):
         testlang.start_in_flight_exit(spend_id)
 
 
-def test_start_in_flight_exit_twice_different_piggybacks_should_succeed(testlang):
+def test_start_finalized_in_flight_exit_once_more_should_fail(testlang):
     owner, amount = testlang.accounts[0], 100
     deposit_id = testlang.deposit(owner, amount)
     spend_id = testlang.spend_utxo([deposit_id], [owner.key],
@@ -200,15 +200,9 @@ def test_start_in_flight_exit_twice_different_piggybacks_should_succeed(testlang
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
     testlang.process_exits(NULL_ADDRESS, 0, 10)
 
-    # Second time should also succeed
-    testlang.start_in_flight_exit(spend_id)
-
-    # Exit was created
-    in_flight_exit = testlang.get_in_flight_exit(spend_id)
-    assert in_flight_exit.exit_start_timestamp == testlang.ethtester.chain.head_state.timestamp
-    assert in_flight_exit.exit_map == 2 ** 8
-    assert in_flight_exit.bond_owner == owner.address
-    assert in_flight_exit.oldest_competitor == 0
+    # Second time should fail
+    with pytest.raises(TransactionFailed):
+        testlang.start_in_flight_exit(spend_id)
 
 
 def test_start_in_flight_exit_invalid_outputs_should_fail(testlang):
@@ -247,8 +241,9 @@ def test_start_in_flight_exit_cancelling_standard_exits_from_inputs(testlang, nu
     challenger = testlang.accounts[5]
     balance = testlang.get_balance(challenger)
     testlang.start_in_flight_exit(spend_id, sender=challenger)
-    assert testlang.get_balance(
-        challenger) == balance + num_inputs * testlang.root_chain.standardExitBond() - testlang.root_chain.inFlightExitBond()
+
+    expected = balance + num_inputs * testlang.root_chain.standardExitBond() - testlang.root_chain.inFlightExitBond()
+    assert testlang.get_balance(challenger) == expected
 
     # Standard exits are correctly challenged
     for i in range(0, num_inputs):
