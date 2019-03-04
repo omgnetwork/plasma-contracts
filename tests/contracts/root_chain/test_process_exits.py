@@ -15,13 +15,13 @@ def test_process_exits_standard_exit_should_succeed(testlang):
     testlang.flush_events()
 
     testlang.start_standard_exit(spend_id, owner.key)
-    [exit] = testlang.flush_events()
-    assert {"owner": owner.address, "_event_type": b'ExitStarted'}.items() <= exit.items()
+    [exit_event] = testlang.flush_events()
+    assert {"owner": owner.address, "_event_type": b'ExitStarted'}.items() <= exit_event.items()
 
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
     testlang.process_exits(NULL_ADDRESS, 0, 100)
     [exit_finalized] = testlang.flush_events()
-    assert {"exitId": exit['exitId'], "_event_type": b'ExitFinalized'}.items() <= exit_finalized.items()
+    assert {"exitId": exit_event['exitId'], "_event_type": b'ExitFinalized'}.items() <= exit_finalized.items()
 
     standard_exit = testlang.get_standard_exit(spend_id)
     assert standard_exit.owner == NULL_ADDRESS_HEX
@@ -46,7 +46,7 @@ def test_process_exits_in_flight_exit_should_succeed(testlang):
     assert in_flight_exit.bond_owner == NULL_ADDRESS_HEX
     assert in_flight_exit.oldest_competitor == 0
 
-    for i in range(0, 4):
+    for i in range(4):
         input_info = in_flight_exit.get_input(i)
         assert input_info.owner == NULL_ADDRESS_HEX
         assert input_info.amount == 0
@@ -158,11 +158,11 @@ def test_finalize_exits_partial_queue_processing(testlang):
     owner, amount = testlang.accounts[0], 100
 
     deposit_id_1 = testlang.deposit(owner, amount)
-    spend_id_1 = testlang.spend_utxo([deposit_id_1], [owner.key], [(owner.address, NULL_ADDRESS, 100)])
+    spend_id_1 = testlang.spend_utxo([deposit_id_1], [owner.key], [(owner.address, NULL_ADDRESS, amount)])
     testlang.start_standard_exit(spend_id_1, owner.key)
 
     deposit_id_2 = testlang.deposit(owner, amount)
-    spend_id_2 = testlang.spend_utxo([deposit_id_2], [owner.key], [(owner.address, NULL_ADDRESS, 100)])
+    spend_id_2 = testlang.spend_utxo([deposit_id_2], [owner.key], [(owner.address, NULL_ADDRESS, amount)])
     testlang.start_standard_exit(spend_id_2, owner.key)
 
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
@@ -171,6 +171,26 @@ def test_finalize_exits_partial_queue_processing(testlang):
     assert plasma_exit.owner == NULL_ADDRESS_HEX
     plasma_exit = testlang.get_standard_exit(spend_id_2)
     assert plasma_exit.owner == owner.address
+
+
+def test_processing_exits_with_specifying_top_exit_id_is_possible(testlang):
+    owner, amount = testlang.accounts[0], 100
+
+    deposit_id_1 = testlang.deposit(owner, amount)
+    testlang.start_standard_exit(deposit_id_1, owner.key)
+
+    deposit_id_2 = testlang.deposit(owner, amount)
+    spend_id_2 = testlang.spend_utxo([deposit_id_2], [owner.key], [(owner.address, NULL_ADDRESS, amount)])
+    testlang.start_in_flight_exit(spend_id_2)
+    testlang.piggyback_in_flight_exit_output(spend_id_2, 0, owner.key)
+
+    testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
+
+    testlang.process_exits(NULL_ADDRESS, testlang.get_standard_exit_id(deposit_id_1), 1)
+    testlang.process_exits(NULL_ADDRESS, testlang.get_in_flight_exit_id(spend_id_2), 1)
+
+    in_flight_exit = testlang.get_in_flight_exit(spend_id_2)
+    assert in_flight_exit.bond_owner == NULL_ADDRESS_HEX
 
 
 def test_finalize_exits_tx_race_short_circuit(testlang):
@@ -186,7 +206,7 @@ def test_finalize_exits_tx_race_short_circuit(testlang):
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
     testlang.process_exits(NULL_ADDRESS, testlang.get_standard_exit_id(utxo1.spend_id), 1)
     with pytest.raises(TransactionFailed):
-        testlang.process_exits(NULL_ADDRESS, testlang.get_standard_exit_id(utxo1.spend_id), 3, startgas=1000000)
+        testlang.process_exits(NULL_ADDRESS, testlang.get_standard_exit_id(utxo1.spend_id), 3)
     short_circuit_gas = testlang.ethtester.chain.last_gas_used()
     assert short_circuit_gas < 67291  # value from _tx_race_normal
 
@@ -345,16 +365,16 @@ def test_finalize_exits_priority_for_in_flight_exits_corresponds_to_the_age_of_y
 
     balance = testlang.get_balance(owner)
 
-    testlang.process_exits(NULL_ADDRESS, 0, 1)
+    testlang.process_exits(NULL_ADDRESS, testlang.get_standard_exit_id(spend_00_id), 1)
     assert testlang.get_balance(owner) == balance + 30 + testlang.root_chain.standardExitBond()
 
     balance = testlang.get_balance(owner)
-    testlang.process_exits(NULL_ADDRESS, 0, 1)
+    testlang.process_exits(NULL_ADDRESS, testlang.get_in_flight_exit_id(spend_1_id), 1)
     assert testlang.get_balance(
         owner) == balance + 70 + testlang.root_chain.inFlightExitBond() + testlang.root_chain.piggybackBond()
 
     balance = testlang.get_balance(owner)
-    testlang.process_exits(NULL_ADDRESS, 0, 1)
+    testlang.process_exits(NULL_ADDRESS, testlang.get_standard_exit_id(spend_2_id), 1)
     assert testlang.get_balance(owner) == balance + 100 + testlang.root_chain.standardExitBond()
 
 
@@ -455,7 +475,7 @@ def test_finalize_in_flight_exit_with_eth_and_erc20_token(testlang, token):
     assert testlang.get_balance(owner_2, token.address) == owner_2_balances[1] + (amount - 2)
 
 
-def test_does_not_finalize_other_token_outputs(testlang, token):
+def test_does_not_finalize_outputs_of_other_tokens(testlang, token):
     (owner_1, owner_2), amount = testlang.accounts[1:3], 100
     testlang.root_chain.addToken(token.address)
     token_deposit = testlang.deposit_token(owner_1, token, amount)
@@ -592,13 +612,12 @@ def test_when_processing_an_ife_it_is_cleaned_up_when_all_piggybacked_outputs_fi
 
 
 def test_in_flight_exit_is_cleaned_up_even_though_none_of_outputs_exited(testlang):
-
     owner, amount = testlang.accounts[0], 100
     deposit_id = testlang.deposit(owner, amount)
 
     spend_id = testlang.spend_utxo([deposit_id], [owner.key], [(owner.address, NULL_ADDRESS, amount)])
     testlang.start_in_flight_exit(spend_id)
-    testlang.piggyback_in_flight_exit_input(spend_id, 0)
+    testlang.piggyback_in_flight_exit_input(spend_id, 0, owner.key)
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
     pre_balance = testlang.get_balance(owner)
 
@@ -615,5 +634,5 @@ def test_in_flight_exit_is_cleaned_up_even_though_none_of_outputs_exited(testlan
     # some fields are not deleted
     assert in_flight_exit.exit_map != 0
 
-    # assert bond was sent to the owner
-    assert testlang.get_balance(testlang.accounts[0]) == pre_balance + testlang.root_chain.inFlightExitBond()
+    # assert IFE and piggyback bonds were sent to the owners
+    assert testlang.get_balance(owner) == pre_balance + testlang.root_chain.inFlightExitBond() * 2
