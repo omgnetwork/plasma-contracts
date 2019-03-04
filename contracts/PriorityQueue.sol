@@ -71,9 +71,10 @@ contract PriorityQueue {
 
     /**
      * @dev Deletes the top element of the heap and shifts everything up.
-     * @return The smallest element in the priorty queue.
+     * @return The smallest element in the priority queue.
      */
     function delMin()
+        onlyOwner
         public
         returns (uint256)
     {
