@@ -2,6 +2,7 @@ import pytest
 from ethereum.tools.tester import TransactionFailed
 from plasma_core.constants import NULL_ADDRESS, NULL_ADDRESS_HEX, MIN_EXIT_PERIOD
 from testlang.testlang import address_to_hex
+from tests.conftest import deploy_token
 
 
 @pytest.mark.parametrize("num_inputs", [1, 2, 3, 4])
@@ -295,7 +296,20 @@ def test_start_in_flight_exit_spending_the_same_input_twice_should_fail(testlang
         testlang.start_in_flight_exit(spend_id)
 
 
-def test_start_in_flight_exit_with_four_different_tokens_should_succeed(testlang):
-    assert False
+def test_start_in_flight_exit_with_four_different_tokens_should_succeed(testlang, ethtester, get_contract):
+
+    owner, amount, tokens_no = testlang.accounts[0], 100, 4
+
+    tokens = [deploy_token(ethtester, get_contract) for _ in range(tokens_no)]
+    deposits = [testlang.deposit_token(owner, tokens[i], amount)for i in range(tokens_no)]
+    outputs = [(owner.address, tokens[i].address, amount) for i in range(4)]
+    spend_id = testlang.spend_utxo(deposits, [owner.key] * tokens_no, outputs)
+
+    testlang.start_in_flight_exit(spend_id, sender=owner)
+
+    in_flight_exit = testlang.get_in_flight_exit(spend_id)
+
+    assert in_flight_exit.bond_owner == owner.address
+
 
 # TODO: add test_start_in_flight_exit_with_holes_in_inputs_should_fail

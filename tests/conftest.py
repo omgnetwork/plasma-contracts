@@ -54,7 +54,9 @@ def ethutils():
 
 @pytest.fixture
 def get_contract(ethtester, ethutils):
-    def create_contract(path, args=(), sender=ethtester.k0, libraries=dict()):
+    def create_contract(path, args=(), sender=ethtester.k0, libraries=None):
+        if libraries is None:
+            libraries = dict()
         abi, hexcode = deployer.builder.get_contract_data(path)
         encoded_args = (ContractTranslator(abi).encode_constructor_arguments(args) if args else b'')
 
@@ -83,11 +85,15 @@ def initialized_contract(ethtester, get_contract, exit_period):
     return contract
 
 
-@pytest.fixture
-def token(ethtester, get_contract):
+def deploy_token(ethtester, get_contract):
     contract = get_contract('MintableToken')
     ethtester.chain.mine()
     return contract
+
+
+@pytest.fixture
+def token(ethtester, get_contract):
+    return deploy_token(ethtester, get_contract)
 
 
 @pytest.fixture
