@@ -546,12 +546,10 @@ def test_ife_is_enqueued_once_per_token(testlang, token):
     testlang.root_chain.addToken(token.address)
 
     spend_id = testlang.spend_utxo([token_deposit_id, eth_deposit_id], [owner.key] * 2,
-                                   [
-                                       (owner.address, NULL_ADDRESS, amount // 2),
-                                       (owner.address, NULL_ADDRESS, amount // 2),
-                                       (owner.address, token.address, amount // 2),
-                                       (owner.address, token.address, amount // 2)
-                                   ])
+                                   [(owner.address, NULL_ADDRESS, amount // 2),
+                                    (owner.address, NULL_ADDRESS, amount // 2),
+                                    (owner.address, token.address, amount // 2),
+                                    (owner.address, token.address, amount // 2)])
 
     testlang.start_in_flight_exit(spend_id)
     for i in range(4):

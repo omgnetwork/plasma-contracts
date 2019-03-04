@@ -66,7 +66,8 @@ def test_piggyback_in_flight_exit_non_existent_exit_should_fail(testlang):
 def test_piggyback_unpiggybacked_output_of_finalized_in_flight_exit_should_fail(testlang):
     owner, amount = testlang.accounts[0], 100
     deposit_id = testlang.deposit(owner, amount)
-    spend_id = testlang.spend_utxo([deposit_id], [owner.key], [(owner.address, NULL_ADDRESS, 50), (owner.address, NULL_ADDRESS, 50)])
+    spend_id = testlang.spend_utxo([deposit_id], [owner.key],
+                                   [(owner.address, NULL_ADDRESS, 50), (owner.address, NULL_ADDRESS, 50)])
 
     # First time should succeed
     testlang.start_in_flight_exit(spend_id)
@@ -136,7 +137,8 @@ def test_piggyback_in_flight_exit_output_with_preexisting_standard_exit_should_f
     bond = testlang.root_chain.piggybackBond()
 
     with pytest.raises(TransactionFailed):
-        testlang.piggyback_in_flight_exit_output(spend_id, num_outputs - 1, testlang.accounts[num_outputs - 1].key, bond)
+        testlang.piggyback_in_flight_exit_output(spend_id, num_outputs - 1, testlang.accounts[num_outputs - 1].key,
+                                                 bond)
 
     in_flight_exit = testlang.get_in_flight_exit(spend_id)
     assert not in_flight_exit.output_piggybacked(num_outputs - 1)
@@ -165,7 +167,8 @@ def test_piggyback_in_flight_exit_output_with_preexisting_finalized_standard_exi
     bond = testlang.root_chain.piggybackBond()
 
     with pytest.raises(TransactionFailed):
-        testlang.piggyback_in_flight_exit_output(spend_id, num_outputs - 1, testlang.accounts[num_outputs - 1].key, bond)
+        testlang.piggyback_in_flight_exit_output(spend_id, num_outputs - 1, testlang.accounts[num_outputs - 1].key,
+                                                 bond)
 
     in_flight_exit = testlang.get_in_flight_exit(spend_id)
     assert not in_flight_exit.output_piggybacked(num_outputs - 1)
@@ -216,4 +219,3 @@ def test_piggybacking_outputs_of_different_tokens_should_succeed(testlang, token
 
     for i in outputs:
         assert in_flight_exit.input_piggybacked(i)
-
