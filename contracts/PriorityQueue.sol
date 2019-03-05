@@ -34,20 +34,33 @@ contract PriorityQueue {
         queue.init(_owner);
     }
 
-    function currentSize()
-        external
-        view
-        returns (uint256)
-    {
-        return queue.getCurrentSize();
-    }
-
+    /**
+     * @dev Inserts an element into the queue. Does not perform deduplication.
+     */
     function insert(uint256 _element)
         onlyOwner
         public
     {
         queue.insert(_element);
     }
+
+
+    /**
+     * @dev Deletes the top element of the heap and shifts everything up.
+     * @return The smallest element in the priority queue.
+     */
+    function delMin()
+        onlyOwner
+        public
+        returns (uint256)
+    {
+        return queue.delMin();
+    }
+
+
+    /*
+     * Read-only functions
+     */
 
     function minChild(uint256 i)
         public
@@ -69,15 +82,12 @@ contract PriorityQueue {
         return queue.getMin();
     }
 
-    /**
-     * @dev Deletes the top element of the heap and shifts everything up.
-     * @return The smallest element in the priorty queue.
-     */
-    function delMin()
-        public
+    function currentSize()
+        external
+        view
         returns (uint256)
     {
-        return queue.delMin();
+        return queue.getCurrentSize();
     }
 
 }

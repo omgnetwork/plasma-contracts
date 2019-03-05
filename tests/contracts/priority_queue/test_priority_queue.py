@@ -117,3 +117,12 @@ def test_priority_queue_average_case_gas_cost(ethtester, priority_queue):
 def test_priority_queue_best_case_gas_cost(ethtester, priority_queue):
     values = list(range(1, 100))
     run_test(ethtester, priority_queue, values)
+
+
+def test_del_min_can_be_called_by_owner_only(ethtester, priority_queue):
+    priority_queue.insert(7)
+
+    with pytest.raises(TransactionFailed):
+        priority_queue.delMin(sender=ethtester.k1)
+
+    assert priority_queue.delMin(sender=ethtester.k0) == 7
