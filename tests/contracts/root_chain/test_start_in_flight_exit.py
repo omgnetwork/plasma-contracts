@@ -126,7 +126,7 @@ def test_start_in_flight_exit_with_an_output_with_a_token_not_from_inputs_should
         [401], [400, 1], [50, 50, 301], [100, 100, 100, 101]
     ]
 )
-def test_start_in_flight_exit_that_spends_more_than_deposit_should_fail(testlang, token, output_values):
+def test_start_in_flight_exit_that_spends_more_than_value_of_inputs_should_fail(testlang, token, output_values):
     owner, amount = testlang.accounts[0], 100
     outputs = [(owner.address, token.address, value) for value in output_values]
     deposits = [testlang.deposit_token(owner, token, amount) for _ in range(4)]

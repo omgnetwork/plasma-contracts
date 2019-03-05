@@ -81,7 +81,7 @@ contract RootChain {
         uint256 oldestCompetitor;
     }
 
-    struct InputSum {
+    struct _InputSum {
         address token;
         uint256 amount;
     }
@@ -488,8 +488,8 @@ contract RootChain {
 
         // Separate the inputs transactions.
         RLP.RLPItem[] memory splitInputTxs = _inputTxs.toRLPItem().toList();
+        uint256 [] memory inputTxoPos = new uint256[](splitInputTxs.length);
 
-        uint256 [MAX_INPUTS] memory inputTxoPos;
         uint256 youngestInputTxoPos;
         bool finalized;
         bool any_finalized = false;
@@ -813,7 +813,6 @@ contract RootChain {
 
         while (exitableTimestamp < block.timestamp && _exitsToProcess > 0) {
             // Delete the minimum from the queue.
-            require(queue.currentSize() > 0);
             queue.delMin();
 
             // Check for the in-flight exit flag.
@@ -881,7 +880,7 @@ contract RootChain {
     }
 
     /**
-     * @dev Returns the next exit to be processed.
+     * @dev Returns the next exit to be processed
      * @return A tuple with timestamp for when the next exit is processable, its unique exit id
      and flag determining if exit is in-flight one.
     */
@@ -1131,11 +1130,10 @@ contract RootChain {
         view
     {
 
-        InputSum[MAX_INPUTS] memory sums;
+        _InputSum[MAX_INPUTS] memory sums;
         uint8 allocatedSums = 0;
 
-        InputSum memory tokenSum;
-
+        _InputSum memory tokenSum;
         uint8 i;
 
         // Loop through each input
@@ -1143,14 +1141,14 @@ contract RootChain {
             PlasmaCore.TransactionOutput memory input = _inFlightExit.inputs[i];
 
             // Add current input amount to the overall transaction sum (token-wise)
-            (tokenSum, allocatedSums) = _getInputSumByToken(sums, input.token, allocatedSums);
+            (tokenSum, allocatedSums) = _getInputSumByToken(sums, allocatedSums, input.token);
             tokenSum.amount += input.amount;
         }
 
         // Loop through each output
         for (i = 0; i < MAX_INPUTS; ++i) {
             PlasmaCore.TransactionOutput memory output = _tx.getOutput(i);
-            (tokenSum, allocatedSums) = _getInputSumByToken(sums, output.token, allocatedSums);
+            (tokenSum, allocatedSums) = _getInputSumByToken(sums, allocatedSums, output.token);
 
             // Underflow protection
             require(tokenSum.amount >= output.amount);
@@ -1169,7 +1167,7 @@ contract RootChain {
     function _getInputSumByToken(_InputSum[MAX_INPUTS] memory _sums, uint8 _allocated, address _token)
         internal
         pure
-        returns (InputSum, uint8)
+        returns (_InputSum, uint8)
     {
         // Find token sum within already used ones
         for (uint8 i = 0; i < _allocated; ++i) {

@@ -508,7 +508,7 @@ def test_does_not_finalize_outputs_of_other_tokens(testlang, token):
     assert testlang.get_balance(owner_2, token.address) == owner_2_balances[1]
 
 
-def test_when_processing_ife_finalization_of_erc2_token_does_not_clean_up_eth_outputs_data(testlang, token):
+def test_when_processing_ife_finalization_of_erc20_token_does_not_clean_up_eth_outputs_data(testlang, token):
     (owner_1, owner_2), amount = testlang.accounts[1:3], 100
     testlang.root_chain.addToken(token.address)
     token_deposit = testlang.deposit_token(owner_1, token, amount)
