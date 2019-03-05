@@ -902,8 +902,10 @@ contract RootChain {
     {
         uint64 exitableTimestamp = uint64(priority >> 214);
         bool inFlight = priority.getBit(152) == 1;
-        uint192 exitId = uint192((priority << 96) >> 96);
+
         // get 160 least significant bits
+        uint192 exitId = uint192((priority << 96) >> 96);
+
         return (exitableTimestamp, exitId, inFlight);
     }
 
@@ -953,9 +955,9 @@ contract RootChain {
     }
 
     /**
-     * @dev Checks if the left-most bit of an integer is set.
+     * @dev Checks if at least one of the two left-most bits of an integer is set.
      * @param _value Integer to check.
-     * @return True if left-most bit is set. False otherwise.
+     * @return True if at least one of two left-most bits is set. False otherwise.
      */
     function flagged(uint256 _value)
         public
@@ -1135,42 +1137,56 @@ contract RootChain {
         InputSum memory tokenSum;
 
         uint8 i;
-        // Loop through each input.
+
+        // Loop through each input
         for (i = 0; i < MAX_INPUTS; ++i) {
             PlasmaCore.TransactionOutput memory input = _inFlightExit.inputs[i];
-            (tokenSum, allocatedSums) = _getInputSumByToken(sums, input.token, allocatedSums);
 
+            // Add current input amount to the overall transaction sum (token-wise)
+            (tokenSum, allocatedSums) = _getInputSumByToken(sums, input.token, allocatedSums);
             tokenSum.amount += input.amount;
         }
 
+        // Loop through each output
         for (i = 0; i < MAX_INPUTS; ++i) {
             PlasmaCore.TransactionOutput memory output = _tx.getOutput(i);
             (tokenSum, allocatedSums) = _getInputSumByToken(sums, output.token, allocatedSums);
 
+            // Underflow protection
             require(tokenSum.amount >= output.amount);
             tokenSum.amount -= output.amount;
         }
 
     }
 
-    function _getInputSumByToken(InputSum[MAX_INPUTS] memory sums, address token, uint8 allocated)
+    /**
+     * @dev Returns element of an array where sum of the given token is stored.
+     * @param _sums array of sums by tokens
+     * @param _allocated Number of currently allocated elements in _sums array
+     * @param _token Token address which sum is being searched for
+     * @return A tuple containing element of array and an updated number of currently allocated elements
+     */
+    function _getInputSumByToken(_InputSum[MAX_INPUTS] memory _sums, uint8 _allocated, address _token)
         internal
         pure
         returns (InputSum, uint8)
     {
-        for (uint8 i = 0; i < allocated; ++i) {
+        // Find token sum within already used ones
+        for (uint8 i = 0; i < _allocated; ++i) {
 
-            if (sums[i].token == token) {
-                return (sums[i], allocated);
+            if (_sums[i].token == _token) {
+                return (_sums[i], _allocated);
             }
         }
 
-        if (allocated < MAX_INPUTS) {
-            sums[allocated].token = token;
-            return (sums[allocated], allocated + 1);
-        }
+        // Check whether trying to allocate new token sum, even though all has been used
+        // Notice: that there will never be more tokens than number of inputs,
+        // as outputs must be of the same tokens as inputs
+        require(_allocated < MAX_INPUTS);
 
-        return (InputSum(address(0), 0), MAX_INPUTS);
+        // Allocate new token sum
+        _sums[_allocated].token = _token;
+        return (_sums[_allocated], _allocated + 1);
     }
 
 
