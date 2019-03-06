@@ -274,7 +274,9 @@ def test_finalize_challenged_exit_will_not_send_funds(testlang):
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
 
     pre_balance = testlang.get_balance(testlang.root_chain)
+    testlang.flush_events()
     testlang.process_exits(NULL_ADDRESS, 0, 1, sender=finalizer.key)
+    assert [] == testlang.flush_events()
     post_balance = testlang.get_balance(testlang.root_chain)
     assert post_balance == pre_balance
 
