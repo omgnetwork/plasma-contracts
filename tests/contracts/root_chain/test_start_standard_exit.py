@@ -175,3 +175,30 @@ def test_start_standard_exit_on_in_flight_exit_output_should_block_future_piggyb
     in_flight_exit = testlang.get_in_flight_exit(spend_id)
     assert not in_flight_exit.output_piggybacked(output_index)
     assert in_flight_exit.output_blocked(output_index)
+
+
+@pytest.mark.parametrize("num_outputs", [1, 2, 3, 4])
+def test_start_standard_exit_on_finalized_in_flight_exit_output_should_fail(testlang, num_outputs):
+    owner, amount = testlang.accounts[0], 100
+    deposit_id = testlang.deposit(owner, amount)
+    outputs = [(owner.address, NULL_ADDRESS, 1)] * num_outputs
+    spend_id = testlang.spend_utxo([deposit_id], [owner.key], outputs)
+    output_index = num_outputs - 1
+
+    # start IFE, piggyback one output and process the exit
+    testlang.start_in_flight_exit(spend_id)
+    testlang.piggyback_in_flight_exit_output(spend_id, output_index, owner.key)
+    testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
+    testlang.process_exits(NULL_ADDRESS, 0, 1)
+
+    blknum, txindex, _ = decode_utxo_id(spend_id)
+
+    # all not finalized outputs can exit via SE
+    for i in range(output_index):
+        output_id = encode_utxo_id(blknum, txindex, i)
+        testlang.start_standard_exit(output_id, key=owner.key)
+
+    # an already finalized output __cannot__ exit via SE
+    with pytest.raises(TransactionFailed):
+        output_id = encode_utxo_id(blknum, txindex, output_index)
+        testlang.start_standard_exit(output_id, key=owner.key)
