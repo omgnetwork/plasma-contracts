@@ -185,6 +185,7 @@ def test_start_standard_exit_on_finalized_in_flight_exit_output_should_fail(test
     spend_id = testlang.spend_utxo([deposit_id], [owner.key], outputs)
     output_index = num_outputs - 1
 
+    # start IFE, piggyback one output and process the exit
     testlang.start_in_flight_exit(spend_id)
     testlang.piggyback_in_flight_exit_output(spend_id, output_index, owner.key)
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
@@ -197,6 +198,7 @@ def test_start_standard_exit_on_finalized_in_flight_exit_output_should_fail(test
         output_id = encode_utxo_id(blknum, txindex, i)
         testlang.start_standard_exit(output_id, key=owner.key)
 
+    # an already finalized output __cannot__ exit via SE
     with pytest.raises(TransactionFailed):
         output_id = encode_utxo_id(blknum, txindex, output_index)
         testlang.start_standard_exit(output_id, key=owner.key)

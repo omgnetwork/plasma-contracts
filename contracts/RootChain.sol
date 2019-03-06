@@ -356,7 +356,7 @@ contract RootChain {
         require(exits[exitId].amount == 0);
 
         InFlightExit storage inFlightExit = _getInFlightExit(_outputTx);
-
+        // Check whether IFE is either ongoing or finished
         if (inFlightExit.exitStartTimestamp != 0 || flagged(inFlightExit.exitMap)) {
             // Check if this output was piggybacked or exited in an in-flight exit
             require(!inFlightExit.exitMap.bitSet(oindex + MAX_INPUTS) && !inFlightExit.exitMap.bitSet(oindex + MAX_INPUTS + MAX_INPUTS*2));
