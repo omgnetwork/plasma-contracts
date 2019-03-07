@@ -279,6 +279,23 @@ def test_finalize_challenged_exit_will_not_send_funds(testlang):
     assert post_balance == pre_balance
 
 
+def test_finalize_challenged_exit_does_not_emit_events(testlang):
+    owner, finalizer, amount = testlang.accounts[0], testlang.accounts[0], 100
+    deposit_id = testlang.deposit(owner, amount)
+    spend_id = testlang.spend_utxo([deposit_id], [owner.key], [(owner.address, NULL_ADDRESS, 100)])
+
+    testlang.start_standard_exit(spend_id, owner.key)
+    doublespend_id = testlang.spend_utxo([spend_id], [owner.key], [(owner.address, NULL_ADDRESS, 100)])
+
+    testlang.challenge_standard_exit(spend_id, doublespend_id)
+
+    testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
+
+    testlang.flush_events()
+    testlang.process_exits(NULL_ADDRESS, 0, 1, sender=finalizer.key)
+    assert [] == testlang.flush_events()
+
+
 def test_finalize_exit_challenge_of_finalized_will_fail(testlang):
     owner, amount = testlang.accounts[0], 100
     deposit_id = testlang.deposit(owner, amount)

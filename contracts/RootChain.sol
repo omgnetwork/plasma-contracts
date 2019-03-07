@@ -822,8 +822,7 @@ contract RootChain {
                 _processInFlightExit(inFlightExits[exitId], exitId, _token);
                 // think of useful event scheme for in-flight outputs finalization
             } else {
-                _processStandardExit(exits[exitId]);
-                emit ExitFinalized(exitId);
+                _processStandardExit(exits[exitId], exitId);
             }
 
             // Pull the next exit.
@@ -1229,7 +1228,7 @@ contract RootChain {
      * @dev Processes a standard exit.
      * @param _standardExit Exit to process.
      */
-    function _processStandardExit(Exit storage _standardExit)
+    function _processStandardExit(Exit storage _standardExit, uint192 exitId)
         internal
     {
         // If the exit is valid, pay out the exit and refund the bond.
@@ -1247,6 +1246,8 @@ contract RootChain {
             delete _standardExit.owner;
             // Delete token too, since check is done by amount anyway.
             delete _standardExit.token;
+
+            emit ExitFinalized(exitId);
         }
     }
 
