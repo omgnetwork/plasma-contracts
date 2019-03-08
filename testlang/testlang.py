@@ -90,6 +90,9 @@ class InFlightExit(object):
         self.inputs = {}
         self.outputs = {}
 
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
+
     @property
     def challenge_flag_set(self):
         return self.root_chain.flagged(self.exit_start_timestamp)
@@ -290,9 +293,12 @@ class TestingLanguage(object):
             token (address): Address of the token to be processed.
             exit_id (int): Identifier of an exit (optional, pass 0 to ignore the check)
             count (int): Maximum number of exits to be processed.
+
+        Returns:
+            int: number of exits that have been processed.
         """
 
-        self.root_chain.processExits(token, exit_id, count, **kwargs)
+        return self.root_chain.processExits(token, exit_id, count, **kwargs)
 
     def get_challenge_proof(self, utxo_id, spend_id):
         """Returns information required to submit a challenge.

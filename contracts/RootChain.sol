@@ -803,14 +803,20 @@ contract RootChain {
      */
     function processExits(address _token, uint192 _topExitId, uint256 _exitsToProcess)
         public
+        returns (uint256)
     {
         uint64 exitableTimestamp;
         uint192 exitId;
         bool inFlight;
+        uint256 processedExitNum = 0;
+
+        PriorityQueue queue = PriorityQueue(exitsQueues[_token]);
+        if (queue.currentSize() <= 0) {
+            return processedExitNum;
+        }
 
         (exitableTimestamp, exitId, inFlight) = getNextExit(_token);
         require(_topExitId == exitId || _topExitId == 0);
-        PriorityQueue queue = PriorityQueue(exitsQueues[_token]);
 
         while (exitableTimestamp < block.timestamp && _exitsToProcess > 0) {
             // Delete the minimum from the queue.
@@ -825,12 +831,14 @@ contract RootChain {
                 _processStandardExit(exits[exitId], exitId);
             }
 
+            processedExitNum++;
+
             // Pull the next exit.
             if (queue.currentSize() > 0) {
                 (exitableTimestamp, exitId, inFlight) = getNextExit(_token);
                 _exitsToProcess--;
             } else {
-                return;
+                return processedExitNum;
             }
         }
     }
@@ -1301,7 +1309,6 @@ contract RootChain {
         if (_shouldClearInFlightExit(_inFlightExit)){
             _clearInFlightExit(_inFlightExit);
         }
-
     }
 
     function _shouldClearInFlightExit(InFlightExit memory _inFlightExit)

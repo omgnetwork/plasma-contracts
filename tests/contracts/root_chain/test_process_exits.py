@@ -19,7 +19,8 @@ def test_process_exits_standard_exit_should_succeed(testlang):
     assert {"owner": owner.address, "_event_type": b'ExitStarted'}.items() <= exit_event.items()
 
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
-    testlang.process_exits(NULL_ADDRESS, 0, 100)
+    assert 1 == testlang.process_exits(NULL_ADDRESS, 0, 100)
+
     [exit_finalized] = testlang.flush_events()
     assert {"exitId": exit_event['exitId'], "_event_type": b'ExitFinalized'}.items() <= exit_finalized.items()
 
@@ -230,20 +231,8 @@ def test_finalize_exits_tx_race_normal(testlang):
     assert three_exits_tx_gas > 3516  # value from _tx_race_short_circuit
 
 
-def test_finalize_exits_empty_queue_should_crash(testlang, ethtester):
-    owner, amount = testlang.accounts[0], 100
-
-    deposit_id_1 = testlang.deposit(owner, amount)
-    spend_id_1 = testlang.spend_utxo([deposit_id_1], [owner.key], [(owner.address, NULL_ADDRESS, 100)])
-    testlang.start_standard_exit(spend_id_1, owner.key)
-
-    testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
-    testlang.process_exits(NULL_ADDRESS, testlang.get_standard_exit_id(spend_id_1), 1)
-
-    with pytest.raises(TransactionFailed):
-        testlang.process_exits(NULL_ADDRESS, testlang.get_standard_exit_id(spend_id_1), 1)
-    with pytest.raises(TransactionFailed):
-        testlang.process_exits(NULL_ADDRESS, 0, 1)
+def test_finalize_exits_empty_queue_would_do_nothing(testlang, ethtester):
+    assert 0 == testlang.process_exits(NULL_ADDRESS, 0, 1)
 
 
 def test_finalize_skipping_top_utxo_check_is_possible(testlang):
@@ -575,16 +564,10 @@ def test_ife_is_enqueued_once_per_token(testlang, token):
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
 
     # check Eth
-    testlang.process_exits(NULL_ADDRESS, 0, 1)
-
-    with pytest.raises(TransactionFailed):
-        testlang.process_exits(NULL_ADDRESS, 0, 1)
+    assert 1 == testlang.process_exits(NULL_ADDRESS, 0, 1)
 
     # check ERC20 token
-    testlang.process_exits(token.address, 0, 1)
-
-    with pytest.raises(TransactionFailed):
-        testlang.process_exits(token.address, 0, 1)
+    assert 1 == testlang.process_exits(token.address, 0, 1)
 
 
 def test_when_processing_an_ife_it_is_cleaned_up_when_all_piggybacked_outputs_finalized(testlang, token):
