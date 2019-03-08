@@ -796,7 +796,7 @@ contract RootChain {
     }
 
     /**
-     * @dev Processes any exits that have completed the challenge period.
+     * @dev Processes any exits that have completed the challenge period. Fails when exit queue for a token is empty.
      * @param _token Token type to process.
      * @param _topExitId First exit that should be processed. Set to zero to skip the check.
      * @param _exitsToProcess Maximal number of exits to process.
