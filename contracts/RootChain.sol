@@ -328,6 +328,7 @@ contract RootChain {
     /**
      * @dev Starts a standard withdrawal of a given output. Uses output-age priority.
             Crosschecks in-flight exit existence.
+            NOTE: requires the exiting UTXO's token to be added via `addToken`
      * @param _utxoPos Position of the exiting output.
      * @param _outputTx RLP encoded transaction that created the exiting output.
      * @param _outputTxInclusionProof A Merkle proof showing that the transaction was included.
@@ -540,6 +541,7 @@ contract RootChain {
 
     /**
      * @dev Allows a user to piggyback onto an in-flight transaction.
+            NOTE: requires the exiting UTXO's token to be added via `addToken`
      * @param _inFlightTx RLP encoded in-flight transaction.
      * @param _outputIndex Index of the input/output to piggyback (0-7).
      */
