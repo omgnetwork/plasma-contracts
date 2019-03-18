@@ -353,6 +353,8 @@ contract RootChain {
             (output.amount == 0 && output.tokenIds.length > 0) ||
             (output.amount > 0 && output.tokenIds.length == 0)
         );
+        require(exits[exitId].amount == 0);
+        require(exits[exitId].tokenIds.length == 0);
 
         // Make sure queue for this token exists.
         require(hasToken(output.token));
