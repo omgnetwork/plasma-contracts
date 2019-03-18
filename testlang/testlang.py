@@ -2,7 +2,7 @@ import rlp
 from plasma_core.child_chain import ChildChain
 from plasma_core.account import EthereumAccount
 from plasma_core.block import Block
-from plasma_core.transaction import Transaction, TransactionOutput, UnsignedTransaction
+from plasma_core.transaction import Transaction, UnsignedTransaction, TransactionOutputBase
 from plasma_core.constants import WEEK, NULL_SIGNATURE, NULL_ADDRESS
 from plasma_core.utils.transactions import decode_utxo_id, encode_utxo_id
 from plasma_core.utils.address import address_to_hex
@@ -79,7 +79,7 @@ class InFlightExit(object):
     def get_input(self, index):
         input_info = self.inputs.get(index)
         if not input_info:
-            input_info = TransactionOutput(*self.root_chain.getInFlightExitOutput(self.in_flight_tx.encoded, index))
+            input_info = TransactionOutputBase.create_output(*self.root_chain.getInFlightExitOutput(self.in_flight_tx.encoded, index))
             input_info.owner = address_to_hex(input_info.owner)
             self.inputs[index] = input_info
         return input_info
@@ -145,7 +145,7 @@ class TestingLanguage(object):
 
         Args:
             owner (EthereumAccount): Account to own the deposit.
-            token (Contract: ERC20, MintableToken): Token to be deposited.
+            token (Contract: ERC20/ERC721, MintableToken): Token to be deposited.
             amount (int): Deposit amount.
 
         Returns:
@@ -162,6 +162,34 @@ class TestingLanguage(object):
         self.root_chain.depositFrom(deposit_tx.encoded, sender=owner.key)
         balance = self.get_balance(self.root_chain, token)
         assert balance == pre_balance + amount
+        block = Block(transactions=[deposit_tx], number=blknum)
+        self.child_chain.add_block(block)
+        return encode_utxo_id(blknum, 0, 0)
+
+    def deposit_token_nft(self, owner, token, tokenids):
+        """Mints, approves and deposits token for given owner and amount
+
+        Args:
+            owner (EthereumAccount): Account to own the deposit.
+            token (Contract: ERC721, MintableToken): Token to be deposited.
+            tokenids (int[]): Deposit tokens ids.
+
+        Returns:
+            int: Unique identifier of the deposit.
+        """
+
+        deposit_tx = Transaction(outputs=[(owner.address, token.address, tokenids)])
+        for tid in tokenids:
+            token.mint(owner.address, tid)
+            self.ethtester.chain.mine()
+            token.approve(self.root_chain.address, tid, sender=owner.key)
+            self.ethtester.chain.mine()
+
+        blknum = self.root_chain.getDepositBlockNumber()
+        pre_balance = self.get_balance(self.root_chain, token)
+        self.root_chain.depositFrom(deposit_tx.encoded, sender=owner.key)
+        balance = self.get_balance(self.root_chain, token)
+        assert balance == pre_balance + len(tokenids)
         block = Block(transactions=[deposit_tx], number=blknum)
         self.child_chain.add_block(block)
         return encode_utxo_id(blknum, 0, 0)
@@ -258,11 +286,14 @@ class TestingLanguage(object):
         """
 
         spend_tx = self.child_chain.get_transaction(spend_id)
-        inputs = [(spend_tx.blknum1, spend_tx.txindex1, spend_tx.oindex1), (spend_tx.blknum2, spend_tx.txindex2, spend_tx.oindex2)]
-        try:
-            input_index = inputs.index(decode_utxo_id(utxo_id))
-        except ValueError:
-            input_index = 0
+        inputs = [
+            (spend_tx.blknum1, spend_tx.txindex1, spend_tx.oindex1),
+            (spend_tx.blknum2, spend_tx.txindex2, spend_tx.oindex2)
+        ]
+#        try: # TODO: Explain what it was here for?
+        input_index = inputs.index(decode_utxo_id(utxo_id))
+ #       except ValueError:
+ #           input_index = 0
         (blknum, _, _) = decode_utxo_id(spend_id)
         block = self.child_chain.blocks[blknum]
         proof = block.merklized_transaction_set.create_membership_proof(spend_tx.merkle_hash)

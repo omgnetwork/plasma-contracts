@@ -1,12 +1,12 @@
 import pytest
 from ethereum.tools.tester import TransactionFailed
-
+from plasma_core.constants import NULL_ADDRESS
 
 def test_respond_to_non_canonical_challenge_should_succeed(testlang):
     owner_1, owner_2, amount = testlang.accounts[0], testlang.accounts[1], 100
     deposit_id = testlang.deposit(owner_1, amount)
     spend_id = testlang.spend_utxo([deposit_id], [owner_1.key])
-    double_spend_id = testlang.spend_utxo([deposit_id], [owner_1.key], [(owner_1.address, 100)], force_invalid=True)
+    double_spend_id = testlang.spend_utxo([deposit_id], [owner_1.key], [(owner_1.address, NULL_ADDRESS, 100)], force_invalid=True)
     testlang.start_in_flight_exit(spend_id)
     testlang.challenge_in_flight_exit_not_canonical(spend_id, double_spend_id, key=owner_2.key)
 
@@ -23,7 +23,7 @@ def test_respond_to_non_canonical_challenge_should_succeed(testlang):
 def test_respond_to_non_canonical_challenge_not_older_should_fail(testlang):
     owner_1, owner_2, amount = testlang.accounts[0], testlang.accounts[1], 100
     deposit_id = testlang.deposit(owner_1, amount)
-    double_spend_id = testlang.spend_utxo([deposit_id], [owner_1.key], [(owner_1.address, 100)], force_invalid=True)
+    double_spend_id = testlang.spend_utxo([deposit_id], [owner_1.key], [(owner_1.address, NULL_ADDRESS, 100)], force_invalid=True)
     spend_id = testlang.spend_utxo([deposit_id], [owner_1.key])
     testlang.start_in_flight_exit(spend_id)
     testlang.challenge_in_flight_exit_not_canonical(spend_id, double_spend_id, key=owner_2.key)
@@ -38,7 +38,7 @@ def test_respond_to_non_canonical_challenge_invalid_proof_should_fail(testlang):
     owner_1, owner_2, amount = testlang.accounts[0], testlang.accounts[1], 100
     deposit_id = testlang.deposit(owner_1, amount)
     spend_id = testlang.spend_utxo([deposit_id], [owner_1.key])
-    double_spend_id = testlang.spend_utxo([deposit_id], [owner_1.key], [(owner_1.address, 100)], force_invalid=True)
+    double_spend_id = testlang.spend_utxo([deposit_id], [owner_1.key], [(owner_1.address, NULL_ADDRESS, 100)], force_invalid=True)
     testlang.start_in_flight_exit(spend_id)
     testlang.challenge_in_flight_exit_not_canonical(spend_id, double_spend_id, key=owner_2.key)
 

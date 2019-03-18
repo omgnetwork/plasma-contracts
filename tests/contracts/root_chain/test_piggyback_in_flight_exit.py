@@ -30,7 +30,7 @@ def test_piggyback_in_flight_exit_valid_output_owner_should_succeed(testlang, nu
     deposit_id = testlang.deposit(owner_1, amount)
     outputs = []
     for i in range(0, num_outputs):
-        outputs.append((testlang.accounts[i].address, 1))
+        outputs.append((testlang.accounts[i].address, NULL_ADDRESS, 1))
     spend_id = testlang.spend_utxo([deposit_id], [owner_1.key], outputs)
 
     testlang.start_in_flight_exit(spend_id)
@@ -56,7 +56,7 @@ def test_piggyback_in_flight_exit_invalid_owner_should_fail(testlang):
 def test_piggyback_in_flight_exit_different_exits_different_outputs_should_succeed(testlang):
     owner, amount = testlang.accounts[0], 100
     deposit_id = testlang.deposit(owner, amount)
-    spend_id = testlang.spend_utxo([deposit_id], [owner.key], [(owner.address, 50), (owner.address, 50)])
+    spend_id = testlang.spend_utxo([deposit_id], [owner.key], [(owner.address, NULL_ADDRESS, 50), (owner.address, NULL_ADDRESS, 50)])
 
     # First time should succeed
     testlang.start_in_flight_exit(spend_id)
@@ -75,7 +75,7 @@ def test_piggyback_in_flight_exit_different_exits_different_outputs_should_succe
 def test_piggyback_in_flight_exit_different_exits_same_output_should_fail(testlang):
     owner, amount = testlang.accounts[0], 100
     deposit_id = testlang.deposit(owner, amount)
-    spend_id = testlang.spend_utxo([deposit_id], [owner.key], [(owner.address, 50), (owner.address, 50)])
+    spend_id = testlang.spend_utxo([deposit_id], [owner.key], [(owner.address, NULL_ADDRESS, 50), (owner.address, NULL_ADDRESS, 50)])
 
     # First time should succeed
     testlang.start_in_flight_exit(spend_id)

@@ -14,6 +14,8 @@ from solc import link_code
 GAS_LIMIT = 8000000
 START_GAS = GAS_LIMIT - 1000000
 config_metropolis['BLOCK_GAS_LIMIT'] = GAS_LIMIT
+config_metropolis['SPURIOUS_DRAGON_FORK_BLKNUM'] = 0xffffffffffffffffffffffffffffffffffffffff
+# FIXME: Line above disables contract code size limits. Rewrite RootChain.sol to set of separated contracts
 
 
 # Compile contracts before testing
@@ -84,6 +86,11 @@ def token(ethtester, get_contract):
     ethtester.chain.mine()
     return contract
 
+@pytest.fixture
+def token_NFT(ethtester, get_contract):
+    contract = get_contract('NFTBasicToken')
+    ethtester.chain.mine()
+    return contract
 
 @pytest.fixture
 def testlang(root_chain, ethtester):

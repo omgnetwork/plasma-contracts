@@ -1,5 +1,7 @@
 import rlp
 from rlp.sedes import big_endian_int, binary, CountableList
+from rlp.sedes.lists import is_sequence
+from typing import Union
 from ethereum import utils
 from plasma_core.utils.signatures import sign, get_signer
 from plasma_core.utils.transactions import encode_utxo_id
@@ -28,28 +30,81 @@ class TransactionInput(rlp.Serializable):
         return encode_utxo_id(self.blknum, self.txindex, self.oindex)
 
 
-class TransactionOutput(rlp.Serializable):
-
+class TransactionOutputBase(object):
     fields = (
         ('owner', utils.address),
-        ('token', utils.address),
-        ('amount', big_endian_int)
+        ('token', utils.address)
     )
 
-    def __init__(self, owner=NULL_ADDRESS, token=NULL_ADDRESS, amount=0):
+    def __init__(self, owner=NULL_ADDRESS, token=NULL_ADDRESS):
         self.owner = utils.normalize_address(owner)
         self.token = utils.normalize_address(token)
+
+    def serialize_base(self):
+        return [
+            utils.address.serialize(self.owner),
+            utils.address.serialize(self.token)
+        ]
+
+    @classmethod
+    def serialize(cls, obj):
+        return obj.serialize()
+
+    @classmethod
+    def deserialize(cls, serial):
+        assert False  # TODO: Implement
+
+    @staticmethod
+    def create_output(owner, token, value: Union[int, list]):
+        if isinstance(value, int):
+            return TransactionOutputFT(owner, token, value)
+        elif isinstance(value, list):
+            return TransactionOutputNFT(owner, token, value)
+        else:
+            raise RuntimeError("Unsupported value type for output")
+
+
+class TransactionOutputFT(TransactionOutputBase):
+
+    def __init__(self, owner=NULL_ADDRESS, token=NULL_ADDRESS, amount=0):
+        super(TransactionOutputFT, self).__init__(owner, token)
         self.amount = amount
+
+    def serialize(self):
+        result = super(TransactionOutputFT, self).serialize_base()
+        result.append(big_endian_int.serialize(self.amount))
+        return result
+
+    @classmethod
+    def deserialize(cls, serial):
+        assert False  # TODO: Implement
+
+
+class TransactionOutputNFT(TransactionOutputBase):
+
+    def __init__(self, owner=NULL_ADDRESS, token=NULL_ADDRESS, tokenids=[]):
+        super(TransactionOutputNFT, self).__init__(owner, token)
+        tokenids.sort()
+        self.tokenids = list(set(tokenids))
+
+    def serialize(self):
+        result = super(TransactionOutputNFT, self).serialize_base()
+        result.append(CountableList(big_endian_int).serialize(self.tokenids))
+        return result
+
+    @classmethod
+    def deserialize(cls, serial):
+        assert False  # TODO: Implement
 
 
 class Transaction(rlp.Serializable):
-
     NUM_TXOS = 4
     DEFAULT_INPUT = (0, 0, 0)
     DEFAULT_OUTPUT = (NULL_ADDRESS, NULL_ADDRESS, 0)
+
     fields = (
         ('inputs', CountableList(TransactionInput, NUM_TXOS)),
-        ('outputs', CountableList(TransactionOutput, NUM_TXOS)),
+        ('outputs', CountableList(TransactionOutputBase, NUM_TXOS)),
         ('signatures', CountableList(binary, NUM_TXOS))
     )
 
@@ -61,7 +116,8 @@ class Transaction(rlp.Serializable):
         padded_outputs = pad_list(outputs, self.DEFAULT_OUTPUT, self.NUM_TXOS)
 
         self.inputs = [TransactionInput(*i) for i in padded_inputs]
-        self.outputs = [TransactionOutput(*o) for o in padded_outputs]
+        self.outputs = [TransactionOutputBase.create_output(*o) for o in padded_outputs]
+
         self.signatures = signatures[:]
         self.spent = [False] * self.NUM_TXOS
 
@@ -74,15 +130,15 @@ class Transaction(rlp.Serializable):
         return [get_signer(self.hash, sig) if sig != NULL_SIGNATURE else NULL_ADDRESS for sig in self.signatures]
 
     @property
-    def encoded(self):
-        return rlp.encode(self, UnsignedTransaction)
-
-    @property
     def is_deposit(self):
         return all([i.blknum == 0 for i in self.inputs])
 
     def sign(self, index, key):
         self.signatures[index] = sign(self.hash, key)
+
+    @property
+    def encoded(self):
+        return rlp.encode(self, UnsignedTransaction)
 
 
 UnsignedTransaction = Transaction.exclude(['signatures'])

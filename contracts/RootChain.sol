@@ -11,6 +11,7 @@ import "./PriorityQueue.sol";
 import "./PriorityQueueFactory.sol";
 
 import "./ERC20.sol";
+import "./ERC721.sol";
 
 
 /**
@@ -64,6 +65,7 @@ contract RootChain {
         address owner;
         address token;
         uint256 amount;
+        uint256[] tokenIds;
     }
 
     struct InFlightExit {
@@ -92,13 +94,15 @@ contract RootChain {
         address indexed depositor,
         uint256 indexed blknum,
         address indexed token,
-        uint256 amount
+        uint256 amount,
+        uint256[] tokenIds
     );
 
     event ExitStarted(
         address indexed owner,
         uint256 outputId,
         uint256 amount,
+        uint256[] tokenIds,
         address token
     );
 
@@ -266,10 +270,16 @@ contract RootChain {
         // Decode the transaction.
         PlasmaCore.Transaction memory decodedTx = _depositTx.decode();
 
-        // Warning, check your ERC20 implementation. TransferFrom should return bool
-        require(ERC20(decodedTx.outputs[0].token).transferFrom(msg.sender, address(this), decodedTx.outputs[0].amount));
+        // Warning, check your ERC20/ERC721 implementation. TransferFrom should return bool
+        for(uint256 i = 0; i < decodedTx.outputs[0].tokenIds.length; ++i){
+            require(ERC721(decodedTx.outputs[0].token).transferFrom(msg.sender, address(this), decodedTx.outputs[0].tokenIds[i]));
+        }
 
-        // Perform other checks and create a deposit block.
+        if(decodedTx.outputs[0].amount > 0) {
+            require(ERC20(decodedTx.outputs[0].token).transferFrom(msg.sender, address(this), decodedTx.outputs[0].amount));
+        }
+
+        // // Perform other checks and create a deposit block.
         _processDeposit(_depositTx, decodedTx);
 
     }
@@ -283,9 +293,10 @@ contract RootChain {
         // deposit with blknum ending with 000.
         require(nextDepositBlock < CHILD_BLOCK_INTERVAL);
 
-        // Check that all but first inputs are 0.
+        // Check that all but first outputs are 0.
         for (uint i = 1; i < 4; i++) {
             require(decodedTx.outputs[i].amount == 0);
+            require(decodedTx.outputs[i].tokenIds.length == 0);
         }
 
         // Calculate the block root.
@@ -305,7 +316,8 @@ contract RootChain {
             decodedTx.outputs[0].owner,
             blknum,
             decodedTx.outputs[0].token,
-            decodedTx.outputs[0].amount
+            decodedTx.outputs[0].amount,
+            decodedTx.outputs[0].tokenIds
         );
 
         nextDepositBlock++;
@@ -337,8 +349,10 @@ contract RootChain {
         uint192 exitId = getStandardExitId(_outputId);
 
         // Make sure this exit is valid.
-        require(output.amount > 0);
-        require(exits[exitId].amount == 0);
+        require(
+            (output.amount == 0 && output.tokenIds.length > 0) ||
+            (output.amount > 0 && output.tokenIds.length == 0)
+        );
 
         // Make sure queue for this token exists.
         require(hasToken(output.token));
@@ -353,10 +367,11 @@ contract RootChain {
         exits[exitId] = Exit({
             owner: output.owner,
             token: output.token,
-            amount: output.amount
+            amount: output.amount,
+            tokenIds: output.tokenIds
         });
 
-        emit ExitStarted(output.owner, _outputId, output.amount, output.token);
+        emit ExitStarted(output.owner, _outputId, output.amount, output.tokenIds, output.token);
     }
 
     /**
@@ -418,11 +433,12 @@ contract RootChain {
         exits[exitId] = Exit({
             owner: operator,
             token: _token,
-            amount: _amount
+            amount: _amount,
+            tokenIds: new uint[](0)
         });
 
         nextFeeExit++;
-        emit ExitStarted(operator, exitId, _amount, _token);
+        emit ExitStarted(operator, exitId, _amount, new uint[](0), _token);
     }
 
     /**
@@ -1001,6 +1017,19 @@ contract RootChain {
     }
 
     /**
+     * @dev Returns information about an exit.
+     * @param _utxoPos Position of the UTXO in the chain.
+     * @return A tuple representing the active exit for the given UTXO.
+     */
+    // function getExit(uint192 _utxoPos) TODO: Uncommenting this function makes contract undeployable
+    //     public
+    //     view
+    //     returns (address, address, uint256, uint256[])
+    // {
+    //     return (exits[_utxoPos].owner, exits[_utxoPos].token, exits[_utxoPos].amount, exits[_utxoPos].tokenIds);
+    // }
+
+    /**
      * @dev Returns the next exit to be processed.
      * @return A tuple with timestamp for when the next exit is processable, its unique exit id
                and flag determining if exit is in-flight one.
@@ -1096,8 +1125,15 @@ contract RootChain {
                 _standardExit.owner.transfer(_standardExit.amount + standardExitBond);
             }
             else {
-                require(ERC20(_standardExit.token).transfer(_standardExit.owner, _standardExit.amount));
-                _standardExit.owner.transfer(standardExitBond);
+                require(_standardExit.amount > 0 || _standardExit.tokenIds.length > 0);
+                if (_standardExit.amount > 0) {
+                    require(ERC20(_standardExit.token).transfer(_standardExit.owner, _standardExit.amount));
+                    _standardExit.owner.transfer(standardExitBond);
+                } else if (_standardExit.tokenIds.length > 0) {
+                    for(uint256 i = 0; i < _standardExit.tokenIds.length; ++i){
+                        require(ERC721(_standardExit.token).transferFrom(address(this), _standardExit.owner, _standardExit.tokenIds[i]));
+                    }
+                }
             }
         }
 

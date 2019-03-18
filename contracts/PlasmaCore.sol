@@ -33,6 +33,7 @@ library PlasmaCore {
         address owner;
         address token;
         uint256 amount;
+        uint256[] tokenIds;
     }
 
     struct Transaction {
@@ -70,11 +71,27 @@ library PlasmaCore {
             });
 
             RLP.RLPItem[] memory output = outputs[i].toList();
-            decodedTx.outputs[i] = TransactionOutput({
-                owner: output[0].toAddress(),
-                token: output[1].toAddress(),
-                amount: output[2].toUint()
-            });
+            require(output.length == 3);
+            if(!output[2].isList()) {
+                decodedTx.outputs[i] = TransactionOutput({
+                    owner: output[0].toAddress(),
+                    token: output[1].toAddress(),
+                    amount: output[2].toUint(),
+                    tokenIds: new uint[](0)
+                });
+             } else {
+                RLP.RLPItem[] memory tids_rpl = output[2].toList();
+                uint256[] memory tids = new uint256[](tids_rpl.length);
+                for(uint256 ti = 0; ti < tids_rpl.length; ++ti) {
+                    tids[ti] = tids_rpl[ti].toUint();
+                }
+                decodedTx.outputs[i] = TransactionOutput({
+                    owner: output[0].toAddress(),
+                    token: output[1].toAddress(),
+                    amount: 0,
+                    tokenIds: tids
+                });
+            }
         }
 
         return decodedTx;

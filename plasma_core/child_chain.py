@@ -1,6 +1,8 @@
+import itertools
 from plasma_core.utils.transactions import decode_utxo_id
 from plasma_core.utils.address import address_to_hex
 from plasma_core.constants import NULL_SIGNATURE
+from plasma_core.transaction import Transaction, TransactionOutputFT, TransactionOutputNFT
 from plasma_core.exceptions import (InvalidBlockSignatureException,
                                     InvalidTxSignatureException,
                                     TxAlreadySpentException,
@@ -55,29 +57,37 @@ class ChildChain(object):
         return True
 
     def validate_transaction(self, tx, temp_spent={}):
-        input_amount = 0
-        output_amount = sum([o.amount for o in tx.outputs])
+        if isinstance(tx, Transaction):
+            input_amount = 0
+            input_tokenids = []
+            output_amount = sum([o.amount for o in tx.outputs if isinstance(o, TransactionOutputFT)])
+            output_tokenids = list(itertools.chain.from_iterable([o.tokenids for o in tx.outputs if isinstance(o, TransactionOutputNFT)]))
 
-        for x in range(len(tx.inputs)):
-            i = tx.inputs[x]
+            for x in range(len(tx.inputs)):
+                i = tx.inputs[x]
 
-            # Transactions coming from block 0 are valid.
-            if i.blknum == 0:
-                continue
+                # Transactions coming from block 0 are valid.
+                if i.blknum == 0:
+                    continue
 
-            input_tx = self.get_transaction(i.identifier)
+                input_tx = self.get_transaction(i.identifier)
 
-            # Check for a valid signature.
-            if tx.signatures[x] == NULL_SIGNATURE or tx.signers[x] != input_tx.outputs[i.oindex].owner:
-                raise InvalidTxSignatureException('failed to validate tx')
+                # Check for a valid signature.
+                if tx.signatures[x] == NULL_SIGNATURE or tx.signers[x] != input_tx.outputs[i.oindex].owner:
+                    raise InvalidTxSignatureException('failed to validate tx')
 
-            # Check to see if the input is already spent.
-            if input_tx.spent[i.oindex] or i.identifier in temp_spent:
-                raise TxAlreadySpentException('failed to validate tx')
-            input_amount += input_tx.outputs[i.oindex].amount
+                # Check to see if the input is already spent.
+                if input_tx.spent[i.oindex] or i.identifier in temp_spent:
+                    raise TxAlreadySpentException('failed to validate tx')
+                if isinstance(input_tx.outputs[i.oindex], TransactionOutputFT):
+                    input_amount += input_tx.outputs[i.oindex].amount
+                elif isinstance(input_tx.outputs[i.oindex], TransactionOutputNFT):
+                    input_tokenids += input_tx.outputs[i.oindex].tokenids
 
-        if not tx.is_deposit and input_amount < output_amount:
-            raise TxAmountMismatchException('failed to validate tx')
+            if not tx.is_deposit and input_amount < output_amount:
+                raise TxAmountMismatchException('failed to validate tx')
+            if not tx.is_deposit and not set(input_tokenids) == set(output_tokenids):
+                raise TxAmountMismatchException('failed to validate tx')
 
     def get_block(self, blknum):
         return self.blocks[blknum]
