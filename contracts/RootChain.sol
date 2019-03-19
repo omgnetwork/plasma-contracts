@@ -559,17 +559,17 @@ contract RootChain {
         require(_outputIndex < 8);
 
         // Check if SE from the output is not started nor finalized
-        if (_outputIndex >= MAX_INPUTS){
+        if (_outputIndex >= MAX_INPUTS) {
             require(exits[getStandardExitId(txhash, _outputIndex - MAX_INPUTS)].amount == 0);
         }
 
-        // Check that the in-flight exit is currently active and in period 1.
+        // Check that the in-flight exit is active and in period 1.
         InFlightExit storage inFlightExit = _getInFlightExit(_inFlightTx);
         require(_getExitPeriod(inFlightExit) == 1);
 
 
-        // Check that we're not piggybacking something that's already been piggybacked or already exited.
-        require(!inFlightExit.exitMap.bitSet(_outputIndex) && !inFlightExit.exitMap.bitSet(_outputIndex + 8));
+        // Check that we're not piggybacking something that's already been piggybacked.
+        require(!inFlightExit.exitMap.bitSet(_outputIndex));
 
         // Check that the message sender owns the output.
         PlasmaCore.TransactionOutput memory output;
@@ -583,36 +583,35 @@ contract RootChain {
         }
         require(output.owner == msg.sender);
 
-        // Set the output as piggybacked.
-        inFlightExit.exitMap = inFlightExit.exitMap.setBit(_outputIndex);
-
         // Enqueue the exit in a right queue, if not already enqueued.
-        if (_shouldEnqueueInFlightExit(inFlightExit, output.token, _outputIndex)) {
+        if (_shouldEnqueueInFlightExit(inFlightExit, output.token)) {
             _enqueueExit(output.token, inFlightExit.exitPriority);
         }
+
+        // Set the output as piggybacked.
+        inFlightExit.exitMap = inFlightExit.exitMap.setBit(_outputIndex);
 
         emit InFlightExitPiggybacked(msg.sender, txhash, _outputIndex);
     }
 
-    function _shouldEnqueueInFlightExit(InFlightExit memory _inFlightExit, address _token, uint8 _outputIndex)
+    function _shouldEnqueueInFlightExit(InFlightExit memory _inFlightExit, address _token)
         internal
         pure
         returns (bool)
     {
 
-        for (uint8 i = 0; i < MAX_INPUTS; ++i){
+        for (uint8 i = 0; i < MAX_INPUTS; ++i) {
             if (
-                (i != _outputIndex && _inFlightExit.exitMap.bitSet(i) && _inFlightExit.inputs[i].token == _token)
+                (_inFlightExit.exitMap.bitSet(i) && _inFlightExit.inputs[i].token == _token)
                 ||
-                (i + MAX_INPUTS != _outputIndex && _inFlightExit.exitMap.bitSet(i + MAX_INPUTS) && _inFlightExit.outputs[i].token == _token)
-            ){
+                (_inFlightExit.exitMap.bitSet(i + MAX_INPUTS) && _inFlightExit.outputs[i].token == _token)
+            ) {
                 return false;
             }
         }
 
         return true;
     }
-
 
     /**
      * @dev Attempts to prove that an in-flight exit is not canonical.
@@ -635,11 +634,11 @@ contract RootChain {
     )
         public
     {
-        // Check that the exit is currently active and in period 1.
+        // Check that the exit is active and in period 1.
         InFlightExit storage inFlightExit = _getInFlightExit(_inFlightTx);
         require(_getExitPeriod(inFlightExit) == 1);
 
-        // Check if exit's input were spent via MVP exit
+        // Check if exit's input was spent via MVP exit
         require(!isSpentInput(inFlightExit.exitStartTimestamp));
 
         // Check that the two transactions are not the same.
@@ -661,7 +660,7 @@ contract RootChain {
             competitorPosition = _competingTxPos;
         }
 
-        // Competitor must first or must be in the chain before the current oldest competitor.
+        // Competitor must be first or must be older than the current oldest competitor.
         require(inFlightExit.oldestCompetitor == 0 || inFlightExit.oldestCompetitor > competitorPosition);
 
         // Set the oldest competitor and new bond owner.
@@ -687,18 +686,15 @@ contract RootChain {
     )
         public
     {
-        // Check that the exit is currently active and first two periods.
+        // Check that the exit is active and in first two periods.
         InFlightExit storage inFlightExit = _getInFlightExit(_inFlightTx);
         require(_getExitPeriod(inFlightExit) < 3);
 
-        // Check if exit's input were spent via MVP exit
-        require(!isSpentInput(inFlightExit.exitStartTimestamp));
+        // Check that there is a challenge and in-flight transaction is older than its competitors.
+        require(inFlightExit.oldestCompetitor > _inFlightTxPos);
 
         // Check that the in-flight transaction was included.
         require(_transactionIncluded(_inFlightTx, _inFlightTxPos, _inFlightTxInclusionProof));
-
-        // Check that the in-flight transaction is older than its competitors.
-        require(inFlightExit.oldestCompetitor > _inFlightTxPos);
 
         // Fix the oldest competitor and new bond owner.
         inFlightExit.oldestCompetitor = _inFlightTxPos;
@@ -708,7 +704,6 @@ contract RootChain {
         inFlightExit.exitStartTimestamp = clearFlag(inFlightExit.exitStartTimestamp);
 
         emit InFlightExitChallengeResponded(msg.sender, keccak256(_inFlightTx), _inFlightTxPos);
-
     }
 
     /**
@@ -728,7 +723,7 @@ contract RootChain {
     )
         public
     {
-        // Check that the exit is currently active and in first two periods.
+        // Check that the exit is active and in first two periods.
         InFlightExit storage inFlightExit = _getInFlightExit(_inFlightTx);
         require(_getExitPeriod(inFlightExit) < 3);
 
@@ -772,7 +767,7 @@ contract RootChain {
     )
         public
     {
-        // Check that the exit is currently active and in first two periods.
+        // Check that the exit is active and in first two periods.
         InFlightExit storage inFlightExit = _getInFlightExit(_inFlightTx);
         require(_getExitPeriod(inFlightExit) < 3);
 
@@ -1275,13 +1270,13 @@ contract RootChain {
                 output = _inFlightExit.outputs[i - MAX_INPUTS];
             }
 
-            // Check if the output's token, the "to exit" bit is not set or if the "already exited" bit is set.
-            if ( output.token != _token
+            // Check if the output's token or the "to exit" bit is not set.
+            if (output.token != _token
                 || !_inFlightExit.exitMap.bitSet(i)
-                || _inFlightExit.exitMap.bitSet(i + 2 * MAX_INPUTS)
             ) {
                 continue;
             }
+            // Set bit flag to prevent future exits by standard exit mechanism.
             _inFlightExit.exitMap = _inFlightExit.exitMap.clearBit(i).setBit(i + 2 * MAX_INPUTS);
 
 
@@ -1289,10 +1284,10 @@ contract RootChain {
             ethTransferAmount = piggybackBond;
             if ((i < MAX_INPUTS && inputsExitable) || (i >= MAX_INPUTS && !inputsExitable)) {
 
-                if (_token == address(0)){
+                if (_token == address(0)) {
                     ethTransferAmount += output.amount;
                 }
-                else{
+                else {
                     require(ERC20(_token).transfer(output.owner, output.amount));
                 }
                 emit InFlightExitFinalized(_inFlightExitId, i);
@@ -1300,19 +1295,18 @@ contract RootChain {
             output.owner.transfer(ethTransferAmount);
         }
 
-        if (_shouldClearInFlightExit(_inFlightExit)){
+        if (_shouldClearInFlightExit(_inFlightExit)) {
             _clearInFlightExit(_inFlightExit);
         }
-
     }
 
     function _shouldClearInFlightExit(InFlightExit memory _inFlightExit)
         internal
         returns (bool)
     {
-        for (uint8 i  = 0; i < MAX_INPUTS * 2; ++i){
+        for (uint8 i  = 0; i < MAX_INPUTS * 2; ++i) {
             // Check if any output is still piggybacked and awaits processing
-            if (_inFlightExit.exitMap.bitSet(i)){
+            if (_inFlightExit.exitMap.bitSet(i)) {
                 return false;
             }
         }
