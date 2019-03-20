@@ -3,14 +3,16 @@ from ethereum.tools.tester import TransactionFailed
 from plasma_core.constants import NULL_ADDRESS
 
 
-def test_challenge_in_flight_exit_output_spent_should_succeed(testlang):
+# challenge should succeed even when phase 2 of in-flight exit is over
+@pytest.mark.parametrize("period", [1, 2, 4])
+def test_challenge_in_flight_exit_output_spent_should_succeed(testlang, period):
     owner_1, owner_2, amount = testlang.accounts[0], testlang.accounts[1], 100
     deposit_id = testlang.deposit(owner_1, amount)
     spend_id = testlang.spend_utxo([deposit_id], [owner_1.key], [(owner_1.address, NULL_ADDRESS, 100)])
     double_spend_id = testlang.spend_utxo([spend_id], [owner_1.key], force_invalid=True)
     testlang.start_in_flight_exit(spend_id)
     testlang.piggyback_in_flight_exit_output(spend_id, 0, owner_1.key)
-    testlang.forward_to_period(2)
+    testlang.forward_to_period(period)
 
     testlang.challenge_in_flight_exit_output_spent(spend_id, double_spend_id, 0, owner_2.key)
 

@@ -565,7 +565,7 @@ contract RootChain {
 
         // Check that the in-flight exit is active and in period 1.
         InFlightExit storage inFlightExit = _getInFlightExit(_inFlightTx);
-        require(_getExitPeriod(inFlightExit) == 1);
+        require(_firstPhaseNotOver(inFlightExit));
 
 
         // Check that we're not piggybacking something that's already been piggybacked.
@@ -636,7 +636,7 @@ contract RootChain {
     {
         // Check that the exit is active and in period 1.
         InFlightExit storage inFlightExit = _getInFlightExit(_inFlightTx);
-        require(_getExitPeriod(inFlightExit) == 1);
+        require(_firstPhaseNotOver(inFlightExit));
 
         // Check if exit's input was spent via MVP exit
         require(!isSpentInput(inFlightExit.exitStartTimestamp));
@@ -686,9 +686,7 @@ contract RootChain {
     )
         public
     {
-        // Check that the exit is active and in first two periods.
         InFlightExit storage inFlightExit = _getInFlightExit(_inFlightTx);
-        require(_getExitPeriod(inFlightExit) < 3);
 
         // Check that there is a challenge and in-flight transaction is older than its competitors.
         require(inFlightExit.oldestCompetitor > _inFlightTxPos);
@@ -723,9 +721,7 @@ contract RootChain {
     )
         public
     {
-        // Check that the exit is active and in first two periods.
         InFlightExit storage inFlightExit = _getInFlightExit(_inFlightTx);
-        require(_getExitPeriod(inFlightExit) < 3);
 
         // Check that the input is piggybacked.
         require(inFlightExit.exitMap.bitSet(_inFlightTxInputIndex));
@@ -767,9 +763,7 @@ contract RootChain {
     )
         public
     {
-        // Check that the exit is active and in first two periods.
         InFlightExit storage inFlightExit = _getInFlightExit(_inFlightTx);
-        require(_getExitPeriod(inFlightExit) < 3);
 
         // Check that the output is piggybacked.
         uint8 oindex = _inFlightTxOutputPos.getOindex();
@@ -1104,17 +1098,17 @@ contract RootChain {
     }
 
     /**
-     * @dev Returns the period an exit period is currently in.
+     * @dev Checks that in-flight exit is in phase that allows for piggybacks and canonicity challenges.
      * @param _inFlightExit Exit to check.
-     * @return The current period for the specified exit.
+     * @return True only if in-flight exit is in phase that allows for piggybacks and canonicity challenges.
      */
-    function _getExitPeriod(InFlightExit _inFlightExit)
+    function _firstPhaseNotOver(InFlightExit _inFlightExit)
         internal
         view
-        returns (uint256)
+        returns (bool)
     {
         uint256 periodTime = minExitPeriod / 2;
-        return ((block.timestamp - clearFlag(_inFlightExit.exitStartTimestamp)) / periodTime) + 1;
+        return ((block.timestamp - clearFlag(_inFlightExit.exitStartTimestamp)) / periodTime) < 1;
     }
 
     /**

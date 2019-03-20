@@ -3,7 +3,9 @@ from ethereum.tools.tester import TransactionFailed
 from plasma_core.constants import NULL_ADDRESS, MIN_EXIT_PERIOD
 
 
-def test_respond_to_non_canonical_challenge_should_succeed(testlang):
+# should succeed even when phase 2 of in-flight exit is over
+@pytest.mark.parametrize("period", [1, 2, 4])
+def test_respond_to_non_canonical_challenge_should_succeed(testlang, period):
     owner_1, owner_2, amount = testlang.accounts[0], testlang.accounts[1], 100
     deposit_id = testlang.deposit(owner_1, amount)
     spend_id = testlang.spend_utxo([deposit_id], [owner_1.key])
@@ -11,7 +13,7 @@ def test_respond_to_non_canonical_challenge_should_succeed(testlang):
     testlang.start_in_flight_exit(spend_id)
     testlang.challenge_in_flight_exit_not_canonical(spend_id, double_spend_id, key=owner_2.key)
 
-    testlang.forward_to_period(2)
+    testlang.forward_to_period(period)
 
     testlang.respond_to_non_canonical_challenge(spend_id, owner_1.key)
 
