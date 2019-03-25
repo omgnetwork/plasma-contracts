@@ -75,8 +75,10 @@ library PlasmaCore {
             });
             
             // check for empty inputs - disallow gaps
-            if (decodedTx.inputs[i].blknum == 0) emptySeen[0] = true;
-            else require(emptySeen[0] == false, "Gaps in inputs not allowed ");
+            if (decodedTx.inputs[i].blknum == 0
+              && decodedTx.inputs[i].txindex == 0
+              && decodedTx.inputs[i].oindex == 0) emptySeen[0] = true;
+            else require(emptySeen[0] == false, "Gaps in inputs are not allowed ");
 
             RLP.RLPItem[] memory output = outputs[i].toList();
             decodedTx.outputs[i] = TransactionOutput({
@@ -89,7 +91,7 @@ library PlasmaCore {
             if (decodedTx.outputs[i].owner == 0 
              && decodedTx.outputs[i].token == 0 
              && decodedTx.outputs[i].amount == 0) emptySeen[1] = true;
-            else require(emptySeen[1] == false, "Gaps in outputs not allowed ");
+            else require(emptySeen[1] == false, "Gaps in outputs are not allowed ");
         }
 
         return decodedTx;
