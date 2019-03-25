@@ -3,6 +3,7 @@ pragma solidity ^0.4.0;
 import "./Bits.sol";
 import "./ByteUtils.sol";
 import "./ECRecovery.sol";
+import "./InFlightExit.sol";
 import "./Math.sol";
 import "./Merkle.sol";
 import "./RLP.sol";
@@ -21,6 +22,7 @@ contract RootChain {
     using Bits for uint192;
     using Bits for uint256;
     using ByteUtils for bytes;
+    using InFlightExit for InFlightExit.IFE;
     using RLP for bytes;
     using RLP for RLP.RLPItem;
     using PlasmaCore for bytes;
@@ -54,7 +56,7 @@ contract RootChain {
 
     mapping (uint256 => Block) public blocks;
     mapping (uint192 => Exit) public exits;
-    mapping (uint192 => InFlightExit) public inFlightExits;
+    mapping (uint192 => InFlightExit.IFE) public inFlightExits;
     mapping (address => address) public exitsQueues;
 
     bytes32[16] zeroHashes;
@@ -69,16 +71,6 @@ contract RootChain {
         address token;
         uint256 amount;
         uint192 position;
-    }
-
-    struct InFlightExit {
-        uint256 exitStartTimestamp;
-        uint256 exitPriority;
-        uint256 exitMap;
-        PlasmaCore.TransactionOutput[MAX_INPUTS] inputs;
-        PlasmaCore.TransactionOutput[MAX_INPUTS] outputs;
-        address bondOwner;
-        uint256 oldestCompetitor;
     }
 
     struct _InputSum {
@@ -356,13 +348,13 @@ contract RootChain {
         require(output.amount > 0);
         require(exits[exitId].amount == 0);
 
-        InFlightExit storage inFlightExit = _getInFlightExit(_outputTx);
+        InFlightExit.IFE storage inFlightExit = _getInFlightExit(_outputTx);
         // Check whether IFE is either ongoing or finished
-        if (inFlightExit.exitStartTimestamp != 0 || flagged(inFlightExit.exitMap)) {
+        if (inFlightExit.exitStartTimestamp != 0 || inFlightExit.isFinalized()) {
             // Check if this output was piggybacked or exited in an in-flight exit
-            require(!inFlightExit.exitMap.bitSet(oindex + MAX_INPUTS) && !inFlightExit.exitMap.bitSet(oindex + MAX_INPUTS + MAX_INPUTS*2));
+            require(!inFlightExit.isPiggybacked(oindex + MAX_INPUTS) && !inFlightExit.isExited(oindex + MAX_INPUTS));
             // Prevent future piggybacks on this output
-            inFlightExit.exitMap = inFlightExit.exitMap.setBit(oindex + MAX_INPUTS + MAX_INPUTS*2);
+            inFlightExit = inFlightExit.markExited(oindex + MAX_INPUTS);
         }
 
         // Determine the exit's priority.
@@ -482,11 +474,11 @@ contract RootChain {
         onlyWithValue(inFlightExitBond)
     {
         // Check if there is an active in-flight exit from this transaction?
-        InFlightExit storage inFlightExit = _getInFlightExit(_inFlightTx);
+        InFlightExit.IFE storage inFlightExit = _getInFlightExit(_inFlightTx);
         require(inFlightExit.exitStartTimestamp == 0);
 
         // Check if such an in-flight exit has already been finalized
-        require(!flagged(inFlightExit.exitMap));
+        require(!inFlightExit.isFinalized());
 
         // Separate the inputs transactions.
         RLP.RLPItem[] memory splitInputTxs = _inputTxs.toRLPItem().toList();
@@ -523,7 +515,7 @@ contract RootChain {
         // If any of the inputs were finalized via standard exit, consider it non-canonical
         // and flag as not taking part in further canonicity game.
         if (any_finalized) {
-            inFlightExit.exitStartTimestamp = flagSpentInput(inFlightExit.exitStartTimestamp);
+            inFlightExit = inFlightExit.markInputSpent();
         }
 
         emit InFlightExitStarted(msg.sender, keccak256(_inFlightTx));
@@ -564,12 +556,12 @@ contract RootChain {
         }
 
         // Check that the in-flight exit is active and in period 1.
-        InFlightExit storage inFlightExit = _getInFlightExit(_inFlightTx);
+        InFlightExit.IFE storage inFlightExit = _getInFlightExit(_inFlightTx);
         require(_firstPhaseNotOver(inFlightExit));
 
 
         // Check that we're not piggybacking something that's already been piggybacked.
-        require(!inFlightExit.exitMap.bitSet(_outputIndex));
+        require(!inFlightExit.isPiggybacked(_outputIndex));
 
         // Check that the message sender owns the output.
         PlasmaCore.TransactionOutput memory output;
@@ -589,12 +581,12 @@ contract RootChain {
         }
 
         // Set the output as piggybacked.
-        inFlightExit.exitMap = inFlightExit.exitMap.setBit(_outputIndex);
+        inFlightExit = inFlightExit.piggyback(_outputIndex);
 
         emit InFlightExitPiggybacked(msg.sender, txhash, _outputIndex);
     }
 
-    function _shouldEnqueueInFlightExit(InFlightExit memory _inFlightExit, address _token)
+    function _shouldEnqueueInFlightExit(InFlightExit.IFE memory _inFlightExit, address _token)
         internal
         pure
         returns (bool)
@@ -602,9 +594,9 @@ contract RootChain {
 
         for (uint8 i = 0; i < MAX_INPUTS; ++i) {
             if (
-                (_inFlightExit.exitMap.bitSet(i) && _inFlightExit.inputs[i].token == _token)
+                (_inFlightExit.isPiggybacked(i) && _inFlightExit.inputs[i].token == _token)
                 ||
-                (_inFlightExit.exitMap.bitSet(i + MAX_INPUTS) && _inFlightExit.outputs[i].token == _token)
+                (_inFlightExit.isPiggybacked(i + MAX_INPUTS) && _inFlightExit.outputs[i].token == _token)
             ) {
                 return false;
             }
@@ -635,11 +627,11 @@ contract RootChain {
         public
     {
         // Check that the exit is active and in period 1.
-        InFlightExit storage inFlightExit = _getInFlightExit(_inFlightTx);
+        InFlightExit.IFE storage inFlightExit = _getInFlightExit(_inFlightTx);
         require(_firstPhaseNotOver(inFlightExit));
 
         // Check if exit's input was spent via MVP exit
-        require(!isSpentInput(inFlightExit.exitStartTimestamp));
+        require(!inFlightExit.isInputSpent());
 
         // Check that the two transactions are not the same.
         require(keccak256(_inFlightTx) != keccak256(_competingTx));
@@ -668,7 +660,7 @@ contract RootChain {
         inFlightExit.bondOwner = msg.sender;
 
         // Set a flag so that only the inputs are exitable, unless a response is received.
-        inFlightExit.exitStartTimestamp = setFlag(inFlightExit.exitStartTimestamp);
+        inFlightExit = inFlightExit.markInputExitable();
 
         emit InFlightExitChallenged(msg.sender, keccak256(_inFlightTx), competitorPosition);
     }
@@ -686,7 +678,7 @@ contract RootChain {
     )
         public
     {
-        InFlightExit storage inFlightExit = _getInFlightExit(_inFlightTx);
+        InFlightExit.IFE storage inFlightExit = _getInFlightExit(_inFlightTx);
 
         // Check that there is a challenge and in-flight transaction is older than its competitors.
         require(inFlightExit.oldestCompetitor > _inFlightTxPos);
@@ -699,7 +691,7 @@ contract RootChain {
         inFlightExit.bondOwner = msg.sender;
 
         // Reset the flag so only the outputs are exitable.
-        inFlightExit.exitStartTimestamp = clearFlag(inFlightExit.exitStartTimestamp);
+        inFlightExit = inFlightExit.blockInputsExit();
 
         emit InFlightExitChallengeResponded(msg.sender, keccak256(_inFlightTx), _inFlightTxPos);
     }
@@ -721,10 +713,10 @@ contract RootChain {
     )
         public
     {
-        InFlightExit storage inFlightExit = _getInFlightExit(_inFlightTx);
+        InFlightExit.IFE storage inFlightExit = _getInFlightExit(_inFlightTx);
 
         // Check that the input is piggybacked.
-        require(inFlightExit.exitMap.bitSet(_inFlightTxInputIndex));
+        require(inFlightExit.isPiggybacked(_inFlightTxInputIndex));
 
         // Check that the two transactions are not the same.
         require(keccak256(_inFlightTx) != keccak256(_spendingTx));
@@ -738,7 +730,7 @@ contract RootChain {
         require(input.owner == ECRecovery.recover(keccak256(_spendingTx), _spendingTxSig));
 
         // Remove the input from the piggyback map and pay out the bond.
-        inFlightExit.exitMap = inFlightExit.exitMap.clearBit(_inFlightTxInputIndex);
+        inFlightExit = inFlightExit.cancelExit(_inFlightTxInputIndex);
         msg.sender.transfer(piggybackBond);
 
         emit InFlightExitOutputBlocked(msg.sender, keccak256(_inFlightTx), _inFlightTxInputIndex);
@@ -763,11 +755,11 @@ contract RootChain {
     )
         public
     {
-        InFlightExit storage inFlightExit = _getInFlightExit(_inFlightTx);
+        InFlightExit.IFE storage inFlightExit = _getInFlightExit(_inFlightTx);
 
         // Check that the output is piggybacked.
         uint8 oindex = _inFlightTxOutputPos.getOindex();
-        require(inFlightExit.exitMap.bitSet(oindex + MAX_INPUTS));
+        require(inFlightExit.isPiggybacked(oindex + MAX_INPUTS));
 
         // Check that the in-flight transaction is included.
         require(_transactionIncluded(_inFlightTx, _inFlightTxOutputPos, _inFlightTxInclusionProof));
@@ -780,7 +772,7 @@ contract RootChain {
         require(output.owner == ECRecovery.recover(keccak256(_spendingTx), _spendingTxSig));
 
         // Remove the output from the piggyback map and pay out the bond.
-        inFlightExit.exitMap = inFlightExit.exitMap.clearBit(oindex + MAX_INPUTS);
+        inFlightExit = inFlightExit.cancelExit(oindex + MAX_INPUTS);
         msg.sender.transfer(piggybackBond);
 
         emit InFlightExitOutputBlocked(msg.sender, keccak256(_inFlightTx), oindex);
@@ -922,7 +914,7 @@ contract RootChain {
         view
         returns (address, address, uint256)
     {
-        InFlightExit memory inFlightExit = _getInFlightExit(_tx);
+        InFlightExit.IFE memory inFlightExit = _getInFlightExit(_tx);
         PlasmaCore.TransactionOutput memory output;
         if (_outputIndex < MAX_INPUTS) {
             output = inFlightExit.inputs[_outputIndex];
@@ -944,11 +936,6 @@ contract RootChain {
         return nextChildBlock - CHILD_BLOCK_INTERVAL + nextDepositBlock;
     }
 
-    /**
-     * @dev Checks if at least one of the two left-most bits of an integer is set.
-     * @param _value Integer to check.
-     * @return True if at least one of two left-most bits is set. False otherwise.
-     */
     function flagged(uint256 _value)
         public
         pure
@@ -957,36 +944,12 @@ contract RootChain {
         return _value.bitSet(255) || _value.bitSet(254);
     }
 
-    function setFlag(uint256 _value)
-        public
-        pure
-        returns (uint256)
-    {
-        return _value.setBit(255);
-    }
-
     function clearFlag(uint256 _value)
-        public
+        private
         pure
         returns (uint256)
     {
         return _value.clearBit(255);
-    }
-
-    function flagSpentInput(uint256 _value)
-        public
-        pure
-        returns (uint256)
-    {
-        return _value.setBit(254);
-    }
-
-    function isSpentInput(uint256 _value)
-        public
-        pure
-        returns (bool)
-    {
-        return _value.bitSet(254);
     }
 
     /*
@@ -1092,7 +1055,7 @@ contract RootChain {
     function _getInFlightExit(bytes _inFlightTx)
         internal
         view
-        returns (InFlightExit storage)
+        returns (InFlightExit.IFE storage)
     {
         return inFlightExits[getInFlightExitId(_inFlightTx)];
     }
@@ -1102,7 +1065,7 @@ contract RootChain {
      * @param _inFlightExit Exit to check.
      * @return True only if in-flight exit is in phase that allows for piggybacks and canonicity challenges.
      */
-    function _firstPhaseNotOver(InFlightExit _inFlightExit)
+    function _firstPhaseNotOver(InFlightExit.IFE _inFlightExit)
         internal
         view
         returns (bool)
@@ -1116,11 +1079,10 @@ contract RootChain {
      * @param _tx RLP encoded transaction.
      * @return A tuple containing the number of inputs and the sum of the outputs of tx.
      */
-    function _validateInputsOutputsSumUp(InFlightExit storage _inFlightExit, bytes _tx)
+    function _validateInputsOutputsSumUp(InFlightExit.IFE storage _inFlightExit, bytes _tx)
         internal
         view
     {
-
         _InputSum[MAX_INPUTS] memory sums;
         uint8 allocatedSums = 0;
 
@@ -1177,7 +1139,6 @@ contract RootChain {
         _sums[_allocated].token = _token;
         return (_sums[_allocated], _allocated + 1);
     }
-
 
     /**
      * @dev Returns information about an input to a in-flight transaction.
@@ -1248,12 +1209,11 @@ contract RootChain {
      * @param _inFlightExitId Id of the exit process
      * @param _token Token from which exits are to be processed
      */
-    function _processInFlightExit(InFlightExit storage _inFlightExit, uint192 _inFlightExitId, address _token)
+    function _processInFlightExit(InFlightExit.IFE storage _inFlightExit, uint192 _inFlightExitId, address _token)
         internal
     {
         // Determine whether the inputs or the outputs are the exitable set.
-        bool inputsExitable = flagged(_inFlightExit.exitStartTimestamp);
-
+        bool inputsExitable = _inFlightExit.areInputsExitable();
         // Process the inputs or outputs.
         PlasmaCore.TransactionOutput memory output;
         uint256 ethTransferAmount;
@@ -1266,12 +1226,12 @@ contract RootChain {
 
             // Check if the output's token or the "to exit" bit is not set.
             if (output.token != _token
-                || !_inFlightExit.exitMap.bitSet(i)
+                || !_inFlightExit.isPiggybacked(i)
             ) {
                 continue;
             }
             // Set bit flag to prevent future exits by standard exit mechanism.
-            _inFlightExit.exitMap = _inFlightExit.exitMap.clearBit(i).setBit(i + 2 * MAX_INPUTS);
+            _inFlightExit = _inFlightExit.markExited(i);
 
 
             // Pay out any unchallenged and exitable inputs or outputs, refund the rest.
@@ -1294,27 +1254,27 @@ contract RootChain {
         }
     }
 
-    function _shouldClearInFlightExit(InFlightExit memory _inFlightExit)
+    function _shouldClearInFlightExit(InFlightExit.IFE memory _inFlightExit)
         internal
         returns (bool)
     {
         for (uint8 i  = 0; i < MAX_INPUTS * 2; ++i) {
             // Check if any output is still piggybacked and awaits processing
-            if (_inFlightExit.exitMap.bitSet(i)) {
+            if (_inFlightExit.isPiggybacked(i)) {
                 return false;
             }
         }
         return true;
     }
 
-    function _clearInFlightExit(InFlightExit storage _inFlightExit)
+    function _clearInFlightExit(InFlightExit.IFE storage _inFlightExit)
         internal
     {
         // Refund the current bond owner.
         _inFlightExit.bondOwner.transfer(inFlightExitBond);
 
         // Flag as finalized
-        _inFlightExit.exitMap = setFlag(_inFlightExit.exitMap);
+        _inFlightExit = _inFlightExit.finalize();
 
         // Delete everything but the exit map to block exits from already processed outputs.
         delete _inFlightExit.exitStartTimestamp;
