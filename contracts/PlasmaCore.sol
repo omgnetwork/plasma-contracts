@@ -63,6 +63,7 @@ library PlasmaCore {
         }
         RLP.RLPItem[] memory inputs = txList[0].toList();
         RLP.RLPItem[] memory outputs = txList[1].toList();
+        bool[] memory emptySeen = new bool[](2);
 
         Transaction memory decodedTx;
         for (uint i = 0; i < NUM_TXS; i++) {
@@ -72,6 +73,12 @@ library PlasmaCore {
                 txindex: input[1].toUint(),
                 oindex: input[2].toUint()
             });
+            
+            // check for empty inputs - disallow gaps
+            if (decodedTx.inputs[i].blknum == 0
+              && decodedTx.inputs[i].txindex == 0
+              && decodedTx.inputs[i].oindex == 0) emptySeen[0] = true;
+            else require(emptySeen[0] == false, "Gaps in inputs are not allowed ");
 
             RLP.RLPItem[] memory output = outputs[i].toList();
             decodedTx.outputs[i] = TransactionOutput({
@@ -79,6 +86,12 @@ library PlasmaCore {
                 token: output[1].toAddress(),
                 amount: output[2].toUint()
             });
+
+            // check for empty outputs - disallow gaps
+            if (decodedTx.outputs[i].owner == 0 
+             && decodedTx.outputs[i].token == 0 
+             && decodedTx.outputs[i].amount == 0) emptySeen[1] = true;
+            else require(emptySeen[1] == false, "Gaps in outputs are not allowed ");
         }
 
         return decodedTx;
