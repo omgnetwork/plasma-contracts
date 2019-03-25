@@ -86,3 +86,35 @@ def test_get_blknum(plasma_core_test):
 def test_get_txpos_index(plasma_core_test):
     output_id = 1000020003
     assert plasma_core_test.getTxPos(output_id) == 100002
+
+
+def test_decoding_tx_with_gaps_in_inputs_fails(testlang, plasma_core_test):
+    owner, amount = testlang.accounts[0], 100
+    tx = Transaction(inputs=[(0, 0, 0), (1, 0, 0)], outputs=[(owner.address, NULL_ADDRESS, amount)])
+    with pytest.raises(TransactionFailed):
+        plasma_core_test.getInputUtxoPosition(tx.encoded, 0)
+
+    tx = Transaction(inputs=[(1, 0, 0), (0, 0, 0), (1, 1, 0)], outputs=[(owner.address, NULL_ADDRESS, amount)])
+    with pytest.raises(TransactionFailed):
+        plasma_core_test.getInputUtxoPosition(tx.encoded, 1)
+
+
+def test_decoding_tx_with_gaps_in_outputs_fails(testlang, plasma_core_test):
+    owner, amount = testlang.accounts[0], 100
+    null_output = (NULL_ADDRESS, NULL_ADDRESS, 0)
+
+    tx = Transaction(inputs=[(1, 0, 0)], outputs=[null_output, (owner.address, NULL_ADDRESS, amount)])
+    with pytest.raises(TransactionFailed):
+        plasma_core_test.getOutput(tx.encoded, 0)
+
+    tx = Transaction(
+        inputs=[(1, 0, 0)],
+        outputs=[(owner.address, NULL_ADDRESS, amount), null_output, (owner.address, NULL_ADDRESS, amount)])
+    with pytest.raises(TransactionFailed):
+        plasma_core_test.getOutput(tx.encoded, 1)
+
+
+def test_deposit_tx_is_successfully_decoded(testlang, plasma_core_test):
+    owner, amount = testlang.accounts[0], 100
+    tx = Transaction(inputs=[], outputs=[(owner.address, NULL_ADDRESS, amount)])
+    assert plasma_core_test.getInputUtxoPosition(tx.encoded, 0) == 0
