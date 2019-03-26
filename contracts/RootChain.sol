@@ -562,7 +562,7 @@ contract RootChain {
             // Note that we cannot in-flight exit from a deposit, therefore here the output of the transaction
             // cannot be an output of deposit, so we do not have to use `getStandardExitId` (we actually cannot
             // as an output of IFE does not have utxoPos)
-            require(exits[_doGetStandardExitId(txhash, _outputIndex - MAX_INPUTS)].amount == 0);
+            require(exits[_computeStandardExitId(txhash, _outputIndex - MAX_INPUTS)].amount == 0);
         }
 
         // Check that the in-flight exit is active and in period 1.
@@ -870,7 +870,7 @@ contract RootChain {
             toBeHashed = abi.encodePacked(_txbytes, _utxoPos);
         }
 
-        return _doGetStandardExitId(keccak256(toBeHashed), _utxoPos.getOindex());
+        return _computeStandardExitId(keccak256(toBeHashed), _utxoPos.getOindex());
     }
 
     function getFeeExitId(uint256 feeExitNum)
@@ -878,13 +878,13 @@ contract RootChain {
         pure
         returns (uint192)
     {
-        return _doGetStandardExitId(keccak256(feeExitNum), 0);
+        return _computeStandardExitId(keccak256(feeExitNum), 0);
     }
 
-    function _doGetStandardExitId(bytes32 _txhash, uint8 _oindex)
-    internal
-    pure
-    returns (uint192)
+    function _computeStandardExitId(bytes32 _txhash, uint8 _oindex)
+        internal
+        pure
+        returns (uint192)
     {
         return uint192((uint256(_txhash) >> 105) | (uint256(_oindex) << 152));
     }

@@ -345,7 +345,6 @@ class TestingLanguage(object):
 
     def get_standard_exit_id(self, utxo_pos):
         tx = self.child_chain.get_transaction(utxo_pos)
-        blknum, _, oindex = decode_utxo_id(utxo_pos)
         return self.root_chain.getStandardExitId(tx.encoded, utxo_pos)
 
     def get_balance(self, account, token=NULL_ADDRESS):

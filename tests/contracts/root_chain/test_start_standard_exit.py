@@ -68,7 +68,8 @@ def test_start_standard_exit_old_utxo_has_required_exit_period_to_start_exit(tes
 
     testlang.forward_timestamp(required_exit_period + minimal_required_period)
 
-    steal_id = testlang.spend_utxo([utxo.deposit_id], [mallory.key], [(mallory.address, NULL_ADDRESS, utxo.amount)], force_invalid=True)
+    steal_id = testlang.spend_utxo([utxo.deposit_id], [mallory.key], [(mallory.address, NULL_ADDRESS, utxo.amount)],
+                                   force_invalid=True)
     testlang.start_standard_exit(steal_id, mallory.key)
 
     testlang.forward_timestamp(minimal_required_period - 1)
@@ -97,7 +98,8 @@ def test_start_standard_exit_wrong_oindex_should_fail(testlang):
     deposit_id = testlang.deposit(alice, alice_money + bob_money)
     deposit_blknum, _, _ = decode_utxo_id(deposit_id)
 
-    spend_tx = Transaction(inputs=[decode_utxo_id(deposit_id)], outputs=[(alice.address, NULL_ADDRESS, alice_money), (bob.address, NULL_ADDRESS, bob_money)])
+    spend_tx = Transaction(inputs=[decode_utxo_id(deposit_id)],
+                           outputs=[(alice.address, NULL_ADDRESS, alice_money), (bob.address, NULL_ADDRESS, bob_money)])
     spend_tx.sign(0, alice.key)
     blknum = testlang.submit_block([spend_tx])
     alice_utxo = encode_utxo_id(blknum, 0, 0)
@@ -216,4 +218,3 @@ def test_start_standard_exit_from_two_deposits_with_the_same_amount_and_owner_sh
 
     # should start a SE of a similar deposit (same owner and amount)
     testlang.start_standard_exit(second_deposit_id, owner.key)
-
