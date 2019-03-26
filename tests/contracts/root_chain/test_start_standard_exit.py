@@ -202,3 +202,18 @@ def test_start_standard_exit_on_finalized_in_flight_exit_output_should_fail(test
     with pytest.raises(TransactionFailed):
         output_id = encode_utxo_id(blknum, txindex, output_index)
         testlang.start_standard_exit(output_id, key=owner.key)
+
+
+def test_start_standard_exit_from_two_deposits_with_the_same_amount_and_owner_should_succeed(testlang):
+    owner, amount = testlang.accounts[0], 100
+    first_deposit_id = testlang.deposit(owner, amount)
+    second_deposit_id = testlang.deposit(owner, amount)
+
+    # SE ids should be different
+    assert testlang.get_standard_exit_id(first_deposit_id) != testlang.get_standard_exit_id(second_deposit_id)
+
+    testlang.start_standard_exit(first_deposit_id, owner.key)
+
+    # should start a SE of a similar deposit (same owner and amount)
+    testlang.start_standard_exit(second_deposit_id, owner.key)
+
