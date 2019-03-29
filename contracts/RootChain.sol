@@ -846,7 +846,7 @@ contract RootChain {
     }
 
     /**
-     * @dev Given UTXO's position, returns its exit ID.
+     * @dev Given transaction bytes and UTXO position, returns its exit ID.
      * @notice Id from a deposit is computed differently from any other tx.
      * @param _txbytes Transaction bytes.
      * @param _utxoPos UTXO position of the exiting output.
@@ -866,7 +866,7 @@ contract RootChain {
 
         // Only deposit can have empty first input
         uint256 inputUtxoPos = _txbytes.getInputUtxoPosition(0);
-        if (inputUtxoPos.getBlknum() == 0){
+        if (_isDeposit(_utxoPos.getBlknum())){
             toBeHashed = abi.encodePacked(_txbytes, _utxoPos);
         }
 
@@ -1024,12 +1024,12 @@ contract RootChain {
         returns (uint256)
     {
         uint256 blknum = _utxoPos.getBlknum();
-        if (blknum % CHILD_BLOCK_INTERVAL == 0) {
-            return Math.max(blocks[blknum].timestamp + (minExitPeriod * 2), block.timestamp + minExitPeriod);
-        }
-        else {
+        if (_isDeposit(blknum)) {
             // High priority exit for the deposit.
             return block.timestamp + minExitPeriod;
+        }
+        else {
+            return Math.max(blocks[blknum].timestamp + (minExitPeriod * 2), block.timestamp + minExitPeriod);
         }
     }
 
@@ -1342,6 +1342,13 @@ contract RootChain {
         delete _inFlightExit.outputs;
         delete _inFlightExit.bondOwner;
         delete _inFlightExit.oldestCompetitor;
+    }
+
+    function _isDeposit(uint256 blknum)
+        internal
+        returns (bool)
+    {
+        return blknum % CHILD_BLOCK_INTERVAL != 0;
     }
 
     /**
