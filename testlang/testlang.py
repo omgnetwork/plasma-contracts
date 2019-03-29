@@ -235,8 +235,7 @@ class TestingLanguage(object):
                     break
         if input_index is None:
             input_index = 3
-        output_tx = self.child_chain.get_transaction(output_id)
-        exit_id = self.root_chain.getStandardExitId(output_tx.hash, input_index)
+        exit_id = self.get_standard_exit_id(output_id)
         self.root_chain.challengeStandardExit(exit_id, spend_tx.encoded, input_index, signature)
 
     def start_in_flight_exit(self, tx_id, bond=None, sender=None):
@@ -346,8 +345,7 @@ class TestingLanguage(object):
 
     def get_standard_exit_id(self, utxo_pos):
         tx = self.child_chain.get_transaction(utxo_pos)
-        _, _, oindex = decode_utxo_id(utxo_pos)
-        return self.root_chain.getStandardExitId(tx.hash, oindex)
+        return self.root_chain.getStandardExitId(tx.encoded, utxo_pos)
 
     def get_balance(self, account, token=NULL_ADDRESS):
         """Queries ETH or token balance of an account.

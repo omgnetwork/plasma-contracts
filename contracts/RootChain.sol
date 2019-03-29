@@ -350,7 +350,7 @@ contract RootChain {
         // Only output owner can start an exit.
         require(msg.sender == output.owner);
 
-        uint192 exitId = getStandardExitId(keccak256(_outputTx), oindex);
+        uint192 exitId = getStandardExitId(_outputTx, _utxoPos);
 
         // Make sure this exit is valid.
         require(output.amount > 0);
@@ -407,8 +407,7 @@ contract RootChain {
         internal
         returns (bool)
     {
-        uint8 oindex = _utxoPos.getOindex();
-        uint192 standardExitId = getStandardExitId(keccak256(_txbytes), oindex);
+        uint192 standardExitId = getStandardExitId(_txbytes, _utxoPos);
         if (exits[standardExitId].owner != address(0)) {
             _processChallengeStandardExit(_utxoPos, standardExitId);
             return false;
@@ -560,7 +559,10 @@ contract RootChain {
 
         // Check if SE from the output is not started nor finalized
         if (_outputIndex >= MAX_INPUTS) {
-            require(exits[getStandardExitId(txhash, _outputIndex - MAX_INPUTS)].amount == 0);
+            // Note that we cannot in-flight exit from a deposit, therefore here the output of the transaction
+            // cannot be an output of deposit, so we do not have to use `getStandardExitId` (we actually cannot
+            // as an output of IFE does not have utxoPos)
+            require(exits[_computeStandardExitId(txhash, _outputIndex - MAX_INPUTS)].amount == 0);
         }
 
         // Check that the in-flight exit is active and in period 1.
@@ -844,9 +846,10 @@ contract RootChain {
     }
 
     /**
-     * @dev Given UTXO's position, returns its exit ID.
-     * @param _txhash Transaction hash.
-     * @param _oindex Output index.
+     * @dev Given transaction bytes and UTXO position, returns its exit ID.
+     * @notice Id from a deposit is computed differently from any other tx.
+     * @param _txbytes Transaction bytes.
+     * @param _utxoPos UTXO position of the exiting output.
      * @return _standardExitId Unique standard exit id.
      *     Anatomy of returned value, most significant bits first:
      *     8 bits - oindex
@@ -854,12 +857,20 @@ contract RootChain {
      *     151 bit - tx hash
      */
 
-    function getStandardExitId(bytes32 _txhash, uint8 _oindex)
+    function getStandardExitId(bytes memory _txbytes, uint256 _utxoPos)
         public
-        pure
+        view
         returns (uint192)
     {
-        return uint192((uint256(_txhash) >> 105) | (uint256(_oindex) << 152));
+        bytes memory toBeHashed = _txbytes;
+
+        // Only deposit can have empty first input
+        uint256 inputUtxoPos = _txbytes.getInputUtxoPosition(0);
+        if (_isDeposit(_utxoPos.getBlknum())){
+            toBeHashed = abi.encodePacked(_txbytes, _utxoPos);
+        }
+
+        return _computeStandardExitId(keccak256(toBeHashed), _utxoPos.getOindex());
     }
 
     function getFeeExitId(uint256 feeExitNum)
@@ -867,7 +878,15 @@ contract RootChain {
         pure
         returns (uint192)
     {
-        return getStandardExitId(keccak256(feeExitNum), 0);
+        return _computeStandardExitId(keccak256(feeExitNum), 0);
+    }
+
+    function _computeStandardExitId(bytes32 _txhash, uint8 _oindex)
+        internal
+        pure
+        returns (uint192)
+    {
+        return uint192((uint256(_txhash) >> 105) | (uint256(_oindex) << 152));
     }
 
     /**
@@ -1005,12 +1024,12 @@ contract RootChain {
         returns (uint256)
     {
         uint256 blknum = _utxoPos.getBlknum();
-        if (blknum % CHILD_BLOCK_INTERVAL == 0) {
-            return Math.max(blocks[blknum].timestamp + (minExitPeriod * 2), block.timestamp + minExitPeriod);
-        }
-        else {
+        if (_isDeposit(blknum)) {
             // High priority exit for the deposit.
             return block.timestamp + minExitPeriod;
+        }
+        else {
+            return Math.max(blocks[blknum].timestamp + (minExitPeriod * 2), block.timestamp + minExitPeriod);
         }
     }
 
@@ -1323,6 +1342,13 @@ contract RootChain {
         delete _inFlightExit.outputs;
         delete _inFlightExit.bondOwner;
         delete _inFlightExit.oldestCompetitor;
+    }
+
+    function _isDeposit(uint256 blknum)
+        internal
+        returns (bool)
+    {
+        return blknum % CHILD_BLOCK_INTERVAL != 0;
     }
 
     /**
