@@ -586,7 +586,7 @@ contract RootChain {
         }
 
         // Set the output as piggybacked.
-        piggyback(inFlightExit, _outputIndex);
+        setPiggybacked(inFlightExit, _outputIndex);
 
         emit InFlightExitPiggybacked(msg.sender, txhash, _outputIndex);
     }
@@ -734,7 +734,7 @@ contract RootChain {
         require(input.owner == ECRecovery.recover(keccak256(_spendingTx), _spendingTxSig));
 
         // Remove the input from the piggyback map and pay out the bond.
-        cancelExit(inFlightExit, _inFlightTxInputIndex);
+        setExitCancelled(inFlightExit, _inFlightTxInputIndex);
         msg.sender.transfer(piggybackBond);
 
         emit InFlightExitOutputBlocked(msg.sender, keccak256(_inFlightTx), _inFlightTxInputIndex);
@@ -776,7 +776,7 @@ contract RootChain {
         require(output.owner == ECRecovery.recover(keccak256(_spendingTx), _spendingTxSig));
 
         // Remove the output from the piggyback map and pay out the bond.
-        cancelExit(inFlightExit, oindex + MAX_INPUTS);
+        setExitCancelled(inFlightExit, oindex + MAX_INPUTS);
         msg.sender.transfer(piggybackBond);
 
         emit InFlightExitOutputBlocked(msg.sender, keccak256(_inFlightTx), oindex);
@@ -965,17 +965,17 @@ contract RootChain {
         return _value.bitSet(255) || _value.bitSet(254);
     }
 
-    function clearFlag(uint256 _value)
-        private
-        pure
-        returns (uint256)
-    {
-        return _value.clearBit(255);
-    }
-
-    /*
+     /*
      * Internal functions
      */
+
+    function getInFlightExitTimestamp(InFlightExit storage _ife)
+        private
+        view
+        returns (uint256)
+    {
+        return _ife.exitStartTimestamp.clearBit(255);
+    }
 
     function isPiggybacked(InFlightExit storage _ife, uint8 _output)
         view
@@ -1001,7 +1001,7 @@ contract RootChain {
         return _ife.exitStartTimestamp.bitSet(254);
     }
 
-    function piggyback(InFlightExit storage _ife, uint8 _output)
+    function setPiggybacked(InFlightExit storage _ife, uint8 _output)
         private
     {
         _ife.exitMap = _ife.exitMap.setBit(_output);
@@ -1019,7 +1019,7 @@ contract RootChain {
         _ife.exitStartTimestamp = _ife.exitStartTimestamp.setBit(254);
     }
 
-    function finalize(InFlightExit storage _ife)
+    function setFinalized(InFlightExit storage _ife)
         private
     {
         _ife.exitMap = _ife.exitMap.setBit(255);
@@ -1037,7 +1037,7 @@ contract RootChain {
         _ife.exitStartTimestamp = _ife.exitStartTimestamp.clearBit(255);
     }
 
-    function cancelExit(InFlightExit storage _ife, uint8 _output)
+    function setExitCancelled(InFlightExit storage _ife, uint8 _output)
         private
     {
         _ife.exitMap = _ife.exitMap.clearBit(_output);
@@ -1056,7 +1056,7 @@ contract RootChain {
         private
         returns (bool)
     {
-        return _ife.exitMap.bitSet(255) || _ife.exitMap.bitSet(254);
+        return _ife.exitMap.bitSet(255);
     }
 
     /**
@@ -1167,13 +1167,13 @@ contract RootChain {
      * @param _inFlightExit Exit to check.
      * @return True only if in-flight exit is in phase that allows for piggybacks and canonicity challenges.
      */
-    function _firstPhaseNotOver(InFlightExit _inFlightExit)
+    function _firstPhaseNotOver(InFlightExit storage _inFlightExit)
         internal
         view
         returns (bool)
     {
         uint256 periodTime = minExitPeriod / 2;
-        return ((block.timestamp - clearFlag(_inFlightExit.exitStartTimestamp)) / periodTime) < 1;
+        return ((block.timestamp - getInFlightExitTimestamp(_inFlightExit)) / periodTime) < 1;
     }
 
     /**
@@ -1374,7 +1374,7 @@ contract RootChain {
         _inFlightExit.bondOwner.transfer(inFlightExitBond);
 
         // Flag as finalized
-        finalize(_inFlightExit);
+        setFinalized(_inFlightExit);
 
         // Delete everything but the exit map to block exits from already processed outputs.
         delete _inFlightExit.exitStartTimestamp;
