@@ -292,7 +292,7 @@ contract RootChain {
         // deposit with blknum ending with 000.
         require(nextDepositBlock < CHILD_BLOCK_INTERVAL);
 
-        // Check that all but first inputs are 0.
+        // Check that all but first outputs are 0.
         for (uint i = 1; i < MAX_INPUTS; i++) {
             require(decodedTx.outputs[i].amount == 0);
         }
