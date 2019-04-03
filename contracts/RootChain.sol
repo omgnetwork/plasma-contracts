@@ -292,9 +292,14 @@ contract RootChain {
         // deposit with blknum ending with 000.
         require(nextDepositBlock < CHILD_BLOCK_INTERVAL);
 
-        // Check that all but first outputs are 0.
-        for (uint i = 1; i < MAX_INPUTS; i++) {
-            require(decodedTx.outputs[i].amount == 0);
+        for (uint i = 0; i < MAX_INPUTS; i++) {
+            // all inputs should be empty
+            require(decodedTx.inputs[i].blknum == 0);
+
+            // only first output should have value
+            if (i >= 1) {
+                require(decodedTx.outputs[i].amount == 0);
+            }
         }
 
         // Calculate the block root.
@@ -850,7 +855,6 @@ contract RootChain {
      *     1 bit - in-flight flag
      *     151 bit - tx hash
      */
-
     function getStandardExitId(bytes memory _txbytes, uint256 _utxoPos)
         public
         view
@@ -858,8 +862,6 @@ contract RootChain {
     {
         bytes memory toBeHashed = _txbytes;
 
-        // Only deposit can have empty first input
-        uint256 inputUtxoPos = _txbytes.getInputUtxoPosition(0);
         if (_isDeposit(_utxoPos.getBlknum())){
             toBeHashed = abi.encodePacked(_txbytes, _utxoPos);
         }
