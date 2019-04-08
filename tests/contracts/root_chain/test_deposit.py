@@ -37,9 +37,17 @@ def test_deposit_zero_amount_should_succeed(testlang):
     assert testlang.root_chain.nextDepositBlock() == 2
 
 
-def test_deposit_invalid_format_should_fail(testlang):
+def test_deposit_with_multiple_output_should_fail(testlang):
     owner, amount = testlang.accounts[0], 100
     deposit_tx = Transaction(outputs=[(owner.address, NULL_ADDRESS, amount), (owner.address, NULL_ADDRESS, amount)])
+
+    with pytest.raises(TransactionFailed):
+        testlang.root_chain.deposit(deposit_tx.encoded, value=amount)
+
+
+def test_deposit_with_input_should_fail(testlang):
+    owner, amount = testlang.accounts[0], 100
+    deposit_tx = Transaction(inputs=[(1, 0, 0)], outputs=[(owner.address, NULL_ADDRESS, amount)])
 
     with pytest.raises(TransactionFailed):
         testlang.root_chain.deposit(deposit_tx.encoded, value=amount)
