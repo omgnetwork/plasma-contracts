@@ -99,3 +99,11 @@ def test_token_deposit_insufficient_approve_should_fail(testlang, token):
     token.approve(testlang.root_chain.address, amount, sender=owner.key)
     with pytest.raises(TransactionFailed):
         testlang.root_chain.depositFrom(deposit_tx.encoded, sender=owner.key)
+
+
+def test_registered_exchange_must_not_deposit_funds(testlang, token):
+    exchange, amount = testlang.accounts[0], 100
+    testlang.register_exchange(exchange)
+
+    with pytest.raises(TransactionFailed):
+        testlang.deposit(exchange, amount)

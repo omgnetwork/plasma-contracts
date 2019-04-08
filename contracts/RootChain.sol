@@ -40,6 +40,7 @@ contract RootChain {
     uint256 public standardExitBond = 31415926535 wei;
     uint256 public inFlightExitBond = 31415926535 wei;
     uint256 public piggybackBond = 31415926535 wei;
+    uint256 public exchangeBond = 31415926535 wei;
 
     // NOTE: this is the "middle" period. Exit period for fresh utxos we'll double that while IFE phase is half that
     uint256 public minExitPeriod;
@@ -55,6 +56,7 @@ contract RootChain {
     mapping (uint192 => Exit) public exits;
     mapping (uint192 => InFlightExit) public inFlightExits;
     mapping (address => address) public exitsQueues;
+    mapping (address => Exchange) public exchanges;
 
     bytes32[16] zeroHashes;
 
@@ -83,6 +85,10 @@ contract RootChain {
     struct _InputSum {
         address token;
         uint256 amount;
+    }
+
+    struct Exchange {
+        uint256 registeredTimestamp;
     }
 
     /*
@@ -151,6 +157,10 @@ contract RootChain {
         uint8 outputIndex
     );
 
+    event ExchangeRegistered(
+         address exchange
+    );
+
     /*
      * Modifiers
      */
@@ -204,6 +214,21 @@ contract RootChain {
             zeroHashes[i] = zeroHash;
             zeroHash = keccak256(abi.encodePacked(zeroHash, zeroHash));
         }
+    }
+
+    /**
+     * @dev Registers an address as an exchange address
+     */
+    function registerExchange()
+        public
+        payable
+        onlyWithValue(exchangeBond)
+    {
+        // Can not re-register active exchange
+        require(exchanges[msg.sender].registeredTimestamp == 0);
+
+        exchanges[msg.sender] = Exchange({registeredTimestamp: block.timestamp});
+        emit ExchangeRegistered(msg.sender);
     }
 
     // @dev Allows anyone to add new token to Plasma chain
@@ -292,8 +317,13 @@ contract RootChain {
         // deposit with blknum ending with 000.
         require(nextDepositBlock < CHILD_BLOCK_INTERVAL);
 
+        // Check that it does not deposit funds for an active exchange
+        for (uint i = 0; i < MAX_INPUTS; i++) {
+            require(exchanges[decodedTx.outputs[i].owner].registeredTimestamp == 0);
+        }
+
         // Check that all but first outputs are 0.
-        for (uint i = 1; i < MAX_INPUTS; i++) {
+        for (i = 1; i < MAX_INPUTS; i++) {
             require(decodedTx.outputs[i].amount == 0);
         }
 
@@ -344,6 +374,9 @@ contract RootChain {
 
         // Only output owner can start an exit.
         require(msg.sender == output.owner);
+
+        // Registered exchange can not exit funds via standard exit
+        require(exchanges[output.owner].registeredTimestamp == 0);
 
         uint192 exitId = getStandardExitId(_outputTx, _utxoPos);
 

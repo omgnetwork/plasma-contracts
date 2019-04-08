@@ -218,3 +218,16 @@ def test_start_standard_exit_from_two_deposits_with_the_same_amount_and_owner_sh
 
     # should start a SE of a similar deposit (same owner and amount)
     testlang.start_standard_exit(second_deposit_id, owner.key)
+
+
+def test_exchange_must_not_exit_utxo_by_standard_exit(testlang):
+    exchange = testlang.accounts[0]
+    testlang.register_exchange(exchange)
+
+    user, amount = testlang.accounts[1], 100
+    deposit_id = testlang.deposit(user, amount)
+
+    output_id = testlang.spend_utxo([deposit_id], [user.key], [(exchange.address, NULL_ADDRESS, 10)])
+
+    with pytest.raises(TransactionFailed):
+        testlang.start_standard_exit(output_id, key=exchange.key)

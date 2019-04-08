@@ -31,6 +31,17 @@ def get_accounts(ethtester):
     return accounts
 
 
+class Exchange(object):
+    """Represents an exchange.
+
+    Attributes:
+        registeredTimestamp: timestamp when exchange has been registered
+    """
+
+    def __init__(self, timestamp):
+        self.registeredTimestamp = timestamp
+
+
 class StandardExit(object):
     """Represents a Plasma exit.
 
@@ -202,6 +213,10 @@ class TestingLanguage(object):
         block = Block(transactions=[deposit_tx], number=blknum)
         self.child_chain.add_block(block)
         return encode_utxo_id(blknum, 0, 0)
+
+    def register_exchange(self, exchange, bond=None):
+        bond = bond if bond is not None else self.root_chain.exchangeBond()
+        self.root_chain.registerExchange(value=bond, sender=exchange.key)
 
     def spend_utxo(self, input_ids, keys, outputs=None, metadata=None, force_invalid=False):
         if outputs is None:
@@ -472,3 +487,11 @@ class TestingLanguage(object):
         exit_id = self.root_chain.getInFlightExitId(in_flight_tx.encoded)
         exit_info = self.root_chain.inFlightExits(exit_id)
         return InFlightExit(self.root_chain, in_flight_tx, *exit_info)
+
+    def get_exchange(self, exchange):
+        exchange = self.root_chain.exchanges(exchange.address)
+        return Exchange(exchange)
+
+    def get_exchange_registered_events(self):
+        return list(filter(lambda event: event['_event_type'] == b'ExchangeRegistered', self.events))
+
