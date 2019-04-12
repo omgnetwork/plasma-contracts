@@ -3,12 +3,13 @@ pragma solidity ^0.4.0;
 import "./Bits.sol";
 import "./ByteUtils.sol";
 import "./ECRecovery.sol";
+import "./Eip712SignVerifier.sol";
 import "./Math.sol";
 import "./Merkle.sol";
-import "./RLP.sol";
 import "./PlasmaCore.sol";
 import "./PriorityQueue.sol";
 import "./PriorityQueueFactory.sol";
+import "./RLP.sol";
 
 import "./ERC20.sol";
 
@@ -397,8 +398,7 @@ contract RootChain {
         // Check if exit exists.
         address owner = exits[_standardExitId].owner;
         // Check that the challenging tx is signed by the output's owner.
-        bytes32 txHash = keccak256(_challengeTx);
-        require(owner == ECRecovery.recover(txHash, _challengeTxSig));
+        require(owner == ECRecovery.recover(Eip712SignVerifier.hashTransaction(_challengeTx), _challengeTxSig));
 
         _processChallengeStandardExit(challengedUtxoPos, _standardExitId);
     }
@@ -651,7 +651,7 @@ contract RootChain {
 
         // Check that the competing transaction is correctly signed.
         PlasmaCore.TransactionOutput memory input = inFlightExit.inputs[_inFlightTxInputIndex];
-        require(input.owner == ECRecovery.recover(keccak256(_competingTx), _competingTxSig));
+        require(input.owner == ECRecovery.recover(Eip712SignVerifier.hashTransaction(_competingTx), _competingTxSig));
 
         // Determine the position of the competing transaction.
         uint256 competitorPosition = ~uint256(0);
@@ -736,7 +736,7 @@ contract RootChain {
 
         // Check that the spending transaction is signed by the input owner.
         PlasmaCore.TransactionOutput memory input = inFlightExit.inputs[_inFlightTxInputIndex];
-        require(input.owner == ECRecovery.recover(keccak256(_spendingTx), _spendingTxSig));
+        require(input.owner == ECRecovery.recover(Eip712SignVerifier.hashTransaction(_spendingTx), _spendingTxSig));
 
         // Remove the input from the piggyback map and pay out the bond.
         setExitCancelled(inFlightExit, _inFlightTxInputIndex);
@@ -778,7 +778,7 @@ contract RootChain {
 
         // Check that the spending transaction is signed by the input owner.
         PlasmaCore.TransactionOutput memory output = _inFlightTx.getOutput(oindex);
-        require(output.owner == ECRecovery.recover(keccak256(_spendingTx), _spendingTxSig));
+        require(output.owner == ECRecovery.recover(Eip712SignVerifier.hashTransaction(_spendingTx), _spendingTxSig));
 
         // Remove the output from the piggyback map and pay out the bond.
         setExitCancelled(inFlightExit, oindex + MAX_INPUTS);
@@ -1272,7 +1272,7 @@ contract RootChain {
 
         // Check that the transaction is valid.
         require(_transactionIncluded(_inputTx, inputUtxoPos, _txInputTxsInclusionProofs.sliceProof(_inputIndex)));
-        require(input.owner == ECRecovery.recover(keccak256(_tx), _inputSig));
+        require(input.owner == ECRecovery.recover(Eip712SignVerifier.hashTransaction(_tx), _inputSig));
 
         // Challenge exiting standard exits from inputs
         already_finalized = _cleanupDoubleSpendingStandardExits(inputUtxoPos, _inputTx);

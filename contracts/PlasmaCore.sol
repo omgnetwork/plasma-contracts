@@ -38,6 +38,7 @@ library PlasmaCore {
     struct Transaction {
         TransactionInput[NUM_TXS] inputs;
         TransactionOutput[NUM_TXS] outputs;
+        bytes32 metadata;
     }
 
 
@@ -57,15 +58,16 @@ library PlasmaCore {
     {
         RLP.RLPItem[] memory txList = _tx.toRLPItem().toList();
         require(txList.length == 2 || txList.length == 3);
+
+        Transaction memory decodedTx;
         if (txList.length == 3){
            //ensuring that metadata isn't larger than 32 bytes
-           txList[2].toBytes32();
+           decodedTx.metadata = txList[2].toBytes32();
         }
         RLP.RLPItem[] memory inputs = txList[0].toList();
         RLP.RLPItem[] memory outputs = txList[1].toList();
         bool[] memory emptySeen = new bool[](2);
 
-        Transaction memory decodedTx;
         for (uint i = 0; i < NUM_TXS; i++) {
             RLP.RLPItem[] memory input = inputs[i].toList();
             decodedTx.inputs[i] = TransactionInput({
