@@ -1,7 +1,6 @@
 pragma solidity ^0.4.0;
 
 import "./PlasmaCore.sol";
-import "./Eip712SignVerifier.sol";
 
 
 /**

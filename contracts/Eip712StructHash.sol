@@ -5,10 +5,10 @@ import "./PlasmaCore.sol";
 
 
 /**
- * @title Eip712SignVerifier
- * @dev Utilities for verifying EIP-712 signatures.
+ * @title Eip712StructHash
+ * @dev Utilities for hashing structural data, see EIP-712.
  */
-library Eip712SignVerifier {
+library Eip712StructHash {
     using PlasmaCore for bytes;
 
     bytes32 constant EIP712_DOMAIN_HASH  = keccak256(abi.encodePacked("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract,bytes32 salt)"));
@@ -31,7 +31,7 @@ library Eip712SignVerifier {
         salt
     ));
 
-    function hashTransaction(bytes _tx)
+    function hash(bytes _tx)
         internal
         view
         returns (bytes32)
