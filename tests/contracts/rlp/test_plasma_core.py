@@ -118,23 +118,3 @@ def test_deposit_tx_is_successfully_decoded(testlang, plasma_core_test):
     owner, amount = testlang.accounts[0], 100
     tx = Transaction(inputs=[], outputs=[(owner.address, NULL_ADDRESS, amount)])
     assert plasma_core_test.getInputUtxoPosition(tx.encoded, 0) == 0
-
-# def test_deploy(get_contract):
-#     pqf = get_contract('PlasmaCoreTest')
-#     assert pqf.address == 0
-
-# def test_returned_domain_separator(testlang, plasma_core_test):
-#     o1 = ('0x2258a5279850f6fb78888a7e45ea2a5eb1b3c436', NULL_ADDRESS, 100)
-#     o2 = ('0x0123456789abcdef000000000000000000000000', NULL_ADDRESS, 111)
-#     o3 = ('0x2258a5279850f6fb78888a7e45ea2a5eb1b3c436', '0x0123456789abcdef000000000000000000000000', 1337)  
-#     mt = bytes.fromhex('853a8d8af99c93405a791b97d57e819e538b06ffaa32ad70da2582500bc18d43')
-    
-#     tx1 = Transaction(inputs=[], outputs=[])
-#     tx2 = Transaction(inputs=[(1, 0, 0), (1000, 2, 3), (101000, 1337, 3)], outputs=[o1, o2, o3])
-#     tx3 = Transaction(inputs=[(1, 0, 0), (1000, 2, 3), (101000, 1337, 3)], outputs=[o1, o2, o3], metadata=mt)
-
-#     owner = '0x2258a5279850f6fb78888a7e45ea2a5eb1b3c436'
-#     sign = bytes.fromhex('f4a9fa3c09bbef23fc26f4a1a871b6f5f04a51b9d73a07096ffb8c08880d23112bcfc7748673121708d60a8efbeb15362582d8dd9c21d336c1be47763edd5ed11c')
-
-#     assert plasma_core_test.getDomainSep(tx3.encoded, sign) == 1
-    
