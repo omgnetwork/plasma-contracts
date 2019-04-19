@@ -3,6 +3,7 @@ from plasma_core.constants import NULL_ADDRESS
 from ethereum.tools.tester import TransactionFailed
 from plasma_core.transaction import Transaction
 from plasma_core.utils.transactions import decode_utxo_id
+from plasma_core.utils.eip712_struct_hash import hash_struct
 
 
 @pytest.fixture
