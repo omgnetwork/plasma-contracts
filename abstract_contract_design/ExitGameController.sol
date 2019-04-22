@@ -1,19 +1,23 @@
 pragma solidity ^0.5.0;
 
-import "./ExitGameRegistrator.sol";
+// Should be safe to use. It is marked as experimental as it costs higher gas usage.
+// see: https://github.com/ethereum/solidity/issues/5397 
+pragma experimental ABIEncoderV2;
+
+import "./ExitGameRegistry.sol";
 import "./PlasmaStorage.sol";
 import "./ExitModel.sol";
 
 
-contract ExitGameController is ExitGameRegistrator, PlasmaStorage {
+contract ExitGameController is ExitGameRegistry, PlasmaStorage {
     /**
      * @dev Proxy function that calls the app contract to run the specific interactive game function.
-     * @param _exitGame name of the exit game.
+     * @param _txType tx type. each type has its own exit game contract.
      * @param _encodedFunctionData Encoded function data, including function abi and input variables. 
             eg. for a function "f(uint 256)", this value should be abi.encodeWithSignature("f(uint256)", var1)
      */
-    function runExitGame(bytes32 _exitGame, bytes calldata _encodedFunctionData) external {
-        (bool success,) = getExitGameContract(_exitGame).call(_encodedFunctionData);
+    function runExitGame(uint256 _txType, bytes calldata _encodedFunctionData) external {
+        (bool success,) = getExitGameContract(_txType).call(_encodedFunctionData);
         require(success);
     }
 
@@ -23,7 +27,8 @@ contract ExitGameController is ExitGameRegistrator, PlasmaStorage {
      */
     function enqueue(ExitModel.Exit calldata _exit) external {
         /** Pseudo code
-        
+            
+            // use `exitQueueNonce` to make sure uniqueness of the queue priority.
             uniquePriority = combineToUniquePriority(exit.priority, exitQueueNonce);
             priorityQueue.enqueue(uniquePriority);
             exits[uniquePriority] = exit;
@@ -34,10 +39,10 @@ contract ExitGameController is ExitGameRegistrator, PlasmaStorage {
      /**
      * @dev Processes any exits that have completed the challenge period.
      * @param _token Token type to process.
-     * @param _topExitId First exit that should be processed. Set to zero to skip the check.
+     * @param _topUniquePriority First exit that should be processed. Set to zero to skip the check.
      * @param _exitsToProcess Maximal number of exits to process.
      */
-    function processExits(address _token, uint192 _topExitId, uint256 _exitsToProcess) external {
+    function processExits(address _token, uint192 _topUniquePriority, uint256 _exitsToProcess) external {
         /** Pseudo code
 
             while(exitableTimestamp < block.timestamp && _exitsToProcess > 0) {

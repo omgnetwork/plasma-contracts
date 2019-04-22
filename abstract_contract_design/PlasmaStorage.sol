@@ -19,10 +19,14 @@ contract PlasmaStorage {
     mapping(bytes32 => bool) internal boolStorage;
     mapping(bytes32 => int256) internal intStorage;
 
-
     /**
     Exit Game Controller
      */
     uint256 internal exitQueueNonce;
     mapping(uint256 => ExitModel.Exit) internal exits;
+
+    /**
+    Exit Game Registry
+     */
+    mapping (bytes32 => address) private games;
 }
