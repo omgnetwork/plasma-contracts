@@ -53,9 +53,9 @@ contract MVPGame is ExitGame {
     }
 
     function challengeExit(uint256 _exitId, bytes calldata _txout, uint256 _txOutputType, bytes calldata _challengeTx, uint256 _challengeTxType) external {
-        TxOutputPredicate predicate = parent.getTxoutPredicate(_txOutputType);
+        TxOutputPredicate predicate = parent.getTxoutPredicate(_txOutputType, _challengeTxType);
         
-        if(predicate.canUseTxOutput(_txout, _challengeTx, _challengeTxType)) {
+        if(predicate.canUseTxOutput(_txout, _challengeTx)) {
             bytes32 keyExitValid = keccak256(abi.encodePacked(_exitId, "-isValid"));
             parent.setBoolStorage(txType, keyExitValid, false); // flag exit invalid
         }
