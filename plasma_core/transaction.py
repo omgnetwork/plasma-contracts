@@ -66,7 +66,7 @@ class Transaction(rlp.Serializable):
 
         self.inputs = [TransactionInput(*i) for i in padded_inputs]
         self.outputs = [TransactionOutput(*o) for o in padded_outputs]
-        self.metadata = metadata 
+        self.metadata = metadata
         self.signatures = signatures[:]
         self.spent = [False] * self.NUM_TXOS
 
