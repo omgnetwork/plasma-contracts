@@ -218,3 +218,30 @@ def test_start_standard_exit_from_two_deposits_with_the_same_amount_and_owner_sh
 
     # should start a SE of a similar deposit (same owner and amount)
     testlang.start_standard_exit(second_deposit_id, owner.key)
+
+
+def test_old_signature_scheme_does_not_work_any_longer(testlang, utxo):
+    from plasma_core.transaction import Transaction
+    from plasma_core.utils.eip712_struct_hash import hash_struct
+    from plasma_core.utils.signatures import sign
+
+    # In this test I will challenge standard exit with old signature schema to show it no longer works
+    # Then passing new signature to the same challenge data, challenge will succeed
+    alice = testlang.accounts[0]
+    outputs = [(alice.address, NULL_ADDRESS, 50)]
+    spend_id = testlang.spend_utxo([utxo.spend_id], [alice.key], outputs)
+
+    testlang.start_standard_exit(spend_id, alice.key)
+    exit_id = testlang.get_standard_exit_id(spend_id)
+
+    # let's prepare old schema signature for a transaction with an input of exited utxo
+    spend_tx = Transaction(inputs=[decode_utxo_id(spend_id)], outputs=outputs)
+    old_signature = sign(spend_tx.hash, alice.key)
+
+    # challenge will fail on signature verification
+    with pytest.raises(TransactionFailed):
+        testlang.root_chain.challengeStandardExit(exit_id, spend_tx.encoded, 0, old_signature)
+
+    # let's provide new schema signature for a challenge
+    new_signature = sign(hash_struct(spend_tx), alice.key)
+    testlang.root_chain.challengeStandardExit(exit_id, spend_tx.encoded, 0, new_signature)
