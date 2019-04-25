@@ -11,6 +11,7 @@ import "./PlasmaCore.sol";
 library Eip712StructHash {
     using PlasmaCore for bytes;
 
+    bytes2  constant EIP191_PREFIX       = "\x19\x01";
     bytes32 constant EIP712_DOMAIN_HASH  = keccak256(abi.encodePacked("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract,bytes32 salt)"));
     bytes32 constant TX_TYPE_HASH        = keccak256(abi.encodePacked("Transaction(Input input0,Input input1,Input input2,Input input3,Output output0,Output output1,Output output2,Output output3,bytes32 metadata)Input(uint256 blknum,uint256 txindex,uint256 oindex)Output(address owner,address token,uint256 amount)"));
     bytes32 constant INPUT_TYPE_HASH     = keccak256(abi.encodePacked("Input(uint256 blknum,uint256 txindex,uint256 oindex)"));
@@ -36,29 +37,33 @@ library Eip712StructHash {
         view
         returns (bytes32)
     {
-        PlasmaCore.Transaction memory tx = _tx.decode();
-        
+        return hash(_tx.decode());
+    }
+
+    function hash(PlasmaCore.Transaction memory _tx)
+        private
+        pure
+        returns (bytes32)
+    {
         return keccak256(abi.encodePacked(
-            "\x19\x01",
+            EIP191_PREFIX,
             DOMAIN_SEPARATOR,
             keccak256(abi.encode(
                 TX_TYPE_HASH,
-                hashInput(tx.inputs[0]),
-                hashInput(tx.inputs[1]),
-                hashInput(tx.inputs[2]),
-                hashInput(tx.inputs[3]),
-                hashOutput(tx.outputs[0]),
-                hashOutput(tx.outputs[1]),
-                hashOutput(tx.outputs[2]),
-                hashOutput(tx.outputs[3]),
-                tx.metadata
+                hash(_tx.inputs[0]),
+                hash(_tx.inputs[1]),
+                hash(_tx.inputs[2]),
+                hash(_tx.inputs[3]),
+                hash(_tx.outputs[0]),
+                hash(_tx.outputs[1]),
+                hash(_tx.outputs[2]),
+                hash(_tx.outputs[3]),
+                _tx.metadata
             ))
         ));
-
-        return TX_TYPE_HASH;
     }
-    
-    function hashInput(PlasmaCore.TransactionInput memory _input)
+
+    function hash(PlasmaCore.TransactionInput memory _input)
         private
         pure
         returns (bytes32)
@@ -71,7 +76,7 @@ library Eip712StructHash {
         ));
     }
 
-    function hashOutput(PlasmaCore.TransactionOutput memory _output)
+    function hash(PlasmaCore.TransactionOutput memory _output)
         private
         pure
         returns (bytes32)
