@@ -1,9 +1,10 @@
 import rlp
 from rlp.sedes import big_endian_int, binary, CountableList
 from ethereum import utils
+from plasma_core.constants import NULL_SIGNATURE, NULL_ADDRESS
+from plasma_core.utils.eip712_struct_hash import hash_struct
 from plasma_core.utils.signatures import sign, get_signer
 from plasma_core.utils.transactions import encode_utxo_id
-from plasma_core.constants import NULL_SIGNATURE, NULL_ADDRESS
 from rlp.exceptions import (SerializationError, DeserializationError)
 
 
@@ -75,7 +76,7 @@ class Transaction(rlp.Serializable):
 
     @property
     def signers(self):
-        return [get_signer(self.hash, sig) if sig != NULL_SIGNATURE else NULL_ADDRESS for sig in self.signatures]
+        return [get_signer(hash_struct(self), sig) if sig != NULL_SIGNATURE else NULL_ADDRESS for sig in self.signatures]
 
     @property
     def encoded(self):
@@ -86,7 +87,7 @@ class Transaction(rlp.Serializable):
         return all([i.blknum == 0 for i in self.inputs])
 
     def sign(self, index, key):
-        self.signatures[index] = sign(self.hash, key)
+        self.signatures[index] = sign(hash_struct(self), key)
 
     @staticmethod
     def serialize(obj):
