@@ -10,14 +10,14 @@ import "./Eip712StructHash.sol";
  */
 contract SignatureTest {
     /**
-     * @dev Verifies signature was made by the signer.
-     * @return True when signature is valid, false otherwise.
+     * @dev Recovers signer address from signature and EIP-712 structural hash of transaction.
+     * @return Signer address when signature is valid, random bytes otherwise.
      */
-    function verify(bytes _tx, bytes _sign, address _signer)
+    function getSigner(bytes _tx, bytes _sign)
         public
         view
-        returns (bool)
+        returns (address)
     {
-        return _signer == ECRecovery.recover(Eip712StructHash.hash(_tx), _sign);
+        return ECRecovery.recover(Eip712StructHash.hash(_tx), _sign);
     }
 }
