@@ -6,7 +6,7 @@ import "./Eip712StructHash.sol";
 
 /**
  * @title SignatureTest
- * @dev Opens Eip712 structural hash for end-to-end tests
+ * @dev Opens Eip712 structural hash for dependency conformance tests
  */
 contract SignatureTest {
     /**
