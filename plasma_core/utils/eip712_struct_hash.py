@@ -5,7 +5,7 @@ from plasma_core.constants import NULL_HASH
 
 def hash_struct(tx, domain=None):
     inputs = [Input(blknum=i.blknum, txindex=i.txindex, oindex=i.oindex) for i in tx.inputs]
-    outputs = [Output(owner=o.owner, token=o.token, amount=o.amount) for o in tx.outputs]
+    outputs = [Output(owner=o.owner, currency=o.token, amount=o.amount) for o in tx.outputs]
 
     domain = domain or make_domain(
         name='OMG Network',
@@ -37,7 +37,7 @@ class Input(EIP712Struct):
 
 class Output(EIP712Struct):
     owner = Address()
-    token = Address()
+    currency = Address()
     amount = Uint(256)
 
 

@@ -30,14 +30,14 @@ outputs = [
 # NOTE: following test vectors were confirmed against contracts code
 def test_empty_transaction():
     empty_tx = Transaction(inputs=[], outputs=[])
-    assert hash_struct(empty_tx, test_domain).hex() == 'c67dd6528c3f576a02369244960a19c9e09c4706938630a50e2eaf385d3a291b'
+    assert hash_struct(empty_tx, test_domain).hex() == '992ac0f45bff7d9fb74636623e5d8b111b49b818cadcf3a91c035735a84d154f'
 
 
 def test_sample_transaction():
     tx = Transaction(inputs=inputs, outputs=outputs)
-    assert hash_struct(tx, test_domain).hex() == '6ec5be1d778c6e5d56512b59e68c879cfd2efe27856081c19138ab8dd05d2a41'
+    assert hash_struct(tx, test_domain).hex() == 'b42dc40570279af9faa05e64d62f54db0fd2b768a4a69646efba068cf88eb7a2'
 
 
 def test_transaction_with_metadata():
     tx = Transaction(inputs=inputs, outputs=outputs, metadata=metadata)
-    assert hash_struct(tx, test_domain).hex() == '24858ef969d1713414f4776626bcb8b6f5ce6aa4eab6dd4733172a14f547b153'
+    assert hash_struct(tx, test_domain).hex() == '5f9adeaaba8d2fa17de40f45eb12136c7e7f26ea56567226274314d0a563e81d'
