@@ -12,13 +12,12 @@ library Eip712StructHash {
     using PlasmaCore for bytes;
 
     bytes2  constant EIP191_PREFIX       = "\x19\x01";
-    bytes32 constant EIP712_DOMAIN_HASH  = keccak256(abi.encodePacked("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract,bytes32 salt)"));
+    bytes32 constant EIP712_DOMAIN_HASH  = keccak256(abi.encodePacked("EIP712Domain(string name,string version,address verifyingContract,bytes32 salt)"));
     bytes32 constant TX_TYPE_HASH        = keccak256(abi.encodePacked("Transaction(Input input0,Input input1,Input input2,Input input3,Output output0,Output output1,Output output2,Output output3,bytes32 metadata)Input(uint256 blknum,uint256 txindex,uint256 oindex)Output(address owner,address token,uint256 amount)"));
     bytes32 constant INPUT_TYPE_HASH     = keccak256(abi.encodePacked("Input(uint256 blknum,uint256 txindex,uint256 oindex)"));
     bytes32 constant OUTPUT_TYPE_HASH    = keccak256(abi.encodePacked("Output(address owner,address token,uint256 amount)"));
 
 
-    uint256 constant chainId = 4;
     address constant verifyingContract = 0x44de0Ec539b8C4a4b530c78620Fe8320167F2F74;
     bytes32 constant salt = 0xfad5c7f626d80f9256ef01929f3beb96e058b8b4b0e3fe52d84f054c0e2a7a83;
 
@@ -27,7 +26,6 @@ library Eip712StructHash {
         EIP712_DOMAIN_HASH,
         keccak256("OMG Network"),
         keccak256("1"),
-        chainId,
         verifyingContract,
         salt
     ));

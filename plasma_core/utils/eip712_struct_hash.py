@@ -10,7 +10,6 @@ def hash_struct(tx, domain=None):
     domain = domain or make_domain(
         name='OMG Network',
         version='1',
-        chainId=4,
         verifyingContract=bytes.fromhex('44de0Ec539b8C4a4b530c78620Fe8320167F2F74'),
         salt=bytes.fromhex('fad5c7f626d80f9256ef01929f3beb96e058b8b4b0e3fe52d84f054c0e2a7a83')
     )
