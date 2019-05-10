@@ -1,6 +1,9 @@
 import pytest
 from ethereum.tools.tester import TransactionFailed
 from plasma_core.constants import NULL_ADDRESS, NULL_ADDRESS_HEX, MIN_EXIT_PERIOD
+from plasma_core.transaction import Transaction
+from plasma_core.utils.eip712_struct_hash import hash_struct
+from plasma_core.utils.signatures import sign
 from plasma_core.utils.transactions import decode_utxo_id, encode_utxo_id
 
 
@@ -92,7 +95,6 @@ def test_start_standard_exit_on_finalized_exit_should_fail(testlang, utxo):
 
 
 def test_start_standard_exit_wrong_oindex_should_fail(testlang):
-    from plasma_core.transaction import Transaction
     alice, bob, alice_money, bob_money = testlang.accounts[0], testlang.accounts[1], 10, 90
 
     deposit_id = testlang.deposit(alice, alice_money + bob_money)
@@ -100,7 +102,7 @@ def test_start_standard_exit_wrong_oindex_should_fail(testlang):
 
     spend_tx = Transaction(inputs=[decode_utxo_id(deposit_id)],
                            outputs=[(alice.address, NULL_ADDRESS, alice_money), (bob.address, NULL_ADDRESS, bob_money)])
-    spend_tx.sign(0, alice.key)
+    spend_tx.sign(0, alice.key, verifyingContract=testlang.root_chain)
     blknum = testlang.submit_block([spend_tx])
     alice_utxo = encode_utxo_id(blknum, 0, 0)
     bob_utxo = encode_utxo_id(blknum, 0, 1)
@@ -221,10 +223,6 @@ def test_start_standard_exit_from_two_deposits_with_the_same_amount_and_owner_sh
 
 
 def test_old_signature_scheme_does_not_work_any_longer(testlang, utxo):
-    from plasma_core.transaction import Transaction
-    from plasma_core.utils.eip712_struct_hash import hash_struct
-    from plasma_core.utils.signatures import sign
-
     # In this test I will challenge standard exit with old signature schema to show it no longer works
     # Then passing new signature to the same challenge data, challenge will succeed
     alice = testlang.accounts[0]
@@ -242,6 +240,27 @@ def test_old_signature_scheme_does_not_work_any_longer(testlang, utxo):
     with pytest.raises(TransactionFailed):
         testlang.root_chain.challengeStandardExit(exit_id, spend_tx.encoded, 0, old_signature)
 
-    # let's provide new schema signature for a challenge
-    new_signature = sign(hash_struct(spend_tx), alice.key)
+    # sanity check: let's provide new schema signature for a challenge
+    new_signature = sign(hash_struct(spend_tx, verifyingContract=testlang.root_chain), alice.key)
     testlang.root_chain.challengeStandardExit(exit_id, spend_tx.encoded, 0, new_signature)
+
+
+def test_signature_scheme_respects_verifying_contract(testlang, utxo):
+    alice = testlang.accounts[0]
+    outputs = [(alice.address, NULL_ADDRESS, 50)]
+    spend_id = testlang.spend_utxo([utxo.spend_id], [alice.key], outputs)
+
+    testlang.start_standard_exit(spend_id, alice.key)
+    exit_id = testlang.get_standard_exit_id(spend_id)
+
+    spend_tx = Transaction(inputs=[decode_utxo_id(spend_id)], outputs=outputs)
+
+    bad_contract_signature = sign(hash_struct(spend_tx, verifyingContract=None), alice.key)
+
+    # challenge will fail on signature verification
+    with pytest.raises(TransactionFailed):
+        testlang.root_chain.challengeStandardExit(exit_id, spend_tx.encoded, 0, bad_contract_signature)
+
+    # sanity check
+    proper_signature = sign(hash_struct(spend_tx, verifyingContract=testlang.root_chain), alice.key)
+    testlang.root_chain.challengeStandardExit(exit_id, spend_tx.encoded, 0, proper_signature)
