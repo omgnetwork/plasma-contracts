@@ -18,7 +18,6 @@ library Eip712StructHash {
     bytes32 constant OUTPUT_TYPE_HASH    = keccak256(abi.encodePacked("Output(address owner,address currency,uint256 amount)"));
 
 
-    address constant verifyingContract = 0x44de0Ec539b8C4a4b530c78620Fe8320167F2F74;
     bytes32 constant salt = 0xfad5c7f626d80f9256ef01929f3beb96e058b8b4b0e3fe52d84f054c0e2a7a83;
 
 
@@ -26,7 +25,7 @@ library Eip712StructHash {
         EIP712_DOMAIN_HASH,
         keccak256("OMG Network"),
         keccak256("1"),
-        verifyingContract,
+        address(this),
         salt
     ));
 
