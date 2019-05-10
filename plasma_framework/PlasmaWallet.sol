@@ -14,6 +14,7 @@ contract PlasmaWallet is PlasmaBlockController {
     /*
      * Storage
      */
+
     bytes32[16] zeroHashes;
 
 
@@ -50,24 +51,25 @@ contract PlasmaWallet is PlasmaBlockController {
     }
 
     // TODO: tokens support
-//    /**
-//     * @dev Allows anyone to add new token to Plasma chain
-//     * @param _token The address of the ERC20 token
-//     */
-//    function addToken(address _token)
-//        external
-//    {
-//        require(!hasToken(_token));
-//        exitsQueues[_token] = PriorityQueueFactory.deploy(this);
-//        emit TokenAdded(_token);
-//    }
+    //    /**
+    //     * @dev Allows anyone to add new token to Plasma chain
+    //     * @param _token The address of the ERC20 token
+    //     */
+    //    function addToken(address _token)
+    //        external
+    //    {
+    //        require(!hasToken(_token));
+    //        exitsQueues[_token] = PriorityQueueFactory.deploy(this);
+    //        emit TokenAdded(_token);
+    //    }
 
     /**
      * @dev Allows a user to submit a deposit.
      * @param _depositTx RLP encoded transaction to act as the deposit.
      */
     function deposit(bytes _depositTx)
-        external payable
+        external
+        payable
     {
         //TODO: probably we should call a predicate instead of checks
         //TODO: refactor to use predicates
@@ -88,10 +90,10 @@ contract PlasmaWallet is PlasmaBlockController {
         _processDeposit(_depositTx, decodedTx);
     }
 
-    /**
-//     * @dev Deposits approved amount of ERC20 token. Approve must be called first. Note: does not check if token was added.
-//     * @param _depositTx RLP encoded transaction to act as the deposit.
-//     */
+    //    /**
+    //     * @dev Deposits approved amount of ERC20 token. Approve must be called first. Note: does not check if token was added.
+    //     * @param _depositTx RLP encoded transaction to act as the deposit.
+    //     */
     //    function depositFrom(bytes _depositTx)
     //        external
     //    {
@@ -108,14 +110,15 @@ contract PlasmaWallet is PlasmaBlockController {
     //        _processDeposit(_depositTx, decodedTx);
     //    }
 
-    //    /**
-    //     * @dev Withdraw plasma chain eth via transferring ETH.
-    //     * @param _target Place to transfer eth.
-    //     * @param _amount Amount of eth to transfer.
-    //     */
-    //    function withdraw(address _target, uint256 _amount) internal {
-    //
-    //    }
+        /**
+         * @dev Withdraw plasma chain eth via transferring ETH.
+         * @param _target Place to transfer eth.
+         * @param _amount Amount of eth to transfer.
+         */
+        function withdraw(address _target, uint256 _amount) internal {
+            // TODO: implement
+            // TODO: is this even needed ? there would be only one line (transfer)
+        }
     //
     //    /**
     //     * @dev Withdraw plasma chain ERC20 token via ERC20 transfer.
@@ -125,22 +128,6 @@ contract PlasmaWallet is PlasmaBlockController {
     //     */
     //    function withdrawErc20(address _token, address _target, uint256 _amount) external;
     //
-
-    /*
-     * Views
-     */
-
-    /**
-     * @dev Calculates the next deposit block.
-     * @return Next deposit block number.
-     */
-    function getDepositBlockNumber()
-        public
-        view
-        returns (uint256)
-    {
-        return nextChildBlock - CHILD_BLOCK_INTERVAL + nextDepositBlock;
-    }
 
 
     /*

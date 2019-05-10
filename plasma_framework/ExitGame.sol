@@ -4,8 +4,6 @@ pragma solidity ^0.4.0;
 	// see: https://github.com/ethereum/solidity/issues/5397
 pragma experimental ABIEncoderV2;
 
-import "./ExitModel.sol";
-
 interface ExitGame {
 	    /**
 	     * @dev Check the result of exit game, whether an exit is able to process or not (is successfully challenged or not).

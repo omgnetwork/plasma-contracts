@@ -21,7 +21,7 @@ contract PlasmaBlockController is Operated {
 
     mapping (uint256 => Block) public blocks;
     uint256 public nextChildBlock;
-    uint256 public nextDepositBlock; // TODO: this should go to Wallet, but Wallet has to derive from BlockController
+    uint256 public nextDepositBlock;
 
     /*
      * Events
@@ -51,6 +51,22 @@ contract PlasmaBlockController is Operated {
         nextDepositBlock = 1;
 
         emit BlockSubmitted(submittedBlockNumber);
+    }
+
+    /*
+     * Views
+     */
+
+    /**
+     * @dev Calculates the next deposit block.
+     * @return Next deposit block number.
+     */
+    function getDepositBlockNumber()
+        public
+        view
+        returns (uint256)
+    {
+        return nextChildBlock - CHILD_BLOCK_INTERVAL + nextDepositBlock;
     }
 
 

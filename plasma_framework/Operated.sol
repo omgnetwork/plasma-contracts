@@ -8,7 +8,9 @@ contract Operated {
         _;
     }
 
-    function _initOperator() {
+    function _initOperator()
+        internal
+    {
         require(operator == address(0));
         operator = msg.sender;
     }
