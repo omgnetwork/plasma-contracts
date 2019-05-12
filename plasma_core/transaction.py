@@ -59,7 +59,8 @@ class Transaction(rlp.Serializable):
                  inputs=[DEFAULT_INPUT] * NUM_TXOS,
                  outputs=[DEFAULT_OUTPUT] * NUM_TXOS,
                  metadata=None,
-                 signatures=[NULL_SIGNATURE] * NUM_TXOS):
+                 signatures=[NULL_SIGNATURE] * NUM_TXOS,
+                 signers=[NULL_ADDRESS] * NUM_TXOS):
         assert all(len(o) == 3 for o in outputs)
         padded_inputs = pad_list(inputs, self.DEFAULT_INPUT, self.NUM_TXOS)
         padded_outputs = pad_list(outputs, self.DEFAULT_OUTPUT, self.NUM_TXOS)
@@ -68,6 +69,7 @@ class Transaction(rlp.Serializable):
         self.outputs = [TransactionOutput(*o) for o in padded_outputs]
         self.metadata = metadata
         self.signatures = signatures[:]
+        self._signers = signers[:]
         self.spent = [False] * self.NUM_TXOS
 
     @property
@@ -76,7 +78,7 @@ class Transaction(rlp.Serializable):
 
     @property
     def signers(self):
-        return [get_signer(hash_struct(self), sig) if sig != NULL_SIGNATURE else NULL_ADDRESS for sig in self.signatures]
+        return self._signers
 
     @property
     def encoded(self):
@@ -86,8 +88,11 @@ class Transaction(rlp.Serializable):
     def is_deposit(self):
         return all([i.blknum == 0 for i in self.inputs])
 
-    def sign(self, index, key):
-        self.signatures[index] = sign(hash_struct(self), key)
+    def sign(self, index, key, verifyingContract=None):
+        hash = hash_struct(self, verifyingContract=verifyingContract)
+        sig = sign(hash, key)
+        self.signatures[index] = sig
+        self._signers[index] = get_signer(hash, sig) if sig != NULL_SIGNATURE else NULL_ADDRESS
 
     @staticmethod
     def serialize(obj):

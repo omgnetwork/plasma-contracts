@@ -96,7 +96,7 @@ def test_challenge_standard_exit_wrong_oindex_should_fail(testlang):
     deposit_blknum, _, _ = decode_utxo_id(deposit_id)
 
     spend_tx = Transaction(inputs=[decode_utxo_id(deposit_id)], outputs=[(alice.address, NULL_ADDRESS, alice_money), (bob.address, NULL_ADDRESS, bob_money)])
-    spend_tx.sign(0, alice.key)
+    spend_tx.sign(0, alice.key, verifyingContract=testlang.root_chain)
     blknum = testlang.submit_block([spend_tx])
     alice_utxo = encode_utxo_id(blknum, 0, 0)
     bob_utxo = encode_utxo_id(blknum, 0, 1)
@@ -123,7 +123,7 @@ def test_challenge_standard_exit_with_in_flight_exit_tx_should_succeed(ethtester
     spend_id = testlang.spend_utxo([deposit_id], [owner.key], outputs=[(owner.address, NULL_ADDRESS, amount)])
 
     ife_tx = Transaction(inputs=[decode_utxo_id(spend_id)], outputs=[(owner.address, NULL_ADDRESS, amount)])
-    ife_tx.sign(0, owner.key)
+    ife_tx.sign(0, owner.key, verifyingContract=testlang.root_chain)
 
     (encoded_spend, encoded_inputs, proofs, signatures) = testlang.get_in_flight_exit_info(None, spend_tx=ife_tx)
     bond = testlang.root_chain.inFlightExitBond()

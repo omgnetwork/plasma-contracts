@@ -1,17 +1,21 @@
 from eip712_structs import EIP712Struct, Address, Uint, Bytes, make_domain
 from eth_utils.crypto import keccak
-from plasma_core.constants import NULL_HASH
+from plasma_core.constants import NULL_HASH, NULL_ADDRESS
 
 
-def hash_struct(tx, domain=None):
+def hash_struct(tx, domain=None, verifyingContract=None):
+    if domain and verifyingContract:
+        raise "verifyingContract supplied but ignored"
+
+    verifying_address = verifyingContract.address if verifyingContract else NULL_ADDRESS
+
     inputs = [Input(blknum=i.blknum, txindex=i.txindex, oindex=i.oindex) for i in tx.inputs]
-    outputs = [Output(owner=o.owner, token=o.token, amount=o.amount) for o in tx.outputs]
+    outputs = [Output(owner=o.owner, currency=o.token, amount=o.amount) for o in tx.outputs]
 
     domain = domain or make_domain(
         name='OMG Network',
         version='1',
-        chainId=4,
-        verifyingContract=bytes.fromhex('44de0Ec539b8C4a4b530c78620Fe8320167F2F74'),
+        verifyingContract=verifying_address,
         salt=bytes.fromhex('fad5c7f626d80f9256ef01929f3beb96e058b8b4b0e3fe52d84f054c0e2a7a83')
     )
 
@@ -38,7 +42,7 @@ class Input(EIP712Struct):
 
 class Output(EIP712Struct):
     owner = Address()
-    token = Address()
+    currency = Address()
     amount = Uint(256)
 
 

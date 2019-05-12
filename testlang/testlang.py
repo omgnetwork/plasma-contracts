@@ -209,7 +209,7 @@ class TestingLanguage(object):
         inputs = [decode_utxo_id(input_id) for input_id in input_ids]
         spend_tx = Transaction(inputs=inputs, outputs=outputs, metadata=metadata)
         for i in range(0, len(inputs)):
-            spend_tx.sign(i, keys[i])
+            spend_tx.sign(i, keys[i], verifyingContract=self.root_chain)
         blknum = self.submit_block([spend_tx], force_invalid=force_invalid)
         spend_id = encode_utxo_id(blknum, 0, 0)
         return spend_id
