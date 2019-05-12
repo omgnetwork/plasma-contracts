@@ -35,8 +35,8 @@ contract ExitGameRegistry is Operated {
         external
         onlyOperator
     {
-
         // NOTE: tx type and version are 128-bit, so they can be concatenated into uint256
+
         require(exitGames[_txType] == address(0));
 
         exitGames[_txType] = ExitGame(_contractAddress);

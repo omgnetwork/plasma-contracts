@@ -10,10 +10,10 @@ interface ExitGame {
 	     * @param _exitId Unique identifier of exit within the exit game.
 	     */
 	    function isExitValid(bytes32 _exitId) external view returns (bool);
+
 	    /**
 	     * @dev Custom function to process exit.
 	     * @param _exit Exit data.
 	     */
-//	    function processExit(ExitModel.Exit _exit) external;
-	    function processExit(bytes _exit) external;
+	    function processExit(uint192 _exitId) external;
 }

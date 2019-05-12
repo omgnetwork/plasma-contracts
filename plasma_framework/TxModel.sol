@@ -1,45 +1,26 @@
 pragma solidity ^0.4.0;
 
-library NormalTxInputModel {
+
+
+library TxModel {
+
     struct TxInput {
         uint256 blknum;
         uint256 txindex;
         uint256 oindex;
     }
-}
-
-library NormalTxOutputModel {
-    struct TxOutputData {
-        uint256 amount;
-        address owner;
-        address token;
-    }
 
     struct TxOutput {
         uint256 outputType;
-        TxOutputData outputData;
-    }
-
-//    function decode(bytes memory _txOutput) internal pure returns (TxOutput memory) {
-//        // dummy implement
-//        return TxOutput(1, TxOutputData(10, address(0), address(0)));
-//    }
-}
-
-library NormalTxModel {
-    struct ProofData {
-        bytes signature;
-    }
-
-    struct MetaData {
-        bytes32 data;
+        bytes data;
     }
 
     struct Tx {
-        NormalTxInputModel.TxInput[] inputs;
-        NormalTxOutputModel.TxOutput[] outputs;
-        ProofData proofData;
-        MetaData metaData;
+        uint256 txType;
+        TxInput[] inputs;
+        TxOutput[] outputs;
+        bytes32 medata;
+        bytes data; // here go signatures
     }
 
 //    function decode(bytes memory _tx) internal pure returns (Tx) {
