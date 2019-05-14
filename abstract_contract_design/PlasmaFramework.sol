@@ -9,10 +9,11 @@ import "./GeneralizedStorage.sol";
 import "./PlasmaWallet.sol";
 import "./ExitGameController.sol";
 import "./TxOutputPredicateRegistry.sol";
+import "./ExitProcessorRegistry.sol";
 
 contract PlasmaBlockContoller {
     function submitBlock(bytes32 _blockRoot) public;
 }
 
-contract PlasmaFramework is PlasmaBlockContoller, PlasmaWallet, ExitGameController, TxOutputPredicateRegistry, GeneralizedStorage {
+contract PlasmaFramework is PlasmaBlockContoller, PlasmaWallet, ExitGameController, TxOutputPredicateRegistry, ExitProcessorRegistry, GeneralizedStorage {
 }

@@ -1,10 +1,5 @@
 pragma solidity ^0.5.0;
 
-// Should be safe to use. It is marked as experimental as it costs higher gas usage.
-// see: https://github.com/ethereum/solidity/issues/5397 
-pragma experimental ABIEncoderV2;
-
-import "./ExitGame.sol";
 import "./TxModels.sol";
 import "./TxOutputPredicateInterface.sol";
 import "./PlasmaFramework.sol";
@@ -13,7 +8,7 @@ import "./PlasmaFramework.sol";
 For simpleness, use MVP instead of MoreVP as example.
 Basically the ExitGame implementation should define their own game function.
  */
-contract MVPGame is ExitGame {
+contract MVPGame {
     PlasmaFramework parent;
     uint256 txType;
 
@@ -59,24 +54,5 @@ contract MVPGame is ExitGame {
             bytes32 keyExitValid = keccak256(abi.encodePacked(_exitId, "-isValid"));
             parent.setBoolStorage(txType, keyExitValid, false); // flag exit invalid
         }
-    }
-
-    function isExitValid(bytes32 _exitId) external view returns (bool) {
-        bytes32 keyExitValid = keccak256(abi.encodePacked(_exitId, "-isValid"));
-        return parent.getBoolStorage(txType, keyExitValid);
-    }
-
-    function processExit(ExitModel.Exit calldata _exit) external {
-        /**
-            keyToken = concat(exitId, "-token");
-            keyExitTo = concat(exitId, "-exitTo");
-            keyAmount = concat(exitId, "-amount");
-
-            token = parentContract.getAddressStorage(txType, keyToken);
-            exitTo = parentContract.getAddressStorage(txType, keyExitTo);
-            amount = parentContract.getAddressStorage(txType, keyAmount);
-
-            parentContract.withdrawErc20(token, exitTo, amount);
-         */
     }
 }

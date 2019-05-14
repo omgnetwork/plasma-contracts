@@ -1,9 +1,5 @@
 pragma solidity ^0.5.0;
 
-// Should be safe to use. It is marked as experimental as it costs higher gas usage.
-// see: https://github.com/ethereum/solidity/issues/5397 
-pragma experimental ABIEncoderV2;
-
 import "./ExitGameRegistry.sol";
 import "./PlasmaStorage.sol";
 import "./ExitModel.sol";
@@ -23,14 +19,18 @@ contract ExitGameController is ExitGameRegistry, PlasmaStorage {
 
     /**
      * @dev Enqueue an exit to priority queue.
-     * @param _exit Data for exit.
+     * @param _exitProcessor Address of the exit processor contract.
+     * @param _priority the exit priority, does not need to be unique.
+     * @param _exitId a exit game defined exit id. Do not need to be unique across exit games but should be unique per tx type.
      */
-    function enqueue(ExitModel.Exit calldata _exit) external {
+    function enqueue(address _exitProcessor, uint256 _priority, uint256 _exitId) external {
         /** Pseudo code
             
             // use `exitQueueNonce` to make sure uniqueness of the queue priority.
-            uniquePriority = combineToUniquePriority(exit.priority, exitQueueNonce);
+            uniquePriority = combineToUniquePriority(_priority, exitQueueNonce);
             priorityQueue.enqueue(uniquePriority);
+
+            ExitModel.Exit memory exit = ExitModel.Exit(_exitProcessor, _exitId);
             exits[uniquePriority] = exit;
             exitQueueNonce ++;
          */
@@ -46,10 +46,10 @@ contract ExitGameController is ExitGameRegistry, PlasmaStorage {
         /** Pseudo code
 
             while(exitableTimestamp < block.timestamp && _exitsToProcess > 0) {
-                if (exit.exitGameContract.isExitValid(exit.exitId)) {
+                if (exit.exitProcessor.isExitValid(exit.exitId)) {
                     queue.delMin();
                     exit = exits[uniquePriority] ;
-                    exit.exitGameContract.processExit(exit);
+                    exit.exitProcessor.processExit(exit.exitId);
                 }
 
                 if (queue.currentSize() == 0) {

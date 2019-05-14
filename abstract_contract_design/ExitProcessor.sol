@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 
 import "./ExitModel.sol";
 
-interface ExitGame {
+interface ExitProcessor {
     /**
      * @dev Check the result of exit game, whether an exit is able to process or not (is successfully challenged or not).
      * @param _exitId Unique identifier of exit within the exit game.
@@ -16,5 +16,5 @@ interface ExitGame {
      * @dev Custom function to proces exit.
      * @param _exit Exit data.
      */
-    function processExit(ExitModel.Exit calldata _exit) external;
+    function processExit(bytes32 _exitId) external;
 }
