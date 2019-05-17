@@ -1,6 +1,5 @@
 pragma solidity ^0.4.0;
 
-import "./ECRecovery.sol";
 import "./ByteUtils.sol";
 
 

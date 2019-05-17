@@ -51,10 +51,10 @@ def test_metadata_is_part_of_the_proof(testlang):
     input_ids = [deposit_id]
     keys = [owner.key]
     outputs = [(owner.address, NULL_ADDRESS, amount)]
-    spend_id = testlang.spend_utxo(input_ids, keys, outputs, "metadata info")
+    spend_id = testlang.spend_utxo(input_ids, keys, outputs, b'metadata info')
 
     inputs = [decode_utxo_id(input_id) for input_id in input_ids]
-    bad_spend_tx = Transaction(inputs=inputs, outputs=outputs, metadata="other information")
+    bad_spend_tx = Transaction(inputs=inputs, outputs=outputs, metadata=b'other information')
     with pytest.raises(TransactionFailed):
         testlang.start_standard_exit_with_tx_body(spend_id, bad_spend_tx, owner.key)
 
