@@ -22,3 +22,5 @@ build/
 .idea/
 *.iml
 
+node_modules
+.env
