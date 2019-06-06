@@ -1,0 +1,25 @@
+{
+  "name": "plasma_framework",
+  "version": "0.0.1",
+  "description": "Plasma Framework",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "openzeppelin-test-helpers": "^0.4.0"
+  },
+  "scripts": {
+    "test": "truffle test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/omisego/plasma-contracts.git"
+  },
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/omisego/plasma-contracts/issues"
+  },
+  "homepage": "https://github.com/omisego/plasma-contracts#readme"
+}
