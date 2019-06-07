@@ -2,12 +2,24 @@ var PriorityQueueLib = artifacts.require('./PriorityQueueLib.sol')
 var PriorityQueueFactory = artifacts.require('./PriorityQueueFactory.sol')
 var RootChain = artifacts.require('./RootChain.sol')
 
-module.exports = function (deployer, network, accounts) {
-  deployer.deploy(PriorityQueueLib)
+module.exports = async function (deployer, network, accounts) {
+  // If no DEPLOYER_ADDRESS specified use accounts[0]
+  const DEPLOYER_ADDRESS = process.env.DEPLOYER_ADDRESS || accounts[0]
 
-  deployer.link(PriorityQueueLib, PriorityQueueFactory)
-  deployer.deploy(PriorityQueueFactory)
+  // Unlock the deployer account if necessary
+  if (process.env.DEPLOYER_PASSPHRASE) {
+    await RootChain.web3.eth.personal.unlockAccount(
+      DEPLOYER_ADDRESS,
+      process.env.DEPLOYER_PASSPHRASE,
+      10
+    )
+  }
 
-  deployer.link(PriorityQueueFactory, RootChain)
-  deployer.deploy(RootChain)
+  await deployer.deploy(PriorityQueueLib)
+
+  await deployer.link(PriorityQueueLib, PriorityQueueFactory)
+  await deployer.deploy(PriorityQueueFactory)
+
+  await deployer.link(PriorityQueueFactory, RootChain)
+  return deployer.deploy(RootChain)
 }

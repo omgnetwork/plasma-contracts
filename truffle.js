@@ -14,17 +14,18 @@ module.exports = {
     }
   },
   networks: {
-    development: {
-      host: process.env.GETH_HOST || '127.0.0.1',
-      port: process.env.GETH_PORT || 8545,
+    eth_client: {
+      host: process.env.ETH_CLIENT_HOST || '127.0.0.1',
+      port: process.env.ETH_CLIENT_PORT || 8545,
+      from: process.env.DEPLOYER_ADDRESS,
       network_id: '*'
     },
-    rinkeby: {
+    infura: {
       skipDryRun: true,
       provider: function () {
         return new HDWalletProvider(
           [process.env.DEPLOYER_PRIVATEKEY, process.env.AUTHORITY_PRIVATEKEY],
-          `https://rinkeby.infura.io/v3/${process.env.INFURA_API_KEY}`,
+          `${process.env.INFURA_URL}/${process.env.INFURA_API_KEY}`,
           0, 2
         )
       },
