@@ -4,7 +4,7 @@ const HDWalletProvider = require('truffle-hdwallet-provider')
 module.exports = {
   compilers: {
     solc: {
-      version: '0.4.25',
+      version: process.env.SOLC_VERSION || '0.4.25',
       settings: {
         optimizer: {
           enabled: true,
@@ -14,11 +14,29 @@ module.exports = {
     }
   },
   networks: {
-    eth_client: {
+    development: {
       host: process.env.ETH_CLIENT_HOST || '127.0.0.1',
       port: process.env.ETH_CLIENT_PORT || 8545,
       from: process.env.DEPLOYER_ADDRESS,
       network_id: '*'
+    },
+    mainnet: {
+      host: process.env.ETH_CLIENT_HOST || '127.0.0.1',
+      port: process.env.ETH_CLIENT_PORT || 8545,
+      from: process.env.DEPLOYER_ADDRESS,
+      network_id: 1
+    },
+    rinkeby: {
+      host: process.env.ETH_CLIENT_HOST || '127.0.0.1',
+      port: process.env.ETH_CLIENT_PORT || 8545,
+      from: process.env.DEPLOYER_ADDRESS,
+      network_id: 4
+    },
+    goerli: {
+      host: process.env.ETH_CLIENT_HOST || '127.0.0.1',
+      port: process.env.ETH_CLIENT_PORT || 8545,
+      from: process.env.DEPLOYER_ADDRESS,
+      network_id: 5
     },
     infura: {
       skipDryRun: true,
@@ -29,7 +47,7 @@ module.exports = {
           0, 2
         )
       },
-      network_id: 4
+      network_id: '*'
     }
   }
 }
