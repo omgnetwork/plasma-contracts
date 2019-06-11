@@ -3,7 +3,7 @@ var PriorityQueueFactory = artifacts.require('./PriorityQueueFactory.sol')
 var RootChain = artifacts.require('./RootChain.sol')
 
 module.exports = async function (deployer, network, accounts) {
-  // If no DEPLOYER_ADDRESS specified use accounts[0]
+  // If no DEPLOYER_ADDRESS is set, default to using accounts[0]
   const DEPLOYER_ADDRESS = process.env.DEPLOYER_ADDRESS || accounts[0]
 
   // Unlock the deployer account if necessary
