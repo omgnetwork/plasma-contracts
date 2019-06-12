@@ -87,7 +87,7 @@ Certain configuration values need to be set, depending how you're deploying. The
 
 Run truffle, passing in the network e.g.
 ```
-npx truffle migrate --network development
+npx truffle migrate --network local
 ```
 
 Truffle will compile and deploy the contracts. If all goes well it will output the results:
