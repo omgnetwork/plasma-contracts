@@ -22,5 +22,18 @@ build/
 .idea/
 *.iml
 
-node_modules
+# dotenv environment vars
 .env
+
+# truffle build directory
+build/
+
+# npm dependency directory
+node_modules
+
+# Debug log from npm
+npm-debug.log
+
+# coverage file output
+coverage
+coverage.json
