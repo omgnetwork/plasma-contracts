@@ -9,6 +9,7 @@
     "openzeppelin-solidity": "^2.3.0"
   },
   "devDependencies": {
+    "rlp": "^2.2.3",
     "chai": "^4.2.0",
     "openzeppelin-test-helpers": "^0.4.0"
   },
