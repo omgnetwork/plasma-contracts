@@ -1,7 +1,7 @@
 {
   "name": "plasma-contracts",
   "version": "1.0.0",
-  "description": "Root chain contracts for Plasma MVP, work in progress.",
+  "description": "Root chain contracts for Plasma M(ore)VP, work in progress.",
   "main": "truffle.js",
   "private": true,
   "directories": {
@@ -15,7 +15,7 @@
     "url": "git+https://github.com/omisego/plasma-contracts.git"
   },
   "author": "",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/omisego/plasma-contracts/issues"
   },

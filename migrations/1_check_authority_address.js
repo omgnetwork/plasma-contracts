@@ -17,21 +17,21 @@ module.exports = async function (deployer, network, accounts) {
     // Create a new authority address
     const authorityAddress = await RootChain.web3.eth.personal.newAccount(process.env.AUTHORITY_PASSPHRASE)
 
-    // If no FAUCET_ADDRESS is set default to using accounts[0]
-    const FAUCET_ADDRESS = process.env.FAUCET_ADDRESS || accounts[0]
+    // If no DEPLOYER_ADDRESS is set default to using accounts[0]
+    const DEPLOYER_ADDRESS = process.env.DEPLOYER_ADDRESS || accounts[0]
 
-    // Unlock the faucet account if necessary
-    if (process.env.FAUCET_PASSPHRASE) {
+    // Unlock the deployer account if necessary
+    if (process.env.DEPLOYER_PASSPHRASE) {
       await RootChain.web3.eth.personal.unlockAccount(
-        FAUCET_ADDRESS,
-        process.env.FAUCET_PASSPHRASE,
+        DEPLOYER_ADDRESS,
+        process.env.DEPLOYER_PASSPHRASE,
         10
       )
     }
 
     // Fund the authority address
     await RootChain.web3.eth.sendTransaction({
-      from: FAUCET_ADDRESS,
+      from: DEPLOYER_ADDRESS,
       to: authorityAddress,
       value: process.env.AUTHORITY_ADDRESS_INITIAL_AMOUNT || 1e18
     })

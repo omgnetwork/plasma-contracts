@@ -1,6 +1,6 @@
 # Plasma Contracts
 
-Root chain contracts for Plasma MVP, work in progress.
+Root chain contracts for Plasma M(ore)VP, work in progress.
 
 ## Contents
 This version of the contract implements [Plasma MVP](https://ethresear.ch/t/minimal-viable-plasma/426) (Buterin, Poon, Knott). This implementation is a PoA scheme with one operator and multiple watchers (users). Detailed description of our child chain design is in [Tesuji document](https://github.com/omisego/elixir-omg/blob/master/docs/tesuji_blockchain_design.md).
@@ -63,13 +63,12 @@ npm install
 
 
 ### Deploying
-Deploying the contracts requires three accounts:
+Deploying the contracts requires two accounts:
 1. `DEPLOYER` The account that actually deploys the contracts
-2. `AUTHORITY` The Authority account calls `RootChain.init()` and is the account used by the Child chain (or operator). By default a new `AUTHORITY` account is created when deploying. If you prefer you can use an existing `AUTHORITY` account, but it must not have made any transaction prior to calling `RootChain.init()` i.e. its nonce must be 0.
-3. `FAUCET` If a new `AUTHORITY` account is created, the `FAUCET` account is used to fund it. This account can be the same as the `DEPLOYER` account.
+2. `AUTHORITY` The Authority account calls `RootChain.init()` and is the account used by the Child chain (or operator). By default a new `AUTHORITY` account is created when deploying, and will be funded with some ETH from the `DEPLOYER` account. If you prefer you can use an existing `AUTHORITY` account, but it must not have made any transaction prior to calling `RootChain.init()` i.e. its nonce must be 0.
 
 
-Normally you will deploy the contracts using an Ethereum client that you run yourself, such as Geth or Parity. However, you can also use a provider such as Infura. In this case you'll need to know the private keys for the `DEPLOYER` and `AUTHORITY` accounts. See `truffle.js` for an example.
+Normally you will deploy the contracts using an Ethereum client that you run yourself, such as Geth or Parity. However, you can also use a provider such as Infura. In this case you'll need to know the private keys for the `DEPLOYER` and `AUTHORITY` accounts. See `truffle-config.js` for an example.
 
 #### Configuration
 Certain configuration values need to be set, depending how you're deploying. These values can be set in the environment or in a file called `.env`
@@ -81,8 +80,6 @@ Certain configuration values need to be set, depending how you're deploying. The
  - `DEPLOYER_ADDRESS` Address of the `DEPLOYER` account. Defaults to `accounts[0]`
  - `DEPLOYER_PASSPHRASE` Passphrase of the `DEPLOYER` account.
  - `AUTHORITY_PASSPHRASE` Passphrase of the `AUTHORITY` account.
- - `FAUCET_ADDRESS` Address of the `FAUCET` account. Defaults to `accounts[0]`
- - `FAUCET_PASSPHRASE` Passphrase of the `FAUCET` account.
  - `AUTHORITY_ADDRESS_INITIAL_AMOUNT` The amount the fund the `AUTHORITY` account with (in wei). Defaults to 1 ETH.
  - `USE_EXISTING_AUTHORITY_ADDRESS` Set to `true` if you want to use an existing `AUTHORITY` account instead of creating a new one. You must also set `AUTHORITY_ADDRESS`
 

@@ -14,7 +14,7 @@ module.exports = {
     }
   },
   networks: {
-    development: {
+    local: {
       host: process.env.ETH_CLIENT_HOST || '127.0.0.1',
       port: process.env.ETH_CLIENT_PORT || 8545,
       from: process.env.DEPLOYER_ADDRESS,
