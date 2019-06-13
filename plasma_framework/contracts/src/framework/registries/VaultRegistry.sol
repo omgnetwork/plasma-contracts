@@ -1,10 +1,15 @@
 pragma solidity ^0.5.0;
 
-import "../modifiers/Operated.sol";
+import "../utils/Operated.sol";
 
 contract VaultRegistry is Operated {
     mapping(uint256 => address) private _vaults;
     mapping(address => uint256) private _vaultToId;
+
+    modifier onlyFromVault() {
+        require(_vaultToId[msg.sender] > 0, "Not being called by registered vaults");
+        _;
+    }
 
     /**
      * @notice Register the vault to Plasma framework. This can be only called by contract admin.

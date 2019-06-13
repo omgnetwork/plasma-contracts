@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-import "../modifiers/Operated.sol";
+import "../utils/Operated.sol";
 
 contract ExitGameRegistry is Operated {
     mapping(uint256 => address) private _exitGames;

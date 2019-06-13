@@ -14,7 +14,7 @@ contract('ExitGameController', () => {
 
     beforeEach(async () => {
         this.controller = await ExitGameController.new();
-        this.dummyExitGame = (await DummyExitGame.new());
+        this.dummyExitGame = await DummyExitGame.new();
         this.dummyExitGame.setExitGameController(this.controller.address);
 
         this.dummyTxType = 1;
