@@ -1,6 +1,6 @@
 # Plasma Contracts
 
-Root chain contracts for Plasma MVP, work in progress.
+Root chain contracts for Plasma M(ore)VP, work in progress.
 
 ## Contents
 This version of the contract implements [Plasma MVP](https://ethresear.ch/t/minimal-viable-plasma/426) (Buterin, Poon, Knott). This implementation is a PoA scheme with one operator and multiple watchers (users). Detailed description of our child chain design is in [Tesuji document](https://github.com/omisego/elixir-omg/blob/master/docs/tesuji_blockchain_design.md).
@@ -49,4 +49,52 @@ make test
 Running slow (overnight) tests:
 ```
 make runslow | tee raport.txt
+```
+
+
+# Deploying with truffle
+### Installation
+Requires node.js >= 8
+
+Install dependencies:
+```
+npm install
+```
+
+
+### Deploying
+Deploying the contracts requires two accounts:
+1. `DEPLOYER` The account that actually deploys the contracts
+2. `AUTHORITY` The Authority account calls `RootChain.init()` and is the account used by the Child chain (or operator). By default a new `AUTHORITY` account is created when deploying, and will be funded with some ETH from the `DEPLOYER` account. If you prefer you can use an existing `AUTHORITY` account, but it must not have made any transaction prior to calling `RootChain.init()` i.e. its nonce must be 0.
+
+
+Normally you will deploy the contracts using an Ethereum client that you run yourself, such as Geth or Parity. However, you can also use a provider such as Infura. In this case you'll need to know the private keys for the `DEPLOYER` and `AUTHORITY` accounts. See `truffle-config.js` for an example.
+
+#### Configuration
+Certain configuration values need to be set, depending how you're deploying. These values can be set in the environment or in a file called `.env`
+
+ - `MIN_EXIT_PERIOD` Minimum exit period in seconds. **Required**.
+ - `SOLC_VERSION` Solidity compiler version. Defaults to `0.4.25`
+ - `ETH_CLIENT_HOST` Host of Ethereum client. Defaults to `127.0.0.1`
+ - `ETH_CLIENT_PORT` Port of Ethereum client. Defaults to `8545`
+ - `DEPLOYER_ADDRESS` Address of the `DEPLOYER` account. Defaults to `accounts[0]`
+ - `DEPLOYER_PASSPHRASE` Passphrase of the `DEPLOYER` account.
+ - `AUTHORITY_PASSPHRASE` Passphrase of the `AUTHORITY` account.
+ - `AUTHORITY_ADDRESS_INITIAL_AMOUNT` The amount the fund the `AUTHORITY` account with (in wei). Defaults to 1 ETH.
+ - `USE_EXISTING_AUTHORITY_ADDRESS` Set to `true` if you want to use an existing `AUTHORITY` account instead of creating a new one. You must also set `AUTHORITY_ADDRESS`
+
+
+
+Run truffle, passing in the network e.g.
+```
+npx truffle migrate --network local
+```
+
+Truffle will compile and deploy the contracts. If all goes well it will output the results:
+```
+{
+    "contract_addr":"0xb6d73FCDD7F3E053990518eAe1306D7893EEFE12",
+    "txhash_contract":"0x1595b181ece865ccc9e3a025931be0566dd6e7bec739d79faafb1d5215b01c71",
+    "authority_addr":"0xF0B750F59Fff5C2be61870Dc0DA58e5e8d8F4232"
+}
 ```

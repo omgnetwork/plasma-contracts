@@ -22,6 +22,9 @@ build/
 .idea/
 *.iml
 
+# dotenv environment vars
+.env
+
 # truffle build directory
 build/
 
