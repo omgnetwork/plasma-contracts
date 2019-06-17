@@ -6,6 +6,11 @@ contract ExitGameRegistry is Operated {
     mapping(uint256 => address) private _exitGames;
     mapping(address => uint256) private _exitGameToTxType;
 
+    modifier onlyFromExitGame() {
+        require(_exitGameToTxType[msg.sender] != 0, "Not being called by registered exit game contract");
+        _;
+    }
+
     /**
      * @notice Register the exit game to Plasma framework. This can be only called by contract admin.
      * @param _txType tx type that the exit game want to register to.
