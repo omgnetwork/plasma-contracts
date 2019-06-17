@@ -24,15 +24,15 @@ library OutputModel {
     }
 
     function decodeOutput(RLP.RLPItem memory encoded) internal pure returns (TxOutput memory) {
-      RLP.RLPItem[] memory rlpEncoded = encoded.toList();
-      require(rlpEncoded.length == 3, "invalid output encoding");
+        RLP.RLPItem[] memory rlpEncoded = encoded.toList();
+        require(rlpEncoded.length == 3, "invalid output encoding");
 
-      TxOutput memory output = TxOutput({
-        amount: rlpEncoded[0].toUint(),
-        outputGuard: rlpEncoded[1].toBytes32(),
-        token: rlpEncoded[2].toAddress()
-      });
+        TxOutput memory output = TxOutput({
+            amount: rlpEncoded[0].toUint(),
+            outputGuard: rlpEncoded[1].toBytes32(),
+            token: rlpEncoded[2].toAddress()
+        });
 
-      return output;
+        return output;
     }
 }

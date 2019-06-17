@@ -7,14 +7,8 @@ contract RLPMock {
     using RLP for bytes;
     using RLP for RLP.RLPItem;
 
-    function decodeBytes(bytes memory _data) public view returns (bytes memory) {
-        bytes memory expected = "bytes";
-        bytes memory actual = _data.toRLPItem().toBytes();
-        require(actual.length == 6);
-    }
-
     function decodeBytes32(bytes memory _data) public view returns (bytes32) {
-      return _data.toRLPItem().toBytes32();
+        return _data.toRLPItem().toBytes32();
     }
 
     function decodeBool(bytes memory _data) public view returns (bool) {
@@ -30,7 +24,12 @@ contract RLPMock {
     }
 
     function decodeArray(bytes memory _data) public view returns (uint) {
-        RLP.RLPItem[] memory items = _data.toRLPItem().toList();
+        RLP.RLPItem[] memory items = (_data.toRLPItem().toList()[0]).toList();
         return items.length;
+    }
+
+    function decodeDeposit(bytes memory _data) public view returns (bytes32) {
+        bytes32 input = (_data.toRLPItem().toList()[1]).toList()[0].toBytes32();
+        return input;
     }
 }
