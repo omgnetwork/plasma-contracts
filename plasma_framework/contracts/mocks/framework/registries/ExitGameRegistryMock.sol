@@ -12,4 +12,4 @@ contract ExitGameRegistryMock is ExitGameRegistry {
     function checkOnlyFromExitGame() public onlyFromExitGame {
         exitGameCheckPass = true;
     }
- }
+}

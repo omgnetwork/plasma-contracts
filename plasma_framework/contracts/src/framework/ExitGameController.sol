@@ -7,9 +7,9 @@ import "./registries/ExitGameRegistry.sol";
 import "./priorityQueue/PriorityQueue.sol";
 
 contract ExitGameController is ExitGameRegistry {
-    uint64 public exitQueueNonce = 1;
-    mapping(uint256 => ExitModel.Exit) public exits;
-    mapping (address => PriorityQueue) public exitsQueues;
+    uint64 private _exitQueueNonce = 1;
+    mapping (uint256 => ExitModel.Exit) private _exits;
+    mapping (address => PriorityQueue) private _exitsQueues;
 
     event TokenAdded(
         address token
@@ -20,6 +20,22 @@ contract ExitGameController is ExitGameRegistry {
         address token
     );
 
+    function exitQueueNonce() public view returns (uint64) {
+        return _exitQueueNonce;
+    }
+
+    /**
+     * @dev Mimics the default getter for public mapping. Struct would be returned as a tuple with variable names.
+     */
+    function exits(uint256 _uniquePriority) public view returns (address exitProcessor, uint256 exitableAt, uint256 exitId) {
+        ExitModel.Exit memory exit = _exits[_uniquePriority];
+        return (exit.exitProcessor, exit.exitableAt, exit.exitId);
+    }
+
+    function exitsQueues(address _token) public view returns (PriorityQueue) {
+        return _exitsQueues[_token];
+    }
+
     /**
      * @notice Add token to the plasma framework and initiate the priority queue.
      * @dev the queue is created as a new contract instance.
@@ -29,7 +45,7 @@ contract ExitGameController is ExitGameRegistry {
         require(!hasToken(_token), "Such token has already been added");
 
         address queueOwner = address(this);
-        exitsQueues[_token] = new PriorityQueue(queueOwner);
+        _exitsQueues[_token] = new PriorityQueue(queueOwner);
         emit TokenAdded(_token);
     }
 
@@ -39,7 +55,7 @@ contract ExitGameController is ExitGameRegistry {
      * @return bool represents whether the queue for a token was created.
      */
     function hasToken(address _token) public view returns (bool) {
-        return address(exitsQueues[_token]) != address(0);
+        return address(_exitsQueues[_token]) != address(0);
     }
 
     /**
@@ -48,18 +64,18 @@ contract ExitGameController is ExitGameRegistry {
      * @dev Use public instead of external because structs in calldata not currently supported.
      * @param _priority The priority of the exit itself
      * @param _token Token for the exit
-     * @param _exit Exit data that contains the basic information for exit processor the process the exit
+     * @param _exit Exit data that contains the basic information for exit processor that processes the exit
      * @return a unique priority number computed for the exit
      */
     function enqueue(uint192 _priority, address _token, ExitModel.Exit memory _exit) public onlyFromExitGame returns (uint256) {
-        require(hasToken(_token), "Such token has not be added to the plasma framework yet");
+        require(hasToken(_token), "Such token has not been added to the plasma framework yet");
 
-        PriorityQueue queue = exitsQueues[_token];
-        uint256 uniquePriority = (uint256(_priority) << 64 | exitQueueNonce);
+        PriorityQueue queue = _exitsQueues[_token];
+        uint256 uniquePriority = (uint256(_priority) << 64 | _exitQueueNonce);
 
-        exitQueueNonce++;
+        _exitQueueNonce++;
         queue.insert(uniquePriority);
-        exits[uniquePriority] = _exit;
+        _exits[uniquePriority] = _exit;
 
         return uniquePriority;
     }
@@ -67,21 +83,21 @@ contract ExitGameController is ExitGameRegistry {
     /**
      * @notice Processes any exits that have completed the challenge period.
      * @param _token Token type to process.
-     * @param _topUniquePriority Unique priority of first the exit that should be processed. Set to zero to skip the check.
+     * @param _topUniquePriority Unique priority of the first exit that should be processed. Set to zero to skip the check.
      * @param _maxExitsToProcess Maximal number of exits to process.
      * @return total number of processed exits
      */
     function processExits(address _token, uint256 _topUniquePriority, uint256 _maxExitsToProcess) external {
         require(hasToken(_token), "Such token has not be added to the plasma framework yet");
 
-        PriorityQueue queue = exitsQueues[_token];
+        PriorityQueue queue = _exitsQueues[_token];
         require(queue.currentSize() > 0, "Exit queue is empty");
 
         uint256 uniquePriority = queue.getMin();
         require(_topUniquePriority == 0 || uniquePriority == _topUniquePriority,
             "Top unique priority of the queue is not the same as the specified one");
 
-        ExitModel.Exit memory exit = exits[uniquePriority];
+        ExitModel.Exit memory exit = _exits[uniquePriority];
         uint256 processedNum = 0;
 
         while (processedNum < _maxExitsToProcess && exit.exitableAt < block.timestamp) {
@@ -89,7 +105,7 @@ contract ExitGameController is ExitGameRegistry {
 
             processor.processExit(exit.exitId);
 
-            delete exits[uniquePriority];
+            delete _exits[uniquePriority];
             queue.delMin();
             processedNum++;
 
@@ -98,7 +114,7 @@ contract ExitGameController is ExitGameRegistry {
             }
 
             uniquePriority = queue.getMin();
-            exit = exits[uniquePriority];
+            exit = _exits[uniquePriority];
         }
 
         emit ProcessedExitsNum(processedNum, _token);

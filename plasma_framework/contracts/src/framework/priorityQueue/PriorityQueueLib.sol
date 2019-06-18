@@ -22,10 +22,6 @@ library PriorityQueueLib {
      *  Public functions
      */
 
-    function isOwner(Queue storage self) internal view returns (bool) {
-        return msg.sender == self.owner;
-    }
-
     function init(Queue storage self, address _owner) public {
         self.owner = _owner;
         self.heapList = [0];
@@ -36,18 +32,6 @@ library PriorityQueueLib {
         self.heapList.push(k);
         self.currentSize = self.currentSize.add(1);
         percUp(self, self.currentSize);
-    }
-
-    function minChild(Queue storage self, uint256 i) public view returns (uint256) {
-        if (i.mul(2).add(1) > self.currentSize) {
-            return i.mul(2);
-        } else {
-            if (self.heapList[i.mul(2)] < self.heapList[i.mul(2).add(1)]) {
-                return i.mul(2);
-            } else {
-                return i.mul(2).add(1);
-            }
-        }
     }
 
     function getMin(Queue storage self) internal view returns (uint256) {
@@ -96,6 +80,18 @@ library PriorityQueueLib {
         }
         if (i != j) {
             self.heapList[i] = newVal;
+        }
+    }
+
+    function minChild(Queue storage self, uint256 i) private view returns (uint256) {
+        if (i.mul(2).add(1) > self.currentSize) {
+            return i.mul(2);
+        } else {
+            if (self.heapList[i.mul(2)] < self.heapList[i.mul(2).add(1)]) {
+                return i.mul(2);
+            } else {
+                return i.mul(2).add(1);
+            }
         }
     }
 }
