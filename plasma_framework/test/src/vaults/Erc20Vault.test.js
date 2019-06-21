@@ -4,8 +4,9 @@ const TransactionModel = artifacts.require('TransactionModel');
 const PlasmaFramework = artifacts.require('PlasmaFramework');
 const Erc20Vault = artifacts.require('Erc20Vault');
 const ERC20 = artifacts.require('ERC20Mintable');
+const BadERC20 = artifacts.require('BadERC20');
 
-const { BN, constants, expectRevert } = require('openzeppelin-test-helpers');
+const { BN, expectRevert } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
 const Testlang = require('../helpers/testlang.js');
@@ -38,7 +39,7 @@ contract('Erc20Vault', (accounts) => {
     await this.erc20.transfer(alice, DepositValue, { from: accounts[0] });
   });
 
-  describe.only('deposit', () => {
+  describe('deposit', () => {
     it('should store erc20 deposit', async () => {
       await this.erc20.approve(this.erc20Vault.address, DepositValue, { from: alice });
       let nextDepositBlock = parseInt(await this.plasma.nextDepositBlock(), 10);
@@ -125,6 +126,24 @@ contract('Erc20Vault', (accounts) => {
         this.erc20Vault.deposit(deposit.rlpEncoded(), { from: alice }),
         'Invalid number of outputs.',
       );
+    });
+  });
+
+  describe('deposit from BadERC20', () => {
+    before('setup', async () => {
+      this.badErc20 = await BadERC20.new(initialSupply);
+      await this.badErc20.transfer(alice, DepositValue, { from: accounts[0] });
+    });
+
+    it('should store erc20 deposit', async () => {
+      await this.badErc20.approve(this.erc20Vault.address, DepositValue, { from: alice });
+      let nextDepositBlock = parseInt(await this.plasma.nextDepositBlock(), 10);
+      expect(nextDepositBlock).to.be.equal(1);
+
+      const deposit = Testlang.deposit(DepositValue, alice, this.badErc20.address);
+      await this.erc20Vault.deposit(deposit, { from: alice });
+      nextDepositBlock = parseInt(await this.plasma.nextDepositBlock(), 10);
+      expect(nextDepositBlock).to.be.equal(2);
     });
   });
 });

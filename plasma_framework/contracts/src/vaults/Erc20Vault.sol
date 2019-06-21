@@ -3,7 +3,8 @@ pragma solidity ^0.5.0;
 import "./ZeroHashesProvider.sol";
 import "../framework/PlasmaFramework.sol";
 import {TransactionModel as DepositTx} from "../transactions/TransactionModel.sol";
-import {ERC20 as ERC20} from "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
+import {IERC20 as IERC20} from "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20 as SafeERC20} from "openzeppelin-solidity/contracts/token/ERC20/SafeERC20.sol";
 
 contract Erc20Vault {
     uint8 constant DEPOSIT_TX_TYPE = 1;
@@ -12,6 +13,7 @@ contract Erc20Vault {
     bytes32[16] zeroHashes;
 
     using DepositTx for DepositTx.Transaction;
+    using SafeERC20 for IERC20;
 
     constructor(address _framework) public {
         framework = PlasmaFramework(_framework);
@@ -27,13 +29,12 @@ contract Erc20Vault {
 
         _validateDepositFormat(decodedTx);
 
-        ERC20 erc20 = ERC20(decodedTx.outputs[0].token);
+        IERC20 erc20 = IERC20(decodedTx.outputs[0].token);
 
         // Check approved
         require(erc20.allowance(msg.sender, address(this)) == decodedTx.outputs[0].amount, "Tokens have not been approved");
 
-        // Warning, check your ERC20 implementation. TransferFrom should return bool
-        require(erc20.transferFrom(msg.sender, address(this), decodedTx.outputs[0].amount), "Token transfer failed");
+        erc20.safeTransferFrom(msg.sender, address(this), decodedTx.outputs[0].amount);
 
         bytes32 root = keccak256(_depositTx);
         for (uint i = 0; i < 16; i++) {
@@ -65,6 +66,6 @@ contract Erc20Vault {
     * @param _amount Amount to transfer.
     */
     function withdraw(address _target, address _token, uint256 _amount) external {
-        ERC20(_token).transfer(_target, _amount);
+        IERC20(_token).safeTransfer(_target, _amount);
     }
 }
