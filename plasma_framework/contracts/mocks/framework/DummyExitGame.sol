@@ -20,6 +20,7 @@ contract DummyExitGame is ExitProcessor {
         emit ExitFinalizedFromDummyExitGame(_exitId);
     }
 
+    // setter function only for test, not a real Exit Game function
     function setExitGameRegistry(address _contract) public {
         exitGameRegistry = ExitGameRegistryMock(_contract);
     }
@@ -28,6 +29,7 @@ contract DummyExitGame is ExitProcessor {
         exitGameRegistry.checkOnlyFromExitGame();
     }
 
+    // setter function only for test, not a real Exit Game function
     function setExitGameController(address _contract) public {
         exitGameController = ExitGameController(_contract);
     }

@@ -1,11 +1,11 @@
 pragma solidity ^0.5.0;
 
-import "../../../src/framework/modifiers/Operated.sol";
+import "../../../src/framework/utils/Operated.sol";
 
 contract OperatedMock is Operated {
     bool public operatorCheckPassed;
 
-    constructor() public Operated() {
+    constructor() public {
         operatorCheckPassed = false;
     }
 

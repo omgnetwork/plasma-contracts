@@ -1,33 +1,59 @@
-const VaultRegistry = artifacts.require('VaultRegistry');
+const VaultRegistry = artifacts.require('VaultRegistryMock');
+const DummyVault = artifacts.require('DummyVault');
 
-const { BN, expectRevert } = require('openzeppelin-test-helpers');
+const { BN, expectEvent, expectRevert } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
 contract('VaultRegistry', ([operator, other]) => {
     beforeEach(async () => {
         this.registry = await VaultRegistry.new();
-        this.dummyVaultAddress = (await VaultRegistry.new()).address;
+        this.dummyVault = await DummyVault.new();
+    });
+
+    describe('onlyFromVault', () => {
+        beforeEach(async () => {
+            this.dummyVaultId = 1;
+            await this.registry.registerVault(this.dummyVaultId, this.dummyVault.address);
+            await this.dummyVault.setVaultRegistry(this.registry.address);
+        });
+
+        it('accepts call when called by registered vault contract', async () => {
+            const { receipt } = await this.dummyVault.checkOnlyFromVault();
+            await expectEvent.inTransaction(
+                receipt.transactionHash, 
+                VaultRegistry, 
+                'OnlyFromVaultChecked', 
+                {}
+            );
+        })
+
+        it('reverts when not called by registered vault contract', async () => {
+            await expectRevert(
+                this.registry.checkOnlyFromVault(),
+                "Not being called by registered vaults"
+            );
+        })
     });
 
     describe('vaults', () => {
         beforeEach(async () => {
             this.dummyVaultId = 1;
-            await this.registry.registerVault(this.dummyVaultId, this.dummyVaultAddress);
+            await this.registry.registerVault(this.dummyVaultId, this.dummyVault.address);
         });
 
         it('can receive vault contract address with vault id', async () => {
-            expect(await this.registry.vaults(this.dummyVaultId)).to.equal(this.dummyVaultAddress);
+            expect(await this.registry.vaults(this.dummyVaultId)).to.equal(this.dummyVault.address);
         });
     });
 
     describe('vaultToId', () => {
         beforeEach(async () => {
             this.dummyVaultId = 1;
-            await this.registry.registerVault(this.dummyVaultId, this.dummyVaultAddress);
+            await this.registry.registerVault(this.dummyVaultId, this.dummyVault.address);
         });
 
         it('can receive vault id with vault contract address', async () => {
-            expect(await this.registry.vaultToId(this.dummyVaultAddress))
+            expect(await this.registry.vaultToId(this.dummyVault.address))
                 .to.be.bignumber.equal(new BN(this.dummyVaultId));
         });
     });
@@ -35,15 +61,15 @@ contract('VaultRegistry', ([operator, other]) => {
     describe('registerVault', () => {
         it('can register successfully', async () => {
             const txType = 1;
-            await this.registry.registerVault(txType, this.dummyVaultAddress);
-            expect(await this.registry.vaults(txType)).to.equal(this.dummyVaultAddress);
-            expect(await this.registry.vaultToId(this.dummyVaultAddress))
+            await this.registry.registerVault(txType, this.dummyVault.address);
+            expect(await this.registry.vaults(txType)).to.equal(this.dummyVault.address);
+            expect(await this.registry.vaultToId(this.dummyVault.address))
                 .to.be.bignumber.equal(new BN(txType));
         });
     
         it('rejects when not registered by operator', async () => {
             await expectRevert(
-                this.registry.registerVault(1, this.dummyVaultAddress, {from: other}),
+                this.registry.registerVault(1, this.dummyVault.address, {from: other}),
                 "Not being called by operator"
             );
         });
@@ -51,7 +77,7 @@ contract('VaultRegistry', ([operator, other]) => {
         it('rejects when the vault id is already registered', async () => {
             const txType = 1;
             const secondDummyVaultAddress = (await VaultRegistry.new()).address;
-            await this.registry.registerVault(txType, this.dummyVaultAddress);
+            await this.registry.registerVault(txType, this.dummyVault.address);
             await expectRevert(
                 this.registry.registerVault(txType, secondDummyVaultAddress),
                 "The vault id is already registered"
@@ -59,9 +85,9 @@ contract('VaultRegistry', ([operator, other]) => {
         });
 
         it('rejects when the the vault contract address is already registered', async () => {
-            await this.registry.registerVault(1, this.dummyVaultAddress);
+            await this.registry.registerVault(1, this.dummyVault.address);
             await expectRevert(
-                this.registry.registerVault(2, this.dummyVaultAddress),
+                this.registry.registerVault(2, this.dummyVault.address),
                 "The vault contract is already registered"
             );
         });

@@ -1,7 +1,7 @@
 const ExitGameRegistry = artifacts.require('ExitGameRegistryMock');
 const DummyExitGame = artifacts.require('DummyExitGame');
 
-const { BN, expectRevert } = require('openzeppelin-test-helpers');
+const { BN, expectEvent, expectRevert } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
 contract('ExitGameRegistry', ([operator, other]) => {
@@ -18,8 +18,13 @@ contract('ExitGameRegistry', ([operator, other]) => {
         });
 
          it('accepts call when called by registered exit game contract', async () => {
-            await this.dummyExitGame.checkOnlyFromExitGame();
-            expect(await this.registry.exitGameCheckPass()).to.be.true;
+            const { receipt } = await this.dummyExitGame.checkOnlyFromExitGame();
+            await expectEvent.inTransaction(
+                receipt.transactionHash, 
+                ExitGameRegistry, 
+                'OnlyFromExitGameChecked', 
+                {}
+            );
         })
 
          it('reverts when not called by registered exit game contract', async () => {
