@@ -3,13 +3,9 @@ pragma solidity ^0.5.0;
 import "../../../src/framework/registries/VaultRegistry.sol";
 
 contract VaultRegistryMock is VaultRegistry {
-    bool public vaultCheckPass;
-
-    constructor() public {
-        vaultCheckPass = false;
-    }
+    event OnlyFromVaultChecked();
 
     function checkOnlyFromVault() public onlyFromVault {
-        vaultCheckPass = true;
+        emit OnlyFromVaultChecked();
     }
 }

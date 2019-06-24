@@ -1,7 +1,7 @@
 const VaultRegistry = artifacts.require('VaultRegistryMock');
 const DummyVault = artifacts.require('DummyVault');
 
-const { BN, expectRevert } = require('openzeppelin-test-helpers');
+const { BN, expectEvent, expectRevert } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
 contract('VaultRegistry', ([operator, other]) => {
@@ -18,8 +18,13 @@ contract('VaultRegistry', ([operator, other]) => {
         });
 
         it('accepts call when called by registered vault contract', async () => {
-            await this.dummyVault.checkOnlyFromVault();
-            expect(await this.registry.vaultCheckPass()).to.be.true;
+            const { receipt } = await this.dummyVault.checkOnlyFromVault();
+            await expectEvent.inTransaction(
+                receipt.transactionHash, 
+                VaultRegistry, 
+                'OnlyFromVaultChecked', 
+                {}
+            );
         })
 
         it('reverts when not called by registered vault contract', async () => {

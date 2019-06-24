@@ -7,6 +7,7 @@ contract DummyVault {
     VaultRegistryMock vaultRegistry;
     BlockController blockController;
 
+    // setter function only for test, not a real Vault function
     function setVaultRegistry(address _contract) public {
         vaultRegistry = VaultRegistryMock(_contract);
     }
@@ -15,6 +16,7 @@ contract DummyVault {
         vaultRegistry.checkOnlyFromVault();
     }
 
+    // setter function only for test, not a real Vault function
     function setBlockController(address _contract) public {
         blockController = BlockController(_contract);
     }
