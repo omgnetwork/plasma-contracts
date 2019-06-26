@@ -5,24 +5,23 @@ import "../../utils/RLP.sol";
 
 library PaymentOutputModel {
 
-    using RLP for bytes;
     using RLP for RLP.RLPItem;
 
-    struct TxOutput {
+    struct Output {
         uint256 amount;
         bytes32 outputGuard;
         address token;
     }
 
-    function hash(TxOutput memory _output) internal pure returns (bytes32) {
+    function hash(Output memory _output) internal pure returns (bytes32) {
         return keccak256(abi.encode(_output));
     }
 
-    function decodeOutput(RLP.RLPItem memory encoded) internal pure returns (TxOutput memory) {
+    function decode(RLP.RLPItem memory encoded) internal pure returns (Output memory) {
         RLP.RLPItem[] memory rlpEncoded = encoded.toList();
-        require(rlpEncoded.length == 3, "invalid output encoding");
+        require(rlpEncoded.length == 3, "Invalid output encoding");
 
-        TxOutput memory output = TxOutput({
+        Output memory output = Output({
             amount: rlpEncoded[0].toUint(),
             outputGuard: rlpEncoded[1].toBytes32(),
             token: rlpEncoded[2].toAddress()

@@ -8,23 +8,11 @@ const { BN, constants, expectRevert } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
 const Testlang = require("../../helpers/testlang.js")
-const Transaction = require("../../helpers/transaction.js").Transaction
-const TransactionOutput = require("../../helpers/transaction.js").TransactionOutput
+const { PaymentTransaction, PaymentTransactionOutput } = require("../../helpers/transaction.js")
 
 contract("EthVault", accounts => {
     const alice = accounts[1];
     const DEPOSIT_VALUE = 1000000;
-
-    before("setup libs", async () => {
-        const rlpLib = await RLP.new();
-        PaymentOutputModel.link("RLP", rlpLib.address);
-        const outputModel = await PaymentOutputModel.new();
-
-        PaymentTransactionModel.link("RLP", rlpLib.address);
-        PaymentTransactionModel.link("TransactionOutput", outputModel.address);
-        const transactionModel = await PaymentTransactionModel.new();
-        EthVault.link("PaymentTransactionModel", transactionModel.address);
-    });
 
     beforeEach("setup contracts", async () => {
         this.blockController = await BlockController.new(10);
@@ -47,13 +35,13 @@ contract("EthVault", accounts => {
         it("should charge eth from depositing user", async () => {
             const preDepositBalance = await web3.eth.getBalance(alice);
             const deposit = Testlang.deposit(DEPOSIT_VALUE, alice);
-            await this.ethVault.deposit(deposit, {from: alice, value: DEPOSIT_VALUE});
+            const tx = await this.ethVault.deposit(deposit, {from: alice, value: DEPOSIT_VALUE});
 
             const actualPostDepositBalance = new BN(await web3.eth.getBalance(alice));
-            const expectedPostDepositBalanceWithoutConsideringGas =
-                (new BN(preDepositBalance)).sub(new BN(DEPOSIT_VALUE));
+            const expectedPostDepositBalance =
+                (new BN(preDepositBalance)).sub(new BN(DEPOSIT_VALUE)).sub(await spentOnGas(tx.receipt));
 
-            expect(actualPostDepositBalance).to.be.bignumber.at.most(expectedPostDepositBalanceWithoutConsideringGas);
+            expect(actualPostDepositBalance).to.be.bignumber.equal(expectedPostDepositBalance);
         });
 
         it("should not store deposit when output value mismatches sent wei", async () => {
@@ -75,7 +63,7 @@ contract("EthVault", accounts => {
 
             await expectRevert(
                 this.ethVault.deposit(deposit, {value: DEPOSIT_VALUE}),
-                "Depositors address does not match senders address."
+                "Depositor's address does not match sender's address."
             );
         });
 
@@ -90,8 +78,8 @@ contract("EthVault", accounts => {
         });
 
         it("should not accept transaction that does not match expected transaction type", async () => {
-            const output = new TransactionOutput(DEPOSIT_VALUE, alice, constants.ZERO_ADDRESS);
-            const deposit = new Transaction(123, [0], [output]);
+            const output = new PaymentTransactionOutput(DEPOSIT_VALUE, alice, constants.ZERO_ADDRESS);
+            const deposit = new PaymentTransaction(123, [0], [output]);
 
             await expectRevert(
                 this.ethVault.deposit(deposit.rlpEncoded(), {from: alice, value: DEPOSIT_VALUE}),
@@ -101,8 +89,8 @@ contract("EthVault", accounts => {
 
         it("should not accept transaction that does not conform to deposit input format", async () => {
             const invalidInput = Buffer.alloc(32, 1);
-            const output = new TransactionOutput(DEPOSIT_VALUE, alice, constants.ZERO_ADDRESS);
-            const deposit = new Transaction(1, [invalidInput], [output]);
+            const output = new PaymentTransactionOutput(DEPOSIT_VALUE, alice, constants.ZERO_ADDRESS);
+            const deposit = new PaymentTransaction(1, [invalidInput], [output]);
 
             await expectRevert(
                 this.ethVault.deposit(deposit.rlpEncoded(), {from: alice, value: DEPOSIT_VALUE}),
@@ -111,13 +99,18 @@ contract("EthVault", accounts => {
         });
 
         it("should not accept transaction with more than one output", async () => {
-            const output = new TransactionOutput(DEPOSIT_VALUE, alice, constants.ZERO_ADDRESS);
-            const deposit = new Transaction(1, [0], [output, output]);
+            const output = new PaymentTransactionOutput(DEPOSIT_VALUE, alice, constants.ZERO_ADDRESS);
+            const deposit = new PaymentTransaction(1, [0], [output, output]);
 
             await expectRevert(
                 this.ethVault.deposit(deposit.rlpEncoded(), {from: alice, value: DEPOSIT_VALUE}),
-                "Invalid number of outputs."
+                "Must have only one output."
             );
         });
     });
 })
+
+async function spentOnGas(receipt) {
+    const tx = await web3.eth.getTransaction(receipt.transactionHash);
+    return web3.utils.toBN(tx.gasPrice).muln(receipt.gasUsed);
+}

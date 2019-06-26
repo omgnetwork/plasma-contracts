@@ -5,7 +5,7 @@ const TransactionTypes = {
   PLASMA_DEPOSIT: 1
 }
 
-class TransactionOutput {
+class PaymentTransactionOutput {
     constructor(amount, owner, token) {
         this.amount = amount;
         this.outputGuard = owner;
@@ -17,7 +17,7 @@ class TransactionOutput {
     }
 }
 
-class Transaction {
+class PaymentTransaction {
     constructor(transactionType, inputs, outputs, metaData = NULL_DATA) {
         this.transactionType = transactionType;
         this.inputs = inputs;
@@ -29,7 +29,7 @@ class Transaction {
         const tx = [this.transactionType];
 
         tx.push(this.inputs);
-        tx.push(Transaction.formatForRlpEncoding(this.outputs));
+        tx.push(PaymentTransaction.formatForRlpEncoding(this.outputs));
         tx.push(this.metaData);
 
         return rlp.encode(tx);
@@ -40,12 +40,12 @@ class Transaction {
     }
 }
 
-class PlasmaDepositTransaction extends Transaction {
+class PlasmaDepositTransaction extends PaymentTransaction {
     constructor(output, metaData = NULL_DATA) {
         super(TransactionTypes.PLASMA_DEPOSIT, [NULL_DATA], [output], metaData);
     }
 }
 
-module.exports.Transaction = Transaction
+module.exports.PaymentTransaction = PaymentTransaction
 module.exports.PlasmaDepositTransaction = PlasmaDepositTransaction
-module.exports.TransactionOutput = TransactionOutput
+module.exports.PaymentTransactionOutput = PaymentTransactionOutput

@@ -10,8 +10,6 @@ contract EthVault is Vault {
 
     bytes32[16] zeroHashes;
 
-    using DepositTx for DepositTx.Transaction;
-
     constructor(address _blockController) public {
         blockController = BlockController(_blockController);
         zeroHashes = ZeroHashesProvider.getZeroHashes();
@@ -40,12 +38,12 @@ contract EthVault is Vault {
         require(_deposit.inputs.length == 1, "Deposit should have exactly one input");
         require(_deposit.inputs[0] == bytes32(0), "Deposit input must be bytes32 of 0");
 
-        require(_deposit.outputs.length == 1, "Invalid number of outputs");
+        require(_deposit.outputs.length == 1, "Must have only one output");
         require(_deposit.outputs[0].amount == msg.value, "Deposited value does not match sent amount");
         require(_deposit.outputs[0].token == address(0), "Output does not have correct currency (ETH)");
 
         address depositorsAddress = address(uint160(uint256(_deposit.outputs[0].outputGuard)));
-        require(depositorsAddress == msg.sender, "Depositors address does not match senders address");
+        require(depositorsAddress == msg.sender, "Depositor's address does not match sender's address");
     }
 
     /**

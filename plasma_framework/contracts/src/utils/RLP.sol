@@ -69,15 +69,9 @@ library RLP {
         RLPItem memory item = toRLPItem(self);
         if (strict) {
             uint len = self.length;
-            if (_payloadOffset(item) > len) {
-                revert();
-            }
-            if (_itemLength(item._unsafe_memPtr) != len) {
-                revert();
-            }
-            if (!_validate(item)) {
-                revert();
-            }
+            require(_payloadOffset(item) <= len);
+            require(_itemLength(item._unsafe_memPtr) == len);
+            require(_validate(item));
         }
         return item;
     }
@@ -192,9 +186,7 @@ library RLP {
         pure
         returns (Iterator memory it)
     {
-        if (!isList(self)) {
-            revert();
-        }
+        require(isList(self));
         uint ptr = self._unsafe_memPtr + _payloadOffset(self);
         it._unsafe_item = self;
         it._unsafe_nextPtr = ptr;
@@ -207,12 +199,10 @@ library RLP {
      */
     function toData(RLPItem memory self)
         internal
-        view
+        pure
         returns (bytes memory bts)
     {
-        if (!isData(self)) {
-            revert();
-        }
+        require(isData(self));
         uint rStartPos;
         uint len;
         (rStartPos, len) = _decode(self);
@@ -231,9 +221,7 @@ library RLP {
         pure
         returns (RLPItem[] memory list)
     {
-        if (!isList(self)) {
-            revert();
-        }
+        require(isList(self));
         uint numItems = items(self);
         list = new RLPItem[](numItems);
         Iterator memory it = iterator(self);
@@ -251,12 +239,10 @@ library RLP {
      */
     function toAscii(RLPItem memory self)
         internal
-        view
+        pure
         returns (string memory str)
     {
-        if (!isData(self)) {
-            revert();
-        }
+        require(isData(self));
         uint rStartPos;
         uint len;
         (rStartPos, len) = _decode(self);
@@ -295,22 +281,16 @@ library RLP {
         pure
         returns (bool data)
     {
-        if (!isData(self)) {
-            revert();
-        }
+        require(isData(self));
         uint rStartPos;
         uint len;
         (rStartPos, len) = _decode(self);
-        if (len != 1) {
-            revert();
-        }
+        require(len == 1);
         uint temp;
         assembly {
             temp := byte(0, mload(rStartPos))
         }
-        if (temp > 1) {
-            revert();
-        }
+        require(temp <= 1);
         return temp == 1 ? true : false;
     }
 
@@ -324,15 +304,11 @@ library RLP {
         pure
         returns (byte data)
     {
-        if (!isData(self)) {
-            revert();
-        }
+        require(isData(self));
         uint rStartPos;
         uint len;
         (rStartPos, len) = _decode(self);
-        if (len != 1) {
-            revert();
-        }
+        require(len == 1);
         uint temp;
         assembly {
             temp := byte(0, mload(rStartPos))
@@ -376,15 +352,11 @@ library RLP {
         pure
         returns (address data)
     {
-        if (!isData(self)) {
-            revert();
-        }
+        require(isData(self));
         uint rStartPos;
         uint len;
         (rStartPos, len) = _decode(self);
-        if (len != 20) {
-            revert();
-        }
+        require(len == 20);
         assembly {
             data := div(mload(rStartPos), exp(256, 12))
         }
@@ -405,15 +377,12 @@ library RLP {
         pure
         returns (RLPItem memory subItem)
     {
-        if (_hasNext(self)) {
-            uint ptr = self._unsafe_nextPtr;
-            uint itemLength = _itemLength(ptr);
-            subItem._unsafe_memPtr = ptr;
-            subItem._unsafe_length = itemLength;
-            self._unsafe_nextPtr = ptr + itemLength;
-        } else {
-            revert();
-        }
+        require(_hasNext(self));
+        uint ptr = self._unsafe_nextPtr;
+        uint itemLength = _itemLength(ptr);
+        subItem._unsafe_memPtr = ptr;
+        subItem._unsafe_length = itemLength;
+        self._unsafe_nextPtr = ptr + itemLength;
     }
 
     /**
@@ -427,9 +396,7 @@ library RLP {
         returns (RLPItem memory subItem)
     {
         subItem = _next(self);
-        if (strict && !_validate(subItem)) {
-            revert();
-        }
+        require(!strict || _validate(subItem));
         return subItem;
     }
 
@@ -526,9 +493,7 @@ library RLP {
         pure
         returns (uint memPtr, uint len)
     {
-        if (!isData(self)) {
-            revert();
-        }
+        require(isData(self));
         uint b0;
         uint start = self._unsafe_memPtr;
         assembly {
@@ -559,7 +524,7 @@ library RLP {
      */
     function _copyToBytes(uint btsPtr, bytes memory tgt, uint btsLen)
         private
-        view
+        pure
     {
         // Exploiting the fact that 'tgt' was the last thing to be allocated,
         // we can write entire words, and just overwrite any excess.

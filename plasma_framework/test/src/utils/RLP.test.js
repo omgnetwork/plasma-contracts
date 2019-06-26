@@ -2,7 +2,7 @@ const rlp = require('rlp');
 
 const RLPMock = artifacts.require("RLPMock");
 
-contract("RLP", accounts => {
+contract("RLP", () => {
 
     before(async () => {
         this.test = await RLPMock.new();
@@ -11,21 +11,21 @@ contract("RLP", accounts => {
     it("should decode bytes32", async () => {
         const expected = Buffer.alloc(32, 1);
 
-        const encoded = rlp.encode(expected);
+        const encoded = web3.utils.bytesToHex(rlp.encode(expected));
         const actual = Buffer.from(
-            web3.utils.hexToBytes(await this.test.decodeBytes32(encoded, encoded))
+            web3.utils.hexToBytes(await this.test.decodeBytes32(encoded))
         );
         expect(actual.compare(expected)).to.equal(0);
     });
 
     it("should decode false boolean", async () => {
-        let bool = rlp.encode(new Buffer([0x00]));
-        expect(await this.test.decodeBool(bool, bool)).is.false;
+        const bool = web3.utils.bytesToHex(rlp.encode(new Buffer([0x00])));
+        expect(await this.test.decodeBool(bool)).is.false;
     });
 
     it("should decode true boolean", async () => {
-        bool = rlp.encode(new Buffer([0x01]));
-        expect(await this.test.decodeBool(bool, bool)).is.true;
+        const bool = web3.utils.bytesToHex(rlp.encode(new Buffer([0x01])));
+        expect(await this.test.decodeBool(bool)).is.true;
     });
 
     it("should decode uint 0", async () => {
@@ -45,15 +45,15 @@ contract("RLP", accounts => {
     });
 
     async function testNumberDecoded(callback, expected) {
-        const encoded = rlp.encode(expected);
-        const actual = (await callback(encoded, encoded)).toNumber();
+        const encoded = web3.utils.bytesToHex(rlp.encode(expected));
+        const actual = (await callback(encoded)).toNumber();
         expect(actual).is.equal(expected);
     }
 
     it("should decode array", async () => {
         const array = [[Buffer.alloc(32, 1)]]
-        const encoded = rlp.encode(array);
-        const arrayLength = (await this.test.decodeArray(encoded, encoded)).toNumber();
+        const encoded = web3.utils.bytesToHex(rlp.encode(array));
+        const arrayLength = (await this.test.decodeArray(encoded)).toNumber();
         expect(arrayLength).is.equal(array.length);
     });
 
