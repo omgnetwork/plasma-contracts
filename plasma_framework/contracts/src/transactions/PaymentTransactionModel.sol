@@ -14,7 +14,7 @@ library PaymentTransactionModel {
     struct Transaction {
         uint256 txType;
         bytes32[] inputs;
-        PaymentOutputModel.TxOutput[] outputs;
+        PaymentOutputModel.Output[] outputs;
         bytes32 metaData;
     }
 
@@ -39,9 +39,9 @@ library PaymentTransactionModel {
             inputs[i] = input;
         }
 
-        PaymentOutputModel.TxOutput[] memory outputs = new PaymentOutputModel.TxOutput[](rlpOutputs.length);
+        PaymentOutputModel.Output[] memory outputs = new PaymentOutputModel.Output[](rlpOutputs.length);
         for (uint i = 0; i < rlpOutputs.length; i++) {
-            PaymentOutputModel.TxOutput memory output = PaymentOutputModel.decodeOutput(rlpOutputs[i]);
+            PaymentOutputModel.Output memory output = PaymentOutputModel.decode(rlpOutputs[i]);
             outputs[i] = output;
         }
 
