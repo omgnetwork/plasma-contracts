@@ -1,8 +1,8 @@
 const rlp = require('rlp');
 
-const NullData = Buffer.alloc(32, 0);
+const NULL_DATA = Buffer.alloc(32, 0);
 const TransactionTypes = {
-  PlasmaDeposit: 1
+  PLASMA_DEPOSIT: 1
 }
 
 class TransactionOutput {
@@ -18,7 +18,7 @@ class TransactionOutput {
 }
 
 class Transaction {
-    constructor(transactionType, inputs, outputs, metaData = NullData) {
+    constructor(transactionType, inputs, outputs, metaData = NULL_DATA) {
         this.transactionType = transactionType;
         this.inputs = inputs;
         this.outputs = outputs;
@@ -41,8 +41,8 @@ class Transaction {
 }
 
 class PlasmaDepositTransaction extends Transaction {
-    constructor(output, metaData = NullData) {
-        super(TransactionTypes.PlasmaDeposit, [NullData], [output], metaData);
+    constructor(output, metaData = NULL_DATA) {
+        super(TransactionTypes.PLASMA_DEPOSIT, [NULL_DATA], [output], metaData);
     }
 }
 
