@@ -18,23 +18,29 @@ contract("RLP", accounts => {
         expect(actual.compare(expected)).to.equal(0);
     });
 
-    it("should decode bool", async () => {
-        // false
+    it("should decode false boolean", async () => {
         let bool = rlp.encode(new Buffer([0x00]));
         expect(await this.test.decodeBool(bool, bool)).is.false;
+    });
 
-        // true
+    it("should decode true boolean", async () => {
         bool = rlp.encode(new Buffer([0x01]));
         expect(await this.test.decodeBool(bool, bool)).is.true;
     });
 
-    it("should decode uint", async () => {
+    it("should decode uint 0", async () => {
         await testNumberDecoded(this.test.decodeUint, 0);
+    });
+
+    it("should decode positive uint", async () => {
         await testNumberDecoded(this.test.decodeUint, 100);
     });
 
-    it("should decode int", async () => {
+    it("should decode int 0", async () => {
         await testNumberDecoded(this.test.decodeInt, 0);
+    });
+
+    it("should decode positive int", async () => {
         await testNumberDecoded(this.test.decodeInt, 100);
     });
 
