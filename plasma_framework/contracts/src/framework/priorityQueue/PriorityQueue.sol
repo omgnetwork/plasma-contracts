@@ -20,7 +20,7 @@ contract PriorityQueue is Ownable {
      * @notice Inserts an element into the queue.
      * @dev Does not perform deduplication.
      */
-    function insert(uint256 _element) public onlyOwner {
+    function insert(uint256 _element) external onlyOwner {
         queue.insert(_element);
     }
 
@@ -28,7 +28,7 @@ contract PriorityQueue is Ownable {
      * @notice Deletes the top element of the heap and shifts everything up.
      * @return The smallest element in the priority queue.
      */
-    function delMin() public onlyOwner returns (uint256) {
+    function delMin() external onlyOwner returns (uint256) {
         return queue.delMin();
     }
 
@@ -37,7 +37,7 @@ contract PriorityQueue is Ownable {
      * @dev Fails when queue is empty
      * @return The smallest element in the priority queue.
      */
-    function getMin() public view returns (uint256) {
+    function getMin() external view returns (uint256) {
         return queue.getMin();
     }
 

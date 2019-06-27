@@ -9,26 +9,19 @@ import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
 library PriorityQueueLib {
     using SafeMath for uint256;
 
-    /*
-     *  Storage definition
-     */
     struct Queue {
         address owner;
         uint256[] heapList;
         uint256 currentSize;
     }
 
-    /*
-     *  Public functions
-     */
-
-    function init(Queue storage self, address _owner) public {
+    function init(Queue storage self, address _owner) internal {
         self.owner = _owner;
         self.heapList = [0];
         self.currentSize = 0;
     }
 
-    function insert(Queue storage self, uint256 k) public {
+    function insert(Queue storage self, uint256 k) internal {
         self.heapList.push(k);
         self.currentSize = self.currentSize.add(1);
         percUp(self, self.currentSize);
@@ -38,7 +31,7 @@ library PriorityQueueLib {
         return self.heapList[1];
     }
 
-    function delMin(Queue storage self) public returns (uint256) {
+    function delMin(Queue storage self) internal returns (uint256) {
         uint256 retVal = self.heapList[1];
         self.heapList[1] = self.heapList[self.currentSize];
         delete self.heapList[self.currentSize];
