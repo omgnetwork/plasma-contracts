@@ -20,7 +20,15 @@ contract('ExitGameController', () => {
         this.dummyTxType = 1;
         this.controller.registerExitGame(this.dummyTxType, this.dummyExitGame.address);
 
-        this.dummyToken = constants.ZERO_ADDRESS;
+        // take any random contract address as token
+        this.dummyToken = (await DummyExitGame.new()).address;
+    });
+
+    describe('constructor', () => {
+        it('should init the queue for ETH', async () => {
+            const ETH_TOKEN = constants.ZERO_ADDRESS;
+            expect(await this.controller.hasToken(ETH_TOKEN)).to.be.true;
+        });
     });
 
     describe('exitQueueNonce', () => {

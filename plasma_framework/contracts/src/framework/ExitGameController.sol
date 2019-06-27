@@ -20,6 +20,12 @@ contract ExitGameController is ExitGameRegistry {
         address token
     );
 
+    constructor() public {
+        address ethToken = address(0);
+        address queueOwner = address(this);
+        _exitsQueues[ethToken] = new PriorityQueue(queueOwner);
+    }
+
     function exitQueueNonce() public view returns (uint64) {
         return _exitQueueNonce;
     }
@@ -38,6 +44,7 @@ contract ExitGameController is ExitGameRegistry {
 
     /**
      * @notice Add token to the plasma framework and initiate the priority queue.
+     * @notice ETH token is supported by default on deployment.
      * @dev the queue is created as a new contract instance.
      * @param _token Address of the token.
      */
