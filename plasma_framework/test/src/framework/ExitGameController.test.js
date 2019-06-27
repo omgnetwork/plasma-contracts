@@ -1,5 +1,4 @@
 const PriorityQueue = artifacts.require('PriorityQueue');
-const PriorityQueueLib = artifacts.require('PriorityQueueLib');
 const ExitGameController = artifacts.require('ExitGameController');
 const DummyExitGame = artifacts.require('DummyExitGame');
 
@@ -9,11 +8,14 @@ const {
 const { expect } = require('chai');
 
 contract('ExitGameController', () => {
+<<<<<<< HEAD
     before(async () => {
         const priorityQueueLib = await PriorityQueueLib.new();
         await ExitGameController.link('PriorityQueueLib', priorityQueueLib.address);
     });
 
+=======
+>>>>>>> fix: alter visibility for PriorityQueue(Lib)
     beforeEach(async () => {
         this.controller = await ExitGameController.new();
         this.dummyExitGame = await DummyExitGame.new();
