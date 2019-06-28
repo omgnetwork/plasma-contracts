@@ -1,19 +1,10 @@
 pragma solidity ^0.5.0;
 
 import "./Vault.sol";
-import "./ZeroHashesProvider.sol";
-import "../framework/BlockController.sol";
 import {PaymentTransactionModel as DepositTx} from "../transactions/PaymentTransactionModel.sol";
 
 contract EthVault is Vault {
-    uint8 constant DEPOSIT_TX_TYPE = 1;
-
-    bytes32[16] zeroHashes;
-
-    constructor(address _blockController) public {
-        blockController = BlockController(_blockController);
-        zeroHashes = ZeroHashesProvider.getZeroHashes();
-    }
+    constructor(address _blockController) Vault(_blockController) public {}
 
     /**
      * @notice Allows a user to submit a deposit.
@@ -24,26 +15,14 @@ contract EthVault is Vault {
 
         _validateDepositFormat(decodedTx);
 
-        bytes32 root = keccak256(_depositTx);
-        for (uint i = 0; i < 16; i++) {
-            root = keccak256(abi.encodePacked(root, zeroHashes[i]));
-        }
-
-        blockController.submitDepositBlock(root);
+        super._submitDepositBlock(_depositTx);
     }
 
-    function _validateDepositFormat(DepositTx.Transaction memory _deposit) private {
-        require(_deposit.txType == DEPOSIT_TX_TYPE, "Invalid transaction type");
+    function _validateDepositFormat(DepositTx.Transaction memory _deposit) internal view {
+        super._validateDepositFormat(_deposit);
 
-        require(_deposit.inputs.length == 1, "Deposit should have exactly one input");
-        require(_deposit.inputs[0] == bytes32(0), "Deposit input must be bytes32 of 0");
-
-        require(_deposit.outputs.length == 1, "Must have only one output");
         require(_deposit.outputs[0].amount == msg.value, "Deposited value does not match sent amount");
         require(_deposit.outputs[0].token == address(0), "Output does not have correct currency (ETH)");
-
-        address depositorsAddress = address(uint160(uint256(_deposit.outputs[0].outputGuard)));
-        require(depositorsAddress == msg.sender, "Depositor's address does not match sender's address");
     }
 
     /**
