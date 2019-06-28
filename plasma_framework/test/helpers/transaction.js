@@ -15,6 +15,13 @@ class PaymentTransactionOutput {
     formatForRlpEncoding() {
         return [this.amount, this.outputGuard, this.token]
     }
+
+    static parseFromContractOutput(output) {
+        const amount = parseInt(output.amount);
+        const outputGuard = web3.eth.abi.decodeParameter('bytes32', output.outputGuard);
+        const token = output.token;
+        return new PaymentTransactionOutput(amount, outputGuard, token);
+     }
 }
 
 class PaymentTransaction {

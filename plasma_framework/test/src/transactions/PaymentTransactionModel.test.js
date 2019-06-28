@@ -4,7 +4,6 @@ const { constants, expectRevert } = require('openzeppelin-test-helpers');
 const PaymentTransactionModelMock = artifacts.require("PaymentTransactionModelMock");
 
 const { PaymentTransaction, PaymentTransactionOutput } = require("../../helpers/transaction.js");
-const decodeOutput = require("./outputs/PaymentOutputModel.test.js").decodeOutput;
 
 const OUTPUT_GUARD = "0x" + Array(64).fill(1).join("");
 const EMPTY_BYTES32 = "0x" + Array(64).fill(0).join("");
@@ -23,8 +22,8 @@ contract("PaymentTransactionModel", () => {
         const actual = await this.test.decode(encoded);
         const decoded = new PaymentTransaction(
             parseInt(actual.txType),
-            decodeInputs(actual.inputs),
-            decodeOutputs(actual.outputs),
+            parseInputs(actual.inputs),
+            parseOutputs(actual.outputs),
             actual.metaData,
         );
 
@@ -51,12 +50,21 @@ contract("PaymentTransactionModel", () => {
             "Transaction must have outputs"
         );
     });
+
+    it("should fail when decoding invalid transaction", async () => {
+        const encoded = web3.utils.bytesToHex(rlp.encode([0, 0]));
+
+        await expectRevert(
+            this.test.decode(encoded),
+            "Invalid encoding of transaction"
+        );
+    });
 })
 
-function decodeInputs(inputs) {
+function parseInputs(inputs) {
     return inputs.map(input => web3.eth.abi.decodeParameter('bytes32', input));
 }
 
-function decodeOutputs(outputs) {
-    return outputs.map(output => decodeOutput(output));
+function parseOutputs(outputs) {
+    return outputs.map(PaymentTransactionOutput.parseFromContractOutput);
 }
