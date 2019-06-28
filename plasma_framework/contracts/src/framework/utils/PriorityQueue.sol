@@ -1,53 +1,69 @@
 pragma solidity ^0.5.0;
 
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
 
 /**
- * @title PriorityQueueLib
- * @dev A priority queue library implementation
+ * @title PriorityQueue
+ * @dev Min-heap priority queue implementation.
  */
-library PriorityQueueLib {
+contract PriorityQueue is Ownable {
     using SafeMath for uint256;
 
     struct Queue {
-        address owner;
         uint256[] heapList;
         uint256 currentSize;
     }
 
-    function init(Queue storage self, address _owner) internal {
-        self.owner = _owner;
-        self.heapList = [0];
-        self.currentSize = 0;
+    Queue queue;
+
+    constructor() public {
+        queue.heapList = [0];
+        queue.currentSize = 0;
     }
 
-    function insert(Queue storage self, uint256 k) internal {
-        self.heapList.push(k);
-        self.currentSize = self.currentSize.add(1);
-        percUp(self, self.currentSize);
+    function currentSize() external view returns (uint256) {
+        return queue.currentSize;
     }
 
-    function getMin(Queue storage self) internal view returns (uint256) {
-        return self.heapList[1];
+    /**
+     * @notice Inserts an element into the queue by the owner.
+     * @dev Does not perform deduplication.
+     */
+    function insert(uint256 _element) external onlyOwner {
+        queue.heapList.push(_element);
+        queue.currentSize = queue.currentSize.add(1);
+        percUp(queue, queue.currentSize);
     }
 
-    function delMin(Queue storage self) internal returns (uint256) {
-        uint256 retVal = self.heapList[1];
-        self.heapList[1] = self.heapList[self.currentSize];
-        delete self.heapList[self.currentSize];
-        self.currentSize = self.currentSize.sub(1);
-        percDown(self, 1);
-        self.heapList.length = self.heapList.length.sub(1);
+    /**
+     * @notice Deletes the smallest element from the queue.
+     * @return The smallest element in the priority queue.
+     */
+    function delMin() external onlyOwner returns (uint256) {
+        uint256 retVal = queue.heapList[1];
+        queue.heapList[1] = queue.heapList[queue.currentSize];
+        delete queue.heapList[queue.currentSize];
+        queue.currentSize = queue.currentSize.sub(1);
+        percDown(queue, 1);
+        queue.heapList.length = queue.heapList.length.sub(1);
         return retVal;
     }
 
-    function getCurrentSize(Queue storage self) internal view returns (uint256) {
-        return self.currentSize;
+    /**
+     * @notice Returns the smallest element from the queue.
+     * @dev Fails when queue is empty.
+     * @return The smallest element in the priority queue.
+     */
+    function getMin() external view returns (uint256) {
+        return queue.heapList[1];
     }
+
 
     /*
      *  Private functions
      */
+
     function percUp(Queue storage self, uint256 pointer) private {
         uint256 i = pointer;
         uint256 j = i;
