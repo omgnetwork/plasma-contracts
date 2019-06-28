@@ -1,27 +1,26 @@
 pragma solidity ^0.5.0;
 
+import "./Vault.sol";
 import "./ZeroHashesProvider.sol";
-import "../framework/PlasmaFramework.sol";
-import {TransactionModel as DepositTx} from "../transactions/TransactionModel.sol";
+import "../framework/BlockController.sol";
+import {PaymentTransactionModel as DepositTx} from "../transactions/PaymentTransactionModel.sol";
 import {IERC20 as IERC20} from "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20 as SafeERC20} from "openzeppelin-solidity/contracts/token/ERC20/SafeERC20.sol";
 
-contract Erc20Vault {
+contract Erc20Vault is Vault {
     uint8 constant DEPOSIT_TX_TYPE = 1;
 
-    PlasmaFramework framework;
     bytes32[16] zeroHashes;
 
-    using DepositTx for DepositTx.Transaction;
     using SafeERC20 for IERC20;
 
-    constructor(address _framework) public {
-        framework = PlasmaFramework(_framework);
+    constructor(address _blockController) public {
+        blockController = BlockController(_blockController);
         zeroHashes = ZeroHashesProvider.getZeroHashes();
     }
 
     /**
-     * @dev Deposits approved amount of ERC20 token. Approve must be called first.
+     * @notice Deposits approved amount of ERC20 token. Approve must have been called first.
      * @param _depositTx RLP encoded transaction to act as the deposit.
      */
     function deposit(bytes calldata _depositTx) external {
@@ -31,7 +30,7 @@ contract Erc20Vault {
 
         IERC20 erc20 = IERC20(decodedTx.outputs[0].token);
 
-        // Check approved
+        // Check if tokens have been approved
         require(erc20.allowance(msg.sender, address(this)) == decodedTx.outputs[0].amount, "Tokens have not been approved");
 
         erc20.safeTransferFrom(msg.sender, address(this), decodedTx.outputs[0].amount);
@@ -41,31 +40,29 @@ contract Erc20Vault {
             root = keccak256(abi.encodePacked(root, zeroHashes[i]));
         }
 
-        framework.submitDepositBlock(root);
+        blockController.submitDepositBlock(root);
     }
 
-    function _validateDepositFormat(DepositTx.Transaction memory depositTx) private {
-      require(depositTx.txType == DEPOSIT_TX_TYPE, "Invalid transaction type");
+    function _validateDepositFormat(DepositTx.Transaction memory _deposit) private {
+        require(_deposit.txType == DEPOSIT_TX_TYPE, "Invalid transaction type");
 
-      // Deposit has one input and its id is 0
-      require(depositTx.inputs.length == 1, "Invalid number of inputs");
-      require(depositTx.inputs[0] == bytes32(0), "Invalid input format");
+        require(_deposit.inputs.length == 1, "Deposit should have exactly one input");
+        require(_deposit.inputs[0] == bytes32(0), "Deposit input must be bytes32 of 0");
 
-      require(depositTx.outputs.length == 1, "Invalid number of outputs");
-      require(depositTx.outputs[0].token != address(0), "Invalid output currency (0x0)");
+        require(_deposit.outputs.length == 1, "Must have only one output");
+        require(_deposit.outputs[0].token != address(0), "Invalid output currency (0x0)");
 
-      address depositorsAddress = address(uint160(uint256(depositTx.outputs[0].outputGuard)));
-      require(depositorsAddress == msg.sender, "Depositors address does not match senders address");
+        address depositorsAddress = address(uint160(uint256(_deposit.outputs[0].outputGuard)));
+        require(depositorsAddress == msg.sender, "Depositor's address does not match sender's address");
     }
 
-    //TODO: must be called only from exit processors, should be guarded by modifier
     /**
-    * @dev Withdraw erc20 tokens to target
+    * @notice Withdraw plasma chain ERC20 tokens to target
     * @param _target Place to transfer eth.
-    * @param _token Address of erc20 token contract.
+    * @param _token Address of ERC20 token contract.
     * @param _amount Amount to transfer.
     */
-    function withdraw(address _target, address _token, uint256 _amount) external {
+    function withdraw(address _target, address _token, uint256 _amount) external onlyFromExitGame {
         IERC20(_token).safeTransfer(_target, _amount);
     }
 }
