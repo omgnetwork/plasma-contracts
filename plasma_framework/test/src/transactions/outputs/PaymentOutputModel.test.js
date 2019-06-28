@@ -18,17 +18,13 @@ contract("PaymentOutputModel", () => {
         const encoded = web3.utils.bytesToHex(rlp.encode(expected.formatForRlpEncoding()));
 
         const output = await this.test.decode(encoded);
-        const actual = decodeOutput(output);
+        const actual = PaymentTransactionOutput.parseFromContractOutput(output);
 
         expect(JSON.stringify(actual)).to.equal(JSON.stringify(expected));
     });
+
+    it("should fail when decoding invalid output", async () => {
+        const encoded = web3.utils.bytesToHex(rlp.encode([0, 0, 0, 0]));
+        await expectRevert(this.test.decode(encoded), "Invalid output encoding");
+    });
 })
-
-function decodeOutput(output) {
-    const amount = parseInt(output.amount);
-    const outputGuard = web3.eth.abi.decodeParameter('bytes32', output.outputGuard);
-    const token = output.token;
-    return new PaymentTransactionOutput(amount, outputGuard, token);
-}
-
-module.exports.decodeOutput = decodeOutput;
