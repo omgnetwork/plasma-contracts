@@ -4,7 +4,7 @@ pragma experimental ABIEncoderV2;
 import "./models/ExitModel.sol";
 import "./interfaces/ExitProcessor.sol";
 import "./registries/ExitGameRegistry.sol";
-import "./priorityQueue/PriorityQueue.sol";
+import "./utils/PriorityQueue.sol";
 
 contract ExitGameController is ExitGameRegistry {
     uint64 private _exitQueueNonce = 1;
@@ -22,8 +22,7 @@ contract ExitGameController is ExitGameRegistry {
 
     constructor() public {
         address ethToken = address(0);
-        address queueOwner = address(this);
-        _exitsQueues[ethToken] = new PriorityQueue(queueOwner);
+        _exitsQueues[ethToken] = new PriorityQueue();
     }
 
     function exitQueueNonce() public view returns (uint64) {
@@ -51,8 +50,7 @@ contract ExitGameController is ExitGameRegistry {
     function addToken(address _token) external {
         require(!hasToken(_token), "Such token has already been added");
 
-        address queueOwner = address(this);
-        _exitsQueues[_token] = new PriorityQueue(queueOwner);
+        _exitsQueues[_token] = new PriorityQueue();
         emit TokenAdded(_token);
     }
 
