@@ -7,7 +7,7 @@ const { expect } = require('chai');
 contract('PlasmaFramework', () => {
     before('link library', async () => {
         const priorityQueueLib = await PriorityQueueLib.new();
-        await PlasmaFramework.link("PriorityQueueLib", priorityQueueLib.address);
+        await PlasmaFramework.link('PriorityQueueLib', priorityQueueLib.address);
     });
 
     describe('constructor', () => {

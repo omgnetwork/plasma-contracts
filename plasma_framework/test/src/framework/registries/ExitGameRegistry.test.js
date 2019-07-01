@@ -4,7 +4,7 @@ const DummyExitGame = artifacts.require('DummyExitGame');
 const { BN, expectEvent, expectRevert } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
-contract('ExitGameRegistry', ([operator, other]) => {
+contract('ExitGameRegistry', ([_, other]) => {
     beforeEach(async () => {
         this.registry = await ExitGameRegistry.new();
         this.dummyExitGame = (await DummyExitGame.new());
@@ -17,22 +17,22 @@ contract('ExitGameRegistry', ([operator, other]) => {
             await this.dummyExitGame.setExitGameRegistry(this.registry.address);
         });
 
-         it('accepts call when called by registered exit game contract', async () => {
+        it('accepts call when called by registered exit game contract', async () => {
             const { receipt } = await this.dummyExitGame.checkOnlyFromExitGame();
             await expectEvent.inTransaction(
-                receipt.transactionHash, 
-                ExitGameRegistry, 
-                'OnlyFromExitGameChecked', 
-                {}
+                receipt.transactionHash,
+                ExitGameRegistry,
+                'OnlyFromExitGameChecked',
+                {},
             );
-        })
+        });
 
-         it('reverts when not called by registered exit game contract', async () => {
+        it('reverts when not called by registered exit game contract', async () => {
             await expectRevert(
                 this.registry.checkOnlyFromExitGame(),
-                "Not being called by registered exit game contract"
+                'Not being called by registered exit game contract',
             );
-        })
+        });
     });
 
     describe('exitGames', () => {
@@ -66,11 +66,11 @@ contract('ExitGameRegistry', ([operator, other]) => {
             expect(await this.registry.exitGameToTxType(this.dummyExitGame.address))
                 .to.be.bignumber.equal(new BN(txType));
         });
-    
+
         it('rejects when not registered by operator', async () => {
             await expectRevert(
-                this.registry.registerExitGame(1, this.dummyExitGame.address, {from: other}),
-                "Not being called by operator"
+                this.registry.registerExitGame(1, this.dummyExitGame.address, { from: other }),
+                'Not being called by operator',
             );
         });
 
@@ -80,7 +80,7 @@ contract('ExitGameRegistry', ([operator, other]) => {
             await this.registry.registerExitGame(txType, this.dummyExitGame.address);
             await expectRevert(
                 this.registry.registerExitGame(txType, secondDummyExitGameAddress),
-                "The tx type is already registered"
+                'The tx type is already registered',
             );
         });
 
@@ -88,7 +88,7 @@ contract('ExitGameRegistry', ([operator, other]) => {
             await this.registry.registerExitGame(1, this.dummyExitGame.address);
             await expectRevert(
                 this.registry.registerExitGame(2, this.dummyExitGame.address),
-                "The exit game contract is already registered"
+                'The exit game contract is already registered',
             );
         });
     });
