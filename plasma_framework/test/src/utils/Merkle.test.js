@@ -32,17 +32,17 @@ contract('Merkle', () => {
             const result = await this.merkleContract.checkMembership(leafData, leafIndex, fakeRootHash, proof);
             expect(result).to.be.false;
         });
-    
+
         it('should reject call when proof data size is incorrect', async () => {
             const leafIndex = 0;
             const leafData = web3.utils.sha3(this.leaves[leafIndex]);
             const rootHash = this.merkleTree.root;
             const proof = this.merkleTree.getInclusionProof(this.leaves[leafIndex]);
-            const wrongSizeProof = proof + '13212';
+            const wrongSizeProof = `${proof}13212`;
 
             await expectRevert(
                 this.merkleContract.checkMembership(leafData, leafIndex, rootHash, wrongSizeProof),
-                "Length of merkle proof must be a multiple of of 32."
+                'Length of merkle proof must be a multiple of of 32.',
             );
         });
     });
