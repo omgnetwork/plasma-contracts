@@ -127,13 +127,13 @@ contract('Erc20Vault', (accounts) => {
 
         it('should store erc20 deposit', async () => {
             await this.badErc20.approve(this.erc20Vault.address, DEPOSIT_VALUE, { from: alice });
-            let nextDepositBlock = parseInt(await this.blockController.nextDepositBlock(), 10);
-            expect(nextDepositBlock).to.be.equal(1);
+            const preDepositBlockNumber = (await this.blockController.nextDepositBlock()).toNumber();
 
             const deposit = Testlang.deposit(DEPOSIT_VALUE, alice, this.badErc20.address);
             await this.erc20Vault.deposit(deposit, { from: alice });
-            nextDepositBlock = parseInt(await this.blockController.nextDepositBlock(), 10);
-            expect(nextDepositBlock).to.equal(2);
+            const postDepositBlockNumber = (await this.blockController.nextDepositBlock()).toNumber();
+            
+            expect(postDepositBlockNumber).to.be.equal(preDepositBlockNumber + 1);
         });
     });
 });
