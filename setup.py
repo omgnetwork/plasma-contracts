@@ -27,6 +27,14 @@ setup(
         'ethereum==2.3.0',
         'web3==4.8.2',
         'rlp==0.6.0',
-        'py-solc-simple==0.0.13'
-    ]
+        'py-solc-simple==0.0.14',
+        'eip712-structs==1.1.0'
+    ],
+    extras_require={
+        'dev': [
+            'pytest>=4.6.0',
+            'pylint>=2.3.0',
+            'flake8>=3.7.0'
+        ]
+    }
 )

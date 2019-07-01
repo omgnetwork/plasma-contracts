@@ -1,5 +1,5 @@
 init:
-	python setup.py install
+	pip install -e .
 
 .PHONY: help
 help:
@@ -45,4 +45,4 @@ runslow:
 
 .PHONY: dev
 dev:
-	pip install pylint pytest flake8
+	pip install -e .[dev]

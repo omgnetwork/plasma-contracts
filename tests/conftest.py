@@ -8,7 +8,7 @@ from plasma_core.utils.address import address_to_hex
 from plasma_core.utils.deployer import Deployer
 from solc_simple import Builder
 from testlang.testlang import TestingLanguage
-from solc import link_code
+from solcx import link_code
 
 
 EXIT_PERIOD = 4 * 60  # 4 minutes
