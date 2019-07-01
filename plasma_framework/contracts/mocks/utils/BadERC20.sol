@@ -22,24 +22,24 @@ contract BadERC20 {
         return balances[_account];
     }
 
-  function transfer(address _to, uint _value) public {
-    balances[msg.sender] = balances[msg.sender].sub(_value);
-    balances[_to] = balances[_to].add(_value);
-  }
+    function transfer(address _to, uint _value) public {
+       balances[msg.sender] = balances[msg.sender].sub(_value);
+       balances[_to] = balances[_to].add(_value);
+    }
 
-  function transferFrom(address _from, address _to, uint _value) public {
-    uint256 _allowance = allowances[_from][msg.sender];
+    function transferFrom(address _from, address _to, uint _value) public {
+        uint256 _allowance = allowances[_from][msg.sender];
 
-    balances[_to] = balances[_to].add(_value);
-    balances[_from] = balances[_from].sub(_value);
-    allowances[_from][msg.sender] = _allowance.sub(_value);
-  }
+        balances[_to] = balances[_to].add(_value);
+        balances[_from] = balances[_from].sub(_value);
+        allowances[_from][msg.sender] = _allowance.sub(_value);
+    }
 
-  function approve(address _spender, uint _value) public {
-    allowances[msg.sender][_spender] = _value;
-  }
+    function approve(address _spender, uint _value) public {
+        allowances[msg.sender][_spender] = _value;
+    }
 
-  function allowance(address _owner, address _spender) public view returns (uint256 remaining) {
-    return allowances[_owner][_spender];
-  }
+    function allowance(address _owner, address _spender) public view returns (uint256 remaining) {
+        return allowances[_owner][_spender];
+    }
 }
