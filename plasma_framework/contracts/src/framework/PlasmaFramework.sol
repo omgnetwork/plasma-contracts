@@ -6,9 +6,10 @@ import "./ExitGameController.sol";
 import "./registries/VaultRegistry.sol";
 import "./registries/ExitGameRegistry.sol";
 import "./utils/Operated.sol";
+import "./interfaces/IPlasmaFramework.sol";
 
-contract PlasmaFramework is Operated, VaultRegistry, ExitGameRegistry, ExitGameController, BlockController {
-    uint256 constant CHILD_BLOCK_INTERVAL = 1000;
+contract PlasmaFramework is IPlasmaFramework, Operated, VaultRegistry, ExitGameRegistry, ExitGameController, BlockController {
+    uint256 public constant CHILD_BLOCK_INTERVAL = 1000;
 
     // NOTE: this is the "middle" period.
     // Exit period for fresh utxos is double of that while IFE phase is half of that
