@@ -3,9 +3,9 @@ pragma experimental ABIEncoderV2;
 
 import "./registries/ExitGameRegistryMock.sol";
 import "../../src/framework/ExitGameController.sol";
-import "../../src/framework/interfaces/ExitProcessor.sol";
+import "../../src/framework/interfaces/IExitProcessor.sol";
 
-contract DummyExitGame is ExitProcessor {
+contract DummyExitGame is IExitProcessor {
     uint256 public uniquePriorityFromEnqueue;
 
     ExitGameRegistryMock private exitGameRegistry;
