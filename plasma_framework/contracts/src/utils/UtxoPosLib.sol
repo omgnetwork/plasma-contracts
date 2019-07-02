@@ -1,5 +1,10 @@
 pragma solidity ^0.5.0;
 
+import "./TxPosLib.sol";
+
+/**
+@dev UTXO position = (blockNumber * BLOCK_OFFSET + txIndex * TX_OFFSET + outputIndex).
+ */
 library UtxoPosLib {
     struct UtxoPos {
         uint256 value;
@@ -55,8 +60,8 @@ library UtxoPosLib {
     function txPos(UtxoPos memory _utxoPos)
         internal
         pure
-        returns (uint256)
+        returns (TxPosLib.TxPos memory)
     {
-        return _utxoPos.value / TX_OFFSET;
+        return TxPosLib.TxPos(_utxoPos.value / TX_OFFSET);
     }
 }

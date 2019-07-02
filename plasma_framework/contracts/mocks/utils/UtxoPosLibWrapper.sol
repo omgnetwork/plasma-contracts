@@ -1,5 +1,7 @@
 pragma solidity ^0.5.0;
+pragma experimental ABIEncoderV2;
 
+import "../../src/utils/TxPosLib.sol";
 import "../../src/utils/UtxoPosLib.sol";
 
 contract UtxoPosLibWrapper {
@@ -17,7 +19,7 @@ contract UtxoPosLibWrapper {
         return UtxoPosLib.UtxoPos(_utxoPos).outputIndex();
     }
 
-    function txPos(uint256 _utxoPos) public pure returns (uint256) {
+    function txPos(uint256 _utxoPos) public pure returns (TxPosLib.TxPos memory) {
         return UtxoPosLib.UtxoPos(_utxoPos).txPos();
     }
 }
