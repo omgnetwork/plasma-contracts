@@ -40,8 +40,8 @@ contract('UtxoPosLib', () => {
 
     describe('txPos', () => {
         it('should parse the correct tx position', async () => {
-            expect(await this.contract.txPos(this.utxoPos))
-                .to.be.bignumber.equal(new BN(this.txPos));
+            const txPos = await this.contract.txPos(this.utxoPos);
+            expect(new BN(txPos.value)).to.be.bignumber.equal(new BN(this.txPos));
         });
     });
 });
