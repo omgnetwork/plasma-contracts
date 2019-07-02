@@ -2,7 +2,7 @@ pragma solidity ^0.5.0;
 pragma experimental ABIEncoderV2;
 
 import "./models/ExitModel.sol";
-import "./interfaces/ExitProcessor.sol";
+import "./interfaces/IExitProcessor.sol";
 import "./registries/ExitGameRegistry.sol";
 import "./utils/PriorityQueue.sol";
 
@@ -106,7 +106,7 @@ contract ExitGameController is ExitGameRegistry {
         uint256 processedNum = 0;
 
         while (processedNum < _maxExitsToProcess && exit.exitableAt < block.timestamp) {
-            ExitProcessor processor = ExitProcessor(exit.exitProcessor);
+            IExitProcessor processor = IExitProcessor(exit.exitProcessor);
 
             processor.processExit(exit.exitId);
 
