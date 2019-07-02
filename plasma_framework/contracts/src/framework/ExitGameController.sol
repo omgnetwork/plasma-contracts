@@ -67,6 +67,7 @@ contract ExitGameController is ExitGameRegistry {
      * @notice Enqueue exits from exit game contracts
      * @dev Unique priority is a combination of original priority and an increasing nonce
      * @dev Use public instead of external because structs in calldata not currently supported.
+     * @dev Also, caller of this function should add "pragma experimental ABIEncoderV2;" on top of file
      * @param _priority The priority of the exit itself
      * @param _token Token for the exit
      * @param _exit Exit data that contains the basic information for exit processor that processes the exit
