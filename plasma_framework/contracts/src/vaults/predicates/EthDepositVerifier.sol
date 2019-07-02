@@ -2,8 +2,11 @@ pragma solidity ^0.5.0;
 
 import "./IEthDepositVerifier.sol";
 import {PaymentTransactionModel as DepositTx} from "../../transactions/PaymentTransactionModel.sol";
+import {PaymentOutputModel as DepositOutputModel} from "../../transactions/outputs/PaymentOutputModel.sol";
 
 contract EthDepositVerifier is IEthDepositVerifier {
+    using DepositOutputModel for DepositOutputModel.Output;
+
     uint8 constant DEPOSIT_TX_TYPE = 1;
 
     function verify(bytes calldata _depositTx, uint256 amount, address _sender) external view {
@@ -18,7 +21,7 @@ contract EthDepositVerifier is IEthDepositVerifier {
         require(decodedTx.outputs[0].amount == amount, "Deposited value does not match sent amount");
         require(decodedTx.outputs[0].token == address(0), "Output does not have correct currency (ETH)");
 
-        address depositorsAddress = address(uint160(uint256(decodedTx.outputs[0].outputGuard)));
+        address depositorsAddress = decodedTx.outputs[0].owner();
         require(depositorsAddress == _sender, "Depositor's address does not match sender's address");
 
     }
