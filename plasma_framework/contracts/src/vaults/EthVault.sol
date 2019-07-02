@@ -4,6 +4,8 @@ import "./Vault.sol";
 import {PaymentTransactionModel as DepositTx} from "../transactions/PaymentTransactionModel.sol";
 
 contract EthVault is Vault {
+    uint8 constant DEPOSIT_TX_TYPE = 1;
+
     constructor(address _blockController) Vault(_blockController) public {}
 
     /**
@@ -19,10 +21,17 @@ contract EthVault is Vault {
     }
 
     function _validateDepositFormat(DepositTx.Transaction memory _deposit) internal view {
-        super._validateDepositFormat(_deposit);
+        require(_deposit.txType == DEPOSIT_TX_TYPE, "Invalid transaction type");
 
+        require(_deposit.inputs.length == 1, "Deposit should have exactly one input");
+        require(_deposit.inputs[0] == bytes32(0), "Deposit input must be bytes32 of 0");
+
+        require(_deposit.outputs.length == 1, "Must have only one output");
         require(_deposit.outputs[0].amount == msg.value, "Deposited value does not match sent amount");
         require(_deposit.outputs[0].token == address(0), "Output does not have correct currency (ETH)");
+
+        address depositorsAddress = address(uint160(uint256(_deposit.outputs[0].outputGuard)));
+        require(depositorsAddress == msg.sender, "Depositor's address does not match sender's address");
     }
 
     /**

@@ -6,6 +6,7 @@ import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/SafeERC20.sol";
 
 contract Erc20Vault is Vault {
+    uint8 constant DEPOSIT_TX_TYPE = 1;
     using SafeERC20 for IERC20;
 
     constructor(address _blockController) Vault(_blockController) public {}
@@ -29,9 +30,16 @@ contract Erc20Vault is Vault {
     }
 
     function _validateDepositFormat(DepositTx.Transaction memory _deposit) internal view {
-        super._validateDepositFormat(_deposit);
+        require(_deposit.txType == DEPOSIT_TX_TYPE, "Invalid transaction type");
 
+        require(_deposit.inputs.length == 1, "Deposit should have exactly one input");
+        require(_deposit.inputs[0] == bytes32(0), "Deposit input must be bytes32 of 0");
+
+        require(_deposit.outputs.length == 1, "Must have only one output");
         require(_deposit.outputs[0].token != address(0), "Invalid output currency (ETH)");
+
+        address depositorsAddress = address(uint160(uint256(_deposit.outputs[0].outputGuard)));
+        require(depositorsAddress == msg.sender, "Depositor's address does not match sender's address");
     }
 
     /**
