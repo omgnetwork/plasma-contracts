@@ -1,15 +1,26 @@
 pragma solidity ^0.5.0;
+pragma experimental ABIEncoderV2;
 
 import "./Vault.sol";
+import "./predicates/IErc20DepositVerifier.sol";
 import {PaymentTransactionModel as DepositTx} from "../transactions/PaymentTransactionModel.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/SafeERC20.sol";
 
 contract Erc20Vault is Vault {
-    uint8 constant DEPOSIT_TX_TYPE = 1;
+    IErc20DepositVerifier private _depositVerifier;
+
     using SafeERC20 for IERC20;
 
     constructor(address _blockController) Vault(_blockController) public {}
+
+    /**
+     * @notice Set the deposit verifier contract. This can be only called by the operator.
+     * @param _contract address of the verifier contract.
+     */
+    function setDepositVerifier(address _contract) public onlyOperator {
+        _depositVerifier = IErc20DepositVerifier(_contract);
+    }
 
     /**
      * @notice Deposits approved amount of ERC20 token. Approve must have been called first.
@@ -18,28 +29,13 @@ contract Erc20Vault is Vault {
     function deposit(bytes calldata _depositTx) external {
         DepositTx.Transaction memory decodedTx = DepositTx.decode(_depositTx);
 
-        _validateDepositFormat(decodedTx);
+        _depositVerifier.verify(decodedTx, msg.sender);
 
         IERC20 erc20 = IERC20(decodedTx.outputs[0].token);
-
         require(erc20.allowance(msg.sender, address(this)) == decodedTx.outputs[0].amount, "Tokens have not been approved");
-
         erc20.safeTransferFrom(msg.sender, address(this), decodedTx.outputs[0].amount);
 
         super._submitDepositBlock(_depositTx);
-    }
-
-    function _validateDepositFormat(DepositTx.Transaction memory _deposit) internal view {
-        require(_deposit.txType == DEPOSIT_TX_TYPE, "Invalid transaction type");
-
-        require(_deposit.inputs.length == 1, "Deposit should have exactly one input");
-        require(_deposit.inputs[0] == bytes32(0), "Deposit input must be bytes32 of 0");
-
-        require(_deposit.outputs.length == 1, "Must have only one output");
-        require(_deposit.outputs[0].token != address(0), "Invalid output currency (ETH)");
-
-        address depositorsAddress = address(uint160(uint256(_deposit.outputs[0].outputGuard)));
-        require(depositorsAddress == msg.sender, "Depositor's address does not match sender's address");
     }
 
     /**

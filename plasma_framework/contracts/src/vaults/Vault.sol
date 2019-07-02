@@ -2,9 +2,10 @@ pragma solidity ^0.5.0;
 
 import "./ZeroHashesProvider.sol";
 import "../framework/BlockController.sol";
+import "../framework/utils/Operated.sol";
 import {PaymentTransactionModel as DepositTx} from "../transactions/PaymentTransactionModel.sol";
 
-contract Vault {
+contract Vault is Operated {
     BlockController blockController;
     bytes32[16] zeroHashes;
 

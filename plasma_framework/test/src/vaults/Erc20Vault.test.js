@@ -1,5 +1,6 @@
 const BlockController = artifacts.require('BlockController');
 const Erc20Vault = artifacts.require('Erc20Vault');
+const Erc20DepositVerifier = artifacts.require('Erc20DepositVerifier');
 const GoodERC20 = artifacts.require('GoodERC20');
 const BadERC20 = artifacts.require('BadERC20');
 
@@ -17,6 +18,8 @@ contract('Erc20Vault', (accounts) => {
     beforeEach('setup contracts', async () => {
         this.blockController = await BlockController.new(10);
         this.erc20Vault = await Erc20Vault.new(this.blockController.address);
+        const depositVerifier = await Erc20DepositVerifier.new();
+        await this.erc20Vault.setDepositVerifier(depositVerifier.address);
         await this.blockController.registerVault(2, this.erc20Vault.address);
         this.erc20 = await GoodERC20.new();
         this.erc20.mint(accounts[0], INITIAL_SUPPLY, { from: accounts[0] });
