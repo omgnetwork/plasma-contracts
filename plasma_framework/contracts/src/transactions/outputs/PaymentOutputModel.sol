@@ -2,6 +2,7 @@ pragma solidity ^0.5.0;
 pragma experimental ABIEncoderV2;
 
 import "../../utils/RLP.sol";
+import "../../utils/AddressPayable.sol";
 
 library PaymentOutputModel {
 
@@ -13,8 +14,14 @@ library PaymentOutputModel {
         address token;
     }
 
-    function hash(Output memory _output) internal pure returns (bytes32) {
-        return keccak256(abi.encode(_output));
+    /**
+     * @notice Get the 'owner' from the output with the assumption of
+     *         'outputGuard' field directly holding owner's address.
+     * @dev 'outputGuard' can potentially be hash of pre-image that holds the owner info.
+     *       This should not and cannot be handled here.
+     */
+    function owner(Output memory _output) internal pure returns (address payable) {
+        return AddressPayable.convert(address(uint256(_output.outputGuard)));
     }
 
     function decode(RLP.RLPItem memory encoded) internal pure returns (Output memory) {

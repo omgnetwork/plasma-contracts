@@ -5,6 +5,7 @@ import "../../../src/transactions/outputs/PaymentOutputModel.sol";
 import "../../../src/utils/RLP.sol";
 
 contract PaymentOutputModelMock {
+    using PaymentOutputModel for PaymentOutputModel.Output;
 
     using RLP for bytes;
 
@@ -13,4 +14,12 @@ contract PaymentOutputModelMock {
         return output;
     }
 
+    function owner(uint256 _amount, address _owner, address _token) public pure returns (address payable) {
+        PaymentOutputModel.Output memory output = PaymentOutputModel.Output({
+            amount: _amount,
+            outputGuard: bytes32(uint256(_owner)),
+            token: _token
+        });
+        return output.owner();
+    }
 }

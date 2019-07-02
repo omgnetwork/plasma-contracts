@@ -7,5 +7,8 @@ interface IErc20DepositVerifier {
      * @param _sender The owner of the deposit transaction.
      * @param _vault The address of the Erc20Vault contract.
      */
-    function verify(bytes calldata _depositTx, address _sender, address _vault) external view returns (address owner, address token, uint256 amount);
+    function verify(bytes calldata _depositTx, address _sender, address _vault)
+        external
+        view
+        returns (address owner, address token, uint256 amount);
 }
