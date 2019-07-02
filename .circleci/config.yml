@@ -2,9 +2,9 @@
 #
 # Check https://circleci.com/docs/2.0/language-javascript/ for more details
 #
-version: 2
+version: 2.1
 jobs:
-  build:
+  truffle_build:
     docker:
       - image: circleci/node:10.16
     working_directory: ~/repo
@@ -12,17 +12,13 @@ jobs:
     steps:
       - checkout
       - run:
-          name: "Set up environment"
+          name: Set up environment
           command: echo 'export PATH="$(npm bin):$PATH"' >> $BASH_ENV
-      # Download and cache dependencies
       - restore_cache:
           keys:
             - v2-dependencies-{{ checksum "plasma_framework/package.json" }}
-            # fallback to using the latest cache if no exact match is found
-            - v2-dependencies-
-
       - run:
-          name: "Install dependencies"
+          name: Install dependencies
           command: |
             npm install
             rm -rf node_modules/*/.git # workaround for problem with dependencies git
@@ -32,8 +28,48 @@ jobs:
           paths:
             - plasma_framework/node_modules
           key: v2-dependencies-{{ checksum "plasma_framework/package.json" }}
-
+      - persist_to_workspace:
+          root: ~/repo
+          paths:
+            - plasma_framework
+      
       - run:
-          name: "Run tests"
+          name: Run tests
           command: truffle test 
           working_directory: ~/repo/plasma_framework
+  
+  python_build:
+    docker:
+      - image: circleci/python:3.7
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - run:
+          name: Prepare environment
+          command: sudo chown -R circleci:circleci /usr/local/bin /usr/local/lib/python3.7/site-packages
+      - restore_cache:
+          keys:
+            - dependencies-{{ checksum "requirements.txt" }}
+      - run: 
+          name: Install dependencies
+          command: |
+            make dev
+            python -m solcx.install v0.4.24
+      - save_cache:
+          key: dependencies-{{ checksum "requirements.txt" }}
+          paths:
+            - /usr/local/bin
+            - /usr/local/lib/python3.7/site-packages
+      - run:
+          name: Run tests
+          command: make test
+
+workflows:
+  version: 2
+  build_root_chain_contract:
+    jobs:
+      - python_build
+
+  build_plasma_framework:
+    jobs:
+      - truffle_build
