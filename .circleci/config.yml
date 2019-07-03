@@ -3,10 +3,17 @@
 # Check https://circleci.com/docs/2.0/language-javascript/ for more details
 #
 version: 2.1
-jobs:
-  Truffle tests:
+executors:
+  truffle_executor:
     docker:
       - image: circleci/node:10.16
+  python_executor:
+    docker:
+      - image: circleci/python:3.7
+
+jobs:
+  Truffle tests:
+    executor: truffle_executor
     working_directory: ~/repo
     steps:
       - checkout
@@ -32,8 +39,7 @@ jobs:
           working_directory: ~/repo/plasma_framework
 
   Truffle linter:
-    docker:
-      - image: circleci/node:10.16
+    executor: truffle_executor
     working_directory: ~/repo
     steps:
       - checkout
@@ -59,8 +65,7 @@ jobs:
           working_directory: ~/repo/plasma_framework
   
   Python tests:
-    docker:
-      - image: circleci/python:3.7
+    executor: python_executor
     working_directory: ~/repo
     steps:
       - checkout
@@ -85,8 +90,7 @@ jobs:
           command: make test
   
   Python linter:
-    docker:
-      - image: circleci/python:3.7
+    executor: python_executor
     working_directory: ~/repo
     steps:
       - checkout
