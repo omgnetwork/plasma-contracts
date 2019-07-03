@@ -15,7 +15,7 @@
     "eslint-plugin-import": "^2.17.3",
     "openzeppelin-test-helpers": "^0.4.0",
     "rlp": "^2.2.3",
-    "truffle": "^5.0.22"
+    "truffle": "^5.0.25"
   },
   "scripts": {
     "test": "truffle test"
