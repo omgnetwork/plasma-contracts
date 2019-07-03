@@ -3,6 +3,7 @@
 # Check https://circleci.com/docs/2.0/language-javascript/ for more details
 #
 version: 2.1
+
 executors:
   truffle_executor:
     docker:
@@ -11,10 +12,8 @@ executors:
     docker:
       - image: circleci/python:3.7
 
-jobs:
-  Truffle tests:
-    executor: truffle_executor
-    working_directory: ~/repo
+commands:
+  setup_truffle_env:
     steps:
       - checkout
       - run:
@@ -25,48 +24,16 @@ jobs:
             - v2-dependencies-{{ checksum "plasma_framework/package.json" }}
       - run:
           name: Install dependencies
+          working_directory: ~/repo/plasma_framework
           command: |
             npm install
             rm -rf node_modules/*/.git # workaround for problem with dependencies git
-          working_directory: ~/repo/plasma_framework
       - save_cache:
           paths:
             - plasma_framework/node_modules
           key: v2-dependencies-{{ checksum "plasma_framework/package.json" }}
-      - run:
-          name: Run tests
-          command: truffle test 
-          working_directory: ~/repo/plasma_framework
 
-  Truffle linter:
-    executor: truffle_executor
-    working_directory: ~/repo
-    steps:
-      - checkout
-      - run:
-          name: Set up environment
-          command: echo 'export PATH="$(npm bin):$PATH"' >> $BASH_ENV
-      - restore_cache:
-          keys:
-            - v2-dependencies-{{ checksum "plasma_framework/package.json" }}
-      - run:
-          name: Install dependencies
-          command: |
-            npm install
-            rm -rf node_modules/*/.git # workaround for problem with dependencies git
-          working_directory: ~/repo/plasma_framework
-      - save_cache:
-          paths:
-            - plasma_framework/node_modules
-          key: v2-dependencies-{{ checksum "plasma_framework/package.json" }}
-      - run:
-          name: Run linter
-          command: eslint . 
-          working_directory: ~/repo/plasma_framework
-  
-  Python tests:
-    executor: python_executor
-    working_directory: ~/repo
+  setup_python_env:
     steps:
       - checkout
       - run:
@@ -75,7 +42,7 @@ jobs:
       - restore_cache:
           keys:
             - dependencies-{{ checksum "requirements.txt" }}
-      - run: 
+      - run:
           name: Install dependencies
           command: |
             make dev
@@ -85,6 +52,33 @@ jobs:
           paths:
             - /usr/local/bin
             - /usr/local/lib/python3.7/site-packages
+
+jobs:
+  Truffle tests:
+    executor: truffle_executor
+    working_directory: ~/repo
+    steps:
+      - setup_truffle_env
+      - run:
+          name: Run tests
+          command: truffle test 
+          working_directory: ~/repo/plasma_framework
+
+  Truffle linter:
+    executor: truffle_executor
+    working_directory: ~/repo
+    steps:
+      - setup_truffle_env
+      - run:
+          name: Run linter
+          command: eslint . 
+          working_directory: ~/repo/plasma_framework
+  
+  Python tests:
+    executor: python_executor
+    working_directory: ~/repo
+    steps:
+      - setup_python_env
       - run:
           name: Run tests
           command: make test
@@ -93,21 +87,7 @@ jobs:
     executor: python_executor
     working_directory: ~/repo
     steps:
-      - checkout
-      - run:
-          name: Prepare environment
-          command: sudo chown -R circleci:circleci /usr/local/bin /usr/local/lib/python3.7/site-packages
-      - restore_cache:
-          keys:
-            - dependencies-{{ checksum "requirements.txt" }}
-      - run: 
-          name: Install dependencies
-          command: pip install flake8 
-      - save_cache:
-          key: dependencies-{{ checksum "requirements.txt" }}
-          paths:
-            - /usr/local/bin
-            - /usr/local/lib/python3.7/site-packages
+      - setup_python_env
       - run:
           name: Run linter 
           command: make lint
