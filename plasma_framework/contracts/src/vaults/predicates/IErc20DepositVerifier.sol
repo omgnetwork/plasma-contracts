@@ -1,13 +1,11 @@
 pragma solidity ^0.5.0;
 pragma experimental ABIEncoderV2;
 
-import {PaymentTransactionModel as DepositTx} from "../../transactions/PaymentTransactionModel.sol";
-
-contract IErc20DepositVerifier {
+interface IErc20DepositVerifier {
     /**
      * @notice Verifies a deposit transaction.
      * @param _depositTx The deposit transaction.
-     * @param _owner The owner of the deposit transaction.
+     * @param _sender The owner of the deposit transaction.
      */
-    function verify(DepositTx.Transaction memory _depositTx, address _owner) public pure;
+    function verify(bytes calldata _depositTx, address _sender, address _vault) external view returns (address owner, address token, uint256 amount);
 }

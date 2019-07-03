@@ -3,7 +3,6 @@ pragma experimental ABIEncoderV2;
 
 import "./Vault.sol";
 import "./predicates/IErc20DepositVerifier.sol";
-import {PaymentTransactionModel as DepositTx} from "../transactions/PaymentTransactionModel.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/SafeERC20.sol";
 
@@ -27,13 +26,9 @@ contract Erc20Vault is Vault {
      * @param _depositTx RLP encoded transaction to act as the deposit.
      */
     function deposit(bytes calldata _depositTx) external {
-        DepositTx.Transaction memory decodedTx = DepositTx.decode(_depositTx);
+        (address owner, address token, uint256 amount) = _depositVerifier.verify(_depositTx, msg.sender, address(this));
 
-        _depositVerifier.verify(decodedTx, msg.sender);
-
-        IERC20 erc20 = IERC20(decodedTx.outputs[0].token);
-        require(erc20.allowance(msg.sender, address(this)) == decodedTx.outputs[0].amount, "Tokens have not been approved");
-        erc20.safeTransferFrom(msg.sender, address(this), decodedTx.outputs[0].amount);
+        IERC20(token).safeTransferFrom(owner, address(this), amount);
 
         super._submitDepositBlock(_depositTx);
     }
