@@ -7,4 +7,11 @@ function deposit(amount, owner, tokenAddress = constants.ZERO_ADDRESS) {
     return depositTx.rlpEncoded();
 }
 
+function buildUtxoPos(blockNum, txIndex, outputIndex) {
+    const BLOCK_OFFSET = 1000000000;
+    const TX_OFFSET = 10000;
+    return blockNum * BLOCK_OFFSET + txIndex * TX_OFFSET + outputIndex;
+}
+
 module.exports.deposit = deposit;
+module.exports.buildUtxoPos = buildUtxoPos;
