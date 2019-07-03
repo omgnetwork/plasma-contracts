@@ -5,8 +5,9 @@ const EthDepositVerifier = artifacts.require('EthDepositVerifier');
 const { BN, constants, expectRevert } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
-const Testlang = require('../../helpers/testlang.js');
 const { PaymentTransaction, PaymentTransactionOutput } = require('../../helpers/transaction.js');
+const { spentOnGas } = require('../../helpers/utils.js');
+const Testlang = require('../../helpers/testlang.js');
 
 contract('EthVault', ([_, alice]) => {
     const DEPOSIT_VALUE = 1000000;
@@ -107,8 +108,3 @@ contract('EthVault', ([_, alice]) => {
         });
     });
 });
-
-async function spentOnGas(receipt) {
-    const tx = await web3.eth.getTransaction(receipt.transactionHash);
-    return web3.utils.toBN(tx.gasPrice).muln(receipt.gasUsed);
-}

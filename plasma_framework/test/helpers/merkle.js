@@ -10,8 +10,19 @@ class MerkleNode {
 }
 
 class MerkleTree {
-    constructor(leaves) {
-        this.height = parseInt(Math.log(leaves.length), 10) + 1;
+    constructor(leaves, height = 0) {
+        const minHeightForLeaves = parseInt(Math.log(leaves.length), 10) + 1;
+
+        if (height === 0) {
+            this.height = minHeightForLeaves;
+        } else if (height > minHeightForLeaves) {
+            this.height = height;
+        } else {
+            throw new Error(
+                `height should be at least ${minHeightForLeaves} for the list of leaves`
+            );
+        }
+
         this.leafCount = 2 ** this.height;
 
         this.leaves = leaves.map(web3.utils.sha3);
