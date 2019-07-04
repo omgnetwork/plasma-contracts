@@ -1,5 +1,6 @@
 const BlockController = artifacts.require('BlockController');
 const EthVault = artifacts.require('EthVault');
+const EthDepositVerifier = artifacts.require('EthDepositVerifier');
 
 const { BN, constants, expectRevert } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
@@ -7,13 +8,14 @@ const { expect } = require('chai');
 const Testlang = require('../../helpers/testlang.js');
 const { PaymentTransaction, PaymentTransactionOutput } = require('../../helpers/transaction.js');
 
-contract('EthVault', (accounts) => {
-    const alice = accounts[1];
+contract('EthVault', ([_, alice]) => {
     const DEPOSIT_VALUE = 1000000;
 
     beforeEach('setup contracts', async () => {
         this.blockController = await BlockController.new(10);
         this.ethVault = await EthVault.new(this.blockController.address);
+        const depositVerifier = await EthDepositVerifier.new();
+        await this.ethVault.setDepositVerifier(depositVerifier.address);
         await this.blockController.registerVault(1, this.ethVault.address);
     });
 
