@@ -4,14 +4,14 @@ const DummyVault = artifacts.require('DummyVault');
 const { BN, expectRevert, expectEvent } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
-contract('BlockController', ([operator, other]) => {
+contract('BlockController', ([_, other]) => {
     beforeEach(async () => {
         this.childBlockInterval = 5;
         this.blockController = await BlockController.new(this.childBlockInterval);
         this.dummyBlockHash = web3.utils.keccak256('dummy block');
 
         this.dummyVault = await DummyVault.new();
-        this.dummyVault.setBlockController(this.blockController.address); 
+        this.dummyVault.setBlockController(this.blockController.address);
         this.dummyVaultId = 1;
         this.blockController.registerVault(this.dummyVaultId, this.dummyVault.address);
     });
@@ -27,7 +27,8 @@ contract('BlockController', ([operator, other]) => {
         });
 
         it('childBlockInterval is set as the inserted value', async () => {
-            expect(await this.blockController.childBlockInterval()).to.be.bignumber.equal(new BN(this.childBlockInterval));
+            expect(await this.blockController.childBlockInterval())
+                .to.be.bignumber.equal(new BN(this.childBlockInterval));
         });
     });
 
@@ -63,8 +64,8 @@ contract('BlockController', ([operator, other]) => {
 
         it('reverts when not called by operator', async () => {
             await expectRevert(
-                this.blockController.submitBlock(this.dummyBlockHash, {from: other}),
-                "Not being called by operator"
+                this.blockController.submitBlock(this.dummyBlockHash, { from: other }),
+                'Not being called by operator',
             );
         });
     });
@@ -72,7 +73,7 @@ contract('BlockController', ([operator, other]) => {
     describe('submitDepositBlock', () => {
         it('saves the deposit block root to contract', async () => {
             await this.dummyVault.submitDepositBlock(this.dummyBlockHash);
-            
+
             const firstDepositBlockNum = 1;
             const block = await this.blockController.blocks(firstDepositBlockNum);
             expect(block.root).to.equal(this.dummyBlockHash);
@@ -82,34 +83,35 @@ contract('BlockController', ([operator, other]) => {
             const nextDepositBlockBeforeSubmission = await this.blockController.nextDepositBlock();
 
             await this.dummyVault.submitDepositBlock(this.dummyBlockHash);
-            
-            expect(await this.blockController.nextDepositBlock()).to.be.bignumber.equal(nextDepositBlockBeforeSubmission.add(new BN(1)));
+
+            expect(await this.blockController.nextDepositBlock())
+                .to.be.bignumber.equal(nextDepositBlockBeforeSubmission.add(new BN(1)));
         });
 
         it('does not change nextChildBlock', async () => {
             const nextChildBlockBeforeSubmission = await this.blockController.nextChildBlock();
 
             await this.dummyVault.submitDepositBlock(this.dummyBlockHash);
-            
+
             expect(await this.blockController.nextChildBlock()).to.be.bignumber.equal(nextChildBlockBeforeSubmission);
         });
 
         it('reverts when exceed max deposit amount (childBlockInterval) between two child chain blocks', async () => {
             const promises = Array(this.childBlockInterval - 1).fill().map(
-                () => this.dummyVault.submitDepositBlock(this.dummyBlockHash)
+                () => this.dummyVault.submitDepositBlock(this.dummyBlockHash),
             );
             await Promise.all(promises);
 
             await expectRevert(
                 this.dummyVault.submitDepositBlock(this.dummyBlockHash),
-                "Exceed limit of deposits per child block interval"
+                'Exceed limit of deposits per child block interval',
             );
         });
 
         it('reverts when not called by registered vault', async () => {
             await expectRevert(
                 this.blockController.submitDepositBlock(this.dummyBlockHash),
-                "Not being called by registered vaults"
+                'Not being called by registered vaults',
             );
         });
     });

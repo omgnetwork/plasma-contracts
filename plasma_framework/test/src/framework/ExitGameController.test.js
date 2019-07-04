@@ -1,17 +1,13 @@
 const PriorityQueue = artifacts.require('PriorityQueue');
-const PriorityQueueLib = artifacts.require('PriorityQueueLib');
 const ExitGameController = artifacts.require('ExitGameController');
 const DummyExitGame = artifacts.require('DummyExitGame');
 
-const { BN, constants, expectEvent, expectRevert } = require('openzeppelin-test-helpers');
+const {
+    BN, constants, expectEvent, expectRevert,
+} = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
 contract('ExitGameController', () => {
-    before(async () => {
-        const priorityQueueLib = await PriorityQueueLib.new();
-        await ExitGameController.link("PriorityQueueLib", priorityQueueLib.address);
-    });
-
     beforeEach(async () => {
         this.controller = await ExitGameController.new();
         this.dummyExitGame = await DummyExitGame.new();
@@ -68,7 +64,7 @@ contract('ExitGameController', () => {
             await this.controller.addToken(this.dummyToken);
             await expectRevert(
                 this.controller.addToken(this.dummyToken),
-                "Such token has already been added"
+                'Such token has already been added',
             );
         });
 
@@ -86,7 +82,7 @@ contract('ExitGameController', () => {
     });
 
     describe('enqueue', () => {
-        beforeEach(async() => {
+        beforeEach(async () => {
             this.dummyExit = {
                 exitProcessor: this.dummyExitGame.address,
                 exitableAt: 1,
@@ -98,7 +94,7 @@ contract('ExitGameController', () => {
         it('rejects when not called from exit game contract', async () => {
             await expectRevert(
                 this.controller.enqueue(0, constants.ZERO_ADDRESS, this.dummyExit),
-                "Not being called by registered exit game contract"
+                'Not being called by registered exit game contract',
             );
         });
 
@@ -106,7 +102,7 @@ contract('ExitGameController', () => {
             const fakeNonAddedTokenAddress = (await DummyExitGame.new()).address;
             await expectRevert(
                 this.dummyExitGame.enqueue(0, fakeNonAddedTokenAddress, this.dummyExit),
-                "Such token has not been added to the plasma framework yet"
+                'Such token has not been added to the plasma framework yet',
             );
         });
 
@@ -121,7 +117,7 @@ contract('ExitGameController', () => {
 
         it('inserts the new unique priority to the queue', async () => {
             await this.dummyExitGame.enqueue(0, this.dummyToken, this.dummyExit);
-            
+
             const priorityQueueAddress = await this.controller.exitsQueues(this.dummyToken);
             const priorityQueue = await PriorityQueue.at(priorityQueueAddress);
             const queueMin = await priorityQueue.getMin();
@@ -133,7 +129,7 @@ contract('ExitGameController', () => {
 
         it('saves the exit data to map', async () => {
             await this.dummyExitGame.enqueue(0, this.dummyToken, this.dummyExit);
-            
+
             const uniquePriority = await this.dummyExitGame.uniquePriorityFromEnqueue();
             const exit = await this.controller.exits(uniquePriority);
 
@@ -142,13 +138,13 @@ contract('ExitGameController', () => {
             expect(exit.exitId).to.be.bignumber.equal(new BN(this.dummyExit.exitId));
         });
 
-        it('can enqueue with the same exit priority multiple times', async ()=> {
+        it('can enqueue with the same exit priority multiple times', async () => {
             const exitPriority = 1;
             const dummyExit2 = {
                 exitProcessor: this.dummyExitGame.address,
                 exitableAt: 1,
                 exitId: 456,
-            }
+            };
             await this.dummyExitGame.enqueue(exitPriority, this.dummyToken, this.dummyExit);
             await this.dummyExitGame.enqueue(exitPriority, this.dummyToken, dummyExit2);
 
@@ -172,14 +168,14 @@ contract('ExitGameController', () => {
             const fakeNonAddedTokenAddress = (await DummyExitGame.new()).address;
             await expectRevert(
                 this.controller.processExits(fakeNonAddedTokenAddress, 0, 1),
-                "Such token has not be added to the plasma framework yet"
+                'Such token has not be added to the plasma framework yet',
             );
         });
 
         it('rejects when the exit queue is empty', async () => {
             await expectRevert(
                 this.controller.processExits(this.dummyToken, 0, 1),
-                "Exit queue is empty"
+                'Exit queue is empty',
             );
         });
 
@@ -189,7 +185,7 @@ contract('ExitGameController', () => {
             const nonExistingUniqeuePriority = 123;
             await expectRevert(
                 this.controller.processExits(this.dummyToken, nonExistingUniqeuePriority, 1),
-                "Top unique priority of the queue is not the same as the specified one"
+                'Top unique priority of the queue is not the same as the specified one',
             );
         });
 
@@ -199,7 +195,7 @@ contract('ExitGameController', () => {
             const tx = await this.controller.processExits(this.dummyToken, 0, 1);
             await expectEvent.inLogs(tx.logs, 'ProcessedExitsNum', {
                 processedNum: new BN(1),
-                token: this.dummyToken
+                token: this.dummyToken,
             });
         });
 
@@ -210,7 +206,7 @@ contract('ExitGameController', () => {
             const tx = await this.controller.processExits(this.dummyToken, uniquePriority, 1);
             await expectEvent.inLogs(tx.logs, 'ProcessedExitsNum', {
                 processedNum: new BN(1),
-                token: this.dummyToken
+                token: this.dummyToken,
             });
         });
 
@@ -233,10 +229,10 @@ contract('ExitGameController', () => {
             const { receipt } = await this.controller.processExits(this.dummyToken, 0, 1);
 
             await expectEvent.inTransaction(
-                receipt.transactionHash, 
-                DummyExitGame, 
-                'ExitFinalizedFromDummyExitGame', 
-                { exitId: new BN(this.dummyExit.exitId) }
+                receipt.transactionHash,
+                DummyExitGame,
+                'ExitFinalizedFromDummyExitGame',
+                { exitId: new BN(this.dummyExit.exitId) },
             );
         });
 
@@ -260,13 +256,13 @@ contract('ExitGameController', () => {
             };
             await this.dummyExitGame.enqueue(0, this.dummyToken, this.dummyExit);
             await this.dummyExitGame.enqueue(0, this.dummyToken, dummyExit2);
-            
+
             const maxExitsToProcess = 1;
             const tx = await this.controller.processExits(this.dummyToken, 0, maxExitsToProcess);
 
             await expectEvent.inLogs(tx.logs, 'ProcessedExitsNum', {
                 processedNum: new BN(maxExitsToProcess),
-                token: this.dummyToken
+                token: this.dummyToken,
             });
         });
 
@@ -283,20 +279,20 @@ contract('ExitGameController', () => {
 
             await expectEvent.inLogs(tx.logs, 'ProcessedExitsNum', {
                 processedNum: new BN(0),
-                token: this.dummyToken
+                token: this.dummyToken,
             });
         });
 
         it('stops to process when queue becomes empty', async () => {
             await this.dummyExitGame.enqueue(0, this.dummyToken, this.dummyExit);
-            
+
             const queueSize = 1;
             const maxExitsToProcess = 2;
             const tx = await this.controller.processExits(this.dummyToken, 0, maxExitsToProcess);
 
             await expectEvent.inLogs(tx.logs, 'ProcessedExitsNum', {
                 processedNum: new BN(queueSize),
-                token: this.dummyToken
+                token: this.dummyToken,
             });
         });
     });

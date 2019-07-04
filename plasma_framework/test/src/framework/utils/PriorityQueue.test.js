@@ -1,17 +1,11 @@
 const PriorityQueue = artifacts.require('PriorityQueue');
-const PriorityQueueLib = artifacts.require('PriorityQueueLib');
 
-const { BN, constants, expectEvent, expectRevert } = require('openzeppelin-test-helpers');
+const { BN, expectRevert } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
-contract('PriorityQueue', ([operator]) => {
-    before(async () => {
-        const priorityQueueLib = await PriorityQueueLib.new();
-        await PriorityQueue.link("PriorityQueueLib", priorityQueueLib.address);
-    });
-
+contract('PriorityQueue', ([_, nonOwner]) => {
     beforeEach(async () => {
-        this.priorityQueue = await PriorityQueue.new(operator);
+        this.priorityQueue = await PriorityQueue.new();
     });
 
     describe('getMin', () => {
@@ -23,7 +17,7 @@ contract('PriorityQueue', ([operator]) => {
         });
 
         it('fails when empty', async () => {
-            errorMsg = 'Returned error: VM Exception while processing transaction: invalid opcode';
+            const errorMsg = 'Returned error: VM Exception while processing transaction: invalid opcode';
             await this.priorityQueue.getMin()
                 .catch(err => expect(err.message).to.equal(errorMsg));
         });
@@ -79,12 +73,19 @@ contract('PriorityQueue', ([operator]) => {
             expect(await this.priorityQueue.currentSize())
                 .to.be.bignumber.equal(new BN(2));
         });
+
+        it('should fail when not inserted by the owner', async () => {
+            await expectRevert(
+                this.priorityQueue.insert(100, { from: nonOwner }),
+                'Ownable: caller is not the owner.',
+            );
+        });
     });
 
     describe('delMin', () => {
         it('can delete when single value in queue', async () => {
             await this.priorityQueue.insert(2);
-            
+
             await this.priorityQueue.delMin();
             expect(await this.priorityQueue.currentSize())
                 .to.be.bignumber.equal(new BN(0));
@@ -93,7 +94,7 @@ contract('PriorityQueue', ([operator]) => {
         it('can delete when multiple values in queue', async () => {
             await this.priorityQueue.insert(2);
             await this.priorityQueue.insert(5);
-            
+
             await this.priorityQueue.delMin();
             expect(await this.priorityQueue.getMin())
                 .to.be.bignumber.equal(new BN(5));
@@ -104,12 +105,19 @@ contract('PriorityQueue', ([operator]) => {
         it('can delete all', async () => {
             await this.priorityQueue.insert(2);
             await this.priorityQueue.insert(5);
-            
+
             await this.priorityQueue.delMin();
             await this.priorityQueue.delMin();
 
             expect(await this.priorityQueue.currentSize())
                 .to.be.bignumber.equal(new BN(0));
+        });
+
+        it('should fail when not deleted by the owner', async () => {
+            await expectRevert(
+                this.priorityQueue.delMin({ from: nonOwner }),
+                'Ownable: caller is not the owner.',
+            );
         });
     });
 });
