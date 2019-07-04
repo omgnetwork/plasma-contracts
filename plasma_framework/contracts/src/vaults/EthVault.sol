@@ -1,37 +1,29 @@
 pragma solidity ^0.5.0;
 
 import "./Vault.sol";
-import {PaymentTransactionModel as DepositTx} from "../transactions/PaymentTransactionModel.sol";
+import "./predicates/IEthDepositVerifier.sol";
 
 contract EthVault is Vault {
-    uint8 constant DEPOSIT_TX_TYPE = 1;
+    IEthDepositVerifier private _depositVerifier;
 
     constructor(address _blockController) Vault(_blockController) public {}
+
+    /**
+     * @notice Set the deposit verifier contract. This can be only called by the operator.
+     * @param _contract address of the verifier contract.
+     */
+    function setDepositVerifier(address _contract) public onlyOperator {
+        _depositVerifier = IEthDepositVerifier(_contract);
+    }
 
     /**
      * @notice Allows a user to submit a deposit.
      * @param _depositTx RLP encoded transaction to act as the deposit.
      */
     function deposit(bytes calldata _depositTx) external payable {
-        DepositTx.Transaction memory decodedTx = DepositTx.decode(_depositTx);
-
-        _validateDepositFormat(decodedTx);
+        _depositVerifier.verify(_depositTx, msg.value, msg.sender);
 
         super._submitDepositBlock(_depositTx);
-    }
-
-    function _validateDepositFormat(DepositTx.Transaction memory _deposit) private {
-        require(_deposit.txType == DEPOSIT_TX_TYPE, "Invalid transaction type");
-
-        require(_deposit.inputs.length == 1, "Deposit should have exactly one input");
-        require(_deposit.inputs[0] == bytes32(0), "Deposit input must be bytes32 of 0");
-
-        require(_deposit.outputs.length == 1, "Must have only one output");
-        require(_deposit.outputs[0].amount == msg.value, "Deposited value does not match sent amount");
-        require(_deposit.outputs[0].token == address(0), "Output does not have correct currency (ETH)");
-
-        address depositorsAddress = address(uint160(uint256(_deposit.outputs[0].outputGuard)));
-        require(depositorsAddress == msg.sender, "Depositor's address does not match sender's address");
     }
 
     /**
