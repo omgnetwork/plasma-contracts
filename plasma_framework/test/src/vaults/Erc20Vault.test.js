@@ -135,7 +135,7 @@ contract('Erc20Vault', (accounts) => {
             const deposit = Testlang.deposit(DEPOSIT_VALUE, alice, this.badErc20.address);
             await this.erc20Vault.deposit(deposit, { from: alice });
             const postDepositBlockNumber = (await this.blockController.nextDepositBlock()).toNumber();
-            
+
             expect(postDepositBlockNumber).to.be.equal(preDepositBlockNumber + 1);
         });
     });
