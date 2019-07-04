@@ -1,19 +1,12 @@
 pragma solidity ^0.5.0;
 
 import "./Vault.sol";
-import "./ZeroHashesProvider.sol";
-import "../framework/BlockController.sol";
 import {PaymentTransactionModel as DepositTx} from "../transactions/PaymentTransactionModel.sol";
 
 contract EthVault is Vault {
     uint8 constant DEPOSIT_TX_TYPE = 1;
 
-    bytes32[16] zeroHashes;
-
-    constructor(address _blockController) public {
-        blockController = BlockController(_blockController);
-        zeroHashes = ZeroHashesProvider.getZeroHashes();
-    }
+    constructor(address _blockController) Vault(_blockController) public {}
 
     /**
      * @notice Allows a user to submit a deposit.
@@ -24,12 +17,7 @@ contract EthVault is Vault {
 
         _validateDepositFormat(decodedTx);
 
-        bytes32 root = keccak256(_depositTx);
-        for (uint i = 0; i < 16; i++) {
-            root = keccak256(abi.encodePacked(root, zeroHashes[i]));
-        }
-
-        blockController.submitDepositBlock(root);
+        super._submitDepositBlock(_depositTx);
     }
 
     function _validateDepositFormat(DepositTx.Transaction memory _deposit) private {
