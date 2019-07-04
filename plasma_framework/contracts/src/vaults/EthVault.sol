@@ -20,7 +20,7 @@ contract EthVault is Vault {
         super._submitDepositBlock(_depositTx);
     }
 
-    function _validateDepositFormat(DepositTx.Transaction memory _deposit) internal view {
+    function _validateDepositFormat(DepositTx.Transaction memory _deposit) private {
         require(_deposit.txType == DEPOSIT_TX_TYPE, "Invalid transaction type");
 
         require(_deposit.inputs.length == 1, "Deposit should have exactly one input");
