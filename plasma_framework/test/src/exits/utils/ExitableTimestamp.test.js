@@ -3,11 +3,6 @@ const ExitableTimestamp = artifacts.require('ExitableTimestampWrapper');
 const { BN, time } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-
 contract('ExitableTimestamp', () => {
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
 
@@ -18,7 +13,6 @@ contract('ExitableTimestamp', () => {
     describe('calculate', () => {
         it('should get the correct exit timestamp for deposit tx', async () => {
             const latestTimestamp = await time.latest();
-            await sleep(2000);
             expect(await this.contract.calculate(latestTimestamp, MIN_EXIT_PERIOD, true))
                 .to.be.bignumber.equal(latestTimestamp.add(new BN(MIN_EXIT_PERIOD)));
         });
