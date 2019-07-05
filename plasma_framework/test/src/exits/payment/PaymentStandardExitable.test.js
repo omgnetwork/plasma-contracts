@@ -5,7 +5,9 @@ const ExitId = artifacts.require('ExitIdWrapper');
 const IsDeposit = artifacts.require('IsDepositWrapper');
 const ExitableTimestamp = artifacts.require('ExitableTimestampWrapper');
 
-const { BN, constants, expectRevert, time } = require('openzeppelin-test-helpers');
+const {
+    BN, constants, expectRevert, time,
+} = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
 const { MerkleTree } = require('../../../helpers/merkle.js');

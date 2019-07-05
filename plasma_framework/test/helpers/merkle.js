@@ -19,7 +19,7 @@ class MerkleTree {
             this.height = height;
         } else {
             throw new Error(
-                `height should be at least ${minHeightForLeaves} for the list of leaves`
+                `height should be at least ${minHeightForLeaves} for the list of leaves`,
             );
         }
 
