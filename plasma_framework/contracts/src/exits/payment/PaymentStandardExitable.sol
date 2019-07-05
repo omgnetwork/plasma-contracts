@@ -115,25 +115,24 @@ contract PaymentStandardExitable is OnlyWithValue {
         private
         view
     {
+        require(data.output.amount > 0, "Should not exit with amount 0");
+        require(data.output.owner() == msg.sender, "Only output owner can start an exit");
+        require(exits[data.exitId].exitable == false, "Exit already started");
         bytes32 leafData = keccak256(data.rlpTx);
         require(
             Merkle.checkMembership(leafData, data.utxoPos.txIndex(), data.txBlockRoot, data.txInclusionProof),
             "transaction inclusion proof failed"
         );
-        require(data.output.amount > 0, "Should not exit with amount 0");
-        require(data.output.owner() == msg.sender, "Only output owner can start an exit");
-        require(exits[data.exitId].exitable == false, "Exit already started");
     }
 
     function saveStandardExitData(StartStandardExitData memory data) private {
-        PaymentExitDataModel.StandardExit memory exitData = PaymentExitDataModel.StandardExit({
+        exits[data.exitId] = PaymentExitDataModel.StandardExit({
             exitable: true,
             position: uint192(data.utxoPos.value),
             token: data.output.token,
             exitTarget: data.output.owner(),
             amount: data.output.amount
         });
-        exits[data.exitId] = exitData;
     }
 
     function enqueueStandardExit(StartStandardExitData memory data) private {
