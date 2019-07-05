@@ -11,7 +11,7 @@ contract('TxPosLib', () => {
         this.txIndex = 123;
 
         const BLOCK_OFFSET_OF_TX_POS = 1000000000 / 10000;
-        this.txPos = this.blockNumber * BLOCK_OFFSET_OF_TX_POS + this.txIndex ;
+        this.txPos = this.blockNumber * BLOCK_OFFSET_OF_TX_POS + this.txIndex;
     });
 
     describe('blockNum', () => {
