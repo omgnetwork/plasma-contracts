@@ -1,7 +1,9 @@
 const VaultRegistry = artifacts.require('VaultRegistryMock');
 const DummyVault = artifacts.require('DummyVault');
 
-const { BN, expectEvent, expectRevert } = require('openzeppelin-test-helpers');
+const {
+    BN, constants, expectEvent, expectRevert,
+} = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
 contract('VaultRegistry', ([_, other]) => {
@@ -71,6 +73,20 @@ contract('VaultRegistry', ([_, other]) => {
             await expectRevert(
                 this.registry.registerVault(1, this.dummyVault.address, { from: other }),
                 'Not being called by operator',
+            );
+        });
+
+        it('rejects when trying to register with vault id 0', async () => {
+            await expectRevert(
+                this.registry.registerVault(0, this.dummyVault.address),
+                'should not register with vault id 0',
+            );
+        });
+
+        it('rejects when trying to register with an empty vault address', async () => {
+            await expectRevert(
+                this.registry.registerVault(1, constants.ZERO_ADDRESS),
+                'should not register an empty vault address',
             );
         });
 
