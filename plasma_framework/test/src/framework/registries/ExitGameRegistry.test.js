@@ -1,7 +1,9 @@
 const ExitGameRegistry = artifacts.require('ExitGameRegistryMock');
 const DummyExitGame = artifacts.require('DummyExitGame');
 
-const { BN, expectEvent, expectRevert } = require('openzeppelin-test-helpers');
+const {
+    BN, constants, expectEvent, expectRevert,
+} = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
 contract('ExitGameRegistry', ([_, other]) => {
@@ -71,6 +73,20 @@ contract('ExitGameRegistry', ([_, other]) => {
             await expectRevert(
                 this.registry.registerExitGame(1, this.dummyExitGame.address, { from: other }),
                 'Not being called by operator',
+            );
+        });
+
+        it('rejects when trying to register with tx type 0', async () => {
+            await expectRevert(
+                this.registry.registerExitGame(0, this.dummyExitGame.address),
+                'should not register with tx type 0',
+            );
+        });
+
+        it('rejects when trying to register with empty address', async () => {
+            await expectRevert(
+                this.registry.registerExitGame(1, constants.ZERO_ADDRESS),
+                'should not register with an empty exit game address',
             );
         });
 

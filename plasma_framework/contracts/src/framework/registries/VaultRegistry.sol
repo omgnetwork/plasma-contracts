@@ -17,6 +17,8 @@ contract VaultRegistry is Operated {
      * @param _vaultAddress address of the vault contract.
      */
     function registerVault(uint256 _vaultId, address _vaultAddress) public onlyOperator {
+        require(_vaultId != 0, "should not register with vault id 0");
+        require(_vaultAddress != address(0), "should not register an empty vault address");
         require(_vaults[_vaultId] == address(0), "The vault id is already registered");
         require(_vaultToId[_vaultAddress] == 0, "The vault contract is already registered");
 

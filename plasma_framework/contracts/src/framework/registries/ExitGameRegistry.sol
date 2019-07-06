@@ -17,6 +17,8 @@ contract ExitGameRegistry is Operated {
      * @param _contract Address of the exit game contract.
      */
     function registerExitGame(uint256 _txType, address _contract) public onlyOperator {
+        require(_txType != 0, "should not register with tx type 0");
+        require(_contract != address(0), "should not register with an empty exit game address");
         require(_exitGames[_txType] == address(0), "The tx type is already registered");
         require(_exitGameToTxType[_contract] == 0, "The exit game contract is already registered");
 
