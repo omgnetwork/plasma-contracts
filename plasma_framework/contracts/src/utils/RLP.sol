@@ -69,9 +69,9 @@ library RLP {
         RLPItem memory item = toRLPItem(self);
         if (strict) {
             uint len = self.length;
-            require(_payloadOffset(item) <= len);
-            require(_itemLength(item._unsafe_memPtr) == len);
-            require(_validate(item));
+            require(_payloadOffset(item) <= len, "Invalid RLP encoding - Payload offset to big");
+            require(_itemLength(item._unsafe_memPtr) == len, "Invalid RLP encoding - Implied item length does not match encoded length");
+            require(_validate(item), "Invalid RLP encoding");
         }
         return item;
     }
