@@ -1,6 +1,13 @@
 pragma solidity ^0.5.0;
 
+import '../../transactions/outputs/PaymentOutputModel.sol';
+import '../../transactions/PaymentTransactionModel.sol';
+
 library PaymentExitDataModel {
+
+    uint8 constant public MAX_INPUT_NUM = 4;
+    uint8 constant public MAX_OUTPUT_NUM = 4;
+
     struct StandardExit {
         bool exitable;
         uint192 utxoPos;
@@ -12,5 +19,15 @@ library PaymentExitDataModel {
         address token;
         address payable exitTarget;
         uint256 amount;
+    }
+
+    struct InFlightExit {
+        uint256 exitStartTimestamp;
+        uint256 exitPriority;
+        uint256 exitMap;
+        PaymentOutputModel.Output[MAX_INPUT_NUM] inputs;
+        PaymentOutputModel.Output[MAX_OUTPUT_NUM] outputs;
+        address payable bondOwner;
+        uint256 oldestCompetitor;
     }
 }

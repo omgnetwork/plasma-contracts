@@ -34,7 +34,7 @@ contract PaymentStandardExitable is
     using IsDeposit for IsDeposit.Predicate;
     using ExitableTimestamp for ExitableTimestamp.Calculator;
 
-    uint256 public constant standardExitBond = 31415926535 wei;
+    uint256 public constant STANDARD_EXIT_BOND = 31415926535 wei;
     mapping (uint192 => PaymentExitDataModel.StandardExit) public exits;
 
     PlasmaFramework private framework;
@@ -141,7 +141,7 @@ contract PaymentStandardExitable is
     )
         external
         payable
-        onlyWithValue(standardExitBond)
+        onlyWithValue(STANDARD_EXIT_BOND)
     {
         StartStandardExitArgs memory args = StartStandardExitArgs({
             utxoPos: _utxoPos,
@@ -178,7 +178,7 @@ contract PaymentStandardExitable is
         verifySpendingCondition(data);
 
         delete exits[_args.exitId];
-        msg.sender.transfer(standardExitBond);
+        msg.sender.transfer(STANDARD_EXIT_BOND);
 
         emit ExitChallenged(data.exitData.utxoPos);
     }
@@ -198,7 +198,7 @@ contract PaymentStandardExitable is
 
         framework.flagOutputSpent(exit.outputId);
 
-        exit.exitTarget.transfer(standardExitBond);
+        exit.exitTarget.transfer(STANDARD_EXIT_BOND);
         if (exit.token == address(0)) {
             ethVault.withdraw(exit.exitTarget, exit.amount);
         } else {

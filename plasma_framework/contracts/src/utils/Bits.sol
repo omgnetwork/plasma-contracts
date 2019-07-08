@@ -1,6 +1,5 @@
 pragma solidity ^0.5.0;
 
-
 /**
  * @title Bits
  * @dev Operations on individual bits of a word.
@@ -11,7 +10,6 @@ library Bits {
      */
 
     uint constant internal ONE = uint(1);
-
 
     /*
      * Internal functions

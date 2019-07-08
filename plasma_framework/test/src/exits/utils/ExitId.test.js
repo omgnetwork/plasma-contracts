@@ -73,4 +73,15 @@ contract('ExitId', () => {
                 .to.be.bignumber.equal(new BN('703552653258022238271278712366387034216770541439'));
         });
     });
+
+    describe('getInFlightExitId', () => {
+        it('should get correct in-flight exit id', async () => {
+            const output = new PaymentTransactionOutput(100, OUTPUT_GUARD, constants.ZERO_ADDRESS);
+            const transaction = new PaymentTransaction(1, [1000000000], [output], EMPTY_BYTES32);
+            const transactionBytes = web3.utils.bytesToHex(transaction.rlpEncoded());
+
+            expect(await this.contract.getInFlightExitId(transactionBytes))
+                .to.be.bignumber.equal(new BN('5708990770823858663248091901637071325779231527'));
+        });
+    });
 });

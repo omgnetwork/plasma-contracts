@@ -48,6 +48,10 @@ class PaymentTransaction {
     static formatForRlpEncoding(items) {
         return items.map(item => item.formatForRlpEncoding());
     }
+
+    isDeposit() {
+        return this.inputs === [0];
+    }
 }
 
 class PlasmaDepositTransaction extends PaymentTransaction {

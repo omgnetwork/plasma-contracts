@@ -1,5 +1,6 @@
 pragma solidity ^0.5.0;
 
+import "../../utils/Bits.sol";
 import "../../utils/UtxoPosLib.sol";
 import "../../utils/Bits.sol";
 
@@ -38,6 +39,15 @@ library ExitId {
         }
 
         return _computeStandardExitId(keccak256(_txBytes), _utxoPos.outputIndex());
+    }
+
+    /**
+    * @notice Given transaction bytes returns in-flight exit ID.
+    * @param _txBytes Transaction bytes.
+    * @return Unique in-flight exit id.
+    */
+    function getInFlightExitId(bytes memory _txBytes) internal pure returns (uint192) {
+        return uint192(Bits.setBit(uint256(keccak256(_txBytes)) >> 151, 152));
     }
 
     /**
