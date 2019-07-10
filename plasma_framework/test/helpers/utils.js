@@ -13,6 +13,11 @@ function buildOutputGuard(outputType, outputGuardData) {
     return `0x${paddingZeros}${rightMostBytes20}`;
 }
 
+function addressToOutputGuard(address) {
+    const paddingZeros = Array(24).fill(0).join('');
+    return `0x${paddingZeros}${address.substring(2)}`;
+}
+
 function computeOutputId(isDeposit, txBytes, outputIndex, utxoPos) {
     if (isDeposit) {
         return computeDepositOutputId(txBytes, outputIndex, utxoPos);
@@ -35,8 +40,11 @@ function computeNormalOutputId(txBytes, outputIndex) {
     );
 }
 
-module.exports.spentOnGas = spentOnGas;
-module.exports.buildOutputGuard = buildOutputGuard;
-module.exports.computeOutputId = computeOutputId;
-module.exports.computeDepositOutputId = computeDepositOutputId;
-module.exports.computeNormalOutputId = computeNormalOutputId;
+module.exports = {
+    spentOnGas,
+    buildOutputGuard,
+    computeOutputId,
+    computeDepositOutputId,
+    computeNormalOutputId,
+    addressToOutputGuard,
+};

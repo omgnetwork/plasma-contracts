@@ -1,6 +1,7 @@
 pragma solidity ^0.5.0;
 pragma experimental ABIEncoderV2;
 
+import "../eip712Libs/PaymentEip712Lib.sol";
 import "../../utils/RLP.sol";
 import "../../utils/AddressPayable.sol";
 

@@ -1,6 +1,6 @@
 const rlp = require('rlp');
 
-const NULL_DATA = Buffer.alloc(32, 0);
+const EMPTY_BYTES32 = `0x${Array(64).fill(0).join('')}`;
 const TransactionTypes = {
     PLASMA_DEPOSIT: 1,
 };
@@ -16,6 +16,10 @@ class PaymentTransactionOutput {
         return [this.amount, this.outputGuard, this.token];
     }
 
+    rlpEncoded() {
+        return rlp.encode(this.formatForRlpEncoding());
+    }
+
     static parseFromContractOutput(output) {
         const amount = parseInt(output.amount, 10);
         const outputGuard = web3.eth.abi.decodeParameter('bytes32', output.outputGuard);
@@ -24,7 +28,7 @@ class PaymentTransactionOutput {
 }
 
 class PaymentTransaction {
-    constructor(transactionType, inputs, outputs, metaData = NULL_DATA) {
+    constructor(transactionType, inputs, outputs, metaData = EMPTY_BYTES32) {
         this.transactionType = transactionType;
         this.inputs = inputs;
         this.outputs = outputs;
@@ -47,11 +51,13 @@ class PaymentTransaction {
 }
 
 class PlasmaDepositTransaction extends PaymentTransaction {
-    constructor(output, metaData = NULL_DATA) {
-        super(TransactionTypes.PLASMA_DEPOSIT, [NULL_DATA], [output], metaData);
+    constructor(output, metaData = EMPTY_BYTES32) {
+        super(TransactionTypes.PLASMA_DEPOSIT, [0], [output], metaData);
     }
 }
 
-module.exports.PaymentTransaction = PaymentTransaction;
-module.exports.PlasmaDepositTransaction = PlasmaDepositTransaction;
-module.exports.PaymentTransactionOutput = PaymentTransactionOutput;
+module.exports = {
+    PaymentTransaction,
+    PlasmaDepositTransaction,
+    PaymentTransactionOutput,
+};
