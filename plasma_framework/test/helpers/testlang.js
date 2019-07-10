@@ -4,7 +4,7 @@ const { PaymentTransactionOutput, PlasmaDepositTransaction } = require('./transa
 function deposit(amount, owner, tokenAddress = constants.ZERO_ADDRESS) {
     const output = new PaymentTransactionOutput(amount, owner, tokenAddress);
     const depositTx = new PlasmaDepositTransaction(output);
-    return depositTx.rlpEncoded();
+    return web3.utils.bytesToHex(depositTx.rlpEncoded());
 }
 
 function buildUtxoPos(blockNum, txIndex, outputIndex) {
