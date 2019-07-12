@@ -28,8 +28,8 @@ library ExitId {
         returns (uint192)
     {
         if (_isDeposit) {
-            bytes32 hash = keccak256(abi.encodePacked(_txBytes, _utxoPos.value));
-            return _computeStandardExitId(hash, _utxoPos.outputIndex());
+            bytes32 hashData = keccak256(abi.encodePacked(_txBytes, _utxoPos.value));
+            return _computeStandardExitId(hashData, _utxoPos.outputIndex());
         }
 
         return _computeStandardExitId(keccak256(_txBytes), _utxoPos.outputIndex());
