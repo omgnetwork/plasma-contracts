@@ -1,17 +1,15 @@
 const { constants } = require('openzeppelin-test-helpers');
 const { PaymentTransactionOutput, PlasmaDepositTransaction } = require('./transaction.js');
+const { addressToOutputGuard } = require('./utils.js');
 
 function deposit(amount, owner, tokenAddress = constants.ZERO_ADDRESS) {
-    const output = new PaymentTransactionOutput(amount, owner, tokenAddress);
+    // if passed in with address format, auto transform to outputGuard format
+    const outputGuard = owner.length < 66 ? addressToOutputGuard(owner) : owner;
+    const output = new PaymentTransactionOutput(amount, outputGuard, tokenAddress);
     const depositTx = new PlasmaDepositTransaction(output);
     return web3.utils.bytesToHex(depositTx.rlpEncoded());
 }
 
-function buildUtxoPos(blockNum, txIndex, outputIndex) {
-    const BLOCK_OFFSET = 1000000000;
-    const TX_OFFSET = 10000;
-    return blockNum * BLOCK_OFFSET + txIndex * TX_OFFSET + outputIndex;
-}
-
-module.exports.deposit = deposit;
-module.exports.buildUtxoPos = buildUtxoPos;
+module.exports = {
+    deposit,
+};
