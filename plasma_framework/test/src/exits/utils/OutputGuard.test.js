@@ -3,7 +3,7 @@ const OutputGuard = artifacts.require('OutputGuardWrapper');
 const { expect } = require('chai');
 const { buildOutputGuard } = require('../../../helpers/utils.js');
 
-contract('OutputId', () => {
+contract('OutputGuard', () => {
     const EMPTY_OUTPUT_GUARD = `0x${Array(64).fill(1).join('')}`;
 
     before('setup', async () => {
