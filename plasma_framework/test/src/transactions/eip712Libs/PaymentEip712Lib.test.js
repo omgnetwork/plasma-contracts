@@ -42,7 +42,7 @@ contract('PaymentEip712Lib', ([alice]) => {
 
         it('should hash transaction correctly given transaction has empty metaData', async () => {
             const output = new PaymentTransactionOutput(100, OUTPUT_GUARD, constants.ZERO_ADDRESS);
-            const utxoPos = buildUtxoPos(10000, 0, 0);
+            const utxoPos = buildUtxoPos(10000, 123, 2);
             const tx = new PaymentTransaction(1, [utxoPos], [output]);
             const txBytes = web3.utils.bytesToHex(tx.rlpEncoded());
 

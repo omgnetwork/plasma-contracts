@@ -1,38 +1,66 @@
 const PaymentExitGame = artifacts.require('PaymentExitGame');
+const PaymentOutputToPaymentTxCondition = artifacts.require('PaymentOutputToPaymentTxCondition');
 const PlasmaFramework = artifacts.require('PlasmaFramework');
 const PriorityQueue = artifacts.require('PriorityQueue');
 const EthVault = artifacts.require('EthVault');
 const EthDepositVerifier = artifacts.require('EthDepositVerifier');
 const ExitId = artifacts.require('ExitIdWrapper');
+const OutputId = artifacts.require('OutputIdWrapper');
 
-const { BN, constants } = require('openzeppelin-test-helpers');
+const { BN, constants, expectEvent } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
 const { MerkleTree } = require('../../../helpers/merkle.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
+const { addressToOutputGuard, computeDepositOutputId } = require('../../../helpers/utils.js');
+const { sign } = require('../../../helpers/sign.js');
+const { hashTx } = require('../../../helpers/paymentEip712.js');
+const { buildUtxoPos } = require('../../../helpers/utxoPos.js');
 const Testlang = require('../../../helpers/testlang.js');
 
-contract('PaymentExitGame - End to End Tests', ([_, alice, bob]) => {
+contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
     const STANDARD_EXIT_BOND = 31415926535; // wei
     const ETH = constants.ZERO_ADDRESS;
     const DEPOSIT_VALUE = 1000000;
+    const OUTPUT_TYPE_ZERO = 0;
+    const EMPTY_BYTES = '0x';
+    const PAYMENT_TX_TYPE = 1;
+
+    const alicePrivateKey = '0x7151e5dab6f8e95b5436515b83f423c4df64fe4c6149f864daa209b26adb10ca';
+    let alice;
+
+    before(async () => {
+        const password = 'password1234';
+        alice = await web3.eth.personal.importRawKey(alicePrivateKey, password);
+        alice = web3.utils.toChecksumAddress(alice);
+        web3.eth.personal.unlockAccount(alice, password, 3600);
+        web3.eth.sendTransaction({ to: alice, from: richFather, value: web3.utils.toWei('1', 'ether') });
+
+        this.exitIdHelper = await ExitId.new();
+        this.outputIdHelper = await OutputId.new();
+    });
 
     const setupContracts = async () => {
         this.framework = await PlasmaFramework.new(MIN_EXIT_PERIOD);
         this.exitGame = await PaymentExitGame.new(this.framework.address);
-        this.ethVault = await EthVault.new(this.framework.address);
-        this.exitIdHelper = await ExitId.new();
 
+        this.toPaymentCondition = await PaymentOutputToPaymentTxCondition.new(this.framework.address);
+        await this.exitGame.registerSpendingCondition(
+            OUTPUT_TYPE_ZERO, PAYMENT_TX_TYPE, this.toPaymentCondition.address,
+        );
+
+        this.ethVault = await EthVault.new(this.framework.address);
         const depositVerifier = await EthDepositVerifier.new();
         await this.ethVault.setDepositVerifier(depositVerifier.address);
+
         await this.framework.registerVault(1, this.ethVault.address);
-        await this.framework.registerExitGame(1, this.exitGame.address);
+        await this.framework.registerExitGame(PAYMENT_TX_TYPE, this.exitGame.address);
     };
 
     const aliceDeposits = async () => {
         const depositBlockNum = (await this.framework.nextDepositBlock()).toNumber();
-        this.depositUtxoPos = Testlang.buildUtxoPos(depositBlockNum, 0, 0);
+        this.depositUtxoPos = buildUtxoPos(depositBlockNum, 0, 0);
         this.depositTx = Testlang.deposit(DEPOSIT_VALUE, alice);
         this.merkleTreeForDepositTx = new MerkleTree([this.depositTx], 16);
         this.merkleProofForDepositTx = this.merkleTreeForDepositTx.getInclusionProof(this.depositTx);
@@ -42,13 +70,11 @@ contract('PaymentExitGame - End to End Tests', ([_, alice, bob]) => {
 
     const aliceTransferToBob = async () => {
         const tranferTxBlockNum = (await this.framework.nextChildBlock()).toNumber();
-        this.transferUtxoPos = Testlang.buildUtxoPos(tranferTxBlockNum, 0, 0);
+        this.transferUtxoPos = buildUtxoPos(tranferTxBlockNum, 0, 0);
 
-        const output = new PaymentTransactionOutput(1000, bob, ETH);
-
-        // TODO: utxo_pos or output_id pending decision here: https://github.com/omisego/research/issues/93
-        // if it ends up differently should alter this function accordingly
-        this.transferTx = (new PaymentTransaction(1, [this.transferUtxoPos], [output])).rlpEncoded();
+        const output = new PaymentTransactionOutput(1000, addressToOutputGuard(bob), ETH);
+        this.transferTxObject = new PaymentTransaction(1, [this.depositUtxoPos], [output]);
+        this.transferTx = this.transferTxObject.rlpEncoded();
         this.merkleTreeForTransferTx = new MerkleTree([this.transferTx]);
         this.merkleProofForTransferTx = this.merkleTreeForTransferTx.getInclusionProof(this.transferTx);
 
@@ -64,7 +90,8 @@ contract('PaymentExitGame - End to End Tests', ([_, alice, bob]) => {
             describe('When alice starts standard exit on the deposit tx', () => {
                 beforeEach(async () => {
                     await this.exitGame.startStandardExit(
-                        this.depositUtxoPos, this.depositTx, this.merkleProofForDepositTx,
+                        this.depositUtxoPos, this.depositTx, OUTPUT_TYPE_ZERO,
+                        EMPTY_BYTES, this.merkleProofForDepositTx,
                         { from: alice, value: STANDARD_EXIT_BOND },
                     );
                 });
@@ -73,8 +100,18 @@ contract('PaymentExitGame - End to End Tests', ([_, alice, bob]) => {
                     const exitId = await this.exitIdHelper.getStandardExitId(true, this.depositTx, this.depositUtxoPos);
                     const standardExitData = await this.exitGame.exits(exitId);
 
+                    const isDeposit = true;
+                    const outputIndexForDeposit = 0;
+                    const outputId = await this.outputIdHelper.compute(
+                        isDeposit, this.depositTx, outputIndexForDeposit, this.depositUtxoPos,
+                    );
+                    const expectedOutputRelatedDataHash = web3.utils.soliditySha3(
+                        { t: 'uint256', v: this.depositUtxoPos }, { t: 'bytes32', v: outputId },
+                        { t: 'uint256', v: OUTPUT_TYPE_ZERO }, { t: 'bytes32', v: addressToOutputGuard(alice) },
+                    );
+
                     expect(standardExitData.exitable).to.be.true;
-                    expect(standardExitData.position).to.be.bignumber.equal(new BN(this.depositUtxoPos));
+                    expect(standardExitData.outputRelatedDataHash).to.equal(expectedOutputRelatedDataHash);
                     expect(standardExitData.token).to.equal(ETH);
                     expect(standardExitData.exitTarget).to.equal(alice);
                     expect(standardExitData.amount).to.be.bignumber.equal(new BN(DEPOSIT_VALUE));
@@ -100,7 +137,8 @@ contract('PaymentExitGame - End to End Tests', ([_, alice, bob]) => {
             describe('When bob tries to start the standard exit on the transfered tx', () => {
                 beforeEach(async () => {
                     await this.exitGame.startStandardExit(
-                        this.transferUtxoPos, this.transferTx, this.merkleProofForTransferTx,
+                        this.transferUtxoPos, this.transferTx, OUTPUT_TYPE_ZERO,
+                        EMPTY_BYTES, this.merkleProofForTransferTx,
                         { from: bob, value: STANDARD_EXIT_BOND },
                     );
                 });
@@ -124,21 +162,47 @@ contract('PaymentExitGame - End to End Tests', ([_, alice, bob]) => {
             describe('When alice tries to start the standard exit on the deposit tx', () => {
                 beforeEach(async () => {
                     await this.exitGame.startStandardExit(
-                        this.depositUtxoPos, this.depositTx, this.merkleProofForDepositTx,
+                        this.depositUtxoPos, this.depositTx, OUTPUT_TYPE_ZERO,
+                        EMPTY_BYTES, this.merkleProofForDepositTx,
                         { from: alice, value: STANDARD_EXIT_BOND },
+                    );
+                    this.exitId = await this.exitIdHelper.getStandardExitId(
+                        true, this.depositTx, this.depositUtxoPos,
                     );
                 });
 
                 it('should still be able to start standard exit even already spent', async () => {
-                    const exitId = await this.exitIdHelper.getStandardExitId(true, this.depositTx, this.depositUtxoPos);
-                    const standardExitData = await this.exitGame.exits(exitId);
+                    const standardExitData = await this.exitGame.exits(this.exitId);
                     expect(standardExitData.exitable).to.be.true;
                 });
 
                 describe('Then bob can challenge the standard exit spent', async () => {
-                    it('TODO: should challenge it successfully', async () => {
-                        // TODO: implement this!
-                        // this is to show case how we can do cool BDD style in E2E test and reuse setup
+                    beforeEach(async () => {
+                        const txHash = hashTx(this.transferTxObject, this.framework.address);
+                        const signature = sign(txHash, alicePrivateKey);
+
+                        const input = {
+                            exitId: this.exitId.toString(10),
+                            outputType: OUTPUT_TYPE_ZERO,
+                            outputUtxoPos: this.depositUtxoPos,
+                            outputId: computeDepositOutputId(this.depositTx, 0, this.depositUtxoPos),
+                            outputGuard: addressToOutputGuard(alice),
+                            challengeTxType: PAYMENT_TX_TYPE,
+                            challengeTx: this.transferTx,
+                            inputIndex: 0,
+                            witness: signature,
+                        };
+
+                        const { logs } = await this.exitGame.challengeStandardExit(input);
+                        this.challengeTxLogs = logs;
+                    });
+
+                    it('should challenge it successfully', async () => {
+                        expectEvent.inLogs(
+                            this.challengeTxLogs,
+                            'ExitChallenged',
+                            { utxoPos: new BN(this.depositUtxoPos) },
+                        );
                     });
                 });
             });
