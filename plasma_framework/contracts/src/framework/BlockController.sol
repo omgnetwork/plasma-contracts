@@ -5,37 +5,20 @@ import "./registries/VaultRegistry.sol";
 import "./utils/Operated.sol";
 
 contract BlockController is Operated, VaultRegistry {
-    uint256 private _childBlockInterval;
-    uint256 private _nextChildBlock;
-    uint256 private _nextDepositBlock;
+    uint256 public childBlockInterval;
+    uint256 public nextChildBlock;
+    uint256 public nextDepositBlock;
 
-    mapping (uint256 => BlockModel.Block) private _blocks;
+    mapping (uint256 => BlockModel.Block) public blocks;
 
     event BlockSubmitted(
         uint256 blockNumber
     );
 
     constructor(uint256 _interval) public {
-        _childBlockInterval = _interval;
-        _nextChildBlock = _childBlockInterval;
-        _nextDepositBlock = 1;
-    }
-
-    function blocks(uint256 _blockNumber) public view returns (bytes32 root, uint256 timestamp) {
-        BlockModel.Block memory blockData = _blocks[_blockNumber];
-        return (blockData.root, blockData.timestamp);
-    }
-
-    function childBlockInterval() public view returns (uint256) {
-        return _childBlockInterval;
-    }
-
-    function nextChildBlock() public view returns (uint256) {
-        return _nextChildBlock;
-    }
-
-    function nextDepositBlock() public view returns (uint256) {
-        return _nextDepositBlock;
+        childBlockInterval = _interval;
+        nextChildBlock = childBlockInterval;
+        nextDepositBlock = 1;
     }
 
     /**
@@ -44,15 +27,15 @@ contract BlockController is Operated, VaultRegistry {
      * @param _blockRoot Merkle root of the block.
      */
     function submitBlock(bytes32 _blockRoot) public onlyOperator {
-        uint256 submittedBlockNumber = _nextChildBlock;
+        uint256 submittedBlockNumber = nextChildBlock;
 
-        _blocks[submittedBlockNumber] = BlockModel.Block({
+        blocks[submittedBlockNumber] = BlockModel.Block({
             root: _blockRoot,
             timestamp: block.timestamp
         });
 
-        _nextChildBlock += _childBlockInterval;
-        _nextDepositBlock = 1;
+        nextChildBlock += childBlockInterval;
+        nextDepositBlock = 1;
 
         emit BlockSubmitted(submittedBlockNumber);
     }
@@ -63,14 +46,14 @@ contract BlockController is Operated, VaultRegistry {
      * @param _blockRoot Merkle root of the block.
      */
     function submitDepositBlock(bytes32 _blockRoot) public onlyFromVault {
-        require(_nextDepositBlock < _childBlockInterval, "Exceed limit of deposits per child block interval");
+        require(nextDepositBlock < childBlockInterval, "Exceed limit of deposits per child block interval");
 
-        uint256 blknum = _nextChildBlock - _childBlockInterval + _nextDepositBlock;
-        _blocks[blknum] = BlockModel.Block({
+        uint256 blknum = nextChildBlock - childBlockInterval + nextDepositBlock;
+        blocks[blknum] = BlockModel.Block({
             root : _blockRoot,
             timestamp : block.timestamp
         });
 
-        _nextDepositBlock++;
+        nextDepositBlock++;
     }
 }

@@ -7,9 +7,9 @@ import "./registries/ExitGameRegistry.sol";
 import "./utils/PriorityQueue.sol";
 
 contract ExitGameController is ExitGameRegistry {
-    uint64 private _exitQueueNonce = 1;
-    mapping (uint256 => ExitModel.Exit) private _exits;
-    mapping (address => PriorityQueue) private _exitsQueues;
+    uint64 public exitQueueNonce = 1;
+    mapping (uint256 => ExitModel.Exit) public exits;
+    mapping (address => PriorityQueue) public exitsQueues;
 
     event TokenAdded(
         address token
@@ -22,23 +22,7 @@ contract ExitGameController is ExitGameRegistry {
 
     constructor() public {
         address ethToken = address(0);
-        _exitsQueues[ethToken] = new PriorityQueue();
-    }
-
-    function exitQueueNonce() public view returns (uint64) {
-        return _exitQueueNonce;
-    }
-
-    /**
-     * @dev Mimics the default getter for public mapping. Struct would be returned as a tuple with variable names.
-     */
-    function exits(uint256 _uniquePriority) public view returns (address exitProcessor, uint256 exitableAt, uint256 exitId) {
-        ExitModel.Exit memory exit = _exits[_uniquePriority];
-        return (exit.exitProcessor, exit.exitableAt, exit.exitId);
-    }
-
-    function exitsQueues(address _token) public view returns (PriorityQueue) {
-        return _exitsQueues[_token];
+        exitsQueues[ethToken] = new PriorityQueue();
     }
 
     /**
@@ -50,7 +34,7 @@ contract ExitGameController is ExitGameRegistry {
     function addToken(address _token) external {
         require(!hasToken(_token), "Such token has already been added");
 
-        _exitsQueues[_token] = new PriorityQueue();
+        exitsQueues[_token] = new PriorityQueue();
         emit TokenAdded(_token);
     }
 
@@ -60,7 +44,7 @@ contract ExitGameController is ExitGameRegistry {
      * @return bool represents whether the queue for a token was created.
      */
     function hasToken(address _token) public view returns (bool) {
-        return address(_exitsQueues[_token]) != address(0);
+        return address(exitsQueues[_token]) != address(0);
     }
 
     /**
@@ -76,12 +60,11 @@ contract ExitGameController is ExitGameRegistry {
     function enqueue(uint192 _priority, address _token, ExitModel.Exit memory _exit) public onlyFromExitGame returns (uint256) {
         require(hasToken(_token), "Such token has not been added to the plasma framework yet");
 
-        PriorityQueue queue = _exitsQueues[_token];
-        uint256 uniquePriority = (uint256(_priority) << 64 | _exitQueueNonce);
-
-        _exitQueueNonce++;
+        PriorityQueue queue = exitsQueues[_token];
+        uint256 uniquePriority = (uint256(_priority) << 64 | exitQueueNonce);
+        exitQueueNonce++;
         queue.insert(uniquePriority);
-        _exits[uniquePriority] = _exit;
+        exits[uniquePriority] = _exit;
 
         return uniquePriority;
     }
@@ -96,14 +79,14 @@ contract ExitGameController is ExitGameRegistry {
     function processExits(address _token, uint256 _topUniquePriority, uint256 _maxExitsToProcess) external {
         require(hasToken(_token), "Such token has not be added to the plasma framework yet");
 
-        PriorityQueue queue = _exitsQueues[_token];
+        PriorityQueue queue = exitsQueues[_token];
         require(queue.currentSize() > 0, "Exit queue is empty");
 
         uint256 uniquePriority = queue.getMin();
         require(_topUniquePriority == 0 || uniquePriority == _topUniquePriority,
             "Top unique priority of the queue is not the same as the specified one");
 
-        ExitModel.Exit memory exit = _exits[uniquePriority];
+        ExitModel.Exit memory exit = exits[uniquePriority];
         uint256 processedNum = 0;
 
         while (processedNum < _maxExitsToProcess && exit.exitableAt < block.timestamp) {
@@ -111,7 +94,7 @@ contract ExitGameController is ExitGameRegistry {
 
             processor.processExit(exit.exitId);
 
-            delete _exits[uniquePriority];
+            delete exits[uniquePriority];
             queue.delMin();
             processedNum++;
 
@@ -120,7 +103,7 @@ contract ExitGameController is ExitGameRegistry {
             }
 
             uniquePriority = queue.getMin();
-            exit = _exits[uniquePriority];
+            exit = exits[uniquePriority];
         }
 
         emit ProcessedExitsNum(processedNum, _token);
