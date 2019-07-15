@@ -46,7 +46,7 @@ contract BlockController is Operated, VaultRegistry {
      * @param _blockRoot Merkle root of the block.
      */
     function submitDepositBlock(bytes32 _blockRoot) public onlyFromVault {
-        require(nextDepositBlock < childBlockInterval, "Exceed limit of deposits per child block interval");
+        require(nextDepositBlock < childBlockInterval, "Exceeded limit of deposits per child block interval");
 
         uint256 blknum = nextChildBlock - childBlockInterval + nextDepositBlock;
         blocks[blknum] = BlockModel.Block({
