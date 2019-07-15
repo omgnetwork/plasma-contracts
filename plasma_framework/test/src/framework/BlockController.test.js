@@ -104,7 +104,7 @@ contract('BlockController', ([_, other]) => {
 
             await expectRevert(
                 this.dummyVault.submitDepositBlock(this.dummyBlockHash),
-                'Exceed limit of deposits per child block interval',
+                'Exceeded limit of deposits per child block interval',
             );
         });
 
