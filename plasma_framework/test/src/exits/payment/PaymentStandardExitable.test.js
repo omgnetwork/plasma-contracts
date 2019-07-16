@@ -49,6 +49,9 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
             this.exitIdHelper = await ExitId.new();
             this.isDeposit = await IsDeposit.new(CHILD_BLOCK_INTERVAL);
             this.exitableHelper = await ExitableTimestamp.new(MIN_EXIT_PERIOD);
+
+            this.dummyAmount = 1000;
+            this.dummyBlockNum = 1001;
         });
 
         beforeEach(async () => {
@@ -58,12 +61,10 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
         });
 
         it('should fail when cannot prove the tx is included in the block', async () => {
-            const testAmount = 1000;
-            const dummyBlockNum = 1001;
-            const data = buildTestData(testAmount, alice, dummyBlockNum);
+            const data = buildTestData(this.dummyAmount, alice, this.dummyBlockNum);
             const fakeRoot = web3.utils.sha3('fake root data');
 
-            await this.framework.setBlock(dummyBlockNum, fakeRoot, 0);
+            await this.framework.setBlock(this.dummyBlockNum, fakeRoot, 0);
 
             await expectRevert(
                 this.exitGame.startStandardExit(
@@ -75,11 +76,10 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
         });
 
         it('should fail when exit with amount of 0', async () => {
-            const testAmount = 0;
-            const dummyBlockNum = 1001;
-            const data = buildTestData(testAmount, alice, dummyBlockNum);
+            const testAmountZero = 0;
+            const data = buildTestData(testAmountZero, alice, this.dummyBlockNum);
 
-            await this.framework.setBlock(dummyBlockNum, data.merkleTree.root, 0);
+            await this.framework.setBlock(this.dummyBlockNum, data.merkleTree.root, 0);
 
             await expectRevert(
                 this.exitGame.startStandardExit(
@@ -91,11 +91,9 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
         });
 
         it('should fail when amount of bond is invalid', async () => {
-            const testAmount = 1000;
-            const dummyBlockNum = 1001;
-            const data = buildTestData(testAmount, alice, dummyBlockNum);
+            const data = buildTestData(this.dummyAmount, alice, this.dummyBlockNum);
 
-            await this.framework.setBlock(dummyBlockNum, data.merkleTree.root, 0);
+            await this.framework.setBlock(this.dummyBlockNum, data.merkleTree.root, 0);
 
             const invalidBond = STANDARD_EXIT_BOND - 100;
             await expectRevert(
@@ -108,11 +106,9 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
         });
 
         it('should fail when not initiated by the exit target', async () => {
-            const testAmount = 1000;
-            const dummyBlockNum = 1001;
-            const data = buildTestData(testAmount, alice, dummyBlockNum);
+            const data = buildTestData(this.dummyAmount, alice, this.dummyBlockNum);
 
-            await this.framework.setBlock(dummyBlockNum, data.merkleTree.root, 0);
+            await this.framework.setBlock(this.dummyBlockNum, data.merkleTree.root, 0);
 
             const nonOutputOwner = bob;
             await expectRevert(
@@ -124,37 +120,34 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
             );
         });
 
-        it('should fail when output guard mismatch pre-image data given output type non 0', async () => {
-            const testAmount = 1000;
-            const dummyBlockNum = 1001;
-            const data = buildTestData(testAmount, alice, dummyBlockNum);
+        it('should fail when output guard mismatches the pre-image data given output type non 0', async () => {
+            const data = buildTestData(this.dummyAmount, alice, this.dummyBlockNum);
 
             const outputGuardExitTarget = alice;
             const parser = await OutputGuardParser.new(outputGuardExitTarget);
             await this.exitGame.registerOutputGuardParser(1, parser.address);
 
-            await this.framework.setBlock(dummyBlockNum, data.merkleTree.root, 0);
+            await this.framework.setBlock(this.dummyBlockNum, data.merkleTree.root, 0);
 
             const outputType = 1;
+            const mismatchOutputguardData = EMPTY_BYTES;
             await expectRevert(
                 this.exitGame.startStandardExit(
-                    data.utxoPos, data.tx, outputType, EMPTY_BYTES, data.merkleProof,
+                    data.utxoPos, data.tx, outputType, mismatchOutputguardData, data.merkleProof,
                     { from: alice, value: STANDARD_EXIT_BOND },
                 ),
-                'Output guard data mismatch pre-image',
+                'Output guard data does not match pre-image',
             );
         });
 
         it('should fail when output guard parser is not registered with the output type given output type non 0', async () => {
-            const testAmount = 1000;
-            const dummyBlockNum = 1001;
             const outputType = 1;
             const outputGuardData = web3.utils.toHex(alice);
             const outputGuard = buildOutputGuard(outputType, outputGuardData);
 
-            const data = buildTestData(testAmount, outputGuard, dummyBlockNum);
+            const data = buildTestData(this.dummyAmount, outputGuard, this.dummyBlockNum);
 
-            await this.framework.setBlock(dummyBlockNum, data.merkleTree.root, 0);
+            await this.framework.setBlock(this.dummyBlockNum, data.merkleTree.root, 0);
 
             await expectRevert(
                 this.exitGame.startStandardExit(
@@ -166,11 +159,9 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
         });
 
         it('should fail when same exit already started', async () => {
-            const testAmount = 1000;
-            const dummyBlockNum = 1001;
-            const data = buildTestData(testAmount, alice, dummyBlockNum);
+            const data = buildTestData(this.dummyAmount, alice, this.dummyBlockNum);
 
-            await this.framework.setBlock(dummyBlockNum, data.merkleTree.root, 0);
+            await this.framework.setBlock(this.dummyBlockNum, data.merkleTree.root, 0);
 
             await this.exitGame.startStandardExit(
                 data.utxoPos, data.tx, OUTPUT_TYPE_ZERO, EMPTY_BYTES, data.merkleProof,
@@ -186,12 +177,10 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
             );
         });
 
-        it('should charge the bond for the user', async () => {
-            const testAmount = 1000;
-            const dummyBlockNum = 1001;
-            const data = buildTestData(testAmount, alice, dummyBlockNum);
+        it('should charge the bond from the user', async () => {
+            const data = buildTestData(this.dummyAmount, alice, this.dummyBlockNum);
 
-            await this.framework.setBlock(dummyBlockNum, data.merkleTree.root, 0);
+            await this.framework.setBlock(this.dummyBlockNum, data.merkleTree.root, 0);
 
             const preBalance = new BN(await web3.eth.getBalance(alice));
             const tx = await this.exitGame.startStandardExit(
@@ -207,19 +196,17 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
         });
 
         it('should save the StandardExit data when successfully done', async () => {
-            const testAmount = 1000;
-            const dummyBlockNum = 1001;
             const outputOwner = alice;
-            const data = buildTestData(testAmount, outputOwner, dummyBlockNum);
+            const data = buildTestData(this.dummyAmount, alice, this.dummyBlockNum);
 
-            await this.framework.setBlock(dummyBlockNum, data.merkleTree.root, 0);
+            await this.framework.setBlock(this.dummyBlockNum, data.merkleTree.root, 0);
 
             await this.exitGame.startStandardExit(
                 data.utxoPos, data.tx, OUTPUT_TYPE_ZERO, EMPTY_BYTES, data.merkleProof,
                 { from: alice, value: STANDARD_EXIT_BOND },
             );
 
-            const isTxDeposit = await this.isDeposit.test(dummyBlockNum);
+            const isTxDeposit = await this.isDeposit.test(this.dummyBlockNum);
             const exitId = await this.exitIdHelper.getStandardExitId(isTxDeposit, data.tx, data.utxoPos);
             const outputId = computeOutputId(
                 isTxDeposit, data.tx, data.outputIndex, data.utxoPos,
@@ -236,24 +223,22 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
             expect(standardExitData.outputRelatedDataHash).to.equal(expectedOutputRelatedDataHash);
             expect(standardExitData.exitTarget).to.equal(outputOwner);
             expect(standardExitData.token).to.equal(ETH);
-            expect(standardExitData.amount).to.be.bignumber.equal(new BN(testAmount));
+            expect(standardExitData.amount).to.be.bignumber.equal(new BN(this.dummyAmount));
         });
 
         it('should put the exit data into the queue of framework', async () => {
-            const testAmount = 1000;
-            const dummyBlockNum = 1001;
-            const data = buildTestData(testAmount, alice, dummyBlockNum);
+            const data = buildTestData(this.dummyAmount, alice, this.dummyBlockNum);
             const currentTimestamp = await time.latest();
             const timestamp = currentTimestamp.sub(new BN(15));
 
-            await this.framework.setBlock(dummyBlockNum, data.merkleTree.root, timestamp);
+            await this.framework.setBlock(this.dummyBlockNum, data.merkleTree.root, 0);
 
             await this.exitGame.startStandardExit(
                 data.utxoPos, data.tx, OUTPUT_TYPE_ZERO, EMPTY_BYTES, data.merkleProof,
                 { from: alice, value: STANDARD_EXIT_BOND },
             );
 
-            const isTxDeposit = await this.isDeposit.test(dummyBlockNum);
+            const isTxDeposit = await this.isDeposit.test(this.dummyBlockNum);
             const exitId = await this.exitIdHelper.getStandardExitId(isTxDeposit, data.tx, data.utxoPos);
             const exitableAt = await this.exitableHelper.calculate(
                 currentTimestamp, timestamp, isTxDeposit,
@@ -268,13 +253,11 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
         });
 
         it('should emit ExitStarted event', async () => {
-            const testAmount = 1000;
-            const dummyBlockNum = 1001;
-            const data = buildTestData(testAmount, alice, dummyBlockNum);
+            const data = buildTestData(this.dummyAmount, alice, this.dummyBlockNum);
 
-            await this.framework.setBlock(dummyBlockNum, data.merkleTree.root, 0);
+            await this.framework.setBlock(this.dummyBlockNum, data.merkleTree.root, 0);
 
-            const isTxDeposit = await this.isDeposit.test(dummyBlockNum);
+            const isTxDeposit = await this.isDeposit.test(this.dummyBlockNum);
             const exitId = await this.exitIdHelper.getStandardExitId(isTxDeposit, data.tx, data.utxoPos);
             const { logs } = await this.exitGame.startStandardExit(
                 data.utxoPos, data.tx, OUTPUT_TYPE_ZERO, EMPTY_BYTES, data.merkleProof,
@@ -313,7 +296,7 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
             outputGuard: input.outputGuard,
             utxoPos: input.outputUtxoPos,
             outputId: input.outputId,
-            consumeTx: input.challengeTx,
+            spendingTx: input.challengeTx,
             inputIndex: input.inputIndex,
             witness: input.witness,
         });
@@ -335,7 +318,7 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
             const input = getTestInput(OUTPUT_TYPE_ZERO, addressToOutputGuard(alice));
             await expectRevert(
                 this.exitGame.challengeStandardExit(input),
-                'Such exit does not exists',
+                'Such exit does not exist',
             );
         });
 
@@ -455,7 +438,7 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
             );
         });
 
-        it('should calls the Spending Condition contract with expected params given output type 0', async () => {
+        it('should call the Spending Condition contract with expected params given output type 0', async () => {
             await this.exitGame.depositFundForTest({ value: STANDARD_EXIT_BOND });
 
             const input = getTestInput(OUTPUT_TYPE_ZERO, addressToOutputGuard(alice));
@@ -463,8 +446,8 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
             const conditionExpected = await PaymentSpendingConditionExpected.new();
             const exitTarget = alice;
 
-            // spending condition contract would only returns true
-            // when expected data is as input params during 'verify(...)' called.
+            // Spending condition mock reverts when it's called with arguments
+            // that does not match expectedConditionInput
             const expectedConditionInput = getExpectedConditionInput(input);
             await conditionExpected.setExpected(expectedConditionInput);
 
@@ -479,7 +462,7 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
             expect(exitData.exitable).to.be.false;
         });
 
-        it('should calls the Spending Condition contract with expected params given output type non 0', async () => {
+        it('should call the Spending Condition contract with expected params given output type non 0', async () => {
             await this.exitGame.depositFundForTest({ value: STANDARD_EXIT_BOND });
 
             const outputType = 1;
@@ -489,8 +472,8 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
             const conditionExpected = await PaymentSpendingConditionExpected.new();
             const exitTarget = alice;
 
-            // spending condition contract would only returns true
-            // when expected data is as input params during 'verify(...)' called.
+            // Spending condition mock reverts when it's called with arguments
+            // that does not match expectedConditionInput
             const expectedConditionInput = getExpectedConditionInput(input);
             await conditionExpected.setExpected(expectedConditionInput);
 
@@ -505,7 +488,7 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
             expect(exitData.exitable).to.be.false;
         });
 
-        it('should deletes the exit data when successfully challenged', async () => {
+        it('should delete the exit data when successfully challenged', async () => {
             await this.exitGame.depositFundForTest({ value: STANDARD_EXIT_BOND });
 
             const input = getTestInput(OUTPUT_TYPE_ZERO, addressToOutputGuard(alice));

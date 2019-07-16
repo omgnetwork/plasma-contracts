@@ -11,6 +11,7 @@ const { sign } = require('../../../../helpers/sign.js');
 
 contract('PaymentOutputToPaymentTxCondition', ([richFather]) => {
     const ETH = constants.ZERO_ADDRESS;
+    const EMPTY_OUTPUT_ID = '0x';
     const alicePrivateKey = '0x7151e5dab6f8e95b5436515b83f423c4df64fe4c6149f864daa209b26adb10ca';
     let alice;
 
@@ -32,53 +33,50 @@ contract('PaymentOutputToPaymentTxCondition', ([richFather]) => {
     });
 
     describe('verify', () => {
-        it('should fail when consume tx is not type of payment tx', async () => {
+        it('should fail when spending tx does not match type of payment tx', async () => {
             const outputGuard = addressToOutputGuard(alice);
             const output = new PaymentTransactionOutput(
                 1000, outputGuard, ETH,
             );
             const utxoPos = buildUtxoPos(100, 0, 1);
-            const nonUsingOutputId = '0x';
             const inputIndex = 0;
             const wrongTxType = 2;
             const tx = new PaymentTransaction(wrongTxType, [utxoPos], [output]);
             const txBytes = web3.utils.bytesToHex(tx.rlpEncoded());
             await expectRevert(
                 this.condition.verify(
-                    outputGuard, utxoPos, nonUsingOutputId,
+                    outputGuard, utxoPos, EMPTY_OUTPUT_ID,
                     txBytes, inputIndex, '0x',
                 ),
-                'The consume tx is not of payment tx type',
+                'The spending tx is not of payment tx type',
             );
         });
 
-        it('should fail when consume tx does not point to the utxo pos in input', async () => {
+        it('should fail when spending tx does not point to the utxo pos in input', async () => {
             const outputGuard = addressToOutputGuard(alice);
             const output = new PaymentTransactionOutput(
                 1000, outputGuard, ETH,
             );
             const utxoPos = buildUtxoPos(100, 0, 1);
             const wrongUtxoPosInTx = utxoPos + 1000;
-            const nonUsingOutputId = '0x';
             const inputIndex = 0;
             const tx = new PaymentTransaction(1, [wrongUtxoPosInTx], [output]);
             const txBytes = web3.utils.bytesToHex(tx.rlpEncoded());
             await expectRevert(
                 this.condition.verify(
-                    outputGuard, utxoPos, nonUsingOutputId,
+                    outputGuard, utxoPos, EMPTY_OUTPUT_ID,
                     txBytes, inputIndex, '0x',
                 ),
-                'The consume tx does not consume the output with such utxo pos',
+                'The spending tx does not spend the output at this utxo pos',
             );
         });
 
-        it('should fail when consume tx not correctly signed by the input owner', async () => {
+        it('should fail when spending tx not correctly signed by the input owner', async () => {
             const outputGuard = addressToOutputGuard(alice);
             const output = new PaymentTransactionOutput(
                 1000, outputGuard, ETH,
             );
             const utxoPos = buildUtxoPos(100, 0, 1);
-            const nonUsingOutputId = '0x';
             const inputIndex = 0;
             const tx = new PaymentTransaction(1, [utxoPos], [output]);
             const txBytes = web3.utils.bytesToHex(tx.rlpEncoded());
@@ -87,7 +85,7 @@ contract('PaymentOutputToPaymentTxCondition', ([richFather]) => {
             const wrongSignature = sign(txHash, wrongPrivateKey);
             await expectRevert(
                 this.condition.verify(
-                    outputGuard, utxoPos, nonUsingOutputId,
+                    outputGuard, utxoPos, EMPTY_OUTPUT_ID,
                     txBytes, inputIndex, wrongSignature,
                 ),
                 'Tx not correctly signed',
@@ -100,7 +98,6 @@ contract('PaymentOutputToPaymentTxCondition', ([richFather]) => {
                 1000, outputGuard, ETH,
             );
             const utxoPos = buildUtxoPos(100, 0, 1);
-            const nonUsingOutputId = '0x';
             const inputIndex = 0;
             const tx = new PaymentTransaction(1, [utxoPos], [output]);
             const txBytes = web3.utils.bytesToHex(tx.rlpEncoded());
@@ -108,7 +105,7 @@ contract('PaymentOutputToPaymentTxCondition', ([richFather]) => {
             const signature = sign(txHash, alicePrivateKey);
 
             const result = await this.condition.verify(
-                outputGuard, utxoPos, nonUsingOutputId,
+                outputGuard, utxoPos, EMPTY_OUTPUT_ID,
                 txBytes, inputIndex, signature,
             );
             expect(result).to.be.true;

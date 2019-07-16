@@ -128,7 +128,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
             });
         });
 
-        describe('Given alice deposited and transfered to bob', () => {
+        describe('Given alice deposited and transferred to bob', () => {
             beforeEach(async () => {
                 await aliceDeposits();
                 await aliceTransferToBob();

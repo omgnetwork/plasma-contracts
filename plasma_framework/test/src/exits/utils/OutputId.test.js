@@ -28,7 +28,7 @@ contract('OutputId', () => {
                 .to.equal(computeDepositOutputId(dummyTxBytes, outputIndex, dummyUtxoPos));
         });
 
-        it('should return distinct output ids for deposits that differs in utxo pos', async () => {
+        it('should return distinct output ids for deposits that differ in utxo pos', async () => {
             const output = new PaymentTransactionOutput(100, OUTPUT_GUARD, constants.ZERO_ADDRESS);
             const transaction = new PaymentTransaction(1, [EMPTY_BYTES32], [output], EMPTY_BYTES32);
             const dummyTxBytes = web3.utils.bytesToHex(transaction.rlpEncoded());

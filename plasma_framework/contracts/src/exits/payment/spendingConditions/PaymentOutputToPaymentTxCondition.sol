@@ -18,18 +18,18 @@ contract PaymentOutputToPaymentTxCondition is IPaymentSpendingCondition {
     }
 
     /**
-     * @notice The function that checks output spending condition via authenticate owner.
+     * @notice Checks if given output has been spent by owner in given spending transaction.
      * @param _outputGuard bytes that hold the address of owner directly.
      * @param _utxoPos serves as the identifier of output.
-     * @param _consumeTx The rlp encoded transaction that consumes the output.
-     * @param _inputIndex The input index of the consume transaction that points to the output.
+     * @param _spendingTx The rlp encoded transaction that spends the output.
+     * @param _inputIndex The input index of the spending transaction that points to the output.
      * @param _signature The signature of the output owner.
      */
     function verify(
         bytes32 _outputGuard,
         uint256 _utxoPos,
         bytes32 /*_outputId*/,
-        bytes calldata _consumeTx,
+        bytes calldata _spendingTx,
         uint8 _inputIndex,
         bytes calldata _signature
     )
@@ -37,12 +37,12 @@ contract PaymentOutputToPaymentTxCondition is IPaymentSpendingCondition {
         view
         returns (bool)
     {
-        PaymentTransactionModel.Transaction memory consumeTx = PaymentTransactionModel.decode(_consumeTx);
-        require(consumeTx.txType == PAYMENT_TX_TYPE, "The consume tx is not of payment tx type");
-        require(consumeTx.inputs[_inputIndex] == bytes32(_utxoPos), "The consume tx does not consume the output with such utxo pos");
+        PaymentTransactionModel.Transaction memory spendingTx = PaymentTransactionModel.decode(_spendingTx);
+        require(spendingTx.txType == PAYMENT_TX_TYPE, "The spending tx is not of payment tx type");
+        require(spendingTx.inputs[_inputIndex] == bytes32(_utxoPos), "The spending tx does not spend the output at this utxo pos");
 
         address payable owner = AddressPayable.convert(address(uint256(_outputGuard)));
-        require(owner == ECDSA.recover(eip712.hashTx(consumeTx), _signature), "Tx not correctly signed");
+        require(owner == ECDSA.recover(eip712.hashTx(spendingTx), _signature), "Tx not correctly signed");
 
         return true;
     }

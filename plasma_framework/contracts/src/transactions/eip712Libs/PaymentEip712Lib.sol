@@ -12,25 +12,20 @@ library PaymentEip712Lib {
     uint8 constant public MAX_OUTPUT_NUM = 4;
 
     bytes2 constant EIP191_PREFIX = "\x19\x01";
-    bytes32 constant EIP712_DOMAIN_HASH = keccak256(abi.encodePacked(
-            "EIP712Domain(string name,string version,address verifyingContract,bytes32 salt)"
-        ));
-    bytes32 constant TX_TYPE_HASH = keccak256(abi.encodePacked(
+    bytes32 constant EIP712_DOMAIN_HASH = keccak256(
+        "EIP712Domain(string name,string version,address verifyingContract,bytes32 salt)"
+    );
+    bytes32 constant TX_TYPE_HASH = keccak256(
         "Transaction(uint256 txType,Input input0,Input input1,Input input2,Input input3,Output output0,Output output1,Output output2,Output output3,bytes32 metadata)Input(uint256 blknum,uint256 txindex,uint256 oindex)Output(bytes32 owner,address currency,uint256 amount)"
-    ));
-    bytes32 constant INPUT_TYPE_HASH = keccak256(abi.encodePacked("Input(uint256 blknum,uint256 txindex,uint256 oindex)"));
-    bytes32 constant OUTPUT_TYPE_HASH = keccak256(abi.encodePacked("Output(bytes32 owner,address currency,uint256 amount)"));
+    );
+    bytes32 constant INPUT_TYPE_HASH = keccak256("Input(uint256 blknum,uint256 txindex,uint256 oindex)");
+    bytes32 constant OUTPUT_TYPE_HASH = keccak256("Output(bytes32 owner,address currency,uint256 amount)");
     bytes32 constant SALT = 0xfad5c7f626d80f9256ef01929f3beb96e058b8b4b0e3fe52d84f054c0e2a7a83;
 
     bytes32 constant EMPTY_INPUT_HASH = keccak256(abi.encode(INPUT_TYPE_HASH, 0, 0, 0));
     bytes32 constant EMPTY_OUTPUT_HASH = keccak256(abi.encode(OUTPUT_TYPE_HASH, bytes32(''), bytes32(''), 0));
 
     struct Constants {
-        bytes2 EIP191_PREFIX;
-        bytes32 EIP712_DOMAIN_HASH;
-        bytes32 TX_TYPE_HASH;
-        bytes32 INPUT_TYPE_HASH;
-        bytes32 OUTPUT_TYPE_HASH;
         bytes32 DOMAIN_SEPARATOR;
     }
 
@@ -44,11 +39,6 @@ library PaymentEip712Lib {
         ));
 
         return Constants({
-            EIP191_PREFIX: EIP191_PREFIX,
-            EIP712_DOMAIN_HASH: EIP712_DOMAIN_HASH,
-            TX_TYPE_HASH: TX_TYPE_HASH,
-            INPUT_TYPE_HASH: INPUT_TYPE_HASH,
-            OUTPUT_TYPE_HASH: OUTPUT_TYPE_HASH,
             DOMAIN_SEPARATOR: DOMAIN_SEPARATOR
         });
     }
@@ -59,13 +49,13 @@ library PaymentEip712Lib {
         returns (bytes32)
     {
         return keccak256(abi.encodePacked(
-            _eip712.EIP191_PREFIX,
+            EIP191_PREFIX,
             _eip712.DOMAIN_SEPARATOR,
-            _hashTx(_eip712, _tx)
+            _hashTx(_tx)
         ));
     }
 
-    function _hashTx(Constants memory _eip712, PaymentTransactionModel.Transaction memory _tx)
+    function _hashTx(PaymentTransactionModel.Transaction memory _tx)
         private
         pure
         returns (bytes32)
@@ -83,7 +73,7 @@ library PaymentEip712Lib {
         }
 
         return keccak256(abi.encode(
-            _eip712.TX_TYPE_HASH,
+            TX_TYPE_HASH,
             _tx.txType,
             _hashInput(inputs[0]),
             _hashInput(inputs[1]),
