@@ -11,7 +11,7 @@ contract('PaymentSpendingConditionRegistry', ([_, other]) => {
     });
 
     describe('spendingConditions', () => {
-        it('should receive empty contract address when pair (outputType, consumeTx) not registered', async () => {
+        it('should receive empty contract address when pair (outputType, spendingTx) not registered', async () => {
             expect(await this.registry.spendingConditions(1, 1)).to.equal(constants.ZERO_ADDRESS);
         });
     });
@@ -19,11 +19,11 @@ contract('PaymentSpendingConditionRegistry', ([_, other]) => {
     describe('registerSpendingCondition', () => {
         it('should be able to register successfully', async () => {
             const outputType = 1;
-            const consumeTxType = 123;
+            const spendingTxType = 123;
             await this.registry.registerSpendingCondition(
-                outputType, consumeTxType, this.dummyCondition.address,
+                outputType, spendingTxType, this.dummyCondition.address,
             );
-            expect(await this.registry.spendingConditions(outputType, consumeTxType))
+            expect(await this.registry.spendingConditions(outputType, spendingTxType))
                 .to.equal(this.dummyCondition.address);
         });
 
@@ -44,22 +44,22 @@ contract('PaymentSpendingConditionRegistry', ([_, other]) => {
             );
         });
 
-        it('should reject when trying to register with consume tx type 0', async () => {
+        it('should reject when trying to register with spending tx type 0', async () => {
             const outputType = 1;
-            const consumeTxType = 0;
+            const spendingTxType = 0;
             await expectRevert(
-                this.registry.registerSpendingCondition(outputType, consumeTxType, constants.ZERO_ADDRESS),
-                'Transaction Type would never be 0',
+                this.registry.registerSpendingCondition(outputType, spendingTxType, constants.ZERO_ADDRESS),
+                'Transaction Type must not be 0',
             );
         });
 
         it('should NOT reject when trying to register with output type 0', async () => {
             const outputType = 0;
-            const consumeTxType = 123;
+            const spendingTxType = 123;
             await this.registry.registerSpendingCondition(
-                outputType, consumeTxType, this.dummyCondition.address,
+                outputType, spendingTxType, this.dummyCondition.address,
             );
-            expect(await this.registry.spendingConditions(outputType, consumeTxType))
+            expect(await this.registry.spendingConditions(outputType, spendingTxType))
                 .to.equal(this.dummyCondition.address);
         });
 
@@ -70,14 +70,14 @@ contract('PaymentSpendingConditionRegistry', ([_, other]) => {
             );
         });
 
-        it('should reject when the pair of (output type, consume tx type) is already registered', async () => {
+        it('should reject when the pair of (output type, spending tx type) is already registered', async () => {
             const outputType = 1;
-            const consumeTxType = 123;
+            const spendingTxType = 123;
             const secondDummyConditionAddress = (await DummyPaymentSpendingCondition.new()).address;
-            await this.registry.registerSpendingCondition(outputType, consumeTxType, this.dummyCondition.address);
+            await this.registry.registerSpendingCondition(outputType, spendingTxType, this.dummyCondition.address);
             await expectRevert(
-                this.registry.registerSpendingCondition(outputType, consumeTxType, secondDummyConditionAddress),
-                'Such (output type, consume tx type) pair has already been registered',
+                this.registry.registerSpendingCondition(outputType, spendingTxType, secondDummyConditionAddress),
+                'This (output type, spending tx type) pair has already been registered',
             );
         });
     });

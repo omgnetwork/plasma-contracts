@@ -2,19 +2,19 @@ pragma solidity ^0.5.0;
 
 interface IPaymentSpendingCondition {
     /**
-     * @notice The function that checks output spending condition via authenticate owner.
+     * @notice Checks output spending condition.
      * @param _outputGuard OutputGuard of the output.
-     * @param _utxoPos (optional) serves as the identifier of output. One of utxoPos and outputId must be with value.
-     * @param _outputId (optional) serves as the identifier of output. One of utxoPos and outputId must be with value.
-     * @param _consumeTx The transaction that consumes the output.
-     * @param _inputIndex The input index of the consume transaction that points to the output.
-     * @param _witness Witness data that would be able to prove that output is able to be consumed.
+     * @param _utxoPos (optional) serves as the identifier of output. Only one of utxoPos or outputId must be set.
+     * @param _outputId (optional) serves as the identifier of output. Only one of utxoPos or outputId must be set.
+     * @param _spendingTx The transaction that spends the output.
+     * @param _inputIndex The input index of the spending transaction that points to the output.
+     * @param _witness Witness data proving the output can be spent.
      */
     function verify(
         bytes32 _outputGuard,
         uint256 _utxoPos,
         bytes32 _outputId,
-        bytes calldata _consumeTx,
+        bytes calldata _spendingTx,
         uint8 _inputIndex,
         bytes calldata _witness
     ) external view returns (bool);

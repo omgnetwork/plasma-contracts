@@ -9,13 +9,11 @@ function buildOutputGuard(outputType, outputGuardData) {
         { t: 'bytes', v: outputGuardData },
     );
     const rightMostBytes20 = hashValue.substring(hashValue.length - 40, hashValue.length);
-    const paddingZeros = Array(24).fill(0).join('');
-    return `0x${paddingZeros}${rightMostBytes20}`;
+    return `0x${rightMostBytes20.padStart(64, '0')}`;
 }
 
 function addressToOutputGuard(address) {
-    const paddingZeros = Array(24).fill(0).join('');
-    return `0x${paddingZeros}${address.substring(2)}`;
+    return `0x${address.substring(2).padStart(64, '0')}`;
 }
 
 function computeOutputId(isDeposit, txBytes, outputIndex, utxoPos) {

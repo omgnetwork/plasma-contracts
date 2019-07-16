@@ -40,7 +40,7 @@ contract PaymentStandardExitable is
     IsDeposit.Predicate private isDeposit;
     ExitableTimestamp.Calculator private exitableTimestampCalculator;
 
-    struct StartStandardExitInputData {
+    struct StartStandardExitArgs {
         uint192 utxoPos;
         bytes rlpOutputTx;
         uint256 outputType;
@@ -52,7 +52,7 @@ contract PaymentStandardExitable is
      * @dev data to be passed around startStandardExit helper functions
      */
     struct StartStandardExitData {
-        StartStandardExitInputData input;
+        StartStandardExitArgs args;
         UtxoPosLib.UtxoPos utxoPos;
         PaymentTransactionModel.Transaction outputTx;
         PaymentOutputModel.Output output;
@@ -65,18 +65,18 @@ contract PaymentStandardExitable is
     }
 
     /**
-     * @notice input data for challengeStandardExit.
+     * @notice input args data for challengeStandardExit.
      * @param _exitId Identifier of the standard exit to challenge.
      * @param _outputType The output type of the exiting output.
      * @param _outputUtxoPos The utxo position of the exiting output.
      * @param _outputId The unique id of exiting output.
      * @param _outputGuardData (optional) The output guard data of the output. Could be empty when output type is 0.
-     * @param _challengeTxType The tx type if the challenge transaction.
+     * @param _challengeTxType The tx type of the challenge transaction.
      * @param _challengeTx RLP encoded transaction that spends the exiting output.
      * @param _inputIndex Which input of the challenging tx corresponds to the exiting output.
      * @param _witness Witness data that can prove the exiting output is spent.
      */
-    struct ChallengeStandardExitInputData {
+    struct ChallengeStandardExitArgs {
         uint192 exitId;
         uint256 outputType;
         uint256 outputUtxoPos;
@@ -92,7 +92,7 @@ contract PaymentStandardExitable is
      * @dev data to be passed around challengeStandardExit helper functions
      */
     struct ChallengeStandardExitData {
-        ChallengeStandardExitInputData input;
+        ChallengeStandardExitArgs args;
         PaymentExitDataModel.StandardExit exitData;
     }
 
@@ -131,7 +131,7 @@ contract PaymentStandardExitable is
         payable
         onlyWithValue(standardExitBond)
     {
-        StartStandardExitInputData memory input = StartStandardExitInputData({
+        StartStandardExitArgs memory args = StartStandardExitArgs({
             utxoPos: _utxoPos,
             rlpOutputTx: _rlpOutputTx,
             outputType: _outputType,
@@ -139,7 +139,7 @@ contract PaymentStandardExitable is
             outputTxInclusionProof: _outputTxInclusionProof
         });
 
-        StartStandardExitData memory data = setupStartStandardExitData(input);
+        StartStandardExitData memory data = setupStartStandardExitData(args);
         verifyStartStandardExitData(data);
         saveStandardExitData(data);
         enqueueStandardExit(data);
@@ -151,57 +151,57 @@ contract PaymentStandardExitable is
      * @notice Challenge a standard exit by showing the exiting output was spent.
      * @dev Uses struct as input because too many variables and failed to compile.
      * @dev Uses public instead of external because ABIEncoder V2 does not support struct calldata + external
-     * @param _input input data to challenge. See struct 'ChallengeStandardExitInputData' for detailed param info.
+     * @param _args input argument data to challenge. See struct 'ChallengeStandardExitArgs' for detailed param info.
      */
-    function challengeStandardExit(ChallengeStandardExitInputData memory _input)
+    function challengeStandardExit(ChallengeStandardExitArgs memory _args)
         public
         payable
     {
         ChallengeStandardExitData memory data = ChallengeStandardExitData({
-            input: _input,
-            exitData: exits[_input.exitId]
+            args: _args,
+            exitData: exits[_args.exitId]
         });
         verifyChallengeExitExists(data);
         verifyOutputRelatedDataHash(data);
         verifySpendingCondition(data);
 
-        delete exits[_input.exitId];
+        delete exits[_args.exitId];
         msg.sender.transfer(standardExitBond);
 
-        emit ExitChallenged(_input.outputUtxoPos);
+        emit ExitChallenged(_args.outputUtxoPos);
     }
 
     /**
     Start standard exit helper functions
     */
 
-    function setupStartStandardExitData(StartStandardExitInputData memory input)
+    function setupStartStandardExitData(StartStandardExitArgs memory args)
         private
         view
         returns (StartStandardExitData memory)
     {
-        UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(input.utxoPos);
-        PaymentTransactionModel.Transaction memory outputTx = PaymentTransactionModel.decode(input.rlpOutputTx);
+        UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(args.utxoPos);
+        PaymentTransactionModel.Transaction memory outputTx = PaymentTransactionModel.decode(args.rlpOutputTx);
         PaymentOutputModel.Output memory output = outputTx.outputs[utxoPos.outputIndex()];
         bool isTxDeposit = isDeposit.test(utxoPos.blockNum());
-        uint192 exitId = ExitId.getStandardExitId(isTxDeposit, input.rlpOutputTx, utxoPos);
+        uint192 exitId = ExitId.getStandardExitId(isTxDeposit, args.rlpOutputTx, utxoPos);
         (bytes32 root, uint256 blockTimestamp) = framework.blocks(utxoPos.blockNum());
-        bytes memory outputGuardData = input.outputType == 0 ? bytes("") : input.outputGuardData;
+        bytes memory outputGuardData = args.outputType == 0 ? bytes("") : args.outputGuardData;
 
         address payable exitTarget;
         IOutputGuardParser outputGuardParser;
-        if (input.outputType == 0) {
+        if (args.outputType == 0) {
             // output type 0 --> output holding owner address directly
             exitTarget = output.owner();
-        } else if (input.outputType != 0) {
-            outputGuardParser = OutputGuardParserRegistry.outputGuardParsers(input.outputType);
+        } else if (args.outputType != 0) {
+            outputGuardParser = OutputGuardParserRegistry.outputGuardParsers(args.outputType);
             if (address(outputGuardParser) != address(0)) {
                 exitTarget = outputGuardParser.parseExitTarget(outputGuardData);
             }
         }
 
         return StartStandardExitData({
-            input: input,
+            args: args,
             utxoPos: utxoPos,
             outputTx: outputTx,
             output: output,
@@ -220,19 +220,19 @@ contract PaymentStandardExitable is
     {
         require(data.output.amount > 0, "Should not exit with amount 0");
 
-        if (data.input.outputType != 0) {
-            bytes32 outputGuardFromPreImage = OutputGuard.build(data.input.outputType, data.input.outputGuardData);
-            require(data.output.outputGuard == outputGuardFromPreImage, "Output guard data mismatch pre-image");
+        if (data.args.outputType != 0) {
+            bytes32 outputGuardFromPreImage = OutputGuard.build(data.args.outputType, data.args.outputGuardData);
+            require(data.output.outputGuard == outputGuardFromPreImage, "Output guard data does not match pre-image");
             require(data.outputGuardParser != address(0), "Failed to get the output guard parser for the output type");
         }
 
         require(data.exitTarget == msg.sender, "Only exit target can start an exit");
         require(exits[data.exitId].exitable == false, "Exit already started");
 
-        bytes32 leafData = keccak256(data.input.rlpOutputTx);
+        bytes32 leafData = keccak256(data.args.rlpOutputTx);
         require(
             Merkle.checkMembership(
-                leafData, data.utxoPos.txIndex(), data.txBlockRoot, data.input.outputTxInclusionProof
+                leafData, data.utxoPos.txIndex(), data.txBlockRoot, data.args.outputTxInclusionProof
             ),
             "transaction inclusion proof failed"
         );
@@ -240,11 +240,11 @@ contract PaymentStandardExitable is
 
     function saveStandardExitData(StartStandardExitData memory data) private {
         bytes32 outputId = OutputId.compute(
-            data.isTxDeposit, data.input.rlpOutputTx, data.utxoPos.outputIndex(), data.utxoPos.value
+            data.isTxDeposit, data.args.rlpOutputTx, data.utxoPos.outputIndex(), data.utxoPos.value
         );
 
         bytes32 outputRelatedDataHash = keccak256(
-            abi.encodePacked(data.utxoPos.value, outputId, data.input.outputType, data.output.outputGuard)
+            abi.encodePacked(data.utxoPos.value, outputId, data.args.outputType, data.output.outputGuard)
         );
 
         exits[data.exitId] = PaymentExitDataModel.StandardExit({
@@ -276,13 +276,13 @@ contract PaymentStandardExitable is
     */
 
     function verifyChallengeExitExists(ChallengeStandardExitData memory data) private pure {
-        require(data.exitData.exitable == true, "Such exit does not exists");
+        require(data.exitData.exitable == true, "Such exit does not exist");
     }
 
     function verifyOutputRelatedDataHash(ChallengeStandardExitData memory data) private pure {
-        ChallengeStandardExitInputData memory input = data.input;
+        ChallengeStandardExitArgs memory args = data.args;
         bytes32 outputRelatedDataHash = keccak256(
-            abi.encodePacked(input.outputUtxoPos, input.outputId, input.outputType, input.outputGuard)
+            abi.encodePacked(args.outputUtxoPos, args.outputId, args.outputType, args.outputGuard)
         );
 
         require(data.exitData.outputRelatedDataHash == outputRelatedDataHash,
@@ -290,20 +290,20 @@ contract PaymentStandardExitable is
     }
 
     function verifySpendingCondition(ChallengeStandardExitData memory data) private view {
-        ChallengeStandardExitInputData memory input = data.input;
+        ChallengeStandardExitArgs memory args = data.args;
 
         IPaymentSpendingCondition condition = PaymentSpendingConditionRegistry.spendingConditions(
-            input.outputType, input.challengeTxType
+            args.outputType, args.challengeTxType
         );
         require(address(condition) != address(0), "Spending condition contract not found");
 
         bool isSpentByChallengeTx = condition.verify(
-            input.outputGuard,
-            input.outputUtxoPos,
-            input.outputId,
-            input.challengeTx,
-            input.inputIndex,
-            input.witness
+            args.outputGuard,
+            args.outputUtxoPos,
+            args.outputId,
+            args.challengeTx,
+            args.inputIndex,
+            args.witness
         );
         require(isSpentByChallengeTx, "Spending condition failed");
     }

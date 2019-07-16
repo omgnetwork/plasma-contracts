@@ -9,7 +9,7 @@ contract PaymentSpendingConditionExpected is IPaymentSpendingCondition {
         bytes32 outputGuard;
         uint256 utxoPos;
         bytes32 outputId;
-        bytes consumeTx;
+        bytes spendingTx;
         uint8 inputIndex;
         bytes witness;
     }
@@ -22,14 +22,14 @@ contract PaymentSpendingConditionExpected is IPaymentSpendingCondition {
         bytes32 _outputGuard,
         uint256 _utxoPos,
         bytes32 _outputId,
-        bytes calldata _consumeTx,
+        bytes calldata _spendingTx,
         uint8 _inputIndex,
         bytes calldata _witness
     ) external view returns (bool) {
         require(expected.outputGuard == _outputGuard, "output guard not as expected");
         require(expected.utxoPos == _utxoPos, "utxo pos not as expected");
         require(expected.outputId == _outputId, "output id not as expected");
-        require(compareBytes(expected.consumeTx, _consumeTx), "consume tx not as expected");
+        require(compareBytes(expected.spendingTx, _spendingTx), "spending tx not as expected");
         require(expected.inputIndex == _inputIndex, "input index not as expected");
         require(compareBytes(expected.witness, _witness), "witness not as expected");
 
