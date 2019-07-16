@@ -2,7 +2,6 @@ const { constants } = require('openzeppelin-test-helpers');
 const { UtxoPos } = require('./utxoPos.js');
 
 const EMPTY_BYTES32 = '0x0000000000000000000000000000000000000000000000000000000000000000';
-const NULL_OUTPUT = { outputGuard: EMPTY_BYTES32, token: constants.ZERO_ADDRESS, amount: 0 };
 
 const EIP191_PREFIX = '0x1901';
 const EIP712_DOMAIN_HASH = web3.utils.sha3('EIP712Domain(string name,string version,address verifyingContract,bytes32 salt)');
@@ -49,19 +48,21 @@ const hashTx = (tx, verifyingContract) => {
     const inputs = tx.inputs.map(hashInput);
     const outputs = tx.outputs.map(hashOutput);
 
+    const HASH_EMPTY_INPUT = hashInput(0);
+    const HASH_EMPTY_OUTPUT = hashOutput({ outputGuard: EMPTY_BYTES32, token: constants.ZERO_ADDRESS, amount: 0 });
     const txHash = web3.utils.sha3(web3.eth.abi.encodeParameters([
         'bytes32', 'uint256', 'bytes32', 'bytes32', 'bytes32', 'bytes32', 'bytes32', 'bytes32', 'bytes32', 'bytes32', 'bytes32',
     ], [
         TX_TYPE_HASH,
         tx.transactionType,
-        inputs.length > 0 ? inputs[0] : hashInput(0),
-        inputs.length > 1 ? inputs[1] : hashInput(0),
-        inputs.length > 2 ? inputs[2] : hashInput(0),
-        inputs.length > 3 ? inputs[3] : hashInput(0),
-        outputs.length > 0 ? outputs[0] : hashOutput(NULL_OUTPUT),
-        outputs.length > 1 ? outputs[1] : hashOutput(NULL_OUTPUT),
-        outputs.length > 2 ? outputs[2] : hashOutput(NULL_OUTPUT),
-        outputs.length > 3 ? outputs[3] : hashOutput(NULL_OUTPUT),
+        inputs.length > 0 ? inputs[0] : HASH_EMPTY_INPUT,
+        inputs.length > 1 ? inputs[1] : HASH_EMPTY_INPUT,
+        inputs.length > 2 ? inputs[2] : HASH_EMPTY_INPUT,
+        inputs.length > 3 ? inputs[3] : HASH_EMPTY_INPUT,
+        outputs.length > 0 ? outputs[0] : HASH_EMPTY_OUTPUT,
+        outputs.length > 1 ? outputs[1] : HASH_EMPTY_OUTPUT,
+        outputs.length > 2 ? outputs[2] : HASH_EMPTY_OUTPUT,
+        outputs.length > 3 ? outputs[3] : HASH_EMPTY_OUTPUT,
         tx.metaData || EMPTY_BYTES32,
     ]));
 
