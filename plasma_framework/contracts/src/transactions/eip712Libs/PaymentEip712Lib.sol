@@ -11,6 +11,20 @@ library PaymentEip712Lib {
     uint8 constant public MAX_INPUT_NUM = 4;
     uint8 constant public MAX_OUTPUT_NUM = 4;
 
+    bytes2 constant EIP191_PREFIX = "\x19\x01";
+    bytes32 constant EIP712_DOMAIN_HASH = keccak256(abi.encodePacked(
+            "EIP712Domain(string name,string version,address verifyingContract,bytes32 salt)"
+        ));
+    bytes32 constant TX_TYPE_HASH = keccak256(abi.encodePacked(
+        "Transaction(uint256 txType,Input input0,Input input1,Input input2,Input input3,Output output0,Output output1,Output output2,Output output3,bytes32 metadata)Input(uint256 blknum,uint256 txindex,uint256 oindex)Output(bytes32 owner,address currency,uint256 amount)"
+    ));
+    bytes32 constant INPUT_TYPE_HASH = keccak256(abi.encodePacked("Input(uint256 blknum,uint256 txindex,uint256 oindex)"));
+    bytes32 constant OUTPUT_TYPE_HASH = keccak256(abi.encodePacked("Output(bytes32 owner,address currency,uint256 amount)"));
+    bytes32 constant SALT = 0xfad5c7f626d80f9256ef01929f3beb96e058b8b4b0e3fe52d84f054c0e2a7a83;
+
+    bytes32 constant EMPTY_INPUT_HASH = keccak256(abi.encode(INPUT_TYPE_HASH, 0, 0, 0));
+    bytes32 constant EMPTY_OUTPUT_HASH = keccak256(abi.encode(OUTPUT_TYPE_HASH, bytes32(''), bytes32(''), 0));
+
     struct Constants {
         bytes2 EIP191_PREFIX;
         bytes32 EIP712_DOMAIN_HASH;
@@ -21,24 +35,12 @@ library PaymentEip712Lib {
     }
 
     function initConstants(address _verifyingContract) internal pure returns (Constants memory) {
-        bytes2 EIP191_PREFIX = "\x19\x01";
-        bytes32 EIP712_DOMAIN_HASH = keccak256(abi.encodePacked(
-            "EIP712Domain(string name,string version,address verifyingContract,bytes32 salt)"
-        ));
-        bytes32 TX_TYPE_HASH = keccak256(abi.encodePacked(
-            "Transaction(uint256 txType,Input input0,Input input1,Input input2,Input input3,Output output0,Output output1,Output output2,Output output3,bytes32 metadata)Input(uint256 blknum,uint256 txindex,uint256 oindex)Output(bytes32 owner,address currency,uint256 amount)"
-        ));
-        bytes32 INPUT_TYPE_HASH = keccak256(abi.encodePacked("Input(uint256 blknum,uint256 txindex,uint256 oindex)"));
-        bytes32 OUTPUT_TYPE_HASH = keccak256(abi.encodePacked("Output(bytes32 owner,address currency,uint256 amount)"));
-
-        bytes32 salt = 0xfad5c7f626d80f9256ef01929f3beb96e058b8b4b0e3fe52d84f054c0e2a7a83;
-
         bytes32 DOMAIN_SEPARATOR = keccak256(abi.encode(
             EIP712_DOMAIN_HASH,
             keccak256("OMG Network"),
             keccak256("1"),
             address(_verifyingContract),
-            salt
+            SALT
         ));
 
         return Constants({
@@ -83,35 +85,44 @@ library PaymentEip712Lib {
         return keccak256(abi.encode(
             _eip712.TX_TYPE_HASH,
             _tx.txType,
-            _hashInput(_eip712, inputs[0]),
-            _hashInput(_eip712, inputs[1]),
-            _hashInput(_eip712, inputs[2]),
-            _hashInput(_eip712, inputs[3]),
-            _hashOutput(_eip712, outputs[0]),
-            _hashOutput(_eip712, outputs[1]),
-            _hashOutput(_eip712, outputs[2]),
-            _hashOutput(_eip712, outputs[3]),
+            _hashInput(inputs[0]),
+            _hashInput(inputs[1]),
+            _hashInput(inputs[2]),
+            _hashInput(inputs[3]),
+            _hashOutput(outputs[0]),
+            _hashOutput(outputs[1]),
+            _hashOutput(outputs[2]),
+            _hashOutput(outputs[3]),
             _tx.metaData
         ));
     }
 
-    function _hashInput(Constants memory _eip712, bytes32 _input) private pure returns (bytes32) {
-        UtxoPosLib.UtxoPos memory utxo = UtxoPosLib.UtxoPos(uint256(_input));
+    function _hashInput(bytes32 _input) private pure returns (bytes32) {
+        uint256 inputUtxoValue = uint256(_input);
+        if (inputUtxoValue == 0) {
+            return EMPTY_INPUT_HASH;
+        }
+
+        UtxoPosLib.UtxoPos memory utxo = UtxoPosLib.UtxoPos(inputUtxoValue);
         return keccak256(abi.encode(
-            _eip712.INPUT_TYPE_HASH,
+            INPUT_TYPE_HASH,
             utxo.blockNum(),
             utxo.txIndex(),
             uint256(utxo.outputIndex())
         ));
     }
 
-    function _hashOutput(Constants memory _eip712, PaymentOutputModel.Output memory _output)
+    function _hashOutput(PaymentOutputModel.Output memory _output)
         private
         pure
         returns (bytes32)
     {
+        if (_output.amount == 0) {
+            return EMPTY_OUTPUT_HASH;
+        }
+
         return keccak256(abi.encode(
-            _eip712.OUTPUT_TYPE_HASH,
+            OUTPUT_TYPE_HASH,
             _output.outputGuard,
             _output.token,
             _output.amount
