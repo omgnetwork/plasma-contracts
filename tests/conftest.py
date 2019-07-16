@@ -27,16 +27,14 @@ HUNDRED_ETH = 100 * 10 ** 18
 # On the other hand, in plasma (transactions, blocks, etc.) we should pass addresses in binary form (canonical address).
 
 
-@pytest.fixture(scope="session")
-def deployer():
-    own_dir = os.path.dirname(os.path.realpath(__file__))
-    contracts_dir = os.path.abspath(os.path.realpath(os.path.join(own_dir, '../contracts')))
-    output_dir = os.path.abspath(os.path.realpath(os.path.join(own_dir, '../build')))
-
-    builder = Builder(contracts_dir, output_dir)
-    builder.compile_all()
-    deployer = Deployer(builder)
-    return deployer
+# Compile contracts before testing
+OWN_DIR = os.path.dirname(os.path.realpath(__file__))
+CONTRACTS_DIR = os.path.abspath(os.path.realpath(os.path.join(OWN_DIR, '../plasma_framework/contracts')))
+OUTPUT_DIR = os.path.abspath(os.path.realpath(os.path.join(OWN_DIR, '../build')))
+builder = Builder(CONTRACTS_DIR, OUTPUT_DIR)
+builder.compile_all(allow_paths="*,",
+                    import_remappings=["openzeppelin-solidity=/Users/piotr/Developer/OmiseGO/openzeppelin-solidity"])
+deployer = Deployer(builder)
 
 
 @pytest.fixture(scope="session")
@@ -59,7 +57,6 @@ def parse_worker_no(worker_id):
     except ValueError:
         pass
 
-    return worker_no
 
 
 @pytest.fixture(scope="session")
@@ -113,7 +110,7 @@ def w3(_w3_session):
 
 
 @pytest.fixture
-def get_contract(w3, deployer, accounts):
+def get_contract(w3, accounts):
     def create_contract(path, args=(), sender=accounts[0], libraries=None):
         if libraries is None:
             libraries = dict()
