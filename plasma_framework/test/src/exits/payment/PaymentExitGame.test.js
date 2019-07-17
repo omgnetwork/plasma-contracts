@@ -5,7 +5,6 @@ const PriorityQueue = artifacts.require('PriorityQueue');
 const EthVault = artifacts.require('EthVault');
 const EthDepositVerifier = artifacts.require('EthDepositVerifier');
 const ExitId = artifacts.require('ExitIdWrapper');
-const OutputId = artifacts.require('OutputIdWrapper');
 
 const { BN, constants, expectEvent } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
@@ -38,7 +37,6 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
         web3.eth.sendTransaction({ to: alice, from: richFather, value: web3.utils.toWei('1', 'ether') });
 
         this.exitIdHelper = await ExitId.new();
-        this.outputIdHelper = await OutputId.new();
     });
 
     const setupContracts = async () => {
@@ -100,10 +98,9 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
                     const exitId = await this.exitIdHelper.getStandardExitId(true, this.depositTx, this.depositUtxoPos);
                     const standardExitData = await this.exitGame.exits(exitId);
 
-                    const isDeposit = true;
                     const outputIndexForDeposit = 0;
-                    const outputId = await this.outputIdHelper.compute(
-                        isDeposit, this.depositTx, outputIndexForDeposit, this.depositUtxoPos,
+                    const outputId = computeDepositOutputId(
+                        this.depositTx, outputIndexForDeposit, this.depositUtxoPos,
                     );
                     const expectedOutputRelatedDataHash = web3.utils.soliditySha3(
                         { t: 'uint256', v: this.depositUtxoPos }, { t: 'bytes32', v: outputId },

@@ -18,9 +18,10 @@ const { expect } = require('chai');
 const { MerkleTree } = require('../../../helpers/merkle.js');
 const { buildUtxoPos } = require('../../../helpers/utxoPos.js');
 const {
-    addressToOutputGuard, buildOutputGuard, computeOutputId, spentOnGas,
+    addressToOutputGuard, buildOutputGuard, computeDepositOutputId,
+    computeNormalOutputId, spentOnGas,
 } = require('../../../helpers/utils.js');
-const Testlang = require('../../../helpers/testlang.js');
+const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
 
 
 contract('PaymentStandardExitable', ([_, alice, bob]) => {
@@ -34,7 +35,10 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
 
     describe('startStandardExit', () => {
         const buildTestData = (amount, owner, blockNum) => {
-            const tx = Testlang.deposit(amount, owner, ETH);
+            const output = new PaymentTransactionOutput(amount, addressToOutputGuard(owner), ETH);
+            const txObj = new PaymentTransaction(1, [0], [output]);
+            const tx = web3.utils.bytesToHex(txObj.rlpEncoded());
+
             const outputIndex = 0;
             const utxoPos = buildUtxoPos(blockNum, 0, outputIndex);
             const merkleTree = new MerkleTree([tx], 3);
@@ -195,22 +199,21 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
             expect(actualPostBalance).to.be.bignumber.equal(expectedPostBalance);
         });
 
-        it('should save the StandardExit data when successfully done', async () => {
+        it('should save the correct StandardExit data when successfully done for deposit tx', async () => {
             const outputOwner = alice;
-            const data = buildTestData(this.dummyAmount, alice, this.dummyBlockNum);
+            const depositBlockNum = 2019;
+            const data = buildTestData(this.dummyAmount, alice, depositBlockNum);
 
-            await this.framework.setBlock(this.dummyBlockNum, data.merkleTree.root, 0);
+            await this.framework.setBlock(depositBlockNum, data.merkleTree.root, 0);
 
             await this.exitGame.startStandardExit(
                 data.utxoPos, data.tx, OUTPUT_TYPE_ZERO, EMPTY_BYTES, data.merkleProof,
                 { from: alice, value: STANDARD_EXIT_BOND },
             );
 
-            const isTxDeposit = await this.isDeposit.test(this.dummyBlockNum);
+            const isTxDeposit = true;
             const exitId = await this.exitIdHelper.getStandardExitId(isTxDeposit, data.tx, data.utxoPos);
-            const outputId = computeOutputId(
-                isTxDeposit, data.tx, data.outputIndex, data.utxoPos,
-            );
+            const outputId = computeDepositOutputId(data.tx, data.outputIndex, data.utxoPos);
 
             const expectedOutputRelatedDataHash = web3.utils.soliditySha3(
                 { t: 'uint256', v: data.utxoPos }, { t: 'bytes32', v: outputId },
@@ -226,10 +229,38 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
             expect(standardExitData.amount).to.be.bignumber.equal(new BN(this.dummyAmount));
         });
 
+        it('should save the correct StandardExit data when successfully done for non deposit tx', async () => {
+            const outputOwner = alice;
+            const nonDepositBlockNum = 1000;
+            const data = buildTestData(this.dummyAmount, alice, nonDepositBlockNum, false);
+
+            await this.framework.setBlock(nonDepositBlockNum, data.merkleTree.root, 0);
+
+            await this.exitGame.startStandardExit(
+                data.utxoPos, data.tx, OUTPUT_TYPE_ZERO, EMPTY_BYTES, data.merkleProof,
+                { from: alice, value: STANDARD_EXIT_BOND },
+            );
+
+            const isTxDeposit = false;
+            const exitId = await this.exitIdHelper.getStandardExitId(isTxDeposit, data.tx, data.utxoPos);
+            const outputId = computeNormalOutputId(data.tx, data.outputIndex);
+
+            const expectedOutputRelatedDataHash = web3.utils.soliditySha3(
+                { t: 'uint256', v: data.utxoPos }, { t: 'bytes32', v: outputId },
+                { t: 'uint256', v: OUTPUT_TYPE_ZERO }, { t: 'bytes32', v: addressToOutputGuard(outputOwner) },
+            );
+
+            const standardExitData = await this.exitGame.exits(exitId);
+
+            expect(standardExitData.exitable).to.be.true;
+            expect(standardExitData.outputRelatedDataHash, 'hash differ').to.equal(expectedOutputRelatedDataHash);
+            expect(standardExitData.exitTarget).to.equal(outputOwner);
+            expect(standardExitData.token).to.equal(ETH);
+            expect(standardExitData.amount).to.be.bignumber.equal(new BN(this.dummyAmount));
+        });
+
         it('should put the exit data into the queue of framework', async () => {
             const data = buildTestData(this.dummyAmount, alice, this.dummyBlockNum);
-            const currentTimestamp = await time.latest();
-            const timestamp = currentTimestamp.sub(new BN(15));
 
             await this.framework.setBlock(this.dummyBlockNum, data.merkleTree.root, 0);
 
@@ -240,6 +271,9 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
 
             const isTxDeposit = await this.isDeposit.test(this.dummyBlockNum);
             const exitId = await this.exitIdHelper.getStandardExitId(isTxDeposit, data.tx, data.utxoPos);
+
+            const currentTimestamp = await time.latest();
+            const timestamp = currentTimestamp.sub(new BN(15));
             const exitableAt = await this.exitableHelper.calculate(
                 currentTimestamp, timestamp, isTxDeposit,
             );
