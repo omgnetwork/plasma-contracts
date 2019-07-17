@@ -1,4 +1,5 @@
 init:
+	(test -d openzeppelin-solidity || git clone https://github.com/OpenZeppelin/openzeppelin-solidity.git) && cd openzeppelin-solidity && git checkout v2.3.0
 	pip install -e .
 
 .PHONY: help
@@ -17,6 +18,8 @@ clean-build:
 	rm -fr contract_data/
 	rm -fr *.egg-info
 	rm -fr .pytest_cache
+	rm -rf openzeppelin-solidity/
+
 
 clean-pyc:
 	find . -name '*.pyc' -exec rm -f {} +

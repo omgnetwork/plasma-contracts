@@ -25,7 +25,7 @@ setup(
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
     install_requires=[
         'rlp==1.1.0',
-        'py-solc-simple==0.0.14',
+        'py-solc-simple@git+https://github.com/omisego/py-solc-simple@plasma_contracts_tmp_compilation',
         'web3==5.0.0',
         'eip712-structs==1.1.0',
         'eth_tester==0.2.0b2'
