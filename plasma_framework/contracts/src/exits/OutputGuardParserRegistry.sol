@@ -1,10 +1,10 @@
 pragma solidity ^0.5.0;
 
-import "./IOutputGuardParser.sol";
-import "../utils/Freezable.sol";
-import "../framework/utils/Operated.sol";
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
-contract OutputGuardParserRegistry is Operated, Freezable {
+import "./IOutputGuardParser.sol";
+
+contract OutputGuardParserRegistry is Ownable {
     mapping(uint256 => IOutputGuardParser) private _outputGuardParsers;
 
     function outputGuardParsers(uint256 _outputType) public view returns (IOutputGuardParser) {
@@ -18,8 +18,7 @@ contract OutputGuardParserRegistry is Operated, Freezable {
      */
     function registerOutputGuardParser(uint256 _outputType, address _parserAddress)
         public
-        onlyOperator
-        onlyNonFrozen
+        onlyOwner
     {
         require(_outputType != 0, "Should not register with output type 0");
         require(_parserAddress != address(0), "Should not register an empty address");
