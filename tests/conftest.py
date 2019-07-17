@@ -118,7 +118,7 @@ def get_contract(w3, accounts):
         abi, hexcode = deployer.builder.get_contract_data(path)
 
         libraries = _encode_libs(libraries)
-        linked_hexcode = link_code(hexcode, libraries)
+        linked_hexcode = link_code(hexcode, libraries)[0:-len("\nLinking completed.")]  # trim trailing text
         factory = w3.eth.contract(abi=abi, bytecode=linked_hexcode)
         tx_hash = factory.constructor(*args).transact({'gas': START_GAS, 'from': sender.address})
         tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
