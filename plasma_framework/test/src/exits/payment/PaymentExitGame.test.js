@@ -12,7 +12,7 @@ const { expect } = require('chai');
 
 const { MerkleTree } = require('../../../helpers/merkle.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
-const { addressToOutputGuard, computeDepositOutputId } = require('../../../helpers/utils.js');
+const { addressToOutputGuard, computeDepositOutputId, spentOnGas } = require('../../../helpers/utils.js');
 const { sign } = require('../../../helpers/sign.js');
 const { hashTx } = require('../../../helpers/paymentEip712.js');
 const { buildUtxoPos } = require('../../../helpers/utxoPos.js');
@@ -193,8 +193,12 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
                             witness: signature,
                         };
 
-                        const { logs } = await this.exitGame.challengeStandardExit(input);
+                        this.bobBalanceBeforeChallenge = new BN(await web3.eth.getBalance(bob));
+                        const { logs, receipt } = await this.exitGame.challengeStandardExit(
+                            input, { from: bob },
+                        );
                         this.challengeTxLogs = logs;
+                        this.challengeTxReciept = receipt;
                     });
 
                     it('should challenge it successfully', async () => {
@@ -203,6 +207,15 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
                             'ExitChallenged',
                             { utxoPos: new BN(this.depositUtxoPos) },
                         );
+                    });
+
+                    it('should transfer the bond to bob', async () => {
+                        const actualBobBalanceAfterChallenge = new BN(await web3.eth.getBalance(bob));
+                        const expectedBobBalanceAfterChallenge = this.bobBalanceBeforeChallenge
+                            .add(new BN(STANDARD_EXIT_BOND))
+                            .sub(await spentOnGas(this.challengeTxReciept));
+
+                        expect(actualBobBalanceAfterChallenge).to.be.bignumber.equal(expectedBobBalanceAfterChallenge);
                     });
                 });
             });
