@@ -15,7 +15,7 @@ contract BlockController is Operated, VaultRegistry {
         uint256 blockNumber
     );
 
-    constructor(uint256 _interval) public {
+    constructor(uint256 _interval, uint256 _minExitPeriod) public VaultRegistry(_minExitPeriod) {
         childBlockInterval = _interval;
         nextChildBlock = childBlockInterval;
         nextDepositBlock = 1;
@@ -45,7 +45,7 @@ contract BlockController is Operated, VaultRegistry {
      * @dev Block number adds 1 per submission, could have at most 'childBlockInterval' deposit blocks between two child chain blocks.
      * @param _blockRoot Merkle root of the block.
      */
-    function submitDepositBlock(bytes32 _blockRoot) public onlyFromVault {
+    function submitDepositBlock(bytes32 _blockRoot) public onlyFromVault notQuarantined(msg.sender) {
         require(nextDepositBlock < childBlockInterval, "Exceeded limit of deposits per child block interval");
 
         uint256 blknum = nextChildBlock - childBlockInterval + nextDepositBlock;

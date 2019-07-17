@@ -15,7 +15,7 @@ contract PlasmaFramework is IPlasmaFramework, Operated, VaultRegistry, ExitGameR
     // Exit period for fresh utxos is double of that while IFE phase is half of that
     uint256 public minExitPeriod;
 
-    constructor(uint256 _minExitPeriod) public BlockController(CHILD_BLOCK_INTERVAL) {
+    constructor(uint256 _minExitPeriod) public BlockController(CHILD_BLOCK_INTERVAL, _minExitPeriod) {
         minExitPeriod = _minExitPeriod;
     }
 }
