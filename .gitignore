@@ -22,6 +22,9 @@ build/
 .idea/
 *.iml
 
+# contracts dependencies
+openzeppelin-solidity
+
 # dotenv environment vars
 .env
 
