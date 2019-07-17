@@ -16,13 +16,6 @@ function addressToOutputGuard(address) {
     return `0x${address.substring(2).padStart(64, '0')}`;
 }
 
-function computeOutputId(isDeposit, txBytes, outputIndex, utxoPos) {
-    if (isDeposit) {
-        return computeDepositOutputId(txBytes, outputIndex, utxoPos);
-    }
-    return computeNormalOutputId(txBytes, outputIndex);
-}
-
 function computeDepositOutputId(txBytes, outputIndex, utxoPos) {
     return web3.utils.soliditySha3(
         { t: 'bytes', v: txBytes },
@@ -41,7 +34,6 @@ function computeNormalOutputId(txBytes, outputIndex) {
 module.exports = {
     spentOnGas,
     buildOutputGuard,
-    computeOutputId,
     computeDepositOutputId,
     computeNormalOutputId,
     addressToOutputGuard,
