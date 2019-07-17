@@ -49,7 +49,7 @@ commands:
       - run:
           name: Install dependencies
           command: |
-            pip install -r requirements.txt
+            make init dev
             python -m solcx.install v0.5.9
       - save_cache:
           key: dependencies-{{ checksum "requirements.txt" }}
@@ -85,7 +85,7 @@ jobs:
           name: Run javascript linter
           command: eslint . 
           working_directory: ~/repo/plasma_framework
-          
+
   Solidity linter:
     executor: truffle_executor
     working_directory: ~/repo
@@ -93,9 +93,9 @@ jobs:
       - setup_truffle_env
       - run:
           name: Run solidity linter
-          command: npm run linter-sol 
+          command: npm run linter-sol
           working_directory: ~/repo/plasma_framework
-  
+
   Python tests:
     executor: python_executor
     working_directory: ~/repo
