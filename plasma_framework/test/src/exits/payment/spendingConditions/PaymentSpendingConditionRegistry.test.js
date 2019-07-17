@@ -27,20 +27,20 @@ contract('PaymentSpendingConditionRegistry', ([_, other]) => {
                 .to.equal(this.dummyCondition.address);
         });
 
-        it('should reject when not registered by operator', async () => {
+        it('should reject when not registered by contract owner', async () => {
             await expectRevert(
                 this.registry.registerSpendingCondition(
                     1, 1, this.dummyCondition.address, { from: other },
                 ),
-                'Not being called by operator',
+                'Ownable: caller is not the owner',
             );
         });
 
-        it('should reject when frozen', async () => {
-            await this.registry.freeze();
+        it('should reject when contract got renounced', async () => {
+            await this.registry.renounceOwnership();
             await expectRevert(
                 this.registry.registerSpendingCondition(1, 1, this.dummyCondition.address),
-                'The function has been frozen',
+                'Ownable: caller is not the owner',
             );
         });
 

@@ -1,10 +1,11 @@
 pragma solidity ^0.5.0;
 
-import "./IPaymentSpendingCondition.sol";
-import "../../../utils/Freezable.sol";
-import "../../../framework/utils/Operated.sol";
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
-contract PaymentSpendingConditionRegistry is Operated, Freezable {
+import "./IPaymentSpendingCondition.sol";
+
+
+contract PaymentSpendingConditionRegistry is Ownable {
     mapping(bytes32 => IPaymentSpendingCondition) private _spendingConditions;
 
     function spendingConditions(uint256 _outputType, uint256 _spendingTxType)
@@ -25,8 +26,7 @@ contract PaymentSpendingConditionRegistry is Operated, Freezable {
      */
     function registerSpendingCondition(uint256 _outputType, uint256 _spendingTxType, address _address)
         public
-        onlyOperator
-        onlyNonFrozen
+        onlyOwner
     {
         require(_spendingTxType != 0, "Transaction Type must not be 0");
         require(_address != address(0), "Should not register an empty address");

@@ -24,18 +24,18 @@ contract('OutputGuardParserRegistry', ([_, other]) => {
             expect(await this.registry.outputGuardParsers(outputType)).to.equal(this.dummyOutputGuardParser.address);
         });
 
-        it('should reject when not registered by operator', async () => {
+        it('should reject when not registered by owner', async () => {
             await expectRevert(
                 this.registry.registerOutputGuardParser(1, this.dummyOutputGuardParser.address, { from: other }),
-                'Not being called by operator',
+                'Ownable: caller is not the owner',
             );
         });
 
-        it('should reject when frozen', async () => {
-            await this.registry.freeze();
+        it('should reject when ownership of contract got renounced', async () => {
+            await this.registry.renounceOwnership();
             await expectRevert(
                 this.registry.registerOutputGuardParser(1, this.dummyOutputGuardParser.address),
-                'The function has been frozen',
+                'Ownable: caller is not the owner',
             );
         });
 
