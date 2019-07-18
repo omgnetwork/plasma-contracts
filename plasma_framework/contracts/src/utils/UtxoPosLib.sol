@@ -47,9 +47,9 @@ library UtxoPosLib {
     function outputIndex(UtxoPos memory _utxoPos)
         internal
         pure
-        returns (uint8)
+        returns (uint16)
     {
-        return uint8(_utxoPos.value % TX_OFFSET);
+        return uint16(_utxoPos.value % TX_OFFSET);
     }
 
     /**
