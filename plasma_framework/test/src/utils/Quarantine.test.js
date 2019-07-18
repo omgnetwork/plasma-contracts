@@ -4,7 +4,7 @@ const { expect } = require('chai');
 const { expectRevert } = require('openzeppelin-test-helpers');
 const { sleep } = require('../../helpers/utils');
 
-contract.only('Quarantine', () => {
+contract('Quarantine', () => {
     describe('contract is quarantined', () => {
         const QUARANTINE_PERIOD = 3;
         const INITIAL_IMMUNE = 0;
