@@ -15,7 +15,7 @@ contract UtxoPosLibWrapper {
         return UtxoPosLib.UtxoPos(_utxoPos).txIndex();
     }
 
-    function outputIndex(uint256 _utxoPos) public pure returns (uint8) {
+    function outputIndex(uint256 _utxoPos) public pure returns (uint16) {
         return UtxoPosLib.UtxoPos(_utxoPos).outputIndex();
     }
 

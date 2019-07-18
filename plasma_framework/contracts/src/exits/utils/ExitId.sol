@@ -14,8 +14,8 @@ library ExitId {
      * @param _utxoPos UTXO position of the exiting output.
      * @return _standardExitId Unique standard exit id.
      *     Anatomy of returned value, most significant bits first:
-     *     8 bits - oindex
-     *     1 bit - in-flight flag
+     *     16 bits - output index
+     *     1 bit - in-flight flag (0 for standard exit)
      *     151 bit - hash(tx) or hash(tx|utxo) for deposit
      */
     function getStandardExitId(
@@ -39,7 +39,7 @@ library ExitId {
     Private
     */
 
-    function _computeStandardExitId(bytes32 _txhash, uint8 _outputIndex)
+    function _computeStandardExitId(bytes32 _txhash, uint16 _outputIndex)
         private
         pure
         returns (uint192)
