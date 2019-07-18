@@ -23,7 +23,6 @@ contract Quarantine is Operated {
 
     modifier notQuarantined(address _contractAddress) {
         require(block.timestamp > _quarantine[_contractAddress], "Contract is quarantined.");
-        delete _quarantine[_contractAddress];
         _;
     }
 
