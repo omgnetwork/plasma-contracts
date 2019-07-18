@@ -8,7 +8,7 @@ import "../utils/Operated.sol";
 contract Quarantine is Operated {
     mapping(address => uint256) private _quarantine;
     uint256 private _quarantinePeriod;
-    uint8 private _immunitiesRemaining;
+    uint256 private _immunitiesRemaining;
 
     /**
      * @dev The _initialImmuneCount parameter allows us to deploy the platform with some
@@ -16,7 +16,7 @@ contract Quarantine is Operated {
      * @param _period the period of time in seconds to quarantine contracts.
      * @param _initialImmuneCount the first _initialImmuneCount contracts don't get quarantined.
      */
-    constructor (uint256 _period, uint8 _initialImmuneCount) public {
+    constructor (uint256 _period, uint256 _initialImmuneCount) public {
         _quarantinePeriod = _period;
         _immunitiesRemaining = _initialImmuneCount;
     }
