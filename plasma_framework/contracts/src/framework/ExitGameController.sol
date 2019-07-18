@@ -10,6 +10,7 @@ contract ExitGameController is ExitGameRegistry {
     uint64 public exitQueueNonce = 1;
     mapping (uint256 => ExitModel.Exit) public exits;
     mapping (address => PriorityQueue) public exitsQueues;
+    mapping (bytes32 => bool) public isOutputSpent;
 
     event TokenAdded(
         address token
@@ -107,5 +108,36 @@ contract ExitGameController is ExitGameRegistry {
         }
 
         emit ProcessedExitsNum(processedNum, _token);
+    }
+
+    /**
+     * @notice Checks if any of the output with the given outputIds is spent already.
+     * @param _outputIds Output ids to be checked.
+     */
+    function isAnyOutputsSpent(bytes32[] calldata _outputIds) external view returns (bool) {
+        for (uint i = 0 ; i < _outputIds.length ; i++) {
+            if (isOutputSpent[_outputIds[i]] == true) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @notice Batch flags outputs that is spent
+     * @param _outputIds Output ids to be flagged
+     */
+    function batchFlagOutputsSpent(bytes32[] calldata _outputIds) external onlyFromExitGame {
+        for (uint i = 0 ; i < _outputIds.length ; i++) {
+            isOutputSpent[_outputIds[i]] = true;
+        }
+    }
+
+    /**
+     * @notice Flags a single outputs as spent
+     * @param _outputId The output id to be flagged as spent
+     */
+    function flagOutputSpent(bytes32 _outputId) external onlyFromExitGame {
+        isOutputSpent[_outputId] = true;
     }
 }
