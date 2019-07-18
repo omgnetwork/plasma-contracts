@@ -299,18 +299,17 @@ contract PaymentStandardExitable is
     }
 
     function enqueueStandardExit(StartStandardExitData memory data) private {
-        uint256 exitableAt = exitableTimestampCalculator.calculate(
+        uint64 exitableAt = exitableTimestampCalculator.calculate(
             block.timestamp, data.txBlockTimeStamp, data.isTxDeposit
         );
 
-        uint192 priority = uint192(data.utxoPos.value);
         ExitModel.Exit memory exitDataForQueue = ExitModel.Exit({
             exitProcessor: address(this),
             exitableAt: exitableAt,
             exitId: data.exitId
         });
 
-        framework.enqueue(priority, data.output.token, exitDataForQueue);
+        framework.enqueue(data.output.token, exitDataForQueue);
     }
 
     /**

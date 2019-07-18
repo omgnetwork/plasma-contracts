@@ -75,7 +75,7 @@ contract('ExitGameController', () => {
 
         it('rejects when not called from exit game contract', async () => {
             await expectRevert(
-                this.controller.enqueue(0, constants.ZERO_ADDRESS, this.dummyExit),
+                this.controller.enqueue(constants.ZERO_ADDRESS, this.dummyExit),
                 'Not being called by registered exit game contract',
             );
         });
@@ -83,7 +83,7 @@ contract('ExitGameController', () => {
         it('rejects when such token has not been added yet', async () => {
             const fakeNonAddedTokenAddress = (await DummyExitGame.new()).address;
             await expectRevert(
-                this.dummyExitGame.enqueue(0, fakeNonAddedTokenAddress, this.dummyExit),
+                this.dummyExitGame.enqueue(fakeNonAddedTokenAddress, this.dummyExit),
                 'Such token has not been added to the plasma framework yet',
             );
         });
@@ -94,7 +94,7 @@ contract('ExitGameController', () => {
             const newDummyExitGameId = 2;
             await this.controller.registerExitGame(newDummyExitGameId, newDummyExitGame.address);
             await expectRevert(
-                newDummyExitGame.enqueue(0, this.dummyToken, this.dummyExit),
+                newDummyExitGame.enqueue(this.dummyToken, this.dummyExit),
                 'ExitGame is quarantined.',
             );
         });
@@ -102,14 +102,14 @@ contract('ExitGameController', () => {
         it('increases `exitQueueNonce` once', async () => {
             const originExitQueueNonce = await this.controller.exitQueueNonce();
 
-            await this.dummyExitGame.enqueue(0, this.dummyToken, this.dummyExit);
+            await this.dummyExitGame.enqueue(this.dummyToken, this.dummyExit);
 
             expect(await this.controller.exitQueueNonce())
                 .to.be.bignumber.equal(originExitQueueNonce.add(new BN(1)));
         });
 
         it('inserts the new unique priority to the queue', async () => {
-            await this.dummyExitGame.enqueue(0, this.dummyToken, this.dummyExit);
+            await this.dummyExitGame.enqueue(this.dummyToken, this.dummyExit);
 
             const priorityQueueAddress = await this.controller.exitsQueues(this.dummyToken);
             const priorityQueue = await PriorityQueue.at(priorityQueueAddress);
@@ -121,7 +121,7 @@ contract('ExitGameController', () => {
         });
 
         it('saves the exit data to map', async () => {
-            await this.dummyExitGame.enqueue(0, this.dummyToken, this.dummyExit);
+            await this.dummyExitGame.enqueue(this.dummyToken, this.dummyExit);
 
             const uniquePriority = await this.dummyExitGame.uniquePriorityFromEnqueue();
             const exit = await this.controller.exits(uniquePriority);
@@ -131,15 +131,9 @@ contract('ExitGameController', () => {
             expect(exit.exitId).to.be.bignumber.equal(new BN(this.dummyExit.exitId));
         });
 
-        it('can enqueue with the same exit priority multiple times', async () => {
-            const exitPriority = 1;
-            const dummyExit2 = {
-                exitProcessor: this.dummyExitGame.address,
-                exitableAt: 1,
-                exitId: 456,
-            };
-            await this.dummyExitGame.enqueue(exitPriority, this.dummyToken, this.dummyExit);
-            await this.dummyExitGame.enqueue(exitPriority, this.dummyToken, dummyExit2);
+        it('can enqueue with the same exitable timestamp (priority) multiple times', async () => {
+            await this.dummyExitGame.enqueue(this.dummyToken, this.dummyExit);
+            await this.dummyExitGame.enqueue(this.dummyToken, this.dummyExit);
 
             const priorityQueueAddress = await this.controller.exitsQueues(this.dummyToken);
             const priorityQueue = await PriorityQueue.at(priorityQueueAddress);
@@ -173,7 +167,7 @@ contract('ExitGameController', () => {
         });
 
         it('rejects when the "top unique priority" mismatches with the specified one', async () => {
-            await this.dummyExitGame.enqueue(0, this.dummyToken, this.dummyExit);
+            await this.dummyExitGame.enqueue(this.dummyToken, this.dummyExit);
 
             const nonExistingUniqeuePriority = 123;
             await expectRevert(
@@ -183,7 +177,7 @@ contract('ExitGameController', () => {
         });
 
         it('processes when the "top unique priority" is set to 0', async () => {
-            await this.dummyExitGame.enqueue(0, this.dummyToken, this.dummyExit);
+            await this.dummyExitGame.enqueue(this.dummyToken, this.dummyExit);
 
             const tx = await this.controller.processExits(this.dummyToken, 0, 1);
             await expectEvent.inLogs(tx.logs, 'ProcessedExitsNum', {
@@ -193,7 +187,7 @@ contract('ExitGameController', () => {
         });
 
         it('processes when the "top unique priority" is set to the exact top of the queue', async () => {
-            await this.dummyExitGame.enqueue(0, this.dummyToken, this.dummyExit);
+            await this.dummyExitGame.enqueue(this.dummyToken, this.dummyExit);
             const uniquePriority = await this.dummyExitGame.uniquePriorityFromEnqueue();
 
             const tx = await this.controller.processExits(this.dummyToken, uniquePriority, 1);
@@ -204,8 +198,11 @@ contract('ExitGameController', () => {
         });
 
         it('processes with the order of priority and delete the processed exit from queue', async () => {
-            await this.dummyExitGame.enqueue(0, this.dummyToken, this.dummyExit);
-            await this.dummyExitGame.enqueue(1, this.dummyToken, this.dummyExit);
+            const dummyExit2WithLowerPriority = Object.assign({}, this.dummyExit);
+            dummyExit2WithLowerPriority.exitableAt = this.dummyExit.exitableAt + 1;
+
+            await this.dummyExitGame.enqueue(this.dummyToken, this.dummyExit);
+            await this.dummyExitGame.enqueue(this.dummyToken, dummyExit2WithLowerPriority);
             const lowPriority = await this.dummyExitGame.uniquePriorityFromEnqueue();
 
             await this.controller.processExits(this.dummyToken, 0, 1);
@@ -217,7 +214,7 @@ contract('ExitGameController', () => {
         });
 
         it('calls the "processExit" function of the exit processor when processes', async () => {
-            await this.dummyExitGame.enqueue(0, this.dummyToken, this.dummyExit);
+            await this.dummyExitGame.enqueue(this.dummyToken, this.dummyExit);
 
             const { receipt } = await this.controller.processExits(this.dummyToken, 0, 1);
 
@@ -230,7 +227,7 @@ contract('ExitGameController', () => {
         });
 
         it('deletes the exit data after processed', async () => {
-            await this.dummyExitGame.enqueue(0, this.dummyToken, this.dummyExit);
+            await this.dummyExitGame.enqueue(this.dummyToken, this.dummyExit);
             const uniquePriority = await this.dummyExitGame.uniquePriorityFromEnqueue();
 
             await this.controller.processExits(this.dummyToken, 0, 1);
@@ -247,8 +244,8 @@ contract('ExitGameController', () => {
                 exitableAt: 1,
                 exitId: 456,
             };
-            await this.dummyExitGame.enqueue(0, this.dummyToken, this.dummyExit);
-            await this.dummyExitGame.enqueue(0, this.dummyToken, dummyExit2);
+            await this.dummyExitGame.enqueue(this.dummyToken, this.dummyExit);
+            await this.dummyExitGame.enqueue(this.dummyToken, dummyExit2);
 
             const maxExitsToProcess = 1;
             const tx = await this.controller.processExits(this.dummyToken, 0, maxExitsToProcess);
@@ -260,13 +257,13 @@ contract('ExitGameController', () => {
         });
 
         it('does not process exit that is not able to exit yet', async () => {
-            const INFINITE_TIME = 33134745600; // timestamp of 3020/01/01 00:00:00
+            const UNREACHEABLE_FUTURE = (2 ** 32) - 1; // Sunday, February 7, 2106
             const notAbleToExitYetExit = {
                 exitProcessor: this.dummyExitGame.address,
-                exitableAt: INFINITE_TIME,
+                exitableAt: UNREACHEABLE_FUTURE,
                 exitId: 456,
             };
-            await this.dummyExitGame.enqueue(0, this.dummyToken, notAbleToExitYetExit);
+            await this.dummyExitGame.enqueue(this.dummyToken, notAbleToExitYetExit);
 
             const tx = await this.controller.processExits(this.dummyToken, 0, 1);
 
@@ -277,7 +274,7 @@ contract('ExitGameController', () => {
         });
 
         it('stops to process when queue becomes empty', async () => {
-            await this.dummyExitGame.enqueue(0, this.dummyToken, this.dummyExit);
+            await this.dummyExitGame.enqueue(this.dummyToken, this.dummyExit);
 
             const queueSize = 1;
             const maxExitsToProcess = 2;

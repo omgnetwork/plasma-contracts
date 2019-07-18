@@ -15,13 +15,13 @@ library ExitableTimestamp {
     )
         internal
         pure
-        returns (uint256)
+        returns (uint64)
     {
         uint256 minExitableTimestamp = _now + _calculator.minExitPeriod;
 
         if (_isDeposit) {
-            return minExitableTimestamp;
+            return uint64(minExitableTimestamp);
         }
-        return Math.max(_blockTimestamp + (_calculator.minExitPeriod * 2), minExitableTimestamp);
+        return uint64(Math.max(_blockTimestamp + (_calculator.minExitPeriod * 2), minExitableTimestamp));
     }
 }
