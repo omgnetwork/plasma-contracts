@@ -841,7 +841,7 @@ contract RootChain {
         pure
         returns (uint192)
     {
-        return uint192((uint256(keccak256(_tx)) >> 151).setBit(152));
+        return uint192((uint256(keccak256(_tx)) >> 105).setBit(152));
     }
 
     /**
