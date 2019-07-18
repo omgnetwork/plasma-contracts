@@ -27,27 +27,6 @@ contract('ExitGameController', () => {
         });
     });
 
-    describe('exitQueueNonce', () => {
-        it('can receive the exit queue nonce', async () => {
-            expect(await this.controller.exitQueueNonce()).to.be.bignumber.equal(new BN(1));
-        });
-    });
-
-    describe('exits', () => {
-        it('can receive exit data with the unique priority', async () => {
-            const exit = await this.controller.exits(0);
-            expect(exit.exitProcessor).to.equal(constants.ZERO_ADDRESS);
-            expect(exit.exitableAt).to.be.bignumber.equal(new BN(0));
-            expect(exit.exitId).to.be.bignumber.equal(new BN(0));
-        });
-    });
-
-    describe('exitsQueues', () => {
-        it('can review the priority queue contract for the token', async () => {
-            expect(await this.controller.exitsQueues(this.dummyToken)).to.equal(constants.ZERO_ADDRESS);
-        });
-    });
-
     describe('hasToken', () => {
         it('returns true when token already added', async () => {
             await this.controller.addToken(this.dummyToken);
@@ -294,6 +273,79 @@ contract('ExitGameController', () => {
                 processedNum: new BN(queueSize),
                 token: this.dummyToken,
             });
+        });
+    });
+
+    describe('isAnyOutputsSpent', () => {
+        it('should return true when checking a spent output', async () => {
+            const spentOutputId = web3.utils.sha3('output id');
+            await this.dummyExitGame.proxyBatchFlagOutputsSpent([spentOutputId]);
+            expect(await this.controller.isAnyOutputsSpent([spentOutputId])).to.be.true;
+        });
+
+        it('should return false when checking an unspent output', async () => {
+            const unspentOutputId = web3.utils.sha3('output id');
+            expect(await this.controller.isAnyOutputsSpent([unspentOutputId])).to.be.false;
+        });
+
+        it('should return true when all of the outputs are spent', async () => {
+            const dummyOutputId1 = web3.utils.sha3('output id 1');
+            const dummyOutputId2 = web3.utils.sha3('output id 2');
+            await this.dummyExitGame.proxyBatchFlagOutputsSpent([dummyOutputId1, dummyOutputId2]);
+            expect(await this.controller.isAnyOutputsSpent([dummyOutputId1, dummyOutputId2])).to.be.true;
+        });
+
+        it('should return true when one of the outputs is spent', async () => {
+            const spentOutputId = web3.utils.sha3('output id 1');
+            const unspentOutputId = web3.utils.sha3('output id 2');
+            await this.dummyExitGame.proxyBatchFlagOutputsSpent([spentOutputId]);
+            expect(await this.controller.isAnyOutputsSpent([unspentOutputId, spentOutputId])).to.be.true;
+        });
+
+        it('should return false when all of the outputs are not spent', async () => {
+            const unspentOutputId1 = web3.utils.sha3('output id 1');
+            const unspentOutputId2 = web3.utils.sha3('output id 2');
+            expect(await this.controller.isAnyOutputsSpent([unspentOutputId1, unspentOutputId2])).to.be.false;
+        });
+    });
+
+    describe('batchFlagOutputsSpent', () => {
+        it('should be able to flag a single output', async () => {
+            const dummyOutputId = web3.utils.sha3('output id');
+            await this.dummyExitGame.proxyBatchFlagOutputsSpent([dummyOutputId]);
+            expect(await this.controller.isOutputSpent(dummyOutputId)).to.be.true;
+        });
+
+        it('should be able to flag multiple outputs', async () => {
+            const dummyOutputId1 = web3.utils.sha3('output id 1');
+            const dummyOutputId2 = web3.utils.sha3('output id 2');
+            await this.dummyExitGame.proxyBatchFlagOutputsSpent([dummyOutputId1, dummyOutputId2]);
+            expect(await this.controller.isOutputSpent(dummyOutputId1)).to.be.true;
+            expect(await this.controller.isOutputSpent(dummyOutputId2)).to.be.true;
+        });
+
+        it('should fail when not called by Exit Game contracts', async () => {
+            const dummyOutputId = web3.utils.sha3('output id');
+            await expectRevert(
+                this.controller.batchFlagOutputsSpent([dummyOutputId]),
+                'Not being called by registered exit game contract',
+            );
+        });
+    });
+
+    describe('flagOutputSpent', () => {
+        it('should be able to flag an output', async () => {
+            const dummyOutputId = web3.utils.sha3('output id');
+            await this.dummyExitGame.proxyFlagOutputSpent(dummyOutputId);
+            expect(await this.controller.isOutputSpent(dummyOutputId)).to.be.true;
+        });
+
+        it('should fail when not called by Exit Game contracts', async () => {
+            const dummyOutputId = web3.utils.sha3('output id');
+            await expectRevert(
+                this.controller.flagOutputSpent(dummyOutputId),
+                'Not being called by registered exit game contract',
+            );
         });
     });
 });
