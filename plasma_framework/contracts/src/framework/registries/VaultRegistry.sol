@@ -4,7 +4,7 @@ import "../utils/Operated.sol";
 import "../utils/Quarantine.sol";
 
 contract VaultRegistry is Operated, Quarantine {
-    uint8 public constant INITIAL_IMMUNE_VAULTS = 2;
+    uint256 public constant INITIAL_IMMUNE_VAULTS = 2;
 
     mapping(uint256 => address) private _vaults;
     mapping(address => uint256) private _vaultToId;
@@ -35,9 +35,9 @@ contract VaultRegistry is Operated, Quarantine {
 
         _vaults[_vaultId] = _vaultAddress;
         _vaultToId[_vaultAddress] = _vaultId;
+        Quarantine.quarantine(_vaultAddress);
 
         emit VaultRegistered(_vaultId, _vaultAddress);
-        quarantine(_vaultAddress);
     }
 
     function vaults(uint256 _vaultId) public view returns (address) {
