@@ -7,7 +7,7 @@ const { expect } = require('chai');
 contract('BlockController', ([_, other]) => {
     const MIN_EXIT_PERIOD = 0;
     const INITIAL_IMMUNE_VAULTS = 1;
-    
+
     beforeEach(async () => {
         this.childBlockInterval = 5;
         this.blockController = await BlockController.new(

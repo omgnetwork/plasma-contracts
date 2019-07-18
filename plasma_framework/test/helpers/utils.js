@@ -31,10 +31,17 @@ function computeNormalOutputId(txBytes, outputIndex) {
     );
 }
 
+function sleep(ms) {
+    return new Promise((resolve) => {
+        setTimeout(resolve, ms);
+    });
+}
+
 module.exports = {
     spentOnGas,
     buildOutputGuard,
     computeDepositOutputId,
     computeNormalOutputId,
     addressToOutputGuard,
+    sleep,
 };
