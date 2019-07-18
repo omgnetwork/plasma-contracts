@@ -14,9 +14,11 @@ contract('Erc20Vault', (accounts) => {
     const alice = accounts[1];
     const DEPOSIT_VALUE = 100;
     const INITIAL_SUPPLY = 1000000;
+    const MIN_EXIT_PERIOD = 0;
+    const INITIAL_IMMUNE_VAULTS = 1;
 
     beforeEach('setup contracts', async () => {
-        this.blockController = await BlockController.new(10);
+        this.blockController = await BlockController.new(10, MIN_EXIT_PERIOD, INITIAL_IMMUNE_VAULTS);
         this.erc20Vault = await Erc20Vault.new(this.blockController.address);
         const depositVerifier = await Erc20DepositVerifier.new();
         await this.erc20Vault.setDepositVerifier(depositVerifier.address);
