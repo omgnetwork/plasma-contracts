@@ -4,8 +4,6 @@ import "../utils/Operated.sol";
 import "../utils/Quarantine.sol";
 
 contract VaultRegistry is Operated, Quarantine {
-    uint256 public constant INITIAL_IMMUNE_VAULTS = 2;
-
     mapping(uint256 => address) private _vaults;
     mapping(address => uint256) private _vaultToId;
 
@@ -14,8 +12,10 @@ contract VaultRegistry is Operated, Quarantine {
         address vaultAddress
     );
 
-    constructor (uint256 _minExitPeriod) Quarantine(_minExitPeriod, INITIAL_IMMUNE_VAULTS) public {
-    }
+    constructor (uint256 _minExitPeriod, uint256 _initialImmuneVaults)
+        public
+        Quarantine(_minExitPeriod, _initialImmuneVaults)
+    {}
 
     modifier onlyFromVault() {
         require(_vaultToId[msg.sender] > 0, "Not being called by registered vaults");

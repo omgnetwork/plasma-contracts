@@ -11,9 +11,11 @@ const Testlang = require('../../helpers/testlang.js');
 
 contract('EthVault', ([_, alice]) => {
     const DEPOSIT_VALUE = 1000000;
+    const MIN_EXIT_PERIOD = 0;
+    const INITIAL_IMMUNE_VAULTS = 1;
 
     beforeEach('setup contracts', async () => {
-        this.blockController = await BlockController.new(10);
+        this.blockController = await BlockController.new(10, MIN_EXIT_PERIOD, INITIAL_IMMUNE_VAULTS);
         this.ethVault = await EthVault.new(this.blockController.address);
         const depositVerifier = await EthDepositVerifier.new();
         await this.ethVault.setDepositVerifier(depositVerifier.address);
