@@ -119,6 +119,21 @@ contract('Erc20Vault', (accounts) => {
                 'Must have only one output',
             );
         });
+
+        it('should not store a deposit in a newly registered vault', async () => {
+            this.newErc20Vault = await Erc20Vault.new(this.blockController.address);
+            const depositVerifier = await Erc20DepositVerifier.new();
+            await this.newErc20Vault.setDepositVerifier(depositVerifier.address);
+            await this.blockController.registerVault(3, this.newErc20Vault.address);
+
+            await this.erc20.approve(this.newErc20Vault.address, DEPOSIT_VALUE, { from: alice });
+            const deposit = Testlang.deposit(DEPOSIT_VALUE, alice, this.erc20.address);
+
+            await expectRevert(
+                this.newErc20Vault.deposit(deposit, { from: alice }),
+                'Contract is quarantined.',
+            );
+        });
     });
 
     describe('deposit from BadERC20', () => {

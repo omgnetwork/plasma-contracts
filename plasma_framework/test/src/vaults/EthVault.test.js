@@ -108,5 +108,18 @@ contract('EthVault', ([_, alice]) => {
                 'Must have only one output.',
             );
         });
+
+        it('should not store a deposit in a newly registered vault', async () => {
+            this.newEthVault = await EthVault.new(this.blockController.address);
+            const depositVerifier = await EthDepositVerifier.new();
+            await this.newEthVault.setDepositVerifier(depositVerifier.address);
+            await this.blockController.registerVault(2, this.newEthVault.address);
+
+            const deposit = Testlang.deposit(DEPOSIT_VALUE, alice);
+            await expectRevert(
+                this.newEthVault.deposit(deposit, { from: alice, value: DEPOSIT_VALUE }),
+                'Contract is quarantined.',
+            );
+        });
     });
 });
