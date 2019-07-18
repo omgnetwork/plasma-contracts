@@ -276,7 +276,7 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
 
             await this.framework.setBlock(this.dummyBlockNum, data.merkleTree.root, 0);
 
-            await this.exitGame.startStandardExit(
+            const { receipt } = await this.exitGame.startStandardExit(
                 data.utxoPos, data.tx, OUTPUT_TYPE_ZERO, EMPTY_BYTES, data.merkleProof,
                 { from: alice, value: STANDARD_EXIT_BOND },
             );
@@ -290,12 +290,17 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
                 currentTimestamp, timestamp, isTxDeposit,
             );
 
-            const queueKey = web3.utils.soliditySha3(data.utxoPos, ETH);
-            const queueExitData = await this.framework.testExitQueue(queueKey);
-
-            expect(queueExitData.exitId).to.be.bignumber.equal(exitId);
-            expect(queueExitData.exitProcessor).to.equal(this.exitGame.address);
-            expect(queueExitData.exitableAt).to.be.bignumber.equal(exitableAt);
+            await expectEvent.inTransaction(
+                receipt.transactionHash,
+                SpyPlasmaFramework,
+                'EnqueueTriggered',
+                {
+                    token: ETH,
+                    exitableAt,
+                    exitProcessor: this.exitGame.address,
+                    exitId,
+                },
+            );
         });
 
         it('should emit ExitStarted event', async () => {

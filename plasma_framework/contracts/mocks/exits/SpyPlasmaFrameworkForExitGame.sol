@@ -6,17 +6,26 @@ import "../../src/framework/models/BlockModel.sol";
 
 contract SpyPlasmaFrameworkForExitGame is PlasmaFramework {
     mapping (uint256 => BlockModel.Block) public blocks;
-    mapping (bytes32 => ExitModel.Exit) public testExitQueue;
+    event EnqueueTriggered(
+        address token,
+        uint64 exitableAt,
+        address exitProcessor,
+        uint256 exitId
+    );
 
     constructor(uint256 _minExitPeriod, uint256 _initialImmuneVaults, uint256 _initialImmuneExitGames)
         public
         PlasmaFramework(_minExitPeriod, _initialImmuneVaults, _initialImmuneExitGames) {
     }
 
-    /** override for test */
-    function enqueue(uint192 _priority, address _token, ExitModel.Exit memory _exit) public returns (uint256) {
-        bytes32 key = keccak256(abi.encodePacked(uint256(_priority), _token));
-        testExitQueue[key] = _exit;
+    function enqueue(address _token, ExitModel.Exit memory _exit) public returns (uint256) {
+        emit EnqueueTriggered(
+            _token,
+            _exit.exitableAt,
+            _exit.exitProcessor,
+            _exit.exitId
+        );
+        return 0;
     }
 
     /**

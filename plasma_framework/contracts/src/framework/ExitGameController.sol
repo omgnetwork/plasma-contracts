@@ -56,16 +56,15 @@ contract ExitGameController is ExitGameRegistry {
      * @dev Unique priority is a combination of original priority and an increasing nonce
      * @dev Use public instead of external because structs in calldata not currently supported.
      * @dev Also, caller of this function should add "pragma experimental ABIEncoderV2;" on top of file
-     * @param _priority The priority of the exit itself
      * @param _token Token for the exit
      * @param _exit Exit data that contains the basic information for exit processor that processes the exit
      * @return a unique priority number computed for the exit
      */
-    function enqueue(uint192 _priority, address _token, ExitModel.Exit memory _exit) public onlyFromNonQuarantinedExitGame returns (uint256) {
+    function enqueue(address _token, ExitModel.Exit memory _exit) public onlyFromNonQuarantinedExitGame returns (uint256) {
         require(hasToken(_token), "Such token has not been added to the plasma framework yet");
 
         PriorityQueue queue = exitsQueues[_token];
-        uint256 uniquePriority = (uint256(_priority) << 64 | exitQueueNonce);
+        uint256 uniquePriority = (uint256(_exit.exitableAt) << 64 | exitQueueNonce);
         exitQueueNonce++;
         queue.insert(uniquePriority);
         exits[uniquePriority] = _exit;

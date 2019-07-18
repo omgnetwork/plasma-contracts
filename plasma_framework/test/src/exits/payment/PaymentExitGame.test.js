@@ -2,6 +2,7 @@ const EthVault = artifacts.require('EthVault');
 const Erc20Vault = artifacts.require('Erc20Vault');
 const EthDepositVerifier = artifacts.require('EthDepositVerifier');
 const Erc20DepositVerifier = artifacts.require('Erc20DepositVerifier');
+const ExitableTimestamp = artifacts.require('ExitableTimestampWrapper');
 const ExitId = artifacts.require('ExitIdWrapper');
 const GoodERC20 = artifacts.require('GoodERC20');
 const PaymentExitGame = artifacts.require('PaymentExitGame');
@@ -48,6 +49,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
 
         this.erc20 = await GoodERC20.new();
         await this.erc20.mint(richFather, INITIAL_ERC20_SUPPLY);
+        this.exitableHelper = await ExitableTimestamp.new(MIN_EXIT_PERIOD);
     });
 
     const setupContracts = async () => {
@@ -170,8 +172,15 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
                     const priorityQueue = await PriorityQueue.at(priorityQueueAddress);
                     const uniquePriority = await priorityQueue.getMin();
 
+                    const currentTimestamp = await time.latest();
+                    const isTxDeposit = true;
+                    const timestamp = currentTimestamp.sub(new BN(15));
+                    const exitableAt = await this.exitableHelper.calculate(
+                        currentTimestamp, timestamp, isTxDeposit,
+                    );
+
                     // right most 64 bits are nonce for priority queue
-                    expect(uniquePriority.shrn(64)).to.be.bignumber.equal(new BN(this.depositUtxoPos));
+                    expect(uniquePriority.shrn(64)).to.be.bignumber.equal(new BN(exitableAt));
                 });
 
                 describe('And then someone processes the exits for ETH after a week', () => {
