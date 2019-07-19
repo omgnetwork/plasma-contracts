@@ -61,12 +61,26 @@ contract('ExitGameRegistry', ([_, other]) => {
     });
 
     describe('registerExitGame', () => {
-        it('can register successfully', async () => {
+        it('should save the exit game data correctly', async () => {
             const txType = 1;
             await this.registry.registerExitGame(txType, this.dummyExitGame.address);
             expect(await this.registry.exitGames(txType)).to.equal(this.dummyExitGame.address);
             expect(await this.registry.exitGameToTxType(this.dummyExitGame.address))
                 .to.be.bignumber.equal(new BN(txType));
+        });
+
+        it('should emit ExitGameRegistered event', async () => {
+            const txType = 1;
+            const { receipt } = await this.registry.registerExitGame(txType, this.dummyExitGame.address);
+            await expectEvent.inTransaction(
+                receipt.transactionHash,
+                ExitGameRegistry,
+                'ExitGameRegistered',
+                {
+                    txType: new BN(txType),
+                    exitGameAddress: this.dummyExitGame.address,
+                },
+            );
         });
 
         it('rejects when not registered by operator', async () => {
