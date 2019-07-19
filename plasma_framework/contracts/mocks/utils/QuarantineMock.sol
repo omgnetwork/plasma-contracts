@@ -2,32 +2,22 @@ pragma solidity ^0.5.0;
 
 import "../../src/framework/utils/Quarantine.sol";
 
-contract QuarantineRegistryMock is Quarantine {
-    mapping(uint256 => address) private _contracts;
+contract QuarantineMock {
+    using Quarantine for Quarantine.Data;
+    Quarantine.Data internal _quarantine;
 
     constructor(uint256 _period, uint256 _initialImmuneCount)
-    public
-    Quarantine(_period, _initialImmuneCount)
-    {}
-
-    function registerContract(uint256 _contractId, address _contractAddress) public {
-        _contracts[_contractId] = _contractAddress;
-        Quarantine.quarantine(_contractAddress);
+        public
+    {
+        _quarantine.quarantinePeriod = _period;
+        _quarantine.immunitiesRemaining = _initialImmuneCount;
     }
 
-    function test() public view notQuarantined(msg.sender) returns (bool) {
-        return true;
-    }
-}
-
-contract QuarantinedContractMock {
-    QuarantineRegistryMock private _registry;
-
-    constructor(address _reg) public {
-        _registry = QuarantineRegistryMock(_reg);
+    function quarantineContract(address _contractAddress) public {
+        _quarantine.quarantine(_contractAddress);
     }
 
-    function test() public view returns (bool) {
-        return _registry.test();
+    function isQuarantined(address _contractAddress) public view returns (bool) {
+        return _quarantine.isQuarantined(_contractAddress);
     }
 }

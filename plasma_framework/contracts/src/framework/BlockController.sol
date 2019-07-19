@@ -48,8 +48,9 @@ contract BlockController is Operated, VaultRegistry {
      * @dev Block number adds 1 per submission, could have at most 'childBlockInterval' deposit blocks between two child chain blocks.
      * @param _blockRoot Merkle root of the block.
      */
-    function submitDepositBlock(bytes32 _blockRoot) public onlyFromVault notQuarantined(msg.sender) {
+    function submitDepositBlock(bytes32 _blockRoot) public onlyFromVault {
         require(nextDepositBlock < childBlockInterval, "Exceeded limit of deposits per child block interval");
+        require(!_quarantine.isQuarantined(msg.sender), "Vault is quarantined.");
 
         uint256 blknum = nextChildBlock - childBlockInterval + nextDepositBlock;
         blocks[blknum] = BlockModel.Block({

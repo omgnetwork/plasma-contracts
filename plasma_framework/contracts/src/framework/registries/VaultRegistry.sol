@@ -3,9 +3,11 @@ pragma solidity ^0.5.0;
 import "../utils/Operated.sol";
 import "../utils/Quarantine.sol";
 
-contract VaultRegistry is Operated, Quarantine {
+contract VaultRegistry is Operated {
     mapping(uint256 => address) private _vaults;
     mapping(address => uint256) private _vaultToId;
+    using Quarantine for Quarantine.Data;
+    Quarantine.Data internal _quarantine;
 
     event VaultRegistered(
         uint256 vaultId,
@@ -14,8 +16,10 @@ contract VaultRegistry is Operated, Quarantine {
 
     constructor (uint256 _minExitPeriod, uint256 _initialImmuneVaults)
         public
-        Quarantine(_minExitPeriod, _initialImmuneVaults)
-    {}
+    {
+        _quarantine.quarantinePeriod = _minExitPeriod;
+        _quarantine.immunitiesRemaining = _initialImmuneVaults;
+    }
 
     modifier onlyFromVault() {
         require(_vaultToId[msg.sender] > 0, "Not being called by registered vaults");
@@ -35,7 +39,7 @@ contract VaultRegistry is Operated, Quarantine {
 
         _vaults[_vaultId] = _vaultAddress;
         _vaultToId[_vaultAddress] = _vaultId;
-        Quarantine.quarantine(_vaultAddress);
+        _quarantine.quarantine(_vaultAddress);
 
         emit VaultRegistered(_vaultId, _vaultAddress);
     }

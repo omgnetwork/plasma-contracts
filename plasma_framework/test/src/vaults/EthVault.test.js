@@ -1,4 +1,5 @@
 const BlockController = artifacts.require('BlockController');
+const Quarantine = artifacts.require('Quarantine');
 const EthVault = artifacts.require('EthVault');
 const EthDepositVerifier = artifacts.require('EthDepositVerifier');
 
@@ -11,10 +12,12 @@ const Testlang = require('../../helpers/testlang.js');
 
 contract('EthVault', ([_, alice]) => {
     const DEPOSIT_VALUE = 1000000;
-    const MIN_EXIT_PERIOD = 0;
+    const MIN_EXIT_PERIOD = 1;
     const INITIAL_IMMUNE_VAULTS = 1;
 
     beforeEach('setup contracts', async () => {
+        const quarantine = await Quarantine.new();
+        await BlockController.link('Quarantine', quarantine.address);
         this.blockController = await BlockController.new(10, MIN_EXIT_PERIOD, INITIAL_IMMUNE_VAULTS);
         this.ethVault = await EthVault.new(this.blockController.address);
         const depositVerifier = await EthDepositVerifier.new();
@@ -106,19 +109,6 @@ contract('EthVault', ([_, alice]) => {
             await expectRevert(
                 this.ethVault.deposit(deposit.rlpEncoded(), { from: alice, value: DEPOSIT_VALUE }),
                 'Must have only one output.',
-            );
-        });
-
-        it('should not store a deposit in a newly registered vault', async () => {
-            this.newEthVault = await EthVault.new(this.blockController.address);
-            const depositVerifier = await EthDepositVerifier.new();
-            await this.newEthVault.setDepositVerifier(depositVerifier.address);
-            await this.blockController.registerVault(2, this.newEthVault.address);
-
-            const deposit = Testlang.deposit(DEPOSIT_VALUE, alice);
-            await expectRevert(
-                this.newEthVault.deposit(deposit, { from: alice, value: DEPOSIT_VALUE }),
-                'Contract is quarantined.',
             );
         });
     });
