@@ -6,6 +6,11 @@ contract VaultRegistry is Operated {
     mapping(uint256 => address) private _vaults;
     mapping(address => uint256) private _vaultToId;
 
+    event VaultRegistered(
+        uint256 vaultId,
+        address vaultAddress
+    );
+
     modifier onlyFromVault() {
         require(_vaultToId[msg.sender] > 0, "Not being called by registered vaults");
         _;
@@ -24,6 +29,8 @@ contract VaultRegistry is Operated {
 
         _vaults[_vaultId] = _vaultAddress;
         _vaultToId[_vaultAddress] = _vaultId;
+
+        emit VaultRegistered(_vaultId, _vaultAddress);
     }
 
     function vaults(uint256 _vaultId) public view returns (address) {

@@ -6,6 +6,11 @@ contract ExitGameRegistry is Operated {
     mapping(uint256 => address) private _exitGames;
     mapping(address => uint256) private _exitGameToTxType;
 
+    event ExitGameRegistered(
+        uint256 txType,
+        address exitGameAddress
+    );
+
     modifier onlyFromExitGame() {
         require(_exitGameToTxType[msg.sender] != 0, "Not being called by registered exit game contract");
         _;
@@ -24,6 +29,8 @@ contract ExitGameRegistry is Operated {
 
         _exitGames[_txType] = _contract;
         _exitGameToTxType[_contract] = _txType;
+
+        emit ExitGameRegistered(_txType, _contract);
     }
 
     function exitGames(uint256 _txType) public view returns (address) {

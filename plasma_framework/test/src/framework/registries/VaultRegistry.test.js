@@ -61,12 +61,26 @@ contract('VaultRegistry', ([_, other]) => {
     });
 
     describe('registerVault', () => {
-        it('can register successfully', async () => {
-            const txType = 1;
-            await this.registry.registerVault(txType, this.dummyVault.address);
-            expect(await this.registry.vaults(txType)).to.equal(this.dummyVault.address);
+        it('should save the vault data correctly', async () => {
+            const vaultId = 1;
+            await this.registry.registerVault(vaultId, this.dummyVault.address);
+            expect(await this.registry.vaults(vaultId)).to.equal(this.dummyVault.address);
             expect(await this.registry.vaultToId(this.dummyVault.address))
-                .to.be.bignumber.equal(new BN(txType));
+                .to.be.bignumber.equal(new BN(vaultId));
+        });
+
+        it('should emit VaultRegistered event', async () => {
+            const vaultId = 1;
+            const { receipt } = await this.registry.registerVault(vaultId, this.dummyVault.address);
+            await expectEvent.inTransaction(
+                receipt.transactionHash,
+                VaultRegistry,
+                'VaultRegistered',
+                {
+                    vaultId: new BN(vaultId),
+                    vaultAddress: this.dummyVault.address,
+                },
+            );
         });
 
         it('rejects when not registered by operator', async () => {
@@ -91,11 +105,11 @@ contract('VaultRegistry', ([_, other]) => {
         });
 
         it('rejects when the vault id is already registered', async () => {
-            const txType = 1;
+            const vaultId = 1;
             const secondDummyVaultAddress = (await VaultRegistry.new()).address;
-            await this.registry.registerVault(txType, this.dummyVault.address);
+            await this.registry.registerVault(vaultId, this.dummyVault.address);
             await expectRevert(
-                this.registry.registerVault(txType, secondDummyVaultAddress),
+                this.registry.registerVault(vaultId, secondDummyVaultAddress),
                 'The vault id is already registered',
             );
         });
