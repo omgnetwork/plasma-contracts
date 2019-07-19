@@ -841,7 +841,7 @@ contract RootChain {
         pure
         returns (uint192)
     {
-        return uint192((uint256(keccak256(_tx)) >> 105).setBit(152));
+        return uint192((uint256(keccak256(_tx)) >> 105).setBit(151));
     }
 
     /**
@@ -906,7 +906,7 @@ contract RootChain {
         returns (uint64, uint192, bool)
     {
         uint64 exitableTimestamp = uint64(priority >> 214);
-        bool inFlight = priority.getBit(152) == 1;
+        bool inFlight = priority.getBit(151) == 1;
 
         // get 160 least significant bits
         uint192 exitId = uint192((priority << 96) >> 96);
