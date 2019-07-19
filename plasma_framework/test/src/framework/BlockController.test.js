@@ -1,3 +1,4 @@
+const Quarantine = artifacts.require('Quarantine');
 const BlockController = artifacts.require('BlockController');
 const DummyVault = artifacts.require('DummyVault');
 
@@ -5,10 +6,13 @@ const { BN, expectRevert, expectEvent } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
 contract('BlockController', ([_, other]) => {
-    const MIN_EXIT_PERIOD = 0;
+    const MIN_EXIT_PERIOD = 10;
     const INITIAL_IMMUNE_VAULTS = 1;
 
     beforeEach(async () => {
+        const quarantine = await Quarantine.new();
+        await BlockController.link('Quarantine', quarantine.address);
+
         this.childBlockInterval = 5;
         this.blockController = await BlockController.new(
             this.childBlockInterval,
@@ -119,6 +123,19 @@ contract('BlockController', ([_, other]) => {
             await expectRevert(
                 this.blockController.submitDepositBlock(this.dummyBlockHash),
                 'Not being called by registered vaults',
+            );
+        });
+    });
+
+    describe('new vault', () => {
+        it('should not store a deposit in a newly registered vault', async () => {
+            const newDummyVault = await DummyVault.new();
+            newDummyVault.setBlockController(this.blockController.address);
+            const newDummyVaultId = 2;
+            await this.blockController.registerVault(newDummyVaultId, newDummyVault.address);
+            await expectRevert(
+                newDummyVault.submitDepositBlock(this.dummyBlockHash),
+                'Vault is quarantined.',
             );
         });
     });

@@ -1,4 +1,5 @@
 const BlockController = artifacts.require('BlockController');
+const Quarantine = artifacts.require('Quarantine');
 const Erc20Vault = artifacts.require('Erc20Vault');
 const Erc20DepositVerifier = artifacts.require('Erc20DepositVerifier');
 const GoodERC20 = artifacts.require('GoodERC20');
@@ -18,6 +19,8 @@ contract('Erc20Vault', (accounts) => {
     const INITIAL_IMMUNE_VAULTS = 1;
 
     beforeEach('setup contracts', async () => {
+        const quarantine = await Quarantine.new();
+        await BlockController.link('Quarantine', quarantine.address);
         this.blockController = await BlockController.new(10, MIN_EXIT_PERIOD, INITIAL_IMMUNE_VAULTS);
         this.erc20Vault = await Erc20Vault.new(this.blockController.address);
         const depositVerifier = await Erc20DepositVerifier.new();
@@ -117,21 +120,6 @@ contract('Erc20Vault', (accounts) => {
             await expectRevert(
                 this.erc20Vault.deposit(deposit.rlpEncoded(), { from: alice }),
                 'Must have only one output',
-            );
-        });
-
-        it('should not store a deposit in a newly registered vault', async () => {
-            this.newErc20Vault = await Erc20Vault.new(this.blockController.address);
-            const depositVerifier = await Erc20DepositVerifier.new();
-            await this.newErc20Vault.setDepositVerifier(depositVerifier.address);
-            await this.blockController.registerVault(3, this.newErc20Vault.address);
-
-            await this.erc20.approve(this.newErc20Vault.address, DEPOSIT_VALUE, { from: alice });
-            const deposit = Testlang.deposit(DEPOSIT_VALUE, alice, this.erc20.address);
-
-            await expectRevert(
-                this.newErc20Vault.deposit(deposit, { from: alice }),
-                'Contract is quarantined.',
             );
         });
     });

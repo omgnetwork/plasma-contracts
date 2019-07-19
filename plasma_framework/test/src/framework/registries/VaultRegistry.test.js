@@ -1,4 +1,5 @@
 const VaultRegistry = artifacts.require('VaultRegistryMock');
+const Quarantine = artifacts.require('Quarantine');
 const DummyVault = artifacts.require('DummyVault');
 
 const {
@@ -8,6 +9,8 @@ const { expect } = require('chai');
 
 contract('VaultRegistry', ([_, other]) => {
     beforeEach(async () => {
+        const quarantine = await Quarantine.new();
+        await VaultRegistry.link('Quarantine', quarantine.address);
         this.registry = await VaultRegistry.new();
         this.dummyVault = await DummyVault.new();
     });
