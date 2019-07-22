@@ -11,7 +11,7 @@ contract VaultRegistryMock is VaultRegistry {
     constructor () VaultRegistry(QUARANTINE_PERIOD, INITIAL_IMMUNE_VAULTS) public {
     }
 
-    function checkOnlyFromVault() public onlyFromVault {
+    function checkOnlyFromVault() public onlyFromNonQuarantinedVault {
         emit OnlyFromVaultChecked();
     }
 }
