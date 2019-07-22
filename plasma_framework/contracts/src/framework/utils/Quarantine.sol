@@ -12,7 +12,7 @@ library Quarantine {
         uint256 immunitiesRemaining;
     }
 
-    function isQuarantined(Data storage _self, address _contractAddress) public view returns (bool) {
+    function isQuarantined(Data storage _self, address _contractAddress) internal view returns (bool) {
         return block.timestamp < _self.store[_contractAddress];
     }
 
@@ -20,7 +20,7 @@ library Quarantine {
      * @notice Put a contract into quarantine.
      * @param _contractAddress the address of the contract.
      */
-    function quarantine(Data storage _self, address _contractAddress) public {
+    function quarantine(Data storage _self, address _contractAddress) internal {
         require(_contractAddress != address(0), "Can not quarantine an empty address");
         require(_self.store[_contractAddress] == 0, "The contract is already quarantined");
 

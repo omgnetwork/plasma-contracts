@@ -1,5 +1,4 @@
 const BlockController = artifacts.require('BlockController');
-const Quarantine = artifacts.require('Quarantine');
 const EthVault = artifacts.require('EthVault');
 const EthDepositVerifier = artifacts.require('EthDepositVerifier');
 
@@ -16,8 +15,6 @@ contract('EthVault', ([_, alice]) => {
     const INITIAL_IMMUNE_VAULTS = 1;
 
     beforeEach('setup contracts', async () => {
-        const quarantine = await Quarantine.new();
-        await BlockController.link('Quarantine', quarantine.address);
         this.blockController = await BlockController.new(10, MIN_EXIT_PERIOD, INITIAL_IMMUNE_VAULTS);
         this.ethVault = await EthVault.new(this.blockController.address);
         const depositVerifier = await EthDepositVerifier.new();
