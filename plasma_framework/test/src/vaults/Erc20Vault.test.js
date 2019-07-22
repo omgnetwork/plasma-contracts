@@ -1,5 +1,4 @@
 const BlockController = artifacts.require('BlockController');
-const Quarantine = artifacts.require('Quarantine');
 const Erc20Vault = artifacts.require('Erc20Vault');
 const Erc20DepositVerifier = artifacts.require('Erc20DepositVerifier');
 const GoodERC20 = artifacts.require('GoodERC20');
@@ -19,8 +18,6 @@ contract('Erc20Vault', (accounts) => {
     const INITIAL_IMMUNE_VAULTS = 1;
 
     beforeEach('setup contracts', async () => {
-        const quarantine = await Quarantine.new();
-        await BlockController.link('Quarantine', quarantine.address);
         this.blockController = await BlockController.new(10, MIN_EXIT_PERIOD, INITIAL_IMMUNE_VAULTS);
         this.erc20Vault = await Erc20Vault.new(this.blockController.address);
         const depositVerifier = await Erc20DepositVerifier.new();

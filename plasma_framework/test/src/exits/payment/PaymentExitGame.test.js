@@ -1,6 +1,5 @@
 const PaymentExitGame = artifacts.require('PaymentExitGame');
 const PaymentOutputToPaymentTxCondition = artifacts.require('PaymentOutputToPaymentTxCondition');
-const Quarantine = artifacts.require('Quarantine');
 const PlasmaFramework = artifacts.require('PlasmaFramework');
 const PriorityQueue = artifacts.require('PriorityQueue');
 const EthVault = artifacts.require('EthVault');
@@ -42,8 +41,6 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
     });
 
     const setupContracts = async () => {
-        const quarantine = await Quarantine.new();
-        await PlasmaFramework.link('Quarantine', quarantine.address);
         this.framework = await PlasmaFramework.new(MIN_EXIT_PERIOD, INITIAL_IMMUNE_VAULTS);
         this.exitGame = await PaymentExitGame.new(this.framework.address);
 

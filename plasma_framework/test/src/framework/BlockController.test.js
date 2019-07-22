@@ -1,4 +1,3 @@
-const Quarantine = artifacts.require('Quarantine');
 const BlockController = artifacts.require('BlockController');
 const DummyVault = artifacts.require('DummyVault');
 
@@ -10,9 +9,6 @@ contract('BlockController', ([_, other]) => {
     const INITIAL_IMMUNE_VAULTS = 1;
 
     beforeEach(async () => {
-        const quarantine = await Quarantine.new();
-        await BlockController.link('Quarantine', quarantine.address);
-
         this.childBlockInterval = 5;
         this.blockController = await BlockController.new(
             this.childBlockInterval,

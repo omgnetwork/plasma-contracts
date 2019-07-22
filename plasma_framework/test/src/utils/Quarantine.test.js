@@ -1,14 +1,8 @@
-const Quarantine = artifacts.require('Quarantine');
 const QuarantineMock = artifacts.require('QuarantineMock');
 const { expect } = require('chai');
 const { constants, expectRevert, time } = require('openzeppelin-test-helpers');
 
 contract('Quarantine', () => {
-    before('setup', async () => {
-        const quarantine = await Quarantine.new();
-        await QuarantineMock.link('Quarantine', quarantine.address);
-    });
-
     describe('contract is quarantined', () => {
         const QUARANTINE_PERIOD = 3;
         const INITIAL_IMMUNE = 0;

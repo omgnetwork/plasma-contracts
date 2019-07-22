@@ -1,4 +1,3 @@
-const Quarantine = artifacts.require('Quarantine');
 const PlasmaFramework = artifacts.require('PlasmaFramework');
 
 const { BN } = require('openzeppelin-test-helpers');
@@ -8,9 +7,6 @@ contract('PlasmaFramework', () => {
     const INITIAL_IMMUNE_VAULTS = 1;
     describe('constructor', () => {
         it('should set the min exit period', async () => {
-            const quarantine = await Quarantine.new();
-            await PlasmaFramework.link('Quarantine', quarantine.address);
-
             const testMinExitPeriod = 1000;
             const framework = await PlasmaFramework.new(testMinExitPeriod, INITIAL_IMMUNE_VAULTS);
             expect(await framework.minExitPeriod()).to.be.bignumber.equal(new BN(testMinExitPeriod));
