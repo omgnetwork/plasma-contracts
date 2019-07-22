@@ -22,7 +22,18 @@ contract('Quarantine', () => {
             await time.increase((QUARANTINE_PERIOD + 1) * 1000);
             expect(await this.quarantineMock.isQuarantined(dummyAddress)).to.be.false;
         });
+    });
 
+    describe('quarantineContract errors', () => {
+        const QUARANTINE_PERIOD = 3;
+        const INITIAL_IMMUNE = 0;
+
+        const dummyAddress = web3.utils.keccak256('dummy address').slice(-40);
+
+        before('setup', async () => {
+            this.quarantineMock = await QuarantineMock.new(QUARANTINE_PERIOD, INITIAL_IMMUNE);
+            await this.quarantineMock.quarantineContract(dummyAddress);
+        });
         it('should revert when attempting to quarantine an empty address', async () => {
             await expectRevert(
                 this.quarantineMock.quarantineContract(constants.ZERO_ADDRESS),

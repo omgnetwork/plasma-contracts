@@ -123,7 +123,7 @@ contract('BlockController', ([_, other]) => {
         });
     });
 
-    describe('new vault', () => {
+    describe('registerVault', () => {
         it('should not store a deposit in a newly registered vault', async () => {
             const newDummyVault = await DummyVault.new();
             newDummyVault.setBlockController(this.blockController.address);
