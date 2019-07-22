@@ -21,8 +21,9 @@ contract VaultRegistry is Operated {
         _quarantine.immunitiesRemaining = _initialImmuneVaults;
     }
 
-    modifier onlyFromVault() {
+    modifier onlyFromNonQuarantinedVault() {
         require(_vaultToId[msg.sender] > 0, "Not being called by registered vaults");
+        require(!_quarantine.isQuarantined(msg.sender), "Vault is quarantined.");
         _;
     }
 
