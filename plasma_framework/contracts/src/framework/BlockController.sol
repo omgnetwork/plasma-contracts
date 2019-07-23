@@ -29,7 +29,7 @@ contract BlockController is Operated, VaultRegistry {
      * @dev Block number jumps 'childBlockInterval' per submission.
      * @param _blockRoot Merkle root of the block.
      */
-    function submitBlock(bytes32 _blockRoot) public onlyOperator {
+    function submitBlock(bytes32 _blockRoot) external onlyOperator {
         uint256 submittedBlockNumber = nextChildBlock;
 
         blocks[submittedBlockNumber] = BlockModel.Block({
