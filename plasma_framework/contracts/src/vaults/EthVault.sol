@@ -2,11 +2,12 @@ pragma solidity ^0.5.0;
 
 import "./Vault.sol";
 import "./predicates/IEthDepositVerifier.sol";
+import "./interfaces/IEthVault.sol";
 
-contract EthVault is Vault {
+contract EthVault is IEthVault, Vault {
     IEthDepositVerifier private _depositVerifier;
 
-    constructor(address _blockController) Vault(_blockController) public {}
+    constructor(IPlasmaFramework _framework) Vault(_framework) public {}
 
     /**
      * @notice Set the deposit verifier contract. This can be only called by the operator.

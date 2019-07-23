@@ -3,6 +3,8 @@ pragma experimental ABIEncoderV2;
 
 import "./registries/ExitGameRegistryMock.sol";
 import "../../src/framework/ExitGameController.sol";
+import "../../src/vaults/interfaces/IErc20Vault.sol";
+import "../../src/vaults/interfaces/IEthVault.sol";
 import "../../src/framework/interfaces/IExitProcessor.sol";
 
 contract DummyExitGame is IExitProcessor {
@@ -10,6 +12,8 @@ contract DummyExitGame is IExitProcessor {
 
     ExitGameRegistryMock private exitGameRegistry;
     ExitGameController private exitGameController;
+    IEthVault private ethVault;
+    IErc20Vault private erc20Vault;
 
     event ExitFinalizedFromDummyExitGame (
         uint256 indexed exitId
@@ -44,5 +48,23 @@ contract DummyExitGame is IExitProcessor {
 
     function proxyFlagOutputSpent(bytes32 _outputId) public {
         exitGameController.flagOutputSpent(_outputId);
+    }
+
+    // setter function only for test, not a real Exit Game function
+    function setEthVault(address _contract) public {
+        ethVault = IEthVault(_contract);
+    }
+
+    function proxyEthWithdraw(address payable _target, uint256 _amount) public {
+        ethVault.withdraw(_target, _amount);
+    }
+
+    // setter function only for test, not a real Exit Game function
+    function setErc20Vault(address _contract) public {
+        erc20Vault = IErc20Vault(_contract);
+    }
+
+    function proxyErc20Withdraw(address payable _target, address _token, uint256 _amount) public {
+        erc20Vault.withdraw(_target, _token, _amount);
     }
 }

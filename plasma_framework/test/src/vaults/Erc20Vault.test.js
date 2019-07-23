@@ -1,10 +1,11 @@
-const BlockController = artifacts.require('BlockController');
+const PlasmaFramework = artifacts.require('PlasmaFramework');
 const Erc20Vault = artifacts.require('Erc20Vault');
 const Erc20DepositVerifier = artifacts.require('Erc20DepositVerifier');
 const GoodERC20 = artifacts.require('GoodERC20');
 const BadERC20 = artifacts.require('BadERC20');
+const DummyExitGame = artifacts.require('DummyExitGame');
 
-const { BN, expectRevert } = require('openzeppelin-test-helpers');
+const { BN, constants, expectRevert } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
 const Testlang = require('../../helpers/testlang.js');
@@ -14,15 +15,19 @@ contract('Erc20Vault', (accounts) => {
     const alice = accounts[1];
     const DEPOSIT_VALUE = 100;
     const INITIAL_SUPPLY = 1000000;
-    const MIN_EXIT_PERIOD = 0;
     const INITIAL_IMMUNE_VAULTS = 1;
 
     beforeEach('setup contracts', async () => {
-        this.blockController = await BlockController.new(10, MIN_EXIT_PERIOD, INITIAL_IMMUNE_VAULTS);
-        this.erc20Vault = await Erc20Vault.new(this.blockController.address);
+        this.framework = await PlasmaFramework.new(10, INITIAL_IMMUNE_VAULTS);
+        this.erc20Vault = await Erc20Vault.new(this.framework.address);
         const depositVerifier = await Erc20DepositVerifier.new();
         await this.erc20Vault.setDepositVerifier(depositVerifier.address);
-        await this.blockController.registerVault(2, this.erc20Vault.address);
+        await this.framework.registerVault(2, this.erc20Vault.address);
+
+        this.exitGame = await DummyExitGame.new();
+        await this.exitGame.setErc20Vault(this.erc20Vault.address);
+        await this.framework.registerExitGame(1, this.exitGame.address);
+
         this.erc20 = await GoodERC20.new();
         this.erc20.mint(accounts[0], INITIAL_SUPPLY, { from: accounts[0] });
         await this.erc20.transfer(alice, DEPOSIT_VALUE, { from: accounts[0] });
@@ -31,11 +36,11 @@ contract('Erc20Vault', (accounts) => {
     describe('deposit', () => {
         it('should store erc20 deposit', async () => {
             await this.erc20.approve(this.erc20Vault.address, DEPOSIT_VALUE, { from: alice });
-            const preDepositBlockNumber = (await this.blockController.nextDepositBlock()).toNumber();
+            const preDepositBlockNumber = (await this.framework.nextDepositBlock()).toNumber();
 
             const deposit = Testlang.deposit(DEPOSIT_VALUE, alice, this.erc20.address);
             await this.erc20Vault.deposit(deposit, { from: alice });
-            const postDepositBlockNumber = (await this.blockController.nextDepositBlock()).toNumber();
+            const postDepositBlockNumber = (await this.framework.nextDepositBlock()).toNumber();
 
             expect(postDepositBlockNumber).to.be.equal(preDepositBlockNumber + 1);
         });
@@ -132,13 +137,57 @@ contract('Erc20Vault', (accounts) => {
 
         it('should store erc20 deposit', async () => {
             await this.badErc20.approve(this.erc20Vault.address, DEPOSIT_VALUE, { from: alice });
-            const preDepositBlockNumber = (await this.blockController.nextDepositBlock()).toNumber();
+            const preDepositBlockNumber = (await this.framework.nextDepositBlock()).toNumber();
 
             const deposit = Testlang.deposit(DEPOSIT_VALUE, alice, this.badErc20.address);
             await this.erc20Vault.deposit(deposit, { from: alice });
-            const postDepositBlockNumber = (await this.blockController.nextDepositBlock()).toNumber();
+            const postDepositBlockNumber = (await this.framework.nextDepositBlock()).toNumber();
 
             expect(postDepositBlockNumber).to.be.equal(preDepositBlockNumber + 1);
+        });
+    });
+
+    describe('withdraw', () => {
+        beforeEach(async () => {
+            this.testFundAmount = 1000;
+            await this.erc20.transfer(this.erc20Vault.address, this.testFundAmount, { from: accounts[0] });
+        });
+
+        it('should fail when not called by a registered exit game contract', async () => {
+            await expectRevert(
+                this.erc20Vault.withdraw(constants.ZERO_ADDRESS, constants.ZERO_ADDRESS, 0),
+                'Not called from a registered Exit Game contract',
+            );
+        });
+
+        it('should transfer ERC token to the target', async () => {
+            const preBalance = await this.erc20.balanceOf(alice);
+
+            await this.exitGame.proxyErc20Withdraw(alice, this.erc20.address, this.testFundAmount);
+
+            const postBalance = await this.erc20.balanceOf(alice);
+            const expectedPostBalance = preBalance.add(new BN(this.testFundAmount));
+
+            expect(postBalance).to.be.bignumber.equal(expectedPostBalance);
+        });
+    });
+
+    describe('withdraw with BadERC20', () => {
+        beforeEach(async () => {
+            this.testFundAmount = 1000;
+            this.badErc20 = await BadERC20.new(INITIAL_SUPPLY);
+            await this.badErc20.transfer(this.erc20Vault.address, this.testFundAmount, { from: accounts[0] });
+        });
+
+        it('should transfer ERC token to the target', async () => {
+            const preBalance = await this.badErc20.balanceOf(alice);
+
+            await this.exitGame.proxyErc20Withdraw(alice, this.badErc20.address, this.testFundAmount);
+
+            const postBalance = await this.badErc20.balanceOf(alice);
+            const expectedPostBalance = preBalance.add(new BN(this.testFundAmount));
+
+            expect(postBalance).to.be.bignumber.equal(expectedPostBalance);
         });
     });
 });

@@ -2,15 +2,16 @@ pragma solidity ^0.5.0;
 
 import "./Vault.sol";
 import "./predicates/IErc20DepositVerifier.sol";
+import "./interfaces/IErc20Vault.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/SafeERC20.sol";
 
-contract Erc20Vault is Vault {
+contract Erc20Vault is IErc20Vault, Vault {
     IErc20DepositVerifier private _depositVerifier;
 
     using SafeERC20 for IERC20;
 
-    constructor(address _blockController) Vault(_blockController) public {}
+    constructor(IPlasmaFramework _framework) Vault(_framework) public {}
 
     /**
      * @notice Set the deposit verifier contract. This can be only called by the operator.
@@ -38,7 +39,7 @@ contract Erc20Vault is Vault {
     * @param _token Address of ERC20 token contract.
     * @param _amount Amount to transfer.
     */
-    function withdraw(address _target, address _token, uint256 _amount) external onlyFromExitGame {
+    function withdraw(address payable _target, address _token, uint256 _amount) external onlyFromExitGame {
         IERC20(_token).safeTransfer(_target, _amount);
     }
 }
