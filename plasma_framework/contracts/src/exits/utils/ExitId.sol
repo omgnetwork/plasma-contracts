@@ -2,9 +2,15 @@ pragma solidity ^0.5.0;
 
 import "../../utils/UtxoPosLib.sol";
 import "../../framework/interfaces/IPlasmaFramework.sol";
+import "../../utils/Bits.sol";
 
 library ExitId {
     using UtxoPosLib for UtxoPosLib.UtxoPos;
+    using Bits for uint192;
+
+    function isStandardExit(uint192 _exitId) internal pure returns (bool) {
+        return _exitId.getBit(151) == 0;
+    }
 
     /**
      * @notice Given transaction bytes and UTXO position, returns its exit ID.

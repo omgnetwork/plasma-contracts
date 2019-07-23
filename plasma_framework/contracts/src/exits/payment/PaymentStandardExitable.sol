@@ -10,6 +10,8 @@ import "../utils/ExitId.sol";
 import "../utils/ExitableTimestamp.sol";
 import "../utils/OutputId.sol";
 import "../utils/OutputGuard.sol";
+import "../../vaults/interfaces/IEthVault.sol";
+import "../../vaults/interfaces/IErc20Vault.sol";
 import "../../framework/interfaces/IPlasmaFramework.sol";
 import "../../framework/interfaces/IExitProcessor.sol";
 import "../../framework/models/ExitModel.sol";
@@ -39,6 +41,8 @@ contract PaymentStandardExitable is
     IPlasmaFramework private framework;
     IsDeposit.Predicate private isDeposit;
     ExitableTimestamp.Calculator private exitableTimestampCalculator;
+    IEthVault ethVault;
+    IErc20Vault erc20Vault;
 
     struct StartStandardExitArgs {
         uint192 utxoPos;
@@ -79,8 +83,6 @@ contract PaymentStandardExitable is
     struct ChallengeStandardExitArgs {
         uint192 exitId;
         uint256 outputType;
-        uint256 outputUtxoPos;
-        bytes32 outputId;
         bytes32 outputGuard;
         uint256 challengeTxType;
         bytes challengeTx;
@@ -105,10 +107,20 @@ contract PaymentStandardExitable is
         uint256 indexed utxoPos
     );
 
-    constructor(address _framework) public {
-        framework = IPlasmaFramework(_framework);
+    event ExitFinalized(
+        uint192 indexed exitId
+    );
+
+    event ExitOmitted(
+        uint192 indexed exitId
+    );
+
+    constructor(IPlasmaFramework _framework, IEthVault _ethVault, IErc20Vault _erc20Vault) public {
+        framework = _framework;
         isDeposit = IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL());
         exitableTimestampCalculator = ExitableTimestamp.Calculator(framework.minExitPeriod());
+        ethVault = _ethVault;
+        erc20Vault = _erc20Vault;
     }
 
     /**
@@ -162,13 +174,41 @@ contract PaymentStandardExitable is
             exitData: exits[_args.exitId]
         });
         verifyChallengeExitExists(data);
-        verifyOutputRelatedDataHash(data);
+        verifyOutputTypeAndGuardHash(data);
         verifySpendingCondition(data);
 
         delete exits[_args.exitId];
         msg.sender.transfer(standardExitBond);
 
-        emit ExitChallenged(_args.outputUtxoPos);
+        emit ExitChallenged(data.exitData.utxoPos);
+    }
+
+    /**
+     * @notice Process standard exit.
+     * @dev This function is designed to be called in the main processExit function. Thus using internal.
+     * @param _exitId The standard exit id.
+     */
+    function _processStandardExit(uint256 _exitId) internal {
+        uint192 exitId = uint192(_exitId);
+        PaymentExitDataModel.StandardExit memory exit = exits[exitId];
+
+        if (!exit.exitable || framework.isOutputSpent(exit.outputId)) {
+            emit ExitOmitted(exitId);
+            return;
+        }
+
+        framework.flagOutputSpent(exit.outputId);
+
+        exit.exitTarget.transfer(standardExitBond);
+        if (exit.token == address(0)) {
+            ethVault.withdraw(exit.exitTarget, exit.amount);
+        } else {
+            erc20Vault.withdraw(exit.exitTarget, exit.token, exit.amount);
+        }
+
+        delete exits[exitId];
+
+        emit ExitFinalized(exitId);
     }
 
     /**
@@ -243,13 +283,15 @@ contract PaymentStandardExitable is
             OutputId.computeDepositOutputId(data.args.rlpOutputTx, data.utxoPos.outputIndex(), data.utxoPos.value)
             : OutputId.computeNormalOutputId(data.args.rlpOutputTx, data.utxoPos.outputIndex());
 
-        bytes32 outputRelatedDataHash = keccak256(
-            abi.encodePacked(data.utxoPos.value, outputId, data.args.outputType, data.output.outputGuard)
+        bytes32 outputTypeAndGuardHash = keccak256(
+            abi.encodePacked(data.args.outputType, data.output.outputGuard)
         );
 
         exits[data.exitId] = PaymentExitDataModel.StandardExit({
             exitable: true,
-            outputRelatedDataHash: outputRelatedDataHash,
+            utxoPos: uint192(data.utxoPos.value),
+            outputId: outputId,
+            outputTypeAndGuardHash: outputTypeAndGuardHash,
             token: data.output.token,
             exitTarget: data.exitTarget,
             amount: data.output.amount
@@ -279,14 +321,14 @@ contract PaymentStandardExitable is
         require(data.exitData.exitable == true, "Such exit does not exist");
     }
 
-    function verifyOutputRelatedDataHash(ChallengeStandardExitData memory data) private pure {
+    function verifyOutputTypeAndGuardHash(ChallengeStandardExitData memory data) private pure {
         ChallengeStandardExitArgs memory args = data.args;
-        bytes32 outputRelatedDataHash = keccak256(
-            abi.encodePacked(args.outputUtxoPos, args.outputId, args.outputType, args.outputGuard)
+        bytes32 outputTypeAndGuardHash = keccak256(
+            abi.encodePacked(args.outputType, args.outputGuard)
         );
 
-        require(data.exitData.outputRelatedDataHash == outputRelatedDataHash,
-                "Some of the output related challenge data are invalid for the exit");
+        require(data.exitData.outputTypeAndGuardHash == outputTypeAndGuardHash,
+                "Either output type or output guard of challenge input args is invalid for the exit");
     }
 
     function verifySpendingCondition(ChallengeStandardExitData memory data) private view {
@@ -299,8 +341,8 @@ contract PaymentStandardExitable is
 
         bool isSpentByChallengeTx = condition.verify(
             args.outputGuard,
-            args.outputUtxoPos,
-            args.outputId,
+            data.exitData.utxoPos,
+            data.exitData.outputId,
             args.challengeTx,
             args.inputIndex,
             args.witness

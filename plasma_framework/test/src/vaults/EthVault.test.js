@@ -10,7 +10,7 @@ const { PaymentTransaction, PaymentTransactionOutput } = require('../../helpers/
 const { spentOnGas } = require('../../helpers/utils.js');
 const Testlang = require('../../helpers/testlang.js');
 
-contract.only('EthVault', ([_, alice]) => {
+contract('EthVault', ([_, alice]) => {
     const DEPOSIT_VALUE = 1000000;
     const INITIAL_IMMUNE_VAULTS = 1;
 
