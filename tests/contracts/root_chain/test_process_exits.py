@@ -6,28 +6,37 @@ from ethereum.tools.tester import TransactionFailed
 from plasma_core.utils.transactions import decode_utxo_id, encode_utxo_id
 
 
-def test_process_exits_standard_exit_should_succeed(testlang):
-    owner, amount = testlang.accounts[0], 100
-    deposit_id = testlang.deposit(owner, amount)
-    spend_id = testlang.spend_utxo([deposit_id], [owner.key], [(owner.address, NULL_ADDRESS, amount)])
+@pytest.mark.parametrize("num_outputs", [1, 2, 3, 4])
+def test_process_exits_standard_exit_should_succeed(testlang, num_outputs):
+    owners, amount, outputs = [], 100, []
+    for i in range(0, num_outputs):
+        owners.append(testlang.accounts[i])
+        outputs.append((owners[i].address, NULL_ADDRESS, amount))
 
-    pre_balance = testlang.get_balance(owner)
+    deposit_id = testlang.deposit(owners[0], num_outputs * amount)
+    spend_id = testlang.spend_utxo([deposit_id], [owners[0].key], outputs)
+
+    output_index = num_outputs - 1
+    utxo_pos = spend_id + output_index
+    output_owner = owners[output_index]
+
+    pre_balance = testlang.get_balance(output_owner)
     testlang.flush_events()
 
-    testlang.start_standard_exit(spend_id, owner.key)
+    testlang.start_standard_exit(utxo_pos, output_owner.key)
     [exit_event] = testlang.flush_events()
-    assert {"owner": owner.address, "_event_type": b'ExitStarted'}.items() <= exit_event.items()
+    assert {"owner": output_owner.address, "_event_type": b'ExitStarted'}.items() <= exit_event.items()
 
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
     testlang.process_exits(NULL_ADDRESS, 0, 100)
     [exit_finalized] = testlang.flush_events()
     assert {"exitId": exit_event['exitId'], "_event_type": b'ExitFinalized'}.items() <= exit_finalized.items()
 
-    standard_exit = testlang.get_standard_exit(spend_id)
+    standard_exit = testlang.get_standard_exit(utxo_pos)
     assert standard_exit.owner == NULL_ADDRESS_HEX
     assert standard_exit.token == NULL_ADDRESS_HEX
-    assert standard_exit.amount == 100
-    assert testlang.get_balance(owner) == pre_balance + amount
+    assert standard_exit.amount == amount
+    assert testlang.get_balance(output_owner) == pre_balance + amount
 
 
 def test_process_exits_in_flight_exit_should_succeed(testlang):
