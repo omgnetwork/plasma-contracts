@@ -1,20 +1,23 @@
 pragma solidity ^0.5.0;
 
 import "./ZeroHashesProvider.sol";
-import "../framework/BlockController.sol";
+import "../framework/interfaces/IPlasmaFramework.sol";
 import "../framework/utils/Operated.sol";
 
 contract Vault is Operated {
-    BlockController blockController;
+    IPlasmaFramework framework;
     bytes32[16] zeroHashes;
 
-    constructor(address _blockController) public {
-        blockController = BlockController(_blockController);
+    constructor(IPlasmaFramework _framework) public {
+        framework = _framework;
         zeroHashes = ZeroHashesProvider.getZeroHashes();
     }
 
     modifier onlyFromExitGame() {
-        require(false, "TODO: Implement and test once we have exit plasma framework contract");
+        require(
+            framework.exitGameToTxType(msg.sender) != 0,
+            "Not called from a registered Exit Game contract"
+        );
         _;
     }
 
@@ -24,6 +27,6 @@ contract Vault is Operated {
             root = keccak256(abi.encodePacked(root, zeroHashes[i]));
         }
 
-        blockController.submitDepositBlock(root);
+        framework.submitDepositBlock(root);
     }
 }
