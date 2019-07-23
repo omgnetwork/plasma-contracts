@@ -12,4 +12,6 @@ interface IPlasmaFramework {
     function blocks(uint256 _blockNumber) external view returns (bytes32, uint256);
 
     function enqueue(uint192 _priority, address _token, ExitModel.Exit calldata _exit) external returns (uint256);
+
+    function exitGameToTxType(address _exitGame) external view returns (uint256);
 }

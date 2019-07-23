@@ -1,6 +1,7 @@
-const BlockController = artifacts.require('BlockController');
+const PlasmaFramework = artifacts.require('PlasmaFramework');
 const EthVault = artifacts.require('EthVault');
 const EthDepositVerifier = artifacts.require('EthDepositVerifier');
+const DummyExitGame = artifacts.require('DummyExitGame');
 
 const { BN, constants, expectRevert } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
@@ -9,26 +10,29 @@ const { PaymentTransaction, PaymentTransactionOutput } = require('../../helpers/
 const { spentOnGas } = require('../../helpers/utils.js');
 const Testlang = require('../../helpers/testlang.js');
 
-contract('EthVault', ([_, alice]) => {
+contract.only('EthVault', ([_, alice]) => {
     const DEPOSIT_VALUE = 1000000;
-    const MIN_EXIT_PERIOD = 1;
     const INITIAL_IMMUNE_VAULTS = 1;
 
     beforeEach('setup contracts', async () => {
-        this.blockController = await BlockController.new(10, MIN_EXIT_PERIOD, INITIAL_IMMUNE_VAULTS);
-        this.ethVault = await EthVault.new(this.blockController.address);
+        this.framework = await PlasmaFramework.new(10, INITIAL_IMMUNE_VAULTS);
+        this.ethVault = await EthVault.new(this.framework.address);
         const depositVerifier = await EthDepositVerifier.new();
         await this.ethVault.setDepositVerifier(depositVerifier.address);
-        await this.blockController.registerVault(1, this.ethVault.address);
+        await this.framework.registerVault(1, this.ethVault.address);
+
+        this.exitGame = await DummyExitGame.new();
+        await this.exitGame.setEthVault(this.ethVault.address);
+        await this.framework.registerExitGame(1, this.exitGame.address);
     });
 
     describe('deposit', () => {
         it('should store ethereum deposit', async () => {
-            const preDepositBlockNumber = (await this.blockController.nextDepositBlock()).toNumber();
+            const preDepositBlockNumber = (await this.framework.nextDepositBlock()).toNumber();
 
             const deposit = Testlang.deposit(DEPOSIT_VALUE, alice);
             await this.ethVault.deposit(deposit, { from: alice, value: DEPOSIT_VALUE });
-            const postDepositBlockNumber = (await this.blockController.nextDepositBlock()).toNumber();
+            const postDepositBlockNumber = (await this.framework.nextDepositBlock()).toNumber();
 
             expect(postDepositBlockNumber).to.be.equal(preDepositBlockNumber + 1);
         });
@@ -107,6 +111,31 @@ contract('EthVault', ([_, alice]) => {
                 this.ethVault.deposit(deposit.rlpEncoded(), { from: alice, value: DEPOSIT_VALUE }),
                 'Must have only one output.',
             );
+        });
+    });
+
+    describe('withdraw', () => {
+        beforeEach(async () => {
+            const deposit = Testlang.deposit(DEPOSIT_VALUE, alice);
+            await this.ethVault.deposit(deposit, { from: alice, value: DEPOSIT_VALUE });
+        });
+
+        it('should fail when not called by a registered exit game contract', async () => {
+            await expectRevert(
+                this.ethVault.withdraw(constants.ZERO_ADDRESS, 0),
+                'Not called from a registered Exit Game contract',
+            );
+        });
+
+        it('should transfer ETH to the target', async () => {
+            const preBalance = new BN(await web3.eth.getBalance(alice));
+
+            await this.exitGame.proxyEthWithdraw(alice, DEPOSIT_VALUE);
+
+            const postBalance = new BN(await web3.eth.getBalance(alice));
+            const expectedPostBalance = preBalance.add(new BN(DEPOSIT_VALUE));
+
+            expect(postBalance).to.be.bignumber.equal(expectedPostBalance);
         });
     });
 });
