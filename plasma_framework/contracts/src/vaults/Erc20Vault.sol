@@ -1,7 +1,7 @@
 pragma solidity ^0.5.0;
 
 import "./Vault.sol";
-import "./predicates/IErc20DepositVerifier.sol";
+import "./interfaces/IErc20DepositVerifier.sol";
 import "./interfaces/IErc20Vault.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/SafeERC20.sol";
