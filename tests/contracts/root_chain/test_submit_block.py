@@ -1,5 +1,5 @@
 import pytest
-from ethereum.tools.tester import TransactionFailed
+from eth_tester.exceptions import TransactionFailed
 
 
 def test_submit_block_valid_key_should_succeed(ethtester, testlang):

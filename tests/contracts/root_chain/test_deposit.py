@@ -1,5 +1,5 @@
 import pytest
-from ethereum.tools.tester import TransactionFailed
+from eth_tester.exceptions import TransactionFailed
 from plasma_core.constants import NULL_ADDRESS
 from plasma_core.utils.transactions import decode_utxo_id
 from plasma_core.transaction import Transaction

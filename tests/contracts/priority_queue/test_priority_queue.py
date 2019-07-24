@@ -1,5 +1,5 @@
 import pytest
-from ethereum.tools.tester import TransactionFailed
+from eth_tester.exceptions import TransactionFailed
 from plasma_core.utils.address import address_to_hex
 import math
 

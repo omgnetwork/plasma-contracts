@@ -1,6 +1,6 @@
 import os
 import pytest
-from ethereum import utils
+import eth_utils as utils
 from ethereum.tools import tester
 from ethereum.abi import ContractTranslator
 from ethereum.config import config_metropolis

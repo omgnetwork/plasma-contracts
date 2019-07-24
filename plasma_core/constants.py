@@ -1,4 +1,4 @@
-from ethereum import utils as u
+import plasma_core.utils.utils as u
 
 AUTHORITY = {
     'address': '0xfd02EcEE62797e75D86BCff1642EB0844afB28c7',

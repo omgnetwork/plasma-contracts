@@ -1,4 +1,4 @@
-from ethereum import utils as u
+import eth_utils as u
 
 
 def sign(hash, key):
