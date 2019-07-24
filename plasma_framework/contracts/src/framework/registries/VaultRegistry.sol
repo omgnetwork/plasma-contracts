@@ -4,10 +4,11 @@ import "../utils/Operated.sol";
 import "../utils/Quarantine.sol";
 
 contract VaultRegistry is Operated {
+    using Quarantine for Quarantine.Data;
+
     mapping(uint256 => address) private _vaults;
     mapping(address => uint256) private _vaultToId;
-    using Quarantine for Quarantine.Data;
-    Quarantine.Data internal _quarantine;
+    Quarantine.Data private _quarantine;
 
     event VaultRegistered(
         uint256 vaultId,

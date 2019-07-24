@@ -2,37 +2,42 @@ const VaultRegistry = artifacts.require('VaultRegistryMock');
 const DummyVault = artifacts.require('DummyVault');
 
 const {
-    BN, constants, expectEvent, expectRevert,
+    BN, constants, expectEvent, expectRevert, time,
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
 contract('VaultRegistry', ([_, other]) => {
+    const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
+    const INITIAL_IMMUNE_VAULTS_NUM = 0;
+
     beforeEach(async () => {
-        this.registry = await VaultRegistry.new();
+        this.registry = await VaultRegistry.new(MIN_EXIT_PERIOD, INITIAL_IMMUNE_VAULTS_NUM);
         this.dummyVault = await DummyVault.new();
     });
 
-    describe('onlyFromVault', () => {
+    describe('onlyFromNonQuarantinedVault', () => {
         beforeEach(async () => {
             this.dummyVaultId = 1;
             await this.registry.registerVault(this.dummyVaultId, this.dummyVault.address);
             await this.dummyVault.setVaultRegistry(this.registry.address);
         });
 
-        it('accepts call when called by registered vault contract', async () => {
-            const { receipt } = await this.dummyVault.checkOnlyFromVault();
-            await expectEvent.inTransaction(
-                receipt.transactionHash,
-                VaultRegistry,
-                'OnlyFromVaultChecked',
-                {},
+        it('should accept call when called by registered and non quarantined vault contract', async () => {
+            await time.increase(MIN_EXIT_PERIOD + 1);
+            expect(await this.dummyVault.checkOnlyFromNonQuarantinedVault()).to.be.true;
+        });
+
+        it('should revert when not called by registered vault contract', async () => {
+            await expectRevert(
+                this.registry.checkOnlyFromNonQuarantinedVault(),
+                'Not being called by registered vaults',
             );
         });
 
-        it('reverts when not called by registered vault contract', async () => {
+        it('should revert when the vault contract is still quarantined', async () => {
             await expectRevert(
-                this.registry.checkOnlyFromVault(),
-                'Not being called by registered vaults',
+                this.dummyVault.checkOnlyFromNonQuarantinedVault(),
+                'Vault is quarantined',
             );
         });
     });
@@ -106,7 +111,7 @@ contract('VaultRegistry', ([_, other]) => {
 
         it('rejects when the vault id is already registered', async () => {
             const vaultId = 1;
-            const secondDummyVaultAddress = (await VaultRegistry.new()).address;
+            const secondDummyVaultAddress = (await DummyVault.new()).address;
             await this.registry.registerVault(vaultId, this.dummyVault.address);
             await expectRevert(
                 this.registry.registerVault(vaultId, secondDummyVaultAddress),
