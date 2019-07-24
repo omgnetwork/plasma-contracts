@@ -1,7 +1,7 @@
 pragma solidity ^0.5.0;
 
 import "./Vault.sol";
-import "./predicates/IEthDepositVerifier.sol";
+import "./interfaces/IEthDepositVerifier.sol";
 import "./interfaces/IEthVault.sol";
 
 contract EthVault is IEthVault, Vault {

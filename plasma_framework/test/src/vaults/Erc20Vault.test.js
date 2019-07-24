@@ -29,7 +29,7 @@ contract('Erc20Vault', (accounts) => {
         await this.framework.registerExitGame(1, this.exitGame.address);
 
         this.erc20 = await GoodERC20.new();
-        this.erc20.mint(accounts[0], INITIAL_SUPPLY, { from: accounts[0] });
+        await this.erc20.mint(accounts[0], INITIAL_SUPPLY, { from: accounts[0] });
         await this.erc20.transfer(alice, DEPOSIT_VALUE, { from: accounts[0] });
     });
 
