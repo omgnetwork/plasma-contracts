@@ -3,8 +3,8 @@ pragma experimental ABIEncoderV2;
 
 import "./registries/ExitGameRegistryMock.sol";
 import "../../src/framework/ExitGameController.sol";
-import "../../src/vaults/interfaces/IErc20Vault.sol";
-import "../../src/vaults/interfaces/IEthVault.sol";
+import "../../src/vaults/Erc20Vault.sol";
+import "../../src/vaults/EthVault.sol";
 import "../../src/framework/interfaces/IExitProcessor.sol";
 
 contract DummyExitGame is IExitProcessor {
@@ -12,8 +12,8 @@ contract DummyExitGame is IExitProcessor {
 
     ExitGameRegistryMock private exitGameRegistry;
     ExitGameController private exitGameController;
-    IEthVault private ethVault;
-    IErc20Vault private erc20Vault;
+    EthVault private ethVault;
+    Erc20Vault private erc20Vault;
 
     event ExitFinalizedFromDummyExitGame (
         uint256 indexed exitId
@@ -51,8 +51,8 @@ contract DummyExitGame is IExitProcessor {
     }
 
     // setter function only for test, not a real Exit Game function
-    function setEthVault(address _contract) public {
-        ethVault = IEthVault(_contract);
+    function setEthVault(EthVault _vault) public {
+        ethVault = _vault;
     }
 
     function proxyEthWithdraw(address payable _target, uint256 _amount) public {
@@ -60,8 +60,8 @@ contract DummyExitGame is IExitProcessor {
     }
 
     // setter function only for test, not a real Exit Game function
-    function setErc20Vault(address _contract) public {
-        erc20Vault = IErc20Vault(_contract);
+    function setErc20Vault(Erc20Vault _vault) public {
+        erc20Vault = _vault;
     }
 
     function proxyErc20Withdraw(address payable _target, address _token, uint256 _amount) public {

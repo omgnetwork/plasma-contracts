@@ -1,17 +1,18 @@
 pragma solidity ^0.5.0;
 
 import "./Vault.sol";
-import "./interfaces/IErc20DepositVerifier.sol";
-import "./interfaces/IErc20Vault.sol";
+import "./verifiers/IErc20DepositVerifier.sol";
+import "../framework/PlasmaFramework.sol";
+
 import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/SafeERC20.sol";
 
-contract Erc20Vault is IErc20Vault, Vault {
+contract Erc20Vault is Vault {
     IErc20DepositVerifier private _depositVerifier;
 
     using SafeERC20 for IERC20;
 
-    constructor(IPlasmaFramework _framework) Vault(_framework) public {}
+    constructor(PlasmaFramework _framework) Vault(_framework) public {}
 
     /**
      * @notice Set the deposit verifier contract. This can be only called by the operator.

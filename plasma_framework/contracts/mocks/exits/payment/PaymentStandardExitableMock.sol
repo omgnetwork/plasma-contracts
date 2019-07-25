@@ -2,14 +2,14 @@ pragma solidity ^0.5.0;
 pragma experimental ABIEncoderV2;
 
 import "../../../src/exits/payment/PaymentStandardExitable.sol";
-import "../../../src/framework/interfaces/IPlasmaFramework.sol";
-import "../../../src/vaults/interfaces/IEthVault.sol";
-import "../../../src/vaults/interfaces/IErc20Vault.sol";
+import "../../../src/framework/PlasmaFramework.sol";
+import "../../../src/vaults/EthVault.sol";
+import "../../../src/vaults/Erc20Vault.sol";
 
 contract PaymentStandardExitableMock is PaymentStandardExitable {
-    IPlasmaFramework private framework;
+    PlasmaFramework private framework;
 
-    constructor(IPlasmaFramework _framework, IEthVault _ethVault, IErc20Vault _erc20Vault)
+    constructor(PlasmaFramework _framework, EthVault _ethVault, Erc20Vault _erc20Vault)
         public
         PaymentStandardExitable(_framework, _ethVault, _erc20Vault)
     {

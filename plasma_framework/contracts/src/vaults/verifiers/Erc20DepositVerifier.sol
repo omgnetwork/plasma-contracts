@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-import "../interfaces/IErc20DepositVerifier.sol";
+import "./IErc20DepositVerifier.sol";
 
 import {PaymentTransactionModel as DepositTx} from "../../transactions/PaymentTransactionModel.sol";
 import {PaymentOutputModel as DepositOutputModel} from "../../transactions/outputs/PaymentOutputModel.sol";

@@ -1,14 +1,14 @@
 pragma solidity ^0.5.0;
 
 import "./ZeroHashesProvider.sol";
-import "../framework/interfaces/IPlasmaFramework.sol";
+import "../framework/PlasmaFramework.sol";
 import "../framework/utils/Operated.sol";
 
 contract Vault is Operated {
-    IPlasmaFramework framework;
+    PlasmaFramework framework;
     bytes32[16] zeroHashes;
 
-    constructor(IPlasmaFramework _framework) public {
+    constructor(PlasmaFramework _framework) public {
         framework = _framework;
         zeroHashes = ZeroHashesProvider.getZeroHashes();
     }

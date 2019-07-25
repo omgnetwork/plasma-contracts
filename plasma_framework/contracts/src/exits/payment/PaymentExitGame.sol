@@ -4,9 +4,12 @@ pragma experimental ABIEncoderV2;
 import "./PaymentStandardExitable.sol";
 import "../utils/ExitId.sol";
 import "../../framework/interfaces/IExitProcessor.sol";
+import "../../framework/PlasmaFramework.sol";
+import "../../vaults/EthVault.sol";
+import "../../vaults/Erc20Vault.sol";
 
 contract PaymentExitGame is IExitProcessor, PaymentStandardExitable {
-    constructor(IPlasmaFramework _framework, IEthVault _ethVault, IErc20Vault _erc20Vault)
+    constructor(PlasmaFramework _framework, EthVault _ethVault, Erc20Vault _erc20Vault)
         public
         PaymentStandardExitable(_framework, _ethVault, _erc20Vault)
         {}
