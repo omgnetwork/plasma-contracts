@@ -1,7 +1,5 @@
 pragma solidity ^0.5.0;
 
-import "../../framework/interfaces/IPlasmaFramework.sol";
-
 import "openzeppelin-solidity/contracts/math/Math.sol";
 
 library ExitableTimestamp {

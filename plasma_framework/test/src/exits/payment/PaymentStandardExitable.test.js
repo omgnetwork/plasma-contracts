@@ -1,16 +1,16 @@
+const ExitableTimestamp = artifacts.require('ExitableTimestampWrapper');
+const ExitId = artifacts.require('ExitIdWrapper');
+const GoodERC20 = artifacts.require('GoodERC20');
+const IsDeposit = artifacts.require('IsDepositWrapper');
+const OutputGuardParser = artifacts.require('DummyOutputGuardParser');
 const PaymentStandardExitable = artifacts.require('PaymentStandardExitableMock');
 const PaymentSpendingConditionExpected = artifacts.require('PaymentSpendingConditionExpected');
 const PaymentSpendingConditionFalse = artifacts.require('PaymentSpendingConditionFalse');
 const PaymentSpendingConditionTrue = artifacts.require('PaymentSpendingConditionTrue');
 const PaymentSpendingConditionRevert = artifacts.require('PaymentSpendingConditionRevert');
 const SpyPlasmaFramework = artifacts.require('SpyPlasmaFramework');
-const GoodERC20 = artifacts.require('GoodERC20');
-const DummyEthVault = artifacts.require('DummyEthVaultForExitGame');
-const DummyErc20Vault = artifacts.require('DummyErc20VaultForExitGame');
-const ExitId = artifacts.require('ExitIdWrapper');
-const OutputGuardParser = artifacts.require('DummyOutputGuardParser');
-const IsDeposit = artifacts.require('IsDepositWrapper');
-const ExitableTimestamp = artifacts.require('ExitableTimestampWrapper');
+const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
+const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
 
 const {
     BN, constants, expectEvent, expectRevert, time,
@@ -64,8 +64,8 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
         beforeEach(async () => {
             this.framework = await SpyPlasmaFramework.new(MIN_EXIT_PERIOD, INITIAL_IMMUME_VAULTS_NUM);
 
-            const ethVault = await DummyEthVault.new();
-            const erc20Vault = await DummyErc20Vault.new();
+            const ethVault = await SpyEthVault.new(this.framework.address);
+            const erc20Vault = await SpyErc20Vault.new(this.framework.address);
             this.exitGame = await PaymentStandardExitable.new(
                 this.framework.address, ethVault.address, erc20Vault.address,
             );
@@ -353,8 +353,8 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
         beforeEach(async () => {
             this.framework = await SpyPlasmaFramework.new(MIN_EXIT_PERIOD, INITIAL_IMMUME_VAULTS_NUM);
 
-            const ethVault = await DummyEthVault.new();
-            const erc20Vault = await DummyErc20Vault.new();
+            const ethVault = await SpyEthVault.new(this.framework.address);
+            const erc20Vault = await SpyErc20Vault.new(this.framework.address);
             this.exitGame = await PaymentStandardExitable.new(
                 this.framework.address, ethVault.address, erc20Vault.address,
             );
@@ -568,8 +568,8 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
         beforeEach(async () => {
             this.framework = await SpyPlasmaFramework.new(MIN_EXIT_PERIOD, INITIAL_IMMUME_VAULTS_NUM);
 
-            const ethVault = await DummyEthVault.new();
-            const erc20Vault = await DummyErc20Vault.new();
+            const ethVault = await SpyEthVault.new(this.framework.address);
+            const erc20Vault = await SpyErc20Vault.new(this.framework.address);
             this.exitGame = await PaymentStandardExitable.new(
                 this.framework.address, ethVault.address, erc20Vault.address,
             );
@@ -663,7 +663,7 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
             const { receipt } = await this.exitGame.processStandardExit(exitId);
             await expectEvent.inTransaction(
                 receipt.transactionHash,
-                DummyEthVault,
+                SpyEthVault,
                 'DummyEthWithdraw',
                 {
                     target: testExitData.exitTarget,
@@ -682,7 +682,7 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
 
             await expectEvent.inTransaction(
                 receipt.transactionHash,
-                DummyErc20Vault,
+                SpyErc20Vault,
                 'DummyErc20Withdraw',
                 {
                     target: testExitData.exitTarget,

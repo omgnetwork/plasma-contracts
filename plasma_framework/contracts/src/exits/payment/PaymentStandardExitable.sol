@@ -10,9 +10,9 @@ import "../utils/ExitId.sol";
 import "../utils/ExitableTimestamp.sol";
 import "../utils/OutputId.sol";
 import "../utils/OutputGuard.sol";
-import "../../vaults/interfaces/IEthVault.sol";
-import "../../vaults/interfaces/IErc20Vault.sol";
-import "../../framework/interfaces/IPlasmaFramework.sol";
+import "../../vaults/EthVault.sol";
+import "../../vaults/Erc20Vault.sol";
+import "../../framework/PlasmaFramework.sol";
 import "../../framework/interfaces/IExitProcessor.sol";
 import "../../framework/models/ExitModel.sol";
 import "../../utils/IsDeposit.sol";
@@ -38,11 +38,11 @@ contract PaymentStandardExitable is
     uint256 public constant standardExitBond = 31415926535 wei;
     mapping (uint192 => PaymentExitDataModel.StandardExit) public exits;
 
-    IPlasmaFramework private framework;
+    PlasmaFramework private framework;
     IsDeposit.Predicate private isDeposit;
     ExitableTimestamp.Calculator private exitableTimestampCalculator;
-    IEthVault ethVault;
-    IErc20Vault erc20Vault;
+    EthVault ethVault;
+    Erc20Vault erc20Vault;
 
     struct StartStandardExitArgs {
         uint192 utxoPos;
@@ -115,12 +115,13 @@ contract PaymentStandardExitable is
         uint192 indexed exitId
     );
 
-    constructor(IPlasmaFramework _framework, IEthVault _ethVault, IErc20Vault _erc20Vault) public {
+    constructor(PlasmaFramework _framework, EthVault _ethVault, Erc20Vault _erc20Vault) public {
         framework = _framework;
-        isDeposit = IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL());
-        exitableTimestampCalculator = ExitableTimestamp.Calculator(framework.minExitPeriod());
         ethVault = _ethVault;
         erc20Vault = _erc20Vault;
+
+        isDeposit = IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL());
+        exitableTimestampCalculator = ExitableTimestamp.Calculator(framework.minExitPeriod());
     }
 
     /**

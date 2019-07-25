@@ -1,7 +1,6 @@
 pragma solidity ^0.5.0;
 
 import "../../utils/UtxoPosLib.sol";
-import "../../framework/interfaces/IPlasmaFramework.sol";
 import "../../utils/Bits.sol";
 
 library ExitId {
