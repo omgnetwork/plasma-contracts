@@ -20,13 +20,7 @@ contract('ExitGameRegistry', ([_, other]) => {
         });
 
         it('accepts call when called by registered exit game contract', async () => {
-            const { receipt } = await this.dummyExitGame.checkOnlyFromExitGame();
-            await expectEvent.inTransaction(
-                receipt.transactionHash,
-                ExitGameRegistry,
-                'OnlyFromExitGameChecked',
-                {},
-            );
+            expect(await this.dummyExitGame.checkOnlyFromExitGame()).to.be.true;
         });
 
         it('reverts when not called by registered exit game contract', async () => {

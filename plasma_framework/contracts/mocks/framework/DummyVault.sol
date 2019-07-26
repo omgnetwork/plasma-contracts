@@ -12,8 +12,8 @@ contract DummyVault {
         vaultRegistry = VaultRegistryMock(_contract);
     }
 
-    function checkOnlyFromVault() public {
-        vaultRegistry.checkOnlyFromVault();
+    function checkOnlyFromNonQuarantinedVault() public view returns (bool) {
+        return vaultRegistry.checkOnlyFromNonQuarantinedVault();
     }
 
     // setter function only for test, not a real Vault function

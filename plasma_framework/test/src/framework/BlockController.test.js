@@ -115,16 +115,7 @@ contract('BlockController', ([_, other]) => {
             );
         });
 
-        it('reverts when not called by registered vault', async () => {
-            await expectRevert(
-                this.blockController.submitDepositBlock(this.dummyBlockHash),
-                'Not being called by registered vaults',
-            );
-        });
-    });
-
-    describe('registerVault', () => {
-        it('should not store a deposit in a newly registered vault', async () => {
+        it('should revert when called from a newly registered (still quarantined) vault', async () => {
             const newDummyVault = await DummyVault.new();
             newDummyVault.setBlockController(this.blockController.address);
             const newDummyVaultId = 2;
@@ -132,6 +123,13 @@ contract('BlockController', ([_, other]) => {
             await expectRevert(
                 newDummyVault.submitDepositBlock(this.dummyBlockHash),
                 'Vault is quarantined.',
+            );
+        });
+
+        it('reverts when not called by registered vault', async () => {
+            await expectRevert(
+                this.blockController.submitDepositBlock(this.dummyBlockHash),
+                'Not being called by registered vaults',
             );
         });
     });
