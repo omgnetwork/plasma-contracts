@@ -13,6 +13,28 @@ contract('ExitId', () => {
         this.contract = await ExitId.new();
     });
 
+    describe.only('isStandardExit', () => {
+        it('should return true given a standard exit id for deposit tx', async () => {
+            const isDeposit = true;
+            const dummyTxBytes = `0x${Array(100).fill(1).join('')}`;
+            const dummyUtxoPos = 1000000000;
+
+            const exitId = await this.contract.getStandardExitId(isDeposit, dummyTxBytes, dummyUtxoPos);
+            expect(await this.contract.isStandardExit(exitId)).to.be.true;
+        });
+
+        it('should return true given a standard exit id for non deposit tx', async () => {
+            const isDeposit = false;
+            const dummyTxBytes = `0x${Array(100).fill(1).join('')}`;
+            const dummyUtxoPos = 1000000000;
+
+            const exitId = await this.contract.getStandardExitId(isDeposit, dummyTxBytes, dummyUtxoPos);
+            expect(await this.contract.isStandardExit(exitId)).to.be.true;
+        });
+
+        // TODO: tests for inflight exit id should be false
+    });
+
     describe('getStandardExitId', () => {
         it('should get the correct exit id for deposit tx output', async () => {
             const output = new PaymentTransactionOutput(100, OUTPUT_GUARD, constants.ZERO_ADDRESS);
