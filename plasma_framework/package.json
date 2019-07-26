@@ -20,7 +20,8 @@
     "truffle": "^5.0.25"
   },
   "scripts": {
-    "test": "truffle test"
+    "test": "truffle test",
+    "linter": "node_modules/eslint/bin/eslint.js . --fix"
   },
   "repository": {
     "type": "git",
