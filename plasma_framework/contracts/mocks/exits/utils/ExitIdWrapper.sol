@@ -4,6 +4,10 @@ import "../../../src/utils/UtxoPosLib.sol";
 import "../../../src/exits/utils/ExitId.sol";
 
 contract ExitIdWrapper {
+    function isStandardExit(uint192 _exitId) public pure returns (bool) {
+        return ExitId.isStandardExit(_exitId);
+    }
+
     function getStandardExitId(bool _isDeposit, bytes memory _txBytes, uint256 _utxoPos)
         public
         pure
