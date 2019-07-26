@@ -7,7 +7,7 @@ contract ExitGameRegistry is Operated {
     mapping(uint256 => address) private _exitGames;
     mapping(address => uint256) private _exitGameToTxType;
     using Quarantine for Quarantine.Data;
-    Quarantine.Data internal _quarantine;
+    Quarantine.Data private _quarantine;
 
     event ExitGameRegistered(
         uint256 txType,
@@ -17,7 +17,7 @@ contract ExitGameRegistry is Operated {
     constructor (uint256 _minExitPeriod, uint256 _initialImmuneExitGames)
         public
     {
-        _quarantine.quarantinePeriod = _minExitPeriod;
+        _quarantine.quarantinePeriod = 2 * _minExitPeriod;
         _quarantine.immunitiesRemaining = _initialImmuneExitGames;
     }
 

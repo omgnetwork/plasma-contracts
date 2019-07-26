@@ -88,6 +88,17 @@ contract('ExitGameController', () => {
             );
         });
 
+        it('rejects when called from a newly registered (still quarantined) exit game', async () => {
+            const newDummyExitGame = await DummyExitGame.new();
+            newDummyExitGame.setExitGameController(this.controller.address);
+            const newDummyExitGameId = 2;
+            await this.controller.registerExitGame(newDummyExitGameId, newDummyExitGame.address);
+            await expectRevert(
+                newDummyExitGame.enqueue(0, this.dummyToken, this.dummyExit),
+                'ExitGame is quarantined.',
+            );
+        });
+
         it('increases `exitQueueNonce` once', async () => {
             const originExitQueueNonce = await this.controller.exitQueueNonce();
 

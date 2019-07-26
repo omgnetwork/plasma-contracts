@@ -7,7 +7,7 @@ contract ExitGameRegistryMock is ExitGameRegistry {
         ExitGameRegistry(_minExitPeriod, _initialImmuneExitGames) public {
     }
 
-    function checkOnlyFromExitGame() public onlyFromNonQuarantinedExitGame view returns (bool) {
+    function checkOnlyFromNonQuarantinedExitGame() public onlyFromNonQuarantinedExitGame view returns (bool) {
         return true;
     }
 }

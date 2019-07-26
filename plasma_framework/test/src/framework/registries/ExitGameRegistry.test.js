@@ -2,13 +2,13 @@ const ExitGameRegistry = artifacts.require('ExitGameRegistryMock');
 const DummyExitGame = artifacts.require('DummyExitGame');
 
 const {
-    BN, constants, expectEvent, expectRevert,
+    BN, constants, expectEvent, expectRevert, time,
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
 contract('ExitGameRegistry', ([_, other]) => {
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
-    const INITIAL_IMMUNE_EXIT_GAMES_NUM = 1;
+    const INITIAL_IMMUNE_EXIT_GAMES_NUM = 0;
 
     beforeEach(async () => {
         this.registry = await ExitGameRegistry.new(MIN_EXIT_PERIOD, INITIAL_IMMUNE_EXIT_GAMES_NUM);
@@ -22,13 +22,21 @@ contract('ExitGameRegistry', ([_, other]) => {
             await this.dummyExitGame.setExitGameRegistry(this.registry.address);
         });
 
-        it('accepts call when called by registered exit game contract', async () => {
-            expect(await this.dummyExitGame.checkOnlyFromExitGame()).to.be.true;
+        it('should revert when the exit game contract is still quarantined', async () => {
+            await expectRevert(
+                this.dummyExitGame.checkOnlyFromNonQuarantinedExitGame(),
+                'ExitGame is quarantined',
+            );
+        });
+
+        it('accepts call when called by registered exit game contract on passed quarantine period', async () => {
+            await time.increase(2 * MIN_EXIT_PERIOD + 1);
+            expect(await this.dummyExitGame.checkOnlyFromNonQuarantinedExitGame()).to.be.true;
         });
 
         it('reverts when not called by registered exit game contract', async () => {
             await expectRevert(
-                this.registry.checkOnlyFromExitGame(),
+                this.registry.checkOnlyFromNonQuarantinedExitGame(),
                 'Not being called by registered exit game contract',
             );
         });
