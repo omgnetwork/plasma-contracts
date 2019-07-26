@@ -21,7 +21,10 @@ contract ExitGameController is ExitGameRegistry {
         address token
     );
 
-    constructor() public {
+    constructor(uint256 _minExitPeriod, uint256 _initialImmuneExitGames)
+        public
+        ExitGameRegistry(_minExitPeriod, _initialImmuneExitGames)
+    {
         address ethToken = address(0);
         exitsQueues[ethToken] = new PriorityQueue();
     }
@@ -58,7 +61,7 @@ contract ExitGameController is ExitGameRegistry {
      * @param _exit Exit data that contains the basic information for exit processor that processes the exit
      * @return a unique priority number computed for the exit
      */
-    function enqueue(uint192 _priority, address _token, ExitModel.Exit memory _exit) public onlyFromExitGame returns (uint256) {
+    function enqueue(uint192 _priority, address _token, ExitModel.Exit memory _exit) public onlyFromNonQuarantinedExitGame returns (uint256) {
         require(hasToken(_token), "Such token has not been added to the plasma framework yet");
 
         PriorityQueue queue = exitsQueues[_token];
@@ -127,7 +130,7 @@ contract ExitGameController is ExitGameRegistry {
      * @notice Batch flags outputs that is spent
      * @param _outputIds Output ids to be flagged
      */
-    function batchFlagOutputsSpent(bytes32[] calldata _outputIds) external onlyFromExitGame {
+    function batchFlagOutputsSpent(bytes32[] calldata _outputIds) external onlyFromNonQuarantinedExitGame {
         for (uint i = 0 ; i < _outputIds.length ; i++) {
             isOutputSpent[_outputIds[i]] = true;
         }
@@ -137,7 +140,7 @@ contract ExitGameController is ExitGameRegistry {
      * @notice Flags a single outputs as spent
      * @param _outputId The output id to be flagged as spent
      */
-    function flagOutputSpent(bytes32 _outputId) external onlyFromExitGame {
+    function flagOutputSpent(bytes32 _outputId) external onlyFromNonQuarantinedExitGame {
         isOutputSpent[_outputId] = true;
     }
 }

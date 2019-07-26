@@ -26,6 +26,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
     const EMPTY_BYTES = '0x';
     const PAYMENT_TX_TYPE = 1;
     const INITIAL_IMMUNE_VAULTS = 1;
+    const INITIAL_IMMUNE_EXIT_GAMES = 1;
 
     const alicePrivateKey = '0x7151e5dab6f8e95b5436515b83f423c4df64fe4c6149f864daa209b26adb10ca';
     let alice;
@@ -41,7 +42,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
     });
 
     const setupContracts = async () => {
-        this.framework = await PlasmaFramework.new(MIN_EXIT_PERIOD, INITIAL_IMMUNE_VAULTS);
+        this.framework = await PlasmaFramework.new(MIN_EXIT_PERIOD, INITIAL_IMMUNE_VAULTS, INITIAL_IMMUNE_EXIT_GAMES);
         this.exitGame = await PaymentExitGame.new(this.framework.address);
 
         this.toPaymentCondition = await PaymentOutputToPaymentTxCondition.new(this.framework.address);

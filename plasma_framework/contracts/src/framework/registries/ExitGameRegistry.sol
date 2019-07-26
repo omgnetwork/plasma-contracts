@@ -1,18 +1,29 @@
 pragma solidity ^0.5.0;
 
 import "../utils/Operated.sol";
+import "../utils/Quarantine.sol";
 
 contract ExitGameRegistry is Operated {
     mapping(uint256 => address) private _exitGames;
     mapping(address => uint256) private _exitGameToTxType;
+    using Quarantine for Quarantine.Data;
+    Quarantine.Data private _quarantine;
 
     event ExitGameRegistered(
         uint256 txType,
         address exitGameAddress
     );
 
-    modifier onlyFromExitGame() {
+    constructor (uint256 _minExitPeriod, uint256 _initialImmuneExitGames)
+        public
+    {
+        _quarantine.quarantinePeriod = 2 * _minExitPeriod;
+        _quarantine.immunitiesRemaining = _initialImmuneExitGames;
+    }
+
+    modifier onlyFromNonQuarantinedExitGame() {
         require(_exitGameToTxType[msg.sender] != 0, "Not being called by registered exit game contract");
+        require(!_quarantine.isQuarantined(msg.sender), "ExitGame is quarantined.");
         _;
     }
 
@@ -29,6 +40,7 @@ contract ExitGameRegistry is Operated {
 
         _exitGames[_txType] = _contract;
         _exitGameToTxType[_contract] = _txType;
+        _quarantine.quarantine(_contract);
 
         emit ExitGameRegistered(_txType, _contract);
     }

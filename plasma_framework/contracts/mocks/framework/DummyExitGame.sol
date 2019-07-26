@@ -25,8 +25,8 @@ contract DummyExitGame is IExitProcessor {
         exitGameRegistry = ExitGameRegistryMock(_contract);
     }
 
-    function checkOnlyFromExitGame() public view returns (bool) {
-        return exitGameRegistry.checkOnlyFromExitGame();
+    function checkOnlyFromNonQuarantinedExitGame() public view returns (bool) {
+        return exitGameRegistry.checkOnlyFromNonQuarantinedExitGame();
     }
 
     // setter function only for test, not a real Exit Game function
