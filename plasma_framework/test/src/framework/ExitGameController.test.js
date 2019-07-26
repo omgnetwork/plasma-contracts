@@ -345,6 +345,19 @@ contract('ExitGameController', () => {
                 'Not being called by registered exit game contract',
             );
         });
+
+        it('should revert when called on quarantined Exit Game contract', async () => {
+            const dummyOutputId1 = web3.utils.sha3('output id 1');
+            const dummyOutputId2 = web3.utils.sha3('output id 2');
+            const newDummyExitGame = await DummyExitGame.new();
+            newDummyExitGame.setExitGameController(this.controller.address);
+            const newDummyExitGameId = 2;
+            await this.controller.registerExitGame(newDummyExitGameId, newDummyExitGame.address);
+            await expectRevert(
+                newDummyExitGame.proxyBatchFlagOutputsSpent([dummyOutputId1, dummyOutputId2]),
+                'ExitGame is quarantined.',
+            );
+        });
     });
 
     describe('flagOutputSpent', () => {
@@ -359,6 +372,18 @@ contract('ExitGameController', () => {
             await expectRevert(
                 this.controller.flagOutputSpent(dummyOutputId),
                 'Not being called by registered exit game contract',
+            );
+        });
+
+        it('should revert when called on quarantined Exit Game contract', async () => {
+            const dummyOutputId = web3.utils.sha3('output id');
+            const newDummyExitGame = await DummyExitGame.new();
+            newDummyExitGame.setExitGameController(this.controller.address);
+            const newDummyExitGameId = 2;
+            await this.controller.registerExitGame(newDummyExitGameId, newDummyExitGame.address);
+            await expectRevert(
+                newDummyExitGame.proxyFlagOutputSpent(dummyOutputId),
+                'ExitGame is quarantined.',
             );
         });
     });
