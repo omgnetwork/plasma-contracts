@@ -7,12 +7,15 @@ const {
 const { expect } = require('chai');
 
 contract('ExitGameRegistry', ([_, other]) => {
+    const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
+    const INITIAL_IMMUNE_EXIT_GAMES_NUM = 1;
+
     beforeEach(async () => {
-        this.registry = await ExitGameRegistry.new();
+        this.registry = await ExitGameRegistry.new(MIN_EXIT_PERIOD, INITIAL_IMMUNE_EXIT_GAMES_NUM);
         this.dummyExitGame = (await DummyExitGame.new());
     });
 
-    describe('onlyFromExitGame', () => {
+    describe('onlyFromNonQuarantinedExitGame', () => {
         beforeEach(async () => {
             this.dummyTxType = 1;
             await this.registry.registerExitGame(this.dummyTxType, this.dummyExitGame.address);
