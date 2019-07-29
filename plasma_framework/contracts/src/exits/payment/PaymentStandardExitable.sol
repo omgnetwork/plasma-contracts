@@ -189,7 +189,7 @@ contract PaymentStandardExitable is
      * @dev This function is designed to be called in the main processExit function. Thus using internal.
      * @param _exitId The standard exit id.
      */
-    function _processStandardExit(uint256 _exitId) internal {
+    function processStandardExit(uint256 _exitId) internal {
         uint192 exitId = uint192(_exitId);
         PaymentExitDataModel.StandardExit memory exit = exits[exitId];
 

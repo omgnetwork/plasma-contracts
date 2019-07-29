@@ -10,7 +10,8 @@ contract SpyPlasmaFramework is PlasmaFramework {
 
     constructor(uint256 _minExitPeriod, uint256 _initialImmuneVaults, uint256 _initialImmuneExitGames)
         public
-        PlasmaFramework(_minExitPeriod, _initialImmuneVaults, _initialImmuneExitGames) {}
+        PlasmaFramework(_minExitPeriod, _initialImmuneVaults, _initialImmuneExitGames) {
+    }
 
     /** override for test */
     function enqueue(uint192 _priority, address _token, ExitModel.Exit memory _exit) public returns (uint256) {

@@ -16,11 +16,9 @@ contract PaymentStandardExitableMock is PaymentStandardExitable {
         framework = _framework;
     }
 
-    /** override to make this non abstract contract */
-    function processExit(uint256 _exitId) external {}
-
-    function processStandardExit(uint256 _exitId) external {
-        PaymentStandardExitable._processStandardExit(_exitId);
+    /** override and calls processStandardExit for test */
+    function processExit(uint256 _exitId) external {
+        PaymentStandardExitable.processStandardExit(_exitId);
     }
 
     /** helper functions for testing */

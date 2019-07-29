@@ -1,10 +1,10 @@
 pragma solidity ^0.5.0;
 
-import "./IErc20DepositVerifier.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 
+import "./IErc20DepositVerifier.sol";
 import {PaymentTransactionModel as DepositTx} from "../../transactions/PaymentTransactionModel.sol";
 import {PaymentOutputModel as DepositOutputModel} from "../../transactions/outputs/PaymentOutputModel.sol";
-import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 
 contract Erc20DepositVerifier is IErc20DepositVerifier {
     using DepositOutputModel for DepositOutputModel.Output;
