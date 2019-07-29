@@ -189,12 +189,11 @@ contract PaymentStandardExitable is
      * @dev This function is designed to be called in the main processExit function. Thus using internal.
      * @param _exitId The standard exit id.
      */
-    function processStandardExit(uint256 _exitId) internal {
-        uint192 exitId = uint192(_exitId);
-        PaymentExitDataModel.StandardExit memory exit = exits[exitId];
+    function processStandardExit(uint192 _exitId) internal {
+        PaymentExitDataModel.StandardExit memory exit = exits[_exitId];
 
         if (!exit.exitable || framework.isOutputSpent(exit.outputId)) {
-            emit ExitOmitted(exitId);
+            emit ExitOmitted(_exitId);
             return;
         }
 
@@ -207,9 +206,9 @@ contract PaymentStandardExitable is
             erc20Vault.withdraw(exit.exitTarget, exit.token, exit.amount);
         }
 
-        delete exits[exitId];
+        delete exits[_exitId];
 
-        emit ExitFinalized(exitId);
+        emit ExitFinalized(_exitId);
     }
 
     /**
