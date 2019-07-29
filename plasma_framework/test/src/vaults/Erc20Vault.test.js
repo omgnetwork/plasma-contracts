@@ -5,7 +5,9 @@ const GoodERC20 = artifacts.require('GoodERC20');
 const BadERC20 = artifacts.require('BadERC20');
 const DummyExitGame = artifacts.require('DummyExitGame');
 
-const { BN, constants, expectRevert } = require('openzeppelin-test-helpers');
+const {
+    BN, constants, expectEvent, expectRevert,
+} = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
 const Testlang = require('../../helpers/testlang.js');
@@ -169,6 +171,23 @@ contract('Erc20Vault', (accounts) => {
             const expectedPostBalance = preBalance.add(new BN(this.testFundAmount));
 
             expect(postBalance).to.be.bignumber.equal(expectedPostBalance);
+        });
+
+        it('should emit Erc20Withdrawn event correctly', async () => {
+            const { receipt } = await this.exitGame.proxyErc20Withdraw(
+                alice, this.erc20.address, this.testFundAmount,
+            );
+
+            await expectEvent.inTransaction(
+                receipt.transactionHash,
+                Erc20Vault,
+                'Erc20Withdrawn',
+                {
+                    target: alice,
+                    token: this.erc20.address,
+                    amount: new BN(this.testFundAmount),
+                },
+            );
         });
     });
 

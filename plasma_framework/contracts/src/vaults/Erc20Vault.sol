@@ -12,6 +12,12 @@ contract Erc20Vault is Vault {
 
     using SafeERC20 for IERC20;
 
+    event Erc20Withdrawn(
+        address payable indexed target,
+        address indexed token,
+        uint256 amount
+    );
+
     constructor(PlasmaFramework _framework) Vault(_framework) public {}
 
     /**
@@ -42,5 +48,6 @@ contract Erc20Vault is Vault {
     */
     function withdraw(address payable _target, address _token, uint256 _amount) external onlyFromExitGame {
         IERC20(_token).safeTransfer(_target, _amount);
+        emit Erc20Withdrawn(_target, _token, _amount);
     }
 }
