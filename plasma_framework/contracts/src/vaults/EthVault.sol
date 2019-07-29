@@ -7,6 +7,11 @@ import "../framework/PlasmaFramework.sol";
 contract EthVault is Vault {
     IEthDepositVerifier private _depositVerifier;
 
+    event EthWithdrawn(
+        address payable indexed target,
+        uint256 amount
+    );
+
     constructor(PlasmaFramework _framework) Vault(_framework) public {}
 
     /**
@@ -34,5 +39,6 @@ contract EthVault is Vault {
     */
     function withdraw(address payable _target, uint256 _amount) external onlyFromExitGame {
         _target.transfer(_amount);
+        emit EthWithdrawn(_target, _amount);
     }
 }

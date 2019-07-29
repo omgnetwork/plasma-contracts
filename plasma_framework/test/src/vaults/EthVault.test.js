@@ -3,7 +3,9 @@ const EthVault = artifacts.require('EthVault');
 const EthDepositVerifier = artifacts.require('EthDepositVerifier');
 const DummyExitGame = artifacts.require('DummyExitGame');
 
-const { BN, constants, expectRevert } = require('openzeppelin-test-helpers');
+const {
+    BN, constants, expectEvent, expectRevert,
+} = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
 const { PaymentTransaction, PaymentTransactionOutput } = require('../../helpers/transaction.js');
@@ -136,6 +138,20 @@ contract('EthVault', ([_, alice]) => {
             const expectedPostBalance = preBalance.add(new BN(DEPOSIT_VALUE));
 
             expect(postBalance).to.be.bignumber.equal(expectedPostBalance);
+        });
+
+        it('should emit EthWithdrawn event correctly', async () => {
+            const { receipt } = await this.exitGame.proxyEthWithdraw(alice, DEPOSIT_VALUE);
+
+            await expectEvent.inTransaction(
+                receipt.transactionHash,
+                EthVault,
+                'EthWithdrawn',
+                {
+                    target: alice,
+                    amount: new BN(DEPOSIT_VALUE),
+                },
+            );
         });
     });
 });
