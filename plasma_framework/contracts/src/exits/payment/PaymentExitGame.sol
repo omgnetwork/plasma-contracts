@@ -11,14 +11,12 @@ import "../../vaults/Erc20Vault.sol";
 contract PaymentExitGame is IExitProcessor, PaymentStandardExitable {
     constructor(PlasmaFramework _framework, EthVault _ethVault, Erc20Vault _erc20Vault)
         public
-        PaymentStandardExitable(_framework, _ethVault, _erc20Vault)
-        {}
+        PaymentStandardExitable(_framework, _ethVault, _erc20Vault) {
+    }
 
-    function processExit(uint256 _exitId) external {
-        uint192 exitId = uint192(_exitId);
-
-        if (ExitId.isStandardExit(exitId)) {
-            PaymentStandardExitable.processStandardExit(exitId);
+    function processExit(uint192 _exitId) external {
+        if (ExitId.isStandardExit(_exitId)) {
+            PaymentStandardExitable.processStandardExit(_exitId);
         } else {
             require(false, "TODO: implement process in flight exit");
         }

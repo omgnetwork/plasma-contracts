@@ -17,7 +17,7 @@ contract PaymentStandardExitableMock is PaymentStandardExitable {
     }
 
     /** override and calls processStandardExit for test */
-    function processExit(uint256 _exitId) external {
+    function processExit(uint192 _exitId) external {
         PaymentStandardExitable.processStandardExit(_exitId);
     }
 

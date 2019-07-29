@@ -20,7 +20,7 @@ contract DummyExitGame is IExitProcessor {
     );
 
     // override ExitProcessor interface
-    function processExit(uint256 _exitId) public {
+    function processExit(uint192 _exitId) public {
         emit ExitFinalizedFromDummyExitGame(_exitId);
     }
 
