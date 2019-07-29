@@ -15,9 +15,10 @@ const Testlang = require('../../helpers/testlang.js');
 contract('EthVault', ([_, alice]) => {
     const DEPOSIT_VALUE = 1000000;
     const INITIAL_IMMUNE_VAULTS = 1;
+    const INITIAL_IMMUNE_EXIT_GAMES = 0;
 
     beforeEach('setup contracts', async () => {
-        this.framework = await PlasmaFramework.new(10, INITIAL_IMMUNE_VAULTS);
+        this.framework = await PlasmaFramework.new(10, INITIAL_IMMUNE_VAULTS, INITIAL_IMMUNE_EXIT_GAMES);
         this.ethVault = await EthVault.new(this.framework.address);
         const depositVerifier = await EthDepositVerifier.new();
         await this.ethVault.setDepositVerifier(depositVerifier.address);

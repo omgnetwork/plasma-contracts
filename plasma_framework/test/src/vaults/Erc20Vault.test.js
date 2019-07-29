@@ -18,9 +18,10 @@ contract('Erc20Vault', (accounts) => {
     const DEPOSIT_VALUE = 100;
     const INITIAL_SUPPLY = 1000000;
     const INITIAL_IMMUNE_VAULTS = 1;
+    const INITIAL_IMMUNE_EXIT_GAMES = 0;
 
     beforeEach('setup contracts', async () => {
-        this.framework = await PlasmaFramework.new(10, INITIAL_IMMUNE_VAULTS);
+        this.framework = await PlasmaFramework.new(10, INITIAL_IMMUNE_VAULTS, INITIAL_IMMUNE_EXIT_GAMES);
         this.erc20Vault = await Erc20Vault.new(this.framework.address);
         const depositVerifier = await Erc20DepositVerifier.new();
         await this.erc20Vault.setDepositVerifier(depositVerifier.address);

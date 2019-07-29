@@ -4,7 +4,7 @@ pragma experimental ABIEncoderV2;
 import "../../src/framework/PlasmaFramework.sol";
 import "../../src/framework/models/BlockModel.sol";
 
-contract SpyPlasmaFramework is PlasmaFramework {
+contract SpyPlasmaFrameworkForExitGame is PlasmaFramework {
     mapping (uint256 => BlockModel.Block) public blocks;
     mapping (bytes32 => ExitModel.Exit) public testExitQueue;
 

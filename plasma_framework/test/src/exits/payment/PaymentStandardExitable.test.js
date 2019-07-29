@@ -8,7 +8,7 @@ const PaymentSpendingConditionExpected = artifacts.require('PaymentSpendingCondi
 const PaymentSpendingConditionFalse = artifacts.require('PaymentSpendingConditionFalse');
 const PaymentSpendingConditionTrue = artifacts.require('PaymentSpendingConditionTrue');
 const PaymentSpendingConditionRevert = artifacts.require('PaymentSpendingConditionRevert');
-const SpyPlasmaFramework = artifacts.require('SpyPlasmaFramework');
+const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
 
@@ -31,7 +31,8 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
     const ETH = constants.ZERO_ADDRESS;
     const CHILD_BLOCK_INTERVAL = 1000;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
-    const INITIAL_IMMUNE_VAULTS_NUM = 0;
+    const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
+    const INITIAL_IMMUNE_EXIT_GAME_NUM = 1;
     const OUTPUT_TYPE_ZERO = 0;
     const EMPTY_BYTES = '0x0000000000000000000000000000000000000000000000000000000000000000000000';
     const EMPTY_BYTES32 = '0x0000000000000000000000000000000000000000000000000000000000000000';
@@ -62,7 +63,9 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
         });
 
         beforeEach(async () => {
-            this.framework = await SpyPlasmaFramework.new(MIN_EXIT_PERIOD, INITIAL_IMMUNE_VAULTS_NUM);
+            this.framework = await SpyPlasmaFramework.new(
+                MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
+            );
 
             const ethVault = await SpyEthVault.new(this.framework.address);
             const erc20Vault = await SpyErc20Vault.new(this.framework.address);
@@ -351,7 +354,9 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
         });
 
         beforeEach(async () => {
-            this.framework = await SpyPlasmaFramework.new(MIN_EXIT_PERIOD, INITIAL_IMMUNE_VAULTS_NUM);
+            this.framework = await SpyPlasmaFramework.new(
+                MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
+            );
 
             const ethVault = await SpyEthVault.new(this.framework.address);
             const erc20Vault = await SpyErc20Vault.new(this.framework.address);
@@ -566,7 +571,9 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
 
     describe('processStandardExit', () => {
         beforeEach(async () => {
-            this.framework = await SpyPlasmaFramework.new(MIN_EXIT_PERIOD, INITIAL_IMMUNE_VAULTS_NUM);
+            this.framework = await SpyPlasmaFramework.new(
+                MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
+            );
 
             const ethVault = await SpyEthVault.new(this.framework.address);
             const erc20Vault = await SpyErc20Vault.new(this.framework.address);
