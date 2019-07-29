@@ -10,10 +10,10 @@ import "../../src/framework/interfaces/IExitProcessor.sol";
 contract DummyExitGame is IExitProcessor {
     uint256 public uniquePriorityFromEnqueue;
 
-    ExitGameRegistryMock private exitGameRegistry;
-    ExitGameController private exitGameController;
-    EthVault private ethVault;
-    Erc20Vault private erc20Vault;
+    ExitGameRegistryMock public exitGameRegistry;
+    ExitGameController public exitGameController;
+    EthVault public ethVault;
+    Erc20Vault public erc20Vault;
 
     event ExitFinalizedFromDummyExitGame (
         uint256 indexed exitId

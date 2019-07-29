@@ -31,7 +31,7 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
     const ETH = constants.ZERO_ADDRESS;
     const CHILD_BLOCK_INTERVAL = 1000;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
-    const INITIAL_IMMUME_VAULTS_NUM = 0;
+    const INITIAL_IMMUNE_VAULTS_NUM = 0;
     const OUTPUT_TYPE_ZERO = 0;
     const EMPTY_BYTES = '0x0000000000000000000000000000000000000000000000000000000000000000000000';
     const EMPTY_BYTES32 = '0x0000000000000000000000000000000000000000000000000000000000000000';
@@ -62,7 +62,7 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
         });
 
         beforeEach(async () => {
-            this.framework = await SpyPlasmaFramework.new(MIN_EXIT_PERIOD, INITIAL_IMMUME_VAULTS_NUM);
+            this.framework = await SpyPlasmaFramework.new(MIN_EXIT_PERIOD, INITIAL_IMMUNE_VAULTS_NUM);
 
             const ethVault = await SpyEthVault.new(this.framework.address);
             const erc20Vault = await SpyErc20Vault.new(this.framework.address);
@@ -351,7 +351,7 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
         });
 
         beforeEach(async () => {
-            this.framework = await SpyPlasmaFramework.new(MIN_EXIT_PERIOD, INITIAL_IMMUME_VAULTS_NUM);
+            this.framework = await SpyPlasmaFramework.new(MIN_EXIT_PERIOD, INITIAL_IMMUNE_VAULTS_NUM);
 
             const ethVault = await SpyEthVault.new(this.framework.address);
             const erc20Vault = await SpyErc20Vault.new(this.framework.address);
@@ -566,7 +566,7 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
 
     describe('processStandardExit', () => {
         beforeEach(async () => {
-            this.framework = await SpyPlasmaFramework.new(MIN_EXIT_PERIOD, INITIAL_IMMUME_VAULTS_NUM);
+            this.framework = await SpyPlasmaFramework.new(MIN_EXIT_PERIOD, INITIAL_IMMUNE_VAULTS_NUM);
 
             const ethVault = await SpyEthVault.new(this.framework.address);
             const erc20Vault = await SpyErc20Vault.new(this.framework.address);
@@ -586,15 +586,16 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
             outputTypeAndGuardHash: web3.utils.sha3('outputTypeAndGuardHash'),
             token,
             exitTarget: alice,
-            amount: '3000000000000000000', // 3 ether
+            amount: web3.utils.toWei('3', 'ether'),
         });
 
         it('should not process the exit when such exit is not exitable', async () => {
             const exitId = 1;
-            const testExitData = getTestExitData(false, ETH);
+            const exitable = false;
+            const testExitData = getTestExitData(exitable, ETH);
             await this.exitGame.setExit(exitId, testExitData);
 
-            const { logs } = await this.exitGame.processStandardExit(exitId);
+            const { logs } = await this.exitGame.processExit(exitId);
 
             expectEvent.inLogs(
                 logs,
@@ -609,7 +610,7 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
             await this.exitGame.setExit(exitId, testExitData);
             await this.exitGame.proxyFlagOutputSpent(testExitData.outputId);
 
-            const { logs } = await this.exitGame.processStandardExit(exitId);
+            const { logs } = await this.exitGame.processExit(exitId);
 
             expectEvent.inLogs(
                 logs,
@@ -623,7 +624,7 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
             const testExitData = getTestExitData(true, ETH);
             await this.exitGame.setExit(exitId, testExitData);
 
-            await this.exitGame.processStandardExit(exitId);
+            await this.exitGame.processExit(exitId);
 
             expect(await this.framework.isOutputSpent(testExitData.outputId)).to.be.true;
         });
@@ -634,7 +635,7 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
             await this.exitGame.setExit(exitId, testExitData);
 
             const preBalance = new BN(await web3.eth.getBalance(testExitData.exitTarget));
-            await this.exitGame.processStandardExit(exitId);
+            await this.exitGame.processExit(exitId);
             const postBalance = new BN(await web3.eth.getBalance(testExitData.exitTarget));
             const expectBalance = preBalance.add(new BN(STANDARD_EXIT_BOND));
 
@@ -643,12 +644,12 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
 
         it('should return standard exit bond to exit target when the exit token is ERC20', async () => {
             const exitId = 1;
-            const ERC20Token = (await GoodERC20.new()).address;
-            const testExitData = getTestExitData(true, ERC20Token);
+            const erc20Token = (await GoodERC20.new()).address;
+            const testExitData = getTestExitData(true, erc20Token);
             await this.exitGame.setExit(exitId, testExitData);
 
             const preBalance = new BN(await web3.eth.getBalance(testExitData.exitTarget));
-            await this.exitGame.processStandardExit(exitId);
+            await this.exitGame.processExit(exitId);
             const postBalance = new BN(await web3.eth.getBalance(testExitData.exitTarget));
             const expectBalance = preBalance.add(new BN(STANDARD_EXIT_BOND));
 
@@ -660,11 +661,11 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
             const testExitData = getTestExitData(true, ETH);
             await this.exitGame.setExit(exitId, testExitData);
 
-            const { receipt } = await this.exitGame.processStandardExit(exitId);
+            const { receipt } = await this.exitGame.processExit(exitId);
             await expectEvent.inTransaction(
                 receipt.transactionHash,
                 SpyEthVault,
-                'DummyEthWithdraw',
+                'EthWithdrawCalled',
                 {
                     target: testExitData.exitTarget,
                     amount: new BN(testExitData.amount),
@@ -674,16 +675,16 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
 
         it('should call the Erc20 vault with exit amount when the exit token is an ERC 20 token', async () => {
             const exitId = 1;
-            const ERC20Token = (await GoodERC20.new()).address;
-            const testExitData = getTestExitData(true, ERC20Token);
+            const erc20Token = (await GoodERC20.new()).address;
+            const testExitData = getTestExitData(true, erc20Token);
             await this.exitGame.setExit(exitId, testExitData);
 
-            const { receipt } = await this.exitGame.processStandardExit(exitId);
+            const { receipt } = await this.exitGame.processExit(exitId);
 
             await expectEvent.inTransaction(
                 receipt.transactionHash,
                 SpyErc20Vault,
-                'DummyErc20Withdraw',
+                'Erc20WithdrawCalled',
                 {
                     target: testExitData.exitTarget,
                     token: testExitData.token,
@@ -697,7 +698,7 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
             const testExitData = getTestExitData(true, ETH);
             await this.exitGame.setExit(exitId, testExitData);
 
-            await this.exitGame.processStandardExit(exitId);
+            await this.exitGame.processExit(exitId);
 
             const exitData = await this.exitGame.exits(exitId);
 
@@ -713,7 +714,7 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
             const testExitData = getTestExitData(true, ETH);
             await this.exitGame.setExit(exitId, testExitData);
 
-            const { logs } = await this.exitGame.processStandardExit(exitId);
+            const { logs } = await this.exitGame.processExit(exitId);
 
             expectEvent.inLogs(
                 logs,

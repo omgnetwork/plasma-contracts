@@ -24,7 +24,6 @@ const Testlang = require('../../../helpers/testlang.js');
 
 contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
-    const INITIAL_IMMUME_VAULTS_NUM = 2; // ETH and ERC20 vault
     const STANDARD_EXIT_BOND = 31415926535; // wei
     const ETH = constants.ZERO_ADDRESS;
     const INITIAL_ERC20_SUPPLY = 10000000000;
@@ -32,8 +31,8 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
     const OUTPUT_TYPE_ZERO = 0;
     const EMPTY_BYTES = '0x';
     const PAYMENT_TX_TYPE = 1;
-    const INITIAL_IMMUNE_VAULTS = 2;
-    const INITIAL_IMMUNE_EXIT_GAMES = 1;
+    const INITIAL_IMMUNE_VAULTS = 2; // ETH and ERC20 vault
+    const INITIAL_IMMUNE_EXIT_GAMES = 1; // PaymentExitGame
 
     const alicePrivateKey = '0x7151e5dab6f8e95b5436515b83f423c4df64fe4c6149f864daa209b26adb10ca';
     let alice;
@@ -116,7 +115,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
     describe('Given contracts deployed, exit game and both ETH and ERC20 vault registered', () => {
         beforeEach(setupContracts);
 
-        describe('Given alice deposited with ETH', () => {
+        describe('Given Alice deposited with ETH', () => {
             beforeEach(async () => {
                 this.aliceBalanceBeforeDeposit = new BN(await web3.eth.getBalance(alice));
                 this.ethVaultBalanceBeforeDeposit = new BN(await web3.eth.getBalance(this.ethVault.address));
@@ -124,7 +123,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
                 this.aliceDepositReceipt = receipt;
             });
 
-            it('should have transfered the ETH from alice to vault', async () => {
+            it('should have transfered the ETH from Alice to vault', async () => {
                 const aliceBalanceAfterDeposit = new BN(await web3.eth.getBalance(alice));
                 const ethVaultBalanceAfterDeposit = new BN(await web3.eth.getBalance(this.ethVault.address));
                 const expectedAliceBalance = this.aliceBalanceBeforeDeposit
@@ -136,7 +135,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
                 expect(ethVaultBalanceAfterDeposit).to.be.bignumber.equal(expectedEthVaultBalance);
             });
 
-            describe('When alice starts standard exit on the deposit tx', () => {
+            describe('When Alice starts standard exit on the deposit tx', () => {
                 beforeEach(async () => {
                     await this.exitGame.startStandardExit(
                         this.depositUtxoPos, this.depositTx, OUTPUT_TYPE_ZERO,
@@ -184,7 +183,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
                         await this.framework.processExits(ETH, 0, 1);
                     });
 
-                    it('should return the fund plus standard exit bond to alice', async () => {
+                    it('should return the fund plus standard exit bond to Alice', async () => {
                         const actualAliceBalanceAfterProcessExit = new BN(await web3.eth.getBalance(alice));
                         const expectedAliceBalance = this.aliceBalanceBeforeProcessExit
                             .add(new BN(STANDARD_EXIT_BOND))
@@ -196,13 +195,13 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
             });
         });
 
-        describe('Given alice deposited ETH and transferred some to bob', () => {
+        describe('Given Alice deposited ETH and transferred some to Bob', () => {
             beforeEach(async () => {
                 await aliceDepositsETH();
                 await aliceTransferSomeEthToBob();
             });
 
-            describe('When bob tries to start the standard exit on the transfered tx', () => {
+            describe('When Bob tries to start the standard exit on the transfered tx', () => {
                 beforeEach(async () => {
                     await this.exitGame.startStandardExit(
                         this.transferUtxoPos, this.transferTx, OUTPUT_TYPE_ZERO,
@@ -228,7 +227,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
                         await this.framework.processExits(ETH, 0, 1);
                     });
 
-                    it('should return the output amount plus standard exit bond to bob', async () => {
+                    it('should return the output amount plus standard exit bond to Bob', async () => {
                         const actualBobBalanceAfterProcessExit = new BN(await web3.eth.getBalance(bob));
                         const expectedBobBalance = this.bobBalanceBeforeProcessExit
                             .add(new BN(STANDARD_EXIT_BOND))
@@ -240,13 +239,13 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
             });
         });
 
-        describe('Given alice deposited ETH and transfered some to bob', () => {
+        describe('Given Alice deposited ETH and transfered some to Bob', () => {
             beforeEach(async () => {
                 await aliceDepositsETH();
                 await aliceTransferSomeEthToBob();
             });
 
-            describe('When alice tries to start the standard exit on the deposit tx', () => {
+            describe('When Alice tries to start the standard exit on the deposit tx', () => {
                 beforeEach(async () => {
                     await this.exitGame.startStandardExit(
                         this.depositUtxoPos, this.depositTx, OUTPUT_TYPE_ZERO,
@@ -263,7 +262,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
                     expect(standardExitData.exitable).to.be.true;
                 });
 
-                describe('Then bob can challenge the standard exit spent', async () => {
+                describe('Then Bob can challenge the standard exit spent', async () => {
                     beforeEach(async () => {
                         const txHash = hashTx(this.transferTxObject, this.framework.address);
                         const signature = sign(txHash, alicePrivateKey);
@@ -296,7 +295,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
                         );
                     });
 
-                    it('should transfer the bond to bob', async () => {
+                    it('should transfer the bond to Bob', async () => {
                         const actualBobBalanceAfterChallenge = new BN(await web3.eth.getBalance(bob));
                         const expectedBobBalanceAfterChallenge = this.bobBalanceBeforeChallenge
                             .add(new BN(STANDARD_EXIT_BOND))
@@ -327,7 +326,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
         });
 
 
-        describe('Given alice deposited with ERC20 token', () => {
+        describe('Given Alice deposited with ERC20 token', () => {
             beforeEach(async () => {
                 await this.erc20.transfer(alice, DEPOSIT_VALUE, { from: richFather });
                 await this.erc20.approve(this.erc20Vault.address, DEPOSIT_VALUE, { from: alice });
@@ -337,7 +336,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
                 await aliceDepositsErc20();
             });
 
-            it('should have transferred the ERC20 token from alice to vault', async () => {
+            it('should have transferred the ERC20 token from Alice to vault', async () => {
                 const aliceErc20BalanceAfterDeposit = new BN(await this.erc20.balanceOf(alice));
                 const erc20VaultBalanceAfterDeposit = new BN(await this.erc20.balanceOf(this.erc20Vault.address));
                 const expectedAliceBalance = this.aliceErc20BalanceBeforeDeposit.sub(new BN(DEPOSIT_VALUE));
@@ -352,11 +351,11 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
                     await this.framework.addToken(this.erc20.address);
                 });
 
-                it('should has the ERC20 token', async () => {
+                it('should have the ERC20 token', async () => {
                     expect(await this.framework.hasToken(this.erc20.address)).to.be.true;
                 });
 
-                describe('When alice starts standard exit on the ERC20 deposit tx', () => {
+                describe('When Alice starts standard exit on the ERC20 deposit tx', () => {
                     beforeEach(async () => {
                         await this.exitGame.startStandardExit(
                             this.depositUtxoPos, this.depositTx, OUTPUT_TYPE_ZERO,
@@ -384,7 +383,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
                             await this.framework.processExits(this.erc20.address, 0, 1);
                         });
 
-                        it('should return the standard exit bond in ETH to alice', async () => {
+                        it('should return the standard exit bond in ETH to Alice', async () => {
                             const actualAliceEthBalanceAfterProcessExit = new BN(await web3.eth.getBalance(alice));
                             const expectedAliceEthBalance = this.aliceEthBalanceBeforeProcessExit
                                 .add(new BN(STANDARD_EXIT_BOND));
@@ -393,7 +392,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
                                 .to.be.bignumber.equal(expectedAliceEthBalance);
                         });
 
-                        it('should return ERC20 token with deposited amount to alice', async () => {
+                        it('should return ERC20 token with deposited amount to Alice', async () => {
                             const actualAliceErc20BalanceAfterProcessExit = new BN(await this.erc20.balanceOf(alice));
                             const expectedAliceErc20Balance = this.aliceErc20BalanceBeforeProcessExit
                                 .add(new BN(DEPOSIT_VALUE));

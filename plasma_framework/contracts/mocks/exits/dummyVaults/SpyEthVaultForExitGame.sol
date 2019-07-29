@@ -4,7 +4,7 @@ import "../../../src/vaults/EthVault.sol";
 import "../../../src/framework/PlasmaFramework.sol";
 
 contract SpyEthVaultForExitGame is EthVault {
-    event DummyEthWithdraw(
+    event EthWithdrawCalled(
         address target,
         uint256 amount
     );
@@ -13,6 +13,6 @@ contract SpyEthVaultForExitGame is EthVault {
 
     /** override for test */
     function withdraw(address payable _target, uint256 _amount) external {
-        emit DummyEthWithdraw(_target, _amount);
+        emit EthWithdrawCalled(_target, _amount);
     }
 }

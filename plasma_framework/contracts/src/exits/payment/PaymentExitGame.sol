@@ -18,7 +18,7 @@ contract PaymentExitGame is IExitProcessor, PaymentStandardExitable {
         uint192 exitId = uint192(_exitId);
 
         if (ExitId.isStandardExit(exitId)) {
-            PaymentStandardExitable._processStandardExit(exitId);
+            PaymentStandardExitable.processStandardExit(exitId);
         } else {
             require(false, "TODO: implement process in flight exit");
         }

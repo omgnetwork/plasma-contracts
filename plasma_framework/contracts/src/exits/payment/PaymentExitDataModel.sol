@@ -7,7 +7,7 @@ library PaymentExitDataModel {
         bytes32 outputId;
         // Hash of output type and output guard.
         // Correctness of them would be checked when exit starts.
-        // For other steps, they just check data consistenct from input args.
+        // For other steps, they just check data consistency of input args.
         bytes32 outputTypeAndGuardHash;
         address token;
         address payable exitTarget;

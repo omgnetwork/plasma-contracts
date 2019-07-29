@@ -13,7 +13,7 @@ contract('ExitId', () => {
         this.contract = await ExitId.new();
     });
 
-    describe.only('isStandardExit', () => {
+    describe('isStandardExit', () => {
         it('should return true given a standard exit id for deposit tx', async () => {
             const isDeposit = true;
             const dummyTxBytes = `0x${Array(100).fill(1).join('')}`;
