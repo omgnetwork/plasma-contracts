@@ -13,7 +13,7 @@ contract ExitGameController is ExitGameRegistry {
 
     struct Exit {
         IExitProcessor exitProcessor;
-        uint192 exitId; // This is for each exit game contract to design
+        uint192 exitId; // The id for exit processor to identify specific exit within an exit game.
     }
 
     event TokenAdded(
@@ -61,7 +61,7 @@ contract ExitGameController is ExitGameRegistry {
      * @param _token Token for the exit
      * @param _exitableAt The earliest time that such exit can be processed
      * @param _exitId Id for the exit processor contract to understand how to process such exit
-     * @param _exitProcessor The exit processor contract
+     * @param _exitProcessor The exit processor contract that would be called during "processExits"
      * @return a unique priority number computed for the exit
      */
     function enqueue(address _token, uint64 _exitableAt, uint192 _exitId, IExitProcessor _exitProcessor)
