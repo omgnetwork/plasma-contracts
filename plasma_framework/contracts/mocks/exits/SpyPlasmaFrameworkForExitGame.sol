@@ -9,8 +9,8 @@ contract SpyPlasmaFrameworkForExitGame is PlasmaFramework {
     event EnqueueTriggered(
         address token,
         uint64 exitableAt,
-        address exitProcessor,
-        uint256 exitId
+        uint256 exitId,
+        address exitProcessor
     );
 
     constructor(uint256 _minExitPeriod, uint256 _initialImmuneVaults, uint256 _initialImmuneExitGames)
@@ -18,12 +18,16 @@ contract SpyPlasmaFrameworkForExitGame is PlasmaFramework {
         PlasmaFramework(_minExitPeriod, _initialImmuneVaults, _initialImmuneExitGames) {
     }
 
-    function enqueue(address _token, ExitModel.Exit memory _exit) public returns (uint256) {
+    /** override for test */
+    function enqueue(address _token, uint64 _exitableAt, uint192 _exitId, IExitProcessor _exitProcessor)
+        external
+        returns (uint256)
+    {
         emit EnqueueTriggered(
             _token,
-            _exit.exitableAt,
-            _exit.exitProcessor,
-            _exit.exitId
+            _exitableAt,
+            _exitId,
+            address(_exitProcessor)
         );
         return 0;
     }
