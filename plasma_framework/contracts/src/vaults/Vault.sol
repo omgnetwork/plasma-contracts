@@ -8,6 +8,10 @@ contract Vault is Operated {
     PlasmaFramework framework;
     bytes32[16] zeroHashes;
 
+    address private _currentDepositVerifier;
+    address private _newDepositVerifier;
+    uint256 private _newDepositVerifierEffectivePeriod;
+
     constructor(PlasmaFramework _framework) public {
         framework = _framework;
         zeroHashes = ZeroHashesProvider.getZeroHashes();
@@ -28,5 +32,18 @@ contract Vault is Operated {
         }
 
         framework.submitDepositBlock(root);
+    }
+
+    /**
+     * @notice Set the deposit verifier contract. This can be only called by the operator.
+     * @param _contract address of the verifier contract.
+     */
+    function setDepositVerifier(address _contract) public onlyOperator {
+        _currentDepositVerifier = _contract;
+        //_depositVerifier = IErc20DepositVerifier(_contract);
+    }
+
+    function getDepositVerifier() internal view returns (address) {
+        return _currentDepositVerifier;
     }
 }

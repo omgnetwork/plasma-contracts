@@ -5,7 +5,7 @@ import "./verifiers/IEthDepositVerifier.sol";
 import "../framework/PlasmaFramework.sol";
 
 contract EthVault is Vault {
-    IEthDepositVerifier private _depositVerifier;
+    //IEthDepositVerifier private _depositVerifier;
 
     event EthWithdrawn(
         address payable indexed target,
@@ -15,19 +15,11 @@ contract EthVault is Vault {
     constructor(PlasmaFramework _framework) Vault(_framework) public {}
 
     /**
-     * @notice Set the deposit verifier contract. This can be only called by the operator.
-     * @param _contract address of the verifier contract.
-     */
-    function setDepositVerifier(address _contract) public onlyOperator {
-        _depositVerifier = IEthDepositVerifier(_contract);
-    }
-
-    /**
      * @notice Allows a user to submit a deposit.
      * @param _depositTx RLP encoded transaction to act as the deposit.
      */
     function deposit(bytes calldata _depositTx) external payable {
-        _depositVerifier.verify(_depositTx, msg.value, msg.sender);
+        IEthDepositVerifier(getDepositVerifier()).verify(_depositTx, msg.value, msg.sender);
 
         super._submitDepositBlock(_depositTx);
     }
