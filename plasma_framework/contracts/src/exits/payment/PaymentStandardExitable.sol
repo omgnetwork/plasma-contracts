@@ -14,7 +14,6 @@ import "../../vaults/EthVault.sol";
 import "../../vaults/Erc20Vault.sol";
 import "../../framework/PlasmaFramework.sol";
 import "../../framework/interfaces/IExitProcessor.sol";
-import "../../framework/models/ExitModel.sol";
 import "../../utils/IsDeposit.sol";
 import "../../utils/OnlyWithValue.sol";
 import "../../utils/TxPosLib.sol";
@@ -303,13 +302,7 @@ contract PaymentStandardExitable is
             block.timestamp, data.txBlockTimeStamp, data.isTxDeposit
         );
 
-        ExitModel.Exit memory exitDataForQueue = ExitModel.Exit({
-            exitProcessor: address(this),
-            exitableAt: exitableAt,
-            exitId: data.exitId
-        });
-
-        framework.enqueue(data.output.token, exitDataForQueue);
+        framework.enqueue(data.output.token, exitableAt, data.exitId, this);
     }
 
     /**

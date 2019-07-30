@@ -38,8 +38,8 @@ contract DummyExitGame is IExitProcessor {
         exitGameController = ExitGameController(_contract);
     }
 
-    function enqueue(address _token, ExitModel.Exit memory _exit) public {
-        uniquePriorityFromEnqueue = exitGameController.enqueue(_token, _exit);
+    function enqueue(address _token, uint64 _exitableAt, uint192 _exitId, IExitProcessor _exitProcessor) public {
+        uniquePriorityFromEnqueue = exitGameController.enqueue(_token, _exitableAt, _exitId, _exitProcessor);
     }
 
     function proxyBatchFlagOutputsSpent(bytes32[] memory _outputIds) public {
