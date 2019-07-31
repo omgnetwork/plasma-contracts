@@ -32,7 +32,11 @@ contract('ExitId', () => {
             expect(await this.contract.isStandardExit(exitId)).to.be.true;
         });
 
-        // TODO: tests for inflight exit id should be false
+        it('should return false given an in-flight exit id', async () => {
+            const dummyTxBytes = `0x${Array(100).fill(1).join('')}`;
+            const exitId = await this.contract.getInFlightExitId(dummyTxBytes);
+            expect(await this.contract.isStandardExit(exitId)).to.be.false;
+        });
     });
 
     describe('getStandardExitId', () => {
@@ -81,7 +85,7 @@ contract('ExitId', () => {
             const transactionBytes = web3.utils.bytesToHex(transaction.rlpEncoded());
 
             expect(await this.contract.getInFlightExitId(transactionBytes))
-                .to.be.bignumber.equal(new BN('5708990770823858663248091901637071325779231527'));
+                .to.be.bignumber.equal(new BN('4201283832101896552718587336134417389224695679'));
         });
     });
 });
