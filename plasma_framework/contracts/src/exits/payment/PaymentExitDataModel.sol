@@ -23,11 +23,11 @@ library PaymentExitDataModel {
 
     struct InFlightExit {
         uint256 exitStartTimestamp;
-        uint256 exitPriority;
         uint256 exitMap;
+        uint256 position;
         PaymentOutputModel.Output[MAX_INPUT_NUM] inputs;
         PaymentOutputModel.Output[MAX_OUTPUT_NUM] outputs;
         address payable bondOwner;
-        uint256 oldestCompetitor;
+        uint256 oldestCompetitorPosition;
     }
 }

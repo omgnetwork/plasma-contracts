@@ -2,7 +2,6 @@ const PaymentInFlightExitable = artifacts.require('PaymentInFlightExitableMock')
 const PaymentSpendingConditionFalse = artifacts.require('PaymentSpendingConditionFalse');
 const PaymentSpendingConditionTrue = artifacts.require('PaymentSpendingConditionTrue');
 const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
-const DummyVault = artifacts.require('DummyVault');
 const ExitId = artifacts.require('ExitIdWrapper');
 const IsDeposit = artifacts.require('IsDepositWrapper');
 const ExitableTimestamp = artifacts.require('ExitableTimestampWrapper');
@@ -11,7 +10,6 @@ const {
     BN, constants, expectEvent, expectRevert, time,
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
-const rlp = require('rlp');
 
 const { MerkleTree } = require('../../../helpers/merkle.js');
 const { buildUtxoPos, UtxoPos } = require('../../../helpers/utxoPos.js');
@@ -32,13 +30,14 @@ contract('PaymentInFlightExitable', ([_, alice, bob, carol]) => {
     const IFE_TX_TYPE = 1;
     const SIGNATURE_LENGTH_IN_BYTES = 65;
     const INCLUSION_PROOF_LENGTH_IN_BYTES = 512;
-    const IN_FLIGHT_TX_SIGNATURE_BYTES = 'a'.repeat(SIGNATURE_LENGTH_IN_BYTES);
+    const IN_FLIGHT_TX_SIGNATURE_BYTES = web3.utils.bytesToHex('a'.repeat(SIGNATURE_LENGTH_IN_BYTES));
     const BLOCK_NUMBER = 1000;
     const DUMMY_INPUT_1 = '0x0000000000000000000000000000000000000000000000000000000000000001';
     const DUMMY_INPUT_2 = '0x0000000000000000000000000000000000000000000000000000000000000002';
     const DUMMY_INPUT_3 = '0x0000000000000000000000000000000000000000000000000000000000000003';
-    const MERKLE_TREE_HEIGHT = 16;
+    const MERKLE_TREE_HEIGHT = 3;
     const AMOUNT = 10;
+    const TOLERANCE_SECONDS = new BN(1);
 
     describe('startInFlightExit', () => {
         function buildValidIfeStartArgs(amount, [ifeOwner, inputOwner1, inputOwner2], blockNum) {
@@ -50,8 +49,9 @@ contract('PaymentInFlightExitable', ([_, alice, bob, carol]) => {
 
             const inFlightTx = createInFlightTx(inputTxs, inputUtxosPos, ifeOwner, amount);
             const { args, inputTxsBlockRoot } = buildIfeStartArgs(inputTxs, inputUtxosPos, inFlightTx);
+            const argsDecoded = { inputTxs, inputUtxosPos, inFlightTx };
 
-            return { args, inputTxs, inputTxsBlockRoot };
+            return { args, argsDecoded, inputTxsBlockRoot };
         }
 
         function buildIfeStartArgs([inputTx1, inputTx2], inputUtxosPos, inFlightTx) {
@@ -61,27 +61,26 @@ contract('PaymentInFlightExitable', ([_, alice, bob, carol]) => {
             const rlpInputTx2 = inputTx2.rlpEncoded();
             const encodedInputTx2 = web3.utils.bytesToHex(rlpInputTx2);
 
-            const inputTxsRaw = web3.utils.bytesToHex(rlp.encode([rlpInputTx1, rlpInputTx2]));
+            const inputTxs = [encodedInputTx1, encodedInputTx2];
 
             const merkleTree = new MerkleTree([encodedInputTx1, encodedInputTx2], MERKLE_TREE_HEIGHT);
             const inclusionProof1 = merkleTree.getInclusionProof(encodedInputTx1);
             const inclusionProof2 = merkleTree.getInclusionProof(encodedInputTx2);
 
-            const inclusionProofs = inclusionProof1 + inclusionProof2.slice(2);
+            const inputTxsInclusionProofs = [inclusionProof1, inclusionProof2];
 
-            const inputUtxosTypesRaw = rlp.encode([OUTPUT_TYPE_ZERO, OUTPUT_TYPE_ZERO]);
+            const inputUtxosTypes = [OUTPUT_TYPE_ZERO, OUTPUT_TYPE_ZERO];
 
             const inFlightTxRaw = web3.utils.bytesToHex(inFlightTx.rlpEncoded());
-            const inputUtxosPosRaw = web3.utils.bytesToHex(rlp.encode(inputUtxosPos));
 
-            const inFlightTxSigs = web3.utils.bytesToHex(`${IN_FLIGHT_TX_SIGNATURE_BYTES}${IN_FLIGHT_TX_SIGNATURE_BYTES}`);
+            const inFlightTxSigs = [IN_FLIGHT_TX_SIGNATURE_BYTES, IN_FLIGHT_TX_SIGNATURE_BYTES];
 
             const args = {
                 inFlightTx: inFlightTxRaw,
-                inputTxs: inputTxsRaw,
-                inputUtxosPos: inputUtxosPosRaw,
-                inputUtxosTypes: inputUtxosTypesRaw,
-                inputTxsInclusionProofs: inclusionProofs,
+                inputTxs,
+                inputUtxosPos,
+                inputUtxosTypes,
+                inputTxsInclusionProofs,
                 inFlightTxSigs,
             };
 
@@ -119,14 +118,14 @@ contract('PaymentInFlightExitable', ([_, alice, bob, carol]) => {
         }
 
         function expectInput(input, inputTx) {
-            expect(parseInt(input.amount, 10)).to.equal(inputTx.outputs[0].amount);
+            expect(new BN(input.amount)).to.be.bignumber.equal(new BN(inputTx.outputs[0].amount));
             expect(input.outputGuard.toUpperCase()).to.equal(inputTx.outputs[0].outputGuard.toUpperCase());
             expect(input.token).to.equal(inputTx.outputs[0].token);
         }
 
         function expectOutputNotSet(output) {
             // output is not set when amount equals 0
-            expect(parseInt(output.amount, 10)).to.equal(0);
+            expect(new BN(output.amount)).to.be.bignumber.equal(new BN(0));
         }
 
         before(async () => {
@@ -141,13 +140,12 @@ contract('PaymentInFlightExitable', ([_, alice, bob, carol]) => {
                     MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
                 );
                 this.exitGame = await PaymentInFlightExitable.new(this.framework.address);
-                this.vault = await DummyVault.new();
 
-                const { args, inputTxs, inputTxsBlockRoot } = buildValidIfeStartArgs(
+                const { args, argsDecoded, inputTxsBlockRoot } = buildValidIfeStartArgs(
                     AMOUNT, [alice, bob, carol], BLOCK_NUMBER,
                 );
                 this.args = args;
-                this.inputTxs = inputTxs;
+                this.argsDecoded = argsDecoded;
                 await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot, 0);
 
                 const conditionTrue = await PaymentSpendingConditionTrue.new();
@@ -157,7 +155,7 @@ contract('PaymentInFlightExitable', ([_, alice, bob, carol]) => {
                 );
             });
 
-            it('in-flight exit data should be stored', async () => {
+            it('should store in-flight exit data', async () => {
                 const ethBlockTime = await time.latest();
                 await this.exitGame.startInFlightExit(
                     this.args,
@@ -166,23 +164,27 @@ contract('PaymentInFlightExitable', ([_, alice, bob, carol]) => {
                 const exitId = await this.exitIdHelper.getInFlightExitId(this.args.inFlightTx);
 
                 const exit = await this.exitGame.inFlightExits(exitId);
+
                 expect(exit.bondOwner).to.equal(alice);
-                expect(exit.oldestCompetitor).to.be.bignumber.equal(new BN(0));
-                expect(exit.exitStartTimestamp).to.be.bignumber.equal(ethBlockTime);
+                expect(exit.oldestCompetitorPosition).to.be.bignumber.equal(new BN(0));
+                expect(exit.exitStartTimestamp).to.be.bignumber.closeTo(ethBlockTime, TOLERANCE_SECONDS);
                 expect(exit.exitMap).to.be.bignumber.equal(new BN(0));
 
+                const youngestInput = this.argsDecoded.inputUtxosPos[1];
+                expect(exit.position).to.be.bignumber.equal(new BN(youngestInput));
+
                 const input1 = await this.exitGame.getInFlightExitInput(exitId, 0);
-                expectInput(input1, this.inputTxs[0]);
+                expectInput(input1, this.argsDecoded.inputTxs[0]);
 
                 const input2 = await this.exitGame.getInFlightExitInput(exitId, 1);
-                expectInput(input2, this.inputTxs[1]);
+                expectInput(input2, this.argsDecoded.inputTxs[1]);
 
                 // outputs should be empty, they will be initialized on piggybacks
                 const output = await this.exitGame.getInFlightExitOutput(exitId, 0);
                 expectOutputNotSet(output);
             });
 
-            it('InFlightExitStarted event should be emitted', async () => {
+            it('should emit InFlightExitStarted event', async () => {
                 const tx = await this.exitGame.startInFlightExit(
                     this.args,
                     { from: alice, value: IN_FLIGHT_EXIT_BOND },
@@ -190,12 +192,12 @@ contract('PaymentInFlightExitable', ([_, alice, bob, carol]) => {
 
                 const expectedIfeHash = web3.utils.sha3(this.args.inFlightTx);
                 expectEvent.inLogs(tx.logs, 'InFlightExitStarted', {
-                    owner: alice,
+                    initiator: alice,
                     txHash: expectedIfeHash,
                 });
             });
 
-            it('bond should be charged', async () => {
+            it('should charge user with a bond', async () => {
                 const preBalance = new BN(await web3.eth.getBalance(alice));
                 const tx = await this.exitGame.startInFlightExit(
                     this.args,
@@ -210,48 +212,26 @@ contract('PaymentInFlightExitable', ([_, alice, bob, carol]) => {
             });
         });
 
-        describe('when spending condition for output is not registered', () => {
+        describe('when calling in-flight exit start with valid arguments', () => {
             beforeEach(async () => {
                 this.framework = await SpyPlasmaFramework.new(
                     MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
                 );
                 this.exitGame = await PaymentInFlightExitable.new(this.framework.address);
-                this.vault = await DummyVault.new();
 
                 const { args, inputTxsBlockRoot } = buildValidIfeStartArgs(AMOUNT, [alice, bob, carol], BLOCK_NUMBER);
                 this.args = args;
                 await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot, 0);
             });
 
-            it('starting in-flight exit should fail', async () => {
-                await expectRevert(
-                    this.exitGame.startInFlightExit(this.args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
-                    'Spending condition contract not found',
-                );
-            });
-        });
-
-        describe('when there is a failure when verifying in-flight transaction signatures', () => {
-            beforeEach(async () => {
-                this.framework = await SpyPlasmaFramework.new(
-                    MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
-                );
-                this.exitGame = await PaymentInFlightExitable.new(this.framework.address);
-                this.vault = await DummyVault.new();
-
-                const { args, inputTxsBlockRoot } = buildValidIfeStartArgs(AMOUNT, [alice, bob, carol], BLOCK_NUMBER);
-                this.args = args;
-                await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot, 0);
-            });
-
-            it('should fail because of condition not registered', async () => {
+            it('should fail when spending condition not registered', async () => {
                 await expectRevert(
                     this.exitGame.startInFlightExit(this.args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
                     'Spending condition contract not found',
                 );
             });
 
-            it('should fail because of spending condition not satisfied', async () => {
+            it('should fail when spending condition not satisfied', async () => {
                 const conditionFalse = await PaymentSpendingConditionFalse.new();
 
                 await this.exitGame.registerSpendingCondition(
@@ -270,7 +250,6 @@ contract('PaymentInFlightExitable', ([_, alice, bob, carol]) => {
                     MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
                 );
                 this.exitGame = await PaymentInFlightExitable.new(this.framework.address);
-                this.vault = await DummyVault.new();
             });
 
             it('should fail when not called with a valid exit bond', async () => {
@@ -328,11 +307,24 @@ contract('PaymentInFlightExitable', ([_, alice, bob, carol]) => {
                 await this.exitGame.registerSpendingCondition(
                     OUTPUT_TYPE_ZERO, IFE_TX_TYPE, conditionTrue.address,
                 );
-                const invalidInclusionProofs = web3.utils.bytesToHex('a'.repeat(INCLUSION_PROOF_LENGTH_IN_BYTES * 2));
-                args.inputTxsInclusionProofs = invalidInclusionProofs;
+                const invalidInclusionProof = web3.utils.bytesToHex('a'.repeat(INCLUSION_PROOF_LENGTH_IN_BYTES));
+                args.inputTxsInclusionProofs = [invalidInclusionProof, invalidInclusionProof];
                 await expectRevert(
                     this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
                     'Input transaction is not included in plasma.',
+                );
+            });
+
+            it('should fail when there are no input transactions provided', async () => {
+                const { args, inputTxsBlockRoot } = buildValidIfeStartArgs(AMOUNT, [alice, bob, carol], BLOCK_NUMBER);
+                args.inputTxs = [];
+                args.inputUtxosPos = [];
+
+                await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot, 0);
+
+                await expectRevert(
+                    this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
+                    'Number of input transactions does not match number of in-flight transaction inputs.',
                 );
             });
 
@@ -388,7 +380,7 @@ contract('PaymentInFlightExitable', ([_, alice, bob, carol]) => {
                 );
             });
 
-            it('should fail when in-flight transaction overspends - single token input/output', async () => {
+            it('should fail when in-flight transaction with single token inputs/outputs overspends', async () => {
                 const inputTx1 = createInputTransaction(DUMMY_INPUT_1, alice, AMOUNT);
                 const inputTx2 = createInputTransaction(DUMMY_INPUT_2, bob, AMOUNT);
 
@@ -407,11 +399,11 @@ contract('PaymentInFlightExitable', ([_, alice, bob, carol]) => {
 
                 await expectRevert(
                     this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
-                    'Invalid in-flight transaction, spends more than provided in inputs',
+                    'Invalid transaction, spends more than provided in inputs',
                 );
             });
 
-            it('should fail when in-flight transaction overspends - multiple tokens input/output', async () => {
+            it('should fail when in-flight transaction with multiple tokens inputs/outputs overspends', async () => {
                 const inputTx1 = createInputTransaction(DUMMY_INPUT_1, alice, AMOUNT);
                 const inputTx2 = createInputTransaction(DUMMY_INPUT_2, bob, AMOUNT, OTHER_TOKEN);
 
@@ -435,7 +427,7 @@ contract('PaymentInFlightExitable', ([_, alice, bob, carol]) => {
 
                 await expectRevert(
                     this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
-                    'Invalid in-flight transaction, spends more than provided in inputs',
+                    'Invalid transaction, spends more than provided in inputs',
                 );
             });
 

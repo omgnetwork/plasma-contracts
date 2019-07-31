@@ -2,14 +2,14 @@ pragma solidity ^0.5.0;
 pragma experimental ABIEncoderV2;
 
 import "../../../src/exits/payment/PaymentInFlightExitable.sol";
+import "../../../src/framework/PlasmaFramework.sol";
 import "../../../src/transactions/outputs/PaymentOutputModel.sol";
 
 contract PaymentInFlightExitableMock is PaymentInFlightExitable {
-    constructor(address framework) public PaymentInFlightExitable(framework) {}
+    constructor(PlasmaFramework _framework) public PaymentInFlightExitable(_framework) {}
 
-    function processExit(uint256 exitId) external {}
-
-    function depositFundForTest() public payable {}
+    // to override IExitProcessor function
+    function processExit(uint192 exitId) external {}
 
     function finalizeExit(uint192 exitId) public {
         inFlightExits[exitId].exitStartTimestamp = 1;
