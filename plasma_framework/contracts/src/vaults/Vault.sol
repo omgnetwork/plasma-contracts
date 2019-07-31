@@ -43,7 +43,7 @@ contract Vault is Operated {
         //_depositVerifier = IErc20DepositVerifier(_contract);
     }
 
-    function getDepositVerifier() internal view returns (address) {
+    function getDepositVerifier() public view returns (address) {
         return _currentDepositVerifier;
     }
 }

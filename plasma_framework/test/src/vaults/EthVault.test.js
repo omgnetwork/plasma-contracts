@@ -4,7 +4,7 @@ const EthDepositVerifier = artifacts.require('EthDepositVerifier');
 const DummyExitGame = artifacts.require('DummyExitGame');
 
 const {
-    BN, constants, expectEvent, expectRevert,
+    BN, constants, expectEvent, expectRevert, time,
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
@@ -16,13 +16,15 @@ contract('EthVault', ([_, alice]) => {
     const DEPOSIT_VALUE = 1000000;
     const INITIAL_IMMUNE_VAULTS = 1;
     const INITIAL_IMMUNE_EXIT_GAMES = 0;
+    const MIN_EXIT_PERIOD = 10;
 
     beforeEach('setup contracts', async () => {
-        this.framework = await PlasmaFramework.new(10, INITIAL_IMMUNE_VAULTS, INITIAL_IMMUNE_EXIT_GAMES);
+        this.framework = await PlasmaFramework.new(MIN_EXIT_PERIOD, INITIAL_IMMUNE_VAULTS, INITIAL_IMMUNE_EXIT_GAMES);
         this.ethVault = await EthVault.new(this.framework.address);
         const depositVerifier = await EthDepositVerifier.new();
         await this.ethVault.setDepositVerifier(depositVerifier.address);
         await this.framework.registerVault(1, this.ethVault.address);
+        this.currentDepositVerifier = depositVerifier.address;
 
         this.exitGame = await DummyExitGame.new();
         await this.exitGame.setEthVault(this.ethVault.address);
@@ -114,6 +116,24 @@ contract('EthVault', ([_, alice]) => {
                 this.ethVault.deposit(deposit.rlpEncoded(), { from: alice, value: DEPOSIT_VALUE }),
                 'Must have only one output.',
             );
+        });
+
+        it('deposit verifier waits a period of time before takes effect', async () => {
+            const depositValue = DEPOSIT_VALUE / 2;
+            const deposit = Testlang.deposit(depositValue, alice);
+            expect(this.currentDepositVerifier).to.not.equal(null);
+
+            const newDepositVerifier = await EthDepositVerifier.new();
+            await this.ethVault.setDepositVerifier(newDepositVerifier.address);
+
+            await this.ethVault.deposit(deposit, { from: alice, value: depositValue });
+            expect(await this.ethVault.getDepositVerifier()).to.equal(this.currentDepositVerifier);
+
+
+            await time.increase(MIN_EXIT_PERIOD + 1);
+            await this.ethVault.deposit(deposit, { from: alice, value: depositValue });
+
+            expect(await this.ethVault.getDepositVerifier()).to.equal(newDepositVerifier.address);
         });
     });
 

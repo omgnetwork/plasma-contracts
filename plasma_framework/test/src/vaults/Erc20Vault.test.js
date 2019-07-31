@@ -6,7 +6,7 @@ const BadERC20 = artifacts.require('BadERC20');
 const DummyExitGame = artifacts.require('DummyExitGame');
 
 const {
-    BN, constants, expectEvent, expectRevert,
+    BN, constants, expectEvent, expectRevert, time,
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
@@ -19,13 +19,16 @@ contract('Erc20Vault', (accounts) => {
     const INITIAL_SUPPLY = 1000000;
     const INITIAL_IMMUNE_VAULTS = 1;
     const INITIAL_IMMUNE_EXIT_GAMES = 0;
+    const MIN_EXIT_PERIOD = 10;
+
 
     beforeEach('setup contracts', async () => {
-        this.framework = await PlasmaFramework.new(10, INITIAL_IMMUNE_VAULTS, INITIAL_IMMUNE_EXIT_GAMES);
+        this.framework = await PlasmaFramework.new(MIN_EXIT_PERIOD, INITIAL_IMMUNE_VAULTS, INITIAL_IMMUNE_EXIT_GAMES);
         this.erc20Vault = await Erc20Vault.new(this.framework.address);
         const depositVerifier = await Erc20DepositVerifier.new();
         await this.erc20Vault.setDepositVerifier(depositVerifier.address);
         await this.framework.registerVault(2, this.erc20Vault.address);
+        this.currentDepositVerifier = depositVerifier.address;
 
         this.exitGame = await DummyExitGame.new();
         await this.exitGame.setErc20Vault(this.erc20Vault.address);
@@ -126,6 +129,26 @@ contract('Erc20Vault', (accounts) => {
                 this.erc20Vault.deposit(deposit.rlpEncoded(), { from: alice }),
                 'Must have only one output',
             );
+        });
+
+        it('deposit verifier waits a period of time before takes effect', async () => {
+            const depositValue = DEPOSIT_VALUE / 2;
+            const deposit = Testlang.deposit(depositValue, alice, this.erc20.address);
+            await this.erc20.approve(this.erc20Vault.address, depositValue, { from: alice });
+            expect(this.currentDepositVerifier).to.not.equal(null);
+
+            const newDepositVerifier = await Erc20DepositVerifier.new();
+            await this.erc20Vault.setDepositVerifier(newDepositVerifier.address);
+
+            await this.erc20Vault.deposit(deposit, { from: alice });
+            expect(await this.erc20Vault.getDepositVerifier()).to.equal(this.currentDepositVerifier);
+
+
+            await time.increase(MIN_EXIT_PERIOD + 1);
+            await this.erc20.approve(this.erc20Vault.address, depositValue, { from: alice });
+            await this.erc20Vault.deposit(deposit, { from: alice });
+
+            expect(await this.erc20Vault.getDepositVerifier()).to.equal(newDepositVerifier.address);
         });
     });
 
