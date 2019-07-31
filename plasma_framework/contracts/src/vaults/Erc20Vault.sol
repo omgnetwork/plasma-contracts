@@ -8,8 +8,6 @@ import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/SafeERC20.sol";
 
 contract Erc20Vault is Vault {
-    //IErc20DepositVerifier private _depositVerifier;
-
     using SafeERC20 for IERC20;
 
     event Erc20Withdrawn(
@@ -25,6 +23,7 @@ contract Erc20Vault is Vault {
      * @param _depositTx RLP encoded transaction to act as the deposit.
      */
     function deposit(bytes calldata _depositTx) external {
+        swapDepositVerifiersIfNewerGetsEffective();
         (address owner, address token, uint256 amount) = IErc20DepositVerifier(getDepositVerifier())
             .verify(_depositTx, msg.sender, address(this));
 

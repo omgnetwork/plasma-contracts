@@ -35,15 +35,34 @@ contract Vault is Operated {
     }
 
     /**
-     * @notice Set the deposit verifier contract. This can be only called by the operator.
+     * @notice Sets the deposit verifier contract. This can be only called by the operator.
+     * @notice When one contract is already set next will be effective after MIN_EXIT_PERIOD.
      * @param _contract address of the verifier contract.
      */
     function setDepositVerifier(address _contract) public onlyOperator {
-        _currentDepositVerifier = _contract;
-        //_depositVerifier = IErc20DepositVerifier(_contract);
+        require(_contract != address(0), "Cannot set an empty address as deposit verifier");
+
+        if (_currentDepositVerifier != address(0)) {
+            _newDepositVerifier = _contract;
+            _newDepositVerifierEffectivePeriod = block.timestamp + framework.minExitPeriod();
+        } else {
+            _currentDepositVerifier = _contract;
+        }
     }
 
+    /**
+     * @notice Gets currently effective deposit verifier contract address.
+     * @return contract address of deposit verifier.
+     */
     function getDepositVerifier() public view returns (address) {
+        require(_currentDepositVerifier != address(0), "Deposit verifier was not set yet.");
         return _currentDepositVerifier;
+    }
+
+    function swapDepositVerifiersIfNewerGetsEffective() internal {
+        if (_newDepositVerifier != address(0) && _newDepositVerifierEffectivePeriod <= block.timestamp) {
+            _currentDepositVerifier = _newDepositVerifier;
+            _newDepositVerifier = address(0);
+        }
     }
 }
