@@ -23,8 +23,7 @@ contract Erc20Vault is Vault {
      * @param _depositTx RLP encoded transaction to act as the deposit.
      */
     function deposit(bytes calldata _depositTx) external {
-        swapDepositVerifiersIfNewerGetsEffective();
-        (address owner, address token, uint256 amount) = IErc20DepositVerifier(getDepositVerifier())
+        (address owner, address token, uint256 amount) = IErc20DepositVerifier(getEffectiveDepositVerifier())
             .verify(_depositTx, msg.sender, address(this));
 
         IERC20(token).safeTransferFrom(owner, address(this), amount);

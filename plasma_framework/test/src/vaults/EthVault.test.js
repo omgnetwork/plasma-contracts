@@ -118,22 +118,18 @@ contract('EthVault', ([_, alice]) => {
             );
         });
 
+        // NOTE: This test would be the same for `Erc20Vault` as all functionality is in base `Vault` contract
         it('deposit verifier waits a period of time before takes effect', async () => {
-            const depositValue = DEPOSIT_VALUE / 2;
-            const deposit = Testlang.deposit(depositValue, alice);
-            expect(this.currentDepositVerifier).to.not.equal(null);
-
             const newDepositVerifier = await EthDepositVerifier.new();
-            await this.ethVault.setDepositVerifier(newDepositVerifier.address);
 
-            await this.ethVault.deposit(deposit, { from: alice, value: depositValue });
-            expect(await this.ethVault.getDepositVerifier()).to.equal(this.currentDepositVerifier);
+            expect(await this.ethVault.getEffectiveDepositVerifier()).to.equal(this.currentDepositVerifier);
 
+            const tx = await this.ethVault.setDepositVerifier(newDepositVerifier.address);
+            expect(await this.ethVault.getEffectiveDepositVerifier()).to.equal(this.currentDepositVerifier);
+            await expectEvent.inLogs(tx.logs, 'SetDepositVerifierCalled', { nextDepositVerifier: newDepositVerifier.address });
 
             await time.increase(MIN_EXIT_PERIOD + 1);
-            await this.ethVault.deposit(deposit, { from: alice, value: depositValue });
-
-            expect(await this.ethVault.getDepositVerifier()).to.equal(newDepositVerifier.address);
+            expect(await this.ethVault.getEffectiveDepositVerifier()).to.equal(newDepositVerifier.address);
         });
     });
 

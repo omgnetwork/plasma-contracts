@@ -5,12 +5,16 @@ import "../framework/PlasmaFramework.sol";
 import "../framework/utils/Operated.sol";
 
 contract Vault is Operated {
+    event SetDepositVerifierCalled(address nextDepositVerifier);
     PlasmaFramework framework;
     bytes32[16] zeroHashes;
 
-    address private _currentDepositVerifier;
-    address private _newDepositVerifier;
-    uint256 private _newDepositVerifierEffectivePeriod;
+    /**
+     * @notice Stores deposit verifier contracts addresses where first was effective upto
+     *  `newDepositVerifierMaturityTimestamp` point of time and second become effective after
+    */
+    address[2] public depositVerifiers;
+    uint256 public newDepositVerifierMaturityTimestamp = 2 ** 256 - 1; // point far in the future
 
     constructor(PlasmaFramework _framework) public {
         framework = _framework;
@@ -42,11 +46,14 @@ contract Vault is Operated {
     function setDepositVerifier(address _contract) public onlyOperator {
         require(_contract != address(0), "Cannot set an empty address as deposit verifier");
 
-        if (_currentDepositVerifier != address(0)) {
-            _newDepositVerifier = _contract;
-            _newDepositVerifierEffectivePeriod = block.timestamp + framework.minExitPeriod();
+        if (depositVerifiers[0] != address(0)) {
+            depositVerifiers[0] = getEffectiveDepositVerifier();
+            depositVerifiers[1] = _contract;
+            newDepositVerifierMaturityTimestamp = now + framework.minExitPeriod();
+
+            emit SetDepositVerifierCalled(depositVerifiers[1]);
         } else {
-            _currentDepositVerifier = _contract;
+            depositVerifiers[0] = _contract;
         }
     }
 
@@ -54,15 +61,11 @@ contract Vault is Operated {
      * @notice Gets currently effective deposit verifier contract address.
      * @return contract address of deposit verifier.
      */
-    function getDepositVerifier() public view returns (address) {
-        require(_currentDepositVerifier != address(0), "Deposit verifier was not set yet.");
-        return _currentDepositVerifier;
-    }
-
-    function swapDepositVerifiersIfNewerGetsEffective() internal {
-        if (_newDepositVerifier != address(0) && _newDepositVerifierEffectivePeriod <= block.timestamp) {
-            _currentDepositVerifier = _newDepositVerifier;
-            _newDepositVerifier = address(0);
+    function getEffectiveDepositVerifier() public view returns (address) {
+        if (now > newDepositVerifierMaturityTimestamp) {
+            return depositVerifiers[1];
+        } else {
+            return depositVerifiers[0];
         }
     }
 }
