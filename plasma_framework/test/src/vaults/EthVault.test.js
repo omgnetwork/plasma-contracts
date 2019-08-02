@@ -4,7 +4,7 @@ const EthDepositVerifier = artifacts.require('EthDepositVerifier');
 const DummyExitGame = artifacts.require('DummyExitGame');
 
 const {
-    BN, constants, expectEvent, expectRevert,
+    BN, constants, expectEvent, expectRevert, time,
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
@@ -16,13 +16,15 @@ contract('EthVault', ([_, alice]) => {
     const DEPOSIT_VALUE = 1000000;
     const INITIAL_IMMUNE_VAULTS = 1;
     const INITIAL_IMMUNE_EXIT_GAMES = 0;
+    const MIN_EXIT_PERIOD = 10;
 
     beforeEach('setup contracts', async () => {
-        this.framework = await PlasmaFramework.new(10, INITIAL_IMMUNE_VAULTS, INITIAL_IMMUNE_EXIT_GAMES);
+        this.framework = await PlasmaFramework.new(MIN_EXIT_PERIOD, INITIAL_IMMUNE_VAULTS, INITIAL_IMMUNE_EXIT_GAMES);
         this.ethVault = await EthVault.new(this.framework.address);
         const depositVerifier = await EthDepositVerifier.new();
         await this.ethVault.setDepositVerifier(depositVerifier.address);
         await this.framework.registerVault(1, this.ethVault.address);
+        this.currentDepositVerifier = depositVerifier.address;
 
         this.exitGame = await DummyExitGame.new();
         await this.exitGame.setEthVault(this.ethVault.address);
@@ -114,6 +116,20 @@ contract('EthVault', ([_, alice]) => {
                 this.ethVault.deposit(deposit.rlpEncoded(), { from: alice, value: DEPOSIT_VALUE }),
                 'Must have only one output.',
             );
+        });
+
+        // NOTE: This test would be the same for `Erc20Vault` as all functionality is in base `Vault` contract
+        it('deposit verifier waits a period of time before takes effect', async () => {
+            const newDepositVerifier = await EthDepositVerifier.new();
+
+            expect(await this.ethVault.getEffectiveDepositVerifier()).to.equal(this.currentDepositVerifier);
+
+            const tx = await this.ethVault.setDepositVerifier(newDepositVerifier.address);
+            expect(await this.ethVault.getEffectiveDepositVerifier()).to.equal(this.currentDepositVerifier);
+            await expectEvent.inLogs(tx.logs, 'SetDepositVerifierCalled', { nextDepositVerifier: newDepositVerifier.address });
+
+            await time.increase(MIN_EXIT_PERIOD + 1);
+            expect(await this.ethVault.getEffectiveDepositVerifier()).to.equal(newDepositVerifier.address);
         });
     });
 
