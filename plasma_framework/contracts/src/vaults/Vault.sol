@@ -14,7 +14,7 @@ contract Vault is Operated {
      *  `newDepositVerifierMaturityTimestamp` point of time and second become effective after
     */
     address[2] public depositVerifiers;
-    uint256 public newDepositVerifierMaturityTimestamp = 2 ** 256 - 1; // point far in the future
+    uint256 public newDepositVerifierMaturityTimestamp = 2 ** 255; // point far in the future
 
     constructor(PlasmaFramework _framework) public {
         framework = _framework;
@@ -41,19 +41,19 @@ contract Vault is Operated {
     /**
      * @notice Sets the deposit verifier contract. This can be only called by the operator.
      * @notice When one contract is already set next will be effective after MIN_EXIT_PERIOD.
-     * @param _contract address of the verifier contract.
+     * @param _verifier address of the verifier contract.
      */
-    function setDepositVerifier(address _contract) public onlyOperator {
-        require(_contract != address(0), "Cannot set an empty address as deposit verifier");
+    function setDepositVerifier(address _verifier) public onlyOperator {
+        require(_verifier != address(0), "Cannot set an empty address as deposit verifier");
 
         if (depositVerifiers[0] != address(0)) {
             depositVerifiers[0] = getEffectiveDepositVerifier();
-            depositVerifiers[1] = _contract;
+            depositVerifiers[1] = _verifier;
             newDepositVerifierMaturityTimestamp = now + framework.minExitPeriod();
 
             emit SetDepositVerifierCalled(depositVerifiers[1]);
         } else {
-            depositVerifiers[0] = _contract;
+            depositVerifiers[0] = _verifier;
         }
     }
 
