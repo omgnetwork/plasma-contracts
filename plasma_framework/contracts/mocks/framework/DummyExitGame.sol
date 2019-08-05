@@ -3,9 +3,10 @@ pragma experimental ABIEncoderV2;
 
 import "./registries/ExitGameRegistryMock.sol";
 import "../../src/framework/ExitGameController.sol";
+import "../../src/framework/interfaces/IExitProcessor.sol";
 import "../../src/vaults/Erc20Vault.sol";
 import "../../src/vaults/EthVault.sol";
-import "../../src/framework/interfaces/IExitProcessor.sol";
+import "../../src/utils/TxPosLib.sol";
 
 contract DummyExitGame is IExitProcessor {
     uint256 public uniquePriorityFromEnqueue;
@@ -38,8 +39,8 @@ contract DummyExitGame is IExitProcessor {
         exitGameController = ExitGameController(_contract);
     }
 
-    function enqueue(address _token, uint64 _exitableAt, uint192 _exitId, IExitProcessor _exitProcessor) public {
-        uniquePriorityFromEnqueue = exitGameController.enqueue(_token, _exitableAt, _exitId, _exitProcessor);
+    function enqueue(address _token, uint64 _exitableAt, uint256 _txPos, uint192 _exitId, IExitProcessor _exitProcessor) public {
+        uniquePriorityFromEnqueue = exitGameController.enqueue(_token, _exitableAt, TxPosLib.TxPos(_txPos), _exitId, _exitProcessor);
     }
 
     function proxyBatchFlagOutputsSpent(bytes32[] memory _outputIds) public {

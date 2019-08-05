@@ -1,5 +1,5 @@
 const { constants } = require('openzeppelin-test-helpers');
-const { UtxoPos } = require('./utxoPos.js');
+const { UtxoPos } = require('./positions.js');
 
 const EMPTY_BYTES32 = '0x0000000000000000000000000000000000000000000000000000000000000000';
 

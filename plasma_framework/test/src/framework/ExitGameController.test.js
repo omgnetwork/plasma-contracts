@@ -7,6 +7,8 @@ const {
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
+const { buildTxPos } = require('../../helpers/positions.js');
+
 contract('ExitGameController', () => {
     const MIN_EXIT_PERIOD = 10;
     const INITIAL_IMMUNE_EXIT_GAMES = 1;
@@ -68,6 +70,7 @@ contract('ExitGameController', () => {
             this.dummyExit = {
                 token: this.dummyToken,
                 exitableAt: 1,
+                txPos: buildTxPos(1000, 1),
                 exitId: 123,
                 exitProcessor: this.dummyExitGame.address,
             };
@@ -75,10 +78,12 @@ contract('ExitGameController', () => {
         });
 
         it('rejects when not called from exit game contract', async () => {
+            const txPosStruct = { value: this.dummyExit.txPos };
             await expectRevert(
                 this.controller.enqueue(
                     constants.ZERO_ADDRESS,
                     this.dummyExit.exitableAt,
+                    txPosStruct,
                     this.dummyExit.exitId,
                     this.dummyExit.exitProcessor,
                 ),
@@ -92,6 +97,7 @@ contract('ExitGameController', () => {
                 this.dummyExitGame.enqueue(
                     fakeNonAddedTokenAddress,
                     this.dummyExit.exitableAt,
+                    this.dummyExit.txPos,
                     this.dummyExit.exitId,
                     this.dummyExit.exitProcessor,
                 ),
@@ -108,6 +114,7 @@ contract('ExitGameController', () => {
                 newDummyExitGame.enqueue(
                     this.dummyExit.token,
                     this.dummyExit.exitableAt,
+                    this.dummyExit.txPos,
                     this.dummyExit.exitId,
                     this.dummyExit.exitProcessor,
                 ),
@@ -119,6 +126,7 @@ contract('ExitGameController', () => {
             await this.dummyExitGame.enqueue(
                 this.dummyExit.token,
                 this.dummyExit.exitableAt,
+                this.dummyExit.txPos,
                 this.dummyExit.exitId,
                 this.dummyExit.exitProcessor,
             );
@@ -126,6 +134,7 @@ contract('ExitGameController', () => {
             await this.dummyExitGame.enqueue(
                 this.dummyExit.token,
                 this.dummyExit.exitableAt,
+                this.dummyExit.txPos,
                 this.dummyExit.exitId,
                 this.dummyExit.exitProcessor,
             );
@@ -142,6 +151,7 @@ contract('ExitGameController', () => {
                 await this.dummyExitGame.enqueue(
                     this.dummyExit.token,
                     this.dummyExit.exitableAt,
+                    this.dummyExit.txPos,
                     this.dummyExit.exitId,
                     this.dummyExit.exitProcessor,
                 );
@@ -179,6 +189,7 @@ contract('ExitGameController', () => {
                 token: this.dummyToken,
                 exitProcessor: this.dummyExitGame.address,
                 exitableAt: 1,
+                txPos: buildTxPos(1000, 0),
                 exitId: 123,
             };
         });
@@ -202,6 +213,7 @@ contract('ExitGameController', () => {
             await this.dummyExitGame.enqueue(
                 this.dummyExit.token,
                 this.dummyExit.exitableAt,
+                this.dummyExit.txPos,
                 this.dummyExit.exitId,
                 this.dummyExit.exitProcessor,
             );
@@ -218,11 +230,13 @@ contract('ExitGameController', () => {
             const notAbleToExitYetExit = {
                 exitProcessor: this.dummyExitGame.address,
                 exitableAt: UNREACHEABLE_FUTURE,
+                txPos: buildTxPos(1000, 0),
                 exitId: 456,
             };
             await this.dummyExitGame.enqueue(
                 this.dummyExit.token,
                 notAbleToExitYetExit.exitableAt,
+                notAbleToExitYetExit.txPos,
                 notAbleToExitYetExit.exitId,
                 notAbleToExitYetExit.exitProcessor,
             );
@@ -240,6 +254,7 @@ contract('ExitGameController', () => {
                 await this.dummyExitGame.enqueue(
                     this.dummyExit.token,
                     this.dummyExit.exitableAt,
+                    this.dummyExit.txPos,
                     this.dummyExit.exitId,
                     this.dummyExit.exitProcessor,
                 );
@@ -301,6 +316,7 @@ contract('ExitGameController', () => {
                 await this.dummyExitGame.enqueue(
                     this.dummyExit.token,
                     this.dummyExit.exitableAt,
+                    this.dummyExit.txPos,
                     this.dummyExit.exitId,
                     this.dummyExit.exitProcessor,
                 );
@@ -308,12 +324,14 @@ contract('ExitGameController', () => {
                 const dummyExitLowerPriority = {
                     token: this.dummyExit.token,
                     exitProcessor: this.dummyExitGame.address,
-                    exitableAt: this.dummyExit.exitableAt,
+                    exitableAt: this.dummyExit.exitableAt + 1,
+                    txPos: this.dummyExit.txPos,
                     exitId: 456,
                 };
                 await this.dummyExitGame.enqueue(
                     dummyExitLowerPriority.token,
                     dummyExitLowerPriority.exitableAt,
+                    dummyExitLowerPriority.txPos,
                     dummyExitLowerPriority.exitId,
                     dummyExitLowerPriority.exitProcessor,
                 );

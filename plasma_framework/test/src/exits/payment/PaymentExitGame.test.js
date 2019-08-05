@@ -4,6 +4,7 @@ const EthDepositVerifier = artifacts.require('EthDepositVerifier');
 const Erc20DepositVerifier = artifacts.require('Erc20DepositVerifier');
 const ExitableTimestamp = artifacts.require('ExitableTimestampWrapper');
 const ExitId = artifacts.require('ExitIdWrapper');
+const ExitPriority = artifacts.require('ExitPriorityWrapper');
 const GoodERC20 = artifacts.require('GoodERC20');
 const PaymentExitGame = artifacts.require('PaymentExitGame');
 const PaymentOutputToPaymentTxCondition = artifacts.require('PaymentOutputToPaymentTxCondition');
@@ -20,7 +21,7 @@ const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpe
 const { addressToOutputGuard, computeDepositOutputId, spentOnGas } = require('../../../helpers/utils.js');
 const { sign } = require('../../../helpers/sign.js');
 const { hashTx } = require('../../../helpers/paymentEip712.js');
-const { buildUtxoPos } = require('../../../helpers/utxoPos.js');
+const { buildUtxoPos, utxoPosToTxPos } = require('../../../helpers/positions.js');
 const Testlang = require('../../../helpers/testlang.js');
 
 contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
@@ -46,6 +47,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
         web3.eth.sendTransaction({ to: alice, from: richFather, value: web3.utils.toWei('1', 'ether') });
 
         this.exitIdHelper = await ExitId.new();
+        this.exirPriorityHelper = await ExitPriority.new();
 
         this.erc20 = await GoodERC20.new();
         await this.erc20.mint(richFather, INITIAL_ERC20_SUPPLY);
@@ -178,9 +180,12 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
                     const exitableAt = await this.exitableHelper.calculate(
                         currentTimestamp, timestamp, isTxDeposit,
                     );
+                    const exitQueueNonceUsed = (await this.framework.exitQueueNonce()).sub(new BN(1));
+                    const priorityExpected = await this.exirPriorityHelper.computePriority(
+                        exitableAt, utxoPosToTxPos(this.depositUtxoPos), exitQueueNonceUsed,
+                    );
 
-                    // right most 64 bits are nonce for priority queue
-                    expect(uniquePriority.shrn(64)).to.be.bignumber.equal(new BN(exitableAt));
+                    expect(uniquePriority).to.be.bignumber.equal(priorityExpected);
                 });
 
                 describe('And then someone processes the exits for ETH after a week', () => {

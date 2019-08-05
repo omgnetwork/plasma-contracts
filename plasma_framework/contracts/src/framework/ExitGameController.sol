@@ -1,9 +1,11 @@
 pragma solidity ^0.5.0;
+pragma experimental ABIEncoderV2;
 
 import "./interfaces/IExitProcessor.sol";
 import "./registries/ExitGameRegistry.sol";
 import "./utils/PriorityQueue.sol";
 import "./utils/ExitPriority.sol";
+import "../utils/TxPosLib.sol";
 
 contract ExitGameController is ExitGameRegistry {
     uint64 public exitQueueNonce = 1;
@@ -57,14 +59,15 @@ contract ExitGameController is ExitGameRegistry {
 
     /**
      * @notice Enqueue exits from exit game contracts
-     * @dev Unique priority is a combination of original priority (exitable timestamp) and an increasing nonce
+     * @dev Caller of this function should add "pragma experimental ABIEncoderV2;" on top of file
      * @param _token Token for the exit
      * @param _exitableAt The earliest time that such exit can be processed
+     * @param _txPos Transaction position for the exit priority. For SE it should be the exit tx, for IFE it should be the youngest input tx position.
      * @param _exitId Id for the exit processor contract to understand how to process such exit
      * @param _exitProcessor The exit processor contract that would be called during "processExits"
      * @return a unique priority number computed for the exit
      */
-    function enqueue(address _token, uint64 _exitableAt, uint192 _exitId, IExitProcessor _exitProcessor)
+    function enqueue(address _token, uint64 _exitableAt, TxPosLib.TxPos calldata _txPos, uint192 _exitId, IExitProcessor _exitProcessor)
         external
         onlyFromNonQuarantinedExitGame
         returns (uint256)
@@ -73,7 +76,7 @@ contract ExitGameController is ExitGameRegistry {
 
         PriorityQueue queue = exitsQueues[_token];
 
-        uint256 uniquePriority = ExitPriority.computePriority(_exitableAt, exitQueueNonce);
+        uint256 uniquePriority = ExitPriority.computePriority(_exitableAt, _txPos, exitQueueNonce);
         exitQueueNonce++;
 
         queue.insert(uniquePriority);

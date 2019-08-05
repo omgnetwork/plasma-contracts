@@ -5,6 +5,14 @@ function buildUtxoPos(blockNum, txIndex, outputIndex) {
     return blockNum * BLOCK_OFFSET + txIndex * TX_OFFSET + outputIndex;
 }
 
+function buildTxPos(blockNum, txIndex) {
+    return blockNum * (BLOCK_OFFSET / TX_OFFSET) + txIndex;
+}
+
+function utxoPosToTxPos(utxoPos) {
+    return Math.floor(utxoPos / TX_OFFSET);
+}
+
 class UtxoPos {
     constructor(utxoPos) {
         this.utxoPos = utxoPos;
@@ -16,5 +24,7 @@ class UtxoPos {
 
 module.exports = {
     buildUtxoPos,
+    buildTxPos,
+    utxoPosToTxPos,
     UtxoPos,
 };
