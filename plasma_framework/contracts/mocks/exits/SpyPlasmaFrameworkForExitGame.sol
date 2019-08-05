@@ -2,6 +2,7 @@ pragma solidity ^0.5.0;
 pragma experimental ABIEncoderV2;
 
 import "../../src/framework/PlasmaFramework.sol";
+import "../../src/utils/TxPosLib.sol";
 import "../../src/framework/models/BlockModel.sol";
 
 contract SpyPlasmaFrameworkForExitGame is PlasmaFramework {
@@ -9,6 +10,7 @@ contract SpyPlasmaFrameworkForExitGame is PlasmaFramework {
     event EnqueueTriggered(
         address token,
         uint64 exitableAt,
+        uint256 txPos,
         uint256 exitId,
         address exitProcessor
     );
@@ -19,13 +21,14 @@ contract SpyPlasmaFrameworkForExitGame is PlasmaFramework {
     }
 
     /** override for test */
-    function enqueue(address _token, uint64 _exitableAt, uint192 _exitId, IExitProcessor _exitProcessor)
+    function enqueue(address _token, uint64 _exitableAt, TxPosLib.TxPos calldata _txPos, uint192 _exitId, IExitProcessor _exitProcessor)
         external
         returns (uint256)
     {
         emit EnqueueTriggered(
             _token,
             _exitableAt,
+            _txPos.value,
             _exitId,
             address(_exitProcessor)
         );

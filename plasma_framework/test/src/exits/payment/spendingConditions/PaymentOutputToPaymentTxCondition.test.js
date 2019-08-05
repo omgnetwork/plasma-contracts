@@ -6,7 +6,7 @@ const { expect } = require('chai');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../../helpers/transaction.js');
 const { addressToOutputGuard } = require('../../../../helpers/utils.js');
 const { hashTx } = require('../../../../helpers/paymentEip712.js');
-const { buildUtxoPos } = require('../../../../helpers/utxoPos.js');
+const { buildUtxoPos } = require('../../../../helpers/positions.js');
 const { sign } = require('../../../../helpers/sign.js');
 
 contract('PaymentOutputToPaymentTxCondition', ([richFather]) => {

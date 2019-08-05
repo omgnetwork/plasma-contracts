@@ -302,7 +302,7 @@ contract PaymentStandardExitable is
             block.timestamp, data.txBlockTimeStamp, data.isTxDeposit
         );
 
-        framework.enqueue(data.output.token, exitableAt, data.exitId, this);
+        framework.enqueue(data.output.token, exitableAt, data.utxoPos.txPos(), data.exitId, this);
     }
 
     /**

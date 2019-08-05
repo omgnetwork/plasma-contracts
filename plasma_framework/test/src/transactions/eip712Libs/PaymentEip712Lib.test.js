@@ -6,7 +6,7 @@ const {
     PaymentTransactionOutput, PaymentTransaction, PlasmaDepositTransaction,
 } = require('../../../helpers/transaction.js');
 const { addressToOutputGuard } = require('../../../helpers/utils.js');
-const { buildUtxoPos } = require('../../../helpers/utxoPos.js');
+const { buildUtxoPos } = require('../../../helpers/positions.js');
 const { hashTx } = require('../../../helpers/paymentEip712.js');
 
 const OUTPUT_GUARD = `0x${Array(64).fill(1).join('')}`;

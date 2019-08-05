@@ -18,7 +18,7 @@ const {
 const { expect } = require('chai');
 
 const { MerkleTree } = require('../../../helpers/merkle.js');
-const { buildUtxoPos } = require('../../../helpers/utxoPos.js');
+const { buildUtxoPos, utxoPosToTxPos } = require('../../../helpers/positions.js');
 const {
     addressToOutputGuard, buildOutputGuard, computeDepositOutputId,
     computeNormalOutputId, spentOnGas,
@@ -285,9 +285,9 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
             const exitId = await this.exitIdHelper.getStandardExitId(isTxDeposit, data.tx, data.utxoPos);
 
             const currentTimestamp = await time.latest();
-            const timestamp = currentTimestamp.sub(new BN(15));
+            const dummyTimestampNoImpactOnExitableAt = currentTimestamp.sub(new BN(15));
             const exitableAt = await this.exitableHelper.calculate(
-                currentTimestamp, timestamp, isTxDeposit,
+                currentTimestamp, dummyTimestampNoImpactOnExitableAt, isTxDeposit,
             );
 
             await expectEvent.inTransaction(
@@ -297,6 +297,7 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
                 {
                     token: ETH,
                     exitableAt,
+                    txPos: new BN(utxoPosToTxPos(data.utxoPos)),
                     exitProcessor: this.exitGame.address,
                     exitId,
                 },
