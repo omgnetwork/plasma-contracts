@@ -5,10 +5,17 @@ Regression test for bug in RLP decoder.
 import pytest
 import rlp
 
-from eth_utils import encode_hex
+from eth_utils import encode_hex, is_address, to_canonical_address
+from rlp.sedes import big_endian_int, Binary
 
-from rlp.sedes import big_endian_int
-from ethereum import utils
+
+def normalize_args(args):
+    def _normalize_arg(arg):
+        if is_address(arg):
+            return to_canonical_address(arg)
+        else:
+            return arg
+    return tuple(map(_normalize_arg, args))
 
 
 class Eight(rlp.Serializable):
@@ -19,19 +26,13 @@ class Eight(rlp.Serializable):
         ('f3', big_endian_int),
         ('f4', big_endian_int),
         ('f5', big_endian_int),
-        ('f6', utils.address),
-        ('f7', utils.address)
+        ('f6', Binary.fixed_length(20)),
+        ('f7', Binary.fixed_length(20))
     ]
 
-    def __init__(self, f0, f1, f2, f3, f4, f5, f6, f7):
-        self.f0 = f0
-        self.f1 = f1
-        self.f2 = f2
-        self.f3 = f3
-        self.f4 = f4
-        self.f5 = f5
-        self.f6 = f6
-        self.f7 = f7
+    def __init__(self, *args):
+        args = normalize_args(args)
+        super().__init__(*args)
 
 
 class Eleven(rlp.Serializable):
@@ -44,23 +45,14 @@ class Eleven(rlp.Serializable):
         ('f5', big_endian_int),
         ('f6', big_endian_int),
         ('f7', big_endian_int),
-        ('f8', utils.address),
-        ('f9', utils.address),
-        ('f10', utils.address)
+        ('f8', Binary.fixed_length(20)),
+        ('f9', Binary.fixed_length(20)),
+        ('f10', Binary.fixed_length(20))
     ]
 
-    def __init__(self, f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10):
-        self.f0 = f0
-        self.f1 = f1
-        self.f2 = f2
-        self.f3 = f3
-        self.f4 = f4
-        self.f5 = f5
-        self.f6 = f6
-        self.f7 = f7
-        self.f8 = f8
-        self.f9 = f9
-        self.f10 = f10
+    def __init__(self, *args):
+        args = normalize_args(args)
+        super().__init__(*args)
 
 
 @pytest.fixture

@@ -1,11 +1,11 @@
 import rlp
 from rlp.sedes import big_endian_int, binary, CountableList
-from ethereum import utils
-from plasma_core.constants import NULL_SIGNATURE, NULL_ADDRESS
+from eth_utils import address, keccak
+from plasma_core.constants import NULL_SIGNATURE, NULL_ADDRESS, EMPTY_METADATA
 from plasma_core.utils.eip712_struct_hash import hash_struct
 from plasma_core.utils.signatures import sign, get_signer
 from plasma_core.utils.transactions import encode_utxo_id
-from rlp.exceptions import (SerializationError, DeserializationError)
+from rlp.exceptions import DeserializationError
 
 
 def pad_list(to_pad, value, required_length):
@@ -21,9 +21,7 @@ class TransactionInput(rlp.Serializable):
     )
 
     def __init__(self, blknum=0, txindex=0, oindex=0):
-        self.blknum = blknum
-        self.txindex = txindex
-        self.oindex = oindex
+        super().__init__(blknum, txindex, oindex)
 
     @property
     def identifier(self):
@@ -33,15 +31,16 @@ class TransactionInput(rlp.Serializable):
 class TransactionOutput(rlp.Serializable):
 
     fields = (
-        ('owner', utils.address),
-        ('token', utils.address),
+        ('owner', rlp.sedes.Binary.fixed_length(20)),
+        ('token', rlp.sedes.Binary.fixed_length(20)),
         ('amount', big_endian_int)
     )
 
     def __init__(self, owner=NULL_ADDRESS, token=NULL_ADDRESS, amount=0):
-        self.owner = utils.normalize_address(owner)
-        self.token = utils.normalize_address(token)
-        self.amount = amount
+        owner = address.to_canonical_address(owner)
+        token = address.to_canonical_address(token)
+        amount = amount
+        super().__init__(owner, token, amount)
 
 
 class Transaction(rlp.Serializable):
@@ -56,25 +55,41 @@ class Transaction(rlp.Serializable):
     )
 
     def __init__(self,
-                 inputs=[DEFAULT_INPUT] * NUM_TXOS,
-                 outputs=[DEFAULT_OUTPUT] * NUM_TXOS,
+                 inputs=None,
+                 outputs=None,
                  metadata=None,
-                 signatures=[NULL_SIGNATURE] * NUM_TXOS,
-                 signers=[NULL_ADDRESS] * NUM_TXOS):
+                 signatures=None,
+                 signers=None):
+        """
+
+        :type signatures: object
+        """
+        if signatures is None:
+            signatures = [NULL_SIGNATURE] * Transaction.NUM_TXOS
+        if signers is None:
+            signers = [NULL_ADDRESS] * Transaction.NUM_TXOS
+        if inputs is None:
+            inputs = [Transaction.DEFAULT_INPUT] * Transaction.NUM_TXOS
+        if outputs is None:
+            outputs = [Transaction.DEFAULT_OUTPUT] * Transaction.NUM_TXOS
+        if metadata is None:
+            metadata = EMPTY_METADATA
+
         assert all(len(o) == 3 for o in outputs)
         padded_inputs = pad_list(inputs, self.DEFAULT_INPUT, self.NUM_TXOS)
         padded_outputs = pad_list(outputs, self.DEFAULT_OUTPUT, self.NUM_TXOS)
+        inputs = [TransactionInput(*i) for i in padded_inputs]
+        outputs = [TransactionOutput(*o) for o in padded_outputs]
 
-        self.inputs = [TransactionInput(*i) for i in padded_inputs]
-        self.outputs = [TransactionOutput(*o) for o in padded_outputs]
-        self.metadata = metadata
+        super().__init__(inputs, outputs, metadata)
+
         self.signatures = signatures[:]
         self._signers = signers[:]
         self.spent = [False] * self.NUM_TXOS
 
     @property
     def hash(self):
-        return utils.sha3(self.encoded)
+        return keccak(self.encoded)
 
     @property
     def signers(self):
@@ -93,16 +108,6 @@ class Transaction(rlp.Serializable):
         sig = sign(hash, key)
         self.signatures[index] = sig
         self._signers[index] = get_signer(hash, sig) if sig != NULL_SIGNATURE else NULL_ADDRESS
-
-    @staticmethod
-    def serialize(obj):
-        try:
-            cls = Transaction.exclude(['metadata']) if obj.metadata is None else Transaction
-            field_value = [getattr(obj, field) for field, _ in cls.fields]
-            ret = cls.get_sedes().serialize(field_value)
-            return ret
-        except Exception as e:
-            raise SerializationError(e.format_exc, obj)
 
     @staticmethod
     def deserialize(obj):
