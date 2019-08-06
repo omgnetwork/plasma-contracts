@@ -24,7 +24,7 @@ contract Vault is Operated {
     modifier onlyFromNonQuarantinedExitGame() {
         require(
             ExitGameRegistry(framework).isSafeToUse(msg.sender),
-            "Not called from a registered Exit Game contract"
+            "Called from a nonregistered or quarantined Exit Game contract"
         );
         _;
     }

@@ -15,7 +15,7 @@ const Testlang = require('../../helpers/testlang.js');
 contract('EthVault', ([_, alice]) => {
     const DEPOSIT_VALUE = 1000000;
     const INITIAL_IMMUNE_VAULTS = 1;
-    const INITIAL_IMMUNE_EXIT_GAMES = 0;
+    const INITIAL_IMMUNE_EXIT_GAMES = 1;
     const MIN_EXIT_PERIOD = 10;
 
     beforeEach('setup contracts', async () => {
@@ -142,7 +142,7 @@ contract('EthVault', ([_, alice]) => {
         it('should fail when not called by a registered exit game contract', async () => {
             await expectRevert(
                 this.ethVault.withdraw(constants.ZERO_ADDRESS, 0),
-                'Not called from a registered Exit Game contract',
+                'Called from a nonregistered or quarantined Exit Game contract',
             );
         });
 
@@ -158,6 +158,30 @@ contract('EthVault', ([_, alice]) => {
         });
 
         it('should emit EthWithdrawn event correctly', async () => {
+            const { receipt } = await this.exitGame.proxyEthWithdraw(alice, DEPOSIT_VALUE);
+
+            await expectEvent.inTransaction(
+                receipt.transactionHash,
+                EthVault,
+                'EthWithdrawn',
+                {
+                    target: alice,
+                    amount: new BN(DEPOSIT_VALUE),
+                },
+            );
+        });
+
+        it('should fail when called from under quarantine vault', async () => {
+            const newExitGame = await DummyExitGame.new();
+            await newExitGame.setEthVault(this.ethVault.address);
+            await this.framework.registerExitGame(2, newExitGame.address);
+
+            await expectRevert(
+                newExitGame.proxyEthWithdraw(alice, DEPOSIT_VALUE),
+                'Called from a nonregistered or quarantined Exit Game contract',
+            );
+
+            await time.increase(2 * MIN_EXIT_PERIOD + 1);
             const { receipt } = await this.exitGame.proxyEthWithdraw(alice, DEPOSIT_VALUE);
 
             await expectEvent.inTransaction(
