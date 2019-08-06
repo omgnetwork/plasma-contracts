@@ -26,6 +26,10 @@ contract PriorityQueue is Ownable {
         return queue.currentSize;
     }
 
+    function heapList() external view returns (uint256[] memory) {
+        return queue.heapList;
+    }
+
     /**
      * @notice Inserts an element into the queue by the owner.
      * @dev Does not perform deduplication.

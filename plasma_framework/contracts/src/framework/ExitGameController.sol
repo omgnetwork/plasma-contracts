@@ -27,6 +27,11 @@ contract ExitGameController is ExitGameRegistry {
         address token
     );
 
+    event ExitQueued(
+        uint192 indexed exitId,
+        uint256 uniquePriority
+    );
+
     constructor(uint256 _minExitPeriod, uint256 _initialImmuneExitGames)
         public
         ExitGameRegistry(_minExitPeriod, _initialImmuneExitGames)
@@ -85,6 +90,8 @@ contract ExitGameController is ExitGameRegistry {
             exitProcessor: _exitProcessor,
             exitId: _exitId
         });
+
+        emit ExitQueued(_exitId, uniquePriority);
 
         return uniquePriority;
     }
