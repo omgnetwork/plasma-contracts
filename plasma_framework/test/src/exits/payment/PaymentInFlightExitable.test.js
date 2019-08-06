@@ -12,7 +12,7 @@ const {
 const { expect } = require('chai');
 
 const { MerkleTree } = require('../../../helpers/merkle.js');
-const { buildUtxoPos, UtxoPos } = require('../../../helpers/utxoPos.js');
+const { buildUtxoPos, UtxoPos } = require('../../../helpers/positions.js');
 const {
     addressToOutputGuard, computeNormalOutputId, spentOnGas,
 } = require('../../../helpers/utils.js');
@@ -28,19 +28,19 @@ contract('PaymentInFlightExitable', ([_, alice, bob, carol]) => {
     const INITIAL_IMMUNE_EXIT_GAME_NUM = 1;
     const OUTPUT_TYPE_ZERO = 0;
     const IFE_TX_TYPE = 1;
-    const SIGNATURE_LENGTH_IN_BYTES = 65;
+    const WITNESS_LENGTH_IN_BYTES = 65;
     const INCLUSION_PROOF_LENGTH_IN_BYTES = 512;
-    const IN_FLIGHT_TX_SIGNATURE_BYTES = web3.utils.bytesToHex('a'.repeat(SIGNATURE_LENGTH_IN_BYTES));
+    const IN_FLIGHT_TX_WITNESS_BYTES = web3.utils.bytesToHex('a'.repeat(WITNESS_LENGTH_IN_BYTES));
     const BLOCK_NUMBER = 1000;
     const DUMMY_INPUT_1 = '0x0000000000000000000000000000000000000000000000000000000000000001';
     const DUMMY_INPUT_2 = '0x0000000000000000000000000000000000000000000000000000000000000002';
-    const DUMMY_INPUT_3 = '0x0000000000000000000000000000000000000000000000000000000000000003';
     const MERKLE_TREE_HEIGHT = 3;
     const AMOUNT = 10;
     const TOLERANCE_SECONDS = new BN(1);
 
     describe('startInFlightExit', () => {
         function buildValidIfeStartArgs(amount, [ifeOwner, inputOwner1, inputOwner2], blockNum) {
+            // TODO: make one of those a deposit transaction
             const inputTx1 = createInputTransaction(DUMMY_INPUT_1, inputOwner1, amount);
             const inputTx2 = createInputTransaction(DUMMY_INPUT_2, inputOwner2, amount);
             const inputTxs = [inputTx1, inputTx2];
@@ -73,7 +73,7 @@ contract('PaymentInFlightExitable', ([_, alice, bob, carol]) => {
 
             const inFlightTxRaw = web3.utils.bytesToHex(inFlightTx.rlpEncoded());
 
-            const inFlightTxSigs = [IN_FLIGHT_TX_SIGNATURE_BYTES, IN_FLIGHT_TX_SIGNATURE_BYTES];
+            const inFlightTxWitnesses = [IN_FLIGHT_TX_WITNESS_BYTES, IN_FLIGHT_TX_WITNESS_BYTES];
 
             const args = {
                 inFlightTx: inFlightTxRaw,
@@ -81,7 +81,7 @@ contract('PaymentInFlightExitable', ([_, alice, bob, carol]) => {
                 inputUtxosPos,
                 inputUtxosTypes,
                 inputTxsInclusionProofs,
-                inFlightTxSigs,
+                inFlightTxWitnesses,
             };
 
             const inputTxsBlockRoot = merkleTree.root;
@@ -212,44 +212,37 @@ contract('PaymentInFlightExitable', ([_, alice, bob, carol]) => {
             });
         });
 
-        describe('when calling in-flight exit start with valid arguments', () => {
-            beforeEach(async () => {
-                this.framework = await SpyPlasmaFramework.new(
-                    MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
-                );
-                this.exitGame = await PaymentInFlightExitable.new(this.framework.address);
-
-                const { args, inputTxsBlockRoot } = buildValidIfeStartArgs(AMOUNT, [alice, bob, carol], BLOCK_NUMBER);
-                this.args = args;
-                await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot, 0);
-            });
-
-            it('should fail when spending condition not registered', async () => {
-                await expectRevert(
-                    this.exitGame.startInFlightExit(this.args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
-                    'Spending condition contract not found',
-                );
-            });
-
-            it('should fail when spending condition not satisfied', async () => {
-                const conditionFalse = await PaymentSpendingConditionFalse.new();
-
-                await this.exitGame.registerSpendingCondition(
-                    OUTPUT_TYPE_ZERO, IFE_TX_TYPE, conditionFalse.address,
-                );
-                await expectRevert(
-                    this.exitGame.startInFlightExit(this.args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
-                    'Spending condition failed',
-                );
-            });
-        });
-
         describe('when in-flight exit start is called', () => {
             beforeEach(async () => {
                 this.framework = await SpyPlasmaFramework.new(
                     MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
                 );
                 this.exitGame = await PaymentInFlightExitable.new(this.framework.address);
+            });
+
+            it('should fail when spending condition not registered', async () => {
+                const { args, inputTxsBlockRoot } = buildValidIfeStartArgs(AMOUNT, [alice, bob, carol], BLOCK_NUMBER);
+                await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot, 0);
+
+                await expectRevert(
+                    this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
+                    'Spending condition contract not found',
+                );
+            });
+
+            it('should fail when spending condition not satisfied', async () => {
+                const { args, inputTxsBlockRoot } = buildValidIfeStartArgs(AMOUNT, [alice, bob, carol], BLOCK_NUMBER);
+                await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot, 0);
+
+                const conditionFalse = await PaymentSpendingConditionFalse.new();
+                await this.exitGame.registerSpendingCondition(
+                    OUTPUT_TYPE_ZERO, IFE_TX_TYPE, conditionFalse.address,
+                );
+
+                await expectRevert(
+                    this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
+                    'Spending condition failed',
+                );
             });
 
             it('should fail when not called with a valid exit bond', async () => {
@@ -328,24 +321,6 @@ contract('PaymentInFlightExitable', ([_, alice, bob, carol]) => {
                 );
             });
 
-            it('should fail when input txs do not match inputs of in-flight tx', async () => {
-                const inputTx1 = createInputTransaction(DUMMY_INPUT_1, alice, AMOUNT);
-                const inputTx2 = createInputTransaction(DUMMY_INPUT_2, bob, AMOUNT);
-                const inputTx3 = createInputTransaction(DUMMY_INPUT_3, alice, AMOUNT);
-
-                const inputUtxosPos = [buildUtxoPos(BLOCK_NUMBER, 0, 0), buildUtxoPos(BLOCK_NUMBER, 1, 0)];
-                const inFlightTx = createInFlightTx([inputTx1, inputTx2], inputUtxosPos, carol, AMOUNT);
-
-                const { args, inputTxsBlockRoot } = buildIfeStartArgs([inputTx2, inputTx3], inputUtxosPos, inFlightTx);
-
-                await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot, 0);
-
-                await expectRevert(
-                    this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
-                    'In-flight transaction does not stem from input transactions',
-                );
-            });
-
             it('should fail when number of input transactions does not match number of input utxos positions', async () => {
                 const inputTx1 = createInputTransaction(DUMMY_INPUT_1, alice, AMOUNT);
                 const inputTx2 = createInputTransaction(DUMMY_INPUT_2, bob, AMOUNT);
@@ -377,6 +352,42 @@ contract('PaymentInFlightExitable', ([_, alice, bob, carol]) => {
                 await expectRevert(
                     this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
                     'Number of input transactions does not match number of in-flight transaction inputs.',
+                );
+            });
+
+            it('should fail when number of witnesses does not match in-flight transactions number of inputs', async () => {
+                const { args, inputTxsBlockRoot } = buildValidIfeStartArgs(AMOUNT, [alice, bob, carol], BLOCK_NUMBER);
+                args.inFlightTxWitnesses = [];
+
+                await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot, 0);
+
+                await expectRevert(
+                    this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
+                    ' Number of input transactions witnesses does not match number of in-flight transaction inputs.',
+                );
+            });
+
+            it('should fail when number of merkle inclusion proofs does not match in-flight transactions number of inputs', async () => {
+                const { args, inputTxsBlockRoot } = buildValidIfeStartArgs(AMOUNT, [alice, bob, carol], BLOCK_NUMBER);
+                args.inputTxsInclusionProofs = [];
+
+                await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot, 0);
+
+                await expectRevert(
+                    this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
+                    'Number of input transactions inclusion proofs does not match number of in-flight transaction inputs.',
+                );
+            });
+
+            it('should fail when number of input utxos types does not match in-flight transactions number of inputs', async () => {
+                const { args, inputTxsBlockRoot } = buildValidIfeStartArgs(AMOUNT, [alice, bob, carol], BLOCK_NUMBER);
+                args.inputUtxosTypes = [];
+
+                await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot, 0);
+
+                await expectRevert(
+                    this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
+                    ' Number of input utxo types does not match number of in-flight transaction inputs.',
                 );
             });
 
