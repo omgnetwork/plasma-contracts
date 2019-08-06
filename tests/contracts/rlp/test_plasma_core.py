@@ -26,10 +26,10 @@ def test_slice_signature(plasma_core_test):
 
 def test_get_output(plasma_core_test):
     null = '0x0000000000000000000000000000000000000000'
-    owner = b'0x82a978b3f5962a5b0957d9ee9eef472ee55b42f1'
+    owner = '0x82a978b3f5962a5b0957d9ee9eef472ee55b42f1'
     amount = 100
     tx = Transaction(outputs=[(owner, null, amount)])
-    assert plasma_core_test.getOutput(tx.encoded, 0) == [owner.decode("utf-8"), null, amount]
+    assert plasma_core_test.getOutput(tx.encoded, 0) == [owner, null, amount]
     assert plasma_core_test.getOutput(tx.encoded, 1) == [null, null, 0]
 
 

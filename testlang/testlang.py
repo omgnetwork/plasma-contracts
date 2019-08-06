@@ -98,7 +98,7 @@ class InFlightExit(object):
         input_info = self.inputs.get(index)
         if not input_info:
             input_info = TransactionOutput(*self.root_chain.getInFlightExitOutput(self.in_flight_tx.encoded, index))
-            input_info.owner = address_to_hex(input_info.owner)
+            # input_info.owner = address_to_hex(input_info.owner)
             self.inputs[index] = input_info
         return input_info
 
@@ -153,14 +153,14 @@ class TestingLanguage(object):
         signer = signer or self.operator
         blknum = self.root_chain.nextChildBlock()
         block = Block(transactions, number=blknum)
-        block.sign(signer.key)
-        self.root_chain.submitBlock(block.root, sender=signer.key)
+        signed_block = block.sign(signer.key)
+        self.root_chain.submitBlock(signed_block.root, sender=signer.key)
         if force_invalid:
-            self.child_chain.blocks[self.child_chain.next_child_block] = block
+            self.child_chain.blocks[self.child_chain.next_child_block] = signed_block
             self.child_chain.next_deposit_block = self.child_chain.next_child_block + 1
             self.child_chain.next_child_block += self.child_chain.child_block_interval
         else:
-            assert self.child_chain.add_block(block)
+            assert self.child_chain.add_block(signed_block)
         return blknum
 
     @property

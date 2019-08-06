@@ -1,5 +1,5 @@
 from plasma_core.constants import NULL_ADDRESS, NULL_ADDRESS_HEX, MIN_EXIT_PERIOD
-from eth_utils import encode_hex
+from eth_utils import encode_hex, to_canonical_address
 import pytest
 from ethereum.tools.tester import TransactionFailed
 
@@ -57,11 +57,11 @@ def test_process_exits_in_flight_exit_should_succeed(testlang):
 
     for i in range(4):
         input_info = in_flight_exit.get_input(i)
-        assert input_info.owner == NULL_ADDRESS_HEX
+        assert input_info.owner == NULL_ADDRESS
         assert input_info.amount == 0
 
         output_info = in_flight_exit.get_output(i)
-        assert output_info.owner == NULL_ADDRESS_HEX
+        assert output_info.owner == NULL_ADDRESS
         assert output_info.amount == 0
 
     expected_balance = pre_balance + amount + testlang.root_chain.inFlightExitBond() + testlang.root_chain.piggybackBond()
@@ -426,11 +426,11 @@ def test_finalize_in_flight_exit_with_erc20_token_should_succeed(testlang, token
     for i in range(4):
         tx_input = in_flight_exit.get_input(i)
         assert tx_input.amount == 0
-        assert tx_input.owner == NULL_ADDRESS_HEX
+        assert tx_input.owner == NULL_ADDRESS
 
         tx_output = in_flight_exit.get_input(i)
         assert tx_output.amount == 0
-        assert tx_output.owner == NULL_ADDRESS_HEX
+        assert tx_output.owner == NULL_ADDRESS
 
     assert in_flight_exit.bond_owner == NULL_ADDRESS_HEX
     assert in_flight_exit.oldest_competitor == 0
@@ -561,7 +561,7 @@ def test_when_processing_ife_finalization_of_erc20_token_does_not_clean_up_eth_o
     assert in_flight_exit.output_piggybacked(0)
     assert not in_flight_exit.output_piggybacked(1)
 
-    assert in_flight_exit.get_output(0).owner == owner_1.address
+    assert in_flight_exit.get_output(0).owner == to_canonical_address(owner_1.address)
     assert in_flight_exit.get_output(0).amount == amount
 
 
