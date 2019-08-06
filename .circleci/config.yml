@@ -64,8 +64,13 @@ jobs:
           command: truffle test 
           working_directory: ~/repo/plasma_framework
           environment:
+            CI: true
             MOCHA_REPORTER: eth-gas-reporter
-
+      - run:
+          name: Codechecks for gas usage
+          command: npx codechecks
+          working_directory: ~/repo/plasma_framework
+          
   Truffle linter:
     executor: truffle_executor
     working_directory: ~/repo
