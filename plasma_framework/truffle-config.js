@@ -18,6 +18,8 @@
  *
  */
 
+require('dotenv').config(); // auto parse env variables from '.env' file
+
 // const HDWalletProvider = require('truffle-hdwallet-provider');
 // const infuraKey = "fj4jll3k.....";
 //
@@ -79,7 +81,7 @@ module.exports = {
 
     // Set default mocha options here, use special reporters etc.
     mocha: {
-        reporter: 'eth-gas-reporter',
+        reporter: process.env.MOCHA_REPORTER || '',
         reporterOptions: {
             currency: 'USD',
             showTimeSpent: true,
