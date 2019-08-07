@@ -170,19 +170,28 @@ contract('EthVault', ([_, alice]) => {
                 },
             );
         });
+    });
 
-        it('should fail when called from under quarantine vault', async () => {
-            const newExitGame = await DummyExitGame.new();
-            await newExitGame.setEthVault(this.ethVault.address);
-            await this.framework.registerExitGame(2, newExitGame.address);
+    describe('given quarantined exit game', () => {
+        beforeEach(async () => {
+            const deposit = Testlang.deposit(DEPOSIT_VALUE, alice);
+            await this.ethVault.deposit(deposit, { from: alice, value: DEPOSIT_VALUE });
 
+            this.newExitGame = await DummyExitGame.new();
+            await this.newExitGame.setEthVault(this.ethVault.address);
+            await this.framework.registerExitGame(2, this.newExitGame.address);
+        });
+
+        it('should fail when called under quarantine', async () => {
             await expectRevert(
-                newExitGame.proxyEthWithdraw(alice, DEPOSIT_VALUE),
+                this.newExitGame.proxyEthWithdraw(alice, DEPOSIT_VALUE),
                 'Called from a nonregistered or quarantined Exit Game contract',
             );
+        });
 
+        it('and then quarantine period passes', async () => {
             await time.increase(2 * MIN_EXIT_PERIOD + 1);
-            const { receipt } = await this.exitGame.proxyEthWithdraw(alice, DEPOSIT_VALUE);
+            const { receipt } = await this.newExitGame.proxyEthWithdraw(alice, DEPOSIT_VALUE);
 
             await expectEvent.inTransaction(
                 receipt.transactionHash,

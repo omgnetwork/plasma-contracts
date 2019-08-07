@@ -28,11 +28,11 @@ contract ExitGameRegistry is Operated {
     }
 
     /**
-     * @notice Exposes information about exit games quarantine
+     * @dev Exposes information about exit games quarantine
      * @param _contract address of exit game contract
      * @return A boolean value denoting whether contract is safe to use, is not under quarantine
      */
-     function isSafeToUse(address _contract) public view returns (bool) {
+     function isExitGameSafeToUse(address _contract) public view returns (bool) {
          return _exitGameToTxType[_contract] != 0 && !_quarantine.isQuarantined(_contract);
      }
 

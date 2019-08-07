@@ -176,17 +176,7 @@ contract('Erc20Vault', (accounts) => {
             expect(postBalance).to.be.bignumber.equal(expectedPostBalance);
         });
 
-        it('should fail when called from under quarantine vault', async () => {
-            const newExitGame = await DummyExitGame.new();
-            await newExitGame.setErc20Vault(this.erc20Vault.address);
-            await this.framework.registerExitGame(2, newExitGame.address);
-
-            await expectRevert(
-                newExitGame.proxyErc20Withdraw(alice, this.erc20.address, this.testFundAmount),
-                'Called from a nonregistered or quarantined Exit Game contract',
-            );
-
-            await time.increase(2 * MIN_EXIT_PERIOD + 1);
+        it('should emit Erc20Withdrawn event correctly', async () => {
             const { receipt } = await this.exitGame.proxyErc20Withdraw(
                 alice, this.erc20.address, this.testFundAmount,
             );
@@ -202,9 +192,28 @@ contract('Erc20Vault', (accounts) => {
                 },
             );
         });
+    });
 
-        it('should emit Erc20Withdrawn event correctly', async () => {
-            const { receipt } = await this.exitGame.proxyErc20Withdraw(
+    describe('given quarantined exit game', () => {
+        beforeEach(async () => {
+            this.testFundAmount = 1000;
+            await this.erc20.transfer(this.erc20Vault.address, this.testFundAmount, { from: accounts[0] });
+
+            this.newExitGame = await DummyExitGame.new();
+            await this.newExitGame.setErc20Vault(this.erc20Vault.address);
+            await this.framework.registerExitGame(2, this.newExitGame.address);
+        });
+
+        it('should fail when called under quarantine', async () => {
+            await expectRevert(
+                this.newExitGame.proxyErc20Withdraw(alice, this.erc20.address, this.testFundAmount),
+                'Called from a nonregistered or quarantined Exit Game contract',
+            );
+        });
+
+        it('and then quarantine period passes', async () => {
+            await time.increase(2 * MIN_EXIT_PERIOD + 1);
+            const { receipt } = await this.newExitGame.proxyErc20Withdraw(
                 alice, this.erc20.address, this.testFundAmount,
             );
 
