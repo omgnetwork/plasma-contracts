@@ -21,10 +21,10 @@ contract Vault is Operated {
         zeroHashes = ZeroHashesProvider.getZeroHashes();
     }
 
-    modifier onlyFromExitGame() {
+    modifier onlyFromNonQuarantinedExitGame() {
         require(
-            framework.exitGameToTxType(msg.sender) != 0,
-            "Not called from a registered Exit Game contract"
+            ExitGameRegistry(framework).isExitGameSafeToUse(msg.sender),
+            "Called from a nonregistered or quarantined Exit Game contract"
         );
         _;
     }
