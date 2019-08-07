@@ -1,5 +1,4 @@
 import rlp
-from web3._utils.datatypes import PropertyCheckingFactory
 from web3.exceptions import MismatchedABI
 
 from plasma_core.child_chain import ChildChain

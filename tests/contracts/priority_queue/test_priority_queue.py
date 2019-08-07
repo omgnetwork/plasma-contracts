@@ -2,7 +2,6 @@ import math
 
 import pytest
 from eth_tester.exceptions import TransactionFailed
-import math
 
 
 @pytest.fixture

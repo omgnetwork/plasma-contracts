@@ -1,5 +1,6 @@
 from eth_utils import decode_hex
 
+
 def normalize_key(key):
     if isinstance(key, bytes):
         key = key.decode("utf-8")

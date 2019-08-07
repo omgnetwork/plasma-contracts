@@ -6,6 +6,7 @@ from plasma_core.constants import NULL_ADDRESS, NULL_ADDRESS_HEX, MIN_EXIT_PERIO
 from plasma_core.utils.transactions import decode_utxo_id, encode_utxo_id
 from tests.conftest import assert_event
 
+
 @pytest.mark.parametrize("num_outputs", [1, 2, 3, 4])
 def test_process_exits_standard_exit_should_succeed(testlang, num_outputs):
     owners, amount, outputs = [], 100, []
@@ -99,11 +100,9 @@ def test_finalize_exits_old_utxo_is_mature_after_single_mfp(testlang):
     owner, amount = testlang.accounts[0], 100
 
     deposit_id = testlang.deposit(owner, amount)
-    spend_timestamp = testlang.w3.eth.getBlock('pending').timestamp
     spend_id = testlang.spend_utxo([deposit_id], [owner], [(owner.address, NULL_ADDRESS, amount)])
 
     testlang.forward_timestamp(required_exit_period)
-    exit_start_timestamp = testlang.w3.eth.getBlock('pending').timestamp
     testlang.start_standard_exit(spend_id, owner)
     testlang.forward_timestamp(minimal_finalization_period)
 

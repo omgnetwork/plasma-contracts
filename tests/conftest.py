@@ -62,8 +62,8 @@ def get_contract(w3, deployer, accounts):
 
         libraries = _encode_libs(libraries)
         linked_hexcode = link_code(hexcode, libraries)
-        Contract = w3.eth.contract(abi=abi, bytecode=linked_hexcode)
-        tx_hash = Contract.constructor(*args).transact({'gas': START_GAS, 'from': sender.address})
+        factory = w3.eth.contract(abi=abi, bytecode=linked_hexcode)
+        tx_hash = factory.constructor(*args).transact({'gas': START_GAS, 'from': sender.address})
         tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
         contract = w3.eth.contract(abi=abi, address=tx_receipt.contractAddress)
         return ConvenienceContractWrapper(contract)

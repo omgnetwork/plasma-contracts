@@ -1,9 +1,11 @@
 import pytest
 from eth_tester.exceptions import TransactionFailed
+
 from plasma_core.constants import NULL_ADDRESS, NULL_ADDRESS_HEX, MIN_EXIT_PERIOD
+from tests.conftest import assert_event
+
 
 # TODO: test if fee exit generates events
-from tests.conftest import assert_event
 
 
 def test_start_fee_exit_should_succeed(testlang, root_chain):
