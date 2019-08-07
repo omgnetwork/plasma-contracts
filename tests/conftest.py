@@ -53,22 +53,6 @@ def w3(tester, accounts) -> Web3:
     return w3
 
 
-# def pytest_addoption(parser):
-#     parser.addoption("--runslow", action="store_true",
-#                      default=False, help="run slow tests")
-#
-#
-# def pytest_collection_modifyitems(config, items):
-#     if config.getoption("--runslow"):
-#         # --runslow given in cli: do not skip slow tests
-#         return
-#     skip_slow = pytest.mark.skip(reason="need --runslow option to run")
-#     for item in items:
-#         if "slow" in item.keywords:
-#             item.add_marker(skip_slow)
-#
-
-
 @pytest.fixture
 def get_contract(w3, deployer, accounts):
     def create_contract(path, args=(), sender=accounts[0], libraries=None):
@@ -123,13 +107,6 @@ def testlang_root_chain_short_exit_period(root_chain_short_exit_period, w3, acco
 @pytest.fixture
 def utxo(testlang):
     return testlang.create_utxo()
-
-
-# def watch_contract(ethtester, path, address):
-#     abi, _ = deployer.builder.get_contract_data(path)
-#     return ethtester.ABIContract(ethtester.chain, abi, address)
-#
-#
 
 
 def _encode_libs(libraries):

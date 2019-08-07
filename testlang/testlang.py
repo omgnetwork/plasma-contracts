@@ -3,34 +3,13 @@ from web3._utils.datatypes import PropertyCheckingFactory
 from web3.exceptions import MismatchedABI
 
 from plasma_core.child_chain import ChildChain
-from plasma_core.account import EthereumAccount
 from plasma_core.block import Block
 from plasma_core.transaction import Transaction, TransactionOutput
 from plasma_core.constants import MIN_EXIT_PERIOD, NULL_SIGNATURE, NULL_ADDRESS
 from plasma_core.utils.transactions import decode_utxo_id, encode_utxo_id
-from plasma_core.utils.address import address_to_hex
 from plasma_core.utils.merkle.fixed_merkle import FixedMerkle
 
 IN_FLIGHT_PERIOD = MIN_EXIT_PERIOD // 2
-
-
-# FIXME: probably delete
-# def get_accounts(ethtester):
-#     """Converts ethereum.tools.tester accounts into a list.
-#
-#     Args:
-#         ethtester (ethereum.tools.tester): Ethereum tester instance.
-#
-#     Returns:
-#         EthereumAccount[]: A list of EthereumAccounts.
-#     """
-#
-#     accounts = []
-#     for i in range(10):
-#         address = getattr(ethtester, 'a{0}'.format(i))
-#         key = getattr(ethtester, 'k{0}'.format(i))
-#         accounts.append(EthereumAccount(address_to_hex(address), key))
-#     return accounts
 
 
 class StandardExit(object):
@@ -135,8 +114,6 @@ class TestingLanguage(object):
     def __init__(self, root_chain, w3, accounts):
         self.root_chain = root_chain
         self.w3 = w3
-        # FIXME: invalid type, look at docs ; maybe delete this line
-        # self.accounts = get_accounts(ethtester)
         self.accounts = accounts
         self.operator = self.accounts[0]
         self.child_chain = ChildChain(operator=self.operator)
@@ -367,10 +344,6 @@ class TestingLanguage(object):
             return self.w3.eth.getBalance(account.address)
         if hasattr(token, "balanceOf"):
             return token.balanceOf(account.address)
-        else:
-            # FIXME
-            token_contract = conftest.watch_contract(self.ethtester, 'MintableToken', token)
-            return token_contract.balanceOf(account.address)
 
     def forward_timestamp(self, amount):
         """Forwards the chain's timestamp.

@@ -1,5 +1,5 @@
 import pytest
-from eth_utils import to_normalized_address, to_checksum_address, to_canonical_address
+from eth_utils import to_checksum_address
 
 from plasma_core.constants import NULL_ADDRESS
 from eth_tester.exceptions import TransactionFailed
