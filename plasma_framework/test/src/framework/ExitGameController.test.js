@@ -144,32 +144,11 @@ contract('ExitGameController', () => {
             expect(await priorityQueue.currentSize()).to.be.bignumber.equal(new BN(2));
         });
 
-        it('emits an ExitEnqueued event', async () => {
-            const { receipt } = await this.dummyExitGame.enqueue(
-                this.dummyExit.token,
-                this.dummyExit.exitableAt,
-                this.dummyExit.txPos,
-                this.dummyExit.exitId,
-                this.dummyExit.exitProcessor,
-            );
-
-            const uniquePriority = await this.dummyExitGame.uniquePriorityFromEnqueue();
-
-            await expectEvent.inTransaction(
-                receipt.transactionHash,
-                ExitGameController,
-                'ExitQueued', {
-                    uniquePriority,
-                    exitId: new BN(this.dummyExit.exitId),
-                },
-            );
-        });
-
         describe('when successfully enqueued', () => {
             beforeEach(async () => {
                 this.originExitQueueNonce = await this.controller.exitQueueNonce();
 
-                await this.dummyExitGame.enqueue(
+                this.enqueueTx = await this.dummyExitGame.enqueue(
                     this.dummyExit.token,
                     this.dummyExit.exitableAt,
                     this.dummyExit.txPos,
@@ -199,6 +178,19 @@ contract('ExitGameController', () => {
 
                 expect(exit.exitProcessor).to.equal(this.dummyExit.exitProcessor);
                 expect(exit.exitId).to.be.bignumber.equal(new BN(this.dummyExit.exitId));
+            });
+
+            it('emits an ExitEnqueued event', async () => {
+                const uniquePriority = await this.dummyExitGame.uniquePriorityFromEnqueue();
+
+                await expectEvent.inTransaction(
+                    this.enqueueTx.receipt.transactionHash,
+                    ExitGameController,
+                    'ExitQueued', {
+                        uniquePriority,
+                        exitId: new BN(this.dummyExit.exitId),
+                    },
+                );
             });
 
             it('should be able to find the exit in the priority queue given exitId', async () => {
