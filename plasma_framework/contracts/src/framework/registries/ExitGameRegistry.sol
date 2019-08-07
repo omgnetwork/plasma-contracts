@@ -17,7 +17,7 @@ contract ExitGameRegistry is Operated {
     constructor (uint256 _minExitPeriod, uint256 _initialImmuneExitGames)
         public
     {
-        _quarantine.quarantinePeriod = 2 * _minExitPeriod;
+        _quarantine.quarantinePeriod = 3 * _minExitPeriod;
         _quarantine.immunitiesRemaining = _initialImmuneExitGames;
     }
 
@@ -26,6 +26,15 @@ contract ExitGameRegistry is Operated {
         require(!_quarantine.isQuarantined(msg.sender), "ExitGame is quarantined.");
         _;
     }
+
+    /**
+     * @dev Exposes information about exit games quarantine
+     * @param _contract address of exit game contract
+     * @return A boolean value denoting whether contract is safe to use, is not under quarantine
+     */
+     function isExitGameSafeToUse(address _contract) public view returns (bool) {
+         return _exitGameToTxType[_contract] != 0 && !_quarantine.isQuarantined(_contract);
+     }
 
     /**
      * @notice Register the exit game to Plasma framework. This can be only called by contract admin.

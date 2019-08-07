@@ -6,7 +6,7 @@ const BadERC20 = artifacts.require('BadERC20');
 const DummyExitGame = artifacts.require('DummyExitGame');
 
 const {
-    BN, constants, expectEvent, expectRevert,
+    BN, constants, expectEvent, expectRevert, time,
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
@@ -18,7 +18,7 @@ contract('Erc20Vault', (accounts) => {
     const DEPOSIT_VALUE = 100;
     const INITIAL_SUPPLY = 1000000;
     const INITIAL_IMMUNE_VAULTS = 1;
-    const INITIAL_IMMUNE_EXIT_GAMES = 0;
+    const INITIAL_IMMUNE_EXIT_GAMES = 1;
     const MIN_EXIT_PERIOD = 10;
 
 
@@ -161,7 +161,7 @@ contract('Erc20Vault', (accounts) => {
         it('should fail when not called by a registered exit game contract', async () => {
             await expectRevert(
                 this.erc20Vault.withdraw(constants.ZERO_ADDRESS, constants.ZERO_ADDRESS, 0),
-                'Not called from a registered Exit Game contract',
+                'Called from a nonregistered or quarantined Exit Game contract',
             );
         });
 
@@ -191,6 +191,39 @@ contract('Erc20Vault', (accounts) => {
                     amount: new BN(this.testFundAmount),
                 },
             );
+        });
+
+        describe('given quarantined exit game', () => {
+            beforeEach(async () => {
+                this.newExitGame = await DummyExitGame.new();
+                await this.newExitGame.setErc20Vault(this.erc20Vault.address);
+                await this.framework.registerExitGame(2, this.newExitGame.address);
+            });
+
+            it('should fail when called under quarantine', async () => {
+                await expectRevert(
+                    this.newExitGame.proxyErc20Withdraw(alice, this.erc20.address, this.testFundAmount),
+                    'Called from a nonregistered or quarantined Exit Game contract',
+                );
+            });
+
+            it('should succeed after quarantine period passes', async () => {
+                await time.increase(3 * MIN_EXIT_PERIOD + 1);
+                const { receipt } = await this.newExitGame.proxyErc20Withdraw(
+                    alice, this.erc20.address, this.testFundAmount,
+                );
+
+                await expectEvent.inTransaction(
+                    receipt.transactionHash,
+                    Erc20Vault,
+                    'Erc20Withdrawn',
+                    {
+                        target: alice,
+                        token: this.erc20.address,
+                        amount: new BN(this.testFundAmount),
+                    },
+                );
+            });
         });
     });
 

@@ -37,7 +37,7 @@ contract Erc20Vault is Vault {
     * @param _token Address of ERC20 token contract.
     * @param _amount Amount to transfer.
     */
-    function withdraw(address payable _target, address _token, uint256 _amount) external onlyFromExitGame {
+    function withdraw(address payable _target, address _token, uint256 _amount) external onlyFromNonQuarantinedExitGame {
         IERC20(_token).safeTransfer(_target, _amount);
         emit Erc20Withdrawn(_target, _token, _amount);
     }

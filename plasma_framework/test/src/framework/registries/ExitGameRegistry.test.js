@@ -30,7 +30,7 @@ contract('ExitGameRegistry', ([_, other]) => {
         });
 
         it('accepts call when called by registered exit game contract on passed quarantine period', async () => {
-            await time.increase(2 * MIN_EXIT_PERIOD + 1);
+            await time.increase(3 * MIN_EXIT_PERIOD + 1);
             expect(await this.dummyExitGame.checkOnlyFromNonQuarantinedExitGame()).to.be.true;
         });
 
