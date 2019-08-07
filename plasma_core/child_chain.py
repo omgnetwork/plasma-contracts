@@ -1,5 +1,4 @@
 from plasma_core.utils.transactions import decode_utxo_id
-from plasma_core.utils.address import address_to_hex
 from plasma_core.constants import NULL_SIGNATURE
 from plasma_core.exceptions import (InvalidBlockSignatureException,
                                     InvalidTxSignatureException,
@@ -98,7 +97,7 @@ class ChildChain(object):
 
     def _validate_block(self, block):
         # Check for a valid signature.
-        if not block.is_deposit_block and (block.signature == NULL_SIGNATURE or address_to_hex(block.signer) != self.operator):
+        if not block.is_deposit_block and (block.signature == NULL_SIGNATURE or block.signer != self.operator.address):
             raise InvalidBlockSignatureException('failed to validate block')
 
         # Validate each transaction in the block.
