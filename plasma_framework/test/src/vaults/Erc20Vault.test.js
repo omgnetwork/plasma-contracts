@@ -212,7 +212,7 @@ contract('Erc20Vault', (accounts) => {
         });
 
         it('and then quarantine period passes', async () => {
-            await time.increase(2 * MIN_EXIT_PERIOD + 1);
+            await time.increase(3 * MIN_EXIT_PERIOD + 1);
             const { receipt } = await this.newExitGame.proxyErc20Withdraw(
                 alice, this.erc20.address, this.testFundAmount,
             );

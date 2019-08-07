@@ -17,7 +17,7 @@ contract ExitGameRegistry is Operated {
     constructor (uint256 _minExitPeriod, uint256 _initialImmuneExitGames)
         public
     {
-        _quarantine.quarantinePeriod = 2 * _minExitPeriod;
+        _quarantine.quarantinePeriod = 3 * _minExitPeriod;
         _quarantine.immunitiesRemaining = _initialImmuneExitGames;
     }
 
