@@ -1,4 +1,6 @@
 import pytest
+from eth_utils import to_normalized_address, to_checksum_address, to_canonical_address
+
 from plasma_core.constants import NULL_ADDRESS
 from eth_tester.exceptions import TransactionFailed
 from plasma_core.transaction import Transaction
@@ -6,9 +8,8 @@ from plasma_core.utils.transactions import decode_utxo_id
 
 
 @pytest.fixture
-def plasma_core_test(ethtester, get_contract):
+def plasma_core_test(get_contract):
     contract = get_contract('PlasmaCoreTest')
-    ethtester.chain.mine()
     return contract
 
 
@@ -29,7 +30,7 @@ def test_get_output(plasma_core_test):
     owner = '0x82a978b3f5962a5b0957d9ee9eef472ee55b42f1'
     amount = 100
     tx = Transaction(outputs=[(owner, null, amount)])
-    assert plasma_core_test.getOutput(tx.encoded, 0) == [owner, null, amount]
+    assert plasma_core_test.getOutput(tx.encoded, 0) == [to_checksum_address(owner), null, amount]
     assert plasma_core_test.getOutput(tx.encoded, 1) == [null, null, 0]
 
 
@@ -49,14 +50,13 @@ def test_metadata_is_part_of_the_proof(testlang):
     deposit_id = testlang.deposit(owner, amount)
 
     input_ids = [deposit_id]
-    keys = [owner.key]
     outputs = [(owner.address, NULL_ADDRESS, amount)]
-    spend_id = testlang.spend_utxo(input_ids, keys, outputs, b'metadata info')
+    spend_id = testlang.spend_utxo(input_ids, [owner], outputs, b'metadata info')
 
     inputs = [decode_utxo_id(input_id) for input_id in input_ids]
     bad_spend_tx = Transaction(inputs=inputs, outputs=outputs, metadata=b'other information')
     with pytest.raises(TransactionFailed):
-        testlang.start_standard_exit_with_tx_body(spend_id, bad_spend_tx, owner.key)
+        testlang.start_standard_exit_with_tx_body(spend_id, bad_spend_tx, owner)
 
 
 def test_get_input_id(plasma_core_test):

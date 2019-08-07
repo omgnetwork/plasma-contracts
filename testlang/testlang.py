@@ -1,4 +1,7 @@
 import rlp
+from web3._utils.datatypes import PropertyCheckingFactory
+from web3.exceptions import MismatchedABI
+
 from plasma_core.child_chain import ChildChain
 from plasma_core.account import EthereumAccount
 from plasma_core.block import Block
@@ -137,16 +140,18 @@ class TestingLanguage(object):
         self.accounts = accounts
         self.operator = self.accounts[0]
         self.child_chain = ChildChain(operator=self.operator)
-        self.events = []
-
-        # def gather_events(event):
-        #     all_contract_topics = self.root_chain.translator.event_data.keys()
-        #     if self.root_chain.address is event.address and event.topics[0] in all_contract_topics:
-        #         self.events.append(self.root_chain.translator.decode_event(event.topics, event.data))
-        # self.ethtester.chain.head_state.log_listeners.append(gather_events)
+        self.events_filter = w3.eth.filter({'address': root_chain.address, 'fromBlock': 'latest'})
 
     def flush_events(self):
-        events, self.events = self.events, []
+        logs = self.events_filter.get_new_entries()
+        events = []
+        contract_events = self.root_chain.get_contract_events()
+        for contract_event in contract_events:
+            for log in logs:
+                try:
+                    events.append(contract_event().processLog(log))
+                except MismatchedABI:
+                    pass
         return events
 
     def submit_block(self, transactions, signer=None, force_invalid=False):
@@ -261,7 +266,7 @@ class TestingLanguage(object):
         else:
             deposit_id = self.deposit_token(owner, token, amount)
             token_address = token.address
-        spend_id = self.spend_utxo([deposit_id], [owner.key], [(owner.address, token_address, 100)])
+        spend_id = self.spend_utxo([deposit_id], [owner], [(owner.address, token_address, 100)])
         spend = self.child_chain.get_transaction(spend_id)
         return Utxo(deposit_id, owner, token_address, amount, spend, spend_id)
 
@@ -278,8 +283,8 @@ class TestingLanguage(object):
 
         fee_exit_id = self.root_chain.getFeeExitId(self.root_chain.nextFeeExit())
         bond = bond if bond is not None else self.root_chain.standardExitBond()
-        self.root_chain.startFeeExit(token, amount, **{'value': bond, 'from': operator.address})
-        return fee_exit_id
+        tx_hash = self.root_chain.startFeeExit(token, amount, **{'value': bond, 'from': operator.address, 'gas': 1_000_000})
+        return fee_exit_id, tx_hash
 
     def process_exits(self, token, exit_id, count, **kwargs):
         """Finalizes exits that have completed the exit period.
@@ -290,7 +295,7 @@ class TestingLanguage(object):
             count (int): Maximum number of exits to be processed.
         """
 
-        self.root_chain.processExits(token, exit_id, count, **kwargs)
+        return self.root_chain.processExits(token, exit_id, count, **kwargs)
 
     def get_challenge_proof(self, utxo_id, spend_id):
         """Returns information required to submit a challenge.
@@ -374,7 +379,7 @@ class TestingLanguage(object):
             amount (int): Number of seconds to move forward time.
         """
         tester = self.w3.provider.ethereum_tester
-        tester.time_travel(self.w3.eth.getBlock('pending').timestamp + amount)
+        tester.time_travel(self.timestamp + amount)
 
     def get_in_flight_exit_info(self, tx_id, spend_tx=None):
         if spend_tx is None:
@@ -405,14 +410,14 @@ class TestingLanguage(object):
         merkle = block.merklized_transaction_set
         return merkle.create_membership_proof(tx.encoded)
 
-    def piggyback_in_flight_exit_input(self, tx_id, input_index, key, bond=None):
+    def piggyback_in_flight_exit_input(self, tx_id, input_index, account, bond=None):
         spend_tx = self.child_chain.get_transaction(tx_id)
         bond = bond if bond is not None else self.root_chain.piggybackBond()
-        self.root_chain.piggybackInFlightExit(spend_tx.encoded, input_index, **{'value': bond, 'from': key.address})
+        self.root_chain.piggybackInFlightExit(spend_tx.encoded, input_index, **{'value': bond, 'from': account.address})
 
-    def piggyback_in_flight_exit_output(self, tx_id, output_index, key, bond=None):
+    def piggyback_in_flight_exit_output(self, tx_id, output_index, account, bond=None):
         assert output_index in range(4)
-        return self.piggyback_in_flight_exit_input(tx_id, output_index + 4, key, bond)
+        return self.piggyback_in_flight_exit_input(tx_id, output_index + 4, account, bond)
 
     @staticmethod
     def find_shared_input(tx_a, tx_b):
@@ -452,7 +457,9 @@ class TestingLanguage(object):
         self.root_chain.respondToNonCanonicalChallenge(in_flight_tx.encoded, in_flight_tx_id, proof)
 
     def forward_to_period(self, period):
-        self.forward_timestamp((period - 1) * IN_FLIGHT_PERIOD)
+        forward_time = (period - 1) * IN_FLIGHT_PERIOD
+        if forward_time:
+            self.forward_timestamp(forward_time)
 
     def challenge_in_flight_exit_input_spent(self, in_flight_tx_id, spend_tx_id, key):
         in_flight_tx = self.child_chain.get_transaction(in_flight_tx_id)

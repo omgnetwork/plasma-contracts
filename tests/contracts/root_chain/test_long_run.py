@@ -10,7 +10,7 @@ def subtract(left, right):
 
 def pick(left):
     item = random.choice(left)
-    return (subtract(left, [item]), item)
+    return subtract(left, [item]), item
 
 
 @pytest.mark.slow()

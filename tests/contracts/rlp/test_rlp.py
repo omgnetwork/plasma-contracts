@@ -5,7 +5,7 @@ Regression test for bug in RLP decoder.
 import pytest
 import rlp
 
-from eth_utils import encode_hex, is_address, to_canonical_address
+from eth_utils import is_address, to_canonical_address, to_checksum_address
 from rlp.sedes import big_endian_int, Binary
 
 
@@ -56,19 +56,19 @@ class Eleven(rlp.Serializable):
 
 
 @pytest.fixture
-def rlp_test(ethtester, get_contract):
+def rlp_test(get_contract):
     contract = get_contract('RLPTest')
-    ethtester.chain.mine()
     return contract
 
 
-def test_rlp_tx_eight(ethtester, rlp_test):
-    tx = Eight(0, 1, 2, 3, 4, 5, ethtester.a0, ethtester.a1)
+def test_rlp_tx_eight(accounts, rlp_test):
+    tx = Eight(0, 1, 2, 3, 4, 5, accounts[0].address, accounts[1].address)
     tx_bytes = rlp.encode(tx, Eight)
-    assert [5, encode_hex(ethtester.a0), encode_hex(ethtester.a1)] == rlp_test.eight(tx_bytes)
+    assert [5, accounts[0].address, accounts[1].address] == rlp_test.eight(tx_bytes)
 
 
-def test_rlp_tx_eleven(ethtester, rlp_test):
-    tx = Eleven(0, 1, 2, 3, 4, 5, 6, 7, ethtester.a0, ethtester.a1, ethtester.a2)
+def test_rlp_tx_eleven(accounts, rlp_test):
+    addresses = list(map(lambda account: to_checksum_address(account.address), accounts))
+    tx = Eleven(0, 1, 2, 3, 4, 5, 6, 7, addresses[0], accounts[1].address, accounts[2].address)
     tx_bytes = rlp.encode(tx, Eleven)
-    assert [7, encode_hex(ethtester.a0), encode_hex(ethtester.a1), encode_hex(ethtester.a2)] == rlp_test.eleven(tx_bytes)
+    assert [7, accounts[0].address, accounts[1].address, accounts[2].address] == rlp_test.eleven(tx_bytes)

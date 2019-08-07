@@ -11,14 +11,14 @@ def test_token_adding(token, root_chain):
         root_chain.addToken(token.address)
 
 
-def test_token_adding_gas_cost(ethtester, root_chain):
+def test_token_adding_gas_cost(w3, root_chain):
     ADDRESS_A = b'\x00' * 19 + b'\x01'
     ADDRESS_B = b'\x00' * 19 + b'\x02'
-    root_chain.addToken(ADDRESS_A)
-    gas = ethtester.chain.last_gas_used()
+    tx_hash = root_chain.addToken(ADDRESS_A)
+    gas = w3.eth.getTransactionReceipt(tx_hash).gasUsed
     print("PriorityQueue first deployment costs {} gas".format(gas))
-    root_chain.addToken(ADDRESS_B)
-    gas = ethtester.chain.last_gas_used()
+    tx_hash = root_chain.addToken(ADDRESS_B)
+    gas = w3.eth.getTransactionReceipt(tx_hash).gasUsed
     print("PriorityQueue second deployment costs {} gas".format(gas))
 
 
