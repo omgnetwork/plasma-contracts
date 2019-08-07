@@ -170,38 +170,35 @@ contract('EthVault', ([_, alice]) => {
                 },
             );
         });
-    });
 
-    describe('given quarantined exit game', () => {
-        beforeEach(async () => {
-            const deposit = Testlang.deposit(DEPOSIT_VALUE, alice);
-            await this.ethVault.deposit(deposit, { from: alice, value: DEPOSIT_VALUE });
+        describe('given quarantined exit game', () => {
+            beforeEach(async () => {
+                this.newExitGame = await DummyExitGame.new();
+                await this.newExitGame.setEthVault(this.ethVault.address);
+                await this.framework.registerExitGame(2, this.newExitGame.address);
+            });
 
-            this.newExitGame = await DummyExitGame.new();
-            await this.newExitGame.setEthVault(this.ethVault.address);
-            await this.framework.registerExitGame(2, this.newExitGame.address);
-        });
+            it('should fail when called under quarantine', async () => {
+                await expectRevert(
+                    this.newExitGame.proxyEthWithdraw(alice, DEPOSIT_VALUE),
+                    'Called from a nonregistered or quarantined Exit Game contract',
+                );
+            });
 
-        it('should fail when called under quarantine', async () => {
-            await expectRevert(
-                this.newExitGame.proxyEthWithdraw(alice, DEPOSIT_VALUE),
-                'Called from a nonregistered or quarantined Exit Game contract',
-            );
-        });
+            it('should succeed after quarantine period passes', async () => {
+                await time.increase(3 * MIN_EXIT_PERIOD + 1);
+                const { receipt } = await this.newExitGame.proxyEthWithdraw(alice, DEPOSIT_VALUE);
 
-        it('and then quarantine period passes', async () => {
-            await time.increase(3 * MIN_EXIT_PERIOD + 1);
-            const { receipt } = await this.newExitGame.proxyEthWithdraw(alice, DEPOSIT_VALUE);
-
-            await expectEvent.inTransaction(
-                receipt.transactionHash,
-                EthVault,
-                'EthWithdrawn',
-                {
-                    target: alice,
-                    amount: new BN(DEPOSIT_VALUE),
-                },
-            );
+                await expectEvent.inTransaction(
+                    receipt.transactionHash,
+                    EthVault,
+                    'EthWithdrawn',
+                    {
+                        target: alice,
+                        amount: new BN(DEPOSIT_VALUE),
+                    },
+                );
+            });
         });
     });
 });

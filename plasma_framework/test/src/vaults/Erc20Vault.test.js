@@ -192,41 +192,38 @@ contract('Erc20Vault', (accounts) => {
                 },
             );
         });
-    });
 
-    describe('given quarantined exit game', () => {
-        beforeEach(async () => {
-            this.testFundAmount = 1000;
-            await this.erc20.transfer(this.erc20Vault.address, this.testFundAmount, { from: accounts[0] });
+        describe('given quarantined exit game', () => {
+            beforeEach(async () => {
+                this.newExitGame = await DummyExitGame.new();
+                await this.newExitGame.setErc20Vault(this.erc20Vault.address);
+                await this.framework.registerExitGame(2, this.newExitGame.address);
+            });
 
-            this.newExitGame = await DummyExitGame.new();
-            await this.newExitGame.setErc20Vault(this.erc20Vault.address);
-            await this.framework.registerExitGame(2, this.newExitGame.address);
-        });
+            it('should fail when called under quarantine', async () => {
+                await expectRevert(
+                    this.newExitGame.proxyErc20Withdraw(alice, this.erc20.address, this.testFundAmount),
+                    'Called from a nonregistered or quarantined Exit Game contract',
+                );
+            });
 
-        it('should fail when called under quarantine', async () => {
-            await expectRevert(
-                this.newExitGame.proxyErc20Withdraw(alice, this.erc20.address, this.testFundAmount),
-                'Called from a nonregistered or quarantined Exit Game contract',
-            );
-        });
+            it('should succeed after quarantine period passes', async () => {
+                await time.increase(3 * MIN_EXIT_PERIOD + 1);
+                const { receipt } = await this.newExitGame.proxyErc20Withdraw(
+                    alice, this.erc20.address, this.testFundAmount,
+                );
 
-        it('and then quarantine period passes', async () => {
-            await time.increase(3 * MIN_EXIT_PERIOD + 1);
-            const { receipt } = await this.newExitGame.proxyErc20Withdraw(
-                alice, this.erc20.address, this.testFundAmount,
-            );
-
-            await expectEvent.inTransaction(
-                receipt.transactionHash,
-                Erc20Vault,
-                'Erc20Withdrawn',
-                {
-                    target: alice,
-                    token: this.erc20.address,
-                    amount: new BN(this.testFundAmount),
-                },
-            );
+                await expectEvent.inTransaction(
+                    receipt.transactionHash,
+                    Erc20Vault,
+                    'Erc20Withdrawn',
+                    {
+                        target: alice,
+                        token: this.erc20.address,
+                        amount: new BN(this.testFundAmount),
+                    },
+                );
+            });
         });
     });
 
