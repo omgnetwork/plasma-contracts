@@ -1,8 +1,8 @@
 const PlasmaFramework = artifacts.require('PlasmaFramework');
 const Erc20Vault = artifacts.require('Erc20Vault');
 const Erc20DepositVerifier = artifacts.require('Erc20DepositVerifier');
-const GoodERC20 = artifacts.require('GoodERC20');
-const BadERC20 = artifacts.require('BadERC20');
+const ERC20Mintable = artifacts.require('ERC20Mintable');
+const NonCompliantERC20 = artifacts.require('NonCompliantERC20');
 const DummyExitGame = artifacts.require('DummyExitGame');
 
 const {
@@ -33,7 +33,7 @@ contract('Erc20Vault', (accounts) => {
         await this.exitGame.setErc20Vault(this.erc20Vault.address);
         await this.framework.registerExitGame(1, this.exitGame.address);
 
-        this.erc20 = await GoodERC20.new();
+        this.erc20 = await ERC20Mintable.new();
         await this.erc20.mint(accounts[0], INITIAL_SUPPLY, { from: accounts[0] });
         await this.erc20.transfer(alice, DEPOSIT_VALUE, { from: accounts[0] });
     });
@@ -131,20 +131,20 @@ contract('Erc20Vault', (accounts) => {
         });
     });
 
-    describe('deposit from BadERC20', () => {
-        // A 'BadERC20' token is one that uses an old version of the ERC20 standard,
+    describe('deposit from NonCompliantERC20', () => {
+        // A 'NonCompliantERC20' token is one that uses an old version of the ERC20 standard,
         // as described here https://medium.com/coinmonks/missing-return-value-bug-at-least-130-tokens-affected-d67bf08521ca
         // Erc20Vault should support both versions.
         before('setup', async () => {
-            this.badErc20 = await BadERC20.new(INITIAL_SUPPLY);
-            await this.badErc20.transfer(alice, DEPOSIT_VALUE, { from: accounts[0] });
+            this.nonCompliantERC20 = await NonCompliantERC20.new(INITIAL_SUPPLY);
+            await this.nonCompliantERC20.transfer(alice, DEPOSIT_VALUE, { from: accounts[0] });
         });
 
         it('should store erc20 deposit', async () => {
-            await this.badErc20.approve(this.erc20Vault.address, DEPOSIT_VALUE, { from: alice });
+            await this.nonCompliantERC20.approve(this.erc20Vault.address, DEPOSIT_VALUE, { from: alice });
             const preDepositBlockNumber = (await this.framework.nextDepositBlock()).toNumber();
 
-            const deposit = Testlang.deposit(DEPOSIT_VALUE, alice, this.badErc20.address);
+            const deposit = Testlang.deposit(DEPOSIT_VALUE, alice, this.nonCompliantERC20.address);
             await this.erc20Vault.deposit(deposit, { from: alice });
             const postDepositBlockNumber = (await this.framework.nextDepositBlock()).toNumber();
 
@@ -227,19 +227,19 @@ contract('Erc20Vault', (accounts) => {
         });
     });
 
-    describe('withdraw with BadERC20', () => {
+    describe('withdraw with NonCompliantERC20', () => {
         beforeEach(async () => {
             this.testFundAmount = 1000;
-            this.badErc20 = await BadERC20.new(INITIAL_SUPPLY);
-            await this.badErc20.transfer(this.erc20Vault.address, this.testFundAmount, { from: accounts[0] });
+            this.nonCompliantERC20 = await NonCompliantERC20.new(INITIAL_SUPPLY);
+            await this.nonCompliantERC20.transfer(this.erc20Vault.address, this.testFundAmount, { from: accounts[0] });
         });
 
         it('should transfer ERC token to the target', async () => {
-            const preBalance = await this.badErc20.balanceOf(alice);
+            const preBalance = await this.nonCompliantERC20.balanceOf(alice);
 
-            await this.exitGame.proxyErc20Withdraw(alice, this.badErc20.address, this.testFundAmount);
+            await this.exitGame.proxyErc20Withdraw(alice, this.nonCompliantERC20.address, this.testFundAmount);
 
-            const postBalance = await this.badErc20.balanceOf(alice);
+            const postBalance = await this.nonCompliantERC20.balanceOf(alice);
             const expectedPostBalance = preBalance.add(new BN(this.testFundAmount));
 
             expect(postBalance).to.be.bignumber.equal(expectedPostBalance);

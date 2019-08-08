@@ -1,6 +1,6 @@
 const ExitableTimestamp = artifacts.require('ExitableTimestampWrapper');
 const ExitId = artifacts.require('ExitIdWrapper');
-const GoodERC20 = artifacts.require('GoodERC20');
+const ERC20Mintable = artifacts.require('ERC20Mintable');
 const IsDeposit = artifacts.require('IsDepositWrapper');
 const OutputGuardParser = artifacts.require('DummyOutputGuardParser');
 const PaymentStandardExitable = artifacts.require('PaymentStandardExitableMock');
@@ -657,7 +657,7 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
 
         it('should return standard exit bond to exit target when the exit token is ERC20', async () => {
             const exitId = 1;
-            const erc20Token = (await GoodERC20.new()).address;
+            const erc20Token = (await ERC20Mintable.new()).address;
             const testExitData = getTestExitData(true, erc20Token);
             await this.exitGame.setExit(exitId, testExitData);
 
@@ -688,7 +688,7 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
 
         it('should call the Erc20 vault with exit amount when the exit token is an ERC 20 token', async () => {
             const exitId = 1;
-            const erc20Token = (await GoodERC20.new()).address;
+            const erc20Token = (await ERC20Mintable.new()).address;
             const testExitData = getTestExitData(true, erc20Token);
             await this.exitGame.setExit(exitId, testExitData);
 

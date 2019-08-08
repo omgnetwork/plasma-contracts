@@ -2,11 +2,11 @@ pragma solidity ^0.5.0;
 
 import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
 
-// A 'BadERC20' token is one that uses an old version of the ERC20 standard,
+// A 'NonCompliantERC20' token is one that uses an old version of the ERC20 standard,
 // as described here https://medium.com/coinmonks/missing-return-value-bug-at-least-130-tokens-affected-d67bf08521ca
 // Basically, this version does not return anything from `transfer` and `transferFrom`,
 // whereas most modern implementions of ERC20 return a boolean to indicate success or failure.
-contract BadERC20 {
+contract NonCompliantERC20 {
     using SafeMath for uint256;
 
     mapping (address => uint256) private balances;

@@ -5,7 +5,7 @@ const Erc20DepositVerifier = artifacts.require('Erc20DepositVerifier');
 const ExitableTimestamp = artifacts.require('ExitableTimestampWrapper');
 const ExitId = artifacts.require('ExitIdWrapper');
 const ExitPriority = artifacts.require('ExitPriorityWrapper');
-const GoodERC20 = artifacts.require('GoodERC20');
+const ERC20Mintable = artifacts.require('ERC20Mintable');
 const PaymentExitGame = artifacts.require('PaymentExitGame');
 const PaymentOutputToPaymentTxCondition = artifacts.require('PaymentOutputToPaymentTxCondition');
 const PlasmaFramework = artifacts.require('PlasmaFramework');
@@ -49,7 +49,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
         this.exitIdHelper = await ExitId.new();
         this.exirPriorityHelper = await ExitPriority.new();
 
-        this.erc20 = await GoodERC20.new();
+        this.erc20 = await ERC20Mintable.new();
         await this.erc20.mint(richFather, INITIAL_ERC20_SUPPLY);
         this.exitableHelper = await ExitableTimestamp.new(MIN_EXIT_PERIOD);
     });
