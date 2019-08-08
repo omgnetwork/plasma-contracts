@@ -16,4 +16,12 @@ contract ExitIdWrapper {
         UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(_utxoPos);
         return ExitId.getStandardExitId(_isDeposit, _txBytes, utxoPos);
     }
+
+    function getInFlightExitId(bytes memory _txBytes)
+        public
+        pure
+        returns (uint192)
+    {
+        return ExitId.getInFlightExitId(_txBytes);
+    }
 }

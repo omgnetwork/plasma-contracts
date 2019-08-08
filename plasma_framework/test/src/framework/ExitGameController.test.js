@@ -144,11 +144,11 @@ contract('ExitGameController', () => {
             expect(await priorityQueue.currentSize()).to.be.bignumber.equal(new BN(2));
         });
 
-        describe('when successully enqueued', () => {
+        describe('when successfully enqueued', () => {
             beforeEach(async () => {
                 this.originExitQueueNonce = await this.controller.exitQueueNonce();
 
-                await this.dummyExitGame.enqueue(
+                this.enqueueTx = await this.dummyExitGame.enqueue(
                     this.dummyExit.token,
                     this.dummyExit.exitableAt,
                     this.dummyExit.txPos,
@@ -178,6 +178,39 @@ contract('ExitGameController', () => {
 
                 expect(exit.exitProcessor).to.equal(this.dummyExit.exitProcessor);
                 expect(exit.exitId).to.be.bignumber.equal(new BN(this.dummyExit.exitId));
+            });
+
+            it('emits an ExitEnqueued event', async () => {
+                const uniquePriority = await this.dummyExitGame.uniquePriorityFromEnqueue();
+
+                await expectEvent.inTransaction(
+                    this.enqueueTx.receipt.transactionHash,
+                    ExitGameController,
+                    'ExitQueued', {
+                        uniquePriority,
+                        exitId: new BN(this.dummyExit.exitId),
+                    },
+                );
+            });
+
+            it('should be able to find the exit in the priority queue given exitId', async () => {
+                // Search for and ExitQueued event with the exitId
+                const events = await this.controller.getPastEvents('ExitQueued', {
+                    filter: { exitId: this.dummyExit.exitId },
+                });
+
+                // There should be only one ExitQueued event
+                expect(events.length).to.equal(1);
+
+                // Get the exit's uniquePriority from the ExitQueued event
+                const { uniquePriority } = events[0].args;
+
+                // Find the exit's uniquePriority in the priority queue
+                const priorityQueueAddress = await this.controller.exitsQueues(this.dummyToken);
+                const priorityQueue = await PriorityQueue.at(priorityQueueAddress);
+                const heapList = await priorityQueue.heapList();
+                const foundInQueue = heapList.find(e => e.eq(uniquePriority));
+                expect(foundInQueue).not.null;
             });
         });
     });

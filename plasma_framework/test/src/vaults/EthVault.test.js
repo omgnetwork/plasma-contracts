@@ -15,7 +15,7 @@ const Testlang = require('../../helpers/testlang.js');
 contract('EthVault', ([_, alice]) => {
     const DEPOSIT_VALUE = 1000000;
     const INITIAL_IMMUNE_VAULTS = 1;
-    const INITIAL_IMMUNE_EXIT_GAMES = 0;
+    const INITIAL_IMMUNE_EXIT_GAMES = 1;
     const MIN_EXIT_PERIOD = 10;
 
     beforeEach('setup contracts', async () => {
@@ -142,7 +142,7 @@ contract('EthVault', ([_, alice]) => {
         it('should fail when not called by a registered exit game contract', async () => {
             await expectRevert(
                 this.ethVault.withdraw(constants.ZERO_ADDRESS, 0),
-                'Not called from a registered Exit Game contract',
+                'Called from a nonregistered or quarantined Exit Game contract',
             );
         });
 
@@ -169,6 +169,36 @@ contract('EthVault', ([_, alice]) => {
                     amount: new BN(DEPOSIT_VALUE),
                 },
             );
+        });
+
+        describe('given quarantined exit game', () => {
+            beforeEach(async () => {
+                this.newExitGame = await DummyExitGame.new();
+                await this.newExitGame.setEthVault(this.ethVault.address);
+                await this.framework.registerExitGame(2, this.newExitGame.address);
+            });
+
+            it('should fail when called under quarantine', async () => {
+                await expectRevert(
+                    this.newExitGame.proxyEthWithdraw(alice, DEPOSIT_VALUE),
+                    'Called from a nonregistered or quarantined Exit Game contract',
+                );
+            });
+
+            it('should succeed after quarantine period passes', async () => {
+                await time.increase(3 * MIN_EXIT_PERIOD + 1);
+                const { receipt } = await this.newExitGame.proxyEthWithdraw(alice, DEPOSIT_VALUE);
+
+                await expectEvent.inTransaction(
+                    receipt.transactionHash,
+                    EthVault,
+                    'EthWithdrawn',
+                    {
+                        target: alice,
+                        amount: new BN(DEPOSIT_VALUE),
+                    },
+                );
+            });
         });
     });
 });

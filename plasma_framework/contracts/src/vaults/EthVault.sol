@@ -27,7 +27,7 @@ contract EthVault is Vault {
     * @param _target Place to transfer eth.
     * @param _amount Amount of eth to transfer.
     */
-    function withdraw(address payable _target, uint256 _amount) external onlyFromExitGame {
+    function withdraw(address payable _target, uint256 _amount) external onlyFromNonQuarantinedExitGame {
         _target.transfer(_amount);
         emit EthWithdrawn(_target, _amount);
     }
