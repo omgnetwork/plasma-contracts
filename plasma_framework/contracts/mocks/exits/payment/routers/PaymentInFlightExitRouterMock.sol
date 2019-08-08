@@ -3,12 +3,13 @@ pragma experimental ABIEncoderV2;
 
 import "../../../../src/exits/payment/routers/PaymentInFlightExitRouter.sol";
 import "../../../../src/framework/PlasmaFramework.sol";
-import "../../../../src/transactions/outputs/PaymentOutputModel.sol";
+import "../../../../src/exits/IStateTransitionVerifier.sol";
+import "../../../../src/exits/payment/PaymentExitDataModel.sol";
 
 contract PaymentInFlightExitRouterMock is PaymentInFlightExitRouter {
-    constructor(PlasmaFramework _framework, PaymentSpendingConditionRegistry _registry)
+    constructor(PlasmaFramework framework, PaymentSpendingConditionRegistry registry, IStateTransitionVerifier verifier)
         public
-        PaymentInFlightExitRouter(_framework, _registry) {
+        PaymentInFlightExitRouter(framework, registry, verifier) {
     }
 
     // to override IExitProcessor function
@@ -19,11 +20,11 @@ contract PaymentInFlightExitRouterMock is PaymentInFlightExitRouter {
         inFlightExitMap.exits[exitId].exitMap = Bits.setBit(inFlightExitMap.exits[exitId].exitMap, 255);
     }
 
-    function getInFlightExitInput(uint192 exitId, uint8 inputIndex) public view returns (PaymentOutputModel.Output memory) {
+    function getInFlightExitInput(uint192 exitId, uint8 inputIndex) public view returns (PaymentExitDataModel.WithdrawData memory) {
         return inFlightExitMap.exits[exitId].inputs[inputIndex];
     }
 
-    function getInFlightExitOutput(uint192 exitId, uint8 outputIndex) public view returns (PaymentOutputModel.Output memory) {
+    function getInFlightExitOutput(uint192 exitId, uint8 outputIndex) public view returns (PaymentExitDataModel.WithdrawData memory) {
         return inFlightExitMap.exits[exitId].outputs[outputIndex];
     }
 }

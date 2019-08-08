@@ -3,6 +3,8 @@ const PaymentStartInFlightExit = artifacts.require('PaymentStartInFlightExit');
 const PaymentSpendingConditionRegistry = artifacts.require('PaymentSpendingConditionRegistry');
 const PaymentSpendingConditionFalse = artifacts.require('PaymentSpendingConditionFalse');
 const PaymentSpendingConditionTrue = artifacts.require('PaymentSpendingConditionTrue');
+const StateTransitionVerifierAccept = artifacts.require('StateTransitionVerifierAccept');
+const StateTransitionVerifierReject = artifacts.require('StateTransitionVerifierReject');
 const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const ExitId = artifacts.require('ExitIdWrapper');
 const IsDeposit = artifacts.require('IsDepositWrapper');
@@ -47,7 +49,6 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
 
     describe('startInFlightExit', () => {
         function buildValidIfeStartArgs(amount, [ifeOwner, inputOwner1, inputOwner2], blockNum) {
-            // TODO: make one of those a deposit transaction
             const inputTx1 = createInputTransaction(DUMMY_INPUT_1, inputOwner1, amount);
             const inputTx2 = createInputTransaction(DUMMY_INPUT_2, inputOwner2, amount);
             const inputTxs = [inputTx1, inputTx2];
@@ -124,21 +125,19 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
             return inputs;
         }
 
-        function expectInput(input, inputTx) {
+        function expectWithdrawData(input, inputTx, outputId) {
             expect(new BN(input.amount)).to.be.bignumber.equal(new BN(inputTx.outputs[0].amount));
             expect(input.outputGuard.toUpperCase()).to.equal(inputTx.outputs[0].outputGuard.toUpperCase());
+            expect(input.outputId).to.equal(outputId);
             expect(input.token).to.equal(inputTx.outputs[0].token);
-        }
-
-        function expectOutputNotSet(output) {
-            // output is not set when amount equals 0
-            expect(new BN(output.amount)).to.be.bignumber.equal(new BN(0));
         }
 
         before(async () => {
             this.exitIdHelper = await ExitId.new();
             this.isDeposit = await IsDeposit.new(CHILD_BLOCK_INTERVAL);
             this.exitableHelper = await ExitableTimestamp.new(MIN_EXIT_PERIOD);
+            this.stateTransitionVerifierAccept = await StateTransitionVerifierAccept.new();
+            this.stateTransitionVerifierReject = await StateTransitionVerifierReject.new();
         });
 
         describe('when calling in-flight exit start with valid arguments', () => {
@@ -148,7 +147,9 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
                 );
                 this.spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
                 this.exitGame = await PaymentInFlightExitRouter.new(
-                    this.framework.address, this.spendingConditionRegistry.address,
+                    this.framework.address,
+                    this.spendingConditionRegistry.address,
+                    this.stateTransitionVerifierAccept.address,
                 );
 
                 const { args, argsDecoded, inputTxsBlockRoot } = buildValidIfeStartArgs(
@@ -184,14 +185,15 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
                 expect(new BN(exit.position)).to.be.bignumber.equal(new BN(youngestInput));
 
                 const input1 = await this.exitGame.getInFlightExitInput(exitId, 0);
-                expectInput(input1, this.argsDecoded.inputTxs[0]);
+                expectWithdrawData(input1, this.argsDecoded.inputTxs[0], this.argsDecoded.inFlightTx.inputs[0]);
 
                 const input2 = await this.exitGame.getInFlightExitInput(exitId, 1);
-                expectInput(input2, this.argsDecoded.inputTxs[1]);
+                expectWithdrawData(input2, this.argsDecoded.inputTxs[1], this.argsDecoded.inFlightTx.inputs[1]);
 
                 // outputs should be empty, they will be initialized on piggybacks
                 const output = await this.exitGame.getInFlightExitOutput(exitId, 0);
-                expectOutputNotSet(output);
+                const expectedOutputId = computeNormalOutputId(this.args.inFlightTx, 0);
+                expectWithdrawData(output, this.argsDecoded.inFlightTx, expectedOutputId);
             });
 
             it('should emit InFlightExitStarted event', async () => {
@@ -235,7 +237,9 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
                 );
                 this.spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
                 this.exitGame = await PaymentInFlightExitRouter.new(
-                    this.framework.address, this.spendingConditionRegistry.address,
+                    this.framework.address,
+                    this.spendingConditionRegistry.address,
+                    this.stateTransitionVerifierAccept.address,
                 );
             });
 
@@ -336,7 +340,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
 
                 await expectRevert(
                     this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
-                    'Number of input transactions does not match number of in-flight transaction inputs.',
+                    'Number of input transactions positions does not match number of in-flight transaction inputs.',
                 );
             });
 
@@ -370,7 +374,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
 
                 await expectRevert(
                     this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
-                    'Number of input transactions does not match number of in-flight transaction inputs.',
+                    'Number of input transactions positions does not match number of in-flight transaction inputs.',
                 );
             });
 
@@ -410,14 +414,12 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
                 );
             });
 
-            it('should fail when in-flight transaction with single token inputs/outputs overspends', async () => {
-                const inputTx1 = createInputTransaction(DUMMY_INPUT_1, alice, AMOUNT);
-                const inputTx2 = createInputTransaction(DUMMY_INPUT_2, bob, AMOUNT);
+            it('should fail when in-flight tx input transactions are not unique', async () => {
+                const inputTx = createInputTransaction(DUMMY_INPUT_1, alice, AMOUNT);
+                const inputUtxosPos = [buildUtxoPos(BLOCK_NUMBER, 0, 0), buildUtxoPos(BLOCK_NUMBER, 0, 0)];
+                const inFlightTx = createInFlightTx([inputTx, inputTx], inputUtxosPos, carol, AMOUNT);
 
-                const inputUtxosPos = [buildUtxoPos(BLOCK_NUMBER, 0, 0), buildUtxoPos(BLOCK_NUMBER, 1, 0)];
-                const inFlightTx = createInFlightTx([inputTx1, inputTx2], inputUtxosPos, carol, AMOUNT * 3);
-
-                const { args, inputTxsBlockRoot } = buildIfeStartArgs([inputTx1, inputTx2], inputUtxosPos, inFlightTx);
+                const { args, inputTxsBlockRoot } = buildIfeStartArgs([inputTx, inputTx], inputUtxosPos, inFlightTx);
 
                 await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot, 0);
 
@@ -429,11 +431,24 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
 
                 await expectRevert(
                     this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
-                    'Invalid transaction, spends more than provided in inputs',
+                    'In-flight transaction must have unique inputs',
+                );
+            });
+        });
+
+        describe('when in-flight exit start is called', () => {
+            beforeEach(async () => {
+                this.framework = await SpyPlasmaFramework.new(
+                    MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
+                );
+                this.exitGame = await PaymentInFlightExitRouter.new(
+                    this.framework.address,
+                    this.spendingConditionRegistry.address,
+                    this.stateTransitionVerifierReject.address,
                 );
             });
 
-            it('should fail when in-flight transaction with multiple tokens inputs/outputs overspends', async () => {
+            it('should fail when in-flight transaction is an invalid state transistion', async () => {
                 const inputTx1 = createInputTransaction(DUMMY_INPUT_1, alice, AMOUNT);
                 const inputTx2 = createInputTransaction(DUMMY_INPUT_2, bob, AMOUNT, OTHER_TOKEN);
 
@@ -450,29 +465,9 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
 
                 await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot, 0);
 
-                const conditionTrue = await PaymentSpendingConditionTrue.new();
-                await this.spendingConditionRegistry.registerSpendingCondition(
-                    OUTPUT_TYPE_ZERO, IFE_TX_TYPE, conditionTrue.address,
-                );
-
                 await expectRevert(
                     this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
-                    'Invalid transaction, spends more than provided in inputs',
-                );
-            });
-
-            it('should fail when in-flight tx input transactions are not unique', async () => {
-                const inputTx = createInputTransaction(DUMMY_INPUT_1, alice, AMOUNT);
-                const inputUtxosPos = [buildUtxoPos(BLOCK_NUMBER, 0, 0), buildUtxoPos(BLOCK_NUMBER, 0, 0)];
-                const inFlightTx = createInFlightTx([inputTx, inputTx], inputUtxosPos, carol, AMOUNT);
-
-                const { args, inputTxsBlockRoot } = buildIfeStartArgs([inputTx, inputTx], inputUtxosPos, inFlightTx);
-
-                await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot, 0);
-
-                await expectRevert(
-                    this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
-                    'In-flight transaction must have unique inputs',
+                    'Invalid state transition',
                 );
             });
         });
