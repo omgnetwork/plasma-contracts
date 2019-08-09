@@ -1,66 +1,38 @@
 pragma solidity ^0.5.0;
 pragma experimental ABIEncoderV2;
 
-import "./PaymentExitDataModel.sol";
-import "./spendingConditions/IPaymentSpendingCondition.sol";
-import "./spendingConditions/PaymentSpendingConditionRegistry.sol";
-import "../utils/ExitId.sol";
-import "../utils/ExitableTimestamp.sol";
-import "../utils/OutputId.sol";
-import "../../framework/PlasmaFramework.sol";
-import "../../framework/interfaces/IExitProcessor.sol";
-import "../../utils/Bits.sol";
-import "../../utils/IsDeposit.sol";
-import "../../utils/OnlyWithValue.sol";
-import "../../utils/UtxoPosLib.sol";
-import "../../utils/Merkle.sol";
-import "../../transactions/PaymentTransactionModel.sol";
-import "../../transactions/outputs/PaymentOutputModel.sol";
+import "../PaymentExitDataModel.sol";
+import "../views/PaymentInFlightExitViewArgs.sol";
+import "../spendingConditions/IPaymentSpendingCondition.sol";
+import "../spendingConditions/PaymentSpendingConditionRegistry.sol";
+import "../../utils/ExitableTimestamp.sol";
+import "../../utils/ExitId.sol";
+import "../../utils/OutputId.sol";
+import "../../../utils/IsDeposit.sol";
+import "../../../utils/UtxoPosLib.sol";
+import "../../../utils/Merkle.sol";
+import "../../../framework/PlasmaFramework.sol";
 
-contract PaymentInFlightExitable is
-    IExitProcessor,
-    OnlyWithValue,
-    PaymentSpendingConditionRegistry
-{
+library PaymentStartInFlightExitController {
     using ExitableTimestamp for ExitableTimestamp.Calculator;
     using IsDeposit for IsDeposit.Predicate;
-    using PaymentOutputModel for PaymentOutputModel.Output;
-    using RLP for bytes;
-    using RLP for RLP.RLPItem;
     using UtxoPosLib for UtxoPosLib.UtxoPos;
 
-    uint8 constant public MAX_INPUT_NUM = 4;
-    uint256 public constant IN_FLIGHT_EXIT_BOND = 31415926535 wei;
-    mapping (uint192 => PaymentExitDataModel.InFlightExit) public inFlightExits;
+    uint256 constant public MAX_INPUT_NUM = 4;
 
-    PlasmaFramework private framework;
-    IsDeposit.Predicate private isDeposit;
-    ExitableTimestamp.Calculator private exitableTimestampCalculator;
+    struct Object {
+        PlasmaFramework framework;
+        IsDeposit.Predicate isDeposit;
+        ExitableTimestamp.Calculator exitTimestampCalculator;
+        PaymentSpendingConditionRegistry spendingConditionRegistry;
+    }
 
     event InFlightExitStarted(
         address indexed initiator,
         bytes32 txHash
     );
 
-    /**
-    * @notice Wraps arguments for startInFlightExit.
-    * @param inFlightTx RLP encoded in-flight transaction.
-    * @param inputTxs Transactions that created the inputs to the in-flight transaction. In the same order as in-flight transaction inputs.
-    * @param inputUtxosPos Utxos that represent in-flight transaction inputs. In the same order as input transactions.
-    * @param inputUtxosTypes Output types of in flight transaction inputs. In the same order as input transactions.
-    * @param inputTxsInclusionProofs Merkle proofs that show the input-creating transactions are valid. In the same order as input transactions.
-    * @param inFlightTxWitnesses Witnesses for in-flight transaction. In the same order as input transactions.
-    */
-    struct StartExitArgs {
-        bytes inFlightTx;
-        bytes[] inputTxs;
-        uint256[] inputUtxosPos;
-        uint256[] inputUtxosTypes;
-        bytes[] inputTxsInclusionProofs;
-        bytes[] inFlightTxWitnesses;
-    }
-
-    /**
+     /**
      * @dev data to be passed around start in-flight exit helper functions
      * @param exitId ID of the exit.
      * @param inFlightTxRaw In-flight transaction as bytes.
@@ -75,6 +47,7 @@ contract PaymentInFlightExitable is
      * @param outputIds Output ids for input transactions.
      */
     struct StartExitData {
+        Object controller;
         uint192 exitId;
         bytes inFlightTxRaw;
         PaymentTransactionModel.Transaction inFlightTx;
@@ -88,28 +61,42 @@ contract PaymentInFlightExitable is
         bytes32[] outputIds;
     }
 
-    constructor(PlasmaFramework _framework) public {
-        framework = _framework;
-        isDeposit = IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL());
-        exitableTimestampCalculator = ExitableTimestamp.Calculator(framework.minExitPeriod());
+    function init(PlasmaFramework framework, PaymentSpendingConditionRegistry registry)
+        public
+        view
+        returns (Object memory)
+    {
+        return Object({
+            framework: framework,
+            isDeposit: IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL()),
+            exitTimestampCalculator: ExitableTimestamp.Calculator(framework.minExitPeriod()),
+            spendingConditionRegistry: registry
+        });
     }
 
-    /**
-     * @notice Starts withdrawal from a transaction that might be in-flight.
-     * @dev requires the exiting UTXO's token to be added via 'addToken'
-     * @dev Uses struct as input because too many variables and failed to compile.
-     * @dev Uses public instead of external because ABIEncoder V2 does not support struct calldata + external
-     * @param args input argument data to challenge. See struct 'StartExitArgs' for detailed info.
-     */
-    function startInFlightExit(StartExitArgs memory args) public payable onlyWithValue(IN_FLIGHT_EXIT_BOND) {
-        StartExitData memory startExitData = createStartExitData(args);
-        verifyStart(startExitData);
-        startExit(startExitData);
+    function run(
+        Object memory self,
+        PaymentExitDataModel.InFlightExitMap storage inFlightExitMap,
+        PaymentInFlightExitViewArgs.StartExitArgs memory args
+    )
+        public
+    {
+        StartExitData memory startExitData = createStartExitData(self, args);
+        verifyStart(startExitData, inFlightExitMap);
+        startExit(startExitData, inFlightExitMap);
         emit InFlightExitStarted(msg.sender, startExitData.inFlightTxHash);
     }
 
-    function createStartExitData(StartExitArgs memory args) private view returns (StartExitData memory) {
+    function createStartExitData(
+        Object memory controller,
+        PaymentInFlightExitViewArgs.StartExitArgs memory args
+    )
+        private
+        pure
+        returns (StartExitData memory)
+    {
         StartExitData memory exitData;
+        exitData.controller = controller;
         exitData.exitId = ExitId.getInFlightExitId(args.inFlightTx);
         exitData.inFlightTxRaw = args.inFlightTx;
         exitData.inFlightTx = PaymentTransactionModel.decode(args.inFlightTx);
@@ -120,7 +107,7 @@ contract PaymentInFlightExitable is
         exitData.inputUtxosTypes = args.inputUtxosTypes;
         exitData.inputTxsInclusionProofs = args.inputTxsInclusionProofs;
         exitData.inFlightTxWitnesses = args.inFlightTxWitnesses;
-        exitData.outputIds = getOutputIds(exitData.inputTxsRaw, exitData.inputUtxosPos);
+        exitData.outputIds = getOutputIds(controller, exitData.inputTxsRaw, exitData.inputUtxosPos);
         return exitData;
     }
 
@@ -142,11 +129,15 @@ contract PaymentInFlightExitable is
         return inputTxs;
     }
 
-    function getOutputIds(bytes[] memory inputTxs, UtxoPosLib.UtxoPos[] memory utxoPos) private view returns (bytes32[] memory) {
+    function getOutputIds(Object memory controller, bytes[] memory inputTxs, UtxoPosLib.UtxoPos[] memory utxoPos)
+        private
+        pure
+        returns (bytes32[] memory)
+    {
         require(inputTxs.length == utxoPos.length, "Number of input transactions does not match number of provided input utxos positions");
         bytes32[] memory outputIds = new bytes32[](inputTxs.length);
         for (uint i = 0; i < inputTxs.length; i++) {
-            bool isDepositTx = isDeposit.test(utxoPos[i].blockNum());
+            bool isDepositTx = controller.isDeposit.test(utxoPos[i].blockNum());
             outputIds[i] = isDepositTx ?
                 OutputId.computeDepositOutputId(inputTxs[i], utxoPos[i].outputIndex(), utxoPos[i].value)
                 : OutputId.computeNormalOutputId(inputTxs[i], utxoPos[i].outputIndex());
@@ -154,8 +145,14 @@ contract PaymentInFlightExitable is
         return outputIds;
     }
 
-    function verifyStart(StartExitData memory exitData) private view {
-        verifyExitNotStarted(exitData.exitId);
+    function verifyStart(
+        StartExitData memory exitData,
+        PaymentExitDataModel.InFlightExitMap storage inFlightExitMap
+    )
+        private
+        view
+    {
+        verifyExitNotStarted(exitData.exitId, inFlightExitMap);
         verifyNumberOfInputsMatchesNumberOfInFlightTransactionInputs(exitData);
         verifyNoInputSpentMoreThanOnce(exitData.inFlightTx);
         verifyInputTransactionsIncludedInPlasma(exitData);
@@ -163,8 +160,14 @@ contract PaymentInFlightExitable is
         verifyInFlightTransactionDoesNotOverspend(exitData);
     }
 
-    function verifyExitNotStarted(uint192 exitId) private view {
-        PaymentExitDataModel.InFlightExit storage exit = inFlightExits[exitId];
+    function verifyExitNotStarted(
+        uint192 exitId,
+        PaymentExitDataModel.InFlightExitMap storage inFlightExitMap
+    )
+        private
+        view
+    {
+        PaymentExitDataModel.InFlightExit storage exit = inFlightExitMap.exits[exitId];
         require(exit.exitStartTimestamp == 0, "There is an active in-flight exit from this transaction");
         require(!isFinalized(exit), "This in-flight exit has already been finalized");
     }
@@ -208,7 +211,7 @@ contract PaymentInFlightExitable is
 
     function verifyInputTransactionsIncludedInPlasma(StartExitData memory exitData) private view {
         for (uint i = 0; i < exitData.inputTxs.length; i++) {
-            (bytes32 root, ) = framework.blocks(exitData.inputUtxosPos[i].blockNum());
+            (bytes32 root, ) = exitData.controller.framework.blocks(exitData.inputUtxosPos[i].blockNum());
             bytes32 leaf = keccak256(exitData.inputTxsRaw[i]);
             require(
                 Merkle.checkMembership(leaf, exitData.inputUtxosPos[i].txIndex(), root, exitData.inputTxsInclusionProofs[i]),
@@ -223,8 +226,9 @@ contract PaymentInFlightExitable is
             bytes32 outputGuard = exitData.inputTxs[i].outputs[outputIndex].outputGuard;
 
             //FIXME: consider moving spending conditions to PlasmaFramework
-            IPaymentSpendingCondition condition = PaymentSpendingConditionRegistry.spendingConditions(
-                exitData.inputUtxosTypes[i], exitData.inFlightTx.txType);
+            IPaymentSpendingCondition condition = exitData.controller.spendingConditionRegistry.spendingConditions(
+                exitData.inputUtxosTypes[i], exitData.inFlightTx.txType
+            );
             require(address(condition) != address(0), "Spending condition contract not found");
 
             bool isSpentByInFlightTx = condition.verify(
@@ -279,8 +283,13 @@ contract PaymentInFlightExitable is
         return amountIn;
     }
 
-    function startExit(StartExitData memory startExitData) private {
-        PaymentExitDataModel.InFlightExit storage ife = inFlightExits[startExitData.exitId];
+    function startExit(
+        StartExitData memory startExitData,
+        PaymentExitDataModel.InFlightExitMap storage inFlightExitMap
+    )
+        private
+    {
+        PaymentExitDataModel.InFlightExit storage ife = inFlightExitMap.exits[startExitData.exitId];
         ife.bondOwner = msg.sender;
         ife.position = getYoungestInputUtxoPosition(startExitData.inputUtxosPos);
         ife.exitStartTimestamp = block.timestamp;
