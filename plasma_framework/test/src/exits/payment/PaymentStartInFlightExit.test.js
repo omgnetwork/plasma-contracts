@@ -1,4 +1,6 @@
-const PaymentInFlightExitable = artifacts.require('PaymentInFlightExitableMock');
+const PaymentInFlightExitView = artifacts.require('PaymentInFlightExitViewMock');
+const PaymentStartInFlightExitController = artifacts.require('PaymentStartInFlightExitController');
+const PaymentSpendingConditionRegistry = artifacts.require('PaymentSpendingConditionRegistry');
 const PaymentSpendingConditionFalse = artifacts.require('PaymentSpendingConditionFalse');
 const PaymentSpendingConditionTrue = artifacts.require('PaymentSpendingConditionTrue');
 const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
@@ -18,7 +20,7 @@ const {
 } = require('../../../helpers/utils.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
 
-contract('PaymentInFlightExitable', ([_, alice, bob, carol]) => {
+contract('PaymentStartInFlightExit', ([_, alice, bob, carol]) => {
     const IN_FLIGHT_EXIT_BOND = 31415926535; // wei
     const ETH = constants.ZERO_ADDRESS;
     const OTHER_TOKEN = '0x0000000000000000000000000000000000000001';
@@ -37,6 +39,11 @@ contract('PaymentInFlightExitable', ([_, alice, bob, carol]) => {
     const MERKLE_TREE_HEIGHT = 3;
     const AMOUNT = 10;
     const TOLERANCE_SECONDS = new BN(1);
+
+    before('deploy and link with controller lib', async () => {
+        const controller = await PaymentStartInFlightExitController.new();
+        await PaymentInFlightExitView.link('PaymentStartInFlightExitController', controller.address);
+    });
 
     describe('startInFlightExit', () => {
         function buildValidIfeStartArgs(amount, [ifeOwner, inputOwner1, inputOwner2], blockNum) {
@@ -139,7 +146,10 @@ contract('PaymentInFlightExitable', ([_, alice, bob, carol]) => {
                 this.framework = await SpyPlasmaFramework.new(
                     MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
                 );
-                this.exitGame = await PaymentInFlightExitable.new(this.framework.address);
+                this.spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
+                this.exitGame = await PaymentInFlightExitView.new(
+                    this.framework.address, this.spendingConditionRegistry.address,
+                );
 
                 const { args, argsDecoded, inputTxsBlockRoot } = buildValidIfeStartArgs(
                     AMOUNT, [alice, bob, carol], BLOCK_NUMBER,
@@ -150,7 +160,7 @@ contract('PaymentInFlightExitable', ([_, alice, bob, carol]) => {
 
                 const conditionTrue = await PaymentSpendingConditionTrue.new();
 
-                await this.exitGame.registerSpendingCondition(
+                await this.spendingConditionRegistry.registerSpendingCondition(
                     OUTPUT_TYPE_ZERO, IFE_TX_TYPE, conditionTrue.address,
                 );
             });
@@ -166,12 +176,12 @@ contract('PaymentInFlightExitable', ([_, alice, bob, carol]) => {
                 const exit = await this.exitGame.inFlightExits(exitId);
 
                 expect(exit.bondOwner).to.equal(alice);
-                expect(exit.oldestCompetitorPosition).to.be.bignumber.equal(new BN(0));
-                expect(exit.exitStartTimestamp).to.be.bignumber.closeTo(ethBlockTime, TOLERANCE_SECONDS);
-                expect(exit.exitMap).to.be.bignumber.equal(new BN(0));
+                expect(new BN(exit.oldestCompetitorPosition)).to.be.bignumber.equal(new BN(0));
+                expect(new BN(exit.exitStartTimestamp)).to.be.bignumber.closeTo(ethBlockTime, TOLERANCE_SECONDS);
+                expect(new BN(exit.exitMap)).to.be.bignumber.equal(new BN(0));
 
                 const youngestInput = this.argsDecoded.inputUtxosPos[1];
-                expect(exit.position).to.be.bignumber.equal(new BN(youngestInput));
+                expect(new BN(exit.position)).to.be.bignumber.equal(new BN(youngestInput));
 
                 const input1 = await this.exitGame.getInFlightExitInput(exitId, 0);
                 expectInput(input1, this.argsDecoded.inputTxs[0]);
@@ -185,16 +195,22 @@ contract('PaymentInFlightExitable', ([_, alice, bob, carol]) => {
             });
 
             it('should emit InFlightExitStarted event', async () => {
-                const tx = await this.exitGame.startInFlightExit(
+                const { receipt } = await this.exitGame.startInFlightExit(
                     this.args,
                     { from: alice, value: IN_FLIGHT_EXIT_BOND },
                 );
 
                 const expectedIfeHash = web3.utils.sha3(this.args.inFlightTx);
-                expectEvent.inLogs(tx.logs, 'InFlightExitStarted', {
-                    initiator: alice,
-                    txHash: expectedIfeHash,
-                });
+
+                await expectEvent.inTransaction(
+                    receipt.transactionHash,
+                    PaymentStartInFlightExitController,
+                    'InFlightExitStarted',
+                    {
+                        initiator: alice,
+                        txHash: expectedIfeHash,
+                    },
+                );
             });
 
             it('should charge user with a bond', async () => {
@@ -217,7 +233,10 @@ contract('PaymentInFlightExitable', ([_, alice, bob, carol]) => {
                 this.framework = await SpyPlasmaFramework.new(
                     MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
                 );
-                this.exitGame = await PaymentInFlightExitable.new(this.framework.address);
+                this.spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
+                this.exitGame = await PaymentInFlightExitView.new(
+                    this.framework.address, this.spendingConditionRegistry.address,
+                );
             });
 
             it('should fail when spending condition not registered', async () => {
@@ -235,7 +254,7 @@ contract('PaymentInFlightExitable', ([_, alice, bob, carol]) => {
                 await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot, 0);
 
                 const conditionFalse = await PaymentSpendingConditionFalse.new();
-                await this.exitGame.registerSpendingCondition(
+                await this.spendingConditionRegistry.registerSpendingCondition(
                     OUTPUT_TYPE_ZERO, IFE_TX_TYPE, conditionFalse.address,
                 );
 
@@ -259,7 +278,7 @@ contract('PaymentInFlightExitable', ([_, alice, bob, carol]) => {
                 await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot, 0);
 
                 const conditionTrue = await PaymentSpendingConditionTrue.new();
-                await this.exitGame.registerSpendingCondition(
+                await this.spendingConditionRegistry.registerSpendingCondition(
                     OUTPUT_TYPE_ZERO, IFE_TX_TYPE, conditionTrue.address,
                 );
 
@@ -276,7 +295,7 @@ contract('PaymentInFlightExitable', ([_, alice, bob, carol]) => {
                 await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot, 0);
 
                 const conditionTrue = await PaymentSpendingConditionTrue.new();
-                await this.exitGame.registerSpendingCondition(
+                await this.spendingConditionRegistry.registerSpendingCondition(
                     OUTPUT_TYPE_ZERO, IFE_TX_TYPE, conditionTrue.address,
                 );
 
@@ -297,7 +316,7 @@ contract('PaymentInFlightExitable', ([_, alice, bob, carol]) => {
                 await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot, 0);
 
                 const conditionTrue = await PaymentSpendingConditionTrue.new();
-                await this.exitGame.registerSpendingCondition(
+                await this.spendingConditionRegistry.registerSpendingCondition(
                     OUTPUT_TYPE_ZERO, IFE_TX_TYPE, conditionTrue.address,
                 );
                 const invalidInclusionProof = web3.utils.bytesToHex('a'.repeat(INCLUSION_PROOF_LENGTH_IN_BYTES));
@@ -404,7 +423,7 @@ contract('PaymentInFlightExitable', ([_, alice, bob, carol]) => {
 
                 const conditionTrue = await PaymentSpendingConditionTrue.new();
 
-                await this.exitGame.registerSpendingCondition(
+                await this.spendingConditionRegistry.registerSpendingCondition(
                     OUTPUT_TYPE_ZERO, IFE_TX_TYPE, conditionTrue.address,
                 );
 
@@ -432,7 +451,7 @@ contract('PaymentInFlightExitable', ([_, alice, bob, carol]) => {
                 await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot, 0);
 
                 const conditionTrue = await PaymentSpendingConditionTrue.new();
-                await this.exitGame.registerSpendingCondition(
+                await this.spendingConditionRegistry.registerSpendingCondition(
                     OUTPUT_TYPE_ZERO, IFE_TX_TYPE, conditionTrue.address,
                 );
 

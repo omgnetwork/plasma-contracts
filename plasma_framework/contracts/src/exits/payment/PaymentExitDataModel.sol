@@ -36,4 +36,8 @@ library PaymentExitDataModel {
         address payable bondOwner;
         uint256 oldestCompetitorPosition;
     }
+
+    struct InFlightExitMap {
+        mapping (uint192 => PaymentExitDataModel.InFlightExit) exits;
+    }
 }
