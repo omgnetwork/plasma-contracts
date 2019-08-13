@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-import "../../src/exits/payment/BondSize.sol";
+import "../../src/exits/utils/BondSize.sol";
 
 contract BondSizeMock {
     using BondSize for BondSize.Params;
