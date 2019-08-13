@@ -17,6 +17,7 @@ library PaymentStartInFlightExit {
     using ExitableTimestamp for ExitableTimestamp.Calculator;
     using IsDeposit for IsDeposit.Predicate;
     using UtxoPosLib for UtxoPosLib.UtxoPos;
+    using Bits for uint256;
 
     uint256 constant public MAX_INPUT_NUM = 4;
 
@@ -173,7 +174,25 @@ library PaymentStartInFlightExit {
     }
 
     function isFinalized(PaymentExitDataModel.InFlightExit storage ife) private view returns (bool) {
-        return Bits.bitSet(ife.exitMap, 255);
+        return ife.exitMap.bitSet(255);
+    }
+
+    function isSpendingConditionMet(
+        bytes32 outputGuard,
+        uint256 utxoPos,
+        bytes32 outputId,
+        uint256 outputType,
+        bytes memory spendingTx,
+        uint256 spendingTxType,
+        uint8 inputIndex,
+        bytes memory witness
+    ) private view returns(bool) {
+        //FIXME: consider moving spending conditions to PlasmaFramework
+        IPaymentSpendingCondition condition = PaymentSpendingConditionRegistry
+            .spendingConditions(outputType, spendingTxType);
+        require(address(condition) != address(0), "Spending condition contract not found");
+
+        return condition.verify(outputGuard, utxoPos, outputId, spendingTx, inputIndex, witness);
     }
 
     function verifyNumberOfInputsMatchesNumberOfInFlightTransactionInputs(StartExitData memory exitData) private pure {
@@ -235,7 +254,9 @@ library PaymentStartInFlightExit {
                 outputGuard,
                 uint256(0), // should not be used
                 bytes32(exitData.inputUtxosPos[i].value),
+                exitData.inputUtxosTypes[i],
                 exitData.inFlightTxRaw,
+                exitData.inFlightTx.txType,
                 uint8(i),
                 exitData.inFlightTxWitnesses[i]
             );
@@ -251,6 +272,22 @@ library PaymentStartInFlightExit {
             uint256 tokenAmountIn = getTokenAmountIn(exitData.inputTxs, exitData.inputUtxosPos, token);
             require(tokenAmountOut <= tokenAmountIn, "Invalid transaction, spends more than provided in inputs");
         }
+    }
+
+    /**
+     * @dev Checks that in-flight exit is in phase that allows for piggybacks and canonicity challenges.
+     * @param ife in-flight exit to check.
+     */
+    function verifyFirstPhaseNotOver(PaymentExitDataModel.InFlightExit storage ife) private view {
+        uint256 phasePeriod = framework.minExitPeriod() / 2;
+        bool firstPhasePassed = ((block.timestamp - getInFlightExitTimestamp(ife)) / phasePeriod) >= 1;
+        require(firstPhasePassed, "Canonicity challege phase for this exit has ended");
+    }
+
+
+    function verifyInputNotSpent(PaymentExitDataModel.InFlightExit storage ife) private view {
+        bool _isSpent = ife.exitStartTimestamp.bitSet(254);
+        require(!_isSpent, "Input was already spent");
     }
 
     function getTokenAmountOut(PaymentTransactionModel.Transaction memory inFlightTx, address token) private pure returns (uint256) {
@@ -281,6 +318,12 @@ library PaymentStartInFlightExit {
             }
         }
         return amountIn;
+    }
+
+    function getInFlightExitTimestamp(PaymentExitDataModel.InFlightExit storage ife) private view returns (uint256)
+    {
+        // FIXME: check all flags used on this field
+        return ife.exitStartTimestamp.clearBit(255);
     }
 
     function startExit(
@@ -318,5 +361,11 @@ library PaymentStartInFlightExit {
             uint16 outputIndex = inputUtxosPos[i].outputIndex();
             ife.inputs[i] = inputTxs[i].outputs[outputIndex];
         }
+    }
+
+    function setNonCanonicalChallenge(PaymentExitDataModel.InFlightExit storage ife)
+        private
+    {
+        ife.exitStartTimestamp = ife.exitStartTimestamp.setBit(255);
     }
 }

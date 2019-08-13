@@ -38,4 +38,11 @@ contract PaymentInFlightExitRouter is OnlyWithValue {
     {
         startInFlightExitController.run(inFlightExitMap, args);
     }
+
+    function challengeInFlightExitNotCanonical(PaymentInFlightExitRouterArgs.ChallengeCanonicityArgs memory args)
+        public
+        payable
+    {
+        challengeCanonicityController.run(args);
+    }
 }
