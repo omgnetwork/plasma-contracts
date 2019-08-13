@@ -4,8 +4,8 @@ interface IPaymentSpendingCondition {
     /**
      * @notice Checks output spending condition.
      * @param _outputGuard OutputGuard of the output.
-     * @param _utxoPos (optional) serves as the identifier of output. Only one of utxoPos or outputId must be set.
-     * @param _outputId (optional) serves as the identifier of output. Only one of utxoPos or outputId must be set.
+     * @param _utxoPos serves as the identifier of output. Only one of utxoPos or outputId will be used by condition implementation.
+     * @param _outputId serves as the identifier of output. Only one of utxoPos or outputId will be used by condition implementation.
      * @param _spendingTx The transaction that spends the output.
      * @param _inputIndex The input index of the spending transaction that points to the output.
      * @param _witness Witness data proving the output can be spent.

@@ -28,6 +28,7 @@ contract PaymentInFlightExitable is
     using RLP for bytes;
     using RLP for RLP.RLPItem;
     using UtxoPosLib for UtxoPosLib.UtxoPos;
+    using Bits for uint256;
 
     uint8 constant public MAX_INPUT_NUM = 4;
     uint256 public constant IN_FLIGHT_EXIT_BOND = 31415926535 wei;
@@ -40,6 +41,12 @@ contract PaymentInFlightExitable is
     event InFlightExitStarted(
         address indexed initiator,
         bytes32 txHash
+    );
+
+    event InFlightExitChallenged(
+        address indexed challenger,
+        bytes32 txHash,
+        uint256 challengeTxPosition
     );
 
     /**
@@ -88,6 +95,19 @@ contract PaymentInFlightExitable is
         bytes32[] outputIds;
     }
 
+    struct ChallengeCanonicityArgs {
+        bytes inFlightTx;
+        uint8 inFlightTxInputIndex;
+        bytes competingTx;
+        uint8 competingTxInputIndex;
+        uint256 competingTxInputPos;
+        bytes32 competingTxInputOutputId;
+        uint256 competingTxInputOutputType;
+        uint256 competingTxPos;
+        bytes competingTxInclusionProof;
+        bytes competingTxWitness;
+    }
+
     constructor(PlasmaFramework _framework) public {
         framework = _framework;
         isDeposit = IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL());
@@ -106,6 +126,73 @@ contract PaymentInFlightExitable is
         verifyStart(startExitData);
         startExit(startExitData);
         emit InFlightExitStarted(msg.sender, startExitData.inFlightTxHash);
+    }
+
+    function challengeInFlightExitNotCanonical(ChallengeCanonicityArgs memory args) public payable {
+        // Check if there is an active in-flight exit from this transaction?
+        uint192 exitId = ExitId.getInFlightExitId(args.inFlightTx);
+        PaymentExitDataModel.InFlightExit storage ife = inFlightExits[exitId];
+        require(ife.exitStartTimestamp != 0, "In-fligh exit doesn't exists");
+
+        // Check that the exit is active and in period 1
+        verifyFirstPhaseNotOver(ife);
+        // Check if exit's input was spent via MVP exit
+        verifyInputNotSpent(ife);
+
+        // Check that two transactions are not the same
+        require(
+            keccak256(args.inFlightTx) != keccak256(args.competingTx),
+            "The competitor transaction is the same as transaction in-flight"
+        );
+
+        // Check that both transactions share the same input
+        PaymentTransactionModel.Transaction memory inFlight = PaymentTransactionModel.decode(args.inFlightTx);
+        PaymentTransactionModel.Transaction memory competitor = PaymentTransactionModel.decode(args.competingTx);
+        require(
+            inFlight.inputs[args.inFlightTxInputIndex] == competitor.inputs[args.competingTxInputIndex],
+            "The competitor and transcation in-flight have to share input at given positions"
+        );
+
+        // Check that shared input owner signes competing transaction
+        require(
+            isSpendingConditionMet(
+                ife.inputs[args.inFlightTxInputIndex].outputGuard,
+                args.competingTxInputPos,
+                args.competingTxInputOutputId,
+                args.competingTxInputOutputType,
+                args.competingTx,
+                competitor.txType,
+                args.competingTxInputIndex,
+                args.competingTxWitness
+            ),
+            "Competing input spending condition is not met"
+        );
+
+        // Determine the position of the competing transaction.
+        uint256 competitorPosition = ~uint256(0);
+        if (args.competingTxPos != 0) {
+            UtxoPosLib.UtxoPos memory competingUtxoPos = UtxoPosLib.UtxoPos(args.competingTxPos);
+            (bytes32 root, ) = framework.blocks(competingUtxoPos.blockNum());
+            require(
+                Merkle.checkMembership(keccak256(args.competingTx), competingUtxoPos.txIndex(), root, args.competingTxInclusionProof),
+                "Competing transaction is not included in plasma chain"
+            );
+            competitorPosition = args.competingTxPos;
+        }
+
+        // Competitor must be first or must be older than the current oldest competitor.
+        require(
+            ife.oldestCompetitorPosition == 0 || ife.oldestCompetitorPosition > competitorPosition,
+            "Competing transaction is not older than already known competitor"
+        );
+
+        ife.oldestCompetitorPosition = competitorPosition;
+        ife.bondOwner = msg.sender;
+
+        // Set a flag so that only the inputs are exitable, unless a response is received.
+        setNonCanonicalChallenge(ife);
+
+        emit InFlightExitChallenged(msg.sender, keccak256(args.inFlightTx), competitorPosition);
     }
 
     function createStartExitData(StartExitArgs memory args) private view returns (StartExitData memory) {
@@ -164,13 +251,31 @@ contract PaymentInFlightExitable is
     }
 
     function verifyExitNotStarted(uint192 exitId) private view {
-        PaymentExitDataModel.InFlightExit storage exit = inFlightExits[exitId];
-        require(exit.exitStartTimestamp == 0, "There is an active in-flight exit from this transaction");
-        require(!isFinalized(exit), "This in-flight exit has already been finalized");
+        PaymentExitDataModel.InFlightExit storage ife = inFlightExits[exitId];
+        require(ife.exitStartTimestamp == 0, "There is an active in-flight exit from this transaction");
+        require(!isFinalized(ife), "This in-flight exit has already been finalized");
     }
 
     function isFinalized(PaymentExitDataModel.InFlightExit storage ife) private view returns (bool) {
-        return Bits.bitSet(ife.exitMap, 255);
+        return ife.exitMap.bitSet(255);
+    }
+
+    function isSpendingConditionMet(
+        bytes32 outputGuard,
+        uint256 utxoPos,
+        bytes32 outputId,
+        uint256 outputType,
+        bytes memory spendingTx,
+        uint256 spendingTxType,
+        uint8 inputIndex,
+        bytes memory witness
+    ) private view returns(bool) {
+        //FIXME: consider moving spending conditions to PlasmaFramework
+        IPaymentSpendingCondition condition = PaymentSpendingConditionRegistry
+            .spendingConditions(outputType, spendingTxType);
+        require(address(condition) != address(0), "Spending condition contract not found");
+
+        return condition.verify(outputGuard, utxoPos, outputId, spendingTx, inputIndex, witness);
     }
 
     function verifyNumberOfInputsMatchesNumberOfInFlightTransactionInputs(StartExitData memory exitData) private pure {
@@ -222,16 +327,13 @@ contract PaymentInFlightExitable is
             uint16 outputIndex = exitData.inputUtxosPos[i].outputIndex();
             bytes32 outputGuard = exitData.inputTxs[i].outputs[outputIndex].outputGuard;
 
-            //FIXME: consider moving spending conditions to PlasmaFramework
-            IPaymentSpendingCondition condition = PaymentSpendingConditionRegistry.spendingConditions(
-                exitData.inputUtxosTypes[i], exitData.inFlightTx.txType);
-            require(address(condition) != address(0), "Spending condition contract not found");
-
-            bool isSpentByInFlightTx = condition.verify(
+            bool isSpentByInFlightTx = isSpendingConditionMet(
                 outputGuard,
                 uint256(0), // should not be used
                 bytes32(exitData.inputUtxosPos[i].value),
+                exitData.inputUtxosTypes[i],
                 exitData.inFlightTxRaw,
+                exitData.inFlightTx.txType,
                 uint8(i),
                 exitData.inFlightTxWitnesses[i]
             );
@@ -247,6 +349,22 @@ contract PaymentInFlightExitable is
             uint256 tokenAmountIn = getTokenAmountIn(exitData.inputTxs, exitData.inputUtxosPos, token);
             require(tokenAmountOut <= tokenAmountIn, "Invalid transaction, spends more than provided in inputs");
         }
+    }
+
+    /**
+     * @dev Checks that in-flight exit is in phase that allows for piggybacks and canonicity challenges.
+     * @param ife in-flight exit to check.
+     */
+    function verifyFirstPhaseNotOver(PaymentExitDataModel.InFlightExit storage ife) private view {
+        uint256 phasePeriod = framework.minExitPeriod() / 2;
+        bool firstPhasePassed = ((block.timestamp - getInFlightExitTimestamp(ife)) / phasePeriod) >= 1;
+        require(firstPhasePassed, "Canonicity challege phase for this exit has ended");
+    }
+
+
+    function verifyInputNotSpent(PaymentExitDataModel.InFlightExit storage ife) private view {
+        bool _isSpent = ife.exitStartTimestamp.bitSet(254);
+        require(!_isSpent, "Input was already spent");
     }
 
     function getTokenAmountOut(PaymentTransactionModel.Transaction memory inFlightTx, address token) private pure returns (uint256) {
@@ -279,6 +397,12 @@ contract PaymentInFlightExitable is
         return amountIn;
     }
 
+    function getInFlightExitTimestamp(PaymentExitDataModel.InFlightExit storage ife) private view returns (uint256)
+    {
+        // FIXME: check all flags used on this field
+        return ife.exitStartTimestamp.clearBit(255);
+    }
+
     function startExit(StartExitData memory startExitData) private {
         PaymentExitDataModel.InFlightExit storage ife = inFlightExits[startExitData.exitId];
         ife.bondOwner = msg.sender;
@@ -309,5 +433,11 @@ contract PaymentInFlightExitable is
             uint16 outputIndex = inputUtxosPos[i].outputIndex();
             ife.inputs[i] = inputTxs[i].outputs[outputIndex];
         }
+    }
+
+    function setNonCanonicalChallenge(PaymentExitDataModel.InFlightExit storage ife)
+        private
+    {
+        ife.exitStartTimestamp = ife.exitStartTimestamp.setBit(255);
     }
 }
