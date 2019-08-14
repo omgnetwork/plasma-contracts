@@ -34,7 +34,8 @@ setup(
         'dev': [
             'pytest>=4.6.0',
             'pylint>=2.3.0',
-            'flake8>=3.7.0'
+            'flake8>=3.7.0',
+            'pytest-xdist>=1.29.0'
         ]
     }
 )
