@@ -158,7 +158,7 @@ contract PaymentInFlightExitable is
         verifyExitNotStarted(exitData.exitId);
         verifyNumberOfInputsMatchesNumberOfInFlightTransactionInputs(exitData);
         verifyNoInputSpentMoreThanOnce(exitData.inFlightTx);
-        verifyInputTransactionsInludedInPlasma(exitData);
+        verifyInputTransactionsIncludedInPlasma(exitData);
         verifyInputsSpendingCondition(exitData);
         verifyInFlightTransactionDoesNotOverspend(exitData);
     }
@@ -206,7 +206,7 @@ contract PaymentInFlightExitable is
         }
     }
 
-    function verifyInputTransactionsInludedInPlasma(StartExitData memory exitData) private view {
+    function verifyInputTransactionsIncludedInPlasma(StartExitData memory exitData) private view {
         for (uint i = 0; i < exitData.inputTxs.length; i++) {
             (bytes32 root, ) = framework.blocks(exitData.inputUtxosPos[i].blockNum());
             bytes32 leaf = keccak256(exitData.inputTxsRaw[i]);
