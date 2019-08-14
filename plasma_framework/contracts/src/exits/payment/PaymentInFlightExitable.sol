@@ -229,8 +229,8 @@ contract PaymentInFlightExitable is
 
             bool isSpentByInFlightTx = condition.verify(
                 outputGuard,
-                exitData.inputUtxosPos[i].value,
-                exitData.outputIds[i],
+                uint256(0), // should not be used
+                bytes32(exitData.inputUtxosPos[i].value),
                 exitData.inFlightTxRaw,
                 uint8(i),
                 exitData.inFlightTxWitnesses[i]

@@ -11,8 +11,9 @@ const { sign } = require('../../../../helpers/sign.js');
 
 contract('PaymentOutputToPaymentTxCondition', ([richFather]) => {
     const ETH = constants.ZERO_ADDRESS;
-    const EMPTY_OUTPUT_ID = '0x';
+    const EMPTY_UTXO_POS = 0;
     const alicePrivateKey = '0x7151e5dab6f8e95b5436515b83f423c4df64fe4c6149f864daa209b26adb10ca';
+    const utxoPosToBytes32 = utxoPos => web3.eth.abi.encodeParameter('uint256', utxoPos.toString());
     let alice;
 
     before('setup alice account with custom private key', async () => {
@@ -45,7 +46,7 @@ contract('PaymentOutputToPaymentTxCondition', ([richFather]) => {
             const txBytes = web3.utils.bytesToHex(tx.rlpEncoded());
             await expectRevert(
                 this.condition.verify(
-                    outputGuard, utxoPos, EMPTY_OUTPUT_ID,
+                    outputGuard, EMPTY_UTXO_POS, utxoPosToBytes32(utxoPos),
                     txBytes, inputIndex, '0x',
                 ),
                 'The spending tx is not of payment tx type',
@@ -64,7 +65,7 @@ contract('PaymentOutputToPaymentTxCondition', ([richFather]) => {
             const txBytes = web3.utils.bytesToHex(tx.rlpEncoded());
             await expectRevert(
                 this.condition.verify(
-                    outputGuard, utxoPos, EMPTY_OUTPUT_ID,
+                    outputGuard, EMPTY_UTXO_POS, utxoPosToBytes32(utxoPos),
                     txBytes, inputIndex, '0x',
                 ),
                 'The spending tx does not spend the output at this utxo pos',
@@ -85,7 +86,7 @@ contract('PaymentOutputToPaymentTxCondition', ([richFather]) => {
             const wrongSignature = sign(txHash, wrongPrivateKey);
             await expectRevert(
                 this.condition.verify(
-                    outputGuard, utxoPos, EMPTY_OUTPUT_ID,
+                    outputGuard, EMPTY_UTXO_POS, utxoPosToBytes32(utxoPos),
                     txBytes, inputIndex, wrongSignature,
                 ),
                 'Tx not correctly signed',
@@ -105,7 +106,7 @@ contract('PaymentOutputToPaymentTxCondition', ([richFather]) => {
             const signature = sign(txHash, alicePrivateKey);
 
             const result = await this.condition.verify(
-                outputGuard, utxoPos, EMPTY_OUTPUT_ID,
+                outputGuard, EMPTY_UTXO_POS, utxoPosToBytes32(utxoPos),
                 txBytes, inputIndex, signature,
             );
             expect(result).to.be.true;
