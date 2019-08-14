@@ -133,4 +133,19 @@ library PaymentChallengeInFlightExitNotCanonical {
     {
         ife.exitStartTimestamp = ife.exitStartTimestamp.setBit(255);
     }
+
+    function verifyAndDeterminePositionOfTransactionIncludedInBlock(
+        bytes memory txbytes,
+        UtxoPosLib.UtxoPos memory utxoPos,
+        bytes memory inclusionProof
+    ) private view returns(uint256) {
+        (bytes32 root, ) = framework.blocks(utxoPos.blockNum());
+        bytes32 leaf = keccak256(txbytes);
+        require(
+            Merkle.checkMembership(leaf, utxoPos.txIndex(), root, inclusionProof),
+            "Transaction is not included in block of plasma chain"
+        );
+
+        return utxoPos.value;
+    }
 }
