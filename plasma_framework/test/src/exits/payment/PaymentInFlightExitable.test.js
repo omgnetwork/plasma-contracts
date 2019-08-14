@@ -304,7 +304,7 @@ contract('PaymentInFlightExitable', ([_, alice, bob, carol]) => {
                 args.inputTxsInclusionProofs = [invalidInclusionProof, invalidInclusionProof];
                 await expectRevert(
                     this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
-                    'Input transaction is not included in plasma.',
+                    'Transaction is not included in block of plasma chain.',
                 );
             });
 
