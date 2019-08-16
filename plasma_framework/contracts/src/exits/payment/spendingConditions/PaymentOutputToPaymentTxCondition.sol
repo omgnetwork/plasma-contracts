@@ -19,9 +19,9 @@ contract PaymentOutputToPaymentTxCondition is IPaymentSpendingCondition {
 
     /**
      * @notice Checks if given output has been spent by owner in given spending transaction.
-     * @param _outputGuard bytes that hold the address of owner directly.
      * @dev _utxoPos not used, serves as the position identifier of output.
-     * @param _outputId serves as the identifier of output (input pointer).
+     * @param _outputGuard bytes that hold the address of owner directly.
+     * @param _outputIdentifier serves as the identifier of output (spendingTx is supposed to contain it as input).
      * @param _spendingTx The rlp encoded transaction that spends the output.
      * @param _inputIndex The input index of the spending transaction that points to the output.
      * @param _signature The signature of the output owner.
@@ -29,7 +29,7 @@ contract PaymentOutputToPaymentTxCondition is IPaymentSpendingCondition {
     function verify(
         bytes32 _outputGuard,
         uint256, /*_utxoPos  NOTE: It's unclear how & if this will be used at all, see: https://github.com/omisego/plasma-contracts/pull/212*/
-        bytes32 _outputId,
+        bytes32 _outputIdentifier,
         bytes calldata _spendingTx,
         uint8 _inputIndex,
         bytes calldata _signature
@@ -40,7 +40,10 @@ contract PaymentOutputToPaymentTxCondition is IPaymentSpendingCondition {
     {
         PaymentTransactionModel.Transaction memory spendingTx = PaymentTransactionModel.decode(_spendingTx);
         require(spendingTx.txType == PAYMENT_TX_TYPE, "The spending tx is not of payment tx type");
-        require(spendingTx.inputs[_inputIndex] == _outputId, "The spending tx does not spend the output at this utxo pos");
+        require(
+            spendingTx.inputs[_inputIndex] == _outputIdentifier, 
+            "The spending tx does not spend the output specified by output identifier"
+        );
 
         address payable owner = AddressPayable.convert(address(uint256(_outputGuard)));
         require(owner == ECDSA.recover(eip712.hashTx(spendingTx), _signature), "Tx not correctly signed");

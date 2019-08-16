@@ -68,7 +68,7 @@ contract('PaymentOutputToPaymentTxCondition', ([richFather]) => {
                     outputGuard, EMPTY_UTXO_POS, utxoPosToBytes32(utxoPos),
                     txBytes, inputIndex, '0x',
                 ),
-                'The spending tx does not spend the output at this utxo pos',
+                'The spending tx does not spend the output specified by output identifier',
             );
         });
 
