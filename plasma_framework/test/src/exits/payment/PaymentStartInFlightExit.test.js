@@ -1,4 +1,4 @@
-const PaymentInFlightExitView = artifacts.require('PaymentInFlightExitViewMock');
+const PaymentInFlightExitRouter = artifacts.require('PaymentInFlightExitRouterMock');
 const PaymentStartInFlightExitController = artifacts.require('PaymentStartInFlightExitController');
 const PaymentSpendingConditionRegistry = artifacts.require('PaymentSpendingConditionRegistry');
 const PaymentSpendingConditionFalse = artifacts.require('PaymentSpendingConditionFalse');
@@ -42,7 +42,7 @@ contract('PaymentStartInFlightExit', ([_, alice, bob, carol]) => {
 
     before('deploy and link with controller lib', async () => {
         const controller = await PaymentStartInFlightExitController.new();
-        await PaymentInFlightExitView.link('PaymentStartInFlightExitController', controller.address);
+        await PaymentInFlightExitRouter.link('PaymentStartInFlightExitController', controller.address);
     });
 
     describe('startInFlightExit', () => {
@@ -147,7 +147,7 @@ contract('PaymentStartInFlightExit', ([_, alice, bob, carol]) => {
                     MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
                 );
                 this.spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
-                this.exitGame = await PaymentInFlightExitView.new(
+                this.exitGame = await PaymentInFlightExitRouter.new(
                     this.framework.address, this.spendingConditionRegistry.address,
                 );
 
@@ -234,7 +234,7 @@ contract('PaymentStartInFlightExit', ([_, alice, bob, carol]) => {
                     MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
                 );
                 this.spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
-                this.exitGame = await PaymentInFlightExitView.new(
+                this.exitGame = await PaymentInFlightExitRouter.new(
                     this.framework.address, this.spendingConditionRegistry.address,
                 );
             });

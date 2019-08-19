@@ -2,7 +2,7 @@ pragma solidity ^0.5.0;
 pragma experimental ABIEncoderV2;
 
 import "../PaymentExitDataModel.sol";
-import "../views/PaymentInFlightExitViewArgs.sol";
+import "../routers/PaymentInFlightExitRouterArgs.sol";
 import "../spendingConditions/IPaymentSpendingCondition.sol";
 import "../spendingConditions/PaymentSpendingConditionRegistry.sol";
 import "../../utils/ExitableTimestamp.sol";
@@ -77,7 +77,7 @@ library PaymentStartInFlightExitController {
     function run(
         Object memory self,
         PaymentExitDataModel.InFlightExitMap storage inFlightExitMap,
-        PaymentInFlightExitViewArgs.StartExitArgs memory args
+        PaymentInFlightExitRouterArgs.StartExitArgs memory args
     )
         public
     {
@@ -89,7 +89,7 @@ library PaymentStartInFlightExitController {
 
     function createStartExitData(
         Object memory controller,
-        PaymentInFlightExitViewArgs.StartExitArgs memory args
+        PaymentInFlightExitRouterArgs.StartExitArgs memory args
     )
         private
         pure
