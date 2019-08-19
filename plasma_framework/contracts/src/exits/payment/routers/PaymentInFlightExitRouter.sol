@@ -13,7 +13,7 @@ contract PaymentInFlightExitRouter is OnlyWithValue {
 
     uint256 public constant IN_FLIGHT_EXIT_BOND = 31415926535 wei;
 
-    PaymentExitDataModel.InFlightExitMap internal inFlightExitMap;
+    PaymentExitDataModel.InFlightExitMap inFlightExitMap;
     PaymentStartInFlightExitController.Object startInFlightExitController;
 
     constructor(PlasmaFramework _framework, PaymentSpendingConditionRegistry spendingConditionRegistry) public {

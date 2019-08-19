@@ -21,6 +21,10 @@ library PaymentExitDataModel {
         uint256 amount;
     }
 
+    struct StandardExitMap {
+        mapping (uint192 => PaymentExitDataModel.StandardExit) exits;
+    }
+
     struct InFlightExit {
         uint256 exitStartTimestamp;
 
