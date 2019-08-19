@@ -7,8 +7,8 @@ import "../../../vaults/EthVault.sol";
 import "../../../vaults/Erc20Vault.sol";
 import "../../../framework/PlasmaFramework.sol";
 
-library PaymentProcessStandardExitController {
-    struct Object {
+library PaymentProcessStandardExit {
+    struct Controller {
         PlasmaFramework framework;
         EthVault ethVault;
         Erc20Vault erc20Vault;
@@ -24,7 +24,7 @@ library PaymentProcessStandardExitController {
     );
 
     function run(
-        Object memory self,
+        Controller memory self,
         PaymentExitDataModel.StandardExitMap storage exitMap,
         uint192 exitId
     )

@@ -13,14 +13,14 @@ import "../../../utils/UtxoPosLib.sol";
 import "../../../utils/Merkle.sol";
 import "../../../framework/PlasmaFramework.sol";
 
-library PaymentStartInFlightExitController {
+library PaymentStartInFlightExit {
     using ExitableTimestamp for ExitableTimestamp.Calculator;
     using IsDeposit for IsDeposit.Predicate;
     using UtxoPosLib for UtxoPosLib.UtxoPos;
 
     uint256 constant public MAX_INPUT_NUM = 4;
 
-    struct Object {
+    struct Controller {
         PlasmaFramework framework;
         IsDeposit.Predicate isDeposit;
         ExitableTimestamp.Calculator exitTimestampCalculator;
@@ -47,7 +47,7 @@ library PaymentStartInFlightExitController {
      * @param outputIds Output ids for input transactions.
      */
     struct StartExitData {
-        Object controller;
+        Controller controller;
         uint192 exitId;
         bytes inFlightTxRaw;
         PaymentTransactionModel.Transaction inFlightTx;
@@ -61,12 +61,12 @@ library PaymentStartInFlightExitController {
         bytes32[] outputIds;
     }
 
-    function init(PlasmaFramework framework, PaymentSpendingConditionRegistry registry)
+    function buildController(PlasmaFramework framework, PaymentSpendingConditionRegistry registry)
         public
         view
-        returns (Object memory)
+        returns (Controller memory)
     {
-        return Object({
+        return Controller({
             framework: framework,
             isDeposit: IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL()),
             exitTimestampCalculator: ExitableTimestamp.Calculator(framework.minExitPeriod()),
@@ -75,7 +75,7 @@ library PaymentStartInFlightExitController {
     }
 
     function run(
-        Object memory self,
+        Controller memory self,
         PaymentExitDataModel.InFlightExitMap storage inFlightExitMap,
         PaymentInFlightExitRouterArgs.StartExitArgs memory args
     )
@@ -88,7 +88,7 @@ library PaymentStartInFlightExitController {
     }
 
     function createStartExitData(
-        Object memory controller,
+        Controller memory controller,
         PaymentInFlightExitRouterArgs.StartExitArgs memory args
     )
         private
@@ -129,7 +129,7 @@ library PaymentStartInFlightExitController {
         return inputTxs;
     }
 
-    function getOutputIds(Object memory controller, bytes[] memory inputTxs, UtxoPosLib.UtxoPos[] memory utxoPos)
+    function getOutputIds(Controller memory controller, bytes[] memory inputTxs, UtxoPosLib.UtxoPos[] memory utxoPos)
         private
         pure
         returns (bytes32[] memory)

@@ -16,13 +16,13 @@ import "../../../utils/UtxoPosLib.sol";
 import "../../../utils/Merkle.sol";
 import "../../../framework/PlasmaFramework.sol";
 
-library PaymentStartStandardExitController {
+library PaymentStartStandardExit {
     using ExitableTimestamp for ExitableTimestamp.Calculator;
     using IsDeposit for IsDeposit.Predicate;
     using PaymentOutputModel for PaymentOutputModel.Output;
     using UtxoPosLib for UtxoPosLib.UtxoPos;
 
-    struct Object {
+    struct Controller {
         IExitProcessor exitProcessor;
         PlasmaFramework framework;
         IsDeposit.Predicate isDeposit;
@@ -34,7 +34,7 @@ library PaymentStartStandardExitController {
      * @dev data to be passed around startStandardExit helper functions
      */
     struct StartStandardExitData {
-        Object controller;
+        Controller controller;
         PaymentStandardExitRouterArgs.StartStandardExitArgs args;
         UtxoPosLib.UtxoPos utxoPos;
         PaymentTransactionModel.Transaction outputTx;
@@ -52,16 +52,16 @@ library PaymentStartStandardExitController {
         uint192 exitId
     );
 
-    function init(
+    function buildController(
         IExitProcessor exitProcessor,
         PlasmaFramework framework,
         OutputGuardParserRegistry outputGuardParserRegistry
     )
         public
         view
-        returns (Object memory)
+        returns (Controller memory)
     {
-        return Object({
+        return Controller({
             exitProcessor: exitProcessor,
             framework: framework,
             isDeposit: IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL()),
@@ -71,7 +71,7 @@ library PaymentStartStandardExitController {
     }
 
     function run(
-        Object memory self,
+        Controller memory self,
         PaymentExitDataModel.StandardExitMap storage exitMap,
         PaymentStandardExitRouterArgs.StartStandardExitArgs memory args
     )
@@ -86,7 +86,7 @@ library PaymentStartStandardExitController {
     }
 
     function setupStartStandardExitData(
-        Object memory controller,
+        Controller memory controller,
         PaymentStandardExitRouterArgs.StartStandardExitArgs memory args
     )
         private

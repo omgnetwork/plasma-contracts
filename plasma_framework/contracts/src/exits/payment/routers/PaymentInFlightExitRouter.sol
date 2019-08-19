@@ -3,21 +3,21 @@ pragma experimental ABIEncoderV2;
 
 import "./PaymentInFlightExitRouterArgs.sol";
 import "../PaymentExitDataModel.sol";
-import "../controllers/PaymentStartInFlightExitController.sol";
+import "../controllers/PaymentStartInFlightExit.sol";
 import "../spendingConditions/PaymentSpendingConditionRegistry.sol";
 import "../../../utils/OnlyWithValue.sol";
 import "../../../framework/PlasmaFramework.sol";
 
 contract PaymentInFlightExitRouter is OnlyWithValue {
-    using PaymentStartInFlightExitController for PaymentStartInFlightExitController.Object;
+    using PaymentStartInFlightExit for PaymentStartInFlightExit.Controller;
 
     uint256 public constant IN_FLIGHT_EXIT_BOND = 31415926535 wei;
 
     PaymentExitDataModel.InFlightExitMap inFlightExitMap;
-    PaymentStartInFlightExitController.Object startInFlightExitController;
+    PaymentStartInFlightExit.Controller startInFlightExitController;
 
     constructor(PlasmaFramework _framework, PaymentSpendingConditionRegistry spendingConditionRegistry) public {
-        startInFlightExitController = PaymentStartInFlightExitController.init(_framework, spendingConditionRegistry);
+        startInFlightExitController = PaymentStartInFlightExit.buildController(_framework, spendingConditionRegistry);
     }
 
     function inFlightExits(uint192 _exitId) public view returns (PaymentExitDataModel.InFlightExit memory) {

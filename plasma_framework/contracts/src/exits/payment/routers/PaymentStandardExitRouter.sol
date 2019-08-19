@@ -3,8 +3,9 @@ pragma experimental ABIEncoderV2;
 
 import "./PaymentStandardExitRouterArgs.sol";
 import "../PaymentExitDataModel.sol";
-import "../controllers/PaymentStartStandardExitController.sol";
-import "../controllers/PaymentProcessStandardExitController.sol";
+import "../controllers/PaymentStartStandardExit.sol";
+import "../controllers/PaymentProcessStandardExit.sol";
+import "../controllers/PaymentChallengeStandardExit.sol";
 import "../spendingConditions/PaymentSpendingConditionRegistry.sol";
 import "../../OutputGuardParserRegistry.sol";
 import "../../../vaults/EthVault.sol";
@@ -19,15 +20,16 @@ contract PaymentStandardExitRouter is
     OutputGuardParserRegistry,
     PaymentSpendingConditionRegistry
 {
-    using PaymentStartStandardExitController for PaymentStartStandardExitController.Object;
-    using PaymentProcessStandardExitController for PaymentProcessStandardExitController.Object;
-
+    using PaymentStartStandardExit for PaymentStartStandardExit.Controller;
+    using PaymentChallengeStandardExit for PaymentChallengeStandardExit.Controller;
+    using PaymentProcessStandardExit for PaymentProcessStandardExit.Controller;
 
     uint256 public constant STANDARD_EXIT_BOND = 31415926535 wei;
 
     PaymentExitDataModel.StandardExitMap standardExitMap;
-    PaymentStartStandardExitController.Object startStandardExitController;
-    PaymentProcessStandardExitController.Object processStandardExitController;
+    PaymentStartStandardExit.Controller startStandardExitController;
+    PaymentProcessStandardExit.Controller processStandardExitController;
+    PaymentChallengeStandardExit.Controller challengeStandardExitController;
 
     constructor(
         PlasmaFramework _framework,
@@ -38,11 +40,15 @@ contract PaymentStandardExitRouter is
     )
         public
     {
-        startStandardExitController = PaymentStartStandardExitController.init(
+        startStandardExitController = PaymentStartStandardExit.buildController(
             this, _framework, _outputGuardParserRegistry
         );
 
-        processStandardExitController = PaymentProcessStandardExitController.Object(
+        challengeStandardExitController = PaymentChallengeStandardExit.Controller(
+            _framework, _spendingConditionRegistry, STANDARD_EXIT_BOND
+        );
+
+        processStandardExitController = PaymentProcessStandardExit.Controller(
             _framework, _ethVault, _erc20Vault, STANDARD_EXIT_BOND
         );
     }
@@ -66,15 +72,13 @@ contract PaymentStandardExitRouter is
 
     /**
      * @notice Challenge a standard exit by showing the exiting output was spent.
-     * @dev Uses struct as input because too many variables and failed to compile.
-     * @dev Uses public instead of external because ABIEncoder V2 does not support struct calldata + external
-     * @param _args input argument data to challenge. See struct 'ChallengeStandardExitArgs' for detailed param info.
      */
-    // function challengeStandardExit(ChallengeStandardExitArgs memory _args)
-    //     public
-    //     payable
-    // {
-    // }
+    function challengeStandardExit(PaymentStandardExitRouterArgs.ChallengeStandardExitArgs memory args)
+        public
+        payable
+    {
+        challengeStandardExitController.run(standardExitMap, args);
+    }
 
     /**
      * @notice Process standard exit.

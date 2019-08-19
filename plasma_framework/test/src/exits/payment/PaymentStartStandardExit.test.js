@@ -3,9 +3,10 @@ const ExitId = artifacts.require('ExitIdWrapper');
 const IsDeposit = artifacts.require('IsDepositWrapper');
 const OutputGuardParser = artifacts.require('DummyOutputGuardParser');
 const OutputGuardParserRegistry = artifacts.require('OutputGuardParserRegistry');
-const PaymentProcessStandardExitController = artifacts.require('PaymentProcessStandardExitController');
+const PaymentChallengeStandardExit = artifacts.require('PaymentChallengeStandardExit');
+const PaymentProcessStandardExit = artifacts.require('PaymentProcessStandardExit');
 const PaymentStandardExitRouter = artifacts.require('PaymentStandardExitRouterMock');
-const PaymentStartStandardExitController = artifacts.require('PaymentStartStandardExitController');
+const PaymentStartStandardExit = artifacts.require('PaymentStartStandardExit');
 const PaymentSpendingConditionRegistry = artifacts.require('PaymentSpendingConditionRegistry');
 const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
@@ -36,10 +37,13 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
     const EMPTY_BYTES = '0x0000000000000000000000000000000000000000000000000000000000000000000000';
 
     before('deploy and link with controller lib', async () => {
-        const startStandardExitController = await PaymentStartStandardExitController.new();
-        const processStandardExitController = await PaymentProcessStandardExitController.new();
-        await PaymentStandardExitRouter.link('PaymentStartStandardExitController', startStandardExitController.address);
-        await PaymentStandardExitRouter.link('PaymentProcessStandardExitController', processStandardExitController.address);
+        const startStandardExit = await PaymentStartStandardExit.new();
+        const challengeStandardExit = await PaymentChallengeStandardExit.new();
+        const processStandardExit = await PaymentProcessStandardExit.new();
+
+        await PaymentStandardExitRouter.link('PaymentStartStandardExit', startStandardExit.address);
+        await PaymentStandardExitRouter.link('PaymentChallengeStandardExit', challengeStandardExit.address);
+        await PaymentStandardExitRouter.link('PaymentProcessStandardExit', processStandardExit.address);
     });
 
     describe('startStandardExit', () => {
@@ -331,7 +335,7 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
 
             await expectEvent.inTransaction(
                 receipt.transactionHash,
-                PaymentStartStandardExitController,
+                PaymentStartStandardExit,
                 'ExitStarted',
                 { owner: alice, exitId },
             );

@@ -1,5 +1,5 @@
 const PaymentInFlightExitRouter = artifacts.require('PaymentInFlightExitRouterMock');
-const PaymentStartInFlightExitController = artifacts.require('PaymentStartInFlightExitController');
+const PaymentStartInFlightExit = artifacts.require('PaymentStartInFlightExit');
 const PaymentSpendingConditionRegistry = artifacts.require('PaymentSpendingConditionRegistry');
 const PaymentSpendingConditionFalse = artifacts.require('PaymentSpendingConditionFalse');
 const PaymentSpendingConditionTrue = artifacts.require('PaymentSpendingConditionTrue');
@@ -41,8 +41,8 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
     const TOLERANCE_SECONDS = new BN(1);
 
     before('deploy and link with controller lib', async () => {
-        const controller = await PaymentStartInFlightExitController.new();
-        await PaymentInFlightExitRouter.link('PaymentStartInFlightExitController', controller.address);
+        const startInFlightExit = await PaymentStartInFlightExit.new();
+        await PaymentInFlightExitRouter.link('PaymentStartInFlightExit', startInFlightExit.address);
     });
 
     describe('startInFlightExit', () => {
@@ -204,7 +204,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
 
                 await expectEvent.inTransaction(
                     receipt.transactionHash,
-                    PaymentStartInFlightExitController,
+                    PaymentStartInFlightExit,
                     'InFlightExitStarted',
                     {
                         initiator: alice,
