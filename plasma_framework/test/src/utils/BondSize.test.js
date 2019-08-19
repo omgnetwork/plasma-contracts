@@ -2,6 +2,8 @@ const BondSizeMock = artifacts.require('BondSizeMock');
 const { BN } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
+const GWEI = new BN(1000000000);
+
 contract('BondSize', () => {
     beforeEach(async () => {
         this.initialGasPrice = 20000000000; // 20 gwei
@@ -19,7 +21,9 @@ contract('BondSize', () => {
         this.initialBondSize = new BN(this.initialGasPrice)
             .muln(this.challengeGasCost)
             .muln(this.safetyFactor)
-            .divn(100);
+            .divn(100)
+            .div(GWEI)
+            .mul(GWEI);
     });
 
     it('should return the initial bond size', async () => {

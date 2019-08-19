@@ -11,13 +11,13 @@ contract BondSizeMock {
 
     constructor (
         uint256 _initialGasPrice,
-        uint256 _challengeGasCost,
-        uint256 _ewmaFactor,
-        uint256 _safetyFactor
+        uint128 _targetGasCost,
+        uint64 _ewmaFactor,
+        uint64 _safetyFactor
     ) public {
         _bondSize = BondSize.Params({
             currentGasPrice: _initialGasPrice,
-            challengeGasCost: _challengeGasCost,
+            targetGasCost: _targetGasCost,
             ewmaFactor: _ewmaFactor,
             safetyFactor: _safetyFactor
         });
@@ -28,7 +28,7 @@ contract BondSizeMock {
     }
 
     function updateGasPrice() public {
-        _bondSize.updateGasPrice();
+        _bondSize.updateGasPrice(tx.gasprice);
 
         emit Updated(tx.gasprice);
     }
