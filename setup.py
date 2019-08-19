@@ -26,15 +26,16 @@ setup(
     install_requires=[
         'rlp==1.1.0',
         'py-solc-simple==0.0.14',
-        'web3[tester]==5.0.0',
-        'eip712-structs==1.1.0'
+        'web3==5.0.0',
+        'eip712-structs==1.1.0',
+        'eth_tester==0.2.0b2'
     ],
     extras_require={
         'dev': [
             'pytest>=4.6.0',
             'pylint>=2.3.0',
             'flake8>=3.7.0',
-            'pytest-xdist>=1.29.0'
+            'pytest-xprocess>=0.12.0'
         ]
     }
 )

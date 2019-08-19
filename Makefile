@@ -35,14 +35,9 @@ test:
 	python -W ignore::DeprecationWarning -m pytest
 	rm -fr .pytest_cache
 
-.PHONY: conctest
-conctest:
-	python -W ignore::DeprecationWarning -m pytest -n ${PYTEST_PARALLEL_JOBS}
-	rm -fr .pytest_cache
-
 .PHONY: test_quick
 test_quick:
-	python -W ignore::DeprecationWarning -m pytest -n ${PYTEST_PARALLEL_JOBS} -m "not slow"
+	python -W ignore::DeprecationWarning -m pytest -m "not slow"
 	rm -fr .pytest_cache
 
 .PHONY: runslow

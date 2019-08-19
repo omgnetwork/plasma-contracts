@@ -135,7 +135,7 @@ class TestingLanguage(object):
         blknum = self.root_chain.nextChildBlock()
         block = Block(transactions, number=blknum)
         signed_block = block.sign(signer.key)
-        self.root_chain.submitBlock(signed_block.root, **{'from': signer.address})
+        self.root_chain.functions.submitBlock(signed_block.root).transact({'from': signer.address})
         if force_invalid:
             self.child_chain.blocks[self.child_chain.next_child_block] = signed_block
             self.child_chain.next_deposit_block = self.child_chain.next_child_block + 1
@@ -350,8 +350,8 @@ class TestingLanguage(object):
         Args:
             amount (int): Number of seconds to move forward time.
         """
-        tester = self.w3.provider.ethereum_tester
-        tester.time_travel(self.timestamp + amount)
+        eth_module = self.w3.eth
+        eth_module.increase_time(amount)
 
     def get_in_flight_exit_info(self, tx_id, spend_tx=None):
         if spend_tx is None:

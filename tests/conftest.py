@@ -1,20 +1,25 @@
+import itertools
 import os
 
 import pytest
-from eth_tester import EthereumTester, PyEVMBackend
+from eth_keys.datatypes import PrivateKey
 from solc_simple import Builder
 from solcx import link_code
-from web3 import Web3, EthereumTesterProvider
+from web3 import Web3, HTTPProvider
+from web3.main import get_default_modules
+from xprocess import ProcessStarter
 
 from plasma_core.account import EthereumAccount
 from plasma_core.utils.deployer import Deployer
 from testlang.testlang import TestingLanguage
-from tests.contract_wrapper import ConvenienceContractWrapper
+from tests.conveniece_wrappers import ConvenienceContractWrapper, AutominingEth
 
 EXIT_PERIOD = 4 * 60  # 4 minutes
 
 GAS_LIMIT = 10000000
 START_GAS = GAS_LIMIT - 1000000
+
+HUNDRED_ETH = 100 * 10 ** 18
 
 
 @pytest.fixture(scope="session")
@@ -29,28 +34,58 @@ def deployer():
     return deployer
 
 
-@pytest.fixture
-def backend():
-    from eth_tester.backends.pyevm.main import get_default_genesis_params
-    genesis_params = get_default_genesis_params(overrides={'gas_limit': GAS_LIMIT})
-    return PyEVMBackend(genesis_params)
+@pytest.fixture(scope="session")
+def accounts():
+    _accounts = []
+    for i in range(1, 11):
+        pk = PrivateKey(i.to_bytes(32, byteorder='big'))
+        _accounts.append(EthereumAccount(pk.public_key.to_checksum_address(), pk))
+    return _accounts
+
+
+def ganache_initial_accounts_args(accounts):
+    return [f"--account=\"{acc.key.to_hex()},{HUNDRED_ETH}\"" for acc in accounts]
+
+
+def ganache_cli(accounts):
+    accounts_args = ganache_initial_accounts_args(accounts)
+
+    class Starter(ProcessStarter):
+        pattern = "Listening on .*"
+        args = ["ganache-cli",
+                f"--gasLimit={GAS_LIMIT}",
+                f"--time=0",
+                f"--blockTime=0"
+                ] + accounts_args
+
+        def filter_lines(self, lines):
+            return itertools.islice(lines, 100)
+
+    return Starter
+
+
+@pytest.fixture(scope="session")
+def _w3_session(xprocess, accounts):
+
+    web3_modules = get_default_modules()
+    web3_modules.update(eth=(AutominingEth,))
+
+    _w3 = Web3(HTTPProvider(), modules=web3_modules)
+    if not _w3.isConnected():  # try to connect to an external ganache
+        xprocess.ensure("GANACHE", ganache_cli(accounts))
+        assert _w3.provider.make_request('miner_stop', [])['result']
+
+    _w3.eth.defaultAccount = _w3.eth.accounts[0]
+
+    yield _w3
+
+    xprocess.getinfo('GANACHE').terminate()
 
 
 @pytest.fixture
-def tester(backend):
-    return EthereumTester(backend)
-
-
-@pytest.fixture
-def accounts(backend):
-    return [EthereumAccount(pk.public_key.to_checksum_address(), pk) for pk in backend.account_keys]
-
-
-@pytest.fixture
-def w3(tester, accounts) -> Web3:
-    w3 = Web3(EthereumTesterProvider(tester))
-    w3.eth.defaultAccount = accounts[0].address
-    return w3
+def w3(_w3_session):
+    yield _w3_session
+    _w3_session.eth.enable_auto_mine()
 
 
 @pytest.fixture
@@ -96,7 +131,8 @@ def testlang(root_chain, w3, accounts):
 
 @pytest.fixture
 def root_chain_short_exit_period(get_contract):
-    return initialized_contract(get_contract, 0)
+    exit_period = 4  # if less than 2, we divide by 0 in `RootChain::_firstPhaseNotOver`
+    return initialized_contract(get_contract, exit_period)
 
 
 @pytest.fixture

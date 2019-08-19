@@ -59,12 +59,14 @@ def test_deposit_with_input_should_fail(testlang):
 def test_at_most_999_deposits_per_child_block(testlang, w3):
     owner = testlang.accounts[0]
     child_block_interval = testlang.root_chain.CHILD_BLOCK_INTERVAL()
-    w3.provider.ethereum_tester.disable_auto_mine_transactions()
+    w3.eth.disable_auto_mine()
     blknum = testlang.root_chain.getDepositBlockNumber()
     for i in range(0, child_block_interval - 1):
         deposit_id = _deposit(testlang, owner, 1, blknum + i)
         if i % 25 == 0:
-            w3.provider.ethereum_tester.mine_block()
+            w3.eth.mine()
+    w3.eth.enable_auto_mine()
+    w3.eth.mine()
 
     with pytest.raises(TransactionFailed):
         testlang.deposit(owner, 1)
@@ -120,4 +122,4 @@ def _deposit(testlang, owner, amount, blknum):
     deposit_id = encode_utxo_id(blknum, 0, 0)
     block = Block([deposit_tx], number=blknum)
     testlang.child_chain.add_block(block)
-    return deposit_id,
+    return deposit_id

@@ -218,9 +218,13 @@ def test_finalize_exits_tx_race_short_circuit(testlang, w3, root_chain):
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
     testlang.process_exits(NULL_ADDRESS, testlang.get_standard_exit_id(utxo1.spend_id), 1)
 
+    w3.eth.disable_auto_mine()
+
     tx_hash = root_chain.functions\
         .processExits(NULL_ADDRESS, testlang.get_standard_exit_id(utxo1.spend_id), 3)\
         .transact({'gas': 100_000})  # reasonably high amount of gas (otherwise it fails on gas estimation)
+
+    w3.eth.mine(expect_error=True)
 
     tx_receipt = w3.eth.getTransactionReceipt(tx_hash)
     short_circuit_gas = tx_receipt['gasUsed']
@@ -378,7 +382,7 @@ def test_finalize_in_flight_exit_finalizes_only_piggybacked_outputs(testlang):
     assert not in_flight_exit.output_blocked(1)
 
 
-def test_finalize_exits_priority_for_in_flight_exits_corresponds_to_the_age_of_youngest_input(testlang, tester):
+def test_finalize_exits_priority_for_in_flight_exits_corresponds_to_the_age_of_youngest_input(testlang):
     owner, amount = testlang.accounts[0], 100
     deposit_0_id = testlang.deposit(owner, amount)
     deposit_1_id = testlang.deposit(owner, amount)
@@ -426,7 +430,7 @@ def test_finalize_in_flight_exit_with_erc20_token_should_succeed(testlang, token
 
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
 
-    testlang.process_exits(token.address, 0, 1, gas=200_000)
+    testlang.process_exits(token.address, 0, 1)
 
     in_flight_exit = testlang.get_in_flight_exit(spend_id)
 
