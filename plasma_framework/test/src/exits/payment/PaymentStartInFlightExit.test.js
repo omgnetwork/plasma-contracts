@@ -20,7 +20,7 @@ const {
 } = require('../../../helpers/utils.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
 
-contract('PaymentStartInFlightExit', ([_, alice, bob, carol]) => {
+contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
     const IN_FLIGHT_EXIT_BOND = 31415926535; // wei
     const ETH = constants.ZERO_ADDRESS;
     const OTHER_TOKEN = '0x0000000000000000000000000000000000000001';
