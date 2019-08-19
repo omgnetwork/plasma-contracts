@@ -352,8 +352,8 @@ contract('PaymentStandardExitable', ([_, alice, bob]) => {
 
         const getExpectedConditionInputArgs = (input, exitData) => ({
             outputGuard: input.outputGuard,
-            utxoPos: exitData.utxoPos,
-            outputId: exitData.outputId,
+            utxoPos: 0, // should not be used, see: https://github.com/omisego/plasma-contracts/pull/212
+            outputId: web3.eth.abi.encodeParameter('uint256', exitData.utxoPos.toString()),
             spendingTx: input.challengeTx,
             inputIndex: input.inputIndex,
             witness: input.witness,
