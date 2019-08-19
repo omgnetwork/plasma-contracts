@@ -27,7 +27,7 @@ commands:
           working_directory: ~/repo/plasma_framework
           command: |
             npm install
-            rm -rf node_modules/*/.git # workaround for problem with dependencies git
+            rm -rf node_modules/*/.git # workaround for problem with git dependencies
       - save_cache:
           paths:
             - plasma_framework/node_modules
@@ -38,10 +38,14 @@ commands:
       - checkout
       - run:
           name: Prepare environment
-          command: sudo chown -R circleci:circleci /usr/local/bin /usr/local/lib/python3.7/site-packages
+          command: |
+            sudo chown -R circleci:circleci /usr/local/bin /usr/local/lib/python3.7/site-packages
+            sudo apt update && sudo apt install nodejs npm
+            sudo npm install -g n && sudo n stable
+            sudo npm install -g ganache-cli
       - restore_cache:
           keys:
-            - dependencies-{{ checksum "requirements.txt" }}
+            - dependencies_v1_{{ checksum "requirements.txt" }}
       - run:
           name: Install dependencies
           command: |
@@ -52,6 +56,7 @@ commands:
           paths:
             - /usr/local/bin
             - /usr/local/lib/python3.7/site-packages
+            - /usr/local/lib/node_modules
 
 jobs:
   Truffle tests:
