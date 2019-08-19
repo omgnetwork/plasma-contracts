@@ -13,7 +13,6 @@ def test_piggyback_in_flight_exit_valid_input_owner_should_succeed(testlang, num
         owners.append(testlang.accounts[i])
         deposit_ids.append(testlang.deposit(owners[i], amount))
 
-    # owner_keys = [owner.key for owner in owners]
     spend_id = testlang.spend_utxo(deposit_ids, owners)
 
     testlang.start_in_flight_exit(spend_id)

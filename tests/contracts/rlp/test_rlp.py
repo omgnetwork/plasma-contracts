@@ -5,7 +5,7 @@ Regression test for bug in RLP decoder.
 import pytest
 import rlp
 
-from eth_utils import is_address, to_canonical_address, to_checksum_address
+from eth_utils import is_address, to_canonical_address
 from rlp.sedes import big_endian_int, Binary
 
 
@@ -68,7 +68,6 @@ def test_rlp_tx_eight(accounts, rlp_test):
 
 
 def test_rlp_tx_eleven(accounts, rlp_test):
-    addresses = list(map(lambda account: to_checksum_address(account.address), accounts))
-    tx = Eleven(0, 1, 2, 3, 4, 5, 6, 7, addresses[0], accounts[1].address, accounts[2].address)
+    tx = Eleven(0, 1, 2, 3, 4, 5, 6, 7, accounts[0].address, accounts[1].address, accounts[2].address)
     tx_bytes = rlp.encode(tx, Eleven)
     assert [7, accounts[0].address, accounts[1].address, accounts[2].address] == rlp_test.eleven(tx_bytes)
