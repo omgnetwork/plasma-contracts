@@ -1,9 +1,10 @@
 const ERC20Mintable = artifacts.require('ERC20Mintable');
 const OutputGuardParserRegistry = artifacts.require('OutputGuardParserRegistry');
-const PaymentProcessStandardExitController = artifacts.require('PaymentProcessStandardExitController');
+const PaymentChallengeStandardExit = artifacts.require('PaymentChallengeStandardExit');
+const PaymentProcessStandardExit = artifacts.require('PaymentProcessStandardExit');
 const PaymentStandardExitRouter = artifacts.require('PaymentStandardExitRouterMock');
 const PaymentSpendingConditionRegistry = artifacts.require('PaymentSpendingConditionRegistry');
-const PaymentStartStandardExitController = artifacts.require('PaymentStartStandardExitController');
+const PaymentStartStandardExit = artifacts.require('PaymentStartStandardExit');
 const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
@@ -24,10 +25,13 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
     const EMPTY_BYTES32 = '0x0000000000000000000000000000000000000000000000000000000000000000';
 
     before('deploy and link with controller lib', async () => {
-        const startStandardExitController = await PaymentStartStandardExitController.new();
-        const processStandardExitController = await PaymentProcessStandardExitController.new();
-        await PaymentStandardExitRouter.link('PaymentStartStandardExitController', startStandardExitController.address);
-        await PaymentStandardExitRouter.link('PaymentProcessStandardExitController', processStandardExitController.address);
+        const startStandardExit = await PaymentStartStandardExit.new();
+        const challengeStandardExit = await PaymentChallengeStandardExit.new();
+        const processStandardExit = await PaymentProcessStandardExit.new();
+
+        await PaymentStandardExitRouter.link('PaymentStartStandardExit', startStandardExit.address);
+        await PaymentStandardExitRouter.link('PaymentChallengeStandardExit', challengeStandardExit.address);
+        await PaymentStandardExitRouter.link('PaymentProcessStandardExit', processStandardExit.address);
     });
 
     describe('processStandardExit', () => {
@@ -38,12 +42,12 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
 
             const ethVault = await SpyEthVault.new(this.framework.address);
             const erc20Vault = await SpyErc20Vault.new(this.framework.address);
-            const spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
             const outputGuardParserRegistry = await OutputGuardParserRegistry.new();
+            const spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
 
             this.exitGame = await PaymentStandardExitRouter.new(
                 this.framework.address, ethVault.address, erc20Vault.address,
-                spendingConditionRegistry.address, outputGuardParserRegistry.address,
+                outputGuardParserRegistry.address, spendingConditionRegistry.address,
             );
             this.framework.registerExitGame(1, this.exitGame.address);
 
@@ -71,7 +75,7 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
 
             await expectEvent.inTransaction(
                 receipt.transactionHash,
-                PaymentProcessStandardExitController,
+                PaymentProcessStandardExit,
                 'ExitOmitted',
                 { exitId: new BN(exitId) },
             );
@@ -87,7 +91,7 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
 
             await expectEvent.inTransaction(
                 receipt.transactionHash,
-                PaymentProcessStandardExitController,
+                PaymentProcessStandardExit,
                 'ExitOmitted',
                 { exitId: new BN(exitId) },
             );
@@ -190,7 +194,7 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
 
             await expectEvent.inTransaction(
                 receipt.transactionHash,
-                PaymentProcessStandardExitController,
+                PaymentProcessStandardExit,
                 'ExitFinalized',
                 { exitId: new BN(exitId) },
             );
