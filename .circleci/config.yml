@@ -45,7 +45,7 @@ commands:
       - run:
           name: Install dependencies
           command: |
-            make dev
+            pip install -r requirements.txt
             python -m solcx.install v0.4.24
       - save_cache:
           key: dependencies-{{ checksum "requirements.txt" }}
