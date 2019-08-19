@@ -4,6 +4,7 @@ pragma experimental ABIEncoderV2;
 import "./PaymentStandardExitRouterArgs.sol";
 import "../PaymentExitDataModel.sol";
 import "../controllers/PaymentStartStandardExitController.sol";
+import "../controllers/PaymentProcessStandardExitController.sol";
 import "../spendingConditions/PaymentSpendingConditionRegistry.sol";
 import "../../OutputGuardParserRegistry.sol";
 import "../../../vaults/EthVault.sol";
@@ -19,11 +20,14 @@ contract PaymentStandardExitRouter is
     PaymentSpendingConditionRegistry
 {
     using PaymentStartStandardExitController for PaymentStartStandardExitController.Object;
+    using PaymentProcessStandardExitController for PaymentProcessStandardExitController.Object;
+
 
     uint256 public constant STANDARD_EXIT_BOND = 31415926535 wei;
 
     PaymentExitDataModel.StandardExitMap standardExitMap;
     PaymentStartStandardExitController.Object startStandardExitController;
+    PaymentProcessStandardExitController.Object processStandardExitController;
 
     constructor(
         PlasmaFramework _framework,
@@ -36,6 +40,10 @@ contract PaymentStandardExitRouter is
     {
         startStandardExitController = PaymentStartStandardExitController.init(
             this, _framework, _outputGuardParserRegistry
+        );
+
+        processStandardExitController = PaymentProcessStandardExitController.Object(
+            _framework, _ethVault, _erc20Vault, STANDARD_EXIT_BOND
         );
     }
 
@@ -74,5 +82,6 @@ contract PaymentStandardExitRouter is
      * @param _exitId The standard exit id.
      */
     function processStandardExit(uint192 _exitId) internal {
+        processStandardExitController.run(standardExitMap, _exitId);
     }
 }

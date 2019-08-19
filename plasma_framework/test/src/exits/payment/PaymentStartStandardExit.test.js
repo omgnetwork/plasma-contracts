@@ -3,6 +3,7 @@ const ExitId = artifacts.require('ExitIdWrapper');
 const IsDeposit = artifacts.require('IsDepositWrapper');
 const OutputGuardParser = artifacts.require('DummyOutputGuardParser');
 const OutputGuardParserRegistry = artifacts.require('OutputGuardParserRegistry');
+const PaymentProcessStandardExitController = artifacts.require('PaymentProcessStandardExitController');
 const PaymentStandardExitRouter = artifacts.require('PaymentStandardExitRouterMock');
 const PaymentStartStandardExitController = artifacts.require('PaymentStartStandardExitController');
 const PaymentSpendingConditionRegistry = artifacts.require('PaymentSpendingConditionRegistry');
@@ -35,8 +36,10 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
     const EMPTY_BYTES = '0x0000000000000000000000000000000000000000000000000000000000000000000000';
 
     before('deploy and link with controller lib', async () => {
-        const controller = await PaymentStartStandardExitController.new();
-        await PaymentStandardExitRouter.link('PaymentStartStandardExitController', controller.address);
+        const startStandardExitController = await PaymentStartStandardExitController.new();
+        const processStandardExitController = await PaymentProcessStandardExitController.new();
+        await PaymentStandardExitRouter.link('PaymentStartStandardExitController', startStandardExitController.address);
+        await PaymentStandardExitRouter.link('PaymentProcessStandardExitController', processStandardExitController.address);
     });
 
     describe('startStandardExit', () => {
