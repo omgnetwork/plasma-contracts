@@ -24,7 +24,7 @@ const {
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
 
 
-contract('PaymentStartStandardExit', ([_, alice, bob]) => {
+contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
     const STANDARD_EXIT_BOND = 31415926535; // wei
     const ETH = constants.ZERO_ADDRESS;
     const CHILD_BLOCK_INTERVAL = 1000;
