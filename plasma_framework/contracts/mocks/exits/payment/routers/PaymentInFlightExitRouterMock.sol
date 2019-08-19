@@ -1,14 +1,14 @@
 pragma solidity ^0.5.0;
 pragma experimental ABIEncoderV2;
 
-import "../../../../src/exits/payment/views/PaymentInFlightExitView.sol";
+import "../../../../src/exits/payment/routers/PaymentInFlightExitRouter.sol";
 import "../../../../src/framework/PlasmaFramework.sol";
 import "../../../../src/transactions/outputs/PaymentOutputModel.sol";
 
-contract PaymentInFlightExitViewMock is PaymentInFlightExitView {
+contract PaymentInFlightExitRouterMock is PaymentInFlightExitRouter {
     constructor(PlasmaFramework _framework, PaymentSpendingConditionRegistry _registry)
         public
-        PaymentInFlightExitView(_framework, _registry) {
+        PaymentInFlightExitRouter(_framework, _registry) {
     }
 
     // to override IExitProcessor function

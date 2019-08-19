@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-library PaymentInFlightExitViewArgs {
+library PaymentInFlightExitRouterArgs {
     /**
     * @notice Wraps arguments for startInFlightExit.
     * @param inFlightTx RLP encoded in-flight transaction.

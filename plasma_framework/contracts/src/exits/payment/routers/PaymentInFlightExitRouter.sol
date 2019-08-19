@@ -1,14 +1,14 @@
 pragma solidity ^0.5.0;
 pragma experimental ABIEncoderV2;
 
-import "./PaymentInFlightExitViewArgs.sol";
+import "./PaymentInFlightExitRouterArgs.sol";
 import "../PaymentExitDataModel.sol";
 import "../controllers/PaymentStartInFlightExitController.sol";
 import "../spendingConditions/PaymentSpendingConditionRegistry.sol";
 import "../../../utils/OnlyWithValue.sol";
 import "../../../framework/PlasmaFramework.sol";
 
-contract PaymentInFlightExitView is OnlyWithValue {
+contract PaymentInFlightExitRouter is OnlyWithValue {
     using PaymentStartInFlightExitController for PaymentStartInFlightExitController.Object;
 
     uint256 public constant IN_FLIGHT_EXIT_BOND = 31415926535 wei;
@@ -31,7 +31,7 @@ contract PaymentInFlightExitView is OnlyWithValue {
      * @dev Uses public instead of external because ABIEncoder V2 does not support struct calldata + external
      * @param args input argument data to challenge. See struct 'StartExitArgs' for detailed info.
      */
-    function startInFlightExit(PaymentInFlightExitViewArgs.StartExitArgs memory args)
+    function startInFlightExit(PaymentInFlightExitRouterArgs.StartExitArgs memory args)
         public
         payable
         onlyWithValue(IN_FLIGHT_EXIT_BOND)
