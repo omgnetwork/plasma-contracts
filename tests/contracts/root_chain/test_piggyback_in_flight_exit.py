@@ -3,6 +3,8 @@ from eth_tester.exceptions import TransactionFailed
 from plasma_core.constants import MIN_EXIT_PERIOD, NULL_ADDRESS
 from plasma_core.utils.transactions import decode_utxo_id, encode_utxo_id
 
+pytestmark = pytest.mark.skip()
+
 
 @pytest.mark.parametrize("num_inputs", [1, 2, 3, 4])
 def test_piggyback_in_flight_exit_valid_input_owner_should_succeed(testlang, num_inputs):

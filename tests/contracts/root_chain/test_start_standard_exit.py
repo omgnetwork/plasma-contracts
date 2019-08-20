@@ -5,6 +5,8 @@ from plasma_core.transaction import Transaction
 from plasma_core.utils.eip712_struct_hash import hash_struct
 from plasma_core.utils.transactions import decode_utxo_id, encode_utxo_id
 
+pytestmark = pytest.mark.skip()
+
 
 def test_start_standard_exit_should_succeed(testlang, utxo):
     testlang.start_standard_exit(utxo.spend_id, utxo.owner)

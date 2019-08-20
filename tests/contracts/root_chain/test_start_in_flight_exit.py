@@ -3,6 +3,8 @@ from eth_utils import to_canonical_address
 from eth_tester.exceptions import TransactionFailed
 from plasma_core.constants import NULL_ADDRESS, NULL_ADDRESS_HEX, MIN_EXIT_PERIOD
 
+pytestmark = pytest.mark.skip()
+
 
 @pytest.mark.parametrize("num_inputs", [1, 2, 3, 4])
 def test_start_in_flight_exit_should_succeed(testlang, num_inputs):

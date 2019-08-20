@@ -6,6 +6,8 @@ from eth_tester.exceptions import TransactionFailed
 from plasma_core.transaction import Transaction
 from plasma_core.utils.transactions import decode_utxo_id
 
+pytestmark = pytest.mark.skip()
+
 
 @pytest.fixture
 def plasma_core_test(get_contract):

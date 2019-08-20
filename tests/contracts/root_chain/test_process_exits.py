@@ -6,6 +6,8 @@ from plasma_core.constants import NULL_ADDRESS, NULL_ADDRESS_HEX, MIN_EXIT_PERIO
 from plasma_core.utils.transactions import decode_utxo_id, encode_utxo_id
 from tests.conftest import assert_event
 
+pytestmark = pytest.mark.skip()
+
 
 @pytest.mark.parametrize("num_outputs", [1, 2, 3, 4])
 def test_process_exits_standard_exit_should_succeed(testlang, num_outputs):

@@ -4,6 +4,7 @@ from eth_tester.exceptions import TransactionFailed
 from plasma_core.constants import NULL_ADDRESS, NULL_ADDRESS_HEX, MIN_EXIT_PERIOD
 from tests.conftest import assert_event
 
+pytestmark = pytest.mark.skip()
 
 # TODO: test if fee exit generates events
 

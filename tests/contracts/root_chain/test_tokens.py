@@ -2,6 +2,8 @@ import pytest
 from eth_tester.exceptions import TransactionFailed
 from plasma_core.constants import NULL_ADDRESS
 
+pytestmark = pytest.mark.skip()
+
 
 def test_token_adding(token, root_chain):
     assert not root_chain.hasToken(token.address)
