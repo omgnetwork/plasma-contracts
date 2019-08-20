@@ -4,6 +4,8 @@ from plasma_core.constants import NULL_ADDRESS, NULL_ADDRESS_HEX, MIN_EXIT_PERIO
 from plasma_core.transaction import Transaction
 from plasma_core.utils.transactions import decode_utxo_id
 
+pytestmark = pytest.mark.skip()
+
 
 def test_challenge_standard_exit_valid_spend_should_succeed(testlang):
     owner, amount = testlang.accounts[0], 100

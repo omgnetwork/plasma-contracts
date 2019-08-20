@@ -3,6 +3,8 @@ from eth_tester.exceptions import TransactionFailed
 
 from plasma_core.constants import NULL_ADDRESS, MIN_EXIT_PERIOD
 
+pytestmark = pytest.mark.skip()
+
 
 def test_challenge_in_flight_exit_not_canonical_should_succeed(testlang):
     owner_1, owner_2, amount = testlang.accounts[0], testlang.accounts[1], 100

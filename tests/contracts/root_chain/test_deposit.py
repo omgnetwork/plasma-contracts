@@ -7,6 +7,8 @@ from plasma_core.utils.transactions import decode_utxo_id, encode_utxo_id
 from plasma_core.transaction import Transaction
 from plasma_core.utils.merkle.fixed_merkle import FixedMerkle
 
+pytestmark = pytest.mark.skip()
+
 
 def test_deposit_valid_values_should_succeed(testlang, w3):
     owner, amount = testlang.accounts[0], 100

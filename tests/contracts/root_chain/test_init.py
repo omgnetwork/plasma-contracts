@@ -1,6 +1,7 @@
 import pytest
 from eth_tester.exceptions import TransactionFailed
 
+pytestmark = pytest.mark.skip()
 
 EXIT_PERIOD = 4 * 60
 
