@@ -13,8 +13,9 @@ def pick(left):
     return subtract(left, [item]), item
 
 
-@pytest.mark.slow()
-def test_slow(testlang):
+# @pytest.mark.slow()
+@pytest.mark.skip("In this model it takes forever")
+def test_slow(testlang, w3):
     utxos = []
     random.seed(a=0)
     owner, amount = testlang.accounts[0], 100
@@ -36,9 +37,9 @@ def test_slow(testlang):
             max_gas = max(max_gas, testlang.ethtester.chain.last_gas_used())
             utxos.append(spend_id)
 
-        testlang.forward_timestamp(DAY * 2)
+        w3.eth.increase_time(DAY * 2)
 
-        testlang.ethtester.chain.mine()
+        w3.eth.mine()
         # 2. spend
         for _ in range(random.randint(2, 4)):
             utxos, pos = pick(utxos)
