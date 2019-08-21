@@ -85,7 +85,13 @@ Certain configuration values need to be set, depending how you're deploying. The
  - `AUTHORITY_ADDRESS_INITIAL_AMOUNT` The amount the fund the `AUTHORITY` account with (in wei). Defaults to 1 ETH.
  - `USE_EXISTING_AUTHORITY_ADDRESS` Set to `true` if you want to use an existing `AUTHORITY` account instead of creating a new one. You must also set `AUTHORITY_ADDRESS`
 
-
+If using Infura, you will need to set the following:
+ - `INFURA_URL` e.g. `https://rinkeby.infura.io/v3`
+ - `INFURA_API_KEY` Your Infura API key.
+ - `USE_EXISTING_AUTHORITY_ADDRESS=true` You must have created and funded the `AUTHORITY` account.
+ - `AUTHORITY_ADDRESS` Address of the `AUTHORITY` account.
+ - `AUTHORITY_PRIVATEKEY` Private key of the `AUTHORITY` account.
+ - `DEPLOYER_PRIVATEKEY` Private key of the `DEPLOYER` account.
 
 Run truffle, passing in the network e.g.
 ```

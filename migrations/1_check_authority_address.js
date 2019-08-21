@@ -4,7 +4,7 @@ var RootChain = artifacts.require('./RootChain.sol')
 module.exports = async function (deployer, network, accounts) {
   if (process.env.USE_EXISTING_AUTHORITY_ADDRESS) {
     // If using an existing authority address, its nonce must be 0. Abort if it's not.
-    const authorityNonce = RootChain.web3.eth.getTransactionCount(process.env.AUTHORITY_ADDRESS)
+    const authorityNonce = await RootChain.web3.eth.getTransactionCount(process.env.AUTHORITY_ADDRESS)
     if (authorityNonce !== 0) {
       throw new Error(`Authority address ${process.env.AUTHORITY_ADDRESS} nonce is not 0. Aborting...`)
     }
