@@ -45,7 +45,7 @@ contract PaymentOutputToPaymentTxCondition is IPaymentSpendingCondition {
             "The spending tx does not spend the output specified by output identifier"
         );
 
-        address   owner = AddressPayable.convert(address(uint256(_outputGuard)));
+        address payable owner = AddressPayable.convert(address(uint256(_outputGuard)));
         require(owner == ECDSA.recover(eip712.hashTx(spendingTx), _signature), "Tx not correctly signed");
 
         return true;
