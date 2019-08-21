@@ -368,7 +368,7 @@ contract PaymentInFlightExitable is
     function verifyFirstPhaseNotOver(PaymentExitDataModel.InFlightExit storage ife) private view {
         uint256 phasePeriod = framework.minExitPeriod() / 2;
         bool firstPhasePassed = ((block.timestamp - ife.exitStartTimestamp) / phasePeriod) >= 1;
-        require(firstPhasePassed, "Canonicity challege phase for this exit has ended");
+        require(!firstPhasePassed, "Canonicity challege phase for this exit has ended");
     }
 
     function getTokenAmountOut(PaymentTransactionModel.Transaction memory inFlightTx, address token) private pure returns (uint256) {

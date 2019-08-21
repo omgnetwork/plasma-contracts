@@ -41,8 +41,8 @@ contract('PaymentInFlightExitable', ([_, alice, bob, carol]) => {
     describe('startInFlightExit', () => {
         function buildValidIfeStartArgs(amount, [ifeOwner, inputOwner1, inputOwner2], blockNum) {
             // TODO: make one of those a deposit transaction
-            const inputTx1 = createInputTransaction(DUMMY_INPUT_1, inputOwner1, amount);
-            const inputTx2 = createInputTransaction(DUMMY_INPUT_2, inputOwner2, amount);
+            const inputTx1 = createInputTransaction([DUMMY_INPUT_1], inputOwner1, amount);
+            const inputTx2 = createInputTransaction([DUMMY_INPUT_2], inputOwner2, amount);
             const inputTxs = [inputTx1, inputTx2];
 
             const inputUtxosPos = [buildUtxoPos(blockNum, 0, 0), buildUtxoPos(blockNum, 1, 0)];
@@ -89,9 +89,9 @@ contract('PaymentInFlightExitable', ([_, alice, bob, carol]) => {
             return { args, inputTxsBlockRoot };
         }
 
-        function createInputTransaction(input, owner, amount, token = ETH) {
+        function createInputTransaction(inputs, owner, amount, token = ETH) {
             const output = new PaymentTransactionOutput(amount, addressToOutputGuard(owner), token);
-            return new PaymentTransaction(IFE_TX_TYPE, [input], [output]);
+            return new PaymentTransaction(IFE_TX_TYPE, inputs, [output]);
         }
 
         function createInFlightTx(inputTxs, inputUtxosPos, ifeOwner, amount, token = ETH) {
@@ -322,8 +322,8 @@ contract('PaymentInFlightExitable', ([_, alice, bob, carol]) => {
             });
 
             it('should fail when number of input transactions does not match number of input utxos positions', async () => {
-                const inputTx1 = createInputTransaction(DUMMY_INPUT_1, alice, AMOUNT);
-                const inputTx2 = createInputTransaction(DUMMY_INPUT_2, bob, AMOUNT);
+                const inputTx1 = createInputTransaction([DUMMY_INPUT_1], alice, AMOUNT);
+                const inputTx2 = createInputTransaction([DUMMY_INPUT_2], bob, AMOUNT);
 
                 const inputUtxosPos = [buildUtxoPos(BLOCK_NUMBER, 0, 0)];
                 const inFlightTx = createInFlightTx([inputTx1, inputTx2], inputUtxosPos, carol, AMOUNT);
@@ -339,8 +339,8 @@ contract('PaymentInFlightExitable', ([_, alice, bob, carol]) => {
             });
 
             it('should fail when number of input transactions does not match in-flight transactions number of inputs', async () => {
-                const inputTx1 = createInputTransaction(DUMMY_INPUT_1, alice, AMOUNT);
-                const inputTx2 = createInputTransaction(DUMMY_INPUT_2, bob, AMOUNT);
+                const inputTx1 = createInputTransaction([DUMMY_INPUT_1], alice, AMOUNT);
+                const inputTx2 = createInputTransaction([DUMMY_INPUT_2], bob, AMOUNT);
 
                 const inputUtxosPos = [buildUtxoPos(BLOCK_NUMBER, 0, 0), buildUtxoPos(BLOCK_NUMBER, 1, 0)];
                 const inFlightTx = createInFlightTx([inputTx1], inputUtxosPos, carol, AMOUNT);
@@ -392,8 +392,8 @@ contract('PaymentInFlightExitable', ([_, alice, bob, carol]) => {
             });
 
             it('should fail when in-flight transaction with single token inputs/outputs overspends', async () => {
-                const inputTx1 = createInputTransaction(DUMMY_INPUT_1, alice, AMOUNT);
-                const inputTx2 = createInputTransaction(DUMMY_INPUT_2, bob, AMOUNT);
+                const inputTx1 = createInputTransaction([DUMMY_INPUT_1], alice, AMOUNT);
+                const inputTx2 = createInputTransaction([DUMMY_INPUT_2], bob, AMOUNT);
 
                 const inputUtxosPos = [buildUtxoPos(BLOCK_NUMBER, 0, 0), buildUtxoPos(BLOCK_NUMBER, 1, 0)];
                 const inFlightTx = createInFlightTx([inputTx1, inputTx2], inputUtxosPos, carol, AMOUNT * 3);
@@ -415,8 +415,8 @@ contract('PaymentInFlightExitable', ([_, alice, bob, carol]) => {
             });
 
             it('should fail when in-flight transaction with multiple tokens inputs/outputs overspends', async () => {
-                const inputTx1 = createInputTransaction(DUMMY_INPUT_1, alice, AMOUNT);
-                const inputTx2 = createInputTransaction(DUMMY_INPUT_2, bob, AMOUNT, OTHER_TOKEN);
+                const inputTx1 = createInputTransaction([DUMMY_INPUT_1], alice, AMOUNT);
+                const inputTx2 = createInputTransaction([DUMMY_INPUT_2], bob, AMOUNT, OTHER_TOKEN);
 
                 const inputUtxosPos = [buildUtxoPos(BLOCK_NUMBER, 0, 0), buildUtxoPos(BLOCK_NUMBER, 1, 0)];
                 const inputs = createInputsForInFlightTx([inputTx1, inputTx2], inputUtxosPos);
@@ -443,7 +443,7 @@ contract('PaymentInFlightExitable', ([_, alice, bob, carol]) => {
             });
 
             it('should fail when in-flight tx input transactions are not unique', async () => {
-                const inputTx = createInputTransaction(DUMMY_INPUT_1, alice, AMOUNT);
+                const inputTx = createInputTransaction([DUMMY_INPUT_1], alice, AMOUNT);
                 const inputUtxosPos = [buildUtxoPos(BLOCK_NUMBER, 0, 0), buildUtxoPos(BLOCK_NUMBER, 0, 0)];
                 const inFlightTx = createInFlightTx([inputTx, inputTx], inputUtxosPos, carol, AMOUNT);
 
@@ -455,6 +455,221 @@ contract('PaymentInFlightExitable', ([_, alice, bob, carol]) => {
                     this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
                     'In-flight transaction must have unique inputs',
                 );
+            });
+        });
+
+        describe.only('canonicity challenge', () => {
+            function createCompetitorTransaction(ifeZeroInput, otherInput) {
+                const competingTx = createInputTransaction([otherInput.utxoPos, ifeZeroInput], bob, AMOUNT);
+                const competingTxPos = new UtxoPos(buildUtxoPos(otherInput.blockNum + CHILD_BLOCK_INTERVAL, 0, 0));
+
+                return {
+                    competingTx: web3.utils.bytesToHex(competingTx.rlpEncoded()),
+                    decodedCompetingTx: competingTx,
+                    competingTxPos,
+                };
+            }
+
+            function createInclusionProof(encodedTx, txUtxoPos) {
+                const merkleTree = new MerkleTree([encodedTx], MERKLE_TREE_HEIGHT);
+                const competingTxInclusionProof = merkleTree.getInclusionProof(encodedTx);
+
+                return {
+                    competingTxInclusionProof,
+                    blockHash: merkleTree.root,
+                    blockNum: txUtxoPos.blockNum,
+                    blockTimestamp: 1000,
+                };
+            }
+
+            function createValidNoncanonicalChallengeArgs(decodedIfeTx) {
+                const utxoPos = new UtxoPos(buildUtxoPos(BLOCK_NUMBER, 2, 2));
+                const { competingTx, decodedCompetingTx, competingTxPos } = createCompetitorTransaction(
+                    decodedIfeTx.inputs[0], utxoPos,
+                );
+
+                const {
+                    competingTxInclusionProof, blockHash, blockNum, blockTimestamp,
+                } = createInclusionProof(
+                    competingTx, competingTxPos,
+                );
+
+                const competingTxWitness = addressToOutputGuard(bob);
+
+                return {
+                    args: {
+                        inFlightTx: web3.utils.bytesToHex(decodedIfeTx.rlpEncoded()),
+                        inFlightTxInputIndex: 0,
+                        competingTx,
+                        competingTxInputIndex: 1,
+                        competingTxInputOutputType: OUTPUT_TYPE_ZERO,
+                        competingTxPos: competingTxPos.utxoPos,
+                        competingTxInclusionProof,
+                        competingTxWitness,
+                    },
+                    block: {
+                        blockHash, blockNum, blockTimestamp,
+                    },
+                    decodedCompetingTx,
+                };
+            }
+
+            beforeEach(async () => {
+                this.framework = await SpyPlasmaFramework.new(
+                    MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
+                );
+                this.exitGame = await PaymentInFlightExitable.new(this.framework.address);
+
+                const { args, argsDecoded, inputTxsBlockRoot } = buildValidIfeStartArgs(
+                    AMOUNT, [alice, bob, carol], BLOCK_NUMBER,
+                );
+                this.args = args;
+                this.argsDecoded = argsDecoded;
+                await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot, 0);
+
+                const conditionTrue = await PaymentSpendingConditionTrue.new();
+
+                await this.exitGame.registerSpendingCondition(
+                    OUTPUT_TYPE_ZERO, IFE_TX_TYPE, conditionTrue.address,
+                );
+
+                await this.exitGame.startInFlightExit(
+                    this.args,
+                    { from: alice, value: IN_FLIGHT_EXIT_BOND },
+                );
+
+                const {
+                    args: cArgs, block, decodedCompetingTx,
+                } = createValidNoncanonicalChallengeArgs(this.argsDecoded.inFlightTx);
+
+                this.challengeArgs = cArgs;
+                this.competingTx = decodedCompetingTx;
+                this.competingTxBlock = block;
+            });
+
+            it('should successfully challenge ife', async () => {
+                await this.framework.setBlock(
+                    this.competingTxBlock.blockNum,
+                    this.competingTxBlock.blockHash,
+                    this.competingTxBlock.blockTimestamp,
+                );
+
+                const tx = await this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: alice });
+
+                expectEvent.inLogs(tx.logs, 'InFlightExitChallenged', {
+                    challenger: alice,
+                    txHash: web3.utils.sha3(this.args.inFlightTx),
+                    challengeTxPosition: new BN(this.challengeArgs.competingTxPos),
+                });
+            });
+
+            it('fails when competing tx is the same as in-flight one', async () => {
+                this.challengeArgs.competingTx = this.challengeArgs.inFlightTx;
+
+                await expectRevert(
+                    this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: alice }),
+                    'The competitor transaction is the same as transaction in-flight',
+                );
+            });
+
+            it('fails when first phase is over', async () => {
+                await time.increase((MIN_EXIT_PERIOD / 2) + 1);
+
+                await expectRevert(
+                    this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: alice }),
+                    'Canonicity challege phase for this exit has ended',
+                );
+            });
+
+            it('fails when competing tx is not included', async () => {
+                await expectRevert(
+                    this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: alice }),
+                    'Transaction is not included in block of plasma chain',
+                );
+            });
+
+            it('fails when ife not started', async () => {
+                this.challengeArgs.inFlightTx = this.challengeArgs.competingTx;
+
+                await expectRevert(
+                    this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: alice }),
+                    "In-fligh exit doesn't exists",
+                );
+            });
+
+            it('fails when spending condition is not met', async () => {
+                const newOutputType = OUTPUT_TYPE_ZERO + 1;
+
+                const conditionFalse = await PaymentSpendingConditionFalse.new();
+                await this.exitGame.registerSpendingCondition(
+                    newOutputType, IFE_TX_TYPE, conditionFalse.address,
+                );
+
+                this.challengeArgs.competingTxInputOutputType = newOutputType;
+                await expectRevert(
+                    this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: alice }),
+                    'Competing input spending condition is not met',
+                );
+            });
+
+            it('fails when competing tx is younger than already known competitor', async () => {
+                // challenge ife as previously
+                await this.framework.setBlock(
+                    this.competingTxBlock.blockNum,
+                    this.competingTxBlock.blockHash,
+                    this.competingTxBlock.blockTimestamp,
+                );
+
+                await this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: alice });
+
+                // then mine the next block - with the same root hash
+                const nextBlockNum = this.competingTxBlock.blockNum + CHILD_BLOCK_INTERVAL;
+                const nextBlockTimestamp = this.competingTxBlock.blockTimestamp + 1000;
+                const nextCompetitorPos = buildUtxoPos(nextBlockNum, 0, 0);
+
+                await this.framework.setBlock(
+                    nextBlockNum, this.competingTxBlock.blockHash, nextBlockTimestamp,
+                );
+
+                // try to challenge again with competitor from the lastly mined block
+                this.challengeArgs.competingTxPos = nextCompetitorPos;
+                await expectRevert(
+                    this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: alice }),
+                    'Competing transaction is not older than already known competitor',
+                );
+            });
+
+            it('fails when challenge with the same competing tx twice', async () => {
+                await this.framework.setBlock(
+                    this.competingTxBlock.blockNum,
+                    this.competingTxBlock.blockHash,
+                    this.competingTxBlock.blockTimestamp,
+                );
+
+                await this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: alice });
+
+                await expectRevert(
+                    this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: alice }),
+                    'Competing transaction is not older than already known competitor',
+                );
+            });
+
+            it('succeeds when competitor is not included with appropriate large position', async () => {
+                this.challengeArgs.competingTxPos = 0;
+                this.challengeArgs.competingTxInclusionProof = '0x';
+
+                const expectedCompetitorPos = new BN(
+                    // it seems to be solidity `~uint256(0)` - what is important here: it's HUGE
+                    'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF', 16,
+                );
+
+                const tx = await this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: alice });
+
+                expectEvent.inLogs(tx.logs, 'InFlightExitChallenged', {
+                    challenger: alice,
+                    txHash: web3.utils.sha3(this.args.inFlightTx),
+                    challengeTxPosition: expectedCompetitorPos,
+                });
             });
         });
     });
