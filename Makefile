@@ -37,7 +37,12 @@ test:
 
 .PHONY: test_quick
 test_quick:
-	python -W ignore::DeprecationWarning -m pytest -m "not slow"
+	python -W ignore::DeprecationWarning -m pytest -m "not slow" -n auto
+	rm -fr .pytest_cache
+
+.PHONY: conctest
+conctest:
+	python -W ignore::DeprecationWarning -m pytest -n auto
 	rm -fr .pytest_cache
 
 .PHONY: runslow

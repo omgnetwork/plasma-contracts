@@ -47,15 +47,34 @@ def ganache_initial_accounts_args(accounts):
     return [f"--account=\"{acc.key.to_hex()},{HUNDRED_ETH}\"" for acc in accounts]
 
 
-def ganache_cli(accounts):
+def parse_worker_no(worker_id):
+    worker_no = 0
+    try:
+        worker_no = int(worker_id[2:])
+    except ValueError:
+        pass
+
+    return worker_no
+
+
+@pytest.fixture(scope="session")
+def ganache_port(worker_id):
+    default_port = 8545
+    worker_no = parse_worker_no(worker_id)
+    print(f'{worker_id}, {worker_no}')
+    return default_port + worker_no
+
+
+def ganache_cli(accounts, port):
     accounts_args = ganache_initial_accounts_args(accounts)
 
     class Starter(ProcessStarter):
         pattern = "Listening on .*"
         args = ["ganache-cli",
+                f"--port={port}",
                 f"--gasLimit={GAS_LIMIT}",
                 f"--time=0",
-                f"--blockTime=0"
+                f"--blockTime=0",
                 ] + accounts_args
 
         def filter_lines(self, lines):
@@ -65,21 +84,21 @@ def ganache_cli(accounts):
 
 
 @pytest.fixture(scope="session")
-def _w3_session(xprocess, accounts):
+def _w3_session(xprocess, accounts, ganache_port):
 
     web3_modules = get_default_modules()
     web3_modules.update(eth=(AutominingEth,))
 
-    _w3 = Web3(HTTPProvider(), modules=web3_modules)
+    _w3 = Web3(HTTPProvider(endpoint_uri=f'http://localhost:{ganache_port}'), modules=web3_modules)
     if not _w3.isConnected():  # try to connect to an external ganache
-        xprocess.ensure("GANACHE", ganache_cli(accounts))
+        xprocess.ensure(f'GANACHE_{ganache_port}', ganache_cli(accounts, ganache_port))
         assert _w3.provider.make_request('miner_stop', [])['result']
 
     _w3.eth.defaultAccount = _w3.eth.accounts[0]
 
     yield _w3
 
-    xprocess.getinfo('GANACHE').terminate()
+    xprocess.getinfo(f'GANACHE_{ganache_port}').terminate()
 
 
 @pytest.fixture
