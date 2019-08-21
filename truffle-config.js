@@ -1,4 +1,5 @@
 require('dotenv').config()
+const url = require('url')
 const HDWalletProvider = require('truffle-hdwallet-provider')
 
 module.exports = {
@@ -40,13 +41,11 @@ module.exports = {
     },
     infura: {
       skipDryRun: true,
-      provider: function () {
-        return new HDWalletProvider(
-          [process.env.DEPLOYER_PRIVATEKEY, process.env.AUTHORITY_PRIVATEKEY],
-          `${process.env.INFURA_URL}/${process.env.INFURA_API_KEY}`,
-          0, 2
-        )
-      },
+      provider: () =>  new HDWalletProvider(
+        [process.env.DEPLOYER_PRIVATEKEY, process.env.AUTHORITY_PRIVATEKEY],
+        `${url.resolve(process.env.INFURA_URL, process.env.INFURA_API_KEY)}`,
+        0, 2
+      ),
       network_id: '*'
     }
   }

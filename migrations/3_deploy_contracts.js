@@ -7,7 +7,11 @@ module.exports = async function (deployer, network, accounts) {
   const DEPLOYER_ADDRESS = process.env.DEPLOYER_ADDRESS || accounts[0]
 
   // Unlock the deployer account if necessary
-  if (process.env.DEPLOYER_PASSPHRASE) {
+  // Only unlock if no private keys
+  if (process.env.DEPLOYER_PASSPHRASE &&
+     !process.env.AUTHORITY_PRIVATEKEY && 
+     !process.env.DEPLOYER_PRIVATEKEY
+  ) {
     await RootChain.web3.eth.personal.unlockAccount(
       DEPLOYER_ADDRESS,
       process.env.DEPLOYER_PASSPHRASE,
