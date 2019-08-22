@@ -4,6 +4,8 @@ const RootChain = artifacts.require('./RootChain.sol')
 module.exports = async function (deployer, network, accounts) {
   const rootChain = await RootChain.deployed()
 
+  // Unlock the deployer account if not using Infura
+  // As infura doesn't support eth_unlockAccount
   if (process.env.DEPLOYER_PASSPHRASE &&
     !process.env.AUTHORITY_PRIVATEKEY && 
     !process.env.DEPLOYER_PRIVATEKEY

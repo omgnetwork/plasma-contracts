@@ -90,13 +90,11 @@ Certain configuration values need to be set, depending how you're deploying. The
 ##### Infura
 To deploy to infura, you'll need these environment variables in addition to the ones listed above.
 
-** Important: Make sure the deployer and authority addresses are already funded with ETH
-
+** Important: Make sure the deployer address is funded with at least 2 ETH
 ** Important 2: Also make sure the nonce count of the authority is 0 (i.e. no previous transactions have been made)
 
 - `DEPLOYER_PRIVATEKEY` Private key of the deployer address
 - `AUTHORITY_PRIVATEKEY` Private key of the authority address
-- `USE_EXISTING_AUTHORITY_ADDRESS=true` You must have created and funded the `AUTHORITY` account.
 - `INFURA_URL` Infura Endpoint URL e.g. `https://rinkeby.infura.io/v3`
 - `INFURA_API_KEY` Infura Project ID
 

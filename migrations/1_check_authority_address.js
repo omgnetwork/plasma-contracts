@@ -3,8 +3,32 @@ const RootChain = artifacts.require('./RootChain.sol')
 
 
 module.exports = async function (deployer, network, accounts) {
+  if (process.env.AUTHORITY_PRIVATEKEY && process.env.DEPLOYER_PRIVATEKEY) {
+    // If we're deploying via infura
+    const deployerAddress = process.env.DEPLOYER_ADDRESS || accounts[0]
+    const authorityAddress = process.env.AUTHORITY_ADDRESS || accounts[1]
 
-  if (process.env.USE_EXISTING_AUTHORITY_ADDRESS) {
+    // If using an existing authority address, its nonce must be 0. Abort if it's not.
+    const authorityNonce = await RootChain.web3.eth.getTransactionCount(authorityAddress)
+    if (authorityNonce !== 0) {
+      throw new Error(`Authority address ${authorityAddress} nonce is not 0. Aborting...`)
+    }
+
+    // Check if authorithy address has enough funds, if not auto fund it
+    const authorithyWeiCount = await RootChain.web3.eth.getBalance(authorityAddress)
+
+    // Fund authority if it has 0 funds
+    if (parseInt(authorithyWeiCount) === 0 ) {
+       // Funds authority address
+      console.log(`Funding authority address ${authorityAddress}`)
+      await RootChain.web3.eth.sendTransaction({
+        from: deployerAddress,
+        to: authorityAddress,
+        value: process.env.AUTHORITY_ADDRESS_INITIAL_AMOUNT || 1e18
+      })
+      console.log('Successfully funded authority address.')
+    }
+  } else if (process.env.USE_EXISTING_AUTHORITY_ADDRESS) {
     // If using an existing authority address, its nonce must be 0. Abort if it's not.
     const authorityNonce = await RootChain.web3.eth.getTransactionCount(process.env.AUTHORITY_ADDRESS)
     if (authorityNonce !== 0) {

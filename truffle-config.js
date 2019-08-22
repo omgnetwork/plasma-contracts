@@ -41,7 +41,7 @@ module.exports = {
     },
     infura: {
       skipDryRun: true,
-      provider: () =>  new HDWalletProvider(
+      provider: () => new HDWalletProvider(
         [process.env.DEPLOYER_PRIVATEKEY, process.env.AUTHORITY_PRIVATEKEY],
         `${url.resolve(process.env.INFURA_URL, process.env.INFURA_API_KEY)}`,
         0, 2
