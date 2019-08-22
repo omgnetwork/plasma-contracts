@@ -41,7 +41,7 @@ contract PaymentOutputToPaymentTxCondition is IPaymentSpendingCondition {
         PaymentTransactionModel.Transaction memory spendingTx = PaymentTransactionModel.decode(_spendingTx);
         require(spendingTx.txType == PAYMENT_TX_TYPE, "The spending tx is not of payment tx type");
         require(
-            spendingTx.inputs[_inputIndex] == _outputIdentifier, 
+            spendingTx.inputs[_inputIndex] == _outputIdentifier,
             "The spending tx does not spend the output specified by output identifier"
         );
 

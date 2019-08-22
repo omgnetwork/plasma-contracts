@@ -4,7 +4,6 @@ import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 import "./IPaymentSpendingCondition.sol";
 
-
 contract PaymentSpendingConditionRegistry is Ownable {
     mapping(bytes32 => IPaymentSpendingCondition) private _spendingConditions;
 

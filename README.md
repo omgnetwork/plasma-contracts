@@ -96,7 +96,8 @@ To deploy to infura, you'll need these environment variables in addition to the 
 
 - `DEPLOYER_PRIVATEKEY` Private key of the deployer address
 - `AUTHORITY_PRIVATEKEY` Private key of the authority address
-- `INFURA_URL` Infura Endpoint URL
+- `USE_EXISTING_AUTHORITY_ADDRESS=true` You must have created and funded the `AUTHORITY` account.
+- `INFURA_URL` Infura Endpoint URL e.g. `https://rinkeby.infura.io/v3`
 - `INFURA_API_KEY` Infura Project ID
 
 ##### Deploying
