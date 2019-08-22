@@ -1,6 +1,7 @@
 require('dotenv').config()
-const url = require('url')
+const path = require('path')
 const HDWalletProvider = require('truffle-hdwallet-provider')
+
 
 module.exports = {
   compilers: {
@@ -43,7 +44,7 @@ module.exports = {
       skipDryRun: true,
       provider: () => new HDWalletProvider(
         [process.env.DEPLOYER_PRIVATEKEY, process.env.AUTHORITY_PRIVATEKEY],
-        `${url.resolve(process.env.INFURA_URL, process.env.INFURA_API_KEY)}`,
+        `${path.join(process.env.INFURA_URL, process.env.INFURA_API_KEY)}`,
         0, 2
       ),
       network_id: '*'
