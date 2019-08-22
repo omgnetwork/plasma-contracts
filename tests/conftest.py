@@ -134,11 +134,12 @@ def root_chain(get_contract):
 
 
 def initialized_contract(get_contract, exit_period):
-    pql = get_contract('PriorityQueueLib')
-    pqf = get_contract('PriorityQueueFactory', libraries={'PriorityQueueLib': pql.address})
-    contract = get_contract('RootChain', libraries={'PriorityQueueFactory': pqf.address})
-    contract.init(exit_period)
-    return contract
+    # pql = get_contract('PriorityQueueLib')
+    # pqf = get_contract('PriorityQueueFactory', libraries={'PriorityQueueLib': pql.address})
+    # contract = get_contract('RootChain', libraries={'PriorityQueueFactory': pqf.address})
+    # contract.init(exit_period)
+    # return contract
+    return ()
 
 
 @pytest.fixture

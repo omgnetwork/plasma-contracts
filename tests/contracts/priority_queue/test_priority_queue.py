@@ -6,11 +6,7 @@ from eth_tester.exceptions import TransactionFailed
 
 @pytest.fixture
 def priority_queue(get_contract, accounts):
-    pql = get_contract('PriorityQueueLib')
-    return get_contract(
-        'PriorityQueueWrapper',
-        args=[accounts[0].address], libraries={'PriorityQueueLib': pql.address}
-    )
+    return get_contract('PriorityQueueTest')
 
 
 def del_min(priority_queue) -> int:
@@ -105,7 +101,7 @@ def op_cost(n):
     tx_base_cost = 21000
     # Numbers were discovered experimentally. They represent upper bound of
     # gas cost of execution of delMin or insert operations.
-    return tx_base_cost + 39723 + 6582 * math.floor(math.log(n, 2))
+    return tx_base_cost + 40472 + 6689 * math.floor(math.log(n, 2))
 
 
 def test_priority_queue_worst_case_gas_cost(w3, priority_queue):
@@ -128,11 +124,7 @@ def test_priority_queue_best_case_gas_cost(w3, priority_queue):
 
 
 def test_del_min_can_be_called_by_owner_only(w3, get_contract, accounts):
-    pql = get_contract('PriorityQueueLib')
-    priority_queue = get_contract("PriorityQueue",
-                                  args=[accounts[0].address],
-                                  libraries={'PriorityQueueLib': pql.address}
-                                  )  # without a proxy contract
+    priority_queue = get_contract("PriorityQueue")  # without a proxy contract
 
     priority_queue.insert(7)
 
