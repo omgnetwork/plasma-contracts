@@ -44,7 +44,7 @@ module.exports = {
       skipDryRun: true,
       provider: () => new HDWalletProvider(
         [process.env.DEPLOYER_PRIVATEKEY, process.env.AUTHORITY_PRIVATEKEY],
-        `${path.join(process.env.INFURA_URL, process.env.INFURA_API_KEY)}`,
+        `${path.join(process.env.INFURA_URL, process.env.INFURA_API_KEY).replace('https:/', 'https://')}`,
         0, 2
       ),
       network_id: '*'
