@@ -18,6 +18,7 @@ module.exports = {
       host: process.env.ETH_CLIENT_HOST || '127.0.0.1',
       port: process.env.ETH_CLIENT_PORT || 8545,
       from: process.env.DEPLOYER_ADDRESS,
+      gas: 6000000, // reasoning of the gas here: https://github.com/omisego/plasma-contracts/issues/199
       network_id: '*'
     },
     mainnet: {
