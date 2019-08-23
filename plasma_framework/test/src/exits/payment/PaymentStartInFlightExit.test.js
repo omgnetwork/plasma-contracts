@@ -631,7 +631,10 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
                 this.framework = await SpyPlasmaFramework.new(
                     MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
                 );
-                this.exitGame = await PaymentInFlightExitable.new(this.framework.address);
+                this.spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
+                this.exitGame = await PaymentInFlightExitRouter.new(
+                    this.framework.address, this.spendingConditionRegistry.address,
+                );
 
                 const { args, argsDecoded, inputTxsBlockRoot } = buildValidIfeStartArgs(
                     AMOUNT, [alice, bob, carol], BLOCK_NUMBER,
