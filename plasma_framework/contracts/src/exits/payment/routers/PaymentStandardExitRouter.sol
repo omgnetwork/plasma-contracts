@@ -7,7 +7,7 @@ import "../controllers/PaymentStartStandardExit.sol";
 import "../controllers/PaymentProcessStandardExit.sol";
 import "../controllers/PaymentChallengeStandardExit.sol";
 import "../spendingConditions/PaymentSpendingConditionRegistry.sol";
-import "../../OutputGuardParserRegistry.sol";
+import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../../vaults/EthVault.sol";
 import "../../../vaults/Erc20Vault.sol";
 import "../../../framework/PlasmaFramework.sol";
@@ -16,9 +16,7 @@ import "../../../utils/OnlyWithValue.sol";
 
 contract PaymentStandardExitRouter is
     IExitProcessor,
-    OnlyWithValue,
-    OutputGuardParserRegistry,
-    PaymentSpendingConditionRegistry
+    OnlyWithValue
 {
     using PaymentStartStandardExit for PaymentStartStandardExit.Controller;
     using PaymentChallengeStandardExit for PaymentChallengeStandardExit.Controller;
@@ -35,13 +33,13 @@ contract PaymentStandardExitRouter is
         PlasmaFramework _framework,
         EthVault _ethVault,
         Erc20Vault _erc20Vault,
-        OutputGuardParserRegistry _outputGuardParserRegistry,
+        OutputGuardHandlerRegistry _outputGuardHandlerRegistry,
         PaymentSpendingConditionRegistry _spendingConditionRegistry
     )
         public
     {
         startStandardExitController = PaymentStartStandardExit.buildController(
-            this, _framework, _outputGuardParserRegistry
+            this, _framework, _outputGuardHandlerRegistry
         );
 
         challengeStandardExitController = PaymentChallengeStandardExit.Controller(

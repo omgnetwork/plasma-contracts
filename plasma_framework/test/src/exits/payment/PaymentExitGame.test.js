@@ -6,9 +6,10 @@ const ExitableTimestamp = artifacts.require('ExitableTimestampWrapper');
 const ExitId = artifacts.require('ExitIdWrapper');
 const ExitPriority = artifacts.require('ExitPriorityWrapper');
 const ERC20Mintable = artifacts.require('ERC20Mintable');
-const OutputGuardParserRegistry = artifacts.require('OutputGuardParserRegistry');
+const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry');
 const PaymentExitGame = artifacts.require('PaymentExitGame');
 const PaymentChallengeStandardExit = artifacts.require('PaymentChallengeStandardExit');
+const PaymentOutputGuardHandler = artifacts.require('PaymentOutputGuardHandler');
 const PaymentOutputToPaymentTxCondition = artifacts.require('PaymentOutputToPaymentTxCondition');
 const PaymentStartInFlightExit = artifacts.require('PaymentStartInFlightExit');
 const PaymentStartStandardExit = artifacts.require('PaymentStartStandardExit');
@@ -36,8 +37,8 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
     const ETH = constants.ZERO_ADDRESS;
     const INITIAL_ERC20_SUPPLY = 10000000000;
     const DEPOSIT_VALUE = 1000000;
-    const OUTPUT_TYPE_ZERO = 0;
     const EMPTY_BYTES = '0x';
+    const PAYMENT_OUTPUT_TYPE = 1;
     const PAYMENT_TX_TYPE = 1;
     const INITIAL_IMMUNE_VAULTS = 2; // ETH and ERC20 vault
     const INITIAL_IMMUNE_EXIT_GAMES = 1; // 1 for PaymentExitGame
@@ -92,16 +93,21 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
         await this.framework.registerVault(1, this.ethVault.address);
         await this.framework.registerVault(2, this.erc20Vault.address);
 
-        const outputGuardRegistry = await OutputGuardParserRegistry.new();
+        const outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
+        const paymentOutputGuardHandler = await PaymentOutputGuardHandler.new(PAYMENT_OUTPUT_TYPE);
+        await outputGuardHandlerRegistry.registerOutputGuardHandler(
+            PAYMENT_OUTPUT_TYPE, paymentOutputGuardHandler.address,
+        );
+
         const spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
         this.exitGame = await PaymentExitGame.new(
             this.framework.address, this.ethVault.address, this.erc20Vault.address,
-            outputGuardRegistry.address, spendingConditionRegistry.address,
+            outputGuardHandlerRegistry.address, spendingConditionRegistry.address,
         );
 
         this.toPaymentCondition = await PaymentOutputToPaymentTxCondition.new(this.framework.address);
         await spendingConditionRegistry.registerSpendingCondition(
-            OUTPUT_TYPE_ZERO, PAYMENT_TX_TYPE, this.toPaymentCondition.address,
+            PAYMENT_OUTPUT_TYPE, PAYMENT_TX_TYPE, this.toPaymentCondition.address,
         );
         await this.framework.registerExitGame(PAYMENT_TX_TYPE, this.exitGame.address);
     };
@@ -171,8 +177,8 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
                     const args = {
                         utxoPos: this.depositUtxoPos,
                         rlpOutputTx: this.depositTx,
-                        outputType: OUTPUT_TYPE_ZERO,
-                        outputGuardData: EMPTY_BYTES,
+                        outputType: PAYMENT_OUTPUT_TYPE,
+                        outputGuardPreimage: EMPTY_BYTES,
                         outputTxInclusionProof: this.merkleProofForDepositTx,
                     };
                     await this.exitGame.startStandardExit(
@@ -189,7 +195,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
                         this.depositTx, outputIndexForDeposit, this.depositUtxoPos,
                     );
                     const expectedOutputTypeAndGuardHash = web3.utils.soliditySha3(
-                        { t: 'uint256', v: OUTPUT_TYPE_ZERO }, { t: 'bytes32', v: addressToOutputGuard(alice) },
+                        { t: 'uint256', v: PAYMENT_OUTPUT_TYPE }, { t: 'bytes32', v: addressToOutputGuard(alice) },
                     );
 
                     expect(standardExitData.exitable).to.be.true;
@@ -252,8 +258,8 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
                     const args = {
                         utxoPos: this.transferUtxoPos,
                         rlpOutputTx: this.transferTx,
-                        outputType: OUTPUT_TYPE_ZERO,
-                        outputGuardData: EMPTY_BYTES,
+                        outputType: PAYMENT_OUTPUT_TYPE,
+                        outputGuardPreimage: EMPTY_BYTES,
                         outputTxInclusionProof: this.merkleProofForTransferTx,
                     };
 
@@ -302,8 +308,8 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
                     const args = {
                         utxoPos: this.depositUtxoPos,
                         rlpOutputTx: this.depositTx,
-                        outputType: OUTPUT_TYPE_ZERO,
-                        outputGuardData: EMPTY_BYTES,
+                        outputType: PAYMENT_OUTPUT_TYPE,
+                        outputGuardPreimage: EMPTY_BYTES,
                         outputTxInclusionProof: this.merkleProofForDepositTx,
                     };
 
@@ -328,7 +334,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
 
                         const input = {
                             exitId: this.exitId.toString(10),
-                            outputType: OUTPUT_TYPE_ZERO,
+                            outputType: PAYMENT_OUTPUT_TYPE,
                             outputUtxoPos: this.depositUtxoPos,
                             outputId: computeDepositOutputId(this.depositTx, 0, this.depositUtxoPos),
                             outputGuard: addressToOutputGuard(alice),
@@ -419,8 +425,8 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
                         const args = {
                             utxoPos: this.depositUtxoPos,
                             rlpOutputTx: this.depositTx,
-                            outputType: OUTPUT_TYPE_ZERO,
-                            outputGuardData: EMPTY_BYTES,
+                            outputType: PAYMENT_OUTPUT_TYPE,
+                            outputGuardPreimage: EMPTY_BYTES,
                             outputTxInclusionProof: this.merkleProofForDepositTx,
                         };
 
