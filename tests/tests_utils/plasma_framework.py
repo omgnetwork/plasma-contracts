@@ -1,4 +1,3 @@
-from plasma_core.constants import CHILD_BLOCK_INTERVAL
 from .constants import EXIT_PERIOD, INITIAL_IMMUNE_EXIT_GAMES, INITIAL_IMMUNE_VAULTS
 
 
@@ -7,17 +6,15 @@ class PlasmaFramework:
         self.plasma_framework = get_contract('PlasmaFramework',
                                              args=(EXIT_PERIOD, INITIAL_IMMUNE_VAULTS, INITIAL_IMMUNE_EXIT_GAMES))
 
-        self.blockController = get_contract('BlockController',
-                                            args=(CHILD_BLOCK_INTERVAL, EXIT_PERIOD, INITIAL_IMMUNE_VAULTS))
 
     def blocks(self, block):
-        return self.blockController.blocks(block)
+        return self.plasma_framework.blocks(block)
 
     def addToken(self, token):
         raise NotImplementedError
 
     def submitBlock(self, block_root, **kwargs):
-        self.blockController.submitBlock(block_root, **kwargs)
+        self.plasma_framework.submitBlock(block_root, **kwargs)
 
     def deposit(self, deposit_tx):
         raise NotImplementedError
@@ -92,7 +89,10 @@ class PlasmaFramework:
         raise NotImplementedError
 
     def nextChildBlock(self):
-        return self.blockController.nextChildBlock()
+        return self.plasma_framework.nextChildBlock()
 
-    def getDepositBlockNumber(self):
-        return self.blockController.nextDepositBlock()
+    def nextDepositBlock(self):
+        return self.plasma_framework.nextDepositBlock()
+
+    def childBlockInterval(self):
+        return self.plasma_framework.childBlockInterval()
