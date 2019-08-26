@@ -110,13 +110,15 @@ class TestingLanguage:
         child_chain (ChildChain): Child chain instance.
     """
 
-    def __init__(self, root_chain, w3, accounts):
-        self.root_chain = root_chain
+    def __init__(self, plasma_framework, w3, accounts):
+        self.root_chain = plasma_framework  # TODO: change root_chain -> plasma_framework
         self.w3 = w3
         self.accounts = accounts
         self.operator = self.accounts[0]
         self.child_chain = ChildChain(operator=self.operator)
-        self.events_filter = w3.eth.filter({'address': root_chain.address, 'fromBlock': 'latest'})
+
+        # TODO: collect events from all contracts
+        # self.events_filter = w3.eth.filter({'address': root_chain.address, 'fromBlock': 'latest'})
 
     def flush_events(self):
         logs = self.events_filter.get_new_entries()
@@ -172,11 +174,11 @@ class TestingLanguage:
 
         deposit_tx = Transaction(outputs=[(owner.address, token.address, amount)])
         token.mint(owner.address, amount)
-        token.approve(self.root_chain.address, amount, **{'from': owner.address})
-        blknum = self.root_chain.getDepositBlockNumber()
-        pre_balance = self.get_balance(self.root_chain, token)
-        self.root_chain.depositFrom(deposit_tx.encoded, **{'from': owner.address})
-        balance = self.get_balance(self.root_chain, token)
+        token.approve(self.plasma_framework.address, amount, **{'from': owner.address})
+        blknum = self.plasma_framework.getDepositBlockNumber()
+        pre_balance = self.get_balance(self.plasma_framework, token)
+        self.plasma_framework.depositFrom(deposit_tx.encoded, **{'from': owner.address})
+        balance = self.get_balance(self.plasma_framework, token)
         assert balance == pre_balance + amount
         block = Block(transactions=[deposit_tx], number=blknum)
         self.child_chain.add_block(block)
@@ -188,7 +190,7 @@ class TestingLanguage:
         inputs = [decode_utxo_id(input_id) for input_id in input_ids]
         spend_tx = Transaction(inputs=inputs, outputs=outputs, metadata=metadata)
         for i in range(0, len(inputs)):
-            spend_tx.sign(i, accounts[i], verifyingContract=self.root_chain)
+            spend_tx.sign(i, accounts[i], verifyingContract=self.plasma_framework)
         blknum = self.submit_block([spend_tx], force_invalid=force_invalid)
         spend_id = encode_utxo_id(blknum, 0, 0)
         return spend_id
@@ -201,7 +203,8 @@ class TestingLanguage:
         merkle = FixedMerkle(16, [output_tx.encoded])
         proof = merkle.create_membership_proof(output_tx.encoded)
         bond = bond if bond is not None else self.root_chain.standardExitBond()
-        self.root_chain.startStandardExit(output_id, output_tx.encoded, proof, **{'value': bond, 'from': account.address})
+        self.root_chain.startStandardExit(output_id, output_tx.encoded, proof,
+                                          **{'value': bond, 'from': account.address})
 
     def challenge_standard_exit(self, output_id, spend_id, input_index=None):
         spend_tx = self.child_chain.get_transaction(spend_id)
@@ -259,7 +262,8 @@ class TestingLanguage:
 
         fee_exit_id = self.root_chain.getFeeExitId(self.root_chain.nextFeeExit())
         bond = bond if bond is not None else self.root_chain.standardExitBond()
-        tx_hash = self.root_chain.startFeeExit(token, amount, **{'value': bond, 'from': operator.address, 'gas': 1_000_000})
+        tx_hash = self.root_chain.startFeeExit(token, amount,
+                                               **{'value': bond, 'from': operator.address, 'gas': 1_000_000})
         return fee_exit_id, tx_hash
 
     def process_exits(self, token, exit_id, count, **kwargs):
@@ -421,7 +425,8 @@ class TestingLanguage:
         signature = competing_tx.signatures[competing_tx_input_index]
         self.root_chain.challengeInFlightExitNotCanonical(in_flight_tx.encoded, in_flight_tx_input_index,
                                                           competing_tx.encoded, competing_tx_input_index,
-                                                          competing_tx_id, proof, signature, **{'from': account.address})
+                                                          competing_tx_id, proof, signature,
+                                                          **{'from': account.address})
 
     def respond_to_non_canonical_challenge(self, in_flight_tx_id, key):
         in_flight_tx = self.child_chain.get_transaction(in_flight_tx_id)

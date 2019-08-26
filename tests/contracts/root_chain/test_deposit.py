@@ -76,7 +76,7 @@ def test_at_most_999_deposits_per_child_block(testlang, w3):
     testlang.deposit(owner, 1)
 
 
-def test_token_deposit_should_succeed(testlang, root_chain, token):
+def test_token_deposit_should_succeed(testlang, plasma_framework, token):
     owner, amount = testlang.accounts[0], 100
 
     deposit_id = testlang.deposit_token(owner, token, amount)
@@ -85,7 +85,7 @@ def test_token_deposit_should_succeed(testlang, root_chain, token):
     plasma_block = testlang.get_plasma_block(deposit_blknum)
     assert plasma_block.root == testlang.child_chain.get_block(deposit_blknum).root
     assert plasma_block.timestamp == testlang.timestamp
-    assert root_chain.nextDepositBlock() == 2
+    assert plasma_framework.nextDepositBlock() == 2
 
 
 def test_token_deposit_non_existing_token_should_fail(testlang, token):

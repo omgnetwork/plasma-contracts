@@ -1,5 +1,5 @@
 from plasma_core.utils.transactions import decode_utxo_id
-from plasma_core.constants import NULL_SIGNATURE
+from plasma_core.constants import NULL_SIGNATURE, CHILD_BLOCK_INTERVAL
 from plasma_core.exceptions import (InvalidBlockSignatureException,
                                     InvalidTxSignatureException,
                                     TxAlreadySpentException,
@@ -12,7 +12,7 @@ class ChildChain(object):
         self.operator = operator
         self.blocks = {}
         self.parent_queue = {}
-        self.child_block_interval = 1000
+        self.child_block_interval = CHILD_BLOCK_INTERVAL
         self.next_child_block = self.child_block_interval
         self.next_deposit_block = 1
 

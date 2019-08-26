@@ -71,10 +71,10 @@ def test_process_exits_in_flight_exit_should_succeed(testlang):
     assert testlang.get_balance(owner) == expected_balance
 
 
-def test_finalize_exits_for_erc20_should_succeed(testlang, root_chain, token):
+def test_finalize_exits_for_erc20_should_succeed(testlang, plasma_framework, token):
     owner, amount = testlang.accounts[0], 100
-    root_chain.addToken(token.address)
-    assert root_chain.hasToken(token.address)
+    plasma_framework.addToken(token.address)
+    assert plasma_framework.hasToken(token.address)
     deposit_id = testlang.deposit_token(owner, token, amount)
     spend_id = testlang.spend_utxo([deposit_id], [owner], [(owner.address, token.address, amount)])
 
@@ -162,8 +162,8 @@ def test_finalize_exits_only_mature_exits_are_processed(testlang):
     assert testlang.get_standard_exit(spend_id_2).owner == owner.address
 
 
-def test_finalize_exits_for_uninitialized_erc20_should_fail(testlang, root_chain, token):
-    assert not root_chain.hasToken(token.address)
+def test_finalize_exits_for_uninitialized_erc20_should_fail(testlang, plasma_framework, token):
+    assert not plasma_framework.hasToken(token.address)
     with pytest.raises(TransactionFailed):
         testlang.process_exits(token.address, 0, 100)
 
@@ -207,7 +207,7 @@ def test_processing_exits_with_specifying_top_exit_id_is_possible(testlang):
     assert in_flight_exit.bond_owner == NULL_ADDRESS_HEX
 
 
-def test_finalize_exits_tx_race_short_circuit(testlang, w3, root_chain):
+def test_finalize_exits_tx_race_short_circuit(testlang, w3, plasma_framework):
     utxo1 = testlang.create_utxo()
     utxo2 = testlang.create_utxo()
     utxo3 = testlang.create_utxo()
@@ -222,7 +222,7 @@ def test_finalize_exits_tx_race_short_circuit(testlang, w3, root_chain):
 
     w3.eth.disable_auto_mine()
 
-    tx_hash = root_chain.functions\
+    tx_hash = plasma_framework.functions\
         .processExits(NULL_ADDRESS, testlang.get_standard_exit_id(utxo1.spend_id), 3)\
         .transact({'gas': 100_000})  # reasonably high amount of gas (otherwise it fails on gas estimation)
 

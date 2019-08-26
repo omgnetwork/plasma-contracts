@@ -10,16 +10,17 @@ from web3.main import get_default_modules
 from xprocess import ProcessStarter
 
 from plasma_core.account import EthereumAccount
-from plasma_core.utils.deployer import Deployer
 from testlang.testlang import TestingLanguage
-from tests.conveniece_wrappers import ConvenienceContractWrapper, AutominingEth
-
-EXIT_PERIOD = 4 * 60  # 4 minutes
-
-GAS_LIMIT = 10000000
-START_GAS = GAS_LIMIT - 1000000
-
-HUNDRED_ETH = 100 * 10 ** 18
+from tests.tests_utils.constants import (
+    HUNDRED_ETH,
+    START_GAS,
+    GAS_LIMIT,
+    INITIAL_IMMUNE_VAULTS,
+    INITIAL_IMMUNE_EXIT_GAMES,
+)
+from tests.tests_utils.conveniece_wrappers import ConvenienceContractWrapper, AutominingEth
+from tests.tests_utils.deployer import Deployer
+from tests.tests_utils.plasma_framework import PlasmaFramework
 
 
 # IMPORTANT NOTICE
@@ -28,6 +29,7 @@ HUNDRED_ETH = 100 * 10 ** 18
 
 
 # Compile contracts before testing
+
 OWN_DIR = os.path.dirname(os.path.realpath(__file__))
 CONTRACTS_DIR = os.path.abspath(os.path.realpath(os.path.join(OWN_DIR, '../plasma_framework/contracts')))
 OUTPUT_DIR = os.path.abspath(os.path.realpath(os.path.join(OWN_DIR, '../build')))
@@ -88,7 +90,6 @@ def ganache_cli(accounts, port):
 
 @pytest.fixture(scope="session")
 def _w3_session(xprocess, accounts, ganache_port):
-
     web3_modules = get_default_modules()
     web3_modules.update(eth=(AutominingEth,))
 
@@ -129,15 +130,12 @@ def get_contract(w3, accounts):
 
 
 @pytest.fixture
-def root_chain(get_contract):
-    return initialized_contract(get_contract, EXIT_PERIOD)
+def plasma_framework(get_contract):
+    return PlasmaFramework(get_contract)
 
 
-def initialized_contract(get_contract, exit_period):
-    pql = get_contract('PriorityQueueLib')
-    pqf = get_contract('PriorityQueueFactory', libraries={'PriorityQueueLib': pql.address})
-    contract = get_contract('RootChain', libraries={'PriorityQueueFactory': pqf.address})
-    contract.init(exit_period)
+def initialized_contract(get_contract, exit_period, immune_vaults, immune_exit_games):
+    contract = get_contract('PlasmaFramework', args=[exit_period, immune_vaults, immune_exit_games])
     return contract
 
 
@@ -147,10 +145,10 @@ def token(get_contract):
 
 
 @pytest.fixture
-def testlang(root_chain, w3, accounts):
-    return TestingLanguage(root_chain, w3, accounts)
+def testlang(plasma_framework, w3, accounts):
+    return TestingLanguage(plasma_framework, w3, accounts)
 
-
+# FIXME: delete fixture
 @pytest.fixture
 def root_chain_short_exit_period(get_contract):
     # Minimal valid exit period is 2, if we exit period to less than 2
@@ -158,7 +156,7 @@ def root_chain_short_exit_period(get_contract):
     # But, if we set exit period to 2, then we will automatically end up in the second phase as
     # blocks are mined with 1 second interval.
     exit_period = 4
-    return initialized_contract(get_contract, exit_period)
+    return initialized_contract(get_contract, exit_period, INITIAL_IMMUNE_VAULTS, INITIAL_IMMUNE_EXIT_GAMES)
 
 
 @pytest.fixture

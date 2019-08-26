@@ -56,3 +56,5 @@ DAY = 60 * 60 * 24
 
 # used for suitable test contract instantiation
 MIN_EXIT_PERIOD = 4 * MINUTE
+
+CHILD_BLOCK_INTERVAL = 1000
