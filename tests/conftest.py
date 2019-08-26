@@ -29,6 +29,7 @@ from tests.tests_utils.plasma_framework import PlasmaFramework
 
 
 # Compile contracts before testing
+
 OWN_DIR = os.path.dirname(os.path.realpath(__file__))
 CONTRACTS_DIR = os.path.abspath(os.path.realpath(os.path.join(OWN_DIR, '../plasma_framework/contracts')))
 OUTPUT_DIR = os.path.abspath(os.path.realpath(os.path.join(OWN_DIR, '../build')))
@@ -129,17 +130,13 @@ def get_contract(w3, accounts):
 
 
 @pytest.fixture
-def root_chain(get_contract):
-    return initialized_contract(get_contract, EXIT_PERIOD)
+def plasma_framework(get_contract):
+    return PlasmaFramework(get_contract)
 
 
-def initialized_contract(get_contract, exit_period):
-    # pql = get_contract('PriorityQueueLib')
-    # pqf = get_contract('PriorityQueueFactory', libraries={'PriorityQueueLib': pql.address})
-    # contract = get_contract('RootChain', libraries={'PriorityQueueFactory': pqf.address})
-    # contract.init(exit_period)
-    # return contract
-    return ()
+def initialized_contract(get_contract, exit_period, immune_vaults, immune_exit_games):
+    contract = get_contract('PlasmaFramework', args=[exit_period, immune_vaults, immune_exit_games])
+    return contract
 
 
 @pytest.fixture
@@ -148,10 +145,10 @@ def token(get_contract):
 
 
 @pytest.fixture
-def testlang(root_chain, w3, accounts):
-    return TestingLanguage(root_chain, w3, accounts)
+def testlang(plasma_framework, w3, accounts):
+    return TestingLanguage(plasma_framework, w3, accounts)
 
-
+# FIXME: delete fixture
 @pytest.fixture
 def root_chain_short_exit_period(get_contract):
     # Minimal valid exit period is 2, if we exit period to less than 2
@@ -159,7 +156,7 @@ def root_chain_short_exit_period(get_contract):
     # But, if we set exit period to 2, then we will automatically end up in the second phase as
     # blocks are mined with 1 second interval.
     exit_period = 4
-    return initialized_contract(get_contract, exit_period)
+    return initialized_contract(get_contract, exit_period, INITIAL_IMMUNE_VAULTS, INITIAL_IMMUNE_EXIT_GAMES)
 
 
 @pytest.fixture

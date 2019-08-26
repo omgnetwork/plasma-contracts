@@ -11,9 +11,10 @@ def utxo(testlang_root_chain_short_exit_period):
     return testlang_root_chain_short_exit_period.create_utxo()
 
 
-def test_cant_ever_init_twice(root_chain, accounts):
+@pytest.mark.skip("PlasmaFramework has no init function")
+def test_cant_ever_init_twice(plasma_framework, accounts):
     with pytest.raises(TransactionFailed):
-        root_chain.init(EXIT_PERIOD, **{'from': accounts[0].address})
+        plasma_framework.init(EXIT_PERIOD, **{'from': accounts[0].address})
 
 
 def test_exit_period_setting_has_effect(testlang_root_chain_short_exit_period, w3):

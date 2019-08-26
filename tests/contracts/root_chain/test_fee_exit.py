@@ -9,7 +9,7 @@ pytestmark = pytest.mark.skip()
 # TODO: test if fee exit generates events
 
 
-def test_start_fee_exit_should_succeed(testlang, root_chain):
+def test_start_fee_exit_should_succeed(testlang, plasma_framework):
     operator, amount = testlang.operator, 100
     exit_id, tx_hash = testlang.start_fee_exit(operator, amount)
 
