@@ -1,0 +1,52 @@
+const PaymentOutputGuardHandler = artifacts.require('PaymentOutputGuardHandlerWrapper');
+
+const { expectRevert } = require('openzeppelin-test-helpers');
+const { expect } = require('chai');
+
+const { addressToOutputGuard } = require('../../../../helpers/utils.js');
+
+
+contract('PaymentOutputGuardHandler', ([alice]) => {
+    const TEST_OUTPUT_TYPE = 1;
+
+    beforeEach('setup contracts', async () => {
+        this.handler = await PaymentOutputGuardHandler.new(TEST_OUTPUT_TYPE);
+    });
+
+    describe('isValid', () => {
+        it('should fail when preimage is not empty', async () => {
+            const nonEmptyPreimage = '0x11';
+            const guard = addressToOutputGuard(alice);
+
+            await expectRevert(
+                this.handler.isValid(guard, TEST_OUTPUT_TYPE, nonEmptyPreimage),
+                'Pre-imgage of the output guard should be empty',
+            );
+        });
+
+        it('should fail when output type mismatch', async () => {
+            const preimage = '0x';
+            const mismatchOutputType = TEST_OUTPUT_TYPE + 1;
+            const guard = addressToOutputGuard(alice);
+
+            await expectRevert(
+                this.handler.isValid(guard, mismatchOutputType, preimage),
+                'Output type mismatch',
+            );
+        });
+
+        it('should return true when succeed', async () => {
+            const preimage = '0x';
+            const guard = addressToOutputGuard(alice);
+            expect(await this.handler.isValid(guard, TEST_OUTPUT_TYPE, preimage)).to.be.true;
+        });
+    });
+
+    describe('getExitTarget', () => {
+        it('should return the owner information directly from outputGuard field', async () => {
+            const preimage = '0x';
+            const guard = addressToOutputGuard(alice);
+            expect(await this.handler.getExitTarget(guard, TEST_OUTPUT_TYPE, preimage)).to.equal(alice);
+        });
+    });
+});
