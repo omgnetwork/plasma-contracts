@@ -10,16 +10,17 @@ from web3.main import get_default_modules
 from xprocess import ProcessStarter
 
 from plasma_core.account import EthereumAccount
-from plasma_core.utils.deployer import Deployer
 from testlang.testlang import TestingLanguage
-from tests.conveniece_wrappers import ConvenienceContractWrapper, AutominingEth
-
-EXIT_PERIOD = 4 * 60  # 4 minutes
-
-GAS_LIMIT = 10000000
-START_GAS = GAS_LIMIT - 1000000
-
-HUNDRED_ETH = 100 * 10 ** 18
+from tests.tests_utils.constants import (
+    HUNDRED_ETH,
+    START_GAS,
+    GAS_LIMIT,
+    INITIAL_IMMUNE_VAULTS,
+    INITIAL_IMMUNE_EXIT_GAMES,
+)
+from tests.tests_utils.conveniece_wrappers import ConvenienceContractWrapper, AutominingEth
+from tests.tests_utils.deployer import Deployer
+from tests.tests_utils.plasma_framework import PlasmaFramework
 
 
 # IMPORTANT NOTICE
@@ -88,7 +89,6 @@ def ganache_cli(accounts, port):
 
 @pytest.fixture(scope="session")
 def _w3_session(xprocess, accounts, ganache_port):
-
     web3_modules = get_default_modules()
     web3_modules.update(eth=(AutominingEth,))
 
