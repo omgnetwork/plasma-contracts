@@ -19,6 +19,17 @@ library PaymentInFlightExitRouterArgs {
         bytes[] inFlightTxWitnesses;
     }
 
+    /**
+     * @notice Wraps arguments for challenge in-flight exit not canonical.
+     * @param inFlightTx RLP encoded in-flight transaction.
+     * @param inFlightTxInputIndex Index of shared input in transaction in flight.
+     * @param competingTx RLP encoded competing transaction.
+     * @param competingTxInputIndex Index of shared input in competing transaction.
+     * @param competingTxInputOutputType Output type of shared input.
+     * @param competingTxPos (optional) Position of competing transaction in chain if included.
+     * @param competingTxInclusionProof (optional) Merkle proofs that show the competing transaction was contained in chain.
+     * @param competingTxWitness Witness for competing transaction.
+     */
     struct ChallengeCanonicityArgs {
         bytes inFlightTx;
         uint8 inFlightTxInputIndex;
