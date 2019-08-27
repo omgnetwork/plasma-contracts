@@ -32,6 +32,7 @@ const { buildUtxoPos, utxoPosToTxPos } = require('../../../helpers/positions.js'
 const Testlang = require('../../../helpers/testlang.js');
 
 contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
+    const MORE_VP_PROTOCOL = 2;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
     const ETH = constants.ZERO_ADDRESS;
     const INITIAL_ERC20_SUPPLY = 10000000000;
@@ -110,7 +111,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
         await spendingConditionRegistry.registerSpendingCondition(
             PAYMENT_OUTPUT_TYPE, PAYMENT_TX_TYPE, this.toPaymentCondition.address,
         );
-        await this.framework.registerExitGame(PAYMENT_TX_TYPE, this.exitGame.address);
+        await this.framework.registerExitGame(PAYMENT_TX_TYPE, this.exitGame.address, MORE_VP_PROTOCOL);
     };
 
     const aliceDepositsETH = async () => {

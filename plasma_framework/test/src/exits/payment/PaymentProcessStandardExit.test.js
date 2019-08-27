@@ -22,6 +22,7 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
     const INITIAL_IMMUNE_EXIT_GAME_NUM = 1;
     const EMPTY_BYTES32 = '0x0000000000000000000000000000000000000000000000000000000000000000';
+    const MORE_VP_PROTOCOL = 2;
 
     before('deploy and link with controller lib', async () => {
         const startStandardExit = await PaymentStartStandardExit.new();
@@ -48,7 +49,7 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
                 this.framework.address, ethVault.address, erc20Vault.address,
                 outputGuardHandlerRegistry.address, spendingConditionRegistry.address,
             );
-            this.framework.registerExitGame(1, this.exitGame.address);
+            this.framework.registerExitGame(1, this.exitGame.address, MORE_VP_PROTOCOL);
 
             // prepare the bond that should be set when exit starts
             this.startStandardExitBondSize = await this.exitGame.startStandardExitBondSize();

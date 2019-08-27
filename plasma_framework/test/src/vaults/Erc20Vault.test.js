@@ -20,6 +20,7 @@ contract('Erc20Vault', (accounts) => {
     const INITIAL_IMMUNE_VAULTS = 1;
     const INITIAL_IMMUNE_EXIT_GAMES = 1;
     const MIN_EXIT_PERIOD = 10;
+    const MORE_VP_PROTOCOL = 2;
 
 
     beforeEach('setup contracts', async () => {
@@ -31,7 +32,7 @@ contract('Erc20Vault', (accounts) => {
 
         this.exitGame = await DummyExitGame.new();
         await this.exitGame.setErc20Vault(this.erc20Vault.address);
-        await this.framework.registerExitGame(1, this.exitGame.address);
+        await this.framework.registerExitGame(1, this.exitGame.address, MORE_VP_PROTOCOL);
 
         this.erc20 = await ERC20Mintable.new();
         await this.erc20.mint(accounts[0], INITIAL_SUPPLY, { from: accounts[0] });
@@ -197,7 +198,7 @@ contract('Erc20Vault', (accounts) => {
             beforeEach(async () => {
                 this.newExitGame = await DummyExitGame.new();
                 await this.newExitGame.setErc20Vault(this.erc20Vault.address);
-                await this.framework.registerExitGame(2, this.newExitGame.address);
+                await this.framework.registerExitGame(2, this.newExitGame.address, MORE_VP_PROTOCOL);
             });
 
             it('should fail when called under quarantine', async () => {
