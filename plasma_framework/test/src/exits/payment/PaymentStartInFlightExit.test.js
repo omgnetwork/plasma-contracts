@@ -58,11 +58,11 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
         function buildValidIfeStartArgs(amount, [ifeOwner, inputOwner1, inputOwner2], blockNum1, blockNum2) {
             const inputTx1 = isDeposit(blockNum1)
                 ? createDepositTransaction(inputOwner1, amount)
-                : createInputTransaction(DUMMY_INPUT_1, inputOwner1, amount);
+                : createInputTransaction([DUMMY_INPUT_1], inputOwner1, amount);
 
             const inputTx2 = isDeposit(blockNum2)
                 ? createDepositTransaction(inputOwner2, amount)
-                : createInputTransaction(DUMMY_INPUT_2, inputOwner2, amount);
+                : createInputTransaction([DUMMY_INPUT_2], inputOwner2, amount);
 
             const inputTxs = [inputTx1, inputTx2];
 
@@ -403,7 +403,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
             });
 
             it('should fail when number of input transactions does not match number of input utxos positions', async () => {
-                const inputTx1 = createInputTransaction(DUMMY_INPUT_1, alice, AMOUNT);
+                const inputTx1 = createInputTransaction([DUMMY_INPUT_1], alice, AMOUNT);
                 const inputTx2 = createDepositTransaction(bob, AMOUNT);
 
                 const inputUtxosPos = [buildUtxoPos(BLOCK_NUMBER, 0, 0)];
@@ -425,7 +425,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
             });
 
             it('should fail when number of input transactions does not match in-flight transactions number of inputs', async () => {
-                const inputTx1 = createInputTransaction(DUMMY_INPUT_1, alice, AMOUNT);
+                const inputTx1 = createInputTransaction([DUMMY_INPUT_1], alice, AMOUNT);
                 const inputTx2 = createDepositTransaction(bob, AMOUNT);
 
                 const inputUtxosPos = [buildUtxoPos(BLOCK_NUMBER, 0, 0), buildUtxoPos(BLOCK_NUMBER, 1, 0)];
@@ -641,12 +641,16 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
                     this.framework.address, this.spendingConditionRegistry.address,
                 );
 
-                const { args, argsDecoded, inputTxsBlockRoot } = buildValidIfeStartArgs(
-                    AMOUNT, [alice, bob, carol], BLOCK_NUMBER,
-                );
+                const {
+                    args,
+                    argsDecoded,
+                    inputTxsBlockRoot1,
+                    inputTxsBlockRoot2,
+                } = buildValidIfeStartArgs(AMOUNT, [alice, bob, carol], BLOCK_NUMBER, DEPOSIT_BLOCK_NUMBER);
                 this.args = args;
                 this.argsDecoded = argsDecoded;
-                await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot, 0);
+                await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot1, 0);
+                await this.framework.setBlock(DEPOSIT_BLOCK_NUMBER, inputTxsBlockRoot2, 0);
 
                 const conditionTrue = await PaymentSpendingConditionTrue.new();
 
@@ -782,7 +786,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
                 );
             });
 
-            it.only('should set large competitor position when competitor is in-flight', async () => {
+            it('should set large competitor position when competitor is in-flight', async () => {
                 this.challengeArgs.competingTxPos = 0;
                 this.challengeArgs.competingTxInclusionProof = '0x';
 
