@@ -103,7 +103,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
             this.startStandardExitBondSize = await this.exitGame.startStandardExitBondSize();
         });
 
-        it('should fail when cannot prove the tx is included in the block', async () => {
+        it('should fail when the transaction is not standard finalized', async () => {
             const { args } = buildTestData(this.dummyAmount, outputOwner, this.dummyBlockNum);
             const fakeRoot = web3.utils.sha3('fake root data');
 
@@ -113,7 +113,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
                 this.exitGame.startStandardExit(
                     args, { from: outputOwner, value: this.startStandardExitBondSize },
                 ),
-                'transaction inclusion proof failed',
+                'The transaction must be standard finalized',
             );
         });
 
