@@ -45,7 +45,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
     before('deploy and link with controller lib', async () => {
         const startInFlightExit = await PaymentStartInFlightExit.new();
         const challengeInFlightExitNotCanonical = await PaymentChallengeIFENotCanonical.new();
-        
+
         await PaymentInFlightExitRouter.link('PaymentStartInFlightExit', startInFlightExit.address);
         await PaymentInFlightExitRouter.link('PaymentChallengeIFENotCanonical', challengeInFlightExitNotCanonical.address);
     });
@@ -178,7 +178,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
                     MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
                 );
                 this.spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
-                
+
                 this.exitGame = await PaymentInFlightExitRouter.new(
                     this.framework.address, this.spendingConditionRegistry.address,
                 );
@@ -675,7 +675,9 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
                     this.competingTxBlock.blockTimestamp,
                 );
 
-                const { receipt } = await this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: alice });
+                const { receipt } = await this.exitGame.challengeInFlightExitNotCanonical(
+                    this.challengeArgs, { from: alice },
+                );
 
                 await expectEvent.inTransaction(
                     receipt.transactionHash,
@@ -707,7 +709,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
                 );
             });
 
-            it('fails when competing tx is not included', async () => {
+            it('fails when competing tx is not included in the given position', async () => {
                 await expectRevert(
                     this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: alice }),
                     'Transaction is not included in block of plasma chain.',
@@ -780,16 +782,16 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
                 );
             });
 
-            it('succeeds when competitor is not included with appropriate large position', async () => {
+            it.only('should set large competitor position when competitor is in-flight', async () => {
                 this.challengeArgs.competingTxPos = 0;
                 this.challengeArgs.competingTxInclusionProof = '0x';
 
-                const expectedCompetitorPos = new BN(
-                    // it seems to be solidity `~uint256(0)` - what is important here: it's HUGE
-                    'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF', 16,
-                );
+                // it seems to be solidity `~uint256(0)` - what is important here: it's HUGE
+                const expectedCompetitorPos = new BN(2).pow(new BN(256)).sub(new BN(1));
 
-                const { receipt } = await this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: alice });
+                const { receipt } = await this.exitGame.challengeInFlightExitNotCanonical(
+                    this.challengeArgs, { from: alice },
+                );
 
                 await expectEvent.inTransaction(
                     receipt.transactionHash,

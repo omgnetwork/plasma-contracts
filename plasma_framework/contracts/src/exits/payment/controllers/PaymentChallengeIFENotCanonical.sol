@@ -92,7 +92,13 @@ library PaymentChallengeIFENotCanonical {
      * @dev Checks that in-flight exit is in phase that allows for piggybacks and canonicity challenges.
      * @param ife in-flight exit to check.
      */
-    function verifyFirstPhaseNotOver(PaymentExitDataModel.InFlightExit storage ife, uint256 minExitPeriod) private view {
+    function verifyFirstPhaseNotOver(
+        PaymentExitDataModel.InFlightExit storage ife,
+        uint256 minExitPeriod
+    )
+        private
+        view
+    {
         uint256 phasePeriod = minExitPeriod / 2;
         bool firstPhasePassed = ((block.timestamp - ife.exitStartTimestamp) / phasePeriod) >= 1;
         require(!firstPhasePassed, "Canonicity challege phase for this exit has ended");
@@ -103,7 +109,11 @@ library PaymentChallengeIFENotCanonical {
         UtxoPosLib.UtxoPos memory utxoPos,
         bytes32 root,
         bytes memory inclusionProof
-    ) private pure returns(uint256) {
+    )
+        private
+        pure
+        returns(uint256)
+    {
         bytes32 leaf = keccak256(txbytes);
         require(
             Merkle.checkMembership(leaf, utxoPos.txIndex(), root, inclusionProof),
