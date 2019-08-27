@@ -1,5 +1,6 @@
 const PaymentInFlightExitRouter = artifacts.require('PaymentInFlightExitRouterMock');
 const PaymentStartInFlightExit = artifacts.require('PaymentStartInFlightExit');
+const PaymentChallengeIFENotCanonical = artifacts.require('PaymentChallengeIFENotCanonical');
 const PaymentSpendingConditionRegistry = artifacts.require('PaymentSpendingConditionRegistry');
 const PaymentSpendingConditionFalse = artifacts.require('PaymentSpendingConditionFalse');
 const PaymentSpendingConditionTrue = artifacts.require('PaymentSpendingConditionTrue');
@@ -43,7 +44,10 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
 
     before('deploy and link with controller lib', async () => {
         const startInFlightExit = await PaymentStartInFlightExit.new();
+        const challengeInFlightExitNotCanonical = await PaymentChallengeIFENotCanonical.new();
+        
         await PaymentInFlightExitRouter.link('PaymentStartInFlightExit', startInFlightExit.address);
+        await PaymentInFlightExitRouter.link('PaymentChallengeIFENotCanonical', challengeInFlightExitNotCanonical.address);
     });
 
     describe('startInFlightExit', () => {
@@ -174,6 +178,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
                     MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
                 );
                 this.spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
+                
                 this.exitGame = await PaymentInFlightExitRouter.new(
                     this.framework.address, this.spendingConditionRegistry.address,
                 );
@@ -376,7 +381,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
                 args.inputTxsInclusionProofs = [invalidInclusionProof, invalidInclusionProof];
                 await expectRevert(
                     this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
-                    'Transaction is not included in block of plasma chain.',
+                    'Input transaction is not included in plasma',
                 );
             });
 
@@ -571,7 +576,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
             });
         });
 
-        describe.only('canonicity challenge', () => {
+        describe('canonicity challenge', () => {
             function createCompetitorTransaction(ifeZeroInput, otherInput) {
                 const competingTx = createInputTransaction([otherInput.utxoPos, ifeZeroInput], bob, AMOUNT);
                 const competingTxPos = new UtxoPos(buildUtxoPos(otherInput.blockNum + CHILD_BLOCK_INTERVAL, 0, 0));
@@ -645,7 +650,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
 
                 const conditionTrue = await PaymentSpendingConditionTrue.new();
 
-                await this.exitGame.registerSpendingCondition(
+                await this.spendingConditionRegistry.registerSpendingCondition(
                     OUTPUT_TYPE_ZERO, IFE_TX_TYPE, conditionTrue.address,
                 );
 
@@ -670,13 +675,18 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
                     this.competingTxBlock.blockTimestamp,
                 );
 
-                const tx = await this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: alice });
+                const { receipt } = await this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: alice });
 
-                expectEvent.inLogs(tx.logs, 'InFlightExitChallenged', {
-                    challenger: alice,
-                    txHash: web3.utils.sha3(this.args.inFlightTx),
-                    challengeTxPosition: new BN(this.challengeArgs.competingTxPos),
-                });
+                await expectEvent.inTransaction(
+                    receipt.transactionHash,
+                    PaymentChallengeIFENotCanonical,
+                    'InFlightExitChallenged',
+                    {
+                        challenger: alice,
+                        txHash: web3.utils.sha3(this.args.inFlightTx),
+                        challengeTxPosition: new BN(this.challengeArgs.competingTxPos),
+                    },
+                );
             });
 
             it('fails when competing tx is the same as in-flight one', async () => {
@@ -700,7 +710,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
             it('fails when competing tx is not included', async () => {
                 await expectRevert(
                     this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: alice }),
-                    'Transaction is not included in block of plasma chain',
+                    'Transaction is not included in block of plasma chain.',
                 );
             });
 
@@ -717,7 +727,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
                 const newOutputType = OUTPUT_TYPE_ZERO + 1;
 
                 const conditionFalse = await PaymentSpendingConditionFalse.new();
-                await this.exitGame.registerSpendingCondition(
+                await this.spendingConditionRegistry.registerSpendingCondition(
                     newOutputType, IFE_TX_TYPE, conditionFalse.address,
                 );
 
@@ -779,13 +789,18 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
                     'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF', 16,
                 );
 
-                const tx = await this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: alice });
+                const { receipt } = await this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: alice });
 
-                expectEvent.inLogs(tx.logs, 'InFlightExitChallenged', {
-                    challenger: alice,
-                    txHash: web3.utils.sha3(this.args.inFlightTx),
-                    challengeTxPosition: expectedCompetitorPos,
-                });
+                await expectEvent.inTransaction(
+                    receipt.transactionHash,
+                    PaymentChallengeIFENotCanonical,
+                    'InFlightExitChallenged',
+                    {
+                        challenger: alice,
+                        txHash: web3.utils.sha3(this.args.inFlightTx),
+                        challengeTxPosition: expectedCompetitorPos,
+                    },
+                );
             });
         });
     });

@@ -24,8 +24,6 @@ library PaymentInFlightExitRouterArgs {
         uint8 inFlightTxInputIndex;
         bytes competingTx;
         uint8 competingTxInputIndex;
-        uint256 competingTxInputPos;
-        bytes32 competingTxInputOutputId;
         uint256 competingTxInputOutputType;
         uint256 competingTxPos;
         bytes competingTxInclusionProof;

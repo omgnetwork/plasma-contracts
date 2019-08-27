@@ -10,7 +10,7 @@ import "../../../utils/UtxoPosLib.sol";
 import "../../../utils/Merkle.sol";
 import "../../../framework/PlasmaFramework.sol";
 
-library PaymentChallengeInFlightExitNotCanonical {
+library PaymentChallengeIFENotCanonical {
     using UtxoPosLib for UtxoPosLib.UtxoPos;
 
     struct Controller {
