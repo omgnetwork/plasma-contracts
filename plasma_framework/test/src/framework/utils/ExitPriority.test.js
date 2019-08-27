@@ -32,19 +32,19 @@ contract('ExitPriority', () => {
                 const exitableAt1 = 1;
                 const exitableAt2 = 2;
 
-                this.txPoses.forEach(async (txPos1) => {
-                    this.txPoses.forEach(async (txPos2) => {
-                        this.nonces.forEach(async (nonce1) => {
-                            this.nonces.forEach(async (nonce2) => {
-                                await expectPriorityPossitivelyCorrelative(
+                await Promise.all(this.txPoses.map(
+                    async txPos1 => Promise.all(this.txPoses.map(
+                        async txPos2 => Promise.all(this.nonces.map(
+                            async nonce1 => Promise.all(this.nonces.map(
+                                async nonce2 => expectPriorityPossitivelyCorrelative(
                                     exitableAt1, exitableAt2,
                                     txPos1, txPos2,
                                     nonce1, nonce2,
-                                );
-                            });
-                        });
-                    });
-                });
+                                ),
+                            )),
+                        )),
+                    )),
+                ));
             });
         });
 
@@ -60,15 +60,16 @@ contract('ExitPriority', () => {
             it('should be positive correlative with "txPos" no matter how nonces are', async () => {
                 const txPos1 = buildTxPos(1000, 0);
                 const txPos2 = buildTxPos(2000, 0);
-                this.nonces.forEach(async (nonce1) => {
-                    this.nonces.forEach(async (nonce2) => {
-                        await expectPriorityPossitivelyCorrelative(
+
+                await Promise.all(this.nonces.map(
+                    async nonce1 => Promise.all(this.nonces.map(
+                        async nonce2 => expectPriorityPossitivelyCorrelative(
                             this.exitableAt, this.exitableAt,
                             txPos1, txPos2,
                             nonce1, nonce2,
-                        );
-                    });
-                });
+                        ),
+                    )),
+                ));
             });
         });
 
