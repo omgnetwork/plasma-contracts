@@ -3,7 +3,7 @@ pragma experimental ABIEncoderV2;
 
 import "../../../../src/exits/payment/routers/PaymentInFlightExitRouter.sol";
 import "../../../../src/framework/PlasmaFramework.sol";
-import "../../../../src/exits/IStateTransitionVerifier.sol";
+import "../../../../src/exits/interfaces/IStateTransitionVerifier.sol";
 import "../../../../src/exits/payment/PaymentExitDataModel.sol";
 
 contract PaymentInFlightExitRouterMock is PaymentInFlightExitRouter {
@@ -20,11 +20,11 @@ contract PaymentInFlightExitRouterMock is PaymentInFlightExitRouter {
         inFlightExitMap.exits[exitId].exitMap = Bits.setBit(inFlightExitMap.exits[exitId].exitMap, 255);
     }
 
-    function getInFlightExitInput(uint192 exitId, uint8 inputIndex) public view returns (PaymentExitDataModel.WithdrawData memory) {
+    function getInFlightExitInput(uint192 exitId, uint16 inputIndex) public view returns (PaymentExitDataModel.WithdrawData memory) {
         return inFlightExitMap.exits[exitId].inputs[inputIndex];
     }
 
-    function getInFlightExitOutput(uint192 exitId, uint8 outputIndex) public view returns (PaymentExitDataModel.WithdrawData memory) {
+    function getInFlightExitOutput(uint192 exitId, uint16 outputIndex) public view returns (PaymentExitDataModel.WithdrawData memory) {
         return inFlightExitMap.exits[exitId].outputs[outputIndex];
     }
 }

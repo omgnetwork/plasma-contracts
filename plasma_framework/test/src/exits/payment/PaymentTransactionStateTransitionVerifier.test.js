@@ -1,8 +1,6 @@
 const PaymentTransactionStateTransitionVerifier = artifacts.require('PaymentTransactionStateTransitionVerifier');
 
-const {
-    constants, expectRevert,
-} = require('openzeppelin-test-helpers');
+const { constants } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
 const { buildUtxoPos, UtxoPos } = require('../../../helpers/positions.js');
@@ -125,12 +123,14 @@ contract('PaymentTransactionStateTransitionVerifier', ([alice, bob]) => {
             expect(verificationResult).to.be.false;
         });
 
-        it('should revert when input transactions list and utxos positions differ in length', async () => {
+        it('should return false when input transactions list and utxos positions differ in length', async () => {
             const args = buildCorrectStateTransitionArgs();
-            await expectRevert(
-                this.verifier.isCorrectStateTransition(args.inFlightTx, args.inputTxs, []),
-                'Input transactions do not match input utxos positions',
+            const verificationResult = await this.verifier.isCorrectStateTransition(
+                args.inFlightTx,
+                args.inputTxs,
+                [],
             );
+            expect(verificationResult).to.be.false;
         });
     });
 });

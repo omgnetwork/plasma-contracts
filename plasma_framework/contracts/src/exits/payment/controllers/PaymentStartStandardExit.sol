@@ -3,7 +3,7 @@ pragma experimental ABIEncoderV2;
 
 import "../PaymentExitDataModel.sol";
 import "../routers/PaymentStandardExitRouterArgs.sol";
-import "../../IOutputGuardParser.sol";
+import "../../interfaces/IOutputGuardParser.sol";
 import "../../OutputGuardParserRegistry.sol";
 import "../../utils/ExitableTimestamp.sol";
 import "../../utils/ExitId.sol";

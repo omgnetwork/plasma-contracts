@@ -18,7 +18,8 @@ library WireTransaction {
     }
 
     /**
-    * @notice Returns output for transaction in wire format.
+    * @dev Returns output for transaction in wire format.
+    * Outputs is a field on the second index and should be a list where first three elements are: amount, output guard, token.
     */
     function getOutput(bytes memory transaction, uint16 outputIndex) internal pure returns (Output memory) {
         RLP.RLPItem[] memory rlpTx = transaction.toRLPItem().toList();

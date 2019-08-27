@@ -27,7 +27,7 @@ contract('WireTransaction', () => {
         expect(actual.token).to.equal(constants.ZERO_ADDRESS);
     });
 
-    it('should decode custom transaction output', async () => {
+    it('should decode custom transaction output that fulfills wire transaction format', async () => {
         const encoded = rlp.encode([0, [], [[AMOUNT, OUTPUT_GUARD, constants.ZERO_ADDRESS]], EMPTY_BYTES32, []]);
 
         const actual = await this.test.getOutput(encoded, 0);

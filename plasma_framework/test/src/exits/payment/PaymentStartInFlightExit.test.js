@@ -5,6 +5,7 @@ const PaymentSpendingConditionFalse = artifacts.require('PaymentSpendingConditio
 const PaymentSpendingConditionTrue = artifacts.require('PaymentSpendingConditionTrue');
 const StateTransitionVerifierAccept = artifacts.require('StateTransitionVerifierAccept');
 const StateTransitionVerifierReject = artifacts.require('StateTransitionVerifierReject');
+const StateTransitionVerifierReverse = artifacts.require('StateTransitionVerifierReverse');
 const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const ExitId = artifacts.require('ExitIdWrapper');
 const IsDeposit = artifacts.require('IsDepositWrapper');
@@ -88,6 +89,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
                 inputTxs,
                 inputUtxosPos,
                 inputUtxosTypes,
+                outputGuardDataPreImages: [],
                 inputTxsInclusionProofs,
                 inFlightTxWitnesses,
             };
@@ -137,7 +139,6 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
             this.isDeposit = await IsDeposit.new(CHILD_BLOCK_INTERVAL);
             this.exitableHelper = await ExitableTimestamp.new(MIN_EXIT_PERIOD);
             this.stateTransitionVerifierAccept = await StateTransitionVerifierAccept.new();
-            this.stateTransitionVerifierReject = await StateTransitionVerifierReject.new();
         });
 
         describe('when calling in-flight exit start with valid arguments', () => {
@@ -441,14 +442,15 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
                 this.framework = await SpyPlasmaFramework.new(
                     MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
                 );
-                this.exitGame = await PaymentInFlightExitRouter.new(
-                    this.framework.address,
-                    this.spendingConditionRegistry.address,
-                    this.stateTransitionVerifierReject.address,
-                );
             });
 
             it('should fail when in-flight transaction is an invalid state transistion', async () => {
+                const stateTransitionVerifierReject = await StateTransitionVerifierReject.new();
+                const exitGame = await PaymentInFlightExitRouter.new(
+                    this.framework.address,
+                    this.spendingConditionRegistry.address,
+                    stateTransitionVerifierReject.address,
+                );
                 const inputTx1 = createInputTransaction(DUMMY_INPUT_1, alice, AMOUNT);
                 const inputTx2 = createInputTransaction(DUMMY_INPUT_2, bob, AMOUNT, OTHER_TOKEN);
 
@@ -466,8 +468,27 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
                 await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot, 0);
 
                 await expectRevert(
-                    this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
+                    exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
                     'Invalid state transition',
+                );
+            });
+
+
+            it('should fail when state transition verification reverts', async () => {
+                const stateTransitionVerifierReverse = await StateTransitionVerifierReverse.new();
+                const exitGame = await PaymentInFlightExitRouter.new(
+                    this.framework.address,
+                    this.spendingConditionRegistry.address,
+                    stateTransitionVerifierReverse.address,
+                );
+                const { args, inputTxsBlockRoot } = buildValidIfeStartArgs(
+                    AMOUNT, [alice, bob, carol], BLOCK_NUMBER,
+                );
+                await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot, 0);
+
+                await expectRevert(
+                    exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
+                    'Failing on purpose',
                 );
             });
         });

@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-import "../../src/exits/IOutputGuardParser.sol";
+import "../../src/exits/interfaces/IOutputGuardParser.sol";
 
 contract DummyOutputGuardParser is IOutputGuardParser {
     address payable resultAddress;

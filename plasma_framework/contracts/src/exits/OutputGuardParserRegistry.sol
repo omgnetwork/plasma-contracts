@@ -2,7 +2,7 @@ pragma solidity ^0.5.0;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
-import "./IOutputGuardParser.sol";
+import "./interfaces/IOutputGuardParser.sol";
 
 contract OutputGuardParserRegistry is Ownable {
     mapping(uint256 => IOutputGuardParser) private _outputGuardParsers;

@@ -1,7 +1,7 @@
 pragma solidity ^0.5.0;
 pragma experimental ABIEncoderV2;
 
-import '../IStateTransitionVerifier.sol';
+import '../interfaces/IStateTransitionVerifier.sol';
 import '../payment/PaymentExitDataModel.sol';
 import '../../utils/UtxoPosLib.sol';
 import '../../transactions/WireTransaction.sol';
@@ -28,7 +28,9 @@ contract PaymentTransactionStateTransitionVerifier {
         pure
         returns (bool)
     {
-        require(inputTxs.length == inputUtxosPos.length, "Input transactions do not match input utxos positions");
+        if (inputTxs.length != inputUtxosPos.length) {
+            return false;
+        }
 
         //TODO: refactor that to smaller function as soon as this issue is resolved: https://github.com/ethereum/solidity/issues/6835
         WireTransaction.Output[] memory inputs = new WireTransaction.Output[](inputTxs.length);

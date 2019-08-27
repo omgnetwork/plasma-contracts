@@ -5,7 +5,7 @@ import "../PaymentExitDataModel.sol";
 import "../routers/PaymentInFlightExitRouterArgs.sol";
 import "../spendingConditions/IPaymentSpendingCondition.sol";
 import "../spendingConditions/PaymentSpendingConditionRegistry.sol";
-import "../../IStateTransitionVerifier.sol";
+import "../../interfaces/IStateTransitionVerifier.sol";
 import "../../utils/ExitableTimestamp.sol";
 import "../../utils/ExitId.sol";
 import "../../utils/OutputId.sol";
@@ -122,7 +122,7 @@ library PaymentStartInFlightExit {
     }
 
     function decodeInputTxsPositions(uint256[] memory inputUtxosPos) private pure returns (UtxoPosLib.UtxoPos[] memory) {
-        require(inputUtxosPos.length <= MAX_INPUT_NUM, "To many transactions provided");
+        require(inputUtxosPos.length <= MAX_INPUT_NUM, "Too many transactions provided");
 
         UtxoPosLib.UtxoPos[] memory utxosPos = new UtxoPosLib.UtxoPos[](inputUtxosPos.length);
         for (uint i = 0; i < inputUtxosPos.length; i++) {
@@ -294,6 +294,7 @@ library PaymentStartInFlightExit {
         private
     {
         for (uint i = 0; i < exitData.inFlightTx.outputs.length; i++) {
+            // deposit transaction can't be in-flight exited
             bytes32 outputId = OutputId.computeNormalOutputId(exitData.inFlightTxRaw, i);
             PaymentOutputModel.Output memory output = exitData.inFlightTx.outputs[i];
 

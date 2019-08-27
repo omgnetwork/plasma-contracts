@@ -5,7 +5,7 @@ import "./PaymentInFlightExitRouterArgs.sol";
 import "../PaymentExitDataModel.sol";
 import "../controllers/PaymentStartInFlightExit.sol";
 import "../spendingConditions/PaymentSpendingConditionRegistry.sol";
-import "../../IStateTransitionVerifier.sol";
+import "../../interfaces/IStateTransitionVerifier.sol";
 import "../../../utils/OnlyWithValue.sol";
 import "../../../framework/PlasmaFramework.sol";
 

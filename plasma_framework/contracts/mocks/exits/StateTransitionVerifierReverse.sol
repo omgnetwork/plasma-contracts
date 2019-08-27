@@ -3,7 +3,7 @@ pragma experimental ABIEncoderV2;
 
 import "../../src/exits/interfaces/IStateTransitionVerifier.sol";
 
-contract StateTransitionVerifierReject is IStateTransitionVerifier {
+contract StateTransitionVerifierReverse is IStateTransitionVerifier {
 
     function isCorrectStateTransition(
         bytes calldata /*inFlightTx*/,
@@ -14,6 +14,6 @@ contract StateTransitionVerifierReject is IStateTransitionVerifier {
         view
         returns (bool)
     {
-        return false;
+        require(false, "Failing on purpose");
     }
 }
