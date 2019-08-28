@@ -15,7 +15,7 @@ contract PaymentOutputGuardHandler is IOutputGuardHandler {
     /**
     * @notice Returns whether the whole output guard data combination is a valid one
     */
-    function isValid(OutputGuardModel.Data calldata data) external view returns (bool) {
+    function isValid(OutputGuardModel.Data memory data) public view returns (bool) {
         require(data.preimage.length == 0, "Pre-imgage of the output guard should be empty");
         require(data.outputType == outputType, "Output type mismatch");
         return true;

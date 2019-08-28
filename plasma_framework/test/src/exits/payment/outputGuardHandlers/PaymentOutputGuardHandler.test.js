@@ -1,4 +1,4 @@
-const PaymentOutputGuardHandler = artifacts.require('PaymentOutputGuardHandlerWrapper');
+const PaymentOutputGuardHandler = artifacts.require('PaymentOutputGuardHandler');
 
 const { expectRevert } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
@@ -17,9 +17,10 @@ contract('PaymentOutputGuardHandler', ([alice]) => {
         it('should fail when preimage is not empty', async () => {
             const nonEmptyPreimage = '0x11';
             const guard = addressToOutputGuard(alice);
+            const args = [guard, TEST_OUTPUT_TYPE, nonEmptyPreimage];
 
             await expectRevert(
-                this.handler.isValid(guard, TEST_OUTPUT_TYPE, nonEmptyPreimage),
+                this.handler.isValid(args),
                 'Pre-imgage of the output guard should be empty',
             );
         });
@@ -28,9 +29,10 @@ contract('PaymentOutputGuardHandler', ([alice]) => {
             const preimage = '0x';
             const mismatchOutputType = TEST_OUTPUT_TYPE + 1;
             const guard = addressToOutputGuard(alice);
+            const args = [guard, mismatchOutputType, preimage];
 
             await expectRevert(
-                this.handler.isValid(guard, mismatchOutputType, preimage),
+                this.handler.isValid(args),
                 'Output type mismatch',
             );
         });
@@ -38,7 +40,8 @@ contract('PaymentOutputGuardHandler', ([alice]) => {
         it('should return true when succeed', async () => {
             const preimage = '0x';
             const guard = addressToOutputGuard(alice);
-            expect(await this.handler.isValid(guard, TEST_OUTPUT_TYPE, preimage)).to.be.true;
+            const args = [guard, TEST_OUTPUT_TYPE, preimage];
+            expect(await this.handler.isValid(args)).to.be.true;
         });
     });
 
@@ -46,7 +49,8 @@ contract('PaymentOutputGuardHandler', ([alice]) => {
         it('should return the owner information directly from outputGuard field', async () => {
             const preimage = '0x';
             const guard = addressToOutputGuard(alice);
-            expect(await this.handler.getExitTarget(guard, TEST_OUTPUT_TYPE, preimage)).to.equal(alice);
+            const args = [guard, TEST_OUTPUT_TYPE, preimage];
+            expect(await this.handler.getExitTarget(args)).to.equal(alice);
         });
     });
 });
