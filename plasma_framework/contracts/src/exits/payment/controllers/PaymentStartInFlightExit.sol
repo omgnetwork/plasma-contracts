@@ -30,6 +30,7 @@ library PaymentStartInFlightExit {
         IsDeposit.Predicate isDeposit;
         ExitableTimestamp.Calculator exitTimestampCalculator;
         PaymentSpendingConditionRegistry spendingConditionRegistry;
+        uint256 supportedTxType;
     }
 
     event InFlightExitStarted(
@@ -66,7 +67,11 @@ library PaymentStartInFlightExit {
         bytes32[] outputIds;
     }
 
-    function buildController(PlasmaFramework framework, PaymentSpendingConditionRegistry registry)
+    function buildController(
+        PlasmaFramework framework,
+        PaymentSpendingConditionRegistry registry,
+        uint256 supportedTxType
+    )
         public
         view
         returns (Controller memory)
@@ -75,7 +80,8 @@ library PaymentStartInFlightExit {
             framework: framework,
             isDeposit: IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL()),
             exitTimestampCalculator: ExitableTimestamp.Calculator(framework.minExitPeriod()),
-            spendingConditionRegistry: registry
+            spendingConditionRegistry: registry,
+            supportedTxType: supportedTxType
         });
     }
 
@@ -228,8 +234,9 @@ library PaymentStartInFlightExit {
 
             //FIXME: consider moving spending conditions to PlasmaFramework
             IPaymentSpendingCondition condition = exitData.controller.spendingConditionRegistry.spendingConditions(
-                exitData.inputUtxosTypes[i], exitData.inFlightTx.txType
+                exitData.inputUtxosTypes[i], exitData.controller.supportedTxType
             );
+
             require(address(condition) != address(0), "Spending condition contract not found");
 
             bool isSpentByInFlightTx = condition.verify(
