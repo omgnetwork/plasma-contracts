@@ -18,4 +18,20 @@ library PaymentInFlightExitRouterArgs {
         bytes[] inputTxsInclusionProofs;
         bytes[] inFlightTxWitnesses;
     }
+
+    /**
+    * @notice Wraps arguments for piggybackInFlightExit.
+    * @param inFlightTx RLP encoded in-flight transaction.
+    * @param isPiggybackInput A flag to decide whether it is piggybacking on input or output
+    * @param index Index of the input/output to piggyback on.
+    * @param outputType The output type of the piggyback output.
+    * @param outputGuardPreimage The original data (pre-image) for the outputguard.
+    */
+    struct PiggybackInFlightExitArgs {
+        bytes inFlightTx;
+        bool isPiggybackInput;
+        uint16 index;
+        uint256 outputType;
+        bytes outputGuardPreimage;
+    }
 }

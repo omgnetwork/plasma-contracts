@@ -2,6 +2,7 @@ pragma solidity ^0.5.0;
 pragma experimental ABIEncoderV2;
 
 import "../PaymentExitDataModel.sol";
+import "../PaymentInFlightExitModelLib.sol";
 import "../routers/PaymentInFlightExitRouterArgs.sol";
 import "../spendingConditions/IPaymentSpendingCondition.sol";
 import "../spendingConditions/PaymentSpendingConditionRegistry.sol";
@@ -12,11 +13,15 @@ import "../../../utils/IsDeposit.sol";
 import "../../../utils/UtxoPosLib.sol";
 import "../../../utils/Merkle.sol";
 import "../../../framework/PlasmaFramework.sol";
+import "../../../transactions/PaymentTransactionModel.sol";
+import "../../../transactions/outputs/PaymentOutputModel.sol";
 
 library PaymentStartInFlightExit {
     using ExitableTimestamp for ExitableTimestamp.Calculator;
     using IsDeposit for IsDeposit.Predicate;
     using UtxoPosLib for UtxoPosLib.UtxoPos;
+    using PaymentInFlightExitModelLib for PaymentExitDataModel.InFlightExit;
+    using PaymentOutputModel for PaymentOutputModel.Output;
 
     uint256 constant public MAX_INPUT_NUM = 4;
 
@@ -169,11 +174,7 @@ library PaymentStartInFlightExit {
     {
         PaymentExitDataModel.InFlightExit storage exit = inFlightExitMap.exits[exitId];
         require(exit.exitStartTimestamp == 0, "There is an active in-flight exit from this transaction");
-        require(!isFinalized(exit), "This in-flight exit has already been finalized");
-    }
-
-    function isFinalized(PaymentExitDataModel.InFlightExit storage ife) private view returns (bool) {
-        return Bits.bitSet(ife.exitMap, 255);
+        require(!exit.isFinalized(), "This in-flight exit has already been finalized");
     }
 
     function verifyNumberOfInputsMatchesNumberOfInFlightTransactionInputs(StartExitData memory exitData) private pure {
@@ -316,7 +317,10 @@ library PaymentStartInFlightExit {
     {
         for (uint i = 0; i < inputTxs.length; i++) {
             uint16 outputIndex = inputUtxosPos[i].outputIndex();
-            ife.inputs[i] = inputTxs[i].outputs[outputIndex];
+            PaymentOutputModel.Output memory output = inputTxs[i].outputs[outputIndex];
+            ife.inputs[i].exitTarget = output.owner();
+            ife.inputs[i].token = output.token;
+            ife.inputs[i].amount = output.amount;
         }
     }
 }
