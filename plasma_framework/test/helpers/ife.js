@@ -7,7 +7,7 @@ const { PaymentTransactionOutput, PaymentTransaction, PlasmaDepositTransaction }
 
 const ETH = constants.ZERO_ADDRESS;
 const CHILD_BLOCK_INTERVAL = 1000;
-const OUTPUT_TYPE_ZERO = 0;
+const OUTPUT_TYPE_ONE = 1;
 const IFE_TX_TYPE = 1;
 const WITNESS_LENGTH_IN_BYTES = 65;
 const IN_FLIGHT_TX_WITNESS_BYTES = web3.utils.bytesToHex('a'.repeat(WITNESS_LENGTH_IN_BYTES));
@@ -67,7 +67,7 @@ function buildIfeStartArgs([inputTx1, inputTx2], inputUtxosPos, inFlightTx) {
 
     const inputTxsInclusionProofs = [inclusionProof1, inclusionProof2];
 
-    const inputUtxosTypes = [OUTPUT_TYPE_ZERO, OUTPUT_TYPE_ZERO];
+    const inputUtxosTypes = [OUTPUT_TYPE_ONE, OUTPUT_TYPE_ONE];
 
     const inFlightTxRaw = web3.utils.bytesToHex(inFlightTx.rlpEncoded());
 
@@ -165,7 +165,7 @@ function buildValidNoncanonicalChallengeArgs(decodedIfeTx, competitorOwner) {
             inFlightTxInputIndex: 0,
             competingTx,
             competingTxInputIndex: 1,
-            competingTxInputOutputType: OUTPUT_TYPE_ZERO,
+            competingTxInputOutputType: OUTPUT_TYPE_ONE,
             competingTxPos: competingTxPos.utxoPos,
             competingTxInclusionProof,
             competingTxWitness,

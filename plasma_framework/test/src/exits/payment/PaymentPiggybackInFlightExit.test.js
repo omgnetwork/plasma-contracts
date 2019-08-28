@@ -35,6 +35,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
     const DUMMY_OUTPUT_GUARD_PREIMAGE = web3.utils.toHex('dummy pre-image of output guard');
     const MAX_INPUT_SIZE = 4;
     const MAX_OUTPUT_SIZE = 4;
+    const PAYMENT_TX_TYPE = 1;
 
     before('deploy and link with controller lib', async () => {
         const startInFlightExit = await PaymentStartInFlightExit.new();
@@ -60,7 +61,10 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
             const spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
 
             this.exitGame = await PaymentInFlightExitRouter.new(
-                this.framework.address, this.outputGuardHandlerRegistry.address, spendingConditionRegistry.address,
+                this.framework.address,
+                this.outputGuardHandlerRegistry.address,
+                spendingConditionRegistry.address,
+                PAYMENT_TX_TYPE,
             );
         });
 
