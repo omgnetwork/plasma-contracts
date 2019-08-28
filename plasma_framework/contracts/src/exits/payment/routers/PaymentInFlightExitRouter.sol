@@ -19,12 +19,19 @@ contract PaymentInFlightExitRouter is OnlyWithValue {
     PaymentStartInFlightExit.Controller startInFlightExitController;
     PaymentChallengeIFENotCanonical.Controller challengeCanonicityController;
 
-    constructor(PlasmaFramework _framework, PaymentSpendingConditionRegistry spendingConditionRegistry) public {
+    constructor(
+        PlasmaFramework _framework,
+        PaymentSpendingConditionRegistry spendingConditionRegistry,
+        uint256 supportedTxType
+    )
+        public
+    {
         startInFlightExitController = PaymentStartInFlightExit.buildController(_framework, spendingConditionRegistry);
 
         challengeCanonicityController = PaymentChallengeIFENotCanonical.Controller({
             framework: _framework,
-            spendingConditionRegistry: spendingConditionRegistry
+            spendingConditionRegistry: spendingConditionRegistry,
+            supportedTxType: supportedTxType
         });
     }
 

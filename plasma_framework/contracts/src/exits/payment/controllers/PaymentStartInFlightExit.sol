@@ -290,6 +290,7 @@ library PaymentStartInFlightExit {
         private
     {
         PaymentExitDataModel.InFlightExit storage ife = inFlightExitMap.exits[startExitData.exitId];
+        ife.isCanonical = true;
         ife.bondOwner = msg.sender;
         ife.position = getYoungestInputUtxoPosition(startExitData.inputUtxosPos);
         ife.exitStartTimestamp = uint64(block.timestamp);

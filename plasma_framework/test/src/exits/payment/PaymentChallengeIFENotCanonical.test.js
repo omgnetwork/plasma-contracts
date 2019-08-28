@@ -50,7 +50,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
             );
             this.spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
             this.exitGame = await PaymentInFlightExitRouter.new(
-                this.framework.address, this.spendingConditionRegistry.address,
+                this.framework.address, this.spendingConditionRegistry.address, IFE_TX_TYPE,
             );
 
             const {

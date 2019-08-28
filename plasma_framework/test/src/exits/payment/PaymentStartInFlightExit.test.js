@@ -74,7 +74,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
                 this.spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
 
                 this.exitGame = await PaymentInFlightExitRouter.new(
-                    this.framework.address, this.spendingConditionRegistry.address,
+                    this.framework.address, this.spendingConditionRegistry.address, IFE_TX_TYPE,
                 );
 
                 const {
@@ -105,6 +105,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
 
                 const exit = await this.exitGame.inFlightExits(exitId);
 
+                expect(exit.isCanonical).to.be.true;
                 expect(exit.bondOwner).to.equal(alice);
                 expect(new BN(exit.oldestCompetitorPosition)).to.be.bignumber.equal(new BN(0));
                 expect(new BN(exit.exitStartTimestamp)).to.be.bignumber.closeTo(ethBlockTime, TOLERANCE_SECONDS);
@@ -165,7 +166,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
                 );
                 this.spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
                 this.exitGame = await PaymentInFlightExitRouter.new(
-                    this.framework.address, this.spendingConditionRegistry.address,
+                    this.framework.address, this.spendingConditionRegistry.address, IFE_TX_TYPE,
                 );
             });
 

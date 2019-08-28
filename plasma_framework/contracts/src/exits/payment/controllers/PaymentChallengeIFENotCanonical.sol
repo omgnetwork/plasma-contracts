@@ -16,6 +16,7 @@ library PaymentChallengeIFENotCanonical {
     struct Controller {
         PlasmaFramework framework;
         PaymentSpendingConditionRegistry spendingConditionRegistry;
+        uint256 supportedTxType;
     }
 
     event InFlightExitChallenged(
@@ -31,15 +32,12 @@ library PaymentChallengeIFENotCanonical {
     )
         public
     {
-        // Check if there is an active in-flight exit from this transaction?
         uint192 exitId = ExitId.getInFlightExitId(args.inFlightTx);
         PaymentExitDataModel.InFlightExit storage ife = inFlightExitMap.exits[exitId];
         require(ife.exitStartTimestamp != 0, "In-fligh exit doesn't exists");
 
-        // Check that the exit is active and in period 1
         verifyFirstPhaseNotOver(ife, self.framework.minExitPeriod());
 
-        // Check that two transactions are not the same
         require(
             keccak256(args.inFlightTx) != keccak256(args.competingTx),
             "The competitor transaction is the same as transaction in-flight"
@@ -47,9 +45,8 @@ library PaymentChallengeIFENotCanonical {
 
         PaymentTransactionModel.Transaction memory inFlightTx = PaymentTransactionModel.decode(args.inFlightTx);
 
-        // Check that shared input owner signes competing transaction
         IPaymentSpendingCondition condition = self.spendingConditionRegistry.spendingConditions(
-            args.competingTxInputOutputType, inFlightTx.txType
+            args.competingTxInputOutputType, self.supportedTxType
         );
         require(address(condition) != address(0), "Spending condition contract not found");
 
@@ -73,7 +70,6 @@ library PaymentChallengeIFENotCanonical {
             );
         }
 
-        // Competitor must be first or must be older than the current oldest competitor.
         require(
             ife.oldestCompetitorPosition == 0 || ife.oldestCompetitorPosition > competitorPosition,
             "Competing transaction is not older than already known competitor"
