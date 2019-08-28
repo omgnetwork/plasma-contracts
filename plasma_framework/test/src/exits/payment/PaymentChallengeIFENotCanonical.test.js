@@ -1,0 +1,396 @@
+const PaymentInFlightExitRouter = artifacts.require('PaymentInFlightExitRouterMock');
+const PaymentStartInFlightExit = artifacts.require('PaymentStartInFlightExit');
+const PaymentChallengeIFENotCanonical = artifacts.require('PaymentChallengeIFENotCanonical');
+const PaymentSpendingConditionRegistry = artifacts.require('PaymentSpendingConditionRegistry');
+const PaymentSpendingConditionFalse = artifacts.require('PaymentSpendingConditionFalse');
+const PaymentSpendingConditionTrue = artifacts.require('PaymentSpendingConditionTrue');
+const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
+const ExitId = artifacts.require('ExitIdWrapper');
+const IsDeposit = artifacts.require('IsDepositWrapper');
+const ExitableTimestamp = artifacts.require('ExitableTimestampWrapper');
+
+const {
+    BN, constants, expectEvent, expectRevert, time,
+} = require('openzeppelin-test-helpers');
+const { expect } = require('chai');
+
+const { MerkleTree } = require('../../../helpers/merkle.js');
+const { buildUtxoPos, UtxoPos } = require('../../../helpers/positions.js');
+const {
+    addressToOutputGuard, computeNormalOutputId, spentOnGas,
+} = require('../../../helpers/utils.js');
+const { PaymentTransactionOutput, PaymentTransaction, PlasmaDepositTransaction } = require('../../../helpers/transaction.js');
+
+contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
+    const IN_FLIGHT_EXIT_BOND = 31415926535; // wei
+    const ETH = constants.ZERO_ADDRESS;
+    const OTHER_TOKEN = '0x0000000000000000000000000000000000000001';
+    const CHILD_BLOCK_INTERVAL = 1000;
+    const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
+    const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
+    const INITIAL_IMMUNE_EXIT_GAME_NUM = 1;
+    const OUTPUT_TYPE_ZERO = 0;
+    const IFE_TX_TYPE = 1;
+    const WITNESS_LENGTH_IN_BYTES = 65;
+    const INCLUSION_PROOF_LENGTH_IN_BYTES = 512;
+    const IN_FLIGHT_TX_WITNESS_BYTES = web3.utils.bytesToHex('a'.repeat(WITNESS_LENGTH_IN_BYTES));
+    const BLOCK_NUMBER = 1000;
+    const DEPOSIT_BLOCK_NUMBER = BLOCK_NUMBER + 1;
+    const DUMMY_INPUT_1 = '0x0000000000000000000000000000000000000000000000000000000000000001';
+    const DUMMY_INPUT_2 = '0x0000000000000000000000000000000000000000000000000000000000000002';
+    const MERKLE_TREE_HEIGHT = 3;
+    const AMOUNT = 10;
+    const TOLERANCE_SECONDS = new BN(1);
+
+    before('deploy and link with controller lib', async () => {
+        const startInFlightExit = await PaymentStartInFlightExit.new();
+        const challengeInFlightExitNotCanonical = await PaymentChallengeIFENotCanonical.new();
+
+        await PaymentInFlightExitRouter.link('PaymentStartInFlightExit', startInFlightExit.address);
+        await PaymentInFlightExitRouter.link('PaymentChallengeIFENotCanonical', challengeInFlightExitNotCanonical.address);
+    });
+
+    describe('challenge in-flight exit non canonical', () => {
+        before(async () => {
+            this.exitIdHelper = await ExitId.new();
+            this.isDeposit = await IsDeposit.new(CHILD_BLOCK_INTERVAL);
+            this.exitableHelper = await ExitableTimestamp.new(MIN_EXIT_PERIOD);
+        });
+
+        function isDeposit(blockNum) {
+            return blockNum % CHILD_BLOCK_INTERVAL !== 0;
+        }
+
+        function buildValidIfeStartArgs(amount, [ifeOwner, inputOwner1, inputOwner2], blockNum1, blockNum2) {
+            const inputTx1 = isDeposit(blockNum1)
+                ? createDepositTransaction(inputOwner1, amount)
+                : createInputTransaction([DUMMY_INPUT_1], inputOwner1, amount);
+
+            const inputTx2 = isDeposit(blockNum2)
+                ? createDepositTransaction(inputOwner2, amount)
+                : createInputTransaction([DUMMY_INPUT_2], inputOwner2, amount);
+
+            const inputTxs = [inputTx1, inputTx2];
+
+            const inputUtxosPos = [buildUtxoPos(blockNum1, 0, 0), buildUtxoPos(blockNum2, 0, 0)];
+
+            const inFlightTx = createInFlightTx(inputTxs, inputUtxosPos, ifeOwner, amount);
+            const {
+                args,
+                inputTxsBlockRoot1,
+                inputTxsBlockRoot2,
+            } = buildIfeStartArgs(inputTxs, inputUtxosPos, inFlightTx);
+
+            const argsDecoded = { inputTxs, inputUtxosPos, inFlightTx };
+
+            return {
+                args,
+                argsDecoded,
+                inputTxsBlockRoot1,
+                inputTxsBlockRoot2,
+            };
+        }
+
+        function buildIfeStartArgs([inputTx1, inputTx2], inputUtxosPos, inFlightTx) {
+            const rlpInputTx1 = inputTx1.rlpEncoded();
+            const encodedInputTx1 = web3.utils.bytesToHex(rlpInputTx1);
+
+            const rlpInputTx2 = inputTx2.rlpEncoded();
+            const encodedInputTx2 = web3.utils.bytesToHex(rlpInputTx2);
+
+            const inputTxs = [encodedInputTx1, encodedInputTx2];
+
+            const merkleTree1 = new MerkleTree([encodedInputTx1], MERKLE_TREE_HEIGHT);
+            const merkleTree2 = new MerkleTree([encodedInputTx2], MERKLE_TREE_HEIGHT);
+            const inclusionProof1 = merkleTree1.getInclusionProof(encodedInputTx1);
+            const inclusionProof2 = merkleTree2.getInclusionProof(encodedInputTx2);
+
+            const inputTxsInclusionProofs = [inclusionProof1, inclusionProof2];
+
+            const inputUtxosTypes = [OUTPUT_TYPE_ZERO, OUTPUT_TYPE_ZERO];
+
+            const inFlightTxRaw = web3.utils.bytesToHex(inFlightTx.rlpEncoded());
+
+            const inFlightTxWitnesses = [IN_FLIGHT_TX_WITNESS_BYTES, IN_FLIGHT_TX_WITNESS_BYTES];
+
+            const args = {
+                inFlightTx: inFlightTxRaw,
+                inputTxs,
+                inputUtxosPos,
+                inputUtxosTypes,
+                inputTxsInclusionProofs,
+                inFlightTxWitnesses,
+            };
+
+            const inputTxsBlockRoot1 = merkleTree1.root;
+            const inputTxsBlockRoot2 = merkleTree2.root;
+
+            return { args, inputTxsBlockRoot1, inputTxsBlockRoot2 };
+        }
+
+        function createInputTransaction(inputs, owner, amount, token = ETH) {
+            const output = new PaymentTransactionOutput(amount, addressToOutputGuard(owner), token);
+            return new PaymentTransaction(IFE_TX_TYPE, inputs, [output]);
+        }
+
+        function createDepositTransaction(owner, amount, token = ETH) {
+            const output = new PaymentTransactionOutput(amount, addressToOutputGuard(owner), token);
+            return new PlasmaDepositTransaction(output);
+        }
+
+        function createInFlightTx(inputTxs, inputUtxosPos, ifeOwner, amount, token = ETH) {
+            const inputs = createInputsForInFlightTx(inputTxs, inputUtxosPos);
+
+            const output = new PaymentTransactionOutput(
+                amount * inputTxs.length,
+                addressToOutputGuard(ifeOwner),
+                token,
+            );
+
+            return new PaymentTransaction(1, inputs, [output]);
+        }
+
+        function createInputsForInFlightTx(inputTxs, inputUtxosPos) {
+            const inputs = [];
+            for (let i = 0; i < inputTxs.length; i++) {
+                const inputUtxoPos = new UtxoPos(inputUtxosPos[i]);
+                const inputTx = web3.utils.bytesToHex(inputTxs[i].rlpEncoded());
+                const outputId = computeNormalOutputId(inputTx, inputUtxoPos.outputIndex);
+                inputs.push(outputId);
+            }
+            return inputs;
+        }
+
+        function createCompetitorTransaction(ifeZeroInput, otherInput) {
+            const competingTx = createInputTransaction([otherInput.utxoPos, ifeZeroInput], bob, AMOUNT);
+            const competingTxPos = new UtxoPos(buildUtxoPos(otherInput.blockNum + CHILD_BLOCK_INTERVAL, 0, 0));
+
+            return {
+                competingTx: web3.utils.bytesToHex(competingTx.rlpEncoded()),
+                decodedCompetingTx: competingTx,
+                competingTxPos,
+            };
+        }
+
+        function createInclusionProof(encodedTx, txUtxoPos) {
+            const merkleTree = new MerkleTree([encodedTx], MERKLE_TREE_HEIGHT);
+            const competingTxInclusionProof = merkleTree.getInclusionProof(encodedTx);
+
+            return {
+                competingTxInclusionProof,
+                blockHash: merkleTree.root,
+                blockNum: txUtxoPos.blockNum,
+                blockTimestamp: 1000,
+            };
+        }
+
+        function createValidNoncanonicalChallengeArgs(decodedIfeTx) {
+            const utxoPos = new UtxoPos(buildUtxoPos(BLOCK_NUMBER, 2, 2));
+            const { competingTx, decodedCompetingTx, competingTxPos } = createCompetitorTransaction(
+                decodedIfeTx.inputs[0], utxoPos,
+            );
+
+            const {
+                competingTxInclusionProof, blockHash, blockNum, blockTimestamp,
+            } = createInclusionProof(
+                competingTx, competingTxPos,
+            );
+
+            const competingTxWitness = addressToOutputGuard(bob);
+
+            return {
+                args: {
+                    inFlightTx: web3.utils.bytesToHex(decodedIfeTx.rlpEncoded()),
+                    inFlightTxInputIndex: 0,
+                    competingTx,
+                    competingTxInputIndex: 1,
+                    competingTxInputOutputType: OUTPUT_TYPE_ZERO,
+                    competingTxPos: competingTxPos.utxoPos,
+                    competingTxInclusionProof,
+                    competingTxWitness,
+                },
+                block: {
+                    blockHash, blockNum, blockTimestamp,
+                },
+                decodedCompetingTx,
+            };
+        }
+
+        beforeEach(async () => {
+            this.framework = await SpyPlasmaFramework.new(
+                MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
+            );
+            this.spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
+            this.exitGame = await PaymentInFlightExitRouter.new(
+                this.framework.address, this.spendingConditionRegistry.address,
+            );
+
+            const {
+                args,
+                argsDecoded,
+                inputTxsBlockRoot1,
+                inputTxsBlockRoot2,
+            } = buildValidIfeStartArgs(AMOUNT, [alice, bob, carol], BLOCK_NUMBER, DEPOSIT_BLOCK_NUMBER);
+            this.args = args;
+            this.argsDecoded = argsDecoded;
+            await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot1, 0);
+            await this.framework.setBlock(DEPOSIT_BLOCK_NUMBER, inputTxsBlockRoot2, 0);
+
+            const conditionTrue = await PaymentSpendingConditionTrue.new();
+
+            await this.spendingConditionRegistry.registerSpendingCondition(
+                OUTPUT_TYPE_ZERO, IFE_TX_TYPE, conditionTrue.address,
+            );
+
+            await this.exitGame.startInFlightExit(
+                this.args,
+                { from: alice, value: IN_FLIGHT_EXIT_BOND },
+            );
+
+            const {
+                args: cArgs, block, decodedCompetingTx,
+            } = createValidNoncanonicalChallengeArgs(this.argsDecoded.inFlightTx);
+
+            this.challengeArgs = cArgs;
+            this.competingTx = decodedCompetingTx;
+            this.competingTxBlock = block;
+        });
+
+        it('should successfully challenge ife', async () => {
+            await this.framework.setBlock(
+                this.competingTxBlock.blockNum,
+                this.competingTxBlock.blockHash,
+                this.competingTxBlock.blockTimestamp,
+            );
+
+            const { receipt } = await this.exitGame.challengeInFlightExitNotCanonical(
+                this.challengeArgs, { from: alice },
+            );
+
+            await expectEvent.inTransaction(
+                receipt.transactionHash,
+                PaymentChallengeIFENotCanonical,
+                'InFlightExitChallenged',
+                {
+                    challenger: alice,
+                    txHash: web3.utils.sha3(this.args.inFlightTx),
+                    challengeTxPosition: new BN(this.challengeArgs.competingTxPos),
+                },
+            );
+        });
+
+        it('fails when competing tx is the same as in-flight one', async () => {
+            this.challengeArgs.competingTx = this.challengeArgs.inFlightTx;
+
+            await expectRevert(
+                this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: alice }),
+                'The competitor transaction is the same as transaction in-flight',
+            );
+        });
+
+        it('fails when first phase is over', async () => {
+            await time.increase((MIN_EXIT_PERIOD / 2) + 1);
+
+            await expectRevert(
+                this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: alice }),
+                'Canonicity challege phase for this exit has ended',
+            );
+        });
+
+        it('fails when competing tx is not included in the given position', async () => {
+            await expectRevert(
+                this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: alice }),
+                'Transaction is not included in block of plasma chain.',
+            );
+        });
+
+        it('fails when ife not started', async () => {
+            this.challengeArgs.inFlightTx = this.challengeArgs.competingTx;
+
+            await expectRevert(
+                this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: alice }),
+                "In-fligh exit doesn't exists",
+            );
+        });
+
+        it('fails when spending condition is not met', async () => {
+            const newOutputType = OUTPUT_TYPE_ZERO + 1;
+
+            const conditionFalse = await PaymentSpendingConditionFalse.new();
+            await this.spendingConditionRegistry.registerSpendingCondition(
+                newOutputType, IFE_TX_TYPE, conditionFalse.address,
+            );
+
+            this.challengeArgs.competingTxInputOutputType = newOutputType;
+            await expectRevert(
+                this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: alice }),
+                'Competing input spending condition is not met',
+            );
+        });
+
+        it('fails when competing tx is younger than already known competitor', async () => {
+            // challenge ife as previously
+            await this.framework.setBlock(
+                this.competingTxBlock.blockNum,
+                this.competingTxBlock.blockHash,
+                this.competingTxBlock.blockTimestamp,
+            );
+
+            await this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: alice });
+
+            // then mine the next block - with the same root hash
+            const nextBlockNum = this.competingTxBlock.blockNum + CHILD_BLOCK_INTERVAL;
+            const nextBlockTimestamp = this.competingTxBlock.blockTimestamp + 1000;
+            const nextCompetitorPos = buildUtxoPos(nextBlockNum, 0, 0);
+
+            await this.framework.setBlock(
+                nextBlockNum, this.competingTxBlock.blockHash, nextBlockTimestamp,
+            );
+
+            // try to challenge again with competitor from the lastly mined block
+            this.challengeArgs.competingTxPos = nextCompetitorPos;
+            await expectRevert(
+                this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: alice }),
+                'Competing transaction is not older than already known competitor',
+            );
+        });
+
+        it('fails when challenge with the same competing tx twice', async () => {
+            await this.framework.setBlock(
+                this.competingTxBlock.blockNum,
+                this.competingTxBlock.blockHash,
+                this.competingTxBlock.blockTimestamp,
+            );
+
+            await this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: alice });
+
+            await expectRevert(
+                this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: alice }),
+                'Competing transaction is not older than already known competitor',
+            );
+        });
+
+        it('should set large competitor position when competitor is in-flight', async () => {
+            this.challengeArgs.competingTxPos = 0;
+            this.challengeArgs.competingTxInclusionProof = '0x';
+
+            // it seems to be solidity `~uint256(0)` - what is important here: it's HUGE
+            const expectedCompetitorPos = new BN(2).pow(new BN(256)).sub(new BN(1));
+
+            const { receipt } = await this.exitGame.challengeInFlightExitNotCanonical(
+                this.challengeArgs, { from: alice },
+            );
+
+            await expectEvent.inTransaction(
+                receipt.transactionHash,
+                PaymentChallengeIFENotCanonical,
+                'InFlightExitChallenged',
+                {
+                    challenger: alice,
+                    txHash: web3.utils.sha3(this.args.inFlightTx),
+                    challengeTxPosition: expectedCompetitorPos,
+                },
+            );
+        });
+    });
+});
