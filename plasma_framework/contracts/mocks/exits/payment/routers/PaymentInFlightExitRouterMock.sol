@@ -1,14 +1,18 @@
 pragma solidity ^0.5.0;
 pragma experimental ABIEncoderV2;
 
+import "../../../../src/exits/payment/PaymentExitDataModel.sol";
 import "../../../../src/exits/payment/routers/PaymentInFlightExitRouter.sol";
 import "../../../../src/framework/PlasmaFramework.sol";
-import "../../../../src/transactions/outputs/PaymentOutputModel.sol";
 
 contract PaymentInFlightExitRouterMock is PaymentInFlightExitRouter {
-    constructor(PlasmaFramework _framework, PaymentSpendingConditionRegistry _registry)
+    constructor(
+        PlasmaFramework framework,
+        OutputGuardHandlerRegistry outputGuardHandlerRegistry,
+        PaymentSpendingConditionRegistry spendingConditionRegistry
+    )
         public
-        PaymentInFlightExitRouter(_framework, _registry) {
+        PaymentInFlightExitRouter(framework, outputGuardHandlerRegistry, spendingConditionRegistry) {
     }
 
     // to override IExitProcessor function
@@ -19,11 +23,32 @@ contract PaymentInFlightExitRouterMock is PaymentInFlightExitRouter {
         inFlightExitMap.exits[exitId].exitMap = Bits.setBit(inFlightExitMap.exits[exitId].exitMap, 255);
     }
 
-    function getInFlightExitInput(uint192 exitId, uint8 inputIndex) public view returns (PaymentOutputModel.Output memory) {
+    function setInFlightExit(uint192 exitId, PaymentExitDataModel.InFlightExit memory exit) public {
+        PaymentExitDataModel.InFlightExit storage ife = inFlightExitMap.exits[exitId];
+        ife.exitStartTimestamp = exit.exitStartTimestamp;
+        ife.exitMap = exit.exitMap;
+        ife.position = exit.position;
+        ife.bondOwner = exit.bondOwner;
+        ife.oldestCompetitorPosition = exit.oldestCompetitorPosition;
+
+        for (uint i = 0 ; i < exit.outputGuardForInputs.length ; i++) {
+            ife.outputGuardForInputs[i] = exit.outputGuardForInputs[i];
+        }
+
+        for (uint i = 0 ; i < exit.inputs.length ; i++) {
+            ife.inputs[i] = exit.inputs[i];
+        }
+
+        for (uint i = 0 ; i < exit.outputs.length ; i++) {
+            ife.outputs[i] = exit.outputs[i];
+        }
+    }
+
+    function getInFlightExitInput(uint192 exitId, uint16 inputIndex) public view returns (PaymentExitDataModel.WithdrawData memory) {
         return inFlightExitMap.exits[exitId].inputs[inputIndex];
     }
 
-    function getInFlightExitOutput(uint192 exitId, uint8 outputIndex) public view returns (PaymentOutputModel.Output memory) {
+    function getInFlightExitOutput(uint192 exitId, uint16 outputIndex) public view returns (PaymentExitDataModel.WithdrawData memory) {
         return inFlightExitMap.exits[exitId].outputs[outputIndex];
     }
 }

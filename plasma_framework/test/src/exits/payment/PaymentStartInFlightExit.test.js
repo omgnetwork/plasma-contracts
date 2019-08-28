@@ -1,12 +1,14 @@
+const ExitId = artifacts.require('ExitIdWrapper');
+const ExitableTimestamp = artifacts.require('ExitableTimestampWrapper');
+const IsDeposit = artifacts.require('IsDepositWrapper');
+const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry');
 const PaymentInFlightExitRouter = artifacts.require('PaymentInFlightExitRouterMock');
 const PaymentStartInFlightExit = artifacts.require('PaymentStartInFlightExit');
+const PaymentPiggybackInFlightExit = artifacts.require('PaymentPiggybackInFlightExit');
 const PaymentSpendingConditionRegistry = artifacts.require('PaymentSpendingConditionRegistry');
 const PaymentSpendingConditionFalse = artifacts.require('PaymentSpendingConditionFalse');
 const PaymentSpendingConditionTrue = artifacts.require('PaymentSpendingConditionTrue');
 const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
-const ExitId = artifacts.require('ExitIdWrapper');
-const IsDeposit = artifacts.require('IsDepositWrapper');
-const ExitableTimestamp = artifacts.require('ExitableTimestampWrapper');
 
 const {
     BN, constants, expectEvent, expectRevert, time,
@@ -43,8 +45,12 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
 
     before('deploy and link with controller lib', async () => {
         const startInFlightExit = await PaymentStartInFlightExit.new();
+        const piggybackInFlightExit = await PaymentPiggybackInFlightExit.new();
+
         await PaymentInFlightExitRouter.link('PaymentStartInFlightExit', startInFlightExit.address);
+        await PaymentInFlightExitRouter.link('PaymentPiggybackInFlightExit', piggybackInFlightExit.address);
     });
+
 
     describe('startInFlightExit', () => {
         function isDeposit(blockNum) {
@@ -153,7 +159,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
 
         function expectInput(input, inputTx) {
             expect(new BN(input.amount)).to.be.bignumber.equal(new BN(inputTx.outputs[0].amount));
-            expect(input.outputGuard.toUpperCase()).to.equal(inputTx.outputs[0].outputGuard.toUpperCase());
+            expect(addressToOutputGuard(input.exitTarget)).to.equal(inputTx.outputs[0].outputGuard);
             expect(input.token).to.equal(inputTx.outputs[0].token);
         }
 
@@ -174,8 +180,10 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
                     MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
                 );
                 this.spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
+                const outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
+
                 this.exitGame = await PaymentInFlightExitRouter.new(
-                    this.framework.address, this.spendingConditionRegistry.address,
+                    this.framework.address, outputGuardHandlerRegistry.address, this.spendingConditionRegistry.address,
                 );
 
                 const {
@@ -265,8 +273,9 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
                     MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
                 );
                 this.spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
+                const outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
                 this.exitGame = await PaymentInFlightExitRouter.new(
-                    this.framework.address, this.spendingConditionRegistry.address,
+                    this.framework.address, outputGuardHandlerRegistry.address, this.spendingConditionRegistry.address,
                 );
             });
 
