@@ -12,7 +12,7 @@ module.exports = async function (deployer, network, accounts) {
   ) {
     // Unlock the authority account if necessary
     await RootChain.web3.eth.personal.unlockAccount(
-      global.deployerAddress,
+      global.authorityAddress,
       process.env.AUTHORITY_PASSPHRASE,
       10
     )
@@ -20,6 +20,6 @@ module.exports = async function (deployer, network, accounts) {
   // Call RootChain.init() from the authority account
   return rootChain.init(
     process.env.MIN_EXIT_PERIOD,
-    { from: global.authorityAddress || accounts[1] }
+    { from: global.authorityAddress }
   )
 }
