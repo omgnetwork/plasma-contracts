@@ -14,12 +14,13 @@ const {
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
-const { MerkleTree } = require('../../../helpers/merkle.js');
-const { buildUtxoPos, UtxoPos } = require('../../../helpers/positions.js');
+const { buildUtxoPos } = require('../../../helpers/positions.js');
+const { addressToOutputGuard, spentOnGas } = require('../../../helpers/utils.js');
+const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
 const {
-    addressToOutputGuard, computeNormalOutputId, spentOnGas,
-} = require('../../../helpers/utils.js');
-const { PaymentTransactionOutput, PaymentTransaction, PlasmaDepositTransaction } = require('../../../helpers/transaction.js');
+    buildValidIfeStartArgs, buildIfeStartArgs, createInputTransaction, createDepositTransaction, createInFlightTx,
+    createInputsForInFlightTx,
+} = require('../../../helpers/ife.js');
 
 contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
     const IN_FLIGHT_EXIT_BOND = 31415926535; // wei
@@ -31,14 +32,11 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
     const INITIAL_IMMUNE_EXIT_GAME_NUM = 1;
     const OUTPUT_TYPE_ZERO = 0;
     const IFE_TX_TYPE = 1;
-    const WITNESS_LENGTH_IN_BYTES = 65;
     const INCLUSION_PROOF_LENGTH_IN_BYTES = 512;
-    const IN_FLIGHT_TX_WITNESS_BYTES = web3.utils.bytesToHex('a'.repeat(WITNESS_LENGTH_IN_BYTES));
     const BLOCK_NUMBER = 1000;
     const DEPOSIT_BLOCK_NUMBER = BLOCK_NUMBER + 1;
     const DUMMY_INPUT_1 = '0x0000000000000000000000000000000000000000000000000000000000000001';
     const DUMMY_INPUT_2 = '0x0000000000000000000000000000000000000000000000000000000000000002';
-    const MERKLE_TREE_HEIGHT = 3;
     const AMOUNT = 10;
     const TOLERANCE_SECONDS = new BN(1);
 
@@ -51,110 +49,6 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
     });
 
     describe('startInFlightExit', () => {
-        function isDeposit(blockNum) {
-            return blockNum % CHILD_BLOCK_INTERVAL !== 0;
-        }
-
-        function buildValidIfeStartArgs(amount, [ifeOwner, inputOwner1, inputOwner2], blockNum1, blockNum2) {
-            const inputTx1 = isDeposit(blockNum1)
-                ? createDepositTransaction(inputOwner1, amount)
-                : createInputTransaction([DUMMY_INPUT_1], inputOwner1, amount);
-
-            const inputTx2 = isDeposit(blockNum2)
-                ? createDepositTransaction(inputOwner2, amount)
-                : createInputTransaction([DUMMY_INPUT_2], inputOwner2, amount);
-
-            const inputTxs = [inputTx1, inputTx2];
-
-            const inputUtxosPos = [buildUtxoPos(blockNum1, 0, 0), buildUtxoPos(blockNum2, 0, 0)];
-
-            const inFlightTx = createInFlightTx(inputTxs, inputUtxosPos, ifeOwner, amount);
-            const {
-                args,
-                inputTxsBlockRoot1,
-                inputTxsBlockRoot2,
-            } = buildIfeStartArgs(inputTxs, inputUtxosPos, inFlightTx);
-
-            const argsDecoded = { inputTxs, inputUtxosPos, inFlightTx };
-
-            return {
-                args,
-                argsDecoded,
-                inputTxsBlockRoot1,
-                inputTxsBlockRoot2,
-            };
-        }
-
-        function buildIfeStartArgs([inputTx1, inputTx2], inputUtxosPos, inFlightTx) {
-            const rlpInputTx1 = inputTx1.rlpEncoded();
-            const encodedInputTx1 = web3.utils.bytesToHex(rlpInputTx1);
-
-            const rlpInputTx2 = inputTx2.rlpEncoded();
-            const encodedInputTx2 = web3.utils.bytesToHex(rlpInputTx2);
-
-            const inputTxs = [encodedInputTx1, encodedInputTx2];
-
-            const merkleTree1 = new MerkleTree([encodedInputTx1], MERKLE_TREE_HEIGHT);
-            const merkleTree2 = new MerkleTree([encodedInputTx2], MERKLE_TREE_HEIGHT);
-            const inclusionProof1 = merkleTree1.getInclusionProof(encodedInputTx1);
-            const inclusionProof2 = merkleTree2.getInclusionProof(encodedInputTx2);
-
-            const inputTxsInclusionProofs = [inclusionProof1, inclusionProof2];
-
-            const inputUtxosTypes = [OUTPUT_TYPE_ZERO, OUTPUT_TYPE_ZERO];
-
-            const inFlightTxRaw = web3.utils.bytesToHex(inFlightTx.rlpEncoded());
-
-            const inFlightTxWitnesses = [IN_FLIGHT_TX_WITNESS_BYTES, IN_FLIGHT_TX_WITNESS_BYTES];
-
-            const args = {
-                inFlightTx: inFlightTxRaw,
-                inputTxs,
-                inputUtxosPos,
-                inputUtxosTypes,
-                inputTxsInclusionProofs,
-                inFlightTxWitnesses,
-            };
-
-            const inputTxsBlockRoot1 = merkleTree1.root;
-            const inputTxsBlockRoot2 = merkleTree2.root;
-
-            return { args, inputTxsBlockRoot1, inputTxsBlockRoot2 };
-        }
-
-        function createInputTransaction(inputs, owner, amount, token = ETH) {
-            const output = new PaymentTransactionOutput(amount, addressToOutputGuard(owner), token);
-            return new PaymentTransaction(IFE_TX_TYPE, inputs, [output]);
-        }
-
-        function createDepositTransaction(owner, amount, token = ETH) {
-            const output = new PaymentTransactionOutput(amount, addressToOutputGuard(owner), token);
-            return new PlasmaDepositTransaction(output);
-        }
-
-        function createInFlightTx(inputTxs, inputUtxosPos, ifeOwner, amount, token = ETH) {
-            const inputs = createInputsForInFlightTx(inputTxs, inputUtxosPos);
-
-            const output = new PaymentTransactionOutput(
-                amount * inputTxs.length,
-                addressToOutputGuard(ifeOwner),
-                token,
-            );
-
-            return new PaymentTransaction(1, inputs, [output]);
-        }
-
-        function createInputsForInFlightTx(inputTxs, inputUtxosPos) {
-            const inputs = [];
-            for (let i = 0; i < inputTxs.length; i++) {
-                const inputUtxoPos = new UtxoPos(inputUtxosPos[i]);
-                const inputTx = web3.utils.bytesToHex(inputTxs[i].rlpEncoded());
-                const outputId = computeNormalOutputId(inputTx, inputUtxoPos.outputIndex);
-                inputs.push(outputId);
-            }
-            return inputs;
-        }
-
         function expectInput(input, inputTx) {
             expect(new BN(input.amount)).to.be.bignumber.equal(new BN(inputTx.outputs[0].amount));
             expect(input.outputGuard.toUpperCase()).to.equal(inputTx.outputs[0].outputGuard.toUpperCase());

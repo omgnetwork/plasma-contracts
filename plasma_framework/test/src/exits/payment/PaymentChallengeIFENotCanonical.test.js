@@ -10,37 +10,24 @@ const IsDeposit = artifacts.require('IsDepositWrapper');
 const ExitableTimestamp = artifacts.require('ExitableTimestampWrapper');
 
 const {
-    BN, constants, expectEvent, expectRevert, time,
+    BN, expectEvent, expectRevert, time,
 } = require('openzeppelin-test-helpers');
-const { expect } = require('chai');
 
-const { MerkleTree } = require('../../../helpers/merkle.js');
-const { buildUtxoPos, UtxoPos } = require('../../../helpers/positions.js');
-const {
-    addressToOutputGuard, computeNormalOutputId, spentOnGas,
-} = require('../../../helpers/utils.js');
-const { PaymentTransactionOutput, PaymentTransaction, PlasmaDepositTransaction } = require('../../../helpers/transaction.js');
+const { buildUtxoPos } = require('../../../helpers/positions.js');
+
+const { buildValidIfeStartArgs, buildValidNoncanonicalChallengeArgs } = require('../../../helpers/ife.js');
 
 contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
     const IN_FLIGHT_EXIT_BOND = 31415926535; // wei
-    const ETH = constants.ZERO_ADDRESS;
-    const OTHER_TOKEN = '0x0000000000000000000000000000000000000001';
     const CHILD_BLOCK_INTERVAL = 1000;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
     const INITIAL_IMMUNE_EXIT_GAME_NUM = 1;
     const OUTPUT_TYPE_ZERO = 0;
     const IFE_TX_TYPE = 1;
-    const WITNESS_LENGTH_IN_BYTES = 65;
-    const INCLUSION_PROOF_LENGTH_IN_BYTES = 512;
-    const IN_FLIGHT_TX_WITNESS_BYTES = web3.utils.bytesToHex('a'.repeat(WITNESS_LENGTH_IN_BYTES));
     const BLOCK_NUMBER = 1000;
     const DEPOSIT_BLOCK_NUMBER = BLOCK_NUMBER + 1;
-    const DUMMY_INPUT_1 = '0x0000000000000000000000000000000000000000000000000000000000000001';
-    const DUMMY_INPUT_2 = '0x0000000000000000000000000000000000000000000000000000000000000002';
-    const MERKLE_TREE_HEIGHT = 3;
     const AMOUNT = 10;
-    const TOLERANCE_SECONDS = new BN(1);
 
     before('deploy and link with controller lib', async () => {
         const startInFlightExit = await PaymentStartInFlightExit.new();
@@ -56,165 +43,6 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
             this.isDeposit = await IsDeposit.new(CHILD_BLOCK_INTERVAL);
             this.exitableHelper = await ExitableTimestamp.new(MIN_EXIT_PERIOD);
         });
-
-        function isDeposit(blockNum) {
-            return blockNum % CHILD_BLOCK_INTERVAL !== 0;
-        }
-
-        function buildValidIfeStartArgs(amount, [ifeOwner, inputOwner1, inputOwner2], blockNum1, blockNum2) {
-            const inputTx1 = isDeposit(blockNum1)
-                ? createDepositTransaction(inputOwner1, amount)
-                : createInputTransaction([DUMMY_INPUT_1], inputOwner1, amount);
-
-            const inputTx2 = isDeposit(blockNum2)
-                ? createDepositTransaction(inputOwner2, amount)
-                : createInputTransaction([DUMMY_INPUT_2], inputOwner2, amount);
-
-            const inputTxs = [inputTx1, inputTx2];
-
-            const inputUtxosPos = [buildUtxoPos(blockNum1, 0, 0), buildUtxoPos(blockNum2, 0, 0)];
-
-            const inFlightTx = createInFlightTx(inputTxs, inputUtxosPos, ifeOwner, amount);
-            const {
-                args,
-                inputTxsBlockRoot1,
-                inputTxsBlockRoot2,
-            } = buildIfeStartArgs(inputTxs, inputUtxosPos, inFlightTx);
-
-            const argsDecoded = { inputTxs, inputUtxosPos, inFlightTx };
-
-            return {
-                args,
-                argsDecoded,
-                inputTxsBlockRoot1,
-                inputTxsBlockRoot2,
-            };
-        }
-
-        function buildIfeStartArgs([inputTx1, inputTx2], inputUtxosPos, inFlightTx) {
-            const rlpInputTx1 = inputTx1.rlpEncoded();
-            const encodedInputTx1 = web3.utils.bytesToHex(rlpInputTx1);
-
-            const rlpInputTx2 = inputTx2.rlpEncoded();
-            const encodedInputTx2 = web3.utils.bytesToHex(rlpInputTx2);
-
-            const inputTxs = [encodedInputTx1, encodedInputTx2];
-
-            const merkleTree1 = new MerkleTree([encodedInputTx1], MERKLE_TREE_HEIGHT);
-            const merkleTree2 = new MerkleTree([encodedInputTx2], MERKLE_TREE_HEIGHT);
-            const inclusionProof1 = merkleTree1.getInclusionProof(encodedInputTx1);
-            const inclusionProof2 = merkleTree2.getInclusionProof(encodedInputTx2);
-
-            const inputTxsInclusionProofs = [inclusionProof1, inclusionProof2];
-
-            const inputUtxosTypes = [OUTPUT_TYPE_ZERO, OUTPUT_TYPE_ZERO];
-
-            const inFlightTxRaw = web3.utils.bytesToHex(inFlightTx.rlpEncoded());
-
-            const inFlightTxWitnesses = [IN_FLIGHT_TX_WITNESS_BYTES, IN_FLIGHT_TX_WITNESS_BYTES];
-
-            const args = {
-                inFlightTx: inFlightTxRaw,
-                inputTxs,
-                inputUtxosPos,
-                inputUtxosTypes,
-                inputTxsInclusionProofs,
-                inFlightTxWitnesses,
-            };
-
-            const inputTxsBlockRoot1 = merkleTree1.root;
-            const inputTxsBlockRoot2 = merkleTree2.root;
-
-            return { args, inputTxsBlockRoot1, inputTxsBlockRoot2 };
-        }
-
-        function createInputTransaction(inputs, owner, amount, token = ETH) {
-            const output = new PaymentTransactionOutput(amount, addressToOutputGuard(owner), token);
-            return new PaymentTransaction(IFE_TX_TYPE, inputs, [output]);
-        }
-
-        function createDepositTransaction(owner, amount, token = ETH) {
-            const output = new PaymentTransactionOutput(amount, addressToOutputGuard(owner), token);
-            return new PlasmaDepositTransaction(output);
-        }
-
-        function createInFlightTx(inputTxs, inputUtxosPos, ifeOwner, amount, token = ETH) {
-            const inputs = createInputsForInFlightTx(inputTxs, inputUtxosPos);
-
-            const output = new PaymentTransactionOutput(
-                amount * inputTxs.length,
-                addressToOutputGuard(ifeOwner),
-                token,
-            );
-
-            return new PaymentTransaction(1, inputs, [output]);
-        }
-
-        function createInputsForInFlightTx(inputTxs, inputUtxosPos) {
-            const inputs = [];
-            for (let i = 0; i < inputTxs.length; i++) {
-                const inputUtxoPos = new UtxoPos(inputUtxosPos[i]);
-                const inputTx = web3.utils.bytesToHex(inputTxs[i].rlpEncoded());
-                const outputId = computeNormalOutputId(inputTx, inputUtxoPos.outputIndex);
-                inputs.push(outputId);
-            }
-            return inputs;
-        }
-
-        function createCompetitorTransaction(ifeZeroInput, otherInput) {
-            const competingTx = createInputTransaction([otherInput.utxoPos, ifeZeroInput], bob, AMOUNT);
-            const competingTxPos = new UtxoPos(buildUtxoPos(otherInput.blockNum + CHILD_BLOCK_INTERVAL, 0, 0));
-
-            return {
-                competingTx: web3.utils.bytesToHex(competingTx.rlpEncoded()),
-                decodedCompetingTx: competingTx,
-                competingTxPos,
-            };
-        }
-
-        function createInclusionProof(encodedTx, txUtxoPos) {
-            const merkleTree = new MerkleTree([encodedTx], MERKLE_TREE_HEIGHT);
-            const competingTxInclusionProof = merkleTree.getInclusionProof(encodedTx);
-
-            return {
-                competingTxInclusionProof,
-                blockHash: merkleTree.root,
-                blockNum: txUtxoPos.blockNum,
-                blockTimestamp: 1000,
-            };
-        }
-
-        function createValidNoncanonicalChallengeArgs(decodedIfeTx) {
-            const utxoPos = new UtxoPos(buildUtxoPos(BLOCK_NUMBER, 2, 2));
-            const { competingTx, decodedCompetingTx, competingTxPos } = createCompetitorTransaction(
-                decodedIfeTx.inputs[0], utxoPos,
-            );
-
-            const {
-                competingTxInclusionProof, blockHash, blockNum, blockTimestamp,
-            } = createInclusionProof(
-                competingTx, competingTxPos,
-            );
-
-            const competingTxWitness = addressToOutputGuard(bob);
-
-            return {
-                args: {
-                    inFlightTx: web3.utils.bytesToHex(decodedIfeTx.rlpEncoded()),
-                    inFlightTxInputIndex: 0,
-                    competingTx,
-                    competingTxInputIndex: 1,
-                    competingTxInputOutputType: OUTPUT_TYPE_ZERO,
-                    competingTxPos: competingTxPos.utxoPos,
-                    competingTxInclusionProof,
-                    competingTxWitness,
-                },
-                block: {
-                    blockHash, blockNum, blockTimestamp,
-                },
-                decodedCompetingTx,
-            };
-        }
 
         beforeEach(async () => {
             this.framework = await SpyPlasmaFramework.new(
@@ -249,7 +77,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
 
             const {
                 args: cArgs, block, decodedCompetingTx,
-            } = createValidNoncanonicalChallengeArgs(this.argsDecoded.inFlightTx);
+            } = buildValidNoncanonicalChallengeArgs(this.argsDecoded.inFlightTx, bob);
 
             this.challengeArgs = cArgs;
             this.competingTx = decodedCompetingTx;
