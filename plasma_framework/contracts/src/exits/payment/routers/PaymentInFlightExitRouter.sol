@@ -5,6 +5,7 @@ import "./PaymentInFlightExitRouterArgs.sol";
 import "../PaymentExitDataModel.sol";
 import "../controllers/PaymentStartInFlightExit.sol";
 import "../controllers/PaymentPiggybackInFlightExit.sol";
+import "../controllers/PaymentChallengeIFENotCanonical.sol";
 import "../spendingConditions/PaymentSpendingConditionRegistry.sol";
 import "../../../utils/OnlyWithValue.sol";
 import "../../../framework/PlasmaFramework.sol";
@@ -13,6 +14,7 @@ import "../../../framework/interfaces/IExitProcessor.sol";
 contract PaymentInFlightExitRouter is IExitProcessor, OnlyWithValue {
     using PaymentStartInFlightExit for PaymentStartInFlightExit.Controller;
     using PaymentPiggybackInFlightExit for PaymentPiggybackInFlightExit.Controller;
+    using PaymentChallengeIFENotCanonical for PaymentChallengeIFENotCanonical.Controller;
 
     uint256 public constant IN_FLIGHT_EXIT_BOND = 31415926535 wei;
     uint256 public constant PIGGYBACK_BOND = 31415926535 wei;
@@ -20,11 +22,13 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyWithValue {
     PaymentExitDataModel.InFlightExitMap inFlightExitMap;
     PaymentStartInFlightExit.Controller startInFlightExitController;
     PaymentPiggybackInFlightExit.Controller piggybackInFlightExitController;
+    PaymentChallengeIFENotCanonical.Controller challengeCanonicityController;
 
     constructor(
         PlasmaFramework framework,
         OutputGuardHandlerRegistry outputGuardHandlerRegistry,
-        PaymentSpendingConditionRegistry spendingConditionRegistry
+        PaymentSpendingConditionRegistry spendingConditionRegistry,
+        uint256 supportedTxType
     )
         public
     {
@@ -35,6 +39,12 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyWithValue {
         piggybackInFlightExitController = PaymentPiggybackInFlightExit.buildController(
             framework, this, outputGuardHandlerRegistry
         );
+
+        challengeCanonicityController = PaymentChallengeIFENotCanonical.Controller({
+            framework: framework,
+            spendingConditionRegistry: spendingConditionRegistry,
+            supportedTxType: supportedTxType
+        });
     }
 
     function inFlightExits(uint192 _exitId) public view returns (PaymentExitDataModel.InFlightExit memory) {
@@ -65,5 +75,12 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyWithValue {
         onlyWithValue(PIGGYBACK_BOND)
     {
         piggybackInFlightExitController.run(inFlightExitMap, args);
+    }
+
+    function challengeInFlightExitNotCanonical(PaymentInFlightExitRouterArgs.ChallengeCanonicityArgs memory args)
+        public
+        payable
+    {
+        challengeCanonicityController.run(inFlightExitMap, args);
     }
 }

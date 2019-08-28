@@ -291,9 +291,10 @@ library PaymentStartInFlightExit {
         private
     {
         PaymentExitDataModel.InFlightExit storage ife = inFlightExitMap.exits[startExitData.exitId];
+        ife.isCanonical = true;
         ife.bondOwner = msg.sender;
         ife.position = getYoungestInputUtxoPosition(startExitData.inputUtxosPos);
-        ife.exitStartTimestamp = block.timestamp;
+        ife.exitStartTimestamp = uint64(block.timestamp);
         setInFlightExitInputs(ife, startExitData.inputTxs, startExitData.inputUtxosPos);
         // output is set during a piggyback
     }
