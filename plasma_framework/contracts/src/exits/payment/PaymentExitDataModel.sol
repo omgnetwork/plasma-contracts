@@ -1,10 +1,6 @@
 pragma solidity ^0.5.0;
 
-import '../../transactions/outputs/PaymentOutputModel.sol';
-import '../../transactions/PaymentTransactionModel.sol';
-
 library PaymentExitDataModel {
-
     uint8 constant public MAX_INPUT_NUM = 4;
     uint8 constant public MAX_OUTPUT_NUM = 4;
 
@@ -25,6 +21,12 @@ library PaymentExitDataModel {
         mapping (uint192 => PaymentExitDataModel.StandardExit) exits;
     }
 
+    struct WithdrawData {
+        address payable exitTarget;
+        address token;
+        uint256 amount;
+    }
+
     struct InFlightExit {
         uint256 exitStartTimestamp;
 
@@ -36,8 +38,10 @@ library PaymentExitDataModel {
          */
         uint256 exitMap;
         uint256 position;
-        PaymentOutputModel.Output[MAX_INPUT_NUM] inputs;
-        PaymentOutputModel.Output[MAX_OUTPUT_NUM] outputs;
+        // TODO: need to save the output guard during IFE
+        bytes32[MAX_INPUT_NUM] outputGuardForInputs;
+        WithdrawData[MAX_INPUT_NUM] inputs;
+        WithdrawData[MAX_OUTPUT_NUM] outputs;
         address payable bondOwner;
         uint256 oldestCompetitorPosition;
     }
