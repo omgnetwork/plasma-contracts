@@ -33,7 +33,6 @@ const Testlang = require('../../../helpers/testlang.js');
 
 contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
-    const STANDARD_EXIT_BOND = 31415926535; // wei
     const ETH = constants.ZERO_ADDRESS;
     const INITIAL_ERC20_SUPPLY = 10000000000;
     const DEPOSIT_VALUE = 1000000;
@@ -104,6 +103,8 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
             this.framework.address, this.ethVault.address, this.erc20Vault.address,
             outputGuardHandlerRegistry.address, spendingConditionRegistry.address,
         );
+
+        this.bondSize = await this.exitGame.bondSize();
 
         this.toPaymentCondition = await PaymentOutputToPaymentTxCondition.new(this.framework.address);
         await spendingConditionRegistry.registerSpendingCondition(
@@ -182,7 +183,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
                         outputTxInclusionProof: this.merkleProofForDepositTx,
                     };
                     await this.exitGame.startStandardExit(
-                        args, { from: alice, value: STANDARD_EXIT_BOND },
+                        args, { from: alice, value: this.bondSize },
                     );
                 });
 
@@ -238,7 +239,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
                     it('should return the fund plus standard exit bond to Alice', async () => {
                         const actualAliceBalanceAfterProcessExit = new BN(await web3.eth.getBalance(alice));
                         const expectedAliceBalance = this.aliceBalanceBeforeProcessExit
-                            .add(new BN(STANDARD_EXIT_BOND))
+                            .add(this.bondSize)
                             .add(new BN(DEPOSIT_VALUE));
 
                         expect(actualAliceBalanceAfterProcessExit).to.be.bignumber.equal(expectedAliceBalance);
@@ -264,7 +265,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
                     };
 
                     await this.exitGame.startStandardExit(
-                        args, { from: bob, value: STANDARD_EXIT_BOND },
+                        args, { from: bob, value: this.bondSize },
                     );
                 });
 
@@ -288,7 +289,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
                     it('should return the output amount plus standard exit bond to Bob', async () => {
                         const actualBobBalanceAfterProcessExit = new BN(await web3.eth.getBalance(bob));
                         const expectedBobBalance = this.bobBalanceBeforeProcessExit
-                            .add(new BN(STANDARD_EXIT_BOND))
+                            .add(this.bondSize)
                             .add(new BN(this.transferTxObject.outputs[0].amount));
 
                         expect(actualBobBalanceAfterProcessExit).to.be.bignumber.equal(expectedBobBalance);
@@ -314,7 +315,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
                     };
 
                     await this.exitGame.startStandardExit(
-                        args, { from: alice, value: STANDARD_EXIT_BOND },
+                        args, { from: alice, value: this.bondSize },
                     );
 
                     this.exitId = await this.exitIdHelper.getStandardExitId(
@@ -363,7 +364,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
                     it('should transfer the bond to Bob', async () => {
                         const actualBobBalanceAfterChallenge = new BN(await web3.eth.getBalance(bob));
                         const expectedBobBalanceAfterChallenge = this.bobBalanceBeforeChallenge
-                            .add(new BN(STANDARD_EXIT_BOND))
+                            .add(this.bondSize)
                             .sub(await spentOnGas(this.challengeTxReciept));
 
                         expect(actualBobBalanceAfterChallenge).to.be.bignumber.equal(expectedBobBalanceAfterChallenge);
@@ -431,7 +432,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
                         };
 
                         await this.exitGame.startStandardExit(
-                            args, { from: alice, value: STANDARD_EXIT_BOND },
+                            args, { from: alice, value: this.bondSize },
                         );
                     });
 
@@ -457,7 +458,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
                         it('should return the standard exit bond in ETH to Alice', async () => {
                             const actualAliceEthBalanceAfterProcessExit = new BN(await web3.eth.getBalance(alice));
                             const expectedAliceEthBalance = this.aliceEthBalanceBeforeProcessExit
-                                .add(new BN(STANDARD_EXIT_BOND));
+                                .add(this.bondSize);
 
                             expect(actualAliceEthBalanceAfterProcessExit)
                                 .to.be.bignumber.equal(expectedAliceEthBalance);

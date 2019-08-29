@@ -2,7 +2,7 @@ const BondSizeMock = artifacts.require('BondSizeMock');
 const { BN, expectRevert, time } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
-contract.only('BondSize', () => {
+contract('BondSize', () => {
     beforeEach(async () => {
         this.initialBondSize = new BN(20000000000);
         this.contract = await BondSizeMock.new(

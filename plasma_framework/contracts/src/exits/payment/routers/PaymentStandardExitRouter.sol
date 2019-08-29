@@ -8,26 +8,34 @@ import "../controllers/PaymentProcessStandardExit.sol";
 import "../controllers/PaymentChallengeStandardExit.sol";
 import "../spendingConditions/PaymentSpendingConditionRegistry.sol";
 import "../../registries/OutputGuardHandlerRegistry.sol";
+import "../../utils/BondSize.sol";
 import "../../../vaults/EthVault.sol";
 import "../../../vaults/Erc20Vault.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../framework/interfaces/IExitProcessor.sol";
+import "../../../framework/utils/Operated.sol";
 import "../../../utils/OnlyWithValue.sol";
 
 contract PaymentStandardExitRouter is
     IExitProcessor,
+    Operated,
     OnlyWithValue
 {
     using PaymentStartStandardExit for PaymentStartStandardExit.Controller;
     using PaymentChallengeStandardExit for PaymentChallengeStandardExit.Controller;
     using PaymentProcessStandardExit for PaymentProcessStandardExit.Controller;
+    using BondSize for BondSize.Params;
 
-    uint256 public constant STANDARD_EXIT_BOND = 31415926535 wei;
+    // Initial bond size = 70000 (gas cost of challenge) * 20 gwei (current fast gas price) * 10 (safety margin)
+    uint128 public constant INITIAL_BOND_SIZE = 14000000000000000 wei;
 
     PaymentExitDataModel.StandardExitMap standardExitMap;
     PaymentStartStandardExit.Controller startStandardExitController;
     PaymentProcessStandardExit.Controller processStandardExitController;
     PaymentChallengeStandardExit.Controller challengeStandardExitController;
+    BondSize.Params bond;
+
+    event StandardExitBondUpdated(uint128 bondSize);
 
     constructor(
         PlasmaFramework _framework,
@@ -43,16 +51,34 @@ contract PaymentStandardExitRouter is
         );
 
         challengeStandardExitController = PaymentChallengeStandardExit.Controller(
-            _framework, _spendingConditionRegistry, STANDARD_EXIT_BOND
+            _framework, _spendingConditionRegistry
         );
 
         processStandardExitController = PaymentProcessStandardExit.Controller(
-            _framework, _ethVault, _erc20Vault, STANDARD_EXIT_BOND
+            _framework, _ethVault, _erc20Vault
         );
+
+        bond = BondSize.buildParams(INITIAL_BOND_SIZE);
     }
 
     function standardExits(uint192 _exitId) public view returns (PaymentExitDataModel.StandardExit memory) {
         return standardExitMap.exits[_exitId];
+    }
+
+    /**
+     * @notice Gets the standard exit bond size.
+     */
+    function bondSize() public view returns (uint256) {
+        return bond.bondSize();
+    }
+
+    /**
+     * @notice Updates the standard exit bond size. Will take 2 days to come into effect.
+     * @param newBondSize The new bond size.
+     */
+    function updateBondSize(uint128 newBondSize) public onlyOperator {
+        bond.updateBondSize(newBondSize);
+        emit StandardExitBondUpdated(newBondSize);
     }
 
     /**
@@ -63,7 +89,7 @@ contract PaymentStandardExitRouter is
     )
         public
         payable
-        onlyWithValue(STANDARD_EXIT_BOND)
+        onlyWithValue(bond.bondSize())
     {
         startStandardExitController.run(standardExitMap, args);
     }

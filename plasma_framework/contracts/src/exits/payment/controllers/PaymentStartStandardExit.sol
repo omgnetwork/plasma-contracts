@@ -169,7 +169,8 @@ library PaymentStartStandardExit {
             outputTypeAndGuardHash: outputTypeAndGuardHash,
             token: data.output.token,
             exitTarget: msg.sender,
-            amount: data.output.amount
+            amount: data.output.amount,
+            bondSize: msg.value
         });
     }
 
