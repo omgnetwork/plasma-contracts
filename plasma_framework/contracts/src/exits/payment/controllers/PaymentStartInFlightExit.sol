@@ -235,6 +235,11 @@ library PaymentStartInFlightExit {
             uint16 outputIndex = exitData.inputUtxosPos[i].outputIndex();
             WireTransaction.Output memory output = WireTransaction.getOutput(exitData.inputTxs[i], outputIndex);
 
+            if (exitData.inputUtxosTypes[i] != 0) {
+                bytes32 outputGuardFromPreImage = OutputGuard.build(exitData.inputUtxosTypes[i], exitData.outputGuardDataPreImages[i]);
+                require(output.outputGuard == outputGuardFromPreImage, "Output guard data does not match pre-image");
+            }
+
             //FIXME: consider moving spending conditions to PlasmaFramework
             IPaymentSpendingCondition condition = exitData.controller.spendingConditionRegistry.spendingConditions(
                 exitData.inputUtxosTypes[i], exitData.inFlightTx.txType

@@ -21,7 +21,7 @@ const { expect } = require('chai');
 const { MerkleTree } = require('../../../helpers/merkle.js');
 const { buildUtxoPos, UtxoPos } = require('../../../helpers/positions.js');
 const {
-    addressToOutputGuard, computeNormalOutputId, spentOnGas,
+    addressToOutputGuard, buildOutputGuard, computeNormalOutputId, spentOnGas,
 } = require('../../../helpers/utils.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
 
@@ -34,6 +34,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
     const INITIAL_IMMUNE_EXIT_GAME_NUM = 1;
     const OUTPUT_TYPE_ZERO = 0;
+    const OUTPUT_TYPE_NON_ZERO = 1;
     const IFE_TX_TYPE = 1;
     const WITNESS_LENGTH_IN_BYTES = 65;
     const INCLUSION_PROOF_LENGTH_IN_BYTES = 512;
@@ -86,12 +87,13 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
 
             const inFlightTxWitnesses = [IN_FLIGHT_TX_WITNESS_BYTES, IN_FLIGHT_TX_WITNESS_BYTES];
 
+            const outputGuardDataPreImage = web3.utils.toHex(alice);
             const args = {
                 inFlightTx: inFlightTxRaw,
                 inputTxs,
                 inputUtxosPos,
                 inputUtxosTypes,
-                outputGuardDataPreImages: [],
+                outputGuardDataPreImages: [outputGuardDataPreImage, outputGuardDataPreImage],
                 inputTxsInclusionProofs,
                 inFlightTxWitnesses,
             };
@@ -102,7 +104,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
         }
 
         function createInputTransaction(input, owner, amount, token = ETH) {
-            const output = new PaymentTransactionOutput(amount, addressToOutputGuard(owner), token);
+            const output = new PaymentTransactionOutput(amount, owner, token);
             return new PaymentTransaction(IFE_TX_TYPE, [input], [output]);
         }
 
@@ -277,6 +279,21 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
                 await expectRevert(
                     this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
                     'Spending condition contract not found',
+                );
+            });
+
+            it('should fail when output guard pre-images do not match output guards', async () => {
+                const { args, inputTxsBlockRoot } = buildValidIfeStartArgs(AMOUNT, [alice, bob, carol], BLOCK_NUMBER);
+                await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot, 0);
+                args.inputUtxosTypes = [OUTPUT_TYPE_NON_ZERO, OUTPUT_TYPE_NON_ZERO];
+
+                await this.spendingConditionRegistry.registerSpendingCondition(
+                    OUTPUT_TYPE_ZERO, IFE_TX_TYPE, this.conditionTrue.address,
+                );
+
+                await expectRevert(
+                    this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
+                    ' Output guard data does not match pre-image',
                 );
             });
 
@@ -530,16 +547,27 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
                     this.outputGuardParserRegistry.address,
                 );
 
-                const notRegisteredOutputType = 1;
-
                 await this.spendingConditionRegistry.registerSpendingCondition(
-                    notRegisteredOutputType, IFE_TX_TYPE, this.conditionTrue.address,
+                    OUTPUT_TYPE_NON_ZERO, IFE_TX_TYPE, this.conditionTrue.address,
                 );
 
-                const { args, inputTxsBlockRoot } = buildValidIfeStartArgs(
-                    AMOUNT, [alice, bob, carol], BLOCK_NUMBER,
+                const inputTx1 = createInputTransaction(
+                    DUMMY_INPUT_1,
+                    buildOutputGuard(OUTPUT_TYPE_NON_ZERO, web3.utils.toHex(alice)),
+                    AMOUNT,
                 );
-                args.inputUtxosTypes = [notRegisteredOutputType, notRegisteredOutputType];
+                const inputTx2 = createInputTransaction(
+                    DUMMY_INPUT_2,
+                    buildOutputGuard(OUTPUT_TYPE_NON_ZERO, web3.utils.toHex(alice)),
+                    AMOUNT,
+                );
+
+                const inputUtxosPos = [buildUtxoPos(BLOCK_NUMBER, 0, 0), buildUtxoPos(BLOCK_NUMBER, 1, 0)];
+
+                const inFlightTx = createInFlightTx([inputTx1, inputTx2], inputUtxosPos, carol, AMOUNT);
+
+                const { args, inputTxsBlockRoot } = buildIfeStartArgs([inputTx1, inputTx2], inputUtxosPos, inFlightTx);
+                args.inputUtxosTypes = [OUTPUT_TYPE_NON_ZERO, OUTPUT_TYPE_NON_ZERO];
 
                 await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot, 0);
 
