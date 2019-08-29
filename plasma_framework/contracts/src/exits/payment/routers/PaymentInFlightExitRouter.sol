@@ -5,6 +5,8 @@ import "./PaymentInFlightExitRouterArgs.sol";
 import "../PaymentExitDataModel.sol";
 import "../controllers/PaymentStartInFlightExit.sol";
 import "../spendingConditions/PaymentSpendingConditionRegistry.sol";
+import "../../OutputGuardParserRegistry.sol";
+import "../../interfaces/IOutputGuardParser.sol";
 import "../../interfaces/IStateTransitionVerifier.sol";
 import "../../../utils/OnlyWithValue.sol";
 import "../../../framework/PlasmaFramework.sol";
@@ -20,11 +22,17 @@ contract PaymentInFlightExitRouter is OnlyWithValue {
     constructor(
         PlasmaFramework framework,
         PaymentSpendingConditionRegistry spendingConditionRegistry,
-        IStateTransitionVerifier verifier
+        IStateTransitionVerifier verifier,
+        OutputGuardParserRegistry outputGuardParserRegistry
     )
         public
     {
-        startInFlightExitController = PaymentStartInFlightExit.buildController(framework, spendingConditionRegistry, verifier);
+        startInFlightExitController = PaymentStartInFlightExit.buildController(
+            framework,
+            spendingConditionRegistry,
+            verifier,
+            outputGuardParserRegistry
+        );
     }
 
     function inFlightExits(uint192 _exitId) public view returns (PaymentExitDataModel.InFlightExit memory) {

@@ -7,9 +7,14 @@ import "../../../../src/exits/interfaces/IStateTransitionVerifier.sol";
 import "../../../../src/exits/payment/PaymentExitDataModel.sol";
 
 contract PaymentInFlightExitRouterMock is PaymentInFlightExitRouter {
-    constructor(PlasmaFramework framework, PaymentSpendingConditionRegistry registry, IStateTransitionVerifier verifier)
+    constructor(
+        PlasmaFramework framework,
+        PaymentSpendingConditionRegistry registry,
+        IStateTransitionVerifier verifier,
+        OutputGuardParserRegistry outputGuardParserRegistry
+    )
         public
-        PaymentInFlightExitRouter(framework, registry, verifier) {
+        PaymentInFlightExitRouter(framework, registry, verifier, outputGuardParserRegistry) {
     }
 
     // to override IExitProcessor function
