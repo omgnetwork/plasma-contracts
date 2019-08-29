@@ -6,8 +6,12 @@ module.exports = async function (deployer, network, accounts) {
   // If no DEPLOYER_ADDRESS is set, default to using accounts[0]
   const DEPLOYER_ADDRESS = process.env.DEPLOYER_ADDRESS || accounts[0]
 
-  // Unlock the deployer account if necessary
-  if (process.env.DEPLOYER_PASSPHRASE) {
+  // Unlock the deployer account if not using Infura
+  // As infura doesn't support eth_unlockAccount
+  if (process.env.DEPLOYER_PASSPHRASE &&
+     !process.env.AUTHORITY_PRIVATEKEY && 
+     !process.env.DEPLOYER_PRIVATEKEY
+  ) {
     await RootChain.web3.eth.personal.unlockAccount(
       DEPLOYER_ADDRESS,
       process.env.DEPLOYER_PASSPHRASE,
