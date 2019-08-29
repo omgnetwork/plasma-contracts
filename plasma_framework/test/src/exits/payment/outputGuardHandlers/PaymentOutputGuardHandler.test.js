@@ -7,6 +7,7 @@ const { addressToOutputGuard } = require('../../../../helpers/utils.js');
 
 
 contract('PaymentOutputGuardHandler', ([alice]) => {
+    const EMPTY_BYTES = '0x';
     const TEST_OUTPUT_TYPE = 1;
 
     beforeEach('setup contracts', async () => {
@@ -26,7 +27,7 @@ contract('PaymentOutputGuardHandler', ([alice]) => {
         });
 
         it('should fail when output type mismatch', async () => {
-            const preimage = '0x';
+            const preimage = EMPTY_BYTES;
             const mismatchOutputType = TEST_OUTPUT_TYPE + 1;
             const guard = addressToOutputGuard(alice);
             const args = [guard, mismatchOutputType, preimage];
@@ -38,7 +39,7 @@ contract('PaymentOutputGuardHandler', ([alice]) => {
         });
 
         it('should return true when succeed', async () => {
-            const preimage = '0x';
+            const preimage = EMPTY_BYTES;
             const guard = addressToOutputGuard(alice);
             const args = [guard, TEST_OUTPUT_TYPE, preimage];
             expect(await this.handler.isValid(args)).to.be.true;
@@ -47,7 +48,7 @@ contract('PaymentOutputGuardHandler', ([alice]) => {
 
     describe('getExitTarget', () => {
         it('should return the owner information directly from outputGuard field', async () => {
-            const preimage = '0x';
+            const preimage = EMPTY_BYTES;
             const guard = addressToOutputGuard(alice);
             const args = [guard, TEST_OUTPUT_TYPE, preimage];
             expect(await this.handler.getExitTarget(args)).to.equal(alice);
