@@ -16,7 +16,7 @@ contract PaymentInFlightExitRouterMock is PaymentInFlightExitRouter {
 
     function finalizeExit(uint192 exitId) public {
         inFlightExitMap.exits[exitId].exitStartTimestamp = 1;
-        inFlightExitMap.exits[exitId].exitMap = Bits.setBit(inFlightExitMap.exits[exitId].exitMap, 255);
+        inFlightExitMap.exits[exitId].isFinalized = true;
     }
 
     function getInFlightExitInput(uint192 exitId, uint8 inputIndex) public view returns (PaymentOutputModel.Output memory) {

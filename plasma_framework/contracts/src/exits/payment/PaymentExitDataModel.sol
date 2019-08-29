@@ -26,11 +26,11 @@ library PaymentExitDataModel {
     }
 
     struct InFlightExit {
-        uint64 exitStartTimestamp;
         // Canonicity is assumed at start, then can be challenged and is set to `false`.
         // Response to non-canonical challenge can set it back to `true`.
         bool isCanonical;
-
+        bool isFinalized;
+        uint64 exitStartTimestamp;
         /**
          * exit map stores piggybacks and finalized exits
          * bit 255 is set only when in-flight exit has finalized
