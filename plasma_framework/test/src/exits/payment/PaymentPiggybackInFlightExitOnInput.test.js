@@ -81,6 +81,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
             const rlpInFlighTxBytes = web3.utils.bytesToHex(inFlightTx.rlpEncoded());
 
             const emptyWithdrawData = {
+                outputId: web3.utils.sha3('dummy output id'),
                 exitTarget: constants.ZERO_ADDRESS,
                 token: constants.ZERO_ADDRESS,
                 amount: 0,
@@ -93,15 +94,18 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
                 bondOwner: alice,
                 oldestCompetitorPosition: 0,
                 inputs: [{
+                    outputId: web3.utils.sha3('dummy output id'),
                     exitTarget: inputOwner,
                     token: ETH,
                     amount: 999,
                 }, {
+                    outputId: web3.utils.sha3('dummy output id'),
                     exitTarget: inputOwner,
                     token: ETH,
                     amount: 998,
                 }, emptyWithdrawData, emptyWithdrawData],
                 outputs: [{
+                    outputId: web3.utils.sha3('dummy output id'),
                     exitTarget: outputOwner,
                     token: ETH,
                     amount: outputAmount,
