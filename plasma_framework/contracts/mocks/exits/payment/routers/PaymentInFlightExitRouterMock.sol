@@ -6,9 +6,9 @@ import "../../../../src/framework/PlasmaFramework.sol";
 import "../../../../src/transactions/outputs/PaymentOutputModel.sol";
 
 contract PaymentInFlightExitRouterMock is PaymentInFlightExitRouter {
-    constructor(PlasmaFramework _framework, PaymentSpendingConditionRegistry _registry)
+    constructor(PlasmaFramework _framework, PaymentSpendingConditionRegistry _registry, uint256 supportedTxType)
         public
-        PaymentInFlightExitRouter(_framework, _registry) {
+        PaymentInFlightExitRouter(_framework, _registry, supportedTxType) {
     }
 
     // to override IExitProcessor function

@@ -3,8 +3,9 @@ pragma experimental ABIEncoderV2;
 
 import "../PaymentExitDataModel.sol";
 import "../routers/PaymentStandardExitRouterArgs.sol";
-import "../../IOutputGuardParser.sol";
-import "../../OutputGuardParserRegistry.sol";
+import "../../interfaces/IOutputGuardHandler.sol";
+import "../../models/OutputGuardModel.sol";
+import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../utils/ExitableTimestamp.sol";
 import "../../utils/ExitId.sol";
 import "../../utils/OutputId.sol";
@@ -27,7 +28,7 @@ library PaymentStartStandardExit {
         PlasmaFramework framework;
         IsDeposit.Predicate isDeposit;
         ExitableTimestamp.Calculator exitableTimestampCalculator;
-        OutputGuardParserRegistry outputGuardParserRegistry;
+        OutputGuardHandlerRegistry outputGuardHandlerRegistry;
     }
 
     /**
@@ -39,8 +40,8 @@ library PaymentStartStandardExit {
         UtxoPosLib.UtxoPos utxoPos;
         PaymentTransactionModel.Transaction outputTx;
         PaymentOutputModel.Output output;
-        address outputGuardParser;
-        address payable exitTarget;
+        IOutputGuardHandler outputGuardHandler;
+        OutputGuardModel.Data outputGuardData;
         uint192 exitId;
         bool isTxDeposit;
         bytes32 txBlockRoot;
@@ -55,7 +56,7 @@ library PaymentStartStandardExit {
     function buildController(
         IExitProcessor exitProcessor,
         PlasmaFramework framework,
-        OutputGuardParserRegistry outputGuardParserRegistry
+        OutputGuardHandlerRegistry outputGuardHandlerRegistry
     )
         public
         view
@@ -66,7 +67,7 @@ library PaymentStartStandardExit {
             framework: framework,
             isDeposit: IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL()),
             exitableTimestampCalculator: ExitableTimestamp.Calculator(framework.minExitPeriod()),
-            outputGuardParserRegistry: outputGuardParserRegistry
+            outputGuardHandlerRegistry: outputGuardHandlerRegistry
         });
     }
 
@@ -82,7 +83,7 @@ library PaymentStartStandardExit {
         saveStandardExitData(data, exitMap);
         enqueueStandardExit(data);
 
-        emit ExitStarted(data.exitTarget, data.exitId);
+        emit ExitStarted(msg.sender, data.exitId);
     }
 
     function setupStartStandardExitData(
@@ -99,19 +100,14 @@ library PaymentStartStandardExit {
         bool isTxDeposit = controller.isDeposit.test(utxoPos.blockNum());
         uint192 exitId = ExitId.getStandardExitId(isTxDeposit, args.rlpOutputTx, utxoPos);
         (bytes32 root, uint256 blockTimestamp) = controller.framework.blocks(utxoPos.blockNum());
-        bytes memory outputGuardData = args.outputType == 0 ? bytes("") : args.outputGuardData;
 
-        address payable exitTarget;
-        IOutputGuardParser outputGuardParser;
-        if (args.outputType == 0) {
-            // output type 0 --> output holding owner address directly
-            exitTarget = output.owner();
-        } else if (args.outputType != 0) {
-            outputGuardParser = controller.outputGuardParserRegistry.outputGuardParsers(args.outputType);
-            if (address(outputGuardParser) != address(0)) {
-                exitTarget = outputGuardParser.parseExitTarget(outputGuardData);
-            }
-        }
+        OutputGuardModel.Data memory outputGuardData = OutputGuardModel.Data({
+            guard: output.outputGuard,
+            outputType: args.outputType,
+            preimage: args.outputGuardPreimage
+        });
+
+        IOutputGuardHandler outputGuardHandler = controller.outputGuardHandlerRegistry.outputGuardHandlers(args.outputType);
 
         return StartStandardExitData({
             controller: controller,
@@ -119,8 +115,8 @@ library PaymentStartStandardExit {
             utxoPos: utxoPos,
             outputTx: outputTx,
             output: output,
-            outputGuardParser: address(outputGuardParser),
-            exitTarget: exitTarget,
+            outputGuardHandler: outputGuardHandler,
+            outputGuardData: outputGuardData,
             exitId: exitId,
             isTxDeposit: isTxDeposit,
             txBlockRoot: root,
@@ -137,13 +133,10 @@ library PaymentStartStandardExit {
     {
         require(data.output.amount > 0, "Should not exit with amount 0");
 
-        if (data.args.outputType != 0) {
-            bytes32 outputGuardFromPreImage = OutputGuard.build(data.args.outputType, data.args.outputGuardData);
-            require(data.output.outputGuard == outputGuardFromPreImage, "Output guard data does not match pre-image");
-            require(data.outputGuardParser != address(0), "Failed to get the output guard parser for the output type");
-        }
+        require(address(data.outputGuardHandler) != address(0), "Failed to get the output guard handler for the output type");
+        require(data.outputGuardHandler.isValid(data.outputGuardData), "Some of the output guard related information is not valid");
+        require(data.outputGuardHandler.getExitTarget(data.outputGuardData) == msg.sender, "Only exit target can start an exit");
 
-        require(data.exitTarget == msg.sender, "Only exit target can start an exit");
         require(exitMap.exits[data.exitId].exitable == false, "Exit already started");
 
         bytes32 leafData = keccak256(data.args.rlpOutputTx);
@@ -175,7 +168,7 @@ library PaymentStartStandardExit {
             outputId: outputId,
             outputTypeAndGuardHash: outputTypeAndGuardHash,
             token: data.output.token,
-            exitTarget: data.exitTarget,
+            exitTarget: msg.sender,
             amount: data.output.amount
         });
     }
