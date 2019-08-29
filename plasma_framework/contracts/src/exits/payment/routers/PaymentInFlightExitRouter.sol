@@ -64,17 +64,31 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyWithValue {
     }
 
     /**
-     * @notice Piggyback on an in-flight exiting tx. Would be processed if the in-flight exit is canonical.
-     * @param args input argument data to piggyback. See struct 'PiggybackInFlightExitArgs' for detailed info.
+     * @notice Piggyback on an input of an in-flight exiting tx. Would be processed if the in-flight exit is non-canonical.
+     * @param args input argument data to piggyback. See struct 'PiggybackInFlightExitOnInputArgs' for detailed info.
      */
-    function piggybackInFlightExit(
-        PaymentInFlightExitRouterArgs.PiggybackInFlightExitArgs memory args
+    function piggybackInFlightExitOnInput(
+        PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnInputArgs memory args
     )
         public
         payable
         onlyWithValue(PIGGYBACK_BOND)
     {
-        piggybackInFlightExitController.run(inFlightExitMap, args);
+        piggybackInFlightExitController.piggybackInput(inFlightExitMap, args);
+    }
+
+    /**
+     * @notice Piggyback on an output of an in-flight exiting tx. Would be processed if the in-flight exit is canonical.
+     * @param args input argument data to piggyback. See struct 'PiggybackInFlightExitOnOutputArgs' for detailed info.
+     */
+    function piggybackInFlightExitOnOutput(
+        PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnOutputArgs memory args
+    )
+        public
+        payable
+        onlyWithValue(PIGGYBACK_BOND)
+    {
+        piggybackInFlightExitController.piggybackOutput(inFlightExitMap, args);
     }
 
     function challengeInFlightExitNotCanonical(PaymentInFlightExitRouterArgs.ChallengeCanonicityArgs memory args)

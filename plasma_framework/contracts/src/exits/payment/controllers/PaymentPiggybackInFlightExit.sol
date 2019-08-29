@@ -36,11 +36,16 @@ library PaymentPiggybackInFlightExit {
         uint256 minExitPeriod;
     }
 
-    event InFlightExitPiggybacked(
+    event InFlightExitInputPiggybacked(
         address indexed exitTarget,
         bytes32 txHash,
-        bool isPiggybackInput,
-        uint16 index
+        uint16 inputIndex
+    );
+
+    event InFlightExitOutputPiggybacked(
+        address indexed exitTarget,
+        bytes32 txHash,
+        uint16 outputIndex
     );
 
     function buildController(
@@ -62,54 +67,76 @@ library PaymentPiggybackInFlightExit {
         });
     }
 
-    function run(
+    /**
+     * @notice The main controller logic for 'piggybackInFlightExitOnInput'
+     */
+    function piggybackInput(
         Controller memory self,
         PaymentExitDataModel.InFlightExitMap storage inFlightExitMap,
-        PaymentInFlightExitRouterArgs.PiggybackInFlightExitArgs memory args
+        PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnInputArgs memory args
     )
         public
     {
-        if (args.isPiggybackInput) {
-            require(args.outputType == 0 && args.outputGuardPreimage.length == 0, "No need to pass in output type and preimage when piggyback input");
-        }
-
         uint192 exitId = ExitId.getInFlightExitId(args.inFlightTx);
         PaymentExitDataModel.InFlightExit storage exit = inFlightExitMap.exits[exitId];
 
         require(exit.exitStartTimestamp != 0, "No in-flight exit to piggyback on");
         require(exit.isInFirstPhase(self.minExitPeriod), "Can only piggyback in first phase of exit period");
 
-        uint256 indexMaxNum = args.isPiggybackInput? MAX_INPUT_NUM : MAX_OUTPUT_NUM;
-        require(args.index < indexMaxNum, "Index exceed max size of the input or output");
-        require(!exit.isPiggybacked(args.index, args.isPiggybackInput), "The indexed input/output has been piggybacked already");
+        require(args.inputIndex < MAX_INPUT_NUM, "Index exceed max size of the input");
+        require(!exit.isInputPiggybacked(args.inputIndex), "The indexed input has been piggybacked already");
 
-        PaymentExitDataModel.WithdrawData storage withdrawData = args.isPiggybackInput?
-            exit.inputs[args.index] : exit.outputs[args.index];
+        PaymentExitDataModel.WithdrawData storage withdrawData = exit.inputs[args.inputIndex];
 
-        // In startInFlightExit, exitTarget for inputs would be saved as those are the neccesarry part to create the transaction
-        // However, for outputs since the output preimage data is hold by the output owners themselves, need to get those on piggyback.
-        address payable exitTarget;
-        if (args.isPiggybackInput) {
-            exitTarget = withdrawData.exitTarget;
-        } else {
-            bytes32 outputGuard = getOutputGuardFromPaymentTxBytes(args.inFlightTx, args.index);
-            exitTarget = getExitTargetOfOutput(self, outputGuard, args.outputType, args.outputGuardPreimage);
+        // In startInFlightExit, exitTarget for inputs would be saved as those are the neccesarry data to create the transaction
+        require(withdrawData.exitTarget == msg.sender, "Can be called by the exit target only");
+
+        if (exit.isFirstPiggybackOfTheToken(withdrawData.token)) {
+            enqueue(self, withdrawData.token, UtxoPosLib.UtxoPos(exit.position), exitId);
         }
+
+        exit.setInputPiggybacked(args.inputIndex);
+
+        emit InFlightExitInputPiggybacked(msg.sender, keccak256(args.inFlightTx), args.inputIndex);
+    }
+
+    /**
+     * @notice The main controller logic for 'piggybackInFlightExitOnOutput'
+     */
+    function piggybackOutput(
+        Controller memory self,
+        PaymentExitDataModel.InFlightExitMap storage inFlightExitMap,
+        PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnOutputArgs memory args
+    )
+        public
+    {
+        uint192 exitId = ExitId.getInFlightExitId(args.inFlightTx);
+        PaymentExitDataModel.InFlightExit storage exit = inFlightExitMap.exits[exitId];
+
+        require(exit.exitStartTimestamp != 0, "No in-flight exit to piggyback on");
+        require(exit.isInFirstPhase(self.minExitPeriod), "Can only piggyback in first phase of exit period");
+
+        require(args.outputIndex < MAX_OUTPUT_NUM, "Index exceed max size of the output");
+        require(!exit.isOutputPiggybacked(args.outputIndex), "The indexed output has been piggybacked already");
+
+        PaymentExitDataModel.WithdrawData storage withdrawData = exit.outputs[args.outputIndex];
+
+        // Though for inputs, exit target is set during start inFlight exit.
+        // For outputs since the output preimage data is hold by the output owners themselves, need to get those on piggyback.
+        bytes32 outputGuard = getOutputGuardFromPaymentTxBytes(args.inFlightTx, args.outputIndex);
+        address payable exitTarget = getExitTargetOfOutput(self, outputGuard, args.outputType, args.outputGuardPreimage);
         require(exitTarget == msg.sender, "Can be called by the exit target only");
 
         if (exit.isFirstPiggybackOfTheToken(withdrawData.token)) {
             enqueue(self, withdrawData.token, UtxoPosLib.UtxoPos(exit.position), exitId);
         }
 
-        // Exit Target for outputs is set in piggyback instead of start in-flight exit due to the fact that potentially only
-        // the owner has the data or output guard preimage
-        if (!args.isPiggybackInput) {
-            withdrawData.exitTarget = exitTarget;
-        }
+        // Exit Target for outputs is set in piggyback instead of start in-flight exit
+        withdrawData.exitTarget = exitTarget;
 
-        exit.setPiggybacked(args.index, args.isPiggybackInput);
+        exit.setOutputPiggybacked(args.outputIndex);
 
-        emit InFlightExitPiggybacked(msg.sender, keccak256(args.inFlightTx), args.isPiggybackInput, args.index);
+        emit InFlightExitOutputPiggybacked(msg.sender, keccak256(args.inFlightTx), args.outputIndex);
     }
 
     function enqueue(

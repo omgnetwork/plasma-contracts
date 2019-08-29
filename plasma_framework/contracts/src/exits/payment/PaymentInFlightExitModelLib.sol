@@ -10,19 +10,33 @@ library PaymentInFlightExitModelLib {
     uint8 constant public MAX_INPUT_NUM = 4;
     uint8 constant public MAX_OUTPUT_NUM = 4;
 
-    function isPiggybacked(ExitModel.InFlightExit memory ife, uint16 index, bool isPiggybackInput)
+    function isInputPiggybacked(ExitModel.InFlightExit memory ife, uint16 index)
         internal
         pure
         returns (bool)
     {
-        uint8 indexInExitMap = isPiggybackInput? uint8(index) : uint8(index + MAX_INPUT_NUM);
+        return ife.exitMap.bitSet(uint8(index));
+    }
+
+    function isOutputPiggybacked(ExitModel.InFlightExit memory ife, uint16 index)
+        internal
+        pure
+        returns (bool)
+    {
+        uint8 indexInExitMap = uint8(index + MAX_INPUT_NUM);
         return ife.exitMap.bitSet(indexInExitMap);
     }
 
-    function setPiggybacked(ExitModel.InFlightExit storage ife, uint16 index, bool isPiggybackInput)
+    function setInputPiggybacked(ExitModel.InFlightExit storage ife, uint16 index)
         internal
     {
-        uint8 indexInExitMap = isPiggybackInput? uint8(index) : uint8(index + MAX_INPUT_NUM);
+        ife.exitMap = ife.exitMap.setBit(uint8(index));
+    }
+
+    function setOutputPiggybacked(ExitModel.InFlightExit storage ife, uint16 index)
+        internal
+    {
+        uint8 indexInExitMap = uint8(index + MAX_INPUT_NUM);
         ife.exitMap = ife.exitMap.setBit(indexInExitMap);
     }
 
@@ -50,14 +64,14 @@ library PaymentInFlightExitModelLib {
     {
         bool isPiggybackInput = true;
         for (uint i = 0 ; i < MAX_INPUT_NUM ; i++) {
-            if (isPiggybacked(ife, uint16(i), isPiggybackInput) && ife.inputs[i].token == token) {
+            if (isInputPiggybacked(ife, uint16(i)) && ife.inputs[i].token == token) {
                 return false;
             }
         }
 
         isPiggybackInput = false;
         for (uint i = 0 ; i < MAX_OUTPUT_NUM ; i++) {
-            if (isPiggybacked(ife, uint16(i), isPiggybackInput) && ife.outputs[i].token == token) {
+            if (isOutputPiggybacked(ife, uint16(i)) && ife.outputs[i].token == token) {
                 return false;
             }
         }
