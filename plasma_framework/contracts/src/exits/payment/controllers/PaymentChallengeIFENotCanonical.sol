@@ -51,8 +51,10 @@ library PaymentChallengeIFENotCanonical {
         );
         require(address(condition) != address(0), "Spending condition contract not found");
 
+        // FIXME: move to the finalized interface as https://github.com/omisego/plasma-contracts/issues/214
+        // Also, the tests should verify the args correctness
         bool isSpentByInFlightTx = condition.verify(
-            ife.outputGuardForInputs[args.inFlightTxInputIndex],
+            bytes32(''), // tmp solution, we don't need outputGuard anymore for the interface of 214
             uint256(0), // should not be used
             inFlightTx.inputs[args.inFlightTxInputIndex],
             args.competingTx,

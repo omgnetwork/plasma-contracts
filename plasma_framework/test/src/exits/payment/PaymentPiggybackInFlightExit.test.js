@@ -107,7 +107,6 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
                     position: INFLIGHT_EXIT_YOUNGEST_INPUT_POSITION,
                     bondOwner: alice,
                     oldestCompetitorPosition: 0,
-                    outputGuardForInputs: [addressToOutputGuard(inputOwner), '0x', '0x', '0x'],
                     inputs: [{
                         exitTarget: inputOwner,
                         token: ETH,
@@ -371,15 +370,6 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
         });
 
         describe('piggyback on input', () => {
-            beforeEach(async () => {
-                // returns true when "isValid" is called and return the inputOwner when "exitTarget" is called
-                // only set the output type 1 case. Leave output 2 case to stub more complex test cases.
-                const expectedOutputGuardHandler = await ExpectedOutputGuardHandler.new(true, inputOwner);
-                await this.outputGuardHandlerRegistry.registerOutputGuardHandler(
-                    OUTPUT_TYPE.ONE, expectedOutputGuardHandler.address,
-                );
-            });
-
             /** This setup IFE data with 2 inputs with same owner and 1 output.
              *  First input uses output type 1, this uses the default outputguard handler in tests.
              *  Second input uses output type 2, so we can register custom outputguard handler for tests.
@@ -406,7 +396,6 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
                     position: INFLIGHT_EXIT_YOUNGEST_INPUT_POSITION,
                     bondOwner: alice,
                     oldestCompetitorPosition: 0,
-                    outputGuardForInputs: [outputGuard, outputGuard, '0x', '0x'],
                     inputs: [{
                         exitTarget: inputOwner,
                         token: ETH,
@@ -429,7 +418,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
                     inFlightTx: rlpInFlighTxBytes,
                     isPiggybackInput: true,
                     index: 0,
-                    outputType: OUTPUT_TYPE.ONE,
+                    outputType: 0,
                     outputGuardPreimage: '0x',
                 };
 
@@ -437,7 +426,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
                     inFlightTx: rlpInFlighTxBytes,
                     isPiggybackInput: true,
                     index: 1,
-                    outputType: OUTPUT_TYPE.TWO,
+                    outputType: 0,
                     outputGuardPreimage: '0x',
                 };
 
@@ -445,7 +434,6 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
                     argsInputOne,
                     argsInputTwo,
                     exitId,
-                    outputGuard,
                     inFlightExitData,
                 };
             };
@@ -516,38 +504,6 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
                 );
             });
 
-            it('should fail when the output guard handler of the type is not registered', async () => {
-                const data = await buildPiggybackInputData();
-                await this.exitGame.setInFlightExit(data.exitId, data.inFlightExitData);
-
-                // output type 2 handler is never registered, thus should fail
-                await expectRevert(
-                    this.exitGame.piggybackInFlightExit(
-                        data.argsInputTwo, { from: inputOwner, value: PIGGYBACK_BOND },
-                    ),
-                    'Does not have outputGuardHandler registered for the output type',
-                );
-            });
-
-            it('should fail when the output guard related data is not valid', async () => {
-                // Return false when outputGuard handler is checking for output type 2
-                const expectedOutputGuardHandler = await ExpectedOutputGuardHandler.new(false, inputOwner);
-                await this.outputGuardHandlerRegistry.registerOutputGuardHandler(
-                    OUTPUT_TYPE.TWO, expectedOutputGuardHandler.address,
-                );
-
-                const data = await buildPiggybackInputData();
-
-                await this.exitGame.setInFlightExit(data.exitId, data.inFlightExitData);
-
-                await expectRevert(
-                    this.exitGame.piggybackInFlightExit(
-                        data.argsInputTwo, { from: inputOwner, value: PIGGYBACK_BOND },
-                    ),
-                    'Some of the output guard related information is not valid',
-                );
-            });
-
             it('should fail when not called by the exit target of the output', async () => {
                 const data = await buildPiggybackInputData();
                 await this.exitGame.setInFlightExit(data.exitId, data.inFlightExitData);
@@ -556,28 +512,6 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
                         data.argsInputOne, { from: nonInputOwner, value: PIGGYBACK_BOND },
                     ),
                     'Can be called by the exit target only',
-                );
-            });
-
-            it('should call the OutputGuardHandler with the expected data', async () => {
-                const data = await buildPiggybackInputData();
-                await this.exitGame.setInFlightExit(data.exitId, data.inFlightExitData);
-
-                const expectedOutputGuardData = {
-                    guard: data.outputGuard,
-                    outputType: data.argsInputTwo.outputType,
-                    preimage: data.argsInputTwo.outputGuardPreimage,
-                };
-                const expectedOutputGuardHandler = await ExpectedOutputGuardHandler.new(true, inputOwner);
-
-                // test would revert if data not as expected after setting this
-                await expectedOutputGuardHandler.shouldVerifyArgumentEquals(expectedOutputGuardData);
-                await this.outputGuardHandlerRegistry.registerOutputGuardHandler(
-                    OUTPUT_TYPE.TWO, expectedOutputGuardHandler.address,
-                );
-
-                await this.exitGame.piggybackInFlightExit(
-                    data.argsInputTwo, { from: inputOwner, value: PIGGYBACK_BOND },
                 );
             });
 
@@ -634,14 +568,6 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
 
                     // input index = 0 --> flag the right most position to 1 on exit map thus equals 1
                     expect(new BN(exit.exitMap)).to.be.bignumber.equal(new BN(1));
-                });
-
-                it('should set the correct exit target to withdraw data on the output of exit data', async () => {
-                    const exitData = await this.exitGame.getInFlightExitInput(
-                        this.testData.exitId, this.testData.argsInputOne.index,
-                    );
-
-                    expect(exitData.exitTarget).to.equal(inputOwner);
                 });
 
                 it('should emit InFlightExitPiggybacked event', async () => {

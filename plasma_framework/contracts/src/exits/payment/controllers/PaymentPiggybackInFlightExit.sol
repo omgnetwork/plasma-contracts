@@ -69,6 +69,10 @@ library PaymentPiggybackInFlightExit {
     )
         public
     {
+        if (args.isPiggybackInput) {
+            require(args.outputType == 0 && args.outputGuardPreimage.length == 0, "No need to pass in output type and preimage when piggyback input");
+        }
+
         uint192 exitId = ExitId.getInFlightExitId(args.inFlightTx);
         PaymentExitDataModel.InFlightExit storage exit = inFlightExitMap.exits[exitId];
 
@@ -79,22 +83,30 @@ library PaymentPiggybackInFlightExit {
         require(args.index < indexMaxNum, "Index exceed max size of the input or output");
         require(!exit.isPiggybacked(args.index, args.isPiggybackInput), "The indexed input/output has been piggybacked already");
 
-        bytes32 outputGuard = args.isPiggybackInput?
-            exit.outputGuardForInputs[args.index] : getOutputGuardFromPaymentTxBytes(args.inFlightTx, args.index);
-
-        address payable exitTarget = getExitTargetOfOutput(self, outputGuard, args.outputType, args.outputGuardPreimage);
-        require(exitTarget == msg.sender, "Can be called by the exit target only");
-
         PaymentExitDataModel.WithdrawData storage withdrawData = args.isPiggybackInput?
             exit.inputs[args.index] : exit.outputs[args.index];
+
+        // In startInFlightExit, exitTarget for inputs would be saved as those are the neccesarry part to create the transaction
+        // However, for outputs since the output preimage data is hold by the output owners themselves, need to get those on piggyback.
+        address payable exitTarget;
+        if (args.isPiggybackInput) {
+            exitTarget = withdrawData.exitTarget;
+        } else {
+            bytes32 outputGuard = getOutputGuardFromPaymentTxBytes(args.inFlightTx, args.index);
+            exitTarget = getExitTargetOfOutput(self, outputGuard, args.outputType, args.outputGuardPreimage);
+        }
+        require(exitTarget == msg.sender, "Can be called by the exit target only");
 
         if (exit.isFirstPiggybackOfTheToken(withdrawData.token)) {
             enqueue(self, withdrawData.token, UtxoPosLib.UtxoPos(exit.position), exitId);
         }
 
-        // Exit Target is set in piggyback instead of start in-flight exit due to the fact that potentially only
+        // Exit Target for outputs is set in piggyback instead of start in-flight exit due to the fact that potentially only
         // the owner has the data or output guard preimage
-        withdrawData.exitTarget = exitTarget;
+        if (!args.isPiggybackInput) {
+            withdrawData.exitTarget = exitTarget;
+        }
+
         exit.setPiggybacked(args.index, args.isPiggybackInput);
 
         emit InFlightExitPiggybacked(msg.sender, keccak256(args.inFlightTx), args.isPiggybackInput, args.index);

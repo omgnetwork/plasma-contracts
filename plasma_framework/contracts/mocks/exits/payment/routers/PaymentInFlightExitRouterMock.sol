@@ -32,10 +32,6 @@ contract PaymentInFlightExitRouterMock is PaymentInFlightExitRouter {
         ife.bondOwner = exit.bondOwner;
         ife.oldestCompetitorPosition = exit.oldestCompetitorPosition;
 
-        for (uint i = 0 ; i < exit.outputGuardForInputs.length ; i++) {
-            ife.outputGuardForInputs[i] = exit.outputGuardForInputs[i];
-        }
-
         for (uint i = 0 ; i < exit.inputs.length ; i++) {
             ife.inputs[i] = exit.inputs[i];
         }

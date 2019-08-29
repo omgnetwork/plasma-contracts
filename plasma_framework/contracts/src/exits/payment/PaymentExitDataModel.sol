@@ -41,8 +41,6 @@ library PaymentExitDataModel {
          */
         uint256 exitMap;
         uint256 position;
-        // TODO: need to save the output guard during IFE
-        bytes32[MAX_INPUT_NUM] outputGuardForInputs;
         WithdrawData[MAX_INPUT_NUM] inputs;
         WithdrawData[MAX_OUTPUT_NUM] outputs;
         address payable bondOwner;
