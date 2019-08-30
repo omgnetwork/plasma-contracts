@@ -33,11 +33,13 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyWithValue {
         public
     {
         startInFlightExitController = PaymentStartInFlightExit.buildController(
-            framework, spendingConditionRegistry, supportedTxType
+            framework, spendingConditionRegistry, outputGuardHandlerRegistry, supportedTxType
         );
 
         piggybackInFlightExitController = PaymentPiggybackInFlightExit.buildController(
-            framework, this, outputGuardHandlerRegistry
+            framework,
+            this,
+            outputGuardHandlerRegistry
         );
 
         challengeCanonicityController = PaymentChallengeIFENotCanonical.Controller({

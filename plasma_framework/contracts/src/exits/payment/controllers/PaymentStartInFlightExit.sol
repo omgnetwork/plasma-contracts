@@ -6,9 +6,11 @@ import "../PaymentInFlightExitModelUtils.sol";
 import "../routers/PaymentInFlightExitRouterArgs.sol";
 import "../spendingConditions/IPaymentSpendingCondition.sol";
 import "../spendingConditions/PaymentSpendingConditionRegistry.sol";
+import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../utils/ExitableTimestamp.sol";
 import "../../utils/ExitId.sol";
 import "../../utils/OutputId.sol";
+import "../../utils/TxFinalization.sol";
 import "../../../utils/IsDeposit.sol";
 import "../../../utils/UtxoPosLib.sol";
 import "../../../utils/Merkle.sol";
@@ -22,6 +24,7 @@ library PaymentStartInFlightExit {
     using UtxoPosLib for UtxoPosLib.UtxoPos;
     using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
     using PaymentOutputModel for PaymentOutputModel.Output;
+    using TxFinalization for TxFinalization.Verifier;
 
     uint256 constant public MAX_INPUT_NUM = 4;
 
@@ -30,6 +33,7 @@ library PaymentStartInFlightExit {
         IsDeposit.Predicate isDeposit;
         ExitableTimestamp.Calculator exitTimestampCalculator;
         PaymentSpendingConditionRegistry spendingConditionRegistry;
+        OutputGuardHandlerRegistry outputGuardHandlerRegistry;
         uint256 supportedTxType;
     }
 
@@ -49,6 +53,8 @@ library PaymentStartInFlightExit {
      * @param inputUtxosPos Postions of input utxos.
      * @param inputUtxosTypes Types of outputs that make in-flight transaction inputs.
      * @param inputTxsInclusionProofs Merkle proofs for input transactions.
+     * @param inputUtxosGuardPreimages Output guard preimage for the inputs.
+     * @param inputTxsConfirmSigs Confirm signatures for the input txs.
      * @param inFlightTxWitnesses Witnesses for in-flight transactions.
      * @param outputIds Output ids for input transactions.
      */
@@ -63,13 +69,16 @@ library PaymentStartInFlightExit {
         UtxoPosLib.UtxoPos[] inputUtxosPos;
         uint256[] inputUtxosTypes;
         bytes[] inputTxsInclusionProofs;
+        bytes[] inputUtxosGuardPreimages;
+        bytes[] inputTxsConfirmSigs;
         bytes[] inFlightTxWitnesses;
         bytes32[] outputIds;
     }
 
     function buildController(
         PlasmaFramework framework,
-        PaymentSpendingConditionRegistry registry,
+        PaymentSpendingConditionRegistry spendingConditionRegistry,
+        OutputGuardHandlerRegistry outputGuardHandlerRegistry,
         uint256 supportedTxType
     )
         public
@@ -80,7 +89,8 @@ library PaymentStartInFlightExit {
             framework: framework,
             isDeposit: IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL()),
             exitTimestampCalculator: ExitableTimestamp.Calculator(framework.minExitPeriod()),
-            spendingConditionRegistry: registry,
+            spendingConditionRegistry: spendingConditionRegistry,
+            outputGuardHandlerRegistry: outputGuardHandlerRegistry,
             supportedTxType: supportedTxType
         });
     }
@@ -166,7 +176,7 @@ library PaymentStartInFlightExit {
         verifyExitNotStarted(exitData.exitId, inFlightExitMap);
         verifyNumberOfInputsMatchesNumberOfInFlightTransactionInputs(exitData);
         verifyNoInputSpentMoreThanOnce(exitData.inFlightTx);
-        verifyInputTransactionsIncludedInPlasma(exitData);
+        verifyInputTransactionIsStandardFinalized(exitData);
         verifyInputsSpendingCondition(exitData);
         verifyInFlightTransactionDoesNotOverspend(exitData);
     }
@@ -216,14 +226,33 @@ library PaymentStartInFlightExit {
         }
     }
 
-    function verifyInputTransactionsIncludedInPlasma(StartExitData memory exitData) private view {
+    function verifyInputTransactionIsStandardFinalized(StartExitData memory exitData) private view {
         for (uint i = 0; i < exitData.inputTxs.length; i++) {
-            (bytes32 root, ) = exitData.controller.framework.blocks(exitData.inputUtxosPos[i].blockNum());
-            bytes32 leaf = keccak256(exitData.inputTxsRaw[i]);
-            require(
-                Merkle.checkMembership(leaf, exitData.inputUtxosPos[i].txIndex(), root, exitData.inputTxsInclusionProofs[i]),
-                "Input transaction is not included in plasma"
-            );
+            IOutputGuardHandler outputGuardHandler = exitData.controller
+                                                    .outputGuardHandlerRegistry
+                                                    .outputGuardHandlers(exitData.inputUtxosTypes[i]);
+
+            uint16 outputIndex = exitData.inputUtxosPos[i].outputIndex();
+            bytes32 outputGuard = exitData.inputTxs[i].outputs[outputIndex].outputGuard;
+            OutputGuardModel.Data memory outputGuardData = OutputGuardModel.Data({
+                guard: outputGuard,
+                outputType: exitData.inputUtxosTypes[i],
+                preimage: exitData.inputUtxosGuardPreimages[i]
+            });
+
+            require(outputGuardHandler.isValid(outputGuardData),
+                    "Output guard information is invalid for the input tx");
+
+            TxFinalization.Verifier memory verifier = TxFinalization.Verifier({
+                framework: exitData.controller.framework,
+                protocol: exitData.controller.framework.protocols(exitData.inputUtxosTypes[i]),
+                txBytes: exitData.inputTxsRaw[i],
+                txPos: exitData.inputUtxosPos[i].txPos(),
+                inclusionProof: exitData.inputTxsInclusionProofs[i],
+                confirmSig: exitData.inputTxsConfirmSigs[i],
+                confirmSigAddress: outputGuardHandler.getConfirmSigAddress(outputGuardData)
+            });
+            require(verifier.isStandardFinalized(), "Input transaction is not standard finalized");
         }
     }
 

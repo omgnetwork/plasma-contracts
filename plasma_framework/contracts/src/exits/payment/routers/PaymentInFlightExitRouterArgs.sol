@@ -8,6 +8,8 @@ library PaymentInFlightExitRouterArgs {
     * @param inputUtxosPos Utxos that represent in-flight transaction inputs. In the same order as input transactions.
     * @param inputUtxosTypes Output types of in flight transaction inputs. In the same order as input transactions.
     * @param inputTxsInclusionProofs Merkle proofs that show the input-creating transactions are valid. In the same order as input transactions.
+    * @param inputUtxosGuardPreimages Output guard preimage (excluding output type) for the inputs.
+    * @param inputTxsConfirmSigs Confirm signatures for the input txs. Should be empty bytes if the input tx is MoreVP.
     * @param inFlightTxWitnesses Witnesses for in-flight transaction. In the same order as input transactions.
     */
     struct StartExitArgs {
@@ -16,6 +18,8 @@ library PaymentInFlightExitRouterArgs {
         uint256[] inputUtxosPos;
         uint256[] inputUtxosTypes;
         bytes[] inputTxsInclusionProofs;
+        bytes[] inputUtxosGuardPreimages;
+        bytes[] inputTxsConfirmSigs;
         bytes[] inFlightTxWitnesses;
     }
 

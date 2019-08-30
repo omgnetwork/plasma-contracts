@@ -12,19 +12,22 @@ contract PaymentOutputGuardHandler is IOutputGuardHandler {
         outputType = _outputType;
     }
 
-    /**
-    * @notice Returns whether the whole output guard data combination is a valid one
-    */
     function isValid(OutputGuardModel.Data memory data) public view returns (bool) {
         require(data.preimage.length == 0, "Pre-imgage of the output guard should be empty");
         require(data.outputType == outputType, "Output type mismatch");
         return true;
     }
 
-    /**
-    * @notice Parses the 'exit target' from the output guard data set
-    */
     function getExitTarget(OutputGuardModel.Data calldata data) external view returns (address payable) {
         return AddressPayable.convert(address(uint256(data.guard)));
+    }
+
+    function getConfirmSigAddress(OutputGuardModel.Data calldata /*data*/)
+        external
+        view
+        returns (address payable)
+    {
+        // MoreVP transaction, no need to have confirm sig.
+        return address(0);
     }
 }

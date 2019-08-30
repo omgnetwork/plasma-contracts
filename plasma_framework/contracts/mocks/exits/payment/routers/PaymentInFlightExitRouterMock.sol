@@ -13,7 +13,13 @@ contract PaymentInFlightExitRouterMock is PaymentInFlightExitRouter {
         uint256 supportedTxType
     )
         public
-        PaymentInFlightExitRouter(framework, outputGuardHandlerRegistry, spendingConditionRegistry, supportedTxType) {
+        PaymentInFlightExitRouter(
+            framework,
+            outputGuardHandlerRegistry,
+            spendingConditionRegistry,
+            supportedTxType
+        )
+    {
     }
 
     // to override IExitProcessor function
