@@ -2,10 +2,26 @@ from .constants import EXIT_PERIOD, INITIAL_IMMUNE_EXIT_GAMES, INITIAL_IMMUNE_VA
 
 
 class PlasmaFramework:
-    def __init__(self, get_contract):
+    def __init__(self, get_contract, maintainer):
         self.plasma_framework = get_contract('PlasmaFramework',
-                                             args=(EXIT_PERIOD, INITIAL_IMMUNE_VAULTS, INITIAL_IMMUNE_EXIT_GAMES))
+                                             args=(EXIT_PERIOD, INITIAL_IMMUNE_VAULTS, INITIAL_IMMUNE_EXIT_GAMES),
+                                             sender=maintainer)
 
+        self.plasma_framework.initAuthority()  # initialised by default web3 account
+
+        # deposit verifiers
+        self.eth_deposit_verifier = get_contract('EthDepositVerifier', sender=maintainer)
+        self.erc20_deposit_verifier = get_contract('Erc20DepositVerifier', sender=maintainer)
+
+        # vaults setup
+        self.eth_vault = get_contract('EthVault', args=(self.plasma_framework.address,), sender=maintainer)
+        self.erc20_vault = get_contract('Erc20Vault', args=(self.plasma_framework.address,), sender=maintainer)
+
+        self.eth_vault.setDepositVerifier(self.eth_deposit_verifier.address, **{"from": maintainer.address})
+        self.plasma_framework.registerVault(1, self.eth_vault.address, **{"from": maintainer.address})
+
+        self.erc20_vault.setDepositVerifier(self.erc20_deposit_verifier.address, **{"from": maintainer.address})
+        self.plasma_framework.registerVault(2, self.erc20_vault.address, **{"from": maintainer.address})
 
     def blocks(self, block):
         return self.plasma_framework.blocks(block)
@@ -16,11 +32,11 @@ class PlasmaFramework:
     def submitBlock(self, block_root, **kwargs):
         self.plasma_framework.submitBlock(block_root, **kwargs)
 
-    def deposit(self, deposit_tx):
-        raise NotImplementedError
+    def deposit(self, deposit_tx, **kwargs):
+        return self.eth_vault.deposit(deposit_tx, **kwargs)
 
-    def depositFrom(self, deposit_tx):
-        raise NotImplementedError
+    def depositFrom(self, deposit_tx, **kwargs):
+        return self.erc20_vault.deposit(deposit_tx, **kwargs)
 
     def startStandardExit(self, utxo_pos, output_tx, output_tx_inclusion_proof):
         raise NotImplementedError

@@ -1,4 +1,4 @@
-from plasma_core.utils.transactions import decode_utxo_id
+from plasma_core.utils.transactions import decode_utxo_id, output_guard_to_owner
 from plasma_core.constants import NULL_SIGNATURE, CHILD_BLOCK_INTERVAL
 from plasma_core.exceptions import (InvalidBlockSignatureException,
                                     InvalidTxSignatureException,

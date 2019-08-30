@@ -153,7 +153,7 @@ class TestingLanguage:
 
     def deposit(self, owner, amount):
         deposit_tx = Transaction(outputs=[(owner.address, NULL_ADDRESS, amount)])
-        blknum = self.root_chain.getDepositBlockNumber()
+        blknum = self.root_chain.nextDepositBlock()
         self.root_chain.deposit(deposit_tx.encoded, **{'from': owner.address, 'value': amount})
         deposit_id = encode_utxo_id(blknum, 0, 0)
         block = Block([deposit_tx], number=blknum)
@@ -174,11 +174,11 @@ class TestingLanguage:
 
         deposit_tx = Transaction(outputs=[(owner.address, token.address, amount)])
         token.mint(owner.address, amount)
-        token.approve(self.plasma_framework.address, amount, **{'from': owner.address})
-        blknum = self.plasma_framework.getDepositBlockNumber()
-        pre_balance = self.get_balance(self.plasma_framework, token)
-        self.plasma_framework.depositFrom(deposit_tx.encoded, **{'from': owner.address})
-        balance = self.get_balance(self.plasma_framework, token)
+        token.approve(self.root_chain.erc20_vault.address, amount, **{'from': owner.address})
+        blknum = self.root_chain.nextDepositBlock()
+        pre_balance = self.get_balance(self.root_chain.erc20_vault, token)
+        self.root_chain.depositFrom(deposit_tx.encoded, **{'from': owner.address})
+        balance = self.get_balance(self.root_chain.erc20_vault, token)
         assert balance == pre_balance + amount
         block = Block(transactions=[deposit_tx], number=blknum)
         self.child_chain.add_block(block)
@@ -190,7 +190,7 @@ class TestingLanguage:
         inputs = [decode_utxo_id(input_id) for input_id in input_ids]
         spend_tx = Transaction(inputs=inputs, outputs=outputs, metadata=metadata)
         for i in range(0, len(inputs)):
-            spend_tx.sign(i, accounts[i], verifyingContract=self.plasma_framework)
+            spend_tx.sign(i, accounts[i], verifyingContract=self.root_chain.plasma_framework)
         blknum = self.submit_block([spend_tx], force_invalid=force_invalid)
         spend_id = encode_utxo_id(blknum, 0, 0)
         return spend_id
