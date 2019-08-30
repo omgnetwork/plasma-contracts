@@ -80,6 +80,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
 
     const setupContracts = async () => {
         this.framework = await PlasmaFramework.new(MIN_EXIT_PERIOD, INITIAL_IMMUNE_VAULTS, INITIAL_IMMUNE_EXIT_GAMES);
+        await this.framework.init();
 
         const ethDepositVerifier = await EthDepositVerifier.new();
         this.ethVault = await EthVault.new(this.framework.address);
