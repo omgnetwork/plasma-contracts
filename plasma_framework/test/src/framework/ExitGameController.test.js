@@ -8,11 +8,11 @@ const {
 const { expect } = require('chai');
 
 const { buildTxPos } = require('../../helpers/positions.js');
+const { PROTOCOL } = require('../../helpers/constants.js');
 
 contract('ExitGameController', () => {
     const MIN_EXIT_PERIOD = 10;
     const INITIAL_IMMUNE_EXIT_GAMES = 1;
-    const MORE_VP_PROTOCOL = 2;
 
     beforeEach(async () => {
         this.controller = await ExitGameController.new(MIN_EXIT_PERIOD, INITIAL_IMMUNE_EXIT_GAMES);
@@ -20,7 +20,7 @@ contract('ExitGameController', () => {
         this.dummyExitGame.setExitGameController(this.controller.address);
 
         this.dummyTxType = 1;
-        this.controller.registerExitGame(this.dummyTxType, this.dummyExitGame.address, MORE_VP_PROTOCOL);
+        this.controller.registerExitGame(this.dummyTxType, this.dummyExitGame.address, PROTOCOL.MORE_VP);
 
         // take any random contract address as token
         this.dummyToken = (await DummyExitGame.new()).address;
@@ -110,7 +110,7 @@ contract('ExitGameController', () => {
             const newDummyExitGame = await DummyExitGame.new();
             newDummyExitGame.setExitGameController(this.controller.address);
             const newDummyExitGameId = 2;
-            await this.controller.registerExitGame(newDummyExitGameId, newDummyExitGame.address, MORE_VP_PROTOCOL);
+            await this.controller.registerExitGame(newDummyExitGameId, newDummyExitGame.address, PROTOCOL.MORE_VP);
             await expectRevert(
                 newDummyExitGame.enqueue(
                     this.dummyExit.token,
@@ -457,7 +457,7 @@ contract('ExitGameController', () => {
             const newDummyExitGame = await DummyExitGame.new();
             newDummyExitGame.setExitGameController(this.controller.address);
             const newDummyExitGameId = 2;
-            await this.controller.registerExitGame(newDummyExitGameId, newDummyExitGame.address, MORE_VP_PROTOCOL);
+            await this.controller.registerExitGame(newDummyExitGameId, newDummyExitGame.address, PROTOCOL.MORE_VP);
             await expectRevert(
                 newDummyExitGame.proxyBatchFlagOutputsSpent([dummyOutputId1, dummyOutputId2]),
                 'ExitGame is quarantined.',
@@ -485,7 +485,7 @@ contract('ExitGameController', () => {
             const newDummyExitGame = await DummyExitGame.new();
             newDummyExitGame.setExitGameController(this.controller.address);
             const newDummyExitGameId = 2;
-            await this.controller.registerExitGame(newDummyExitGameId, newDummyExitGame.address, MORE_VP_PROTOCOL);
+            await this.controller.registerExitGame(newDummyExitGameId, newDummyExitGame.address, PROTOCOL.MORE_VP);
             await expectRevert(
                 newDummyExitGame.proxyFlagOutputSpent(dummyOutputId),
                 'ExitGame is quarantined.',

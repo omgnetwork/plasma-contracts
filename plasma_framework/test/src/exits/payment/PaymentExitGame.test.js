@@ -23,6 +23,7 @@ const {
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
+const { PROTOCOL } = require('../../../helpers/constants.js');
 const { MerkleTree } = require('../../../helpers/merkle.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
 const { addressToOutputGuard, computeDepositOutputId, spentOnGas } = require('../../../helpers/utils.js');
@@ -32,7 +33,6 @@ const { buildUtxoPos, utxoPosToTxPos } = require('../../../helpers/positions.js'
 const Testlang = require('../../../helpers/testlang.js');
 
 contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
-    const MORE_VP_PROTOCOL = 2;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
     const ETH = constants.ZERO_ADDRESS;
     const INITIAL_ERC20_SUPPLY = 10000000000;
@@ -111,7 +111,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
         await spendingConditionRegistry.registerSpendingCondition(
             PAYMENT_OUTPUT_TYPE, PAYMENT_TX_TYPE, this.toPaymentCondition.address,
         );
-        await this.framework.registerExitGame(PAYMENT_TX_TYPE, this.exitGame.address, MORE_VP_PROTOCOL);
+        await this.framework.registerExitGame(PAYMENT_TX_TYPE, this.exitGame.address, PROTOCOL.MORE_VP);
     };
 
     const aliceDepositsETH = async () => {

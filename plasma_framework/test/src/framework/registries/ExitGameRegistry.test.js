@@ -5,14 +5,11 @@ const {
     BN, constants, expectEvent, expectRevert, time,
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
+const { PROTOCOL } = require('../../../helpers/constants.js');
 
 contract('ExitGameRegistry', ([_, other]) => {
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
     const INITIAL_IMMUNE_EXIT_GAMES_NUM = 0;
-    const PROTOCOL = {
-        MVP: 0,
-        MORE_VP: 1,
-    };
 
     beforeEach(async () => {
         this.registry = await ExitGameRegistry.new(MIN_EXIT_PERIOD, INITIAL_IMMUNE_EXIT_GAMES_NUM);

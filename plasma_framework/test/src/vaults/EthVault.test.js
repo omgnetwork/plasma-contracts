@@ -10,10 +10,10 @@ const { expect } = require('chai');
 
 const { PaymentTransaction, PaymentTransactionOutput } = require('../../helpers/transaction.js');
 const { spentOnGas } = require('../../helpers/utils.js');
+const { PROTOCOL } = require('../../helpers/constants.js');
 const Testlang = require('../../helpers/testlang.js');
 
 contract('EthVault', ([_, alice]) => {
-    const MORE_VP_PROTOCOL = 2;
     const DEPOSIT_VALUE = 1000000;
     const INITIAL_IMMUNE_VAULTS = 1;
     const INITIAL_IMMUNE_EXIT_GAMES = 1;
@@ -29,7 +29,7 @@ contract('EthVault', ([_, alice]) => {
 
         this.exitGame = await DummyExitGame.new();
         await this.exitGame.setEthVault(this.ethVault.address);
-        await this.framework.registerExitGame(1, this.exitGame.address, MORE_VP_PROTOCOL);
+        await this.framework.registerExitGame(1, this.exitGame.address, PROTOCOL.MORE_VP);
     });
 
     describe('deposit', () => {
@@ -176,7 +176,7 @@ contract('EthVault', ([_, alice]) => {
             beforeEach(async () => {
                 this.newExitGame = await DummyExitGame.new();
                 await this.newExitGame.setEthVault(this.ethVault.address);
-                await this.framework.registerExitGame(2, this.newExitGame.address, MORE_VP_PROTOCOL);
+                await this.framework.registerExitGame(2, this.newExitGame.address, PROTOCOL.MORE_VP);
             });
 
             it('should fail when called under quarantine', async () => {
