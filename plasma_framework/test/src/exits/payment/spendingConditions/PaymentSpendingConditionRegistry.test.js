@@ -53,14 +53,13 @@ contract('PaymentSpendingConditionRegistry', ([_, other]) => {
             );
         });
 
-        it('should NOT reject when trying to register with output type 0', async () => {
+        it('should reject when trying to register with output type 0', async () => {
             const outputType = 0;
             const spendingTxType = 123;
-            await this.registry.registerSpendingCondition(
-                outputType, spendingTxType, this.dummyCondition.address,
+            await expectRevert(
+                this.registry.registerSpendingCondition(outputType, spendingTxType, constants.ZERO_ADDRESS),
+                'Output Type must not be 0',
             );
-            expect(await this.registry.spendingConditions(outputType, spendingTxType))
-                .to.equal(this.dummyCondition.address);
         });
 
         it('should reject when trying to register with an empty address', async () => {

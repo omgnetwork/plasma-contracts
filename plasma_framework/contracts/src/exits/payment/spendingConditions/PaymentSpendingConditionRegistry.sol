@@ -27,6 +27,7 @@ contract PaymentSpendingConditionRegistry is Ownable {
         public
         onlyOwner
     {
+        require(_outputType != 0, "Output Type must not be 0");
         require(_spendingTxType != 0, "Transaction Type must not be 0");
         require(_address != address(0), "Should not register an empty address");
 

@@ -9,6 +9,7 @@ import "../../utils/ExitId.sol";
 import "../../../utils/UtxoPosLib.sol";
 import "../../../utils/Merkle.sol";
 import "../../../framework/PlasmaFramework.sol";
+import "../../../transactions/PaymentTransactionModel.sol";
 
 library PaymentChallengeIFENotCanonical {
     using UtxoPosLib for UtxoPosLib.UtxoPos;
@@ -50,8 +51,10 @@ library PaymentChallengeIFENotCanonical {
         );
         require(address(condition) != address(0), "Spending condition contract not found");
 
+        // FIXME: move to the finalized interface as https://github.com/omisego/plasma-contracts/issues/214
+        // Also, the tests should verify the args correctness
         bool isSpentByInFlightTx = condition.verify(
-            ife.inputs[args.inFlightTxInputIndex].outputGuard,
+            bytes32(''), // tmp solution, we don't need outputGuard anymore for the interface of :point-up: GH-214
             uint256(0), // should not be used
             inFlightTx.inputs[args.inFlightTxInputIndex],
             args.competingTx,

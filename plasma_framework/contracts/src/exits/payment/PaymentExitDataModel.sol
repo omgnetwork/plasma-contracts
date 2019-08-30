@@ -1,10 +1,6 @@
 pragma solidity ^0.5.0;
 
-import '../../transactions/outputs/PaymentOutputModel.sol';
-import '../../transactions/PaymentTransactionModel.sol';
-
 library PaymentExitDataModel {
-
     uint8 constant public MAX_INPUT_NUM = 4;
     uint8 constant public MAX_OUTPUT_NUM = 4;
 
@@ -26,11 +22,19 @@ library PaymentExitDataModel {
         mapping (uint192 => PaymentExitDataModel.StandardExit) exits;
     }
 
+    struct WithdrawData {
+        bytes32 outputId;
+        address payable exitTarget;
+        address token;
+        uint256 amount;
+    }
+
     struct InFlightExit {
-        uint64 exitStartTimestamp;
         // Canonicity is assumed at start, then can be challenged and is set to `false`.
         // Response to non-canonical challenge can set it back to `true`.
         bool isCanonical;
+        bool isFinalized;
+        uint64 exitStartTimestamp;
 
         /**
          * exit map stores piggybacks and finalized exits
@@ -40,8 +44,8 @@ library PaymentExitDataModel {
          */
         uint256 exitMap;
         uint256 position;
-        PaymentOutputModel.Output[MAX_INPUT_NUM] inputs;
-        PaymentOutputModel.Output[MAX_OUTPUT_NUM] outputs;
+        WithdrawData[MAX_INPUT_NUM] inputs;
+        WithdrawData[MAX_OUTPUT_NUM] outputs;
         address payable bondOwner;
         uint256 oldestCompetitorPosition;
     }
