@@ -48,12 +48,12 @@ contract('PaymentStandardExitRouter', ([_, outputOwner]) => {
                 this.outputGuardHandlerRegistry.address, spendingConditionRegistry.address,
             );
 
-            this.bondSize = await this.exitGame.bondSize();
+            this.startStandardExitBondSize = await this.exitGame.startStandardExitBondSize();
         });
 
-        it.only('should emit an event when the standard exit bond size is updated', async () => {
-            const newBondSize = this.bondSize.muln(2);
-            const { receipt } = await this.exitGame.updateBondSize(newBondSize);
+        it('should emit an event when the standard exit bond size is updated', async () => {
+            const newBondSize = this.startStandardExitBondSize.addn(20);
+            const { receipt } = await this.exitGame.updateStartStandardExitBondSize(newBondSize);
 
             await expectEvent.inTransaction(
                 receipt.transactionHash,

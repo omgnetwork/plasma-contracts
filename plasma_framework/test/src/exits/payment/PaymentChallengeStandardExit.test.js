@@ -66,7 +66,7 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
             token: ETH,
             exitTarget,
             amount: 66666,
-            bondSize: this.bondSize.toString(),
+            bondSize: this.startStandardExitBondSize.toString(),
         });
 
         const getExpectedConditionInputArgs = (input, exitData) => ({
@@ -93,7 +93,7 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
                 outputGuardParserRegistry.address, this.spendingConditionRegistry.address,
             );
 
-            this.bondSize = await this.exitGame.bondSize();
+            this.startStandardExitBondSize = await this.exitGame.startStandardExitBondSize();
         });
 
         it('should fail when exit for such exit id does not exists', async () => {
@@ -177,7 +177,7 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
         });
 
         it('should call the Spending Condition contract with expected params given output type 0', async () => {
-            await this.exitGame.depositFundForTest({ value: this.bondSize });
+            await this.exitGame.depositFundForTest({ value: this.startStandardExitBondSize });
 
             const input = getTestInputArgs(OUTPUT_TYPE_ZERO, addressToOutputGuard(alice));
             const outputTypeAndGuardHash = getOutputTypeAndGuardHash(input);
@@ -202,7 +202,7 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
         });
 
         it('should call the Spending Condition contract with expected params given output type non 0', async () => {
-            await this.exitGame.depositFundForTest({ value: this.bondSize });
+            await this.exitGame.depositFundForTest({ value: this.startStandardExitBondSize });
 
             const outputType = 1;
             const dummyOutputGuard = `0x${Array(64).fill(1).join('')}`;
@@ -229,7 +229,7 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
         });
 
         it('should delete the exit data when successfully challenged', async () => {
-            await this.exitGame.depositFundForTest({ value: this.bondSize });
+            await this.exitGame.depositFundForTest({ value: this.startStandardExitBondSize });
 
             const input = getTestInputArgs(OUTPUT_TYPE_ZERO, addressToOutputGuard(alice));
             const outputTypeAndGuardHash = getOutputTypeAndGuardHash(input);
@@ -249,7 +249,7 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
         });
 
         it('should transfer the standard exit bond to challenger when successfully challenged', async () => {
-            await this.exitGame.depositFundForTest({ value: this.bondSize });
+            await this.exitGame.depositFundForTest({ value: this.startStandardExitBondSize });
 
             const input = getTestInputArgs(OUTPUT_TYPE_ZERO, addressToOutputGuard(alice));
             const outputTypeAndGuardHash = getOutputTypeAndGuardHash(input);
@@ -268,14 +268,14 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
 
             const actualPostBalance = new BN(await web3.eth.getBalance(bob));
             const expectedPostBalance = preBalance
-                .add(this.bondSize)
+                .add(this.startStandardExitBondSize)
                 .sub(await spentOnGas(tx.receipt));
 
             expect(actualPostBalance).to.be.bignumber.equal(expectedPostBalance);
         });
 
         it('should emit ExitChallenged event when successfully challenged', async () => {
-            await this.exitGame.depositFundForTest({ value: this.bondSize });
+            await this.exitGame.depositFundForTest({ value: this.startStandardExitBondSize });
 
             const input = getTestInputArgs(OUTPUT_TYPE_ZERO, addressToOutputGuard(alice));
             const outputTypeAndGuardHash = getOutputTypeAndGuardHash(input);

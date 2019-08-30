@@ -100,7 +100,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
                 this.outputGuardHandlerRegistry.address, spendingConditionRegistry.address,
             );
 
-            this.bondSize = await this.exitGame.bondSize();
+            this.startStandardExitBondSize = await this.exitGame.startStandardExitBondSize();
         });
 
         it('should fail when cannot prove the tx is included in the block', async () => {
@@ -111,7 +111,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
 
             await expectRevert(
                 this.exitGame.startStandardExit(
-                    args, { from: outputOwner, value: this.bondSize },
+                    args, { from: outputOwner, value: this.startStandardExitBondSize },
                 ),
                 'transaction inclusion proof failed',
             );
@@ -125,7 +125,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
 
             await expectRevert(
                 this.exitGame.startStandardExit(
-                    args, { from: outputOwner, value: this.bondSize },
+                    args, { from: outputOwner, value: this.startStandardExitBondSize },
                 ),
                 'Should not exit with amount 0',
             );
@@ -136,7 +136,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
 
             await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, 0);
 
-            const invalidBond = this.bondSize.subn(100);
+            const invalidBond = this.startStandardExitBondSize.subn(100);
             await expectRevert(
                 this.exitGame.startStandardExit(
                     args, { from: outputOwner, value: invalidBond },
@@ -156,7 +156,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
 
             await expectRevert(
                 this.exitGame.startStandardExit(
-                    args, { from: outputOwner, value: this.bondSize },
+                    args, { from: outputOwner, value: this.startStandardExitBondSize },
                 ),
                 'Failed to get the output guard handler for the output type',
             );
@@ -177,7 +177,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
 
             await expectRevert(
                 this.exitGame.startStandardExit(
-                    args, { from: outputOwner, value: this.bondSize },
+                    args, { from: outputOwner, value: this.startStandardExitBondSize },
                 ),
                 'Some of the output guard related information is not valid',
             );
@@ -190,7 +190,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
 
             await expectRevert(
                 this.exitGame.startStandardExit(
-                    args, { from: nonOutputOwner, value: this.bondSize },
+                    args, { from: nonOutputOwner, value: this.startStandardExitBondSize },
                 ),
                 'Only exit target can start an exit',
             );
@@ -202,12 +202,12 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
             await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, 0);
 
             await this.exitGame.startStandardExit(
-                args, { from: outputOwner, value: this.bondSize },
+                args, { from: outputOwner, value: this.startStandardExitBondSize },
             );
 
             await expectRevert(
                 this.exitGame.startStandardExit(
-                    args, { from: outputOwner, value: this.bondSize },
+                    args, { from: outputOwner, value: this.startStandardExitBondSize },
                 ),
                 'Exit already started',
             );
@@ -220,11 +220,11 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
 
             const preBalance = new BN(await web3.eth.getBalance(outputOwner));
             const tx = await this.exitGame.startStandardExit(
-                args, { from: outputOwner, value: this.bondSize },
+                args, { from: outputOwner, value: this.startStandardExitBondSize },
             );
             const actualPostBalance = new BN(await web3.eth.getBalance(outputOwner));
             const expectedPostBalance = preBalance
-                .sub(this.bondSize)
+                .sub(this.startStandardExitBondSize)
                 .sub(await spentOnGas(tx.receipt));
 
             expect(actualPostBalance).to.be.bignumber.equal(expectedPostBalance);
@@ -237,7 +237,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
             await this.framework.setBlock(depositBlockNum, merkleTree.root, 0);
 
             await this.exitGame.startStandardExit(
-                args, { from: outputOwner, value: this.bondSize },
+                args, { from: outputOwner, value: this.startStandardExitBondSize },
             );
 
             const isTxDeposit = true;
@@ -266,7 +266,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
             await this.framework.setBlock(nonDepositBlockNum, merkleTree.root, 0);
 
             await this.exitGame.startStandardExit(
-                args, { from: outputOwner, value: this.bondSize },
+                args, { from: outputOwner, value: this.startStandardExitBondSize },
             );
 
             const isTxDeposit = false;
@@ -294,7 +294,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
             await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, 0);
 
             const { receipt } = await this.exitGame.startStandardExit(
-                args, { from: outputOwner, value: this.bondSize },
+                args, { from: outputOwner, value: this.startStandardExitBondSize },
             );
 
             const isTxDeposit = await this.isDeposit.test(this.dummyBlockNum);
@@ -328,7 +328,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
             const isTxDeposit = await this.isDeposit.test(this.dummyBlockNum);
             const exitId = await this.exitIdHelper.getStandardExitId(isTxDeposit, args.rlpOutputTx, args.utxoPos);
             const { receipt } = await this.exitGame.startStandardExit(
-                args, { from: outputOwner, value: this.bondSize },
+                args, { from: outputOwner, value: this.startStandardExitBondSize },
             );
 
             await expectEvent.inTransaction(

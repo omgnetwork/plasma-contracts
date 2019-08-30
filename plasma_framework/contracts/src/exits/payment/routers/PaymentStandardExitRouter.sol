@@ -28,12 +28,14 @@ contract PaymentStandardExitRouter is
 
     // Initial bond size = 70000 (gas cost of challenge) * 20 gwei (current fast gas price) * 10 (safety margin)
     uint128 public constant INITIAL_BOND_SIZE = 14000000000000000 wei;
+    uint16 public constant BOND_LOWER_BOUND_DIVISOR = 2;
+    uint16 public constant BOND_UPPER_BOUND_MULTIPLIER = 2;
 
     PaymentExitDataModel.StandardExitMap standardExitMap;
     PaymentStartStandardExit.Controller startStandardExitController;
     PaymentProcessStandardExit.Controller processStandardExitController;
     PaymentChallengeStandardExit.Controller challengeStandardExitController;
-    BondSize.Params bond;
+    BondSize.Params startStandardExitBond;
 
     event StandardExitBondUpdated(uint128 bondSize);
 
@@ -58,7 +60,7 @@ contract PaymentStandardExitRouter is
             _framework, _ethVault, _erc20Vault
         );
 
-        bond = BondSize.buildParams(INITIAL_BOND_SIZE);
+        startStandardExitBond = BondSize.buildParams(INITIAL_BOND_SIZE, BOND_LOWER_BOUND_DIVISOR, BOND_UPPER_BOUND_MULTIPLIER);
     }
 
     function standardExits(uint192 _exitId) public view returns (PaymentExitDataModel.StandardExit memory) {
@@ -68,16 +70,16 @@ contract PaymentStandardExitRouter is
     /**
      * @notice Gets the standard exit bond size.
      */
-    function bondSize() public view returns (uint256) {
-        return bond.bondSize();
+    function startStandardExitBondSize() public view returns (uint128) {
+        return startStandardExitBond.bondSize();
     }
 
     /**
      * @notice Updates the standard exit bond size. Will take 2 days to come into effect.
      * @param newBondSize The new bond size.
      */
-    function updateBondSize(uint128 newBondSize) public onlyOperator {
-        bond.updateBondSize(newBondSize);
+    function updateStartStandardExitBondSize(uint128 newBondSize) public onlyOperator {
+        startStandardExitBond.updateBondSize(newBondSize);
         emit StandardExitBondUpdated(newBondSize);
     }
 
@@ -89,7 +91,7 @@ contract PaymentStandardExitRouter is
     )
         public
         payable
-        onlyWithValue(bond.bondSize())
+        onlyWithValue(startStandardExitBondSize())
     {
         startStandardExitController.run(standardExitMap, args);
     }

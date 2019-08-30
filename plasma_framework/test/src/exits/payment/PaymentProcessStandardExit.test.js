@@ -51,8 +51,8 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
             this.framework.registerExitGame(1, this.exitGame.address);
 
             // prepare the bond that should be set when exit starts
-            this.bondSize = await this.exitGame.bondSize();
-            await this.exitGame.depositFundForTest({ value: this.bondSize });
+            this.startStandardExitBondSize = await this.exitGame.startStandardExitBondSize();
+            await this.exitGame.depositFundForTest({ value: this.startStandardExitBondSize });
         });
 
         const getTestExitData = (exitable, token) => ({
@@ -63,7 +63,7 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
             token,
             exitTarget: alice,
             amount: web3.utils.toWei('3', 'ether'),
-            bondSize: this.bondSize.toString(),
+            bondSize: this.startStandardExitBondSize.toString(),
         });
 
         it('should not process the exit when such exit is not exitable', async () => {
@@ -116,7 +116,7 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
             const preBalance = new BN(await web3.eth.getBalance(testExitData.exitTarget));
             await this.exitGame.processExit(exitId);
             const postBalance = new BN(await web3.eth.getBalance(testExitData.exitTarget));
-            const expectBalance = preBalance.add(this.bondSize);
+            const expectBalance = preBalance.add(this.startStandardExitBondSize);
 
             expect(postBalance).to.be.bignumber.equal(expectBalance);
         });
@@ -130,7 +130,7 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
             const preBalance = new BN(await web3.eth.getBalance(testExitData.exitTarget));
             await this.exitGame.processExit(exitId);
             const postBalance = new BN(await web3.eth.getBalance(testExitData.exitTarget));
-            const expectBalance = preBalance.add(this.bondSize);
+            const expectBalance = preBalance.add(this.startStandardExitBondSize);
 
             expect(postBalance).to.be.bignumber.equal(expectBalance);
         });

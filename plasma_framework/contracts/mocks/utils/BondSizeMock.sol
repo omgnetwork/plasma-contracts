@@ -7,19 +7,15 @@ contract BondSizeMock {
 
     BondSize.Params public bond;
 
-    event Updated(uint128 bondSize);
-
-    constructor (uint128 _initialBondSize) public {
-        bond = BondSize.buildParams(_initialBondSize);
+    constructor (uint128 _initialBondSize, uint16 _lowerBoundDivisor, uint16 _upperBoundMultiplier) public {
+        bond = BondSize.buildParams(_initialBondSize,  _lowerBoundDivisor,  _upperBoundMultiplier);
     }
 
-    function bondSize() public view returns (uint) {
+    function bondSize() public view returns (uint128) {
         return bond.bondSize();
     }
 
     function updateBondSize(uint128 newBondSize) public {
         bond.updateBondSize(newBondSize);
-
-        emit Updated(newBondSize);
     }
 }
