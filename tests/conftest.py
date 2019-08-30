@@ -59,14 +59,13 @@ def parse_worker_no(worker_id):
         worker_no = int(worker_id[2:])
     except ValueError:
         pass
-
+    return worker_no
 
 
 @pytest.fixture(scope="session")
 def ganache_port(worker_id):
     default_port = 8545
     worker_no = parse_worker_no(worker_id)
-    print(f'{worker_id}, {worker_no}')
     return default_port + worker_no
 
 
@@ -130,8 +129,8 @@ def get_contract(w3, accounts):
 
 
 @pytest.fixture
-def plasma_framework(get_contract):
-    return PlasmaFramework(get_contract)
+def plasma_framework(get_contract, accounts):
+    return PlasmaFramework(get_contract, maintainer=accounts[-1])
 
 
 def initialized_contract(get_contract, exit_period, immune_vaults, immune_exit_games):
@@ -140,13 +139,14 @@ def initialized_contract(get_contract, exit_period, immune_vaults, immune_exit_g
 
 
 @pytest.fixture
-def token(get_contract):
-    return get_contract('MintableToken')
-
-
-@pytest.fixture
 def testlang(plasma_framework, w3, accounts):
     return TestingLanguage(plasma_framework, w3, accounts)
+
+
+@pytest.fixture(params=["ERC20Mintable"])
+def token(get_contract, request):
+    return get_contract(request.param)
+
 
 # FIXME: delete fixture
 @pytest.fixture

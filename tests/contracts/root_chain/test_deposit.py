@@ -7,8 +7,6 @@ from plasma_core.utils.transactions import decode_utxo_id, encode_utxo_id
 from plasma_core.transaction import Transaction
 from plasma_core.utils.merkle.fixed_merkle import FixedMerkle
 
-pytestmark = pytest.mark.skip()
-
 
 def test_deposit_valid_values_should_succeed(testlang, w3):
     owner, amount = testlang.accounts[0], 100
@@ -59,9 +57,9 @@ def test_deposit_with_input_should_fail(testlang):
 
 def test_at_most_999_deposits_per_child_block(testlang, w3):
     owner = testlang.accounts[0]
-    child_block_interval = testlang.root_chain.CHILD_BLOCK_INTERVAL()
+    child_block_interval = testlang.root_chain.childBlockInterval()
     w3.eth.disable_auto_mine()
-    blknum = testlang.root_chain.getDepositBlockNumber()
+    blknum = testlang.root_chain.nextDepositBlock()
     for i in range(0, child_block_interval - 1):
         deposit_id = _deposit(testlang, owner, 1, blknum + i)
         if i % 25 == 0:
@@ -93,7 +91,7 @@ def test_token_deposit_non_existing_token_should_fail(testlang, token):
     deposit_tx = Transaction(outputs=[(owner.address, NULL_ADDRESS, amount)])
 
     token.mint(owner.address, amount)
-    token.approve(testlang.root_chain.address, amount, **{'from': owner.address})
+    token.approve(testlang.root_chain.erc20_vault.address, amount, **{'from': owner.address})
     with pytest.raises(TransactionFailed):
         testlang.root_chain.depositFrom(deposit_tx.encoded, **{'from': owner.address})
 
@@ -112,14 +110,14 @@ def test_token_deposit_insufficient_approve_should_fail(testlang, token):
     deposit_tx = Transaction(outputs=[(owner.address, token.address, amount * 5)])
 
     token.mint(owner.address, amount)
-    token.approve(testlang.root_chain.address, amount, **{'from': owner.address})
+    token.approve(testlang.root_chain.erc20_vault.address, amount, **{'from': owner.address})
     with pytest.raises(TransactionFailed):
         testlang.root_chain.depositFrom(deposit_tx.encoded, **{'from': owner.address})
 
 
 def _deposit(testlang, owner, amount, blknum):
     deposit_tx = Transaction(outputs=[(owner.address, NULL_ADDRESS, amount)])
-    testlang.root_chain.contract.functions.deposit(deposit_tx.encoded).transact({'from': owner.address, 'value': amount})
+    testlang.root_chain.eth_vault.functions.deposit(deposit_tx.encoded).transact({'from': owner.address, 'value': amount})
     deposit_id = encode_utxo_id(blknum, 0, 0)
     block = Block([deposit_tx], number=blknum)
     testlang.child_chain.add_block(block)
