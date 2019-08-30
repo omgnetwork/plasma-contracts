@@ -26,10 +26,10 @@ const {
 contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
     const STANDARD_EXIT_BOND = 31415926535; // wei
     const ETH = constants.ZERO_ADDRESS;
-    const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
+    const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week in seconds
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
     const INITIAL_IMMUNE_EXIT_GAME_NUM = 1;
-    const OUTPUT_TYPE_ZERO = 0;
+    const OUTPUT_TYPE_ONE = 1;
     const EMPTY_BYTES = '0x0000000000000000000000000000000000000000000000000000000000000000000000';
     const EMPTY_BYTES32 = '0x0000000000000000000000000000000000000000000000000000000000000000';
 
@@ -95,7 +95,7 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
         });
 
         it('should fail when exit for such exit id does not exists', async () => {
-            const input = getTestInputArgs(OUTPUT_TYPE_ZERO, addressToOutputGuard(alice));
+            const input = getTestInputArgs(OUTPUT_TYPE_ONE, addressToOutputGuard(alice));
             await expectRevert(
                 this.exitGame.challengeStandardExit(input),
                 'Such exit does not exist',
@@ -103,7 +103,7 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
         });
 
         it('should fail when output type mismatch exit data', async () => {
-            const input = getTestInputArgs(OUTPUT_TYPE_ZERO, addressToOutputGuard(alice));
+            const input = getTestInputArgs(OUTPUT_TYPE_ONE, addressToOutputGuard(alice));
             const mismatchInput = Object.assign({}, input);
             mismatchInput.outputType += 1;
 
@@ -117,7 +117,7 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
         });
 
         it('should fail when output guard mismatch exit data', async () => {
-            const input = getTestInputArgs(OUTPUT_TYPE_ZERO, addressToOutputGuard(alice));
+            const input = getTestInputArgs(OUTPUT_TYPE_ONE, addressToOutputGuard(alice));
             const mismatchInput = Object.assign({}, input);
             mismatchInput.outputGuard = web3.utils.sha3(mismatchInput.outputGuard);
 
@@ -131,7 +131,7 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
         });
 
         it('should fail when not able to find the spending condition contract', async () => {
-            const input = getTestInputArgs(OUTPUT_TYPE_ZERO, addressToOutputGuard(alice));
+            const input = getTestInputArgs(OUTPUT_TYPE_ONE, addressToOutputGuard(alice));
             const outputTypeAndGuardHash = getOutputTypeAndGuardHash(input);
             await this.exitGame.setExit(input.exitId, getTestExitData(outputTypeAndGuardHash, alice));
 
@@ -142,7 +142,7 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
         });
 
         it('should fail when spending condition contract returns false', async () => {
-            const input = getTestInputArgs(OUTPUT_TYPE_ZERO, addressToOutputGuard(alice));
+            const input = getTestInputArgs(OUTPUT_TYPE_ONE, addressToOutputGuard(alice));
             const outputTypeAndGuardHash = getOutputTypeAndGuardHash(input);
             const conditionFalse = await PaymentSpendingConditionFalse.new();
             await this.spendingConditionRegistry.registerSpendingCondition(
@@ -158,7 +158,7 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
         });
 
         it('should fail when spending condition contract reverts', async () => {
-            const input = getTestInputArgs(OUTPUT_TYPE_ZERO, addressToOutputGuard(alice));
+            const input = getTestInputArgs(OUTPUT_TYPE_ONE, addressToOutputGuard(alice));
             const outputTypeAndGuardHash = getOutputTypeAndGuardHash(input);
             const conditionRevert = await PaymentSpendingConditionRevert.new();
             await this.spendingConditionRegistry.registerSpendingCondition(
@@ -177,7 +177,7 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
         it('should call the Spending Condition contract with expected params given output type 0', async () => {
             await this.exitGame.depositFundForTest({ value: STANDARD_EXIT_BOND });
 
-            const input = getTestInputArgs(OUTPUT_TYPE_ZERO, addressToOutputGuard(alice));
+            const input = getTestInputArgs(OUTPUT_TYPE_ONE, addressToOutputGuard(alice));
             const outputTypeAndGuardHash = getOutputTypeAndGuardHash(input);
             const conditionExpected = await PaymentSpendingConditionExpected.new();
             const exitTarget = alice;
@@ -229,7 +229,7 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
         it('should delete the exit data when successfully challenged', async () => {
             await this.exitGame.depositFundForTest({ value: STANDARD_EXIT_BOND });
 
-            const input = getTestInputArgs(OUTPUT_TYPE_ZERO, addressToOutputGuard(alice));
+            const input = getTestInputArgs(OUTPUT_TYPE_ONE, addressToOutputGuard(alice));
             const outputTypeAndGuardHash = getOutputTypeAndGuardHash(input);
             const conditionTrue = await PaymentSpendingConditionTrue.new();
             await this.spendingConditionRegistry.registerSpendingCondition(
@@ -249,7 +249,7 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
         it('should transfer the standard exit bond to challenger when successfully challenged', async () => {
             await this.exitGame.depositFundForTest({ value: STANDARD_EXIT_BOND });
 
-            const input = getTestInputArgs(OUTPUT_TYPE_ZERO, addressToOutputGuard(alice));
+            const input = getTestInputArgs(OUTPUT_TYPE_ONE, addressToOutputGuard(alice));
             const outputTypeAndGuardHash = getOutputTypeAndGuardHash(input);
             const conditionTrue = await PaymentSpendingConditionTrue.new();
             await this.spendingConditionRegistry.registerSpendingCondition(
@@ -275,7 +275,7 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
         it('should emit ExitChallenged event when successfully challenged', async () => {
             await this.exitGame.depositFundForTest({ value: STANDARD_EXIT_BOND });
 
-            const input = getTestInputArgs(OUTPUT_TYPE_ZERO, addressToOutputGuard(alice));
+            const input = getTestInputArgs(OUTPUT_TYPE_ONE, addressToOutputGuard(alice));
             const outputTypeAndGuardHash = getOutputTypeAndGuardHash(input);
             const testExitData = getTestExitData(outputTypeAndGuardHash, alice);
 

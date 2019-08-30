@@ -10,7 +10,7 @@ contract('OutputGuardHandlerRegistry', ([_, other]) => {
         this.registry = await OutputGuardHandlerRegistry.new();
     });
 
-    describe('registerOutputGuardParser', () => {
+    describe('registerOutputGuardHandler', () => {
         it('should be able to register successfully', async () => {
             const outputType = 1;
             await this.registry.registerOutputGuardHandler(outputType, this.dummyOutputGuardHandler.address);

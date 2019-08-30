@@ -6,6 +6,7 @@ import "../../src/utils/TxPosLib.sol";
 import "../../src/framework/models/BlockModel.sol";
 
 contract SpyPlasmaFrameworkForExitGame is PlasmaFramework {
+    uint256 public enqueuedCount = 0;
     mapping (uint256 => BlockModel.Block) public blocks;
     event EnqueueTriggered(
         address token,
@@ -25,6 +26,7 @@ contract SpyPlasmaFrameworkForExitGame is PlasmaFramework {
         external
         returns (uint256)
     {
+        enqueuedCount += 1;
         emit EnqueueTriggered(
             _token,
             _exitableAt,
@@ -32,7 +34,7 @@ contract SpyPlasmaFrameworkForExitGame is PlasmaFramework {
             _exitId,
             address(_exitProcessor)
         );
-        return 0;
+        return enqueuedCount;
     }
 
     /**
