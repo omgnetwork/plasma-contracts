@@ -1,5 +1,7 @@
 require('dotenv').config()
+const path = require('path')
 const HDWalletProvider = require('truffle-hdwallet-provider')
+
 
 module.exports = {
   compilers: {
@@ -41,10 +43,15 @@ module.exports = {
     },
     infura: {
       skipDryRun: true,
-      provider: function () {
+      provider: () => {
+        const infuraUrl = `${process.env.INFURA_URL}/${process.env.INFURA_API_KEY}`;
+
+        // Replace double '//'
+        const cleanInfuraUrl = infuraUrl.replace(/([^:])(\/\/+)/g, '$1/');
+
         return new HDWalletProvider(
           [process.env.DEPLOYER_PRIVATEKEY, process.env.AUTHORITY_PRIVATEKEY],
-          `${process.env.INFURA_URL}/${process.env.INFURA_API_KEY}`,
+          cleanInfuraUrl,
           0, 2
         )
       },
