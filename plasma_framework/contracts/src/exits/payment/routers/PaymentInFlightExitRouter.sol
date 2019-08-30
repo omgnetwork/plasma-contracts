@@ -4,26 +4,29 @@ pragma experimental ABIEncoderV2;
 import "./PaymentInFlightExitRouterArgs.sol";
 import "../PaymentExitDataModel.sol";
 import "../controllers/PaymentStartInFlightExit.sol";
+import "../controllers/PaymentChallengeIFENotCanonical.sol";
 import "../spendingConditions/PaymentSpendingConditionRegistry.sol";
-import "../../OutputGuardParserRegistry.sol";
-import "../../interfaces/IOutputGuardParser.sol";
+import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../interfaces/IStateTransitionVerifier.sol";
 import "../../../utils/OnlyWithValue.sol";
 import "../../../framework/PlasmaFramework.sol";
 
 contract PaymentInFlightExitRouter is OnlyWithValue {
     using PaymentStartInFlightExit for PaymentStartInFlightExit.Controller;
+    using PaymentChallengeIFENotCanonical for PaymentChallengeIFENotCanonical.Controller;
 
     uint256 public constant IN_FLIGHT_EXIT_BOND = 31415926535 wei;
 
     PaymentExitDataModel.InFlightExitMap inFlightExitMap;
     PaymentStartInFlightExit.Controller startInFlightExitController;
+    PaymentChallengeIFENotCanonical.Controller challengeCanonicityController;
 
     constructor(
         PlasmaFramework framework,
         PaymentSpendingConditionRegistry spendingConditionRegistry,
         IStateTransitionVerifier verifier,
-        OutputGuardParserRegistry outputGuardParserRegistry
+        OutputGuardHandlerRegistry outputGuardHandlerRegistry,
+        uint256 supportedTxType
     )
         public
     {
@@ -31,8 +34,14 @@ contract PaymentInFlightExitRouter is OnlyWithValue {
             framework,
             spendingConditionRegistry,
             verifier,
-            outputGuardParserRegistry
+            outputGuardHandlerRegistry
         );
+
+        challengeCanonicityController = PaymentChallengeIFENotCanonical.Controller({
+            framework: framework,
+            spendingConditionRegistry: spendingConditionRegistry,
+            supportedTxType: supportedTxType
+        });
     }
 
     function inFlightExits(uint192 _exitId) public view returns (PaymentExitDataModel.InFlightExit memory) {
@@ -52,5 +61,12 @@ contract PaymentInFlightExitRouter is OnlyWithValue {
         onlyWithValue(IN_FLIGHT_EXIT_BOND)
     {
         startInFlightExitController.run(inFlightExitMap, args);
+    }
+
+    function challengeInFlightExitNotCanonical(PaymentInFlightExitRouterArgs.ChallengeCanonicityArgs memory args)
+        public
+        payable
+    {
+        challengeCanonicityController.run(inFlightExitMap, args);
     }
 }

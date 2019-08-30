@@ -1,8 +1,8 @@
 const ExitableTimestamp = artifacts.require('ExitableTimestampWrapper');
 const ExitId = artifacts.require('ExitIdWrapper');
 const IsDeposit = artifacts.require('IsDepositWrapper');
-const OutputGuardParser = artifacts.require('DummyOutputGuardParser');
-const OutputGuardParserRegistry = artifacts.require('OutputGuardParserRegistry');
+const ExpectedOutputGuardHandler = artifacts.require('ExpectedOutputGuardHandler');
+const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry');
 const PaymentChallengeStandardExit = artifacts.require('PaymentChallengeStandardExit');
 const PaymentProcessStandardExit = artifacts.require('PaymentProcessStandardExit');
 const PaymentStandardExitRouter = artifacts.require('PaymentStandardExitRouterMock');
@@ -20,20 +20,20 @@ const { expect } = require('chai');
 const { MerkleTree } = require('../../../helpers/merkle.js');
 const { buildUtxoPos, utxoPosToTxPos } = require('../../../helpers/positions.js');
 const {
-    addressToOutputGuard, buildOutputGuard, computeDepositOutputId,
+    addressToOutputGuard, computeDepositOutputId,
     computeNormalOutputId, spentOnGas,
 } = require('../../../helpers/utils.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
 
 
-contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
+contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
     const STANDARD_EXIT_BOND = 31415926535; // wei
     const ETH = constants.ZERO_ADDRESS;
     const CHILD_BLOCK_INTERVAL = 1000;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
     const INITIAL_IMMUNE_EXIT_GAME_NUM = 1;
-    const OUTPUT_TYPE_ZERO = 0;
+    const PAYMENT_OUTPUT_TYPE = 1;
     const EMPTY_BYTES = '0x0000000000000000000000000000000000000000000000000000000000000000000000';
 
     before('deploy and link with controller lib', async () => {
@@ -49,8 +49,8 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
     describe('startStandardExit', () => {
         const buildTestData = (
             amount, owner, blockNum,
-            outputType = OUTPUT_TYPE_ZERO,
-            outputGuardData = EMPTY_BYTES,
+            outputType = PAYMENT_OUTPUT_TYPE,
+            outputGuardPreimage = EMPTY_BYTES,
         ) => {
             const output = new PaymentTransactionOutput(amount, addressToOutputGuard(owner), ETH);
             const txObj = new PaymentTransaction(1, [0], [output]);
@@ -65,7 +65,7 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
                 utxoPos,
                 rlpOutputTx: tx,
                 outputType,
-                outputGuardData,
+                outputGuardPreimage,
                 outputTxInclusionProof: merkleProof,
             };
 
@@ -91,22 +91,26 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
             const ethVault = await SpyEthVault.new(this.framework.address);
             const erc20Vault = await SpyErc20Vault.new(this.framework.address);
             const spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
-            this.outputGuardParserRegistry = await OutputGuardParserRegistry.new();
+            this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
+
+            const handler = await ExpectedOutputGuardHandler.new(true, outputOwner);
+            await this.outputGuardHandlerRegistry.registerOutputGuardHandler(PAYMENT_OUTPUT_TYPE, handler.address);
+
             this.exitGame = await PaymentStandardExitRouter.new(
                 this.framework.address, ethVault.address, erc20Vault.address,
-                this.outputGuardParserRegistry.address, spendingConditionRegistry.address,
+                this.outputGuardHandlerRegistry.address, spendingConditionRegistry.address,
             );
         });
 
         it('should fail when cannot prove the tx is included in the block', async () => {
-            const { args } = buildTestData(this.dummyAmount, alice, this.dummyBlockNum);
+            const { args } = buildTestData(this.dummyAmount, outputOwner, this.dummyBlockNum);
             const fakeRoot = web3.utils.sha3('fake root data');
 
             await this.framework.setBlock(this.dummyBlockNum, fakeRoot, 0);
 
             await expectRevert(
                 this.exitGame.startStandardExit(
-                    args, { from: alice, value: STANDARD_EXIT_BOND },
+                    args, { from: outputOwner, value: STANDARD_EXIT_BOND },
                 ),
                 'transaction inclusion proof failed',
             );
@@ -114,38 +118,75 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
 
         it('should fail when exit with amount of 0', async () => {
             const testAmountZero = 0;
-            const { args, merkleTree } = buildTestData(testAmountZero, alice, this.dummyBlockNum);
+            const { args, merkleTree } = buildTestData(testAmountZero, outputOwner, this.dummyBlockNum);
 
             await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, 0);
 
             await expectRevert(
                 this.exitGame.startStandardExit(
-                    args, { from: alice, value: STANDARD_EXIT_BOND },
+                    args, { from: outputOwner, value: STANDARD_EXIT_BOND },
                 ),
                 'Should not exit with amount 0',
             );
         });
 
         it('should fail when amount of bond is invalid', async () => {
-            const { args, merkleTree } = buildTestData(this.dummyAmount, alice, this.dummyBlockNum);
+            const { args, merkleTree } = buildTestData(this.dummyAmount, outputOwner, this.dummyBlockNum);
 
             await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, 0);
 
             const invalidBond = STANDARD_EXIT_BOND - 100;
             await expectRevert(
                 this.exitGame.startStandardExit(
-                    args, { from: alice, value: invalidBond },
+                    args, { from: outputOwner, value: invalidBond },
                 ),
                 'Input value mismatches with msg.value',
             );
         });
 
-        it('should fail when not initiated by the exit target', async () => {
-            const { args, merkleTree } = buildTestData(this.dummyAmount, alice, this.dummyBlockNum);
+        it('should fail when output guard handler is not registered with the output type', async () => {
+            const nonRegisteredOutputType = 2;
+
+            const { args, merkleTree } = buildTestData(
+                this.dummyAmount, outputOwner, this.dummyBlockNum, nonRegisteredOutputType,
+            );
 
             await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, 0);
 
-            const nonOutputOwner = bob;
+            await expectRevert(
+                this.exitGame.startStandardExit(
+                    args, { from: outputOwner, value: STANDARD_EXIT_BOND },
+                ),
+                'Failed to get the output guard handler for the output type',
+            );
+        });
+
+        it('should fail when some of the output guard information (guard, output type, pre-image) is not valid', async () => {
+            // register with handler that returns false when checking output guard information
+            const expectedValid = false;
+            const testOutputType = 2;
+            const handler = await ExpectedOutputGuardHandler.new(expectedValid, outputOwner);
+            await this.outputGuardHandlerRegistry.registerOutputGuardHandler(testOutputType, handler.address);
+
+            const { args, merkleTree } = buildTestData(
+                this.dummyAmount, outputOwner, this.dummyBlockNum, testOutputType,
+            );
+
+            await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, 0);
+
+            await expectRevert(
+                this.exitGame.startStandardExit(
+                    args, { from: outputOwner, value: STANDARD_EXIT_BOND },
+                ),
+                'Some of the output guard related information is not valid',
+            );
+        });
+
+        it('should fail when not initiated by the exit target', async () => {
+            const { args, merkleTree } = buildTestData(this.dummyAmount, outputOwner, this.dummyBlockNum);
+
+            await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, 0);
+
             await expectRevert(
                 this.exitGame.startStandardExit(
                     args, { from: nonOutputOwner, value: STANDARD_EXIT_BOND },
@@ -154,75 +195,33 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
             );
         });
 
-        it('should fail when output guard mismatches the pre-image data given output type non 0', async () => {
-            const outputType = 1;
-            const mismatchOutputguardData = '0x111111111111111';
-            const { args, merkleTree } = buildTestData(
-                this.dummyAmount, alice, this.dummyBlockNum,
-                outputType, mismatchOutputguardData,
-            );
-
-            const outputGuardExitTarget = alice;
-            const parser = await OutputGuardParser.new(outputGuardExitTarget);
-            await this.outputGuardParserRegistry.registerOutputGuardParser(1, parser.address);
-
-            await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, 0);
-
-            await expectRevert(
-                this.exitGame.startStandardExit(
-                    args, { from: alice, value: STANDARD_EXIT_BOND },
-                ),
-                'Output guard data does not match pre-image',
-            );
-        });
-
-        it('should fail when output guard parser is not registered with the output type given output type non 0', async () => {
-            const outputType = 1;
-            const outputGuardData = web3.utils.toHex(alice);
-            const outputGuard = buildOutputGuard(outputType, outputGuardData);
-
-            const { args, merkleTree } = buildTestData(
-                this.dummyAmount, outputGuard, this.dummyBlockNum,
-                outputType, outputGuardData,
-            );
-
-            await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, 0);
-
-            await expectRevert(
-                this.exitGame.startStandardExit(
-                    args, { from: alice, value: STANDARD_EXIT_BOND },
-                ),
-                'Failed to get the output guard parser for the output type',
-            );
-        });
-
         it('should fail when same exit already started', async () => {
-            const { args, merkleTree } = buildTestData(this.dummyAmount, alice, this.dummyBlockNum);
+            const { args, merkleTree } = buildTestData(this.dummyAmount, outputOwner, this.dummyBlockNum);
 
             await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, 0);
 
             await this.exitGame.startStandardExit(
-                args, { from: alice, value: STANDARD_EXIT_BOND },
+                args, { from: outputOwner, value: STANDARD_EXIT_BOND },
             );
 
             await expectRevert(
                 this.exitGame.startStandardExit(
-                    args, { from: alice, value: STANDARD_EXIT_BOND },
+                    args, { from: outputOwner, value: STANDARD_EXIT_BOND },
                 ),
                 'Exit already started',
             );
         });
 
         it('should charge the bond from the user', async () => {
-            const { args, merkleTree } = buildTestData(this.dummyAmount, alice, this.dummyBlockNum);
+            const { args, merkleTree } = buildTestData(this.dummyAmount, outputOwner, this.dummyBlockNum);
 
             await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, 0);
 
-            const preBalance = new BN(await web3.eth.getBalance(alice));
+            const preBalance = new BN(await web3.eth.getBalance(outputOwner));
             const tx = await this.exitGame.startStandardExit(
-                args, { from: alice, value: STANDARD_EXIT_BOND },
+                args, { from: outputOwner, value: STANDARD_EXIT_BOND },
             );
-            const actualPostBalance = new BN(await web3.eth.getBalance(alice));
+            const actualPostBalance = new BN(await web3.eth.getBalance(outputOwner));
             const expectedPostBalance = preBalance
                 .sub(new BN(STANDARD_EXIT_BOND))
                 .sub(await spentOnGas(tx.receipt));
@@ -231,14 +230,13 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
         });
 
         it('should save the correct StandardExit data when successfully done for deposit tx', async () => {
-            const outputOwner = alice;
             const depositBlockNum = 2019;
-            const { args, merkleTree, outputIndex } = buildTestData(this.dummyAmount, alice, depositBlockNum);
+            const { args, merkleTree, outputIndex } = buildTestData(this.dummyAmount, outputOwner, depositBlockNum);
 
             await this.framework.setBlock(depositBlockNum, merkleTree.root, 0);
 
             await this.exitGame.startStandardExit(
-                args, { from: alice, value: STANDARD_EXIT_BOND },
+                args, { from: outputOwner, value: STANDARD_EXIT_BOND },
             );
 
             const isTxDeposit = true;
@@ -246,7 +244,7 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
             const outputId = computeDepositOutputId(args.rlpOutputTx, outputIndex, args.utxoPos);
 
             const expectedOutputTypeAndGuardHash = web3.utils.soliditySha3(
-                { t: 'uint256', v: OUTPUT_TYPE_ZERO }, { t: 'bytes32', v: addressToOutputGuard(outputOwner) },
+                { t: 'uint256', v: PAYMENT_OUTPUT_TYPE }, { t: 'bytes32', v: addressToOutputGuard(outputOwner) },
             );
 
             const standardExitData = await this.exitGame.standardExits(exitId);
@@ -261,14 +259,13 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
         });
 
         it('should save the correct StandardExit data when successfully done for non deposit tx', async () => {
-            const outputOwner = alice;
             const nonDepositBlockNum = 1000;
-            const { args, outputIndex, merkleTree } = buildTestData(this.dummyAmount, alice, nonDepositBlockNum);
+            const { args, outputIndex, merkleTree } = buildTestData(this.dummyAmount, outputOwner, nonDepositBlockNum);
 
             await this.framework.setBlock(nonDepositBlockNum, merkleTree.root, 0);
 
             await this.exitGame.startStandardExit(
-                args, { from: alice, value: STANDARD_EXIT_BOND },
+                args, { from: outputOwner, value: STANDARD_EXIT_BOND },
             );
 
             const isTxDeposit = false;
@@ -276,7 +273,7 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
             const outputId = computeNormalOutputId(args.rlpOutputTx, outputIndex);
 
             const expectedOutputTypeAndGuardHash = web3.utils.soliditySha3(
-                { t: 'uint256', v: OUTPUT_TYPE_ZERO }, { t: 'bytes32', v: addressToOutputGuard(outputOwner) },
+                { t: 'uint256', v: PAYMENT_OUTPUT_TYPE }, { t: 'bytes32', v: addressToOutputGuard(outputOwner) },
             );
 
             const standardExitData = await this.exitGame.standardExits(exitId);
@@ -291,12 +288,12 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
         });
 
         it('should put the exit data into the queue of framework', async () => {
-            const { args, merkleTree } = buildTestData(this.dummyAmount, alice, this.dummyBlockNum);
+            const { args, merkleTree } = buildTestData(this.dummyAmount, outputOwner, this.dummyBlockNum);
 
             await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, 0);
 
             const { receipt } = await this.exitGame.startStandardExit(
-                args, { from: alice, value: STANDARD_EXIT_BOND },
+                args, { from: outputOwner, value: STANDARD_EXIT_BOND },
             );
 
             const isTxDeposit = await this.isDeposit.test(this.dummyBlockNum);
@@ -323,21 +320,21 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
         });
 
         it('should emit ExitStarted event', async () => {
-            const { args, merkleTree } = buildTestData(this.dummyAmount, alice, this.dummyBlockNum);
+            const { args, merkleTree } = buildTestData(this.dummyAmount, outputOwner, this.dummyBlockNum);
 
             await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, 0);
 
             const isTxDeposit = await this.isDeposit.test(this.dummyBlockNum);
             const exitId = await this.exitIdHelper.getStandardExitId(isTxDeposit, args.rlpOutputTx, args.utxoPos);
             const { receipt } = await this.exitGame.startStandardExit(
-                args, { from: alice, value: STANDARD_EXIT_BOND },
+                args, { from: outputOwner, value: STANDARD_EXIT_BOND },
             );
 
             await expectEvent.inTransaction(
                 receipt.transactionHash,
                 PaymentStartStandardExit,
                 'ExitStarted',
-                { owner: alice, exitId },
+                { owner: outputOwner, exitId },
             );
         });
     });

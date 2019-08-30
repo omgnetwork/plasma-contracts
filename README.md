@@ -73,6 +73,8 @@ Deploying the contracts requires two accounts:
 Normally you will deploy the contracts using an Ethereum client that you run yourself, such as Geth or Parity. However, you can also use a provider such as Infura. In this case you'll need to know the private keys for the `DEPLOYER` and `AUTHORITY` accounts. See `truffle-config.js` for an example.
 
 #### Configuration
+
+##### Geth/Parity/Ganache-cli
 Certain configuration values need to be set, depending how you're deploying. These values can be set in the environment or in a file called `.env`
 
  - `MIN_EXIT_PERIOD` Minimum exit period in seconds. **Required**.
@@ -85,11 +87,25 @@ Certain configuration values need to be set, depending how you're deploying. The
  - `AUTHORITY_ADDRESS_INITIAL_AMOUNT` The amount the fund the `AUTHORITY` account with (in wei). Defaults to 1 ETH.
  - `USE_EXISTING_AUTHORITY_ADDRESS` Set to `true` if you want to use an existing `AUTHORITY` account instead of creating a new one. You must also set `AUTHORITY_ADDRESS`
 
+##### Infura
+To deploy to infura, you'll need these environment variables in addition to the ones listed above.
 
+** Important: Make sure the deployer address is funded with at least 2 ETH
+** Important 2: Also make sure the nonce count of the authority is 0 (i.e. no previous transactions have been made)
+
+- `DEPLOYER_PRIVATEKEY` Private key of the deployer address
+- `AUTHORITY_PRIVATEKEY` Private key of the authority address
+- `INFURA_URL` Infura Endpoint URL e.g. `https://rinkeby.infura.io/v3`
+- `INFURA_API_KEY` Infura Project ID
+
+##### Deploying
 
 Run truffle, passing in the network e.g.
-```
+```bash
 npx truffle migrate --network local
+
+# or to deploy via infura
+npx truffle migrate --network infura
 ```
 
 Truffle will compile and deploy the contracts. If all goes well it will output the results:
