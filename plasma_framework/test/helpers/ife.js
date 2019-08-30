@@ -11,6 +11,8 @@ const OUTPUT_TYPE_ONE = 1;
 const IFE_TX_TYPE = 1;
 const WITNESS_LENGTH_IN_BYTES = 65;
 const IN_FLIGHT_TX_WITNESS_BYTES = web3.utils.bytesToHex('a'.repeat(WITNESS_LENGTH_IN_BYTES));
+const DUMMY_PREIMAGE = web3.utils.utf8ToHex('Dummy Preimage');
+const DUMMY_CONFIRM_SIG = web3.utils.utf8ToHex('Dummy Confirm Sig');
 const BLOCK_NUMBER = 1000;
 const DUMMY_INPUT_1 = '0x0000000000000000000000000000000000000000000000000000000000000001';
 const DUMMY_INPUT_2 = '0x0000000000000000000000000000000000000000000000000000000000000002';
@@ -71,6 +73,10 @@ function buildIfeStartArgs([inputTx1, inputTx2], inputUtxosPos, inFlightTx) {
 
     const inFlightTxRaw = web3.utils.bytesToHex(inFlightTx.rlpEncoded());
 
+    const inputUtxosGuardPreimages = [DUMMY_PREIMAGE, DUMMY_PREIMAGE];
+
+    const inputTxsConfirmSigs = [DUMMY_CONFIRM_SIG, DUMMY_CONFIRM_SIG];
+
     const inFlightTxWitnesses = [IN_FLIGHT_TX_WITNESS_BYTES, IN_FLIGHT_TX_WITNESS_BYTES];
 
     const args = {
@@ -79,6 +85,8 @@ function buildIfeStartArgs([inputTx1, inputTx2], inputUtxosPos, inFlightTx) {
         inputUtxosPos,
         inputUtxosTypes,
         inputTxsInclusionProofs,
+        inputUtxosGuardPreimages,
+        inputTxsConfirmSigs,
         inFlightTxWitnesses,
     };
 

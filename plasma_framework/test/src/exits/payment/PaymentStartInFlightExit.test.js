@@ -1,5 +1,5 @@
-const ExitId = artifacts.require('ExitIdWrapper');
 const ExitableTimestamp = artifacts.require('ExitableTimestampWrapper');
+const ExitId = artifacts.require('ExitIdWrapper');
 const IsDeposit = artifacts.require('IsDepositWrapper');
 const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry');
 const PaymentInFlightExitRouter = artifacts.require('PaymentInFlightExitRouterMock');
@@ -24,7 +24,7 @@ const {
     createInputsForInFlightTx,
 } = require('../../../helpers/ife.js');
 
-contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
+contract.only('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
     const IN_FLIGHT_EXIT_BOND = 31415926535; // wei
     const ETH = constants.ZERO_ADDRESS;
     const OTHER_TOKEN = '0x0000000000000000000000000000000000000001';
@@ -77,13 +77,11 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
                     MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
                 );
                 this.spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
-                const outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
+                this.outptuGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
 
                 this.exitGame = await PaymentInFlightExitRouter.new(
-                    this.framework.address,
-                    outputGuardHandlerRegistry.address,
-                    this.spendingConditionRegistry.address,
-                    IFE_TX_TYPE,
+                    this.framework.address, this.outptuGuardHandlerRegistry.address,
+                    this.spendingConditionRegistry.address, IFE_TX_TYPE,
                 );
 
                 const {
@@ -174,12 +172,11 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
                     MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
                 );
                 this.spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
-                const outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
+                this.outptuGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
+
                 this.exitGame = await PaymentInFlightExitRouter.new(
-                    this.framework.address,
-                    outputGuardHandlerRegistry.address,
-                    this.spendingConditionRegistry.address,
-                    IFE_TX_TYPE,
+                    this.framework.address, this.outptuGuardHandlerRegistry.address,
+                    this.spendingConditionRegistry.address, IFE_TX_TYPE,
                 );
             });
 

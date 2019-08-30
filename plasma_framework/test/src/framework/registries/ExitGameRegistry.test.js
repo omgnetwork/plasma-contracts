@@ -6,7 +6,7 @@ const {
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
-contract.only('ExitGameRegistry', ([_, other]) => {
+contract('ExitGameRegistry', ([_, other]) => {
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
     const INITIAL_IMMUNE_EXIT_GAMES_NUM = 0;
     const PROTOCOL = {
