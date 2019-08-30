@@ -2,7 +2,7 @@ pragma solidity ^0.5.0;
 pragma experimental ABIEncoderV2;
 
 import "../PaymentExitDataModel.sol";
-import "../PaymentInFlightExitModelLib.sol";
+import "../PaymentInFlightExitModelUtils.sol";
 import "../routers/PaymentInFlightExitRouterArgs.sol";
 import "../../models/OutputGuardModel.sol";
 import "../../interfaces/IOutputGuardHandler.sol";
@@ -21,7 +21,7 @@ library PaymentPiggybackInFlightExit {
     using UtxoPosLib for UtxoPosLib.UtxoPos;
     using IsDeposit for IsDeposit.Predicate;
     using ExitableTimestamp for ExitableTimestamp.Calculator;
-    using PaymentInFlightExitModelLib for PaymentExitDataModel.InFlightExit;
+    using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
     using PaymentOutputModel for PaymentOutputModel.Output;
 
     uint8 constant public MAX_INPUT_NUM = 4;

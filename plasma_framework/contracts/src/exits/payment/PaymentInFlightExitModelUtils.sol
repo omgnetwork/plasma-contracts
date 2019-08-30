@@ -4,7 +4,7 @@ pragma experimental ABIEncoderV2;
 import "../../utils/Bits.sol";
 import { PaymentExitDataModel as ExitModel } from "./PaymentExitDataModel.sol";
 
-library PaymentInFlightExitModelLib {
+library PaymentInFlightExitModelUtils {
     using Bits for uint256;
 
     uint8 constant public MAX_INPUT_NUM = 4;
@@ -47,14 +47,6 @@ library PaymentInFlightExitModelLib {
     {
         uint256 periodTime = minExitPeriod / 2;
         return ((block.timestamp - ife.exitStartTimestamp) / periodTime) < 1;
-    }
-
-    function isFinalized(ExitModel.InFlightExit memory ife)
-        internal
-        pure
-        returns (bool)
-    {
-        return Bits.bitSet(ife.exitMap, 255);
     }
 
     function isFirstPiggybackOfTheToken(ExitModel.InFlightExit memory ife, address token)
