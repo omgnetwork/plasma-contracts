@@ -169,11 +169,7 @@ library PaymentStartInFlightExit {
     {
         PaymentExitDataModel.InFlightExit storage exit = inFlightExitMap.exits[exitId];
         require(exit.exitStartTimestamp == 0, "There is an active in-flight exit from this transaction");
-        require(!isFinalized(exit), "This in-flight exit has already been finalized");
-    }
-
-    function isFinalized(PaymentExitDataModel.InFlightExit storage ife) private view returns (bool) {
-        return Bits.bitSet(ife.exitMap, 255);
+        require(!exit.isFinalized, "This in-flight exit has already been finalized");
     }
 
     function verifyNumberOfInputsMatchesNumberOfInFlightTransactionInputs(StartExitData memory exitData) private pure {
