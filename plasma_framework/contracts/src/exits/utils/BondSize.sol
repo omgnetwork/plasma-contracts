@@ -48,7 +48,7 @@ library BondSize {
     }
 
     function validateBondSize(uint256 newBondSize, uint256 currentBondSize) private pure {
-        require(newBondSize >= currentBondSize / 2, "Bond size too low");
+        require(newBondSize >= currentBondSize / 2, "Bond size is too low");
         require(newBondSize <= currentBondSize * 2, "Bond size too high");
     }
 }
