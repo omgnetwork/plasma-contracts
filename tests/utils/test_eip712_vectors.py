@@ -1,8 +1,13 @@
+import pytest
+
 from plasma_core.constants import NULL_ADDRESS
 from plasma_core.transaction import Transaction
 from eip712_structs import make_domain
 from plasma_core.utils.eip712_struct_hash import hash_struct
 
+# TODO: Run the tests on new tx format
+#  Metamask currently does not implement dynamic arrays
+pytestmark = pytest.mark.skip(reason="Dynamic arrays and optional fields in tx format")
 
 test_domain = make_domain(
     name='OMG Network',

@@ -67,7 +67,8 @@ class ChildChain(object):
             input_tx = self.get_transaction(i.identifier)
 
             # Check for a valid signature.
-            if tx.signatures[x] == NULL_SIGNATURE or tx.signers[x] != input_tx.outputs[i.oindex].owner:
+            output_guard = input_tx.outputs[i.oindex].output_guard
+            if tx.signatures[x] == NULL_SIGNATURE or tx.signers[x] != output_guard:
                 raise InvalidTxSignatureException('failed to validate tx')
 
             # Check to see if the input is already spent.
