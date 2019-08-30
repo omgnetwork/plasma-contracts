@@ -4,18 +4,16 @@ pragma experimental ABIEncoderV2;
 import 'openzeppelin-solidity/contracts/cryptography/ECDSA.sol';
 
 import "../../framework/PlasmaFramework.sol";
+import "../../framework/Constants.sol";
 import "../../utils/Merkle.sol";
 import "../../utils/TxPosLib.sol";
 
 library TxFinalization {
     using TxPosLib for TxPosLib.TxPos;
 
-    uint8 constant MVP_PROTOCOL = 1;
-    uint8 constant MORE_VP_PROTOCOL = 2;
-
     struct Verifier {
         PlasmaFramework framework;
-        uint8 protocol;
+        Constants.PROTOCOL protocol;
         bytes txBytes;
         TxPosLib.TxPos txPos;
         bytes inclusionProof;
@@ -35,7 +33,7 @@ library TxFinalization {
     {
         return Verifier({
             framework: framework,
-            protocol: MORE_VP_PROTOCOL,
+            protocol: Constants.PROTOCOL.MORE_VP,
             txBytes: txBytes,
             txPos: txPos,
             inclusionProof: inclusionProof,
@@ -50,9 +48,9 @@ library TxFinalization {
     * @dev MoreVp: checks inclusion proof.
     */
     function isStandardFinalized(Verifier memory self) internal view returns (bool) {
-        if (self.protocol == MVP_PROTOCOL) {
+        if (self.protocol == Constants.PROTOCOL.MVP) {
             return checkConfirmSig(self) && checkInclusionProof(self);
-        } else if (self.protocol == MORE_VP_PROTOCOL) {
+        } else if (self.protocol == Constants.PROTOCOL.MORE_VP) {
             return checkInclusionProof(self);
         } else {
             revert("invalid protocol value");
@@ -65,9 +63,9 @@ library TxFinalization {
     * @dev MoreVp: it allows in-flight tx, so only checks existence of the transaction.
     */
     function isProtocolFinalized(Verifier memory self) internal view returns (bool) {
-        if (self.protocol == MVP_PROTOCOL) {
+        if (self.protocol == Constants.PROTOCOL.MVP) {
             return isStandardFinalized(self);
-        } else if (self.protocol == MORE_VP_PROTOCOL) {
+        } else if (self.protocol == Constants.PROTOCOL.MORE_VP) {
             return self.txBytes.length > 0;
         } else {
             revert("invalid protocol value");

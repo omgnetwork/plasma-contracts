@@ -1,17 +1,15 @@
 pragma solidity ^0.5.0;
 
+import "../Constants.sol";
 import "../utils/Operated.sol";
 import "../utils/Quarantine.sol";
 
 contract ExitGameRegistry is Operated {
     using Quarantine for Quarantine.Data;
 
-    uint8 constant MVP_PROTOCOL = 1;
-    uint8 constant MORE_VP_PROTOCOL = 2;
-
     mapping(uint256 => address) private _exitGames;
     mapping(address => uint256) private _exitGameToTxType;
-    mapping(uint256 => uint8) private _protocols;
+    mapping(uint256 => Constants.PROTOCOL) private _protocols;
     Quarantine.Data private _quarantine;
 
     event ExitGameRegistered(
@@ -46,24 +44,23 @@ contract ExitGameRegistry is Operated {
      * @notice Register the exit game to Plasma framework. This can be only called by contract admin.
      * @param _txType tx type that the exit game want to register to.
      * @param _contract Address of the exit game contract.
-     * @param _protocol The protocol of the transaction, 1 for MVP and 2 for MoreVP.
+     * @param _protocol The protocol of the transaction, 0 for MVP and 1 for MoreVP.
      */
-    function registerExitGame(uint256 _txType, address _contract, uint8 _protocol) public onlyOperator {
+    function registerExitGame(uint256 _txType, address _contract, Constants.PROTOCOL _protocol) public onlyOperator {
         require(_txType != 0, "should not register with tx type 0");
         require(_contract != address(0), "should not register with an empty exit game address");
         require(_exitGames[_txType] == address(0), "The tx type is already registered");
         require(_exitGameToTxType[_contract] == 0, "The exit game contract is already registered");
-        require(_protocol == MVP_PROTOCOL || _protocol == MORE_VP_PROTOCOL, "Wrong protocol value");
 
         _exitGames[_txType] = _contract;
         _exitGameToTxType[_contract] = _txType;
         _protocols[_txType] = _protocol;
         _quarantine.quarantine(_contract);
 
-        emit ExitGameRegistered(_txType, _contract, _protocol);
+        emit ExitGameRegistered(_txType, _contract, uint8(_protocol));
     }
 
-    function protocols(uint256 _txType) public view returns (uint256) {
+    function protocols(uint256 _txType) public view returns (Constants.PROTOCOL) {
         return _protocols[_txType];
     }
 
