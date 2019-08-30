@@ -5,12 +5,12 @@ from plasma_core.constants import NULL_HASH, NULL_ADDRESS
 
 def hash_struct(tx, domain=None, verifyingContract=None):
     if domain and verifyingContract:
-        raise "verifyingContract supplied but ignored"
+        raise RuntimeError("verifyingContract supplied but ignored")
 
     verifying_address = verifyingContract.address if verifyingContract else NULL_ADDRESS
 
     inputs = [Input(blknum=i.blknum, txindex=i.txindex, oindex=i.oindex) for i in tx.inputs]
-    outputs = [Output(owner=o.owner, currency=o.token, amount=o.amount) for o in tx.outputs]
+    outputs = [Output(owner=o.output_guard, currency=o.token, amount=o.amount) for o in tx.outputs]
 
     domain = domain or make_domain(
         name='OMG Network',
@@ -41,7 +41,7 @@ class Input(EIP712Struct):
 
 
 class Output(EIP712Struct):
-    owner = Address()
+    output_guard = Bytes(32)
     currency = Address()
     amount = Uint(256)
 
