@@ -1,5 +1,3 @@
-PYTEST_PARALLEL_JOBS ?= `nproc` # defaults to number value returned by nproc, can be overridden by setting env var
-
 init:
 	pip install -e .
 
@@ -32,22 +30,22 @@ lint:
 
 .PHONY: test
 test:
-	python -W ignore::DeprecationWarning -m pytest
+	python -m pytest
 	rm -fr .pytest_cache
 
 .PHONY: test_quick
 test_quick:
-	python -W ignore::DeprecationWarning -m pytest -m "not slow" -n auto
+	python -m pytest -m "not slow" -n auto
 	rm -fr .pytest_cache
 
 .PHONY: conctest
 conctest:
-	python -W ignore::DeprecationWarning -m pytest -n auto
+	python -m pytest -n auto
 	rm -fr .pytest_cache
 
 .PHONY: runslow
 runslow:
-	python -W ignore::DeprecationWarning -m pytest -m slow
+	python -m pytest -m "slow" 
 	rm -fr .pytest_cache
 
 .PHONY: dev
