@@ -5,6 +5,11 @@ from web3.contract import Contract
 
 
 class AutominingEth(eth.Eth):
+    """ A simple convenience wrapper that cooperates with ganache EVM,
+        so that mining transactions is automatic yet deterministic.
+
+        Provides methods for control of mining and time forwarding.
+    """
 
     def __init__(self, web3):
         super().__init__(web3)
@@ -29,8 +34,7 @@ class AutominingEth(eth.Eth):
 
             if error.args[0]['message'] == "VM Exception while processing transaction: revert":
                 raise TransactionFailed
-            else:
-                raise error
+            raise error
 
     def increase_time(self, seconds):
         self._next_timestamp = self.getBlock('latest')['timestamp'] + seconds
@@ -49,6 +53,14 @@ class AutominingEth(eth.Eth):
 
 
 class ConvenienceContractWrapper:
+    """ Wraps web3.Contract, so that the calling of functions is simpler.
+
+        Instead of calling:
+            `contract.functions.<name_of_function>(args).transact()`
+        we can simply call:
+            `contract.<name_of_function>(args)`
+    """
+
     default_params = {'gasPrice': 0, 'gas': 4 * 10 ** 6}
 
     def __init__(self, contract: Contract):
