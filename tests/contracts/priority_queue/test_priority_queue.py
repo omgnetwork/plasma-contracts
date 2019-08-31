@@ -8,7 +8,7 @@ from eth_tester.exceptions import TransactionFailed
 def priority_queue(get_contract, accounts):
     pql = get_contract('PriorityQueueLib')
     return get_contract(
-        'PriorityQueueTest',
+        'PriorityQueueWrapper',
         args=[accounts[0].address], libraries={'PriorityQueueLib': pql.address}
     )
 
