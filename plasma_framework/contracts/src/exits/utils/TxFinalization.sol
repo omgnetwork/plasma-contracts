@@ -13,7 +13,7 @@ library TxFinalization {
 
     struct Verifier {
         PlasmaFramework framework;
-        Constants.PROTOCOL protocol;
+        uint8 protocol;
         bytes txBytes;
         TxPosLib.TxPos txPos;
         bytes inclusionProof;
@@ -33,7 +33,7 @@ library TxFinalization {
     {
         return Verifier({
             framework: framework,
-            protocol: Constants.PROTOCOL.MORE_VP,
+            protocol: uint8(Constants.PROTOCOL.MORE_VP),
             txBytes: txBytes,
             txPos: txPos,
             inclusionProof: inclusionProof,
@@ -48,9 +48,9 @@ library TxFinalization {
     * @dev MoreVp: checks inclusion proof.
     */
     function isStandardFinalized(Verifier memory self) internal view returns (bool) {
-        if (self.protocol == Constants.PROTOCOL.MVP) {
+        if (self.protocol == uint8(Constants.PROTOCOL.MVP)) {
             return checkConfirmSig(self) && checkInclusionProof(self);
-        } else if (self.protocol == Constants.PROTOCOL.MORE_VP) {
+        } else if (self.protocol == uint8(Constants.PROTOCOL.MORE_VP)) {
             return checkInclusionProof(self);
         } else {
             revert("invalid protocol value");
@@ -63,9 +63,9 @@ library TxFinalization {
     * @dev MoreVp: it allows in-flight tx, so only checks existence of the transaction.
     */
     function isProtocolFinalized(Verifier memory self) internal view returns (bool) {
-        if (self.protocol == Constants.PROTOCOL.MVP) {
+        if (self.protocol == uint8(Constants.PROTOCOL.MVP)) {
             return isStandardFinalized(self);
-        } else if (self.protocol == Constants.PROTOCOL.MORE_VP) {
+        } else if (self.protocol == uint8(Constants.PROTOCOL.MORE_VP)) {
             return self.txBytes.length > 0;
         } else {
             revert("invalid protocol value");

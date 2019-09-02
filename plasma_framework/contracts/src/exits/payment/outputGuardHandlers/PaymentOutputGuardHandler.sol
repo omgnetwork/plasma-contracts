@@ -25,7 +25,7 @@ contract PaymentOutputGuardHandler is IOutputGuardHandler {
     function getConfirmSigAddress(OutputGuardModel.Data calldata /*data*/)
         external
         view
-        returns (address payable)
+        returns (address)
     {
         // MoreVP transaction, no need to have confirm sig.
         return address(0);

@@ -9,7 +9,7 @@ contract ExitGameRegistry is Operated {
 
     mapping(uint256 => address) private _exitGames;
     mapping(address => uint256) private _exitGameToTxType;
-    mapping(uint256 => Constants.PROTOCOL) private _protocols;
+    mapping(uint256 => uint8) private _protocols;
     Quarantine.Data private _quarantine;
 
     event ExitGameRegistered(
@@ -54,13 +54,13 @@ contract ExitGameRegistry is Operated {
 
         _exitGames[_txType] = _contract;
         _exitGameToTxType[_contract] = _txType;
-        _protocols[_txType] = _protocol;
+        _protocols[_txType] = uint8(_protocol); // TODO, move out from enum
         _quarantine.quarantine(_contract);
 
         emit ExitGameRegistered(_txType, _contract, uint8(_protocol));
     }
 
-    function protocols(uint256 _txType) public view returns (Constants.PROTOCOL) {
+    function protocols(uint256 _txType) public view returns (uint8) {
         return _protocols[_txType];
     }
 

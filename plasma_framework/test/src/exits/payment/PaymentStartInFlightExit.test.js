@@ -1,5 +1,6 @@
 const ExitableTimestamp = artifacts.require('ExitableTimestampWrapper');
 const ExitId = artifacts.require('ExitIdWrapper');
+const ExpectedOutputGuardHandler = artifacts.require('ExpectedOutputGuardHandler');
 const IsDeposit = artifacts.require('IsDepositWrapper');
 const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry');
 const PaymentInFlightExitRouter = artifacts.require('PaymentInFlightExitRouterMock');
@@ -19,6 +20,7 @@ const { expect } = require('chai');
 const { buildUtxoPos } = require('../../../helpers/positions.js');
 const { addressToOutputGuard, spentOnGas } = require('../../../helpers/utils.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
+const { PROTOCOL } = require('../../../helpers/constants.js');
 const {
     buildValidIfeStartArgs, buildIfeStartArgs, createInputTransaction, createDepositTransaction, createInFlightTx,
     createInputsForInFlightTx,
@@ -33,6 +35,7 @@ contract.only('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
     const INITIAL_IMMUNE_EXIT_GAME_NUM = 1;
     const OUTPUT_TYPE_ONE = 1;
+    const OUTPUT_TYPE_TWO = 2;
     const IFE_TX_TYPE = 1;
     const INCLUSION_PROOF_LENGTH_IN_BYTES = 512;
     const BLOCK_NUMBER = 1000;
@@ -79,10 +82,27 @@ contract.only('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
                 this.spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
                 this.outptuGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
 
+                this.handler1 = await ExpectedOutputGuardHandler.new();
+                await this.handler1.mockIsValid(true);
+                await this.handler1.mockGetExitTarget(bob);
+                await this.handler1.mockGetConfirmSigAddress(bob);
+                await this.outptuGuardHandlerRegistry.registerOutputGuardHandler(
+                    OUTPUT_TYPE_ONE, this.handler1.address,
+                );
+
+                this.handler2 = await ExpectedOutputGuardHandler.new();
+                await this.handler1.mockIsValid(true);
+                await this.handler1.mockGetExitTarget(carol);
+                await this.handler1.mockGetConfirmSigAddress(carol);
+                await this.outptuGuardHandlerRegistry.registerOutputGuardHandler(
+                    OUTPUT_TYPE_TWO, this.handler2.address,
+                );
+
                 this.exitGame = await PaymentInFlightExitRouter.new(
                     this.framework.address, this.outptuGuardHandlerRegistry.address,
                     this.spendingConditionRegistry.address, IFE_TX_TYPE,
                 );
+                await this.framework.registerExitGame(IFE_TX_TYPE, this.exitGame.address, PROTOCOL.MORE_VP);
 
                 const {
                     args,
@@ -174,10 +194,27 @@ contract.only('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
                 this.spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
                 this.outptuGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
 
+                this.handler1 = await ExpectedOutputGuardHandler.new();
+                await this.handler1.mockIsValid(true);
+                await this.handler1.mockGetExitTarget(bob);
+                await this.handler1.mockGetConfirmSigAddress(bob);
+                await this.outptuGuardHandlerRegistry.registerOutputGuardHandler(
+                    OUTPUT_TYPE_ONE, this.handler1.address,
+                );
+
+                this.handler2 = await ExpectedOutputGuardHandler.new();
+                await this.handler1.mockIsValid(true);
+                await this.handler1.mockGetExitTarget(carol);
+                await this.handler1.mockGetConfirmSigAddress(carol);
+                await this.outptuGuardHandlerRegistry.registerOutputGuardHandler(
+                    OUTPUT_TYPE_TWO, this.handler2.address,
+                );
+
                 this.exitGame = await PaymentInFlightExitRouter.new(
                     this.framework.address, this.outptuGuardHandlerRegistry.address,
                     this.spendingConditionRegistry.address, IFE_TX_TYPE,
                 );
+                await this.framework.registerExitGame(IFE_TX_TYPE, this.exitGame.address, PROTOCOL.MORE_VP);
             });
 
             it('should fail when spending condition not registered', async () => {
@@ -269,7 +306,7 @@ contract.only('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
                 );
             });
 
-            it('should fail when any of input transactions is not included in a plasma block', async () => {
+            it('should fail when any of input transactions is not Input transaction is not standard finalized', async () => {
                 const {
                     args,
                     inputTxsBlockRoot1,
@@ -286,7 +323,7 @@ contract.only('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
                 args.inputTxsInclusionProofs = [invalidInclusionProof, invalidInclusionProof];
                 await expectRevert(
                     this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
-                    'Input transaction is not included in plasma',
+                    'Input transaction is not standard finalized',
                 );
             });
 

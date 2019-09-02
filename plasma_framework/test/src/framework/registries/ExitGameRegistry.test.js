@@ -118,8 +118,8 @@ contract('ExitGameRegistry', ([_, other]) => {
         });
 
         it('rejects when protocol value is not MVP or MoreVP value', async () => {
-            // 0 and 1 are protocol values. All others should fail
-            const nonProtocolValues = [2, 3, 255];
+            // 1 and 2 are protocol values. All others should fail
+            const nonProtocolValues = [0, 3, 255];
             await Promise.all(nonProtocolValues.map(async (protocol, index) => {
                 const txType = index + 1;
                 const contract = (await DummyExitGame.new());

@@ -68,6 +68,7 @@ library PaymentStartInFlightExit {
         PaymentTransactionModel.Transaction[] inputTxs;
         UtxoPosLib.UtxoPos[] inputUtxosPos;
         uint256[] inputUtxosTypes;
+        uint256[] inputTxTypes;
         bytes[] inputTxsInclusionProofs;
         bytes[] inputUtxosGuardPreimages;
         bytes[] inputTxsConfirmSigs;
@@ -124,9 +125,12 @@ library PaymentStartInFlightExit {
         exitData.inFlightTxHash = keccak256(args.inFlightTx);
         exitData.inputTxsRaw = args.inputTxs;
         exitData.inputTxs = decodeInputTxs(exitData.inputTxsRaw);
+        exitData.inputTxTypes = args.inputTxTypes;
         exitData.inputUtxosPos = decodeInputTxsPositions(args.inputUtxosPos);
         exitData.inputUtxosTypes = args.inputUtxosTypes;
+        exitData.inputUtxosGuardPreimages = args.inputUtxosGuardPreimages;
         exitData.inputTxsInclusionProofs = args.inputTxsInclusionProofs;
+        exitData.inputTxsConfirmSigs = args.inputTxsConfirmSigs;
         exitData.inFlightTxWitnesses = args.inFlightTxWitnesses;
         exitData.outputIds = getOutputIds(controller, exitData.inputTxsRaw, exitData.inputUtxosPos);
         return exitData;
@@ -176,9 +180,9 @@ library PaymentStartInFlightExit {
         verifyExitNotStarted(exitData.exitId, inFlightExitMap);
         verifyNumberOfInputsMatchesNumberOfInFlightTransactionInputs(exitData);
         verifyNoInputSpentMoreThanOnce(exitData.inFlightTx);
-        verifyInputTransactionIsStandardFinalized(exitData);
         verifyInputsSpendingCondition(exitData);
         verifyInFlightTransactionDoesNotOverspend(exitData);
+        verifyInputTransactionIsStandardFinalized(exitData);
     }
 
     function verifyExitNotStarted(
@@ -199,6 +203,10 @@ library PaymentStartInFlightExit {
             "Number of input transactions does not match number of in-flight transaction inputs"
         );
         require(
+            exitData.inputTxTypes.length == exitData.inFlightTx.inputs.length,
+            "Number of input tx types does not match number of in-flight transaction inputs"
+        );
+        require(
             exitData.inputUtxosPos.length == exitData.inFlightTx.inputs.length,
             "Number of input transactions positions does not match number of in-flight transaction inputs"
         );
@@ -214,6 +222,14 @@ library PaymentStartInFlightExit {
             exitData.inFlightTxWitnesses.length == exitData.inFlightTx.inputs.length,
             "Number of input transactions witnesses does not match number of in-flight transaction inputs"
         );
+        require(
+            exitData.inputUtxosGuardPreimages.length == exitData.inFlightTx.inputs.length,
+            "Number of output guard preimages for inputs does not match number of in-flight transaction inputs"
+        );
+        require(
+            exitData.inputTxsConfirmSigs.length == exitData.inFlightTx.inputs.length,
+            "Number of input transactions confirm sigs does not match number of in-flight transaction inputs"
+        );
     }
 
     function verifyNoInputSpentMoreThanOnce(PaymentTransactionModel.Transaction memory inFlightTx) private pure {
@@ -228,10 +244,6 @@ library PaymentStartInFlightExit {
 
     function verifyInputTransactionIsStandardFinalized(StartExitData memory exitData) private view {
         for (uint i = 0; i < exitData.inputTxs.length; i++) {
-            IOutputGuardHandler outputGuardHandler = exitData.controller
-                                                    .outputGuardHandlerRegistry
-                                                    .outputGuardHandlers(exitData.inputUtxosTypes[i]);
-
             uint16 outputIndex = exitData.inputUtxosPos[i].outputIndex();
             bytes32 outputGuard = exitData.inputTxs[i].outputs[outputIndex].outputGuard;
             OutputGuardModel.Data memory outputGuardData = OutputGuardModel.Data({
@@ -239,13 +251,20 @@ library PaymentStartInFlightExit {
                 outputType: exitData.inputUtxosTypes[i],
                 preimage: exitData.inputUtxosGuardPreimages[i]
             });
+            IOutputGuardHandler outputGuardHandler = exitData.controller
+                                                    .outputGuardHandlerRegistry
+                                                    .outputGuardHandlers(exitData.inputUtxosTypes[i]);
+
+            require(address(outputGuardHandler) != address(0), "Outputgaurd handler of the output type is not registered");
 
             require(outputGuardHandler.isValid(outputGuardData),
                     "Output guard information is invalid for the input tx");
 
+            uint8 protocol = exitData.controller.framework.protocols(exitData.inputTxTypes[i]);
+
             TxFinalization.Verifier memory verifier = TxFinalization.Verifier({
                 framework: exitData.controller.framework,
-                protocol: exitData.controller.framework.protocols(exitData.inputUtxosTypes[i]),
+                protocol: protocol,
                 txBytes: exitData.inputTxsRaw[i],
                 txPos: exitData.inputUtxosPos[i].txPos(),
                 inclusionProof: exitData.inputTxsInclusionProofs[i],

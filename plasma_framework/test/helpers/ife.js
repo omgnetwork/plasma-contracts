@@ -79,9 +79,12 @@ function buildIfeStartArgs([inputTx1, inputTx2], inputUtxosPos, inFlightTx) {
 
     const inFlightTxWitnesses = [IN_FLIGHT_TX_WITNESS_BYTES, IN_FLIGHT_TX_WITNESS_BYTES];
 
+    const inputTxTypes = [IFE_TX_TYPE, IFE_TX_TYPE];
+
     const args = {
         inFlightTx: inFlightTxRaw,
         inputTxs,
+        inputTxTypes,
         inputUtxosPos,
         inputUtxosTypes,
         inputTxsInclusionProofs,
