@@ -8,8 +8,8 @@ const PaymentSpendingConditionRegistry = artifacts.require('PaymentSpendingCondi
 const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
-
-const { expectEvent } = require('openzeppelin-test-helpers');
+const { expect } = require('chai');
+const { expectEvent, time } = require('openzeppelin-test-helpers');
 
 contract('PaymentStandardExitRouter', ([_, outputOwner]) => {
     const CHILD_BLOCK_INTERVAL = 1000;
@@ -18,6 +18,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner]) => {
     const INITIAL_IMMUNE_EXIT_GAME_NUM = 1;
     const PAYMENT_OUTPUT_TYPE = 1;
     const EMPTY_BYTES = '0x0000000000000000000000000000000000000000000000000000000000000000000000';
+    const UPDATE_BOND_WAITING_PERIOD = time.duration.days(2);
 
     before('deploy and link with controller lib', async () => {
         const startStandardExit = await PaymentStartStandardExit.new();
@@ -49,20 +50,26 @@ contract('PaymentStandardExitRouter', ([_, outputOwner]) => {
             );
 
             this.startStandardExitBondSize = await this.exitGame.startStandardExitBondSize();
+            this.newBondSize = this.startStandardExitBondSize.addn(20);
+            const { receipt } = await this.exitGame.updateStartStandardExitBondSize(this.newBondSize);
+            this.updateTxReceipt = receipt;
         });
 
         it('should emit an event when the standard exit bond size is updated', async () => {
-            const newBondSize = this.startStandardExitBondSize.addn(20);
-            const { receipt } = await this.exitGame.updateStartStandardExitBondSize(newBondSize);
-
             await expectEvent.inTransaction(
-                receipt.transactionHash,
+                this.updateTxReceipt.transactionHash,
                 PaymentStandardExitRouter,
                 'StandardExitBondUpdated',
                 {
-                    bondSize: newBondSize,
+                    bondSize: this.newBondSize,
                 },
             );
+        });
+
+        it('should update the bond value after the waiting period has passed', async () => {
+            await time.increase(UPDATE_BOND_WAITING_PERIOD);
+            const bondSize = await this.exitGame.startStandardExitBondSize();
+            expect(bondSize).to.be.bignumber.equal(this.newBondSize);
         });
     });
 });
