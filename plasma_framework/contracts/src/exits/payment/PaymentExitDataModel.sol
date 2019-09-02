@@ -15,6 +15,7 @@ library PaymentExitDataModel {
         address token;
         address payable exitTarget;
         uint256 amount;
+        uint256 bondSize;
     }
 
     struct StandardExitMap {

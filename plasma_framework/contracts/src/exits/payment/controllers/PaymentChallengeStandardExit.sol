@@ -13,7 +13,6 @@ library PaymentChallengeStandardExit {
     struct Controller {
         PlasmaFramework framework;
         PaymentSpendingConditionRegistry spendingConditionRegistry;
-        uint256 standardExitBond;
     }
 
     event ExitChallenged(
@@ -46,7 +45,7 @@ library PaymentChallengeStandardExit {
         verifySpendingCondition(data);
 
         delete exitMap.exits[args.exitId];
-        msg.sender.transfer(self.standardExitBond);
+        msg.sender.transfer(data.exitData.bondSize);
 
         emit ExitChallenged(data.exitData.utxoPos);
     }
