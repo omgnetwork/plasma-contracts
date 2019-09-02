@@ -17,7 +17,7 @@ const {
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
-const { TX_TYPE, OUTPUT_TYPE, PROTOCOL } = require('../../../helpers/constants.js');
+const { OUTPUT_TYPE } = require('../../../helpers/constants.js');
 const { MerkleTree } = require('../../../helpers/merkle.js');
 const { buildUtxoPos, utxoPosToTxPos } = require('../../../helpers/positions.js');
 const {

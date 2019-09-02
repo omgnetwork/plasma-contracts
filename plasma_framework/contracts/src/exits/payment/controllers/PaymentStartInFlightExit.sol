@@ -180,9 +180,9 @@ library PaymentStartInFlightExit {
         verifyExitNotStarted(exitData.exitId, inFlightExitMap);
         verifyNumberOfInputsMatchesNumberOfInFlightTransactionInputs(exitData);
         verifyNoInputSpentMoreThanOnce(exitData.inFlightTx);
+        verifyInputTransactionIsStandardFinalized(exitData);
         verifyInputsSpendingCondition(exitData);
         verifyInFlightTransactionDoesNotOverspend(exitData);
-        verifyInputTransactionIsStandardFinalized(exitData);
     }
 
     function verifyExitNotStarted(
@@ -255,7 +255,7 @@ library PaymentStartInFlightExit {
                                                     .outputGuardHandlerRegistry
                                                     .outputGuardHandlers(exitData.inputUtxosTypes[i]);
 
-            require(address(outputGuardHandler) != address(0), "Outputgaurd handler of the output type is not registered");
+            require(address(outputGuardHandler) != address(0), "Failed to get the outputGuardHandler of the output type");
 
             require(outputGuardHandler.isValid(outputGuardData),
                     "Output guard information is invalid for the input tx");

@@ -8,6 +8,7 @@ const { PaymentTransactionOutput, PaymentTransaction, PlasmaDepositTransaction }
 const ETH = constants.ZERO_ADDRESS;
 const CHILD_BLOCK_INTERVAL = 1000;
 const OUTPUT_TYPE_ONE = 1;
+const OUTPUT_TYPE_TWO = 2;
 const IFE_TX_TYPE = 1;
 const WITNESS_LENGTH_IN_BYTES = 65;
 const IN_FLIGHT_TX_WITNESS_BYTES = web3.utils.bytesToHex('a'.repeat(WITNESS_LENGTH_IN_BYTES));
@@ -69,7 +70,7 @@ function buildIfeStartArgs([inputTx1, inputTx2], inputUtxosPos, inFlightTx) {
 
     const inputTxsInclusionProofs = [inclusionProof1, inclusionProof2];
 
-    const inputUtxosTypes = [OUTPUT_TYPE_ONE, OUTPUT_TYPE_ONE];
+    const inputUtxosTypes = [OUTPUT_TYPE_ONE, OUTPUT_TYPE_TWO];
 
     const inFlightTxRaw = web3.utils.bytesToHex(inFlightTx.rlpEncoded());
 
