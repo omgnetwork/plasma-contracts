@@ -30,7 +30,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner]) => {
         await PaymentStandardExitRouter.link('PaymentProcessStandardExit', processStandardExit.address);
     });
 
-    describe('startStandardExit', () => {
+    describe('updateStartStandardExitBondSize', () => {
         beforeEach(async () => {
             this.framework = await SpyPlasmaFramework.new(
                 MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,

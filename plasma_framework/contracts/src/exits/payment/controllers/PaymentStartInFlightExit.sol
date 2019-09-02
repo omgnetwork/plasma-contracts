@@ -2,6 +2,7 @@ pragma solidity ^0.5.0;
 pragma experimental ABIEncoderV2;
 
 import "../PaymentExitDataModel.sol";
+import "../PaymentInFlightExitModelUtils.sol";
 import "../routers/PaymentInFlightExitRouterArgs.sol";
 import "../spendingConditions/IPaymentSpendingCondition.sol";
 import "../spendingConditions/PaymentSpendingConditionRegistry.sol";
@@ -12,11 +13,15 @@ import "../../../utils/IsDeposit.sol";
 import "../../../utils/UtxoPosLib.sol";
 import "../../../utils/Merkle.sol";
 import "../../../framework/PlasmaFramework.sol";
+import "../../../transactions/PaymentTransactionModel.sol";
+import "../../../transactions/outputs/PaymentOutputModel.sol";
 
 library PaymentStartInFlightExit {
     using ExitableTimestamp for ExitableTimestamp.Calculator;
     using IsDeposit for IsDeposit.Predicate;
     using UtxoPosLib for UtxoPosLib.UtxoPos;
+    using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
+    using PaymentOutputModel for PaymentOutputModel.Output;
 
     uint256 constant public MAX_INPUT_NUM = 4;
 
@@ -25,6 +30,7 @@ library PaymentStartInFlightExit {
         IsDeposit.Predicate isDeposit;
         ExitableTimestamp.Calculator exitTimestampCalculator;
         PaymentSpendingConditionRegistry spendingConditionRegistry;
+        uint256 supportedTxType;
     }
 
     event InFlightExitStarted(
@@ -61,7 +67,11 @@ library PaymentStartInFlightExit {
         bytes32[] outputIds;
     }
 
-    function buildController(PlasmaFramework framework, PaymentSpendingConditionRegistry registry)
+    function buildController(
+        PlasmaFramework framework,
+        PaymentSpendingConditionRegistry registry,
+        uint256 supportedTxType
+    )
         public
         view
         returns (Controller memory)
@@ -70,7 +80,8 @@ library PaymentStartInFlightExit {
             framework: framework,
             isDeposit: IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL()),
             exitTimestampCalculator: ExitableTimestamp.Calculator(framework.minExitPeriod()),
-            spendingConditionRegistry: registry
+            spendingConditionRegistry: registry,
+            supportedTxType: supportedTxType
         });
     }
 
@@ -169,11 +180,7 @@ library PaymentStartInFlightExit {
     {
         PaymentExitDataModel.InFlightExit storage exit = inFlightExitMap.exits[exitId];
         require(exit.exitStartTimestamp == 0, "There is an active in-flight exit from this transaction");
-        require(!isFinalized(exit), "This in-flight exit has already been finalized");
-    }
-
-    function isFinalized(PaymentExitDataModel.InFlightExit storage ife) private view returns (bool) {
-        return Bits.bitSet(ife.exitMap, 255);
+        require(!exit.isFinalized, "This in-flight exit has already been finalized");
     }
 
     function verifyNumberOfInputsMatchesNumberOfInFlightTransactionInputs(StartExitData memory exitData) private pure {
@@ -227,8 +234,9 @@ library PaymentStartInFlightExit {
 
             //FIXME: consider moving spending conditions to PlasmaFramework
             IPaymentSpendingCondition condition = exitData.controller.spendingConditionRegistry.spendingConditions(
-                exitData.inputUtxosTypes[i], exitData.inFlightTx.txType
+                exitData.inputUtxosTypes[i], exitData.controller.supportedTxType
             );
+
             require(address(condition) != address(0), "Spending condition contract not found");
 
             bool isSpentByInFlightTx = condition.verify(
@@ -317,7 +325,10 @@ library PaymentStartInFlightExit {
     {
         for (uint i = 0; i < inputTxs.length; i++) {
             uint16 outputIndex = inputUtxosPos[i].outputIndex();
-            ife.inputs[i] = inputTxs[i].outputs[outputIndex];
+            PaymentOutputModel.Output memory output = inputTxs[i].outputs[outputIndex];
+            ife.inputs[i].exitTarget = output.owner();
+            ife.inputs[i].token = output.token;
+            ife.inputs[i].amount = output.amount;
         }
     }
 }
