@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-import "../Constants.sol";
+import "../Protocol.sol";
 import "../utils/Operated.sol";
 import "../utils/Quarantine.sol";
 
@@ -44,20 +44,21 @@ contract ExitGameRegistry is Operated {
      * @notice Register the exit game to Plasma framework. This can be only called by contract admin.
      * @param _txType tx type that the exit game want to register to.
      * @param _contract Address of the exit game contract.
-     * @param _protocol The protocol of the transaction, 0 for MVP and 1 for MoreVP.
+     * @param _protocol The protocol of the transaction, 1 for MVP and 2 for MoreVP.
      */
-    function registerExitGame(uint256 _txType, address _contract, Constants.PROTOCOL _protocol) public onlyOperator {
+    function registerExitGame(uint256 _txType, address _contract, uint8 _protocol) public onlyOperator {
         require(_txType != 0, "should not register with tx type 0");
         require(_contract != address(0), "should not register with an empty exit game address");
         require(_exitGames[_txType] == address(0), "The tx type is already registered");
         require(_exitGameToTxType[_contract] == 0, "The exit game contract is already registered");
+        require(Protocol.isValidProtocol(_protocol), "Invalid protocol value");
 
         _exitGames[_txType] = _contract;
         _exitGameToTxType[_contract] = _txType;
-        _protocols[_txType] = uint8(_protocol); // TODO, move out from enum
+        _protocols[_txType] = _protocol;
         _quarantine.quarantine(_contract);
 
-        emit ExitGameRegistered(_txType, _contract, uint8(_protocol));
+        emit ExitGameRegistered(_txType, _contract, _protocol);
     }
 
     function protocols(uint256 _txType) public view returns (uint8) {

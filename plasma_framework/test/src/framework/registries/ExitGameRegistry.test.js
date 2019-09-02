@@ -125,7 +125,7 @@ contract('ExitGameRegistry', ([_, other]) => {
                 const contract = (await DummyExitGame.new());
                 await expectRevert(
                     this.registry.registerExitGame(txType, contract.address, protocol),
-                    'invalid opcode', // protected with using solidity enum as function args
+                    'Invalid protocol value',
                 );
             }));
         });

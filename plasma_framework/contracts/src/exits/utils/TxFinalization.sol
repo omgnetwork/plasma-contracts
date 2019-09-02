@@ -4,7 +4,7 @@ pragma experimental ABIEncoderV2;
 import 'openzeppelin-solidity/contracts/cryptography/ECDSA.sol';
 
 import "../../framework/PlasmaFramework.sol";
-import "../../framework/Constants.sol";
+import "../../framework/Protocol.sol";
 import "../../utils/Merkle.sol";
 import "../../utils/TxPosLib.sol";
 
@@ -33,7 +33,7 @@ library TxFinalization {
     {
         return Verifier({
             framework: framework,
-            protocol: uint8(Constants.PROTOCOL.MORE_VP),
+            protocol: Protocol.MORE_VP(),
             txBytes: txBytes,
             txPos: txPos,
             inclusionProof: inclusionProof,
@@ -48,9 +48,9 @@ library TxFinalization {
     * @dev MoreVp: checks inclusion proof.
     */
     function isStandardFinalized(Verifier memory self) internal view returns (bool) {
-        if (self.protocol == uint8(Constants.PROTOCOL.MVP)) {
+        if (self.protocol == Protocol.MVP()) {
             return checkConfirmSig(self) && checkInclusionProof(self);
-        } else if (self.protocol == uint8(Constants.PROTOCOL.MORE_VP)) {
+        } else if (self.protocol == Protocol.MORE_VP()) {
             return checkInclusionProof(self);
         } else {
             revert("invalid protocol value");
@@ -63,9 +63,9 @@ library TxFinalization {
     * @dev MoreVp: it allows in-flight tx, so only checks existence of the transaction.
     */
     function isProtocolFinalized(Verifier memory self) internal view returns (bool) {
-        if (self.protocol == uint8(Constants.PROTOCOL.MVP)) {
+        if (self.protocol == Protocol.MVP()) {
             return isStandardFinalized(self);
-        } else if (self.protocol == uint8(Constants.PROTOCOL.MORE_VP)) {
+        } else if (self.protocol == Protocol.MORE_VP()) {
             return self.txBytes.length > 0;
         } else {
             revert("invalid protocol value");

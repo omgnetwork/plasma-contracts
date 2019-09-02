@@ -1,6 +1,6 @@
 const PROTOCOL = {
-    MVP: 0,
-    MORE_VP: 1,
+    MVP: 1,
+    MORE_VP: 2,
 };
 
 module.exports = {
