@@ -11,7 +11,7 @@ from plasma_core.utils.merkle.fixed_merkle import FixedMerkle
 IN_FLIGHT_PERIOD = MIN_EXIT_PERIOD // 2
 
 
-class StandardExit(object):
+class StandardExit:
     """Represents a Plasma exit.
 
     Attributes:
@@ -42,7 +42,7 @@ class StandardExit(object):
         return (self.to_list() == other) or (self.to_list()[:3] == other)
 
 
-class PlasmaBlock(object):
+class PlasmaBlock:
     """Represents a Plasma block.
 
     Attributes:
@@ -55,7 +55,7 @@ class PlasmaBlock(object):
         self.timestamp = timestamp
 
 
-class InFlightExit(object):
+class InFlightExit:
 
     def __init__(self, root_chain, in_flight_tx, exit_start_timestamp, exit_priority, exit_map, bond_owner,
                  oldest_competitor):
@@ -99,7 +99,7 @@ class InFlightExit(object):
         return self.input_blocked(index + 4)
 
 
-class TestingLanguage(object):
+class TestingLanguage:
     """Represents the testing language.
 
     Attributes:
@@ -226,7 +226,7 @@ class TestingLanguage(object):
                                           **{'value': bond, 'from': sender.address})
 
     def create_utxo(self, token=NULL_ADDRESS):
-        class Utxo(object):
+        class Utxo:
             def __init__(self, deposit_id, owner, token, amount, spend, spend_id):
                 self.deposit_id = deposit_id
                 self.owner = owner

@@ -61,6 +61,8 @@ class ConvenienceContractWrapper:
             `contract.<name_of_function>(args)`
     """
 
+    # Gas must be preset, due to an error in ganache, which causes ganache-cli to panic
+    # at gas estimation when the transaction being estimated fails.
     default_params = {'gasPrice': 0, 'gas': 4 * 10 ** 6}
 
     def __init__(self, contract: Contract):

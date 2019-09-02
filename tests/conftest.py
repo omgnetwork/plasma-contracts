@@ -22,6 +22,11 @@ START_GAS = GAS_LIMIT - 1000000
 HUNDRED_ETH = 100 * 10 ** 18
 
 
+# IMPORTANT NOTICE
+# Whenever we pass to or receive from web3 an address, we do it in checksum format.
+# On the other hand, in plasma (transactions, blocks, etc.) we should pass addresses in binary form (canonical address).
+
+
 @pytest.fixture(scope="session")
 def deployer():
     own_dir = os.path.dirname(os.path.realpath(__file__))
@@ -150,7 +155,11 @@ def testlang(root_chain, w3, accounts):
 
 @pytest.fixture
 def root_chain_short_exit_period(get_contract):
-    exit_period = 4  # if less than 2, we divide by 0 in `RootChain::_firstPhaseNotOver`
+    # Minimal valid exit period is 2, if we exit period to less than 2
+    # we will be dividing by zero in function`RootChain::_firstPhaseNotOver`.
+    # But, if we set exit period to 2, then we will automatically end up in the second phase as
+    # blocks are mined with 1 second interval.
+    exit_period = 4
     return initialized_contract(get_contract, exit_period)
 
 
@@ -171,9 +180,9 @@ def _encode_libs(libraries):
     }
 
 
-def assert_event(event, event_name, event_args=None):
-    if event_args is None:
-        event_args = {}
+def assert_event(event_obj, expected_event_name, expected_event_args=None):
+    if expected_event_args is None:
+        expected_event_args = {}
 
-    assert event['event'] == event_name
-    assert event_args.items() <= event['args'].items()
+    assert event_obj['event'] == expected_event_name
+    assert expected_event_args.items() <= event_obj['args'].items()

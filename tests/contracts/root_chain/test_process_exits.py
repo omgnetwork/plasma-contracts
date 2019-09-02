@@ -26,12 +26,12 @@ def test_process_exits_standard_exit_should_succeed(testlang, num_outputs):
 
     testlang.start_standard_exit(utxo_pos, output_owner)
     [exit_event] = testlang.flush_events()
-    assert_event(exit_event, event_name='ExitStarted', event_args={"owner": output_owner.address})
+    assert_event(exit_event, expected_event_name='ExitStarted', expected_event_args={"owner": output_owner.address})
 
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
     testlang.process_exits(NULL_ADDRESS, 0, 100)
     [exit_finalized] = testlang.flush_events()
-    assert_event(exit_finalized, event_name='ExitFinalized', event_args={"exitId": exit_event['args']['exitId']})
+    assert_event(exit_finalized, expected_event_name='ExitFinalized', expected_event_args={"exitId": exit_event['args']['exitId']})
 
     standard_exit = testlang.get_standard_exit(utxo_pos)
     assert standard_exit.owner == NULL_ADDRESS_HEX

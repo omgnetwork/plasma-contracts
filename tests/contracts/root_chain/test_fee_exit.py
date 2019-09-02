@@ -14,7 +14,7 @@ def test_start_fee_exit_should_succeed(testlang, root_chain):
 
     [exit_started] = testlang.flush_events()
 
-    assert_event(exit_started, event_name="ExitStarted", event_args={"owner": operator.address, "exitId": exit_id})
+    assert_event(exit_started, expected_event_name="ExitStarted", expected_event_args={"owner": operator.address, "exitId": exit_id})
     assert testlang.root_chain.exits(exit_id) == [operator.address, NULL_ADDRESS_HEX, amount, 1]
 
 
@@ -32,7 +32,7 @@ def test_start_fee_exit_finalizes_after_two_MFPs(testlang):
 
     testlang.start_fee_exit(operator, amount)
     [exit_event] = testlang.flush_events()
-    assert_event(exit_event, event_name="ExitStarted", event_args={"owner": operator.address})
+    assert_event(exit_event, expected_event_name="ExitStarted", expected_event_args={"owner": operator.address})
     balance = testlang.get_balance(testlang.root_chain)
 
     testlang.forward_timestamp(MIN_EXIT_PERIOD + 1)
@@ -44,5 +44,5 @@ def test_start_fee_exit_finalizes_after_two_MFPs(testlang):
     testlang.process_exits(NULL_ADDRESS, 0, 1)
 
     [exit_finalized] = testlang.flush_events()
-    assert_event(exit_finalized, event_name='ExitFinalized', event_args={'exitId': exit_event['args']['exitId']})
+    assert_event(exit_finalized, expected_event_name='ExitFinalized', expected_event_args={'exitId': exit_event['args']['exitId']})
     assert testlang.get_balance(testlang.root_chain) == 0
