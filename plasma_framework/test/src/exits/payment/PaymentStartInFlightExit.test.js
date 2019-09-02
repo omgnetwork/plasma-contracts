@@ -26,7 +26,7 @@ const {
     createInputsForInFlightTx,
 } = require('../../../helpers/ife.js');
 
-contract.only('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
+contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
     const IN_FLIGHT_EXIT_BOND = 31415926535; // wei
     const ETH = constants.ZERO_ADDRESS;
     const OTHER_TOKEN = '0x0000000000000000000000000000000000000001';

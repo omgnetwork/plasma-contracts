@@ -246,6 +246,9 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
 
             it('should not enqueue when it is not first piggyback of the exit on the same token', async () => {
                 const expectedOutputGuardHandler = await ExpectedOutputGuardHandler.new(true, inputOwner);
+                await expectedOutputGuardHandler.mockIsValid(true);
+                await expectedOutputGuardHandler.mockGetExitTarget(inputOwner);
+
                 await this.outputGuardHandlerRegistry.registerOutputGuardHandler(
                     OUTPUT_TYPE.TWO, expectedOutputGuardHandler.address,
                 );
