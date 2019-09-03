@@ -4,6 +4,7 @@ const { MerkleTree } = require('./merkle.js');
 const { buildUtxoPos, UtxoPos } = require('./positions.js');
 const { addressToOutputGuard, computeNormalOutputId } = require('./utils.js');
 const { PaymentTransactionOutput, PaymentTransaction, PlasmaDepositTransaction } = require('./transaction.js');
+const { EMPTY_BYTES } = require('./constants.js');
 
 const ETH = constants.ZERO_ADDRESS;
 const CHILD_BLOCK_INTERVAL = 1000;
@@ -13,7 +14,6 @@ const IFE_TX_TYPE = 1;
 const WITNESS_LENGTH_IN_BYTES = 65;
 const IN_FLIGHT_TX_WITNESS_BYTES = web3.utils.bytesToHex('a'.repeat(WITNESS_LENGTH_IN_BYTES));
 const DUMMY_PREIMAGE = web3.utils.utf8ToHex('Dummy Preimage');
-const DUMMY_CONFIRM_SIG = web3.utils.utf8ToHex('Dummy Confirm Sig');
 const BLOCK_NUMBER = 1000;
 const DUMMY_INPUT_1 = '0x0000000000000000000000000000000000000000000000000000000000000001';
 const DUMMY_INPUT_2 = '0x0000000000000000000000000000000000000000000000000000000000000002';
@@ -24,6 +24,13 @@ function isDeposit(blockNum) {
     return blockNum % CHILD_BLOCK_INTERVAL !== 0;
 }
 
+/**
+ * This returns a setup with the two inputs and one output.
+ * First input would be of output type 1 and the second of output type 2.
+ * All input txs and the in-flight exit tx would be same tx type: 1.
+ * This assumes the tx type would be using MoreVP so the confirm sig provided in this setup would be EMPTY_BYTES.
+ * (protocol setting is on the framework side)
+ */
 function buildValidIfeStartArgs(amount, [ifeOwner, inputOwner1, inputOwner2], blockNum1, blockNum2) {
     const inputTx1 = isDeposit(blockNum1)
         ? createDepositTransaction(inputOwner1, amount)
@@ -76,7 +83,7 @@ function buildIfeStartArgs([inputTx1, inputTx2], inputUtxosPos, inFlightTx) {
 
     const inputUtxosGuardPreimages = [DUMMY_PREIMAGE, DUMMY_PREIMAGE];
 
-    const inputTxsConfirmSigs = [DUMMY_CONFIRM_SIG, DUMMY_CONFIRM_SIG];
+    const inputTxsConfirmSigs = [EMPTY_BYTES, EMPTY_BYTES];
 
     const inFlightTxWitnesses = [IN_FLIGHT_TX_WITNESS_BYTES, IN_FLIGHT_TX_WITNESS_BYTES];
 

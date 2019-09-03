@@ -21,12 +21,13 @@ const { buildUtxoPos } = require('../../../helpers/positions.js');
 const { addressToOutputGuard, spentOnGas } = require('../../../helpers/utils.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
 const { PROTOCOL } = require('../../../helpers/constants.js');
+const { sign } = require('../../../helpers/sign.js');
 const {
     buildValidIfeStartArgs, buildIfeStartArgs, createInputTransaction, createDepositTransaction, createInFlightTx,
     createInputsForInFlightTx,
 } = require('../../../helpers/ife.js');
 
-contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
+contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
     const IN_FLIGHT_EXIT_BOND = 31415926535; // wei
     const ETH = constants.ZERO_ADDRESS;
     const OTHER_TOKEN = '0x0000000000000000000000000000000000000001';
@@ -44,6 +45,8 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
     const DUMMY_INPUT_2 = '0x0000000000000000000000000000000000000000000000000000000000000002';
     const AMOUNT = 10;
     const TOLERANCE_SECONDS = new BN(1);
+    const bobPrivateKey = '0x7151e5dab6f8e95b5436515b83f423c4df64fe4c6149f864daa209b26adb10ca';
+    let bob;
 
     before('deploy and link with controller lib', async () => {
         const startInFlightExit = await PaymentStartInFlightExit.new();
@@ -53,6 +56,18 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
         await PaymentInFlightExitRouter.link('PaymentStartInFlightExit', startInFlightExit.address);
         await PaymentInFlightExitRouter.link('PaymentPiggybackInFlightExit', piggybackInFlightExit.address);
         await PaymentInFlightExitRouter.link('PaymentChallengeIFENotCanonical', challengeInFlightExitNotCanonical.address);
+    });
+
+    before('setup bob account with custom private key', async () => {
+        const password = 'password1234';
+        bob = await web3.eth.personal.importRawKey(bobPrivateKey, password);
+        bob = web3.utils.toChecksumAddress(bob);
+        web3.eth.personal.unlockAccount(bob, password, 3600);
+        web3.eth.sendTransaction({
+            to: bob,
+            from: richFather,
+            value: web3.utils.toWei('1', 'ether'),
+        });
     });
 
 
@@ -78,6 +93,19 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
             );
         }
 
+        async function setupOutputGuardHandler(
+            outptuGuardHandlerRegistry, outputType, isValid, exitTarget, confirmSigAddress,
+        ) {
+            const handler = await ExpectedOutputGuardHandler.new();
+            await handler.mockIsValid(isValid);
+            await handler.mockGetExitTarget(exitTarget);
+            await handler.mockGetConfirmSigAddress(confirmSigAddress);
+            await outptuGuardHandlerRegistry.registerOutputGuardHandler(
+                outputType, handler.address,
+            );
+            return handler;
+        }
+
         before(async () => {
             this.exitIdHelper = await ExitId.new();
             this.isDeposit = await IsDeposit.new(CHILD_BLOCK_INTERVAL);
@@ -94,20 +122,11 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
 
                 this.outptuGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
 
-                this.handler1 = await ExpectedOutputGuardHandler.new();
-                await this.handler1.mockIsValid(true);
-                await this.handler1.mockGetExitTarget(bob);
-                await this.handler1.mockGetConfirmSigAddress(bob);
-                await this.outptuGuardHandlerRegistry.registerOutputGuardHandler(
-                    OUTPUT_TYPE_ONE, this.handler1.address,
+                this.handler1 = await setupOutputGuardHandler(
+                    this.outptuGuardHandlerRegistry, OUTPUT_TYPE_ONE, true, bob, bob,
                 );
-
-                this.handler2 = await ExpectedOutputGuardHandler.new();
-                await this.handler2.mockIsValid(true);
-                await this.handler2.mockGetExitTarget(carol);
-                await this.handler2.mockGetConfirmSigAddress(carol);
-                await this.outptuGuardHandlerRegistry.registerOutputGuardHandler(
-                    OUTPUT_TYPE_TWO, this.handler2.address,
+                this.handler2 = await setupOutputGuardHandler(
+                    this.outptuGuardHandlerRegistry, OUTPUT_TYPE_TWO, true, carol, carol,
                 );
 
                 this.exitGame = await PaymentInFlightExitRouter.new(
@@ -192,6 +211,71 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
             });
         });
 
+        describe('when calling start in-flight with valid arguments including a MVP tx as input', () => {
+            beforeEach(async () => {
+                this.framework = await SpyPlasmaFramework.new(
+                    MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
+                );
+                this.spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
+                await registerSpendingConditionTrue(this.spendingConditionRegistry);
+
+                this.outptuGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
+
+                this.handler1 = await setupOutputGuardHandler(
+                    this.outptuGuardHandlerRegistry, OUTPUT_TYPE_ONE, true, bob, bob,
+                );
+                this.handler2 = await setupOutputGuardHandler(
+                    this.outptuGuardHandlerRegistry, OUTPUT_TYPE_TWO, true, carol, carol,
+                );
+
+                this.exitGame = await PaymentInFlightExitRouter.new(
+                    this.framework.address, this.outptuGuardHandlerRegistry.address,
+                    this.spendingConditionRegistry.address, IFE_TX_TYPE,
+                );
+                await this.framework.registerExitGame(IFE_TX_TYPE, this.exitGame.address, PROTOCOL.MORE_VP);
+
+                const {
+                    args,
+                    argsDecoded,
+                    inputTxsBlockRoot1,
+                    inputTxsBlockRoot2,
+                } = buildValidIfeStartArgs(AMOUNT, [alice, bob, carol], BLOCK_NUMBER, DEPOSIT_BLOCK_NUMBER);
+                this.args = args;
+                this.argsDecoded = argsDecoded;
+                await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot1, 0);
+                await this.framework.setBlock(DEPOSIT_BLOCK_NUMBER, inputTxsBlockRoot2, 0);
+
+                // override first input with MVP tx type and setup the confirm sig
+                const MVP_TX_TYPE = 999;
+                this.args.inputTxTypes[0] = MVP_TX_TYPE;
+                this.args.inputTxsConfirmSigs[0] = sign(inputTxsBlockRoot1, bobPrivateKey);
+                const dummyExitGame = await PaymentInFlightExitRouter.new(
+                    this.framework.address, this.outptuGuardHandlerRegistry.address,
+                    this.spendingConditionRegistry.address, IFE_TX_TYPE,
+                );
+                await this.framework.registerExitGame(MVP_TX_TYPE, dummyExitGame.address, PROTOCOL.MVP);
+            });
+
+            it('should be able to run it successfully', async () => {
+                const { receipt } = await this.exitGame.startInFlightExit(
+                    this.args,
+                    { from: alice, value: IN_FLIGHT_EXIT_BOND },
+                );
+
+                const expectedIfeHash = web3.utils.sha3(this.args.inFlightTx);
+
+                await expectEvent.inTransaction(
+                    receipt.transactionHash,
+                    PaymentStartInFlightExit,
+                    'InFlightExitStarted',
+                    {
+                        initiator: alice,
+                        txHash: expectedIfeHash,
+                    },
+                );
+            });
+        });
+
         describe('when in-flight exit start is called', () => {
             beforeEach(async () => {
                 this.framework = await SpyPlasmaFramework.new(
@@ -202,20 +286,11 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
                 // setup outputGuardHandler
                 this.outptuGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
 
-                this.handler1 = await ExpectedOutputGuardHandler.new();
-                await this.handler1.mockIsValid(true);
-                await this.handler1.mockGetExitTarget(bob);
-                await this.handler1.mockGetConfirmSigAddress(bob);
-                await this.outptuGuardHandlerRegistry.registerOutputGuardHandler(
-                    OUTPUT_TYPE_ONE, this.handler1.address,
+                this.handler1 = await setupOutputGuardHandler(
+                    this.outptuGuardHandlerRegistry, OUTPUT_TYPE_ONE, true, bob, bob,
                 );
-
-                this.handler2 = await ExpectedOutputGuardHandler.new();
-                await this.handler2.mockIsValid(true);
-                await this.handler2.mockGetExitTarget(carol);
-                await this.handler2.mockGetConfirmSigAddress(carol);
-                await this.outptuGuardHandlerRegistry.registerOutputGuardHandler(
-                    OUTPUT_TYPE_TWO, this.handler2.address,
+                this.handler2 = await setupOutputGuardHandler(
+                    this.outptuGuardHandlerRegistry, OUTPUT_TYPE_TWO, true, carol, carol,
                 );
 
                 this.exitGame = await PaymentInFlightExitRouter.new(
@@ -343,7 +418,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
                 );
             });
 
-            it('should fail when any of input transactions is not Input transaction is not standard finalized', async () => {
+            it('should fail when any of input transactions is not standard finalized since inclusion proof failed', async () => {
                 const {
                     args,
                     inputTxsBlockRoot1,
@@ -355,6 +430,33 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
 
                 const invalidInclusionProof = web3.utils.bytesToHex('a'.repeat(INCLUSION_PROOF_LENGTH_IN_BYTES));
                 args.inputTxsInclusionProofs = [invalidInclusionProof, invalidInclusionProof];
+                await expectRevert(
+                    this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
+                    'Input transaction is not standard finalized',
+                );
+            });
+
+            it('should fail when any of input transactions is not standard finalized due to confirm sig mismatch for MVP tx', async () => {
+                const {
+                    args,
+                    inputTxsBlockRoot1,
+                    inputTxsBlockRoot2,
+                } = buildValidIfeStartArgs(AMOUNT, [alice, bob, carol], BLOCK_NUMBER, DEPOSIT_BLOCK_NUMBER);
+                await registerSpendingConditionTrue(this.spendingConditionRegistry);
+                await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot1, 0);
+                await this.framework.setBlock(DEPOSIT_BLOCK_NUMBER, inputTxsBlockRoot2, 0);
+
+                const MVP_TX_TYPE = 999;
+                args.inputTxTypes[0] = MVP_TX_TYPE;
+                args.inputTxsConfirmSigs[0] = web3.utils.utf8ToHex('invalid confirm sig');
+                const dummyExitGame = await PaymentInFlightExitRouter.new(
+                    this.framework.address, this.outptuGuardHandlerRegistry.address,
+                    this.spendingConditionRegistry.address, MVP_TX_TYPE,
+                );
+
+                // register the protocol of such tx type to be MVP
+                await this.framework.registerExitGame(MVP_TX_TYPE, dummyExitGame.address, PROTOCOL.MVP);
+
                 await expectRevert(
                     this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
                     'Input transaction is not standard finalized',

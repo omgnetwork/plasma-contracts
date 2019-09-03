@@ -11,7 +11,10 @@ const OUTPUT_TYPE = {
     PAYMENT: 1,
 };
 
+const EMPTY_BYTES = '0x';
+
 module.exports = {
+    EMPTY_BYTES,
     PROTOCOL,
     TX_TYPE,
     OUTPUT_TYPE,
