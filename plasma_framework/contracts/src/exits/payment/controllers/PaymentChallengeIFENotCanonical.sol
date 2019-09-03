@@ -44,8 +44,6 @@ library PaymentChallengeIFENotCanonical {
             "The competitor transaction is the same as transaction in-flight"
         );
 
-        PaymentTransactionModel.Transaction memory inFlightTx = PaymentTransactionModel.decode(args.inFlightTx);
-
         IPaymentSpendingCondition condition = self.spendingConditionRegistry.spendingConditions(
             args.competingTxInputOutputType, self.supportedTxType
         );
@@ -56,7 +54,7 @@ library PaymentChallengeIFENotCanonical {
         bool isSpentByInFlightTx = condition.verify(
             bytes32(''), // tmp solution, we don't need outputGuard anymore for the interface of :point-up: GH-214
             uint256(0), // should not be used
-            inFlightTx.inputs[args.inFlightTxInputIndex],
+            ife.inputs[args.inFlightTxInputIndex].outputId,
             args.competingTx,
             args.competingTxInputIndex,
             args.competingTxWitness

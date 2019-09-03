@@ -4,16 +4,19 @@ pragma experimental ABIEncoderV2;
 import "../../../../src/exits/payment/PaymentExitDataModel.sol";
 import "../../../../src/exits/payment/routers/PaymentInFlightExitRouter.sol";
 import "../../../../src/framework/PlasmaFramework.sol";
+import "../../../../src/exits/interfaces/IStateTransitionVerifier.sol";
+import "../../../../src/exits/registries/OutputGuardHandlerRegistry.sol";
 
 contract PaymentInFlightExitRouterMock is PaymentInFlightExitRouter {
     constructor(
         PlasmaFramework framework,
         OutputGuardHandlerRegistry outputGuardHandlerRegistry,
         PaymentSpendingConditionRegistry spendingConditionRegistry,
+        IStateTransitionVerifier verifier,
         uint256 supportedTxType
     )
         public
-        PaymentInFlightExitRouter(framework, outputGuardHandlerRegistry, spendingConditionRegistry, supportedTxType) {
+        PaymentInFlightExitRouter(framework, outputGuardHandlerRegistry, spendingConditionRegistry, verifier, supportedTxType) {
     }
 
     // to override IExitProcessor function

@@ -2,7 +2,12 @@ const { constants } = require('openzeppelin-test-helpers');
 
 const { MerkleTree } = require('./merkle.js');
 const { buildUtxoPos, UtxoPos } = require('./positions.js');
-const { addressToOutputGuard, computeNormalOutputId } = require('./utils.js');
+const {
+    addressToOutputGuard,
+    buildOutputGuard,
+    computeNormalOutputId,
+    computeDepositOutputId,
+} = require('./utils.js');
 const { PaymentTransactionOutput, PaymentTransaction, PlasmaDepositTransaction } = require('./transaction.js');
 
 const ETH = constants.ZERO_ADDRESS;
@@ -39,7 +44,7 @@ function buildValidIfeStartArgs(amount, [ifeOwner, inputOwner1, inputOwner2], bl
         args,
         inputTxsBlockRoot1,
         inputTxsBlockRoot2,
-    } = buildIfeStartArgs(inputTxs, inputUtxosPos, inFlightTx);
+    } = buildIfeStartArgs(inputTxs, [inputOwner1, inputOwner2], inputUtxosPos, inFlightTx);
 
     const argsDecoded = { inputTxs, inputUtxosPos, inFlightTx };
 
@@ -51,7 +56,7 @@ function buildValidIfeStartArgs(amount, [ifeOwner, inputOwner1, inputOwner2], bl
     };
 }
 
-function buildIfeStartArgs([inputTx1, inputTx2], inputUtxosPos, inFlightTx) {
+function buildIfeStartArgs([inputTx1, inputTx2], [inputOwner1, inputOwner2], inputUtxosPos, inFlightTx) {
     const rlpInputTx1 = inputTx1.rlpEncoded();
     const encodedInputTx1 = web3.utils.bytesToHex(rlpInputTx1);
 
@@ -73,11 +78,17 @@ function buildIfeStartArgs([inputTx1, inputTx2], inputUtxosPos, inFlightTx) {
 
     const inFlightTxWitnesses = [IN_FLIGHT_TX_WITNESS_BYTES, IN_FLIGHT_TX_WITNESS_BYTES];
 
+    const outputGuardPreimagesForInputs = [
+        web3.utils.toHex(inputOwner1),
+        web3.utils.toHex(inputOwner2),
+    ];
+
     const args = {
         inFlightTx: inFlightTxRaw,
         inputTxs,
         inputUtxosPos,
         inputUtxosTypes,
+        outputGuardPreimagesForInputs,
         inputTxsInclusionProofs,
         inFlightTxWitnesses,
     };
@@ -89,12 +100,12 @@ function buildIfeStartArgs([inputTx1, inputTx2], inputUtxosPos, inFlightTx) {
 }
 
 function createInputTransaction(inputs, owner, amount, token = ETH) {
-    const output = new PaymentTransactionOutput(amount, addressToOutputGuard(owner), token);
+    const output = new PaymentTransactionOutput(amount, buildOutputGuard(OUTPUT_TYPE_ONE, owner), token);
     return new PaymentTransaction(IFE_TX_TYPE, inputs, [output]);
 }
 
 function createDepositTransaction(owner, amount, token = ETH) {
-    const output = new PaymentTransactionOutput(amount, addressToOutputGuard(owner), token);
+    const output = new PaymentTransactionOutput(amount, buildOutputGuard(OUTPUT_TYPE_ONE, owner), token);
     return new PlasmaDepositTransaction(output);
 }
 
@@ -115,7 +126,9 @@ function createInputsForInFlightTx(inputTxs, inputUtxosPos) {
     for (let i = 0; i < inputTxs.length; i++) {
         const inputUtxoPos = new UtxoPos(inputUtxosPos[i]);
         const inputTx = web3.utils.bytesToHex(inputTxs[i].rlpEncoded());
-        const outputId = computeNormalOutputId(inputTx, inputUtxoPos.outputIndex);
+        const outputId = isDeposit(inputUtxoPos.blockNum)
+            ? computeDepositOutputId(inputTx, inputUtxoPos.outputIndex, inputUtxoPos.utxoPos)
+            : computeNormalOutputId(inputTx, inputUtxoPos.outputIndex);
         inputs.push(outputId);
     }
     return inputs;

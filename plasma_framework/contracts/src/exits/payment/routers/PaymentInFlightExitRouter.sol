@@ -7,6 +7,8 @@ import "../controllers/PaymentStartInFlightExit.sol";
 import "../controllers/PaymentPiggybackInFlightExit.sol";
 import "../controllers/PaymentChallengeIFENotCanonical.sol";
 import "../spendingConditions/PaymentSpendingConditionRegistry.sol";
+import "../../registries/OutputGuardHandlerRegistry.sol";
+import "../../interfaces/IStateTransitionVerifier.sol";
 import "../../../utils/OnlyWithValue.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../framework/interfaces/IExitProcessor.sol";
@@ -28,12 +30,17 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyWithValue {
         PlasmaFramework framework,
         OutputGuardHandlerRegistry outputGuardHandlerRegistry,
         PaymentSpendingConditionRegistry spendingConditionRegistry,
+        IStateTransitionVerifier verifier,
         uint256 supportedTxType
     )
         public
     {
         startInFlightExitController = PaymentStartInFlightExit.buildController(
-            framework, spendingConditionRegistry, supportedTxType
+            framework,
+            spendingConditionRegistry,
+            verifier,
+            outputGuardHandlerRegistry,
+            supportedTxType
         );
 
         piggybackInFlightExitController = PaymentPiggybackInFlightExit.buildController(
