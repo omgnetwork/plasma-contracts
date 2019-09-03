@@ -2,6 +2,7 @@ pragma solidity ^0.5.0;
 pragma experimental ABIEncoderV2;
 
 import "../PaymentExitDataModel.sol";
+import "../PaymentInFlightExitModelUtils.sol";
 import "../routers/PaymentInFlightExitRouterArgs.sol";
 import "../spendingConditions/IPaymentSpendingCondition.sol";
 import "../spendingConditions/PaymentSpendingConditionRegistry.sol";
@@ -25,6 +26,8 @@ library PaymentStartInFlightExit {
     using ExitableTimestamp for ExitableTimestamp.Calculator;
     using IsDeposit for IsDeposit.Predicate;
     using UtxoPosLib for UtxoPosLib.UtxoPos;
+    using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
+    using PaymentOutputModel for PaymentOutputModel.Output;
 
     uint256 constant public MAX_INPUT_NUM = 4;
 
@@ -35,6 +38,7 @@ library PaymentStartInFlightExit {
         PaymentSpendingConditionRegistry spendingConditionRegistry;
         IStateTransitionVerifier transitionVerifier;
         OutputGuardHandlerRegistry outputGuardHandlerRegistry;
+        uint256 supportedTxType;
     }
 
     event InFlightExitStarted(
@@ -77,7 +81,8 @@ library PaymentStartInFlightExit {
         PlasmaFramework framework,
         PaymentSpendingConditionRegistry registry,
         IStateTransitionVerifier transitionVerifier,
-        OutputGuardHandlerRegistry outputGuardHandlerRegistry
+        OutputGuardHandlerRegistry outputGuardHandlerRegistry,
+        uint256 supportedTxType
     )
         public
         view
@@ -89,7 +94,8 @@ library PaymentStartInFlightExit {
             exitTimestampCalculator: ExitableTimestamp.Calculator(framework.minExitPeriod()),
             spendingConditionRegistry: registry,
             transitionVerifier: transitionVerifier,
-            outputGuardHandlerRegistry: outputGuardHandlerRegistry
+            outputGuardHandlerRegistry: outputGuardHandlerRegistry,
+            supportedTxType: supportedTxType
         });
     }
 
@@ -184,11 +190,7 @@ library PaymentStartInFlightExit {
     {
         PaymentExitDataModel.InFlightExit storage exit = inFlightExitMap.exits[exitId];
         require(exit.exitStartTimestamp == 0, "There is an active in-flight exit from this transaction");
-        require(!isFinalized(exit), "This in-flight exit has already been finalized");
-    }
-
-    function isFinalized(PaymentExitDataModel.InFlightExit storage ife) private view returns (bool) {
-        return Bits.bitSet(ife.exitMap, 255);
+        require(!exit.isFinalized, "This in-flight exit has already been finalized");
     }
 
     function verifyNumberOfInputsMatchesNumberOfInFlightTransactionInputs(StartExitData memory exitData) private pure {
@@ -241,8 +243,9 @@ library PaymentStartInFlightExit {
 
             //FIXME: consider moving spending conditions to PlasmaFramework
             IPaymentSpendingCondition condition = exitData.controller.spendingConditionRegistry.spendingConditions(
-                exitData.inputUtxosTypes[i], exitData.inFlightTx.txType
+                exitData.inputUtxosTypes[i], exitData.controller.supportedTxType
             );
+
             require(address(condition) != address(0), "Spending condition contract not found");
 
             bool isSpentByInFlightTx = condition.verify(
@@ -301,13 +304,11 @@ library PaymentStartInFlightExit {
             require(address(handler) != address(0), "Output guard handler not registered");
             address payable exitTarget = handler.getExitTarget(outputGuardData);
 
-            ife.inputs[i] = PaymentExitDataModel.WithdrawData(
-                exitData.outputIds[i],
-                output.outputGuard,
-                exitTarget,
-                output.token,
-                output.amount
-            );
+            ife.inputs[i].outputId = exitData.outputIds[i];
+            ife.inputs[i].outputGuard = output.outputGuard;
+            ife.inputs[i].exitTarget = exitTarget;
+            ife.inputs[i].token = output.token;
+            ife.inputs[i].amount = output.amount;
         }
     }
 
@@ -322,13 +323,11 @@ library PaymentStartInFlightExit {
             bytes32 outputId = OutputId.computeNormalOutputId(exitData.inFlightTxRaw, i);
             PaymentOutputModel.Output memory output = exitData.inFlightTx.outputs[i];
 
-            ife.outputs[i] = PaymentExitDataModel.WithdrawData(
-                outputId,
-                output.outputGuard,
-                address(0),
-                output.token,
-                output.amount
-            );
+            ife.outputs[i].outputId = outputId;
+            ife.outputs[i].outputGuard = output.outputGuard;
+            // exit target is not set as output guard preimage many not be available for caller
+            ife.outputs[i].token = output.token;
+            ife.outputs[i].amount = output.amount;
         }
     }
 }

@@ -1,7 +1,11 @@
+const ExitId = artifacts.require('ExitIdWrapper');
+const ExitableTimestamp = artifacts.require('ExitableTimestampWrapper');
+const IsDeposit = artifacts.require('IsDepositWrapper');
 const OutputGuardHandler = artifacts.require('ExpectedOutputGuardHandler');
 const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry');
 const PaymentInFlightExitRouter = artifacts.require('PaymentInFlightExitRouterMock');
 const PaymentStartInFlightExit = artifacts.require('PaymentStartInFlightExit');
+const PaymentPiggybackInFlightExit = artifacts.require('PaymentPiggybackInFlightExit');
 const PaymentChallengeIFENotCanonical = artifacts.require('PaymentChallengeIFENotCanonical');
 const PaymentSpendingConditionRegistry = artifacts.require('PaymentSpendingConditionRegistry');
 const PaymentSpendingConditionFalse = artifacts.require('PaymentSpendingConditionFalse');
@@ -10,9 +14,6 @@ const StateTransitionVerifierAccept = artifacts.require('StateTransitionVerifier
 const StateTransitionVerifierReject = artifacts.require('StateTransitionVerifierReject');
 const StateTransitionVerifierReverse = artifacts.require('StateTransitionVerifierReverse');
 const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
-const ExitId = artifacts.require('ExitIdWrapper');
-const IsDeposit = artifacts.require('IsDepositWrapper');
-const ExitableTimestamp = artifacts.require('ExitableTimestampWrapper');
 
 const {
     BN, constants, expectEvent, expectRevert, time,
@@ -30,10 +31,10 @@ const {
 contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
     const IN_FLIGHT_EXIT_BOND = 31415926535; // wei
     const CHILD_BLOCK_INTERVAL = 1000;
-    const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
+    const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week in seconds
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
     const INITIAL_IMMUNE_EXIT_GAME_NUM = 1;
-    const OUTPUT_TYPE_ZERO = 0;
+    const OUTPUT_TYPE_ONE = 1;
     const IFE_TX_TYPE = 1;
     const INCLUSION_PROOF_LENGTH_IN_BYTES = 512;
     const BLOCK_NUMBER = 1000;
@@ -45,11 +46,14 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
 
     before('deploy and link with controller lib', async () => {
         const startInFlightExit = await PaymentStartInFlightExit.new();
+        const piggybackInFlightExit = await PaymentPiggybackInFlightExit.new();
         const challengeInFlightExitNotCanonical = await PaymentChallengeIFENotCanonical.new();
 
         await PaymentInFlightExitRouter.link('PaymentStartInFlightExit', startInFlightExit.address);
+        await PaymentInFlightExitRouter.link('PaymentPiggybackInFlightExit', piggybackInFlightExit.address);
         await PaymentInFlightExitRouter.link('PaymentChallengeIFENotCanonical', challengeInFlightExitNotCanonical.address);
     });
+
 
     describe('startInFlightExit', () => {
         function expectWithdrawData(withdrawData, outputId, exitTarget, amount, token) {
@@ -75,18 +79,18 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
 
                 this.spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
                 await this.spendingConditionRegistry.registerSpendingCondition(
-                    OUTPUT_TYPE_ZERO, IFE_TX_TYPE, this.conditionTrue.address,
+                    OUTPUT_TYPE_ONE, IFE_TX_TYPE, this.conditionTrue.address,
                 );
 
                 this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
                 const handler = await OutputGuardHandler.new(true, alice);
-                await this.outputGuardHandlerRegistry.registerOutputGuardHandler(OUTPUT_TYPE_ZERO, handler.address);
+                await this.outputGuardHandlerRegistry.registerOutputGuardHandler(OUTPUT_TYPE_ONE, handler.address);
 
                 this.exitGame = await PaymentInFlightExitRouter.new(
                     this.framework.address,
+                    this.outputGuardHandlerRegistry.address,
                     this.spendingConditionRegistry.address,
                     this.stateTransitionVerifierAccept.address,
-                    this.outputGuardHandlerRegistry.address,
                     IFE_TX_TYPE,
                 );
 
@@ -193,12 +197,11 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
                 );
                 this.spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
                 this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
-
                 this.exitGame = await PaymentInFlightExitRouter.new(
                     this.framework.address,
+                    this.outputGuardHandlerRegistry.address,
                     this.spendingConditionRegistry.address,
                     this.stateTransitionVerifierAccept.address,
-                    this.outputGuardHandlerRegistry.address,
                     IFE_TX_TYPE,
                 );
             });
@@ -227,7 +230,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
                 await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot1, 0);
                 await this.framework.setBlock(DEPOSIT_BLOCK_NUMBER, inputTxsBlockRoot2, 0);
                 await this.spendingConditionRegistry.registerSpendingCondition(
-                    OUTPUT_TYPE_ZERO, IFE_TX_TYPE, this.conditionTrue.address,
+                    OUTPUT_TYPE_ONE, IFE_TX_TYPE, this.conditionTrue.address,
                 );
 
                 args.outputGuardPreimagesForInputs = [web3.utils.toHex('invalidGuard'), web3.utils.toHex('invalidGuard')];
@@ -249,7 +252,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
 
                 const conditionFalse = await PaymentSpendingConditionFalse.new();
                 await this.spendingConditionRegistry.registerSpendingCondition(
-                    OUTPUT_TYPE_ZERO, IFE_TX_TYPE, conditionFalse.address,
+                    OUTPUT_TYPE_ONE, IFE_TX_TYPE, conditionFalse.address,
                 );
 
                 await expectRevert(
@@ -277,11 +280,11 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
 
                 const conditionTrue = await PaymentSpendingConditionTrue.new();
                 await this.spendingConditionRegistry.registerSpendingCondition(
-                    OUTPUT_TYPE_ZERO, IFE_TX_TYPE, conditionTrue.address,
+                    OUTPUT_TYPE_ONE, IFE_TX_TYPE, conditionTrue.address,
                 );
 
                 const handler = await OutputGuardHandler.new(true, alice);
-                await this.outputGuardHandlerRegistry.registerOutputGuardHandler(OUTPUT_TYPE_ZERO, handler.address);
+                await this.outputGuardHandlerRegistry.registerOutputGuardHandler(OUTPUT_TYPE_ONE, handler.address);
 
                 await this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND });
                 await expectRevert(
@@ -301,11 +304,11 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
 
                 const conditionTrue = await PaymentSpendingConditionTrue.new();
                 await this.spendingConditionRegistry.registerSpendingCondition(
-                    OUTPUT_TYPE_ZERO, IFE_TX_TYPE, conditionTrue.address,
+                    OUTPUT_TYPE_ONE, IFE_TX_TYPE, conditionTrue.address,
                 );
 
                 const handler = await OutputGuardHandler.new(true, alice);
-                await this.outputGuardHandlerRegistry.registerOutputGuardHandler(OUTPUT_TYPE_ZERO, handler.address);
+                await this.outputGuardHandlerRegistry.registerOutputGuardHandler(OUTPUT_TYPE_ONE, handler.address);
 
                 await this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND });
 
@@ -329,7 +332,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
 
                 const conditionTrue = await PaymentSpendingConditionTrue.new();
                 await this.spendingConditionRegistry.registerSpendingCondition(
-                    OUTPUT_TYPE_ZERO, IFE_TX_TYPE, conditionTrue.address,
+                    OUTPUT_TYPE_ONE, IFE_TX_TYPE, conditionTrue.address,
                 );
                 const invalidInclusionProof = web3.utils.bytesToHex('a'.repeat(INCLUSION_PROOF_LENGTH_IN_BYTES));
                 args.inputTxsInclusionProofs = [invalidInclusionProof, invalidInclusionProof];
@@ -459,7 +462,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
                 const conditionTrue = await PaymentSpendingConditionTrue.new();
 
                 await this.spendingConditionRegistry.registerSpendingCondition(
-                    OUTPUT_TYPE_ZERO, IFE_TX_TYPE, conditionTrue.address,
+                    OUTPUT_TYPE_ONE, IFE_TX_TYPE, conditionTrue.address,
                 );
 
                 await expectRevert(
@@ -481,9 +484,9 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
                 this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
                 const exitGame = await PaymentInFlightExitRouter.new(
                     this.framework.address,
+                    this.outputGuardHandlerRegistry.address,
                     this.spendingConditionRegistry.address,
                     stateTransitionVerifierReject.address,
-                    this.outputGuardHandlerRegistry.address,
                     IFE_TX_TYPE,
                 );
                 const inputTx1 = createInputTransaction(DUMMY_INPUT_1, alice, AMOUNT);
@@ -512,9 +515,9 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
                 this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
                 const exitGame = await PaymentInFlightExitRouter.new(
                     this.framework.address,
+                    this.outputGuardHandlerRegistry.address,
                     this.spendingConditionRegistry.address,
                     stateTransitionVerifierReverse.address,
-                    this.outputGuardHandlerRegistry.address,
                     IFE_TX_TYPE,
                 );
 
@@ -537,16 +540,16 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
 
                 const spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
                 await spendingConditionRegistry.registerSpendingCondition(
-                    OUTPUT_TYPE_ZERO, IFE_TX_TYPE, this.conditionTrue.address,
+                    OUTPUT_TYPE_ONE, IFE_TX_TYPE, this.conditionTrue.address,
                 );
 
                 const outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
 
                 const exitGame = await PaymentInFlightExitRouter.new(
                     framework.address,
+                    outputGuardHandlerRegistry.address,
                     spendingConditionRegistry.address,
                     this.stateTransitionVerifierAccept.address,
-                    outputGuardHandlerRegistry.address,
                     IFE_TX_TYPE,
                 );
 

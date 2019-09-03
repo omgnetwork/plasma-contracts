@@ -12,7 +12,6 @@ library PaymentProcessStandardExit {
         PlasmaFramework framework;
         EthVault ethVault;
         Erc20Vault erc20Vault;
-        uint256 standardExitBond;
     }
 
     event ExitOmitted(
@@ -39,7 +38,7 @@ library PaymentProcessStandardExit {
 
         self.framework.flagOutputSpent(exit.outputId);
 
-        exit.exitTarget.transfer(self.standardExitBond);
+        exit.exitTarget.transfer(exit.bondSize);
         if (exit.token == address(0)) {
             self.ethVault.withdraw(exit.exitTarget, exit.amount);
         } else {

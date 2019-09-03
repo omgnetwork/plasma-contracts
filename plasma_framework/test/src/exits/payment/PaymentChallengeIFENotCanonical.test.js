@@ -2,6 +2,7 @@ const OutputGuardHandler = artifacts.require('ExpectedOutputGuardHandler');
 const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry');
 const PaymentInFlightExitRouter = artifacts.require('PaymentInFlightExitRouterMock');
 const PaymentStartInFlightExit = artifacts.require('PaymentStartInFlightExit');
+const PaymentPiggybackInFlightExit = artifacts.require('PaymentPiggybackInFlightExit');
 const PaymentChallengeIFENotCanonical = artifacts.require('PaymentChallengeIFENotCanonical');
 const PaymentSpendingConditionRegistry = artifacts.require('PaymentSpendingConditionRegistry');
 const PaymentSpendingConditionFalse = artifacts.require('PaymentSpendingConditionFalse');
@@ -27,7 +28,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
     const INITIAL_IMMUNE_EXIT_GAME_NUM = 1;
-    const OUTPUT_TYPE_ZERO = 0;
+    const OUTPUT_TYPE_ONE = 1;
     const IFE_TX_TYPE = 1;
     const BLOCK_NUMBER = 1000;
     const DEPOSIT_BLOCK_NUMBER = BLOCK_NUMBER + 1;
@@ -35,9 +36,11 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
 
     before('deploy and link with controller lib', async () => {
         const startInFlightExit = await PaymentStartInFlightExit.new();
+        const piggybackInFlightExit = await PaymentPiggybackInFlightExit.new();
         const challengeInFlightExitNotCanonical = await PaymentChallengeIFENotCanonical.new();
 
         await PaymentInFlightExitRouter.link('PaymentStartInFlightExit', startInFlightExit.address);
+        await PaymentInFlightExitRouter.link('PaymentPiggybackInFlightExit', piggybackInFlightExit.address);
         await PaymentInFlightExitRouter.link('PaymentChallengeIFENotCanonical', challengeInFlightExitNotCanonical.address);
 
         this.exitIdHelper = await ExitId.new();
@@ -47,7 +50,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
 
         this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
         const handler = await OutputGuardHandler.new(true, alice);
-        await this.outputGuardHandlerRegistry.registerOutputGuardHandler(OUTPUT_TYPE_ZERO, handler.address);
+        await this.outputGuardHandlerRegistry.registerOutputGuardHandler(OUTPUT_TYPE_ONE, handler.address);
     });
 
     describe('challenge in-flight exit non canonical', () => {
@@ -57,9 +60,10 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
             );
             this.spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
             this.exitGame = await PaymentInFlightExitRouter.new(
-                this.framework.address, this.spendingConditionRegistry.address,
-                this.stateTransitionVerifierAccept.address,
+                this.framework.address,
                 this.outputGuardHandlerRegistry.address,
+                this.spendingConditionRegistry.address,
+                this.stateTransitionVerifierAccept.address,
                 IFE_TX_TYPE,
             );
 
@@ -77,7 +81,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
             const conditionTrue = await PaymentSpendingConditionTrue.new();
 
             await this.spendingConditionRegistry.registerSpendingCondition(
-                OUTPUT_TYPE_ZERO, IFE_TX_TYPE, conditionTrue.address,
+                OUTPUT_TYPE_ONE, IFE_TX_TYPE, conditionTrue.address,
             );
 
             await this.exitGame.startInFlightExit(
@@ -193,7 +197,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
             });
 
             it('fails when spending condition is not met', async () => {
-                const newOutputType = OUTPUT_TYPE_ZERO + 1;
+                const newOutputType = OUTPUT_TYPE_ONE + 1;
 
                 const conditionFalse = await PaymentSpendingConditionFalse.new();
                 await this.spendingConditionRegistry.registerSpendingCondition(
@@ -208,7 +212,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
             });
 
             it('fails when spending condition for given output is not registered', async () => {
-                this.challengeArgs.competingTxInputOutputType = OUTPUT_TYPE_ZERO + 1;
+                this.challengeArgs.competingTxInputOutputType = OUTPUT_TYPE_ONE + 1;
 
                 await expectRevert(
                     this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: alice }),

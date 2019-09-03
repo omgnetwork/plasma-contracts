@@ -12,7 +12,7 @@ const { PaymentTransactionOutput, PaymentTransaction, PlasmaDepositTransaction }
 
 const ETH = constants.ZERO_ADDRESS;
 const CHILD_BLOCK_INTERVAL = 1000;
-const OUTPUT_TYPE_ZERO = 0;
+const OUTPUT_TYPE_ONE = 1;
 const IFE_TX_TYPE = 1;
 const WITNESS_LENGTH_IN_BYTES = 65;
 const IN_FLIGHT_TX_WITNESS_BYTES = web3.utils.bytesToHex('a'.repeat(WITNESS_LENGTH_IN_BYTES));
@@ -72,7 +72,7 @@ function buildIfeStartArgs([inputTx1, inputTx2], [inputOwner1, inputOwner2], inp
 
     const inputTxsInclusionProofs = [inclusionProof1, inclusionProof2];
 
-    const inputUtxosTypes = [OUTPUT_TYPE_ZERO, OUTPUT_TYPE_ZERO];
+    const inputUtxosTypes = [OUTPUT_TYPE_ONE, OUTPUT_TYPE_ONE];
 
     const inFlightTxRaw = web3.utils.bytesToHex(inFlightTx.rlpEncoded());
 
@@ -100,12 +100,12 @@ function buildIfeStartArgs([inputTx1, inputTx2], [inputOwner1, inputOwner2], inp
 }
 
 function createInputTransaction(inputs, owner, amount, token = ETH) {
-    const output = new PaymentTransactionOutput(amount, buildOutputGuard(0, owner), token);
+    const output = new PaymentTransactionOutput(amount, buildOutputGuard(OUTPUT_TYPE_ONE, owner), token);
     return new PaymentTransaction(IFE_TX_TYPE, inputs, [output]);
 }
 
 function createDepositTransaction(owner, amount, token = ETH) {
-    const output = new PaymentTransactionOutput(amount, buildOutputGuard(0, owner), token);
+    const output = new PaymentTransactionOutput(amount, buildOutputGuard(OUTPUT_TYPE_ONE, owner), token);
     return new PlasmaDepositTransaction(output);
 }
 
@@ -178,7 +178,7 @@ function buildValidNoncanonicalChallengeArgs(decodedIfeTx, competitorOwner) {
             inFlightTxInputIndex: 0,
             competingTx,
             competingTxInputIndex: 1,
-            competingTxInputOutputType: OUTPUT_TYPE_ZERO,
+            competingTxInputOutputType: OUTPUT_TYPE_ONE,
             competingTxPos: competingTxPos.utxoPos,
             competingTxInclusionProof,
             competingTxWitness,

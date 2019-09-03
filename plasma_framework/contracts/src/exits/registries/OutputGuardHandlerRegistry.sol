@@ -16,6 +16,7 @@ contract OutputGuardHandlerRegistry is Operated {
         public
         onlyOperator
     {
+        require(outputType != 0, "Should not register with output type 0");
         require(address(handler) != address(0), "Should not register an empty address");
         require(address(outputGuardHandlers[outputType]) == address(0), "The output type has already been registered");
 

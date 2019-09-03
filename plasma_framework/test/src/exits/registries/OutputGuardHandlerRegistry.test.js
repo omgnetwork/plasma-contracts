@@ -10,7 +10,7 @@ contract('OutputGuardHandlerRegistry', ([_, other]) => {
         this.registry = await OutputGuardHandlerRegistry.new();
     });
 
-    describe('registerOutputGuardParser', () => {
+    describe('registerOutputGuardHandler', () => {
         it('should be able to register successfully', async () => {
             const outputType = 1;
             await this.registry.registerOutputGuardHandler(outputType, this.dummyOutputGuardHandler.address);
@@ -21,6 +21,13 @@ contract('OutputGuardHandlerRegistry', ([_, other]) => {
             await expectRevert(
                 this.registry.registerOutputGuardHandler(1, this.dummyOutputGuardHandler.address, { from: other }),
                 'Not being called by operator',
+            );
+        });
+
+        it('should reject when trying to register with output type 0', async () => {
+            await expectRevert(
+                this.registry.registerOutputGuardHandler(0, this.dummyOutputGuardHandler.address),
+                'Should not register with output type 0',
             );
         });
 
