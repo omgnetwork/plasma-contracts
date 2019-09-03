@@ -31,7 +31,7 @@ const { hashTx } = require('../../../helpers/paymentEip712.js');
 const { buildUtxoPos, utxoPosToTxPos } = require('../../../helpers/positions.js');
 const Testlang = require('../../../helpers/testlang.js');
 
-contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
+contract('PaymentExitGame - End to End Tests', ([operator, richFather, bob]) => {
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
     const ETH = constants.ZERO_ADDRESS;
     const INITIAL_ERC20_SUPPLY = 10000000000;
@@ -79,7 +79,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
     });
 
     const setupContracts = async () => {
-        this.framework = await PlasmaFramework.new(MIN_EXIT_PERIOD, INITIAL_IMMUNE_VAULTS, INITIAL_IMMUNE_EXIT_GAMES);
+        this.framework = await PlasmaFramework.new(operator, MIN_EXIT_PERIOD, INITIAL_IMMUNE_VAULTS, INITIAL_IMMUNE_EXIT_GAMES);
         await this.framework.init();
 
         const ethDepositVerifier = await EthDepositVerifier.new();
@@ -93,7 +93,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
         await this.framework.registerVault(1, this.ethVault.address);
         await this.framework.registerVault(2, this.erc20Vault.address);
 
-        const outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
+        const outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new(operator);
         const paymentOutputGuardHandler = await PaymentOutputGuardHandler.new(PAYMENT_OUTPUT_TYPE);
         await outputGuardHandlerRegistry.registerOutputGuardHandler(
             PAYMENT_OUTPUT_TYPE, paymentOutputGuardHandler.address,

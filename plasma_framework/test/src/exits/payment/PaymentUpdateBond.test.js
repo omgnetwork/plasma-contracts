@@ -11,7 +11,7 @@ const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
 const { expect } = require('chai');
 const { expectEvent, time } = require('openzeppelin-test-helpers');
 
-contract('PaymentStandardExitRouter', ([_, outputOwner]) => {
+contract('PaymentStandardExitRouter', ([operator, outputOwner]) => {
     const CHILD_BLOCK_INTERVAL = 1000;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
@@ -39,7 +39,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner]) => {
             const ethVault = await SpyEthVault.new(this.framework.address);
             const erc20Vault = await SpyErc20Vault.new(this.framework.address);
             const spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
-            this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
+            this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new(operator);
 
             const handler = await ExpectedOutputGuardHandler.new(true, outputOwner);
             await this.outputGuardHandlerRegistry.registerOutputGuardHandler(PAYMENT_OUTPUT_TYPE, handler.address);

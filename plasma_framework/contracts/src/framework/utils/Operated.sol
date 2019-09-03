@@ -1,18 +1,20 @@
 pragma solidity ^0.5.0;
 
 contract Operated {
-    address private _operator;
+    address public operator;
 
-    constructor() public {
-        _operator = msg.sender;
+    /**
+     * @notice Builing block exposes `onlyOperator` modifier to inheriting contracts.
+     * @param plasmaOperator also known as Maintainer address that is allowed to register components
+     * e.g. vaults, exit games in the framework. More https://github.com/omisego/plasma-contracts/issues/233
+     */
+    constructor(address plasmaOperator) public {
+        require(plasmaOperator != address(0), "Operator cannot be zero-address.");
+        operator = plasmaOperator;
     }
 
     modifier onlyOperator() {
-        require(msg.sender == _operator, "Not being called by operator");
+        require(msg.sender == operator, "Not being called by operator");
         _;
-    }
-
-    function operator() public view returns(address) {
-        return _operator;
     }
 }

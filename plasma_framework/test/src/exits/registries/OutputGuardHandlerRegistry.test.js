@@ -4,10 +4,10 @@ const ExpectedOutputGuardHandler = artifacts.require('ExpectedOutputGuardHandler
 const { constants, expectRevert } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
-contract('OutputGuardHandlerRegistry', ([_, other]) => {
+contract('OutputGuardHandlerRegistry', ([operator, other]) => {
     beforeEach(async () => {
         this.dummyOutputGuardHandler = await ExpectedOutputGuardHandler.new(true, constants.ZERO_ADDRESS);
-        this.registry = await OutputGuardHandlerRegistry.new();
+        this.registry = await OutputGuardHandlerRegistry.new(operator);
     });
 
     describe('registerOutputGuardHandler', () => {

@@ -16,7 +16,7 @@ const { expect } = require('chai');
 
 const { buildUtxoPos } = require('../../../helpers/positions.js');
 
-contract('PaymentStandardExitRouter', ([_, alice]) => {
+contract('PaymentStandardExitRouter', ([operator, alice]) => {
     const ETH = constants.ZERO_ADDRESS;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week in seconds
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
@@ -41,7 +41,7 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
 
             const ethVault = await SpyEthVault.new(this.framework.address);
             const erc20Vault = await SpyErc20Vault.new(this.framework.address);
-            const outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
+            const outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new(operator);
             const spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
 
             this.exitGame = await PaymentStandardExitRouter.new(

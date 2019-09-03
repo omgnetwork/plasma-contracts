@@ -23,7 +23,7 @@ const {
 } = require('../../../helpers/utils.js');
 
 
-contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
+contract('PaymentStandardExitRouter', ([operator, alice, bob]) => {
     const ETH = constants.ZERO_ADDRESS;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week in seconds
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
@@ -85,7 +85,7 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
 
             const ethVault = await SpyEthVault.new(this.framework.address);
             const erc20Vault = await SpyErc20Vault.new(this.framework.address);
-            const outputGuardParserRegistry = await OutputGuardHandlerRegistry.new();
+            const outputGuardParserRegistry = await OutputGuardHandlerRegistry.new(operator);
             this.spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
 
             this.exitGame = await PaymentStandardExitRouter.new(

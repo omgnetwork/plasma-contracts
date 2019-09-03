@@ -12,14 +12,14 @@ const { PaymentTransaction, PaymentTransactionOutput } = require('../../helpers/
 const { spentOnGas } = require('../../helpers/utils.js');
 const Testlang = require('../../helpers/testlang.js');
 
-contract('EthVault', ([_, alice]) => {
+contract('EthVault', ([operator, alice]) => {
     const DEPOSIT_VALUE = 1000000;
     const INITIAL_IMMUNE_VAULTS = 1;
     const INITIAL_IMMUNE_EXIT_GAMES = 1;
     const MIN_EXIT_PERIOD = 10;
 
     beforeEach('setup contracts', async () => {
-        this.framework = await PlasmaFramework.new(MIN_EXIT_PERIOD, INITIAL_IMMUNE_VAULTS, INITIAL_IMMUNE_EXIT_GAMES);
+        this.framework = await PlasmaFramework.new(operator, MIN_EXIT_PERIOD, INITIAL_IMMUNE_VAULTS, INITIAL_IMMUNE_EXIT_GAMES);
         this.ethVault = await EthVault.new(this.framework.address);
         const depositVerifier = await EthDepositVerifier.new();
         await this.ethVault.setDepositVerifier(depositVerifier.address);

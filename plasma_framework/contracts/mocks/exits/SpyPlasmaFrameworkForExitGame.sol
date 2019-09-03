@@ -18,7 +18,7 @@ contract SpyPlasmaFrameworkForExitGame is PlasmaFramework {
 
     constructor(uint256 _minExitPeriod, uint256 _initialImmuneVaults, uint256 _initialImmuneExitGames)
         public
-        PlasmaFramework(_minExitPeriod, _initialImmuneVaults, _initialImmuneExitGames) {
+        PlasmaFramework(msg.sender, _minExitPeriod, _initialImmuneVaults, _initialImmuneExitGames) {
     }
 
     /** override for test */

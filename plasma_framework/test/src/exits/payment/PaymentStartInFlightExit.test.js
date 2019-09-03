@@ -24,7 +24,7 @@ const {
     createInputsForInFlightTx,
 } = require('../../../helpers/ife.js');
 
-contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
+contract('PaymentInFlightExitRouter', ([operator, alice, bob, carol]) => {
     const IN_FLIGHT_EXIT_BOND = 31415926535; // wei
     const ETH = constants.ZERO_ADDRESS;
     const OTHER_TOKEN = '0x0000000000000000000000000000000000000001';
@@ -77,7 +77,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
                     MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
                 );
                 this.spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
-                const outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
+                const outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new(operator);
 
                 this.exitGame = await PaymentInFlightExitRouter.new(
                     this.framework.address,
@@ -174,7 +174,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, bob, carol]) => {
                     MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
                 );
                 this.spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
-                const outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
+                const outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new(operator);
                 this.exitGame = await PaymentInFlightExitRouter.new(
                     this.framework.address,
                     outputGuardHandlerRegistry.address,

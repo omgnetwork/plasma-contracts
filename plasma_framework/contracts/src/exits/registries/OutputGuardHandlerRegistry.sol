@@ -1,11 +1,13 @@
 pragma solidity ^0.5.0;
 
-import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+// import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "../../framework/utils/Operated.sol";
 import "../interfaces/IOutputGuardHandler.sol";
 
 contract OutputGuardHandlerRegistry is Operated {
     mapping(uint256 => IOutputGuardHandler) public outputGuardHandlers;
+
+    constructor(address operator) public Operated(operator) {}
 
     /**
      * @notice Register the output guard handler.

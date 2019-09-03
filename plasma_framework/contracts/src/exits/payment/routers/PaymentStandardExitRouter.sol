@@ -47,6 +47,7 @@ contract PaymentStandardExitRouter is
         PaymentSpendingConditionRegistry _spendingConditionRegistry
     )
         public
+        Operated(_framework.operator())
     {
         startStandardExitController = PaymentStartStandardExit.buildController(
             this, _framework, _outputGuardHandlerRegistry

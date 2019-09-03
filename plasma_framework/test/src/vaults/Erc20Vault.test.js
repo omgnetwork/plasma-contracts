@@ -13,8 +13,7 @@ const { expect } = require('chai');
 const Testlang = require('../../helpers/testlang.js');
 const { PaymentTransaction, PaymentTransactionOutput } = require('../../helpers/transaction.js');
 
-contract('Erc20Vault', (accounts) => {
-    const alice = accounts[1];
+contract('Erc20Vault', ([operator, alice]) => {
     const DEPOSIT_VALUE = 100;
     const INITIAL_SUPPLY = 1000000;
     const INITIAL_IMMUNE_VAULTS = 1;
@@ -23,7 +22,7 @@ contract('Erc20Vault', (accounts) => {
 
 
     beforeEach('setup contracts', async () => {
-        this.framework = await PlasmaFramework.new(MIN_EXIT_PERIOD, INITIAL_IMMUNE_VAULTS, INITIAL_IMMUNE_EXIT_GAMES);
+        this.framework = await PlasmaFramework.new(operator, MIN_EXIT_PERIOD, INITIAL_IMMUNE_VAULTS, INITIAL_IMMUNE_EXIT_GAMES);
         this.erc20Vault = await Erc20Vault.new(this.framework.address);
         const depositVerifier = await Erc20DepositVerifier.new();
         await this.erc20Vault.setDepositVerifier(depositVerifier.address);
@@ -34,8 +33,8 @@ contract('Erc20Vault', (accounts) => {
         await this.framework.registerExitGame(1, this.exitGame.address);
 
         this.erc20 = await ERC20Mintable.new();
-        await this.erc20.mint(accounts[0], INITIAL_SUPPLY, { from: accounts[0] });
-        await this.erc20.transfer(alice, DEPOSIT_VALUE, { from: accounts[0] });
+        await this.erc20.mint(operator, INITIAL_SUPPLY);
+        await this.erc20.transfer(alice, DEPOSIT_VALUE);
     });
 
     describe('deposit', () => {
@@ -137,7 +136,7 @@ contract('Erc20Vault', (accounts) => {
         // Erc20Vault should support both versions.
         before('setup', async () => {
             this.nonCompliantERC20 = await NonCompliantERC20.new(INITIAL_SUPPLY);
-            await this.nonCompliantERC20.transfer(alice, DEPOSIT_VALUE, { from: accounts[0] });
+            await this.nonCompliantERC20.transfer(alice, DEPOSIT_VALUE);
         });
 
         it('should store erc20 deposit', async () => {
@@ -155,7 +154,7 @@ contract('Erc20Vault', (accounts) => {
     describe('withdraw', () => {
         beforeEach(async () => {
             this.testFundAmount = 1000;
-            await this.erc20.transfer(this.erc20Vault.address, this.testFundAmount, { from: accounts[0] });
+            await this.erc20.transfer(this.erc20Vault.address, this.testFundAmount);
         });
 
         it('should fail when not called by a registered exit game contract', async () => {
@@ -231,7 +230,7 @@ contract('Erc20Vault', (accounts) => {
         beforeEach(async () => {
             this.testFundAmount = 1000;
             this.nonCompliantERC20 = await NonCompliantERC20.new(INITIAL_SUPPLY);
-            await this.nonCompliantERC20.transfer(this.erc20Vault.address, this.testFundAmount, { from: accounts[0] });
+            await this.nonCompliantERC20.transfer(this.erc20Vault.address, this.testFundAmount);
         });
 
         it('should transfer ERC token to the target', async () => {

@@ -16,7 +16,7 @@ contract Vault is Operated {
     address[2] public depositVerifiers;
     uint256 public newDepositVerifierMaturityTimestamp = 2 ** 255; // point far in the future
 
-    constructor(PlasmaFramework _framework) public {
+    constructor(PlasmaFramework _framework) public Operated(_framework.operator()) {
         framework = _framework;
         zeroHashes = ZeroHashesProvider.getZeroHashes();
     }

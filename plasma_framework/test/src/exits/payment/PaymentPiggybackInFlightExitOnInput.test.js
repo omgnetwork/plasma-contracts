@@ -20,7 +20,7 @@ const {
 } = require('../../../helpers/utils.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
 
-contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, outputOwner]) => {
+contract('PaymentInFlightExitRouter', ([operator, alice, inputOwner, nonInputOwner, outputOwner]) => {
     const PIGGYBACK_BOND = 31415926535; // wei
     const ETH = constants.ZERO_ADDRESS;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week in seconds
@@ -54,7 +54,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
             MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
         );
 
-        this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
+        this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new(operator);
         const spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
 
         this.exitGame = await PaymentInFlightExitRouter.new(

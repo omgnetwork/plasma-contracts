@@ -26,7 +26,7 @@ const {
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
 
 
-contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
+contract('PaymentStandardExitRouter', ([operator, outputOwner, nonOutputOwner]) => {
     const ETH = constants.ZERO_ADDRESS;
     const CHILD_BLOCK_INTERVAL = 1000;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week in seconds
@@ -90,7 +90,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
             const ethVault = await SpyEthVault.new(this.framework.address);
             const erc20Vault = await SpyErc20Vault.new(this.framework.address);
             const spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
-            this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
+            this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new(operator);
 
             const handler = await ExpectedOutputGuardHandler.new(true, outputOwner);
             await this.outputGuardHandlerRegistry.registerOutputGuardHandler(PAYMENT_OUTPUT_TYPE, handler.address);
