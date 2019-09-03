@@ -247,9 +247,8 @@ def test_finalize_exits_tx_race_normal(testlang, w3):
     testlang.process_exits(NULL_ADDRESS, testlang.get_standard_exit_id(utxo1.spend_id), 1)
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
 
-    tx_hash = testlang.process_exits(NULL_ADDRESS, testlang.get_standard_exit_id(utxo2.spend_id), 3)
-    tx_receipt = w3.eth.getTransactionReceipt(tx_hash)
-    three_exits_tx_gas = tx_receipt['gasUsed']
+    testlang.process_exits(NULL_ADDRESS, testlang.get_standard_exit_id(utxo2.spend_id), 3)
+    three_exits_tx_gas = w3.eth.last_gas_used
     assert three_exits_tx_gas > 26258  # value from _tx_race_short_circuit
 
 

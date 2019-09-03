@@ -89,15 +89,15 @@ def test_priority_queue_insert_spam_does_not_elevate_gas_cost_above_200k():
 
 def run_test(w3, priority_queue, values):
     for i, value in enumerate(values):
-        tx_hash = priority_queue.insert(value)
-        gas = w3.eth.waitForTransactionReceipt(tx_hash)['gasUsed']
+        priority_queue.insert(value)
+        gas = w3.eth.last_gas_used
         if i != 0:  # at first insert there is a small additional cost - we take care of only the asymptotic cost
             assert gas <= op_cost(i + 1)
 
     for i in range(1, len(values)):
         assert i == priority_queue.functions.delMin().call()
-        tx_hash = priority_queue.functions.delMin().transact()
-        gas = w3.eth.waitForTransactionReceipt(tx_hash)['gasUsed']
+        priority_queue.delMin()
+        gas = w3.eth.last_gas_used
         assert gas <= op_cost(len(values) - i)
 
 

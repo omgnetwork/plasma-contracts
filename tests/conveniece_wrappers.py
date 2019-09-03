@@ -15,6 +15,7 @@ class AutominingEth(eth.Eth):
         super().__init__(web3)
         self._mine = True
         self._next_timestamp = None
+        self._last_tx_hash = None
 
     def disable_auto_mine(self):
         self._mine = False
@@ -44,7 +45,13 @@ class AutominingEth(eth.Eth):
         if self._mine:
             self.mine()
 
+        self._last_tx_hash = tx_hash
         return tx_hash
+
+    @property
+    def last_gas_used(self):
+        receipt = self.waitForTransactionReceipt(self._last_tx_hash)
+        return receipt['gasUsed']
 
     def _get_next_timestamp(self):
         next_timestamp = self._next_timestamp or (self.getBlock('latest')['timestamp'] + 1)
