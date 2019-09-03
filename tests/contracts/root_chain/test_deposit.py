@@ -55,7 +55,6 @@ def test_deposit_with_input_should_fail(testlang):
         testlang.root_chain.deposit(deposit_tx.encoded, value=amount)
 
 
-@pytest.mark.slow
 def test_at_most_999_deposits_per_child_block(testlang, w3):
     owner = testlang.accounts[0]
     child_block_interval = testlang.root_chain.CHILD_BLOCK_INTERVAL()

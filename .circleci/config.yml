@@ -103,15 +103,37 @@ jobs:
       - run:
           name: Run linter 
           command: make lint
+  
+  Python long running tests:
+    executor: python_executor
+    working_directory: ~/repo
+    steps:
+      - setup_python_env
+      - run:
+          name: Run slow tests
+          no_output_timeout: 10h
+          command: make runslow 
 
 workflows:
   version: 2
-  build_root_chain_contract:
+  Run python tests:
     jobs:
       - Python tests
       - Python linter
 
-  build_plasma_framework:
+  Run truffle tests:
     jobs:
       - Truffle tests
       - Truffle linter
+  
+  Run python slow tests:
+    jobs:
+      - Python long running tests
+    triggers:
+      - schedule:
+          cron: "0 0 * * 1" # run job every monday at midnight
+          filters:
+            branches:
+              only:
+                - master
+

@@ -30,7 +30,7 @@ lint:
 
 .PHONY: test
 test:
-	python -m pytest
+	python -m pytest -m "not slow"
 	rm -fr .pytest_cache
 
 .PHONY: test_quick
