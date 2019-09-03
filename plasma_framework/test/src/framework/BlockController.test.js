@@ -1,7 +1,9 @@
 const BlockController = artifacts.require('BlockController');
 const DummyVault = artifacts.require('DummyVault');
 
-const { BN, expectRevert, expectEvent } = require('openzeppelin-test-helpers');
+const {
+    BN, constants, expectRevert, expectEvent,
+} = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
 contract('BlockController', ([operator, other]) => {
@@ -56,6 +58,20 @@ contract('BlockController', ([operator, other]) => {
             expect(await this.blockController.childBlockInterval())
                 .to.be.bignumber.equal(new BN(this.childBlockInterval));
         });
+
+        it('setAuthority rejects zero-address as new authority', async () => {
+            await expectRevert(
+                this.blockController.setAuthority(constants.ZERO_ADDRESS),
+                'Authority cannot be zero-address.',
+            );
+        });
+
+        it('setAuthority can be called only by the operator', async () => {
+            await expectRevert(
+                this.blockController.setAuthority(other, { from: other }),
+                'Not being called by operator.',
+            );
+        });
     });
 
     describe('submitBlock', () => {
@@ -93,6 +109,17 @@ contract('BlockController', ([operator, other]) => {
                 this.blockController.submitBlock(this.dummyBlockHash, { from: other }),
                 'Can be called only by the Authority.',
             );
+        });
+
+        it('allows authority address to be changed', async () => {
+            await expectRevert(
+                this.blockController.submitBlock(this.dummyBlockHash, { from: other }),
+                'Can be called only by the Authority.',
+            );
+
+            await this.blockController.setAuthority(other, { from: operator });
+
+            await this.blockController.submitBlock(this.dummyBlockHash, { from: other });
         });
     });
 

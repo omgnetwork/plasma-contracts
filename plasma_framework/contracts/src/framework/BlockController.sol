@@ -37,6 +37,16 @@ contract BlockController is Operated, VaultRegistry {
     }
 
     /**
+     * @notice Allows the operator to set a new authority address. This allows to implement mechanical
+     * re-org protection mechanism, explained in https://github.com/omisego/plasma-contracts/issues/118
+     * @param newAuthority address of new authority, cannot be blank.
+     */
+    function setAuthority(address newAuthority) external onlyOperator {
+        require(newAuthority != address(0), "Authority cannot be zero-address.");
+        authority = newAuthority;
+    }
+
+    /**
      * @notice Allows operator's authority address to submit a child chain block.
      * @dev Block number jumps 'childBlockInterval' per submission.
      * @dev see discussion in https://github.com/omisego/plasma-contracts/issues/233
