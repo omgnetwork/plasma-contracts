@@ -359,7 +359,6 @@ library PaymentStartInFlightExit {
             address payable exitTarget = handler.getExitTarget(outputGuardData);
 
             ife.inputs[i].outputId = exitData.outputIds[i];
-            ife.inputs[i].outputGuard = output.outputGuard;
             ife.inputs[i].exitTarget = exitTarget;
             ife.inputs[i].token = output.token;
             ife.inputs[i].amount = output.amount;
@@ -378,7 +377,6 @@ library PaymentStartInFlightExit {
             PaymentOutputModel.Output memory output = exitData.inFlightTx.outputs[i];
 
             ife.outputs[i].outputId = outputId;
-            ife.outputs[i].outputGuard = output.outputGuard;
             // exit target is not set as output guard preimage many not be available for caller
             ife.outputs[i].token = output.token;
             ife.outputs[i].amount = output.amount;

@@ -1,4 +1,3 @@
-const OutputGuardHandler = artifacts.require('ExpectedOutputGuardHandler');
 const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry');
 const PaymentInFlightExitRouter = artifacts.require('PaymentInFlightExitRouterMock');
 const PaymentStartInFlightExit = artifacts.require('PaymentStartInFlightExit');
@@ -24,9 +23,8 @@ const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpe
 const { buildValidNoncanonicalChallengeArgs } = require('../../../helpers/ife.js');
 
 contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, competitorOwner, challenger]) => {
-    const IN_FLIGHT_EXIT_BOND = 31415926535; // wei
     const CHILD_BLOCK_INTERVAL = 1000;
-    const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
+    const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week in second
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
     const INITIAL_IMMUNE_EXIT_GAME_NUM = 1;
     const OUTPUT_TYPE_ONE = 1;
@@ -84,15 +82,13 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
         await PaymentInFlightExitRouter.link('PaymentStartInFlightExit', startInFlightExit.address);
         await PaymentInFlightExitRouter.link('PaymentPiggybackInFlightExit', piggybackInFlightExit.address);
         await PaymentInFlightExitRouter.link('PaymentChallengeIFENotCanonical', challengeInFlightExitNotCanonical.address);
+    });
 
+    before('deploy helper contracts', async () => {
         this.exitIdHelper = await ExitId.new();
         this.isDeposit = await IsDeposit.new(CHILD_BLOCK_INTERVAL);
         this.exitableHelper = await ExitableTimestamp.new(MIN_EXIT_PERIOD);
         this.stateTransitionVerifierAccept = await StateTransitionVerifierAccept.new();
-
-        this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
-        const handler = await OutputGuardHandler.new(true, alice);
-        await this.outputGuardHandlerRegistry.registerOutputGuardHandler(OUTPUT_TYPE_ONE, handler.address);
     });
 
     describe('challenge in-flight exit non canonical', () => {
@@ -101,6 +97,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
                 MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
             );
             this.spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
+            this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
             this.exitGame = await PaymentInFlightExitRouter.new(
                 this.framework.address,
                 this.outputGuardHandlerRegistry.address,
