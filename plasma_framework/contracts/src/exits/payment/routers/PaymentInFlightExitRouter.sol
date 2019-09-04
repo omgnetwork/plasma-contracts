@@ -100,6 +100,10 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyWithValue {
         piggybackInFlightExitController.piggybackOutput(inFlightExitMap, args);
     }
 
+    /**
+     * @notice Challenges an in-flight exit to be non canonical.
+     * @param args input argument data to challenge. See struct 'ChallengeCanonicityArgs' for detailed info.
+     */
     function challengeInFlightExitNotCanonical(PaymentInFlightExitRouterArgs.ChallengeCanonicityArgs memory args)
         public
         payable
