@@ -69,8 +69,8 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
             }, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData],
         };
 
-        const rlpInFlighTxBytes = web3.utils.bytesToHex(inFlightTx.rlpEncoded());
-        const exitId = await exitIdHelper.getInFlightExitId(rlpInFlighTxBytes);
+        const rlpInFlightTxBytes = web3.utils.bytesToHex(inFlightTx.rlpEncoded());
+        const exitId = await exitIdHelper.getInFlightExitId(rlpInFlightTxBytes);
         return { exitId, inFlightTx, inFlightExitData };
     };
 
@@ -140,14 +140,14 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
                     this.challengeArgs, { from: challenger },
                 );
 
-                const rlpInFlighTxBytes = web3.utils.bytesToHex(this.inFlightTx.rlpEncoded());
+                const rlpInFlightTxBytes = web3.utils.bytesToHex(this.inFlightTx.rlpEncoded());
                 await expectEvent.inTransaction(
                     receipt.transactionHash,
                     PaymentChallengeIFENotCanonical,
                     'InFlightExitChallenged',
                     {
                         challenger,
-                        txHash: web3.utils.sha3(rlpInFlighTxBytes),
+                        txHash: web3.utils.sha3(rlpInFlightTxBytes),
                         challengeTxPosition: new BN(this.challengeArgs.competingTxPos),
                     },
                 );
@@ -299,14 +299,14 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
                     this.challengeArgs, { from: challenger },
                 );
 
-                const rlpInFlighTxBytes = web3.utils.bytesToHex(this.inFlightTx.rlpEncoded());
+                const rlpInFlightTxBytes = web3.utils.bytesToHex(this.inFlightTx.rlpEncoded());
                 await expectEvent.inTransaction(
                     receipt.transactionHash,
                     PaymentChallengeIFENotCanonical,
                     'InFlightExitChallenged',
                     {
                         challenger,
-                        txHash: web3.utils.sha3(rlpInFlighTxBytes),
+                        txHash: web3.utils.sha3(rlpInFlightTxBytes),
                         challengeTxPosition: expectedCompetitorPos,
                     },
                 );

@@ -15,7 +15,7 @@ interface IOutputGuardHandler {
     function getExitTarget(OutputGuardModel.Data calldata object) external view returns (address payable);
 
     /**
-    * @notice Gets the 'confirm singature address' from the data set. Returns address(0) if none.
+    * @notice Gets the 'confirm signature address' from the data set. Returns address(0) if none.
     */
     function getConfirmSigAddress(OutputGuardModel.Data calldata object) external view returns (address);
 }
