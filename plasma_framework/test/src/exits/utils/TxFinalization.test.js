@@ -2,7 +2,7 @@ const TxFinalization = artifacts.require('TxFinalizationWrapper');
 const PlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 
 const { expect } = require('chai');
-const { constants } = require('openzeppelin-test-helpers');
+const { constants, expectRevert } = require('openzeppelin-test-helpers');
 
 const { buildTxPos } = require('../../../helpers/positions.js');
 const { MerkleTree } = require('../../../helpers/merkle.js');
@@ -48,9 +48,10 @@ contract('TxFinalization', ([richFather]) => {
                 constants.ZERO_ADDRESS,
             );
 
-            const errorMsg = 'Returned error: VM Exception while processing transaction: revert invalid protocol value';
-            await this.test.isStandardFinalized(verifier)
-                .catch(err => expect(err.message).to.equal(errorMsg));
+            await expectRevert(
+                this.test.isStandardFinalized(verifier),
+                'invalid protocol value',
+            );
         });
 
         describe('Given MVP protocol', () => {
@@ -138,9 +139,10 @@ contract('TxFinalization', ([richFather]) => {
                 constants.ZERO_ADDRESS,
             );
 
-            const errorMsg = 'Returned error: VM Exception while processing transaction: revert invalid protocol value';
-            await this.test.isProtocolFinalized(verifier)
-                .catch(err => expect(err.message).to.equal(errorMsg));
+            await expectRevert(
+                this.test.isProtocolFinalized(verifier),
+                'invalid protocol value',
+            );
         });
 
         describe('Given MVP protocol', () => {
