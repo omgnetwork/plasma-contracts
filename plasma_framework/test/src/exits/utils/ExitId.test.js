@@ -1,4 +1,4 @@
-const ExitId = artifacts.require('ExitIdWrapper');
+const ExitId = artifacts.require('ExitId');
 
 const { BN, constants } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');

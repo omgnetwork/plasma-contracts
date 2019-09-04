@@ -1,5 +1,5 @@
 const ExitableTimestamp = artifacts.require('ExitableTimestampWrapper');
-const ExitId = artifacts.require('ExitIdWrapper');
+const ExitId = artifacts.require('ExitId');
 const IsDeposit = artifacts.require('IsDepositWrapper');
 const ExpectedOutputGuardHandler = artifacts.require('ExpectedOutputGuardHandler');
 const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry');

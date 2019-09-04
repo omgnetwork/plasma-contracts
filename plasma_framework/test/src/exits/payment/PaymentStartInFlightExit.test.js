@@ -1,4 +1,4 @@
-const ExitId = artifacts.require('ExitIdWrapper');
+const ExitId = artifacts.require('ExitId');
 const ExitableTimestamp = artifacts.require('ExitableTimestampWrapper');
 const IsDeposit = artifacts.require('IsDepositWrapper');
 const OutputGuardHandler = artifacts.require('ExpectedOutputGuardHandler');

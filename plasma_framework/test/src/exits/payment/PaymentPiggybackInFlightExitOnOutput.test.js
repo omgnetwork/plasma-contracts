@@ -1,5 +1,5 @@
 const ExpectedOutputGuardHandler = artifacts.require('ExpectedOutputGuardHandler');
-const ExitIdWrapper = artifacts.require('ExitIdWrapper');
+const ExitId = artifacts.require('ExitId');
 const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry');
 const PaymentChallengeIFENotCanonical = artifacts.require('PaymentChallengeIFENotCanonical');
 const PaymentInFlightExitRouter = artifacts.require('PaymentInFlightExitRouterMock');
@@ -49,7 +49,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, outputOwner, nonOu
     });
 
     before('deploy helper contracts', async () => {
-        this.exitIdHelper = await ExitIdWrapper.new();
+        this.exitIdHelper = await ExitId.new();
         this.stateTransitionVerifierAccept = await StateTransitionVerifierAccept.new();
     });
 

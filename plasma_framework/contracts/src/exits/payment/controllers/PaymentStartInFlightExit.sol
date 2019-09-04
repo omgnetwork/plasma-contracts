@@ -11,7 +11,7 @@ import "../../models/OutputGuardModel.sol";
 import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../interfaces/IStateTransitionVerifier.sol";
 import "../../utils/ExitableTimestamp.sol";
-import "../../utils/ExitId.sol";
+import "../../utils/ExitIdLib.sol";
 import "../../utils/OutputGuard.sol";
 import "../../utils/OutputId.sol";
 import "../../../utils/IsDeposit.sol";
@@ -122,7 +122,7 @@ library PaymentStartInFlightExit {
     {
         StartExitData memory exitData;
         exitData.controller = controller;
-        exitData.exitId = ExitId.getInFlightExitId(args.inFlightTx);
+        exitData.exitId = ExitIdLib.getInFlightExitId(args.inFlightTx);
         exitData.inFlightTxRaw = args.inFlightTx;
         exitData.inFlightTx = PaymentTransactionModel.decode(args.inFlightTx);
         exitData.inFlightTxHash = keccak256(args.inFlightTx);

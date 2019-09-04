@@ -9,7 +9,7 @@ const PaymentSpendingConditionFalse = artifacts.require('PaymentSpendingConditio
 const PaymentSpendingConditionTrue = artifacts.require('PaymentSpendingConditionTrue');
 const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const StateTransitionVerifierAccept = artifacts.require('StateTransitionVerifierAccept');
-const ExitId = artifacts.require('ExitIdWrapper');
+const ExitId = artifacts.require('ExitId');
 const IsDeposit = artifacts.require('IsDepositWrapper');
 const ExitableTimestamp = artifacts.require('ExitableTimestampWrapper');
 

@@ -8,7 +8,7 @@ import "../../models/OutputGuardModel.sol";
 import "../../interfaces/IOutputGuardHandler.sol";
 import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../utils/ExitableTimestamp.sol";
-import "../../utils/ExitId.sol";
+import "../../utils/ExitIdLib.sol";
 import "../../utils/OutputGuard.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../framework/interfaces/IExitProcessor.sol";
@@ -77,7 +77,7 @@ library PaymentPiggybackInFlightExit {
     )
         public
     {
-        uint192 exitId = ExitId.getInFlightExitId(args.inFlightTx);
+        uint192 exitId = ExitIdLib.getInFlightExitId(args.inFlightTx);
         PaymentExitDataModel.InFlightExit storage exit = inFlightExitMap.exits[exitId];
 
         require(exit.exitStartTimestamp != 0, "No in-flight exit to piggyback on");
@@ -110,7 +110,7 @@ library PaymentPiggybackInFlightExit {
     )
         public
     {
-        uint192 exitId = ExitId.getInFlightExitId(args.inFlightTx);
+        uint192 exitId = ExitIdLib.getInFlightExitId(args.inFlightTx);
         PaymentExitDataModel.InFlightExit storage exit = inFlightExitMap.exits[exitId];
 
         require(exit.exitStartTimestamp != 0, "No in-flight exit to piggyback on");

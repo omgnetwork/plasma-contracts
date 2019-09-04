@@ -5,7 +5,7 @@ import "../PaymentExitDataModel.sol";
 import "../routers/PaymentInFlightExitRouterArgs.sol";
 import "../spendingConditions/IPaymentSpendingCondition.sol";
 import "../spendingConditions/PaymentSpendingConditionRegistry.sol";
-import "../../utils/ExitId.sol";
+import "../../utils/ExitIdLib.sol";
 import "../../../utils/UtxoPosLib.sol";
 import "../../../utils/Merkle.sol";
 import "../../../framework/PlasmaFramework.sol";
@@ -33,7 +33,7 @@ library PaymentChallengeIFENotCanonical {
     )
         public
     {
-        uint192 exitId = ExitId.getInFlightExitId(args.inFlightTx);
+        uint192 exitId = ExitIdLib.getInFlightExitId(args.inFlightTx);
         PaymentExitDataModel.InFlightExit storage ife = inFlightExitMap.exits[exitId];
         require(ife.exitStartTimestamp != 0, "In-fligh exit doesn't exists");
 

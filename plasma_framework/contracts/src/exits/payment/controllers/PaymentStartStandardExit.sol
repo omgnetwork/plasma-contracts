@@ -7,7 +7,7 @@ import "../../interfaces/IOutputGuardHandler.sol";
 import "../../models/OutputGuardModel.sol";
 import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../utils/ExitableTimestamp.sol";
-import "../../utils/ExitId.sol";
+import "../../utils/ExitIdLib.sol";
 import "../../utils/OutputId.sol";
 import "../../utils/OutputGuard.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
@@ -98,7 +98,7 @@ library PaymentStartStandardExit {
         PaymentTransactionModel.Transaction memory outputTx = PaymentTransactionModel.decode(args.rlpOutputTx);
         PaymentOutputModel.Output memory output = outputTx.outputs[utxoPos.outputIndex()];
         bool isTxDeposit = controller.isDeposit.test(utxoPos.blockNum());
-        uint192 exitId = ExitId.getStandardExitId(isTxDeposit, args.rlpOutputTx, utxoPos);
+        uint192 exitId = ExitIdLib.getStandardExitId(isTxDeposit, args.rlpOutputTx, utxoPos);
         (bytes32 root, uint256 blockTimestamp) = controller.framework.blocks(utxoPos.blockNum());
 
         OutputGuardModel.Data memory outputGuardData = OutputGuardModel.Data({

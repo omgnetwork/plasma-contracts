@@ -2,7 +2,7 @@ pragma solidity ^0.5.0;
 pragma experimental ABIEncoderV2;
 
 import "./routers/PaymentStandardExitRouter.sol";
-import "../utils/ExitId.sol";
+import "../utils/ExitIdLib.sol";
 import "../../framework/interfaces/IExitProcessor.sol";
 import "../../framework/PlasmaFramework.sol";
 import "../../vaults/EthVault.sol";
@@ -21,7 +21,7 @@ contract PaymentExitGame is IExitProcessor, PaymentStandardExitRouter {
     }
 
     function processExit(uint192 _exitId) external {
-        if (ExitId.isStandardExit(_exitId)) {
+        if (ExitIdLib.isStandardExit(_exitId)) {
             PaymentStandardExitRouter.processStandardExit(_exitId);
         } else {
             require(false, "TODO: implement process in flight exit");
