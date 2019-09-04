@@ -25,7 +25,7 @@ contract('BlockController', ([operator, other]) => {
         this.blockController.registerVault(this.dummyVaultId, this.dummyVault.address);
 
         // to make these tests easier authority address will be the same as default caller (account[0])
-        await this.blockController.init();
+        await this.blockController.initAuthority();
     });
 
     describe('constructor', () => {
@@ -40,7 +40,7 @@ contract('BlockController', ([operator, other]) => {
             expect(await this.blockController.authority()).to.equal(operator);
 
             await expectRevert(
-                this.blockController.init(),
+                this.blockController.initAuthority(),
                 'Authority address has been already set.',
             );
         });

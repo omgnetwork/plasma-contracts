@@ -31,7 +31,7 @@ contract BlockController is Operated, VaultRegistry {
      * @dev All block submission then needs to be send from msg.sender address.
      * @dev see discussion in https://github.com/omisego/plasma-contracts/issues/233
      */
-    function init() external {
+    function initAuthority() external {
         require(authority == address(0), "Authority address has been already set.");
         authority = msg.sender;
     }
