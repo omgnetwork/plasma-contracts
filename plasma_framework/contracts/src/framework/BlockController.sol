@@ -16,9 +16,9 @@ contract BlockController is Operated, VaultRegistry {
         uint256 blockNumber
     );
 
-    constructor(uint256 _interval, uint256 _minExitPeriod, uint256 _initialImmuneVaults)
+    constructor(address operator, uint256 _interval, uint256 _minExitPeriod, uint256 _initialImmuneVaults)
         public
-        VaultRegistry(_minExitPeriod, _initialImmuneVaults)
+        VaultRegistry(operator, _minExitPeriod, _initialImmuneVaults)
     {
         childBlockInterval = _interval;
         nextChildBlock = childBlockInterval;

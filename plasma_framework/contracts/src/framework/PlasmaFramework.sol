@@ -21,9 +21,8 @@ contract PlasmaFramework is Operated, VaultRegistry, ExitGameRegistry, ExitGameC
         uint256 _initialImmuneExitGames
     )
         public
-        Operated(operator)
-        BlockController(CHILD_BLOCK_INTERVAL, _minExitPeriod, _initialImmuneVaults)
-        ExitGameController(_minExitPeriod, _initialImmuneExitGames)
+        BlockController(operator, CHILD_BLOCK_INTERVAL, _minExitPeriod, _initialImmuneVaults)
+        ExitGameController(operator, _minExitPeriod, _initialImmuneExitGames)
     {
         minExitPeriod = _minExitPeriod;
     }

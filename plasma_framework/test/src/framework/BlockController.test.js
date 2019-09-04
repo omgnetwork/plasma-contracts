@@ -13,6 +13,7 @@ contract('BlockController', ([operator, other]) => {
     beforeEach(async () => {
         this.childBlockInterval = 5;
         this.blockController = await BlockController.new(
+            operator,
             this.childBlockInterval,
             MIN_EXIT_PERIOD,
             INITIAL_IMMUNE_VAULTS,

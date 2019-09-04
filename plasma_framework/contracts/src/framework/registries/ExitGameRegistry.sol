@@ -14,8 +14,9 @@ contract ExitGameRegistry is Operated {
         address exitGameAddress
     );
 
-    constructor (uint256 _minExitPeriod, uint256 _initialImmuneExitGames)
+    constructor (address operator, uint256 _minExitPeriod, uint256 _initialImmuneExitGames)
         public
+        Operated(operator)
     {
         _quarantine.quarantinePeriod = 3 * _minExitPeriod;
         _quarantine.immunitiesRemaining = _initialImmuneExitGames;

@@ -32,9 +32,9 @@ contract ExitGameController is ExitGameRegistry {
         uint256 uniquePriority
     );
 
-    constructor(uint256 _minExitPeriod, uint256 _initialImmuneExitGames)
+    constructor(address operator, uint256 _minExitPeriod, uint256 _initialImmuneExitGames)
         public
-        ExitGameRegistry(_minExitPeriod, _initialImmuneExitGames)
+        ExitGameRegistry(operator, _minExitPeriod, _initialImmuneExitGames)
     {
         address ethToken = address(0);
         exitsQueues[ethToken] = new PriorityQueue();

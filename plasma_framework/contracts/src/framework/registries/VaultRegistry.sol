@@ -15,8 +15,9 @@ contract VaultRegistry is Operated {
         address vaultAddress
     );
 
-    constructor (uint256 _minExitPeriod, uint256 _initialImmuneVaults)
+    constructor (address operator, uint256 _minExitPeriod, uint256 _initialImmuneVaults)
         public
+        Operated(operator)
     {
         _quarantine.quarantinePeriod = _minExitPeriod;
         _quarantine.immunitiesRemaining = _initialImmuneVaults;
