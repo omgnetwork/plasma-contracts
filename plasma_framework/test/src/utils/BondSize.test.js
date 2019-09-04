@@ -52,7 +52,7 @@ contract('BondSize', () => {
         const newBondSize = new BN(this.initialBondSize).muln(2);
         await this.contract.updateBondSize(newBondSize);
 
-        await time.increase(WAITING_PERIOD.sub(time.duration.seconds(1)));
+        await time.increase(WAITING_PERIOD.sub(time.duration.seconds(5)));
         const bondSize = await this.contract.bondSize();
         expect(bondSize).to.be.bignumber.equal(this.initialBondSize);
     });
