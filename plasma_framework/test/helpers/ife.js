@@ -2,7 +2,12 @@ const { constants } = require('openzeppelin-test-helpers');
 
 const { MerkleTree } = require('./merkle.js');
 const { buildUtxoPos, UtxoPos } = require('./positions.js');
-const { addressToOutputGuard, computeNormalOutputId } = require('./utils.js');
+const {
+    addressToOutputGuard,
+    buildOutputGuard,
+    computeNormalOutputId,
+    computeDepositOutputId,
+} = require('./utils.js');
 const { PaymentTransactionOutput, PaymentTransaction, PlasmaDepositTransaction } = require('./transaction.js');
 const { EMPTY_BYTES } = require('./constants.js');
 
@@ -13,7 +18,6 @@ const OUTPUT_TYPE_TWO = 2;
 const IFE_TX_TYPE = 1;
 const WITNESS_LENGTH_IN_BYTES = 65;
 const IN_FLIGHT_TX_WITNESS_BYTES = web3.utils.bytesToHex('a'.repeat(WITNESS_LENGTH_IN_BYTES));
-const DUMMY_PREIMAGE = web3.utils.utf8ToHex('Dummy Preimage');
 const BLOCK_NUMBER = 1000;
 const DUMMY_INPUT_1 = '0x0000000000000000000000000000000000000000000000000000000000000001';
 const DUMMY_INPUT_2 = '0x0000000000000000000000000000000000000000000000000000000000000002';
@@ -49,7 +53,7 @@ function buildValidIfeStartArgs(amount, [ifeOwner, inputOwner1, inputOwner2], bl
         args,
         inputTxsBlockRoot1,
         inputTxsBlockRoot2,
-    } = buildIfeStartArgs(inputTxs, inputUtxosPos, inFlightTx);
+    } = buildIfeStartArgs(inputTxs, [inputOwner1, inputOwner2], inputUtxosPos, inFlightTx);
 
     const argsDecoded = { inputTxs, inputUtxosPos, inFlightTx };
 
@@ -61,7 +65,7 @@ function buildValidIfeStartArgs(amount, [ifeOwner, inputOwner1, inputOwner2], bl
     };
 }
 
-function buildIfeStartArgs([inputTx1, inputTx2], inputUtxosPos, inFlightTx) {
+function buildIfeStartArgs([inputTx1, inputTx2], [inputOwner1, inputOwner2], inputUtxosPos, inFlightTx) {
     const rlpInputTx1 = inputTx1.rlpEncoded();
     const encodedInputTx1 = web3.utils.bytesToHex(rlpInputTx1);
 
@@ -81,13 +85,16 @@ function buildIfeStartArgs([inputTx1, inputTx2], inputUtxosPos, inFlightTx) {
 
     const inFlightTxRaw = web3.utils.bytesToHex(inFlightTx.rlpEncoded());
 
-    const inputUtxosGuardPreimages = [DUMMY_PREIMAGE, DUMMY_PREIMAGE];
-
     const inputTxsConfirmSigs = [EMPTY_BYTES, EMPTY_BYTES];
 
     const inFlightTxWitnesses = [IN_FLIGHT_TX_WITNESS_BYTES, IN_FLIGHT_TX_WITNESS_BYTES];
 
     const inputTxTypes = [IFE_TX_TYPE, IFE_TX_TYPE];
+
+    const outputGuardPreimagesForInputs = [
+        web3.utils.toHex(inputOwner1),
+        web3.utils.toHex(inputOwner2),
+    ];
 
     const args = {
         inFlightTx: inFlightTxRaw,
@@ -95,8 +102,8 @@ function buildIfeStartArgs([inputTx1, inputTx2], inputUtxosPos, inFlightTx) {
         inputTxTypes,
         inputUtxosPos,
         inputUtxosTypes,
+        outputGuardPreimagesForInputs,
         inputTxsInclusionProofs,
-        inputUtxosGuardPreimages,
         inputTxsConfirmSigs,
         inFlightTxWitnesses,
     };
@@ -108,12 +115,12 @@ function buildIfeStartArgs([inputTx1, inputTx2], inputUtxosPos, inFlightTx) {
 }
 
 function createInputTransaction(inputs, owner, amount, token = ETH) {
-    const output = new PaymentTransactionOutput(amount, addressToOutputGuard(owner), token);
+    const output = new PaymentTransactionOutput(amount, buildOutputGuard(OUTPUT_TYPE_ONE, owner), token);
     return new PaymentTransaction(IFE_TX_TYPE, inputs, [output]);
 }
 
 function createDepositTransaction(owner, amount, token = ETH) {
-    const output = new PaymentTransactionOutput(amount, addressToOutputGuard(owner), token);
+    const output = new PaymentTransactionOutput(amount, buildOutputGuard(OUTPUT_TYPE_ONE, owner), token);
     return new PlasmaDepositTransaction(output);
 }
 
@@ -134,7 +141,9 @@ function createInputsForInFlightTx(inputTxs, inputUtxosPos) {
     for (let i = 0; i < inputTxs.length; i++) {
         const inputUtxoPos = new UtxoPos(inputUtxosPos[i]);
         const inputTx = web3.utils.bytesToHex(inputTxs[i].rlpEncoded());
-        const outputId = computeNormalOutputId(inputTx, inputUtxoPos.outputIndex);
+        const outputId = isDeposit(inputUtxoPos.blockNum)
+            ? computeDepositOutputId(inputTx, inputUtxoPos.outputIndex, inputUtxoPos.utxoPos)
+            : computeNormalOutputId(inputTx, inputUtxoPos.outputIndex);
         inputs.push(outputId);
     }
     return inputs;

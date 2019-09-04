@@ -6,9 +6,13 @@ import "../PaymentInFlightExitModelUtils.sol";
 import "../routers/PaymentInFlightExitRouterArgs.sol";
 import "../spendingConditions/IPaymentSpendingCondition.sol";
 import "../spendingConditions/PaymentSpendingConditionRegistry.sol";
+import "../../interfaces/IOutputGuardHandler.sol";
+import "../../models/OutputGuardModel.sol";
 import "../../registries/OutputGuardHandlerRegistry.sol";
+import "../../interfaces/IStateTransitionVerifier.sol";
 import "../../utils/ExitableTimestamp.sol";
 import "../../utils/ExitId.sol";
+import "../../utils/OutputGuard.sol";
 import "../../utils/OutputId.sol";
 import "../../utils/TxFinalization.sol";
 import "../../../utils/IsDeposit.sol";
@@ -16,6 +20,7 @@ import "../../../utils/UtxoPosLib.sol";
 import "../../../utils/Merkle.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
+import "../../../transactions/WireTransaction.sol";
 import "../../../transactions/outputs/PaymentOutputModel.sol";
 
 library PaymentStartInFlightExit {
@@ -33,6 +38,7 @@ library PaymentStartInFlightExit {
         IsDeposit.Predicate isDeposit;
         ExitableTimestamp.Calculator exitTimestampCalculator;
         PaymentSpendingConditionRegistry spendingConditionRegistry;
+        IStateTransitionVerifier transitionVerifier;
         OutputGuardHandlerRegistry outputGuardHandlerRegistry;
         uint256 supportedTxType;
     }
@@ -48,12 +54,12 @@ library PaymentStartInFlightExit {
      * @param inFlightTxRaw In-flight transaction as bytes.
      * @param inFlightTx Decoded in-flight transaction.
      * @param inFlightTxHash Hash of in-flight transaction.
-     * @param inputTxsRaw Input transactions as bytes.
-     * @param inputTxs Decoded input transactions.
+     * @param inputTxs Input transactions as bytes.
      * @param inputUtxosPos Postions of input utxos.
+     * @param inputUtxosPos Postions of input utxos coded as integers.
      * @param inputUtxosTypes Types of outputs that make in-flight transaction inputs.
+     * @param outputGuardPreimagesForInputs Output guard pre-images for in-flight transaction inputs.
      * @param inputTxsInclusionProofs Merkle proofs for input transactions.
-     * @param inputUtxosGuardPreimages Output guard preimage for the inputs.
      * @param inputTxsConfirmSigs Confirm signatures for the input txs.
      * @param inFlightTxWitnesses Witnesses for in-flight transactions.
      * @param outputIds Output ids for input transactions.
@@ -64,13 +70,13 @@ library PaymentStartInFlightExit {
         bytes inFlightTxRaw;
         PaymentTransactionModel.Transaction inFlightTx;
         bytes32 inFlightTxHash;
-        bytes[] inputTxsRaw;
-        PaymentTransactionModel.Transaction[] inputTxs;
+        bytes[] inputTxs;
         UtxoPosLib.UtxoPos[] inputUtxosPos;
+        uint256[] inputUtxosPosRaw;
         uint256[] inputUtxosTypes;
         uint256[] inputTxTypes;
+        bytes[] outputGuardPreimagesForInputs;
         bytes[] inputTxsInclusionProofs;
-        bytes[] inputUtxosGuardPreimages;
         bytes[] inputTxsConfirmSigs;
         bytes[] inFlightTxWitnesses;
         bytes32[] outputIds;
@@ -79,6 +85,7 @@ library PaymentStartInFlightExit {
     function buildController(
         PlasmaFramework framework,
         PaymentSpendingConditionRegistry spendingConditionRegistry,
+        IStateTransitionVerifier transitionVerifier,
         OutputGuardHandlerRegistry outputGuardHandlerRegistry,
         uint256 supportedTxType
     )
@@ -91,6 +98,7 @@ library PaymentStartInFlightExit {
             isDeposit: IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL()),
             exitTimestampCalculator: ExitableTimestamp.Calculator(framework.minExitPeriod()),
             spendingConditionRegistry: spendingConditionRegistry,
+            transitionVerifier: transitionVerifier,
             outputGuardHandlerRegistry: outputGuardHandlerRegistry,
             supportedTxType: supportedTxType
         });
@@ -123,35 +131,27 @@ library PaymentStartInFlightExit {
         exitData.inFlightTxRaw = args.inFlightTx;
         exitData.inFlightTx = PaymentTransactionModel.decode(args.inFlightTx);
         exitData.inFlightTxHash = keccak256(args.inFlightTx);
-        exitData.inputTxsRaw = args.inputTxs;
-        exitData.inputTxs = decodeInputTxs(exitData.inputTxsRaw);
+        exitData.inputTxs = args.inputTxs;
         exitData.inputTxTypes = args.inputTxTypes;
         exitData.inputUtxosPos = decodeInputTxsPositions(args.inputUtxosPos);
+        exitData.inputUtxosPosRaw = args.inputUtxosPos;
         exitData.inputUtxosTypes = args.inputUtxosTypes;
-        exitData.inputUtxosGuardPreimages = args.inputUtxosGuardPreimages;
         exitData.inputTxsInclusionProofs = args.inputTxsInclusionProofs;
         exitData.inputTxsConfirmSigs = args.inputTxsConfirmSigs;
+        exitData.outputGuardPreimagesForInputs = args.outputGuardPreimagesForInputs;
         exitData.inFlightTxWitnesses = args.inFlightTxWitnesses;
-        exitData.outputIds = getOutputIds(controller, exitData.inputTxsRaw, exitData.inputUtxosPos);
+        exitData.outputIds = getOutputIds(controller, exitData.inputTxs, exitData.inputUtxosPos);
         return exitData;
     }
 
     function decodeInputTxsPositions(uint256[] memory inputUtxosPos) private pure returns (UtxoPosLib.UtxoPos[] memory) {
-        require(inputUtxosPos.length <= MAX_INPUT_NUM, "To many input transactions provided");
+        require(inputUtxosPos.length <= MAX_INPUT_NUM, "Too many transactions provided");
 
         UtxoPosLib.UtxoPos[] memory utxosPos = new UtxoPosLib.UtxoPos[](inputUtxosPos.length);
         for (uint i = 0; i < inputUtxosPos.length; i++) {
             utxosPos[i] = UtxoPosLib.UtxoPos(inputUtxosPos[i]);
         }
         return utxosPos;
-    }
-
-    function decodeInputTxs(bytes[] memory inputTxsRaw) private pure returns (PaymentTransactionModel.Transaction[] memory) {
-        PaymentTransactionModel.Transaction[] memory inputTxs = new PaymentTransactionModel.Transaction[](inputTxsRaw.length);
-        for (uint i = 0; i < inputTxsRaw.length; i++) {
-            inputTxs[i] = PaymentTransactionModel.decode(inputTxsRaw[i]);
-        }
-        return inputTxs;
     }
 
     function getOutputIds(Controller memory controller, bytes[] memory inputTxs, UtxoPosLib.UtxoPos[] memory utxoPos)
@@ -181,8 +181,11 @@ library PaymentStartInFlightExit {
         verifyNumberOfInputsMatchesNumberOfInFlightTransactionInputs(exitData);
         verifyNoInputSpentMoreThanOnce(exitData.inFlightTx);
         verifyInputTransactionIsStandardFinalized(exitData);
-        verifyInputsSpendingCondition(exitData);
-        verifyInFlightTransactionDoesNotOverspend(exitData);
+        verifyInputsSpent(exitData);
+        require(
+            exitData.controller.transitionVerifier.isCorrectStateTransition(exitData.inFlightTxRaw, exitData.inputTxs, exitData.inputUtxosPosRaw),
+            "Invalid state transition"
+        );
     }
 
     function verifyExitNotStarted(
@@ -215,16 +218,16 @@ library PaymentStartInFlightExit {
             "Number of input utxo types does not match number of in-flight transaction inputs"
         );
         require(
+            exitData.outputGuardPreimagesForInputs.length == exitData.inFlightTx.inputs.length,
+            "Number of output guard preimages for inputs does not match number of in-flight transaction inputs"
+        );
+        require(
             exitData.inputTxsInclusionProofs.length == exitData.inFlightTx.inputs.length,
             "Number of input transactions inclusion proofs does not match number of in-flight transaction inputs"
         );
         require(
             exitData.inFlightTxWitnesses.length == exitData.inFlightTx.inputs.length,
             "Number of input transactions witnesses does not match number of in-flight transaction inputs"
-        );
-        require(
-            exitData.inputUtxosGuardPreimages.length == exitData.inFlightTx.inputs.length,
-            "Number of output guard preimages for inputs does not match number of in-flight transaction inputs"
         );
         require(
             exitData.inputTxsConfirmSigs.length == exitData.inFlightTx.inputs.length,
@@ -245,11 +248,11 @@ library PaymentStartInFlightExit {
     function verifyInputTransactionIsStandardFinalized(StartExitData memory exitData) private view {
         for (uint i = 0; i < exitData.inputTxs.length; i++) {
             uint16 outputIndex = exitData.inputUtxosPos[i].outputIndex();
-            bytes32 outputGuard = exitData.inputTxs[i].outputs[outputIndex].outputGuard;
+            WireTransaction.Output memory output = WireTransaction.getOutput(exitData.inputTxs[i], outputIndex);
             OutputGuardModel.Data memory outputGuardData = OutputGuardModel.Data({
-                guard: outputGuard,
+                guard: output.outputGuard,
                 outputType: exitData.inputUtxosTypes[i],
-                preimage: exitData.inputUtxosGuardPreimages[i]
+                preimage: exitData.outputGuardPreimagesForInputs[i]
             });
             IOutputGuardHandler outputGuardHandler = exitData.controller
                                                     .outputGuardHandlerRegistry
@@ -265,7 +268,7 @@ library PaymentStartInFlightExit {
             TxFinalization.Verifier memory verifier = TxFinalization.Verifier({
                 framework: exitData.controller.framework,
                 protocol: protocol,
-                txBytes: exitData.inputTxsRaw[i],
+                txBytes: exitData.inputTxs[i],
                 txPos: exitData.inputUtxosPos[i].txPos(),
                 inclusionProof: exitData.inputTxsInclusionProofs[i],
                 confirmSig: exitData.inputTxsConfirmSigs[i],
@@ -275,10 +278,22 @@ library PaymentStartInFlightExit {
         }
     }
 
-    function verifyInputsSpendingCondition(StartExitData memory exitData) private view {
+    function verifyInputsSpent(StartExitData memory exitData) private view {
         for (uint i = 0; i < exitData.inputTxs.length; i++) {
             uint16 outputIndex = exitData.inputUtxosPos[i].outputIndex();
-            bytes32 outputGuard = exitData.inputTxs[i].outputs[outputIndex].outputGuard;
+            WireTransaction.Output memory output = WireTransaction.getOutput(exitData.inputTxs[i], outputIndex);
+
+            OutputGuardModel.Data memory outputGuardData = OutputGuardModel.Data({
+                guard: output.outputGuard,
+                outputType: exitData.inputUtxosTypes[i],
+                preimage: exitData.outputGuardPreimagesForInputs[i]
+            });
+            IOutputGuardHandler outputGuardHandler = exitData.controller
+                                                    .outputGuardHandlerRegistry
+                                                    .outputGuardHandlers(exitData.inputUtxosTypes[i]);
+            require(address(outputGuardHandler) != address(0), "Failed to get the outputGuardHandler of the output type");
+            require(outputGuardHandler.isValid(outputGuardData),
+                    "Output guard information is invalid for the input tx");
 
             //FIXME: consider moving spending conditions to PlasmaFramework
             IPaymentSpendingCondition condition = exitData.controller.spendingConditionRegistry.spendingConditions(
@@ -288,55 +303,15 @@ library PaymentStartInFlightExit {
             require(address(condition) != address(0), "Spending condition contract not found");
 
             bool isSpentByInFlightTx = condition.verify(
-                outputGuard,
-                uint256(0), // should not be used
-                bytes32(exitData.inputUtxosPos[i].value),
+                output.outputGuard,
+                exitData.inputUtxosPos[i].value,
+                exitData.outputIds[i],
                 exitData.inFlightTxRaw,
                 uint8(i),
                 exitData.inFlightTxWitnesses[i]
             );
             require(isSpentByInFlightTx, "Spending condition failed");
         }
-    }
-
-    function verifyInFlightTransactionDoesNotOverspend(StartExitData memory exitData) private pure {
-        PaymentTransactionModel.Transaction memory inFlightTx = exitData.inFlightTx;
-        for (uint i = 0; i < inFlightTx.outputs.length; i++) {
-            address token = inFlightTx.outputs[i].token;
-            uint256 tokenAmountOut = getTokenAmountOut(inFlightTx, token);
-            uint256 tokenAmountIn = getTokenAmountIn(exitData.inputTxs, exitData.inputUtxosPos, token);
-            require(tokenAmountOut <= tokenAmountIn, "Invalid transaction, spends more than provided in inputs");
-        }
-    }
-
-    function getTokenAmountOut(PaymentTransactionModel.Transaction memory inFlightTx, address token) private pure returns (uint256) {
-        uint256 amountOut = 0;
-        for (uint i = 0; i < inFlightTx.outputs.length; i++) {
-            if (inFlightTx.outputs[i].token == token) {
-                amountOut += inFlightTx.outputs[i].amount;
-            }
-        }
-        return amountOut;
-    }
-
-    function getTokenAmountIn(
-        PaymentTransactionModel.Transaction[] memory inputTxs,
-        UtxoPosLib.UtxoPos[] memory inputUtxosPos,
-        address token
-    )
-        private
-        pure
-        returns (uint256)
-    {
-        uint256 amountIn = 0;
-        for (uint i = 0; i < inputTxs.length; i++) {
-            uint16 oindex = inputUtxosPos[i].outputIndex();
-            PaymentOutputModel.Output memory output = inputTxs[i].outputs[oindex];
-            if (output.token == token) {
-                amountIn += output.amount;
-            }
-        }
-        return amountIn;
     }
 
     function startExit(
@@ -350,8 +325,8 @@ library PaymentStartInFlightExit {
         ife.bondOwner = msg.sender;
         ife.position = getYoungestInputUtxoPosition(startExitData.inputUtxosPos);
         ife.exitStartTimestamp = uint64(block.timestamp);
-        setInFlightExitInputs(ife, startExitData.inputTxs, startExitData.inputUtxosPos);
-        // output is set during a piggyback
+        setInFlightExitInputs(ife, startExitData);
+        setInFlightExitOutputs(ife, startExitData);
     }
 
     function getYoungestInputUtxoPosition(UtxoPosLib.UtxoPos[] memory inputUtxosPos) private pure returns (uint256) {
@@ -366,17 +341,47 @@ library PaymentStartInFlightExit {
 
     function setInFlightExitInputs(
         PaymentExitDataModel.InFlightExit storage ife,
-        PaymentTransactionModel.Transaction[] memory inputTxs,
-        UtxoPosLib.UtxoPos[] memory inputUtxosPos
+        StartExitData memory exitData
     )
         private
     {
-        for (uint i = 0; i < inputTxs.length; i++) {
-            uint16 outputIndex = inputUtxosPos[i].outputIndex();
-            PaymentOutputModel.Output memory output = inputTxs[i].outputs[outputIndex];
-            ife.inputs[i].exitTarget = output.owner();
+        for (uint i = 0; i < exitData.inputTxs.length; i++) {
+            uint16 outputIndex = exitData.inputUtxosPos[i].outputIndex();
+            WireTransaction.Output memory output = WireTransaction.getOutput(exitData.inputTxs[i], outputIndex);
+
+            OutputGuardModel.Data memory outputGuardData = OutputGuardModel.Data(
+                output.outputGuard,
+                exitData.inputUtxosTypes[i],
+                exitData.outputGuardPreimagesForInputs[i]
+            );
+            IOutputGuardHandler handler = exitData.controller.outputGuardHandlerRegistry.outputGuardHandlers(exitData.inputUtxosTypes[i]);
+            require(address(handler) != address(0), "Output guard handler not registered");
+            address payable exitTarget = handler.getExitTarget(outputGuardData);
+
+            ife.inputs[i].outputId = exitData.outputIds[i];
+            ife.inputs[i].outputGuard = output.outputGuard;
+            ife.inputs[i].exitTarget = exitTarget;
             ife.inputs[i].token = output.token;
             ife.inputs[i].amount = output.amount;
+        }
+    }
+
+    function setInFlightExitOutputs(
+        PaymentExitDataModel.InFlightExit storage ife,
+        StartExitData memory exitData
+    )
+        private
+    {
+        for (uint i = 0; i < exitData.inFlightTx.outputs.length; i++) {
+            // deposit transaction can't be in-flight exited
+            bytes32 outputId = OutputId.computeNormalOutputId(exitData.inFlightTxRaw, i);
+            PaymentOutputModel.Output memory output = exitData.inFlightTx.outputs[i];
+
+            ife.outputs[i].outputId = outputId;
+            ife.outputs[i].outputGuard = output.outputGuard;
+            // exit target is not set as output guard preimage many not be available for caller
+            ife.outputs[i].token = output.token;
+            ife.outputs[i].amount = output.amount;
         }
     }
 }

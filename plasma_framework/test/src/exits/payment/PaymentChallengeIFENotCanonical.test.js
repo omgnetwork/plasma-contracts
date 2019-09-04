@@ -1,3 +1,5 @@
+const OutputGuardHandler = artifacts.require('ExpectedOutputGuardHandler');
+const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry');
 const PaymentInFlightExitRouter = artifacts.require('PaymentInFlightExitRouterMock');
 const PaymentStartInFlightExit = artifacts.require('PaymentStartInFlightExit');
 const PaymentPiggybackInFlightExit = artifacts.require('PaymentPiggybackInFlightExit');
@@ -6,10 +8,10 @@ const PaymentSpendingConditionRegistry = artifacts.require('PaymentSpendingCondi
 const PaymentSpendingConditionFalse = artifacts.require('PaymentSpendingConditionFalse');
 const PaymentSpendingConditionTrue = artifacts.require('PaymentSpendingConditionTrue');
 const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
+const StateTransitionVerifierAccept = artifacts.require('StateTransitionVerifierAccept');
 const ExitId = artifacts.require('ExitIdWrapper');
 const IsDeposit = artifacts.require('IsDepositWrapper');
 const ExitableTimestamp = artifacts.require('ExitableTimestampWrapper');
-const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry');
 
 const {
     BN, constants, expectEvent, expectRevert, time,
@@ -82,25 +84,28 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
         await PaymentInFlightExitRouter.link('PaymentStartInFlightExit', startInFlightExit.address);
         await PaymentInFlightExitRouter.link('PaymentPiggybackInFlightExit', piggybackInFlightExit.address);
         await PaymentInFlightExitRouter.link('PaymentChallengeIFENotCanonical', challengeInFlightExitNotCanonical.address);
+
+        this.exitIdHelper = await ExitId.new();
+        this.isDeposit = await IsDeposit.new(CHILD_BLOCK_INTERVAL);
+        this.exitableHelper = await ExitableTimestamp.new(MIN_EXIT_PERIOD);
+        this.stateTransitionVerifierAccept = await StateTransitionVerifierAccept.new();
+
+        this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
+        const handler = await OutputGuardHandler.new(true, alice);
+        await this.outputGuardHandlerRegistry.registerOutputGuardHandler(OUTPUT_TYPE_ONE, handler.address);
     });
 
     describe('challenge in-flight exit non canonical', () => {
-        before(async () => {
-            this.exitIdHelper = await ExitId.new();
-            this.isDeposit = await IsDeposit.new(CHILD_BLOCK_INTERVAL);
-            this.exitableHelper = await ExitableTimestamp.new(MIN_EXIT_PERIOD);
-        });
-
         beforeEach(async () => {
             this.framework = await SpyPlasmaFramework.new(
                 MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
             );
             this.spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
-            const outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
             this.exitGame = await PaymentInFlightExitRouter.new(
                 this.framework.address,
-                outputGuardHandlerRegistry.address,
+                this.outputGuardHandlerRegistry.address,
                 this.spendingConditionRegistry.address,
+                this.stateTransitionVerifierAccept.address,
                 IFE_TX_TYPE,
             );
 

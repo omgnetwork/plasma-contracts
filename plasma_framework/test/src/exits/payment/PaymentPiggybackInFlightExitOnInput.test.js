@@ -7,6 +7,7 @@ const PaymentPiggybackInFlightExit = artifacts.require('PaymentPiggybackInFlight
 const PaymentStartInFlightExit = artifacts.require('PaymentStartInFlightExit');
 const PaymentSpendingConditionRegistry = artifacts.require('PaymentSpendingConditionRegistry');
 const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
+const StateTransitionVerifierAccept = artifacts.require('StateTransitionVerifierAccept');
 
 const {
     BN, constants, expectEvent, expectRevert, time,
@@ -47,6 +48,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
 
     before('deploy helper contracts', async () => {
         this.exitIdHelper = await ExitIdWrapper.new();
+        this.stateTransitionVerifierAccept = await StateTransitionVerifierAccept.new();
     });
 
     beforeEach(async () => {
@@ -61,6 +63,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
             this.framework.address,
             this.outputGuardHandlerRegistry.address,
             spendingConditionRegistry.address,
+            this.stateTransitionVerifierAccept.address,
             PAYMENT_TX_TYPE,
         );
     });
@@ -82,6 +85,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
 
             const emptyWithdrawData = {
                 outputId: web3.utils.sha3('dummy output id'),
+                outputGuard: web3.utils.sha3('dummy output guard'),
                 exitTarget: constants.ZERO_ADDRESS,
                 token: constants.ZERO_ADDRESS,
                 amount: 0,
@@ -95,17 +99,20 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
                 oldestCompetitorPosition: 0,
                 inputs: [{
                     outputId: web3.utils.sha3('dummy output id'),
+                    outputGuard: web3.utils.sha3('dummy output guard'),
                     exitTarget: inputOwner,
                     token: ETH,
                     amount: 999,
                 }, {
                     outputId: web3.utils.sha3('dummy output id'),
+                    outputGuard: web3.utils.sha3('dummy output guard'),
                     exitTarget: inputOwner,
                     token: ETH,
                     amount: 998,
                 }, emptyWithdrawData, emptyWithdrawData],
                 outputs: [{
                     outputId: web3.utils.sha3('dummy output id'),
+                    outputGuard: web3.utils.sha3('dummy output guard'),
                     exitTarget: outputOwner,
                     token: ETH,
                     amount: outputAmount,
