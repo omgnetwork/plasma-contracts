@@ -37,9 +37,9 @@ library PaymentStartInFlightExit {
         PlasmaFramework framework;
         IsDeposit.Predicate isDeposit;
         ExitableTimestamp.Calculator exitTimestampCalculator;
+        OutputGuardHandlerRegistry outputGuardHandlerRegistry;
         PaymentSpendingConditionRegistry spendingConditionRegistry;
         IStateTransitionVerifier transitionVerifier;
-        OutputGuardHandlerRegistry outputGuardHandlerRegistry;
         uint256 supportedTxType;
     }
 
@@ -84,9 +84,9 @@ library PaymentStartInFlightExit {
 
     function buildController(
         PlasmaFramework framework,
+        OutputGuardHandlerRegistry outputGuardHandlerRegistry,
         PaymentSpendingConditionRegistry spendingConditionRegistry,
         IStateTransitionVerifier transitionVerifier,
-        OutputGuardHandlerRegistry outputGuardHandlerRegistry,
         uint256 supportedTxType
     )
         public

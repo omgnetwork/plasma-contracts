@@ -37,9 +37,9 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyWithValue {
     {
         startInFlightExitController = PaymentStartInFlightExit.buildController(
             framework,
+            outputGuardHandlerRegistry,
             spendingConditionRegistry,
             verifier,
-            outputGuardHandlerRegistry,
             supportedTxType
         );
 
