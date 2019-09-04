@@ -1,4 +1,4 @@
-from ethereum.utils import sha3
+from eth_utils import keccak as sha3
 from .exceptions import MemberNotExistException
 from plasma_core.constants import NULL_HASH
 

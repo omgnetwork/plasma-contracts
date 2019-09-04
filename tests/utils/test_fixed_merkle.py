@@ -1,6 +1,7 @@
 import math
 import pytest
-from ethereum.utils import sha3
+from eth_utils import keccak as sha3
+
 from plasma_core.utils.merkle.fixed_merkle import FixedMerkle
 from plasma_core.constants import NULL_HASH
 

@@ -1,7 +1,6 @@
 import rlp
 from rlp.sedes import CountableList, big_endian_int
 from eth_utils import keccak
-from plasma_core.utils.signatures import sign, get_signer
 from plasma_core.utils.merkle.fixed_merkle import FixedMerkle
 from plasma_core.transaction import Transaction
 from plasma_core.constants import NULL_SIGNATURE
@@ -41,15 +40,19 @@ class Block(rlp.Serializable):
         return len(self.transactions) == 1 and self.transactions[0].is_deposit
 
     def sign(self, key):
-        return SignedBlock(self, sign(self.hash, key))
+        return SignedBlock(self, key.sign_msg_hash(self.hash))
 
 
 class SignedBlock(Block):
 
     def __init__(self, block, signature=NULL_SIGNATURE):
         super().__init__(block.transactions, block.number)
-        self.signature = signature
+        self._signature = signature
+
+    @property
+    def signature(self):
+        return self._signature.to_bytes()
 
     @property
     def signer(self):
-        return get_signer(self.hash, self.signature)
+        return self._signature.recover_public_key_from_msg_hash(self.hash).to_checksum_address()
