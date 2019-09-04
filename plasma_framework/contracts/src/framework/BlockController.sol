@@ -4,7 +4,7 @@ import "./models/BlockModel.sol";
 import "./registries/VaultRegistry.sol";
 import "./utils/Operated.sol";
 
-contract BlockController is Operated, VaultRegistry {
+contract BlockController is VaultRegistry {
     address public authority;
     uint256 public childBlockInterval;
     uint256 public nextChildBlock;

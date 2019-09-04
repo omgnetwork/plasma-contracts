@@ -7,7 +7,7 @@ import "./registries/VaultRegistry.sol";
 import "./registries/ExitGameRegistry.sol";
 import "./utils/Operated.sol";
 
-contract PlasmaFramework is Operated, VaultRegistry, ExitGameRegistry, ExitGameController, BlockController {
+contract PlasmaFramework is ExitGameController, BlockController {
     uint256 public constant CHILD_BLOCK_INTERVAL = 1000;
 
     // NOTE: this is the "middle" period.
