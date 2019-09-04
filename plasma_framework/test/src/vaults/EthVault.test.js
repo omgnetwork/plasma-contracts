@@ -10,6 +10,7 @@ const { expect } = require('chai');
 
 const { PaymentTransaction, PaymentTransactionOutput } = require('../../helpers/transaction.js');
 const { spentOnGas } = require('../../helpers/utils.js');
+const { PROTOCOL } = require('../../helpers/constants.js');
 const Testlang = require('../../helpers/testlang.js');
 
 contract('EthVault', ([_, alice]) => {
@@ -28,7 +29,7 @@ contract('EthVault', ([_, alice]) => {
 
         this.exitGame = await DummyExitGame.new();
         await this.exitGame.setEthVault(this.ethVault.address);
-        await this.framework.registerExitGame(1, this.exitGame.address);
+        await this.framework.registerExitGame(1, this.exitGame.address, PROTOCOL.MORE_VP);
     });
 
     describe('deposit', () => {
@@ -175,7 +176,7 @@ contract('EthVault', ([_, alice]) => {
             beforeEach(async () => {
                 this.newExitGame = await DummyExitGame.new();
                 await this.newExitGame.setEthVault(this.ethVault.address);
-                await this.framework.registerExitGame(2, this.newExitGame.address);
+                await this.framework.registerExitGame(2, this.newExitGame.address, PROTOCOL.MORE_VP);
             });
 
             it('should fail when called under quarantine', async () => {

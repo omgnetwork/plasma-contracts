@@ -74,7 +74,9 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, outputOwner, nonOu
         beforeEach(async () => {
             // returns true when "isValid" is called and return the outputOwner when "exitTarget" is called
             // only set the output type 1 case. Leave output 2 case to stub more complex test cases.
-            const expectedOutputGuardHandler = await ExpectedOutputGuardHandler.new(true, outputOwner);
+            const expectedOutputGuardHandler = await ExpectedOutputGuardHandler.new();
+            await expectedOutputGuardHandler.mockIsValid(true);
+            await expectedOutputGuardHandler.mockGetExitTarget(outputOwner);
             await this.outputGuardHandlerRegistry.registerOutputGuardHandler(
                 OUTPUT_TYPE.ONE, expectedOutputGuardHandler.address,
             );
@@ -99,7 +101,6 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, outputOwner, nonOu
 
             const emptyWithdrawData = {
                 outputId: web3.utils.sha3('dummy output id'),
-                outputGuard: web3.utils.sha3('dummy output guard'),
                 exitTarget: constants.ZERO_ADDRESS,
                 token: constants.ZERO_ADDRESS,
                 amount: 0,
@@ -113,20 +114,17 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, outputOwner, nonOu
                 oldestCompetitorPosition: 0,
                 inputs: [{
                     outputId: web3.utils.sha3('dummy output id'),
-                    outputGuard: web3.utils.sha3('dummy output guard'),
                     exitTarget: inputOwner,
                     token: ETH,
                     amount: 999,
                 }, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData],
                 outputs: [{
                     outputId: web3.utils.sha3('dummy output id'),
-                    outputGuard: web3.utils.sha3('dummy output guard'),
                     exitTarget: constants.ZERO_ADDRESS, // would not be set during start IFE
                     token: ETH,
                     amount: outputAmount1,
                 }, {
                     outputId: web3.utils.sha3('dummy output id'),
-                    outputGuard: web3.utils.sha3('dummy output guard'),
                     exitTarget: constants.ZERO_ADDRESS, // would not be set during start IFE
                     token: ETH,
                     amount: outputAmount2,
@@ -245,7 +243,9 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, outputOwner, nonOu
 
         it('should fail when the output guard related data is not valid', async () => {
             // Return false when outputGuard handler is checking for output type 2
-            const expectedOutputGuardHandler = await ExpectedOutputGuardHandler.new(false, outputOwner);
+            const expectedOutputGuardHandler = await ExpectedOutputGuardHandler.new();
+            await expectedOutputGuardHandler.mockIsValid(false);
+            await expectedOutputGuardHandler.mockGetExitTarget(outputOwner);
             await this.outputGuardHandlerRegistry.registerOutputGuardHandler(
                 OUTPUT_TYPE.TWO, expectedOutputGuardHandler.address,
             );
@@ -282,7 +282,9 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, outputOwner, nonOu
                 outputType: data.outputTwoCase.args.outputType,
                 preimage: data.outputTwoCase.args.outputGuardPreimage,
             };
-            const expectedOutputGuardHandler = await ExpectedOutputGuardHandler.new(true, outputOwner);
+            const expectedOutputGuardHandler = await ExpectedOutputGuardHandler.new();
+            expectedOutputGuardHandler.mockIsValid(true);
+            expectedOutputGuardHandler.mockGetExitTarget(outputOwner);
 
             // test would revert if data not as expected after setting this
             await expectedOutputGuardHandler.shouldVerifyArgumentEquals(expectedOutputGuardData);
@@ -334,7 +336,10 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, outputOwner, nonOu
                 const enqueuedCountBeforePiggyback = (await this.framework.enqueuedCount()).toNumber();
 
                 // set the exit target to output owner
-                const handler = await ExpectedOutputGuardHandler.new(true, outputOwner);
+                const handler = await ExpectedOutputGuardHandler.new();
+                await handler.mockIsValid(true);
+                await handler.mockGetExitTarget(outputOwner);
+
                 await this.outputGuardHandlerRegistry.registerOutputGuardHandler(
                     OUTPUT_TYPE.TWO, handler.address,
                 );

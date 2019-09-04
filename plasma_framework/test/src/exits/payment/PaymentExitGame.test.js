@@ -23,6 +23,7 @@ const {
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
+const { PROTOCOL } = require('../../../helpers/constants.js');
 const { MerkleTree } = require('../../../helpers/merkle.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
 const { addressToOutputGuard, computeDepositOutputId, spentOnGas } = require('../../../helpers/utils.js');
@@ -110,7 +111,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
         await spendingConditionRegistry.registerSpendingCondition(
             PAYMENT_OUTPUT_TYPE, PAYMENT_TX_TYPE, this.toPaymentCondition.address,
         );
-        await this.framework.registerExitGame(PAYMENT_TX_TYPE, this.exitGame.address);
+        await this.framework.registerExitGame(PAYMENT_TX_TYPE, this.exitGame.address, PROTOCOL.MORE_VP);
     };
 
     const aliceDepositsETH = async () => {

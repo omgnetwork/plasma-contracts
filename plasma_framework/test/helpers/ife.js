@@ -9,10 +9,12 @@ const {
     computeDepositOutputId,
 } = require('./utils.js');
 const { PaymentTransactionOutput, PaymentTransaction, PlasmaDepositTransaction } = require('./transaction.js');
+const { EMPTY_BYTES } = require('./constants.js');
 
 const ETH = constants.ZERO_ADDRESS;
 const CHILD_BLOCK_INTERVAL = 1000;
 const OUTPUT_TYPE_ONE = 1;
+const OUTPUT_TYPE_TWO = 2;
 const IFE_TX_TYPE = 1;
 const WITNESS_LENGTH_IN_BYTES = 65;
 const IN_FLIGHT_TX_WITNESS_BYTES = web3.utils.bytesToHex('a'.repeat(WITNESS_LENGTH_IN_BYTES));
@@ -26,6 +28,13 @@ function isDeposit(blockNum) {
     return blockNum % CHILD_BLOCK_INTERVAL !== 0;
 }
 
+/**
+ * This returns a setup with the two inputs and one output.
+ * First input would be of output type 1 and the second of output type 2.
+ * All input txs and the in-flight exit tx would be same tx type: 1.
+ * This assumes the tx type would be using MoreVP so the confirm sig provided in this setup would be EMPTY_BYTES.
+ * (protocol setting is on the framework side)
+ */
 function buildValidIfeStartArgs(amount, [ifeOwner, inputOwner1, inputOwner2], blockNum1, blockNum2) {
     const inputTx1 = isDeposit(blockNum1)
         ? createDepositTransaction(inputOwner1, amount)
@@ -72,11 +81,15 @@ function buildIfeStartArgs([inputTx1, inputTx2], [inputOwner1, inputOwner2], inp
 
     const inputTxsInclusionProofs = [inclusionProof1, inclusionProof2];
 
-    const inputUtxosTypes = [OUTPUT_TYPE_ONE, OUTPUT_TYPE_ONE];
+    const inputUtxosTypes = [OUTPUT_TYPE_ONE, OUTPUT_TYPE_TWO];
 
     const inFlightTxRaw = web3.utils.bytesToHex(inFlightTx.rlpEncoded());
 
+    const inputTxsConfirmSigs = [EMPTY_BYTES, EMPTY_BYTES];
+
     const inFlightTxWitnesses = [IN_FLIGHT_TX_WITNESS_BYTES, IN_FLIGHT_TX_WITNESS_BYTES];
+
+    const inputTxTypes = [IFE_TX_TYPE, IFE_TX_TYPE];
 
     const outputGuardPreimagesForInputs = [
         web3.utils.toHex(inputOwner1),
@@ -86,10 +99,12 @@ function buildIfeStartArgs([inputTx1, inputTx2], [inputOwner1, inputOwner2], inp
     const args = {
         inFlightTx: inFlightTxRaw,
         inputTxs,
+        inputTxTypes,
         inputUtxosPos,
         inputUtxosTypes,
         outputGuardPreimagesForInputs,
         inputTxsInclusionProofs,
+        inputTxsConfirmSigs,
         inFlightTxWitnesses,
     };
 

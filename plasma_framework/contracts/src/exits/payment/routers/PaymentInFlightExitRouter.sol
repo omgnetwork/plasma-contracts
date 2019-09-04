@@ -37,14 +37,16 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyWithValue {
     {
         startInFlightExitController = PaymentStartInFlightExit.buildController(
             framework,
+            outputGuardHandlerRegistry,
             spendingConditionRegistry,
             verifier,
-            outputGuardHandlerRegistry,
             supportedTxType
         );
 
         piggybackInFlightExitController = PaymentPiggybackInFlightExit.buildController(
-            framework, this, outputGuardHandlerRegistry
+            framework,
+            this,
+            outputGuardHandlerRegistry
         );
 
         challengeCanonicityController = PaymentChallengeIFENotCanonical.Controller({
@@ -98,6 +100,10 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyWithValue {
         piggybackInFlightExitController.piggybackOutput(inFlightExitMap, args);
     }
 
+    /**
+     * @notice Challenges an in-flight exit to be non canonical.
+     * @param args input argument data to challenge. See struct 'ChallengeCanonicityArgs' for detailed info.
+     */
     function challengeInFlightExitNotCanonical(PaymentInFlightExitRouterArgs.ChallengeCanonicityArgs memory args)
         public
         payable

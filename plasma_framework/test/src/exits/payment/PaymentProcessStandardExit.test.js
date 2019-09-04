@@ -15,6 +15,7 @@ const {
 const { expect } = require('chai');
 
 const { buildUtxoPos } = require('../../../helpers/positions.js');
+const { PROTOCOL } = require('../../../helpers/constants.js');
 
 contract('PaymentStandardExitRouter', ([_, alice]) => {
     const ETH = constants.ZERO_ADDRESS;
@@ -48,7 +49,7 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
                 this.framework.address, ethVault.address, erc20Vault.address,
                 outputGuardHandlerRegistry.address, spendingConditionRegistry.address,
             );
-            this.framework.registerExitGame(1, this.exitGame.address);
+            this.framework.registerExitGame(1, this.exitGame.address, PROTOCOL.MORE_VP);
 
             // prepare the bond that should be set when exit starts
             this.startStandardExitBondSize = await this.exitGame.startStandardExitBondSize();

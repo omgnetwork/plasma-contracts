@@ -10,11 +10,11 @@ import "../../utils/ExitableTimestamp.sol";
 import "../../utils/ExitId.sol";
 import "../../utils/OutputId.sol";
 import "../../utils/OutputGuard.sol";
+import "../../utils/TxFinalization.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
 import "../../../transactions/outputs/PaymentOutputModel.sol";
 import "../../../utils/IsDeposit.sol";
 import "../../../utils/UtxoPosLib.sol";
-import "../../../utils/Merkle.sol";
 import "../../../framework/PlasmaFramework.sol";
 
 library PaymentStartStandardExit {
@@ -22,6 +22,7 @@ library PaymentStartStandardExit {
     using IsDeposit for IsDeposit.Predicate;
     using PaymentOutputModel for PaymentOutputModel.Output;
     using UtxoPosLib for UtxoPosLib.UtxoPos;
+    using TxFinalization for TxFinalization.Verifier;
 
     struct Controller {
         IExitProcessor exitProcessor;
@@ -44,8 +45,8 @@ library PaymentStartStandardExit {
         OutputGuardModel.Data outputGuardData;
         uint192 exitId;
         bool isTxDeposit;
-        bytes32 txBlockRoot;
         uint256 txBlockTimeStamp;
+        TxFinalization.Verifier finalizationVerifier;
     }
 
     event ExitStarted(
@@ -99,7 +100,7 @@ library PaymentStartStandardExit {
         PaymentOutputModel.Output memory output = outputTx.outputs[utxoPos.outputIndex()];
         bool isTxDeposit = controller.isDeposit.test(utxoPos.blockNum());
         uint192 exitId = ExitId.getStandardExitId(isTxDeposit, args.rlpOutputTx, utxoPos);
-        (bytes32 root, uint256 blockTimestamp) = controller.framework.blocks(utxoPos.blockNum());
+        (, uint256 blockTimestamp) = controller.framework.blocks(utxoPos.blockNum());
 
         OutputGuardModel.Data memory outputGuardData = OutputGuardModel.Data({
             guard: output.outputGuard,
@@ -108,6 +109,13 @@ library PaymentStartStandardExit {
         });
 
         IOutputGuardHandler outputGuardHandler = controller.outputGuardHandlerRegistry.outputGuardHandlers(args.outputType);
+
+        TxFinalization.Verifier memory finalizationVerifier = TxFinalization.moreVpVerifier(
+            controller.framework,
+            args.rlpOutputTx,
+            utxoPos.txPos(),
+            args.outputTxInclusionProof
+        );
 
         return StartStandardExitData({
             controller: controller,
@@ -119,8 +127,8 @@ library PaymentStartStandardExit {
             outputGuardData: outputGuardData,
             exitId: exitId,
             isTxDeposit: isTxDeposit,
-            txBlockRoot: root,
-            txBlockTimeStamp: blockTimestamp
+            txBlockTimeStamp: blockTimestamp,
+            finalizationVerifier: finalizationVerifier
         });
     }
 
@@ -137,15 +145,8 @@ library PaymentStartStandardExit {
         require(data.outputGuardHandler.isValid(data.outputGuardData), "Some of the output guard related information is not valid");
         require(data.outputGuardHandler.getExitTarget(data.outputGuardData) == msg.sender, "Only exit target can start an exit");
 
+        require(data.finalizationVerifier.isStandardFinalized(), "The transaction must be standard finalized");
         require(exitMap.exits[data.exitId].exitable == false, "Exit already started");
-
-        bytes32 leafData = keccak256(data.args.rlpOutputTx);
-        require(
-            Merkle.checkMembership(
-                leafData, data.utxoPos.txIndex(), data.txBlockRoot, data.args.outputTxInclusionProof
-            ),
-            "transaction inclusion proof failed"
-        );
     }
 
     function saveStandardExitData(

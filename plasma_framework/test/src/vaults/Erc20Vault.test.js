@@ -12,6 +12,7 @@ const { expect } = require('chai');
 
 const Testlang = require('../../helpers/testlang.js');
 const { PaymentTransaction, PaymentTransactionOutput } = require('../../helpers/transaction.js');
+const { PROTOCOL } = require('../../helpers/constants.js');
 
 contract('Erc20Vault', (accounts) => {
     const alice = accounts[1];
@@ -31,7 +32,7 @@ contract('Erc20Vault', (accounts) => {
 
         this.exitGame = await DummyExitGame.new();
         await this.exitGame.setErc20Vault(this.erc20Vault.address);
-        await this.framework.registerExitGame(1, this.exitGame.address);
+        await this.framework.registerExitGame(1, this.exitGame.address, PROTOCOL.MORE_VP);
 
         this.erc20 = await ERC20Mintable.new();
         await this.erc20.mint(accounts[0], INITIAL_SUPPLY, { from: accounts[0] });
@@ -197,7 +198,7 @@ contract('Erc20Vault', (accounts) => {
             beforeEach(async () => {
                 this.newExitGame = await DummyExitGame.new();
                 await this.newExitGame.setErc20Vault(this.erc20Vault.address);
-                await this.framework.registerExitGame(2, this.newExitGame.address);
+                await this.framework.registerExitGame(2, this.newExitGame.address, PROTOCOL.MORE_VP);
             });
 
             it('should fail when called under quarantine', async () => {
