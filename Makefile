@@ -30,17 +30,22 @@ lint:
 
 .PHONY: test
 test:
-	python -W ignore::DeprecationWarning -m pytest
+	python -m pytest -m "not slow"
+	rm -fr .pytest_cache
+
+.PHONY: test_quick
+test_quick:
+	python -m pytest -m "not slow" -n auto
 	rm -fr .pytest_cache
 
 .PHONY: conctest
 conctest:
-	python -W ignore::DeprecationWarning -m pytest --concmode=mproc
+	python -m pytest -n auto
 	rm -fr .pytest_cache
 
 .PHONY: runslow
 runslow:
-	python -W ignore::DeprecationWarning -m pytest -s --runslow
+	python -m pytest -m "slow" 
 	rm -fr .pytest_cache
 
 .PHONY: dev

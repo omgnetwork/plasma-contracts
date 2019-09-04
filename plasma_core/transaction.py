@@ -3,7 +3,6 @@ from rlp.sedes import big_endian_int, binary, CountableList
 from eth_utils import address, keccak
 from plasma_core.constants import NULL_SIGNATURE, NULL_ADDRESS, EMPTY_METADATA
 from plasma_core.utils.eip712_struct_hash import hash_struct
-from plasma_core.utils.signatures import sign, get_signer
 from plasma_core.utils.transactions import encode_utxo_id
 from rlp.exceptions import DeserializationError
 
@@ -13,7 +12,6 @@ def pad_list(to_pad, value, required_length):
 
 
 class TransactionInput(rlp.Serializable):
-
     fields = (
         ('blknum', big_endian_int),
         ('txindex', big_endian_int),
@@ -29,7 +27,6 @@ class TransactionInput(rlp.Serializable):
 
 
 class TransactionOutput(rlp.Serializable):
-
     fields = (
         ('owner', rlp.sedes.Binary.fixed_length(20)),
         ('token', rlp.sedes.Binary.fixed_length(20)),
@@ -44,7 +41,6 @@ class TransactionOutput(rlp.Serializable):
 
 
 class Transaction(rlp.Serializable):
-
     NUM_TXOS = 4
     DEFAULT_INPUT = (0, 0, 0)
     DEFAULT_OUTPUT = (NULL_ADDRESS, NULL_ADDRESS, 0)
@@ -103,11 +99,11 @@ class Transaction(rlp.Serializable):
     def is_deposit(self):
         return all([i.blknum == 0 for i in self.inputs])
 
-    def sign(self, index, key, verifyingContract=None):
-        hash = hash_struct(self, verifyingContract=verifyingContract)
-        sig = sign(hash, key)
-        self.signatures[index] = sig
-        self._signers[index] = get_signer(hash, sig) if sig != NULL_SIGNATURE else NULL_ADDRESS
+    def sign(self, index, account, verifyingContract=None):
+        msg_hash = hash_struct(self, verifyingContract=verifyingContract)
+        sig = account.key.sign_msg_hash(msg_hash)
+        self.signatures[index] = sig.to_bytes()
+        self._signers[index] = sig.recover_public_key_from_msg_hash(msg_hash).to_canonical_address() if sig != NULL_SIGNATURE else NULL_ADDRESS
 
     @staticmethod
     def deserialize(obj):

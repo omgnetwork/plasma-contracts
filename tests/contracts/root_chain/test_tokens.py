@@ -1,5 +1,5 @@
 import pytest
-from ethereum.tools.tester import TransactionFailed
+from eth_tester.exceptions import TransactionFailed
 from plasma_core.constants import NULL_ADDRESS
 
 
@@ -11,14 +11,14 @@ def test_token_adding(token, root_chain):
         root_chain.addToken(token.address)
 
 
-def test_token_adding_gas_cost(ethtester, root_chain):
+def test_token_adding_gas_cost(w3, root_chain):
     ADDRESS_A = b'\x00' * 19 + b'\x01'
     ADDRESS_B = b'\x00' * 19 + b'\x02'
     root_chain.addToken(ADDRESS_A)
-    gas = ethtester.chain.last_gas_used()
+    gas = w3.eth.last_gas_used
     print("PriorityQueue first deployment costs {} gas".format(gas))
     root_chain.addToken(ADDRESS_B)
-    gas = ethtester.chain.last_gas_used()
+    gas = w3.eth.last_gas_used
     print("PriorityQueue second deployment costs {} gas".format(gas))
 
 

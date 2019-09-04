@@ -27,7 +27,7 @@ commands:
           working_directory: ~/repo/plasma_framework
           command: |
             npm install
-            rm -rf node_modules/*/.git # workaround for problem with dependencies git
+            rm -rf node_modules/*/.git # workaround for problem with git dependencies
       - save_cache:
           paths:
             - plasma_framework/node_modules
@@ -38,20 +38,25 @@ commands:
       - checkout
       - run:
           name: Prepare environment
-          command: sudo chown -R circleci:circleci /usr/local/bin /usr/local/lib/python3.7/site-packages
+          command: |
+            sudo chown -R circleci:circleci /usr/local/bin /usr/local/lib/python3.7/site-packages
+            sudo apt update && sudo apt install nodejs npm
+            sudo npm install -g n && sudo n stable
+            sudo npm install -g ganache-cli
       - restore_cache:
           keys:
-            - dependencies-{{ checksum "requirements.txt" }}
+            - dependencies_v1_{{ checksum "requirements.txt" }}
       - run:
           name: Install dependencies
           command: |
-            make dev
+            pip install -r requirements.txt
             python -m solcx.install v0.4.24
       - save_cache:
           key: dependencies-{{ checksum "requirements.txt" }}
           paths:
             - /usr/local/bin
             - /usr/local/lib/python3.7/site-packages
+            - /usr/local/lib/node_modules
 
 jobs:
   Truffle tests:
@@ -98,15 +103,37 @@ jobs:
       - run:
           name: Run linter 
           command: make lint
+  
+  Python long running tests:
+    executor: python_executor
+    working_directory: ~/repo
+    steps:
+      - setup_python_env
+      - run:
+          name: Run slow tests
+          no_output_timeout: 10h
+          command: make runslow 
 
 workflows:
   version: 2
-  build_root_chain_contract:
+  Run python tests:
     jobs:
       - Python tests
       - Python linter
 
-  build_plasma_framework:
+  Run truffle tests:
     jobs:
       - Truffle tests
       - Truffle linter
+  
+  Run python slow tests:
+    jobs:
+      - Python long running tests
+    triggers:
+      - schedule:
+          cron: "0 0 * * 1" # run job every monday at midnight
+          filters:
+            branches:
+              only:
+                - master
+

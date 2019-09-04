@@ -24,17 +24,19 @@ setup(
     keywords='plasma contracts ethereum development solidity',
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
     install_requires=[
-        'ethereum==2.3.2',
-        'web3==4.8.2',
         'rlp==1.1.0',
         'py-solc-simple==0.0.14',
-        'eip712-structs==1.1.0'
+        'web3==5.0.0',
+        'eip712-structs==1.1.0',
+        'eth_tester==0.2.0b2'
     ],
     extras_require={
         'dev': [
             'pytest>=4.6.0',
             'pylint>=2.3.0',
-            'flake8>=3.7.0'
+            'flake8>=3.7.0',
+            'pytest-xprocess>=0.12.0',
+            'pytest-xdist>=1.29.0'
         ]
     }
 )
