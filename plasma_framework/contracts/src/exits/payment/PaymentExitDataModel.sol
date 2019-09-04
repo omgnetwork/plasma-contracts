@@ -24,7 +24,6 @@ library PaymentExitDataModel {
 
     struct WithdrawData {
         bytes32 outputId;
-        bytes32 outputGuard;
         address payable exitTarget;
         address token;
         uint256 amount;

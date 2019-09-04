@@ -1,7 +1,7 @@
 const ExitableTimestamp = artifacts.require('ExitableTimestampWrapper');
 const ExitId = artifacts.require('ExitId');
-const IsDeposit = artifacts.require('IsDepositWrapper');
 const ExpectedOutputGuardHandler = artifacts.require('ExpectedOutputGuardHandler');
+const IsDeposit = artifacts.require('IsDepositWrapper');
 const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry');
 const PaymentChallengeStandardExit = artifacts.require('PaymentChallengeStandardExit');
 const PaymentProcessStandardExit = artifacts.require('PaymentProcessStandardExit');
@@ -17,6 +17,7 @@ const {
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
+const { OUTPUT_TYPE } = require('../../../helpers/constants.js');
 const { MerkleTree } = require('../../../helpers/merkle.js');
 const { buildUtxoPos, utxoPosToTxPos } = require('../../../helpers/positions.js');
 const {
@@ -32,7 +33,6 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week in seconds
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
     const INITIAL_IMMUNE_EXIT_GAME_NUM = 1;
-    const PAYMENT_OUTPUT_TYPE = 1;
     const EMPTY_BYTES = '0x0000000000000000000000000000000000000000000000000000000000000000000000';
 
     before('deploy and link with controller lib', async () => {
@@ -48,7 +48,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
     describe('startStandardExit', () => {
         const buildTestData = (
             amount, owner, blockNum,
-            outputType = PAYMENT_OUTPUT_TYPE,
+            outputType = OUTPUT_TYPE.PAYMENT,
             outputGuardPreimage = EMPTY_BYTES,
         ) => {
             const output = new PaymentTransactionOutput(amount, addressToOutputGuard(owner), ETH);
@@ -92,8 +92,10 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
             const spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
             this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
 
-            const handler = await ExpectedOutputGuardHandler.new(true, outputOwner);
-            await this.outputGuardHandlerRegistry.registerOutputGuardHandler(PAYMENT_OUTPUT_TYPE, handler.address);
+            const handler = await ExpectedOutputGuardHandler.new();
+            await handler.mockIsValid(true);
+            await handler.mockGetExitTarget(outputOwner);
+            await this.outputGuardHandlerRegistry.registerOutputGuardHandler(OUTPUT_TYPE.PAYMENT, handler.address);
 
             this.exitGame = await PaymentStandardExitRouter.new(
                 this.framework.address, ethVault.address, erc20Vault.address,
@@ -103,7 +105,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
             this.startStandardExitBondSize = await this.exitGame.startStandardExitBondSize();
         });
 
-        it('should fail when cannot prove the tx is included in the block', async () => {
+        it('should fail when the transaction is not standard finalized', async () => {
             const { args } = buildTestData(this.dummyAmount, outputOwner, this.dummyBlockNum);
             const fakeRoot = web3.utils.sha3('fake root data');
 
@@ -113,7 +115,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
                 this.exitGame.startStandardExit(
                     args, { from: outputOwner, value: this.startStandardExitBondSize },
                 ),
-                'transaction inclusion proof failed',
+                'The transaction must be standard finalized',
             );
         });
 
@@ -245,7 +247,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
             const outputId = computeDepositOutputId(args.rlpOutputTx, outputIndex, args.utxoPos);
 
             const expectedOutputTypeAndGuardHash = web3.utils.soliditySha3(
-                { t: 'uint256', v: PAYMENT_OUTPUT_TYPE }, { t: 'bytes32', v: addressToOutputGuard(outputOwner) },
+                { t: 'uint256', v: OUTPUT_TYPE.PAYMENT }, { t: 'bytes32', v: addressToOutputGuard(outputOwner) },
             );
 
             const standardExitData = await this.exitGame.standardExits(exitId);
@@ -274,7 +276,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
             const outputId = computeNormalOutputId(args.rlpOutputTx, outputIndex);
 
             const expectedOutputTypeAndGuardHash = web3.utils.soliditySha3(
-                { t: 'uint256', v: PAYMENT_OUTPUT_TYPE }, { t: 'bytes32', v: addressToOutputGuard(outputOwner) },
+                { t: 'uint256', v: OUTPUT_TYPE.PAYMENT }, { t: 'bytes32', v: addressToOutputGuard(outputOwner) },
             );
 
             const standardExitData = await this.exitGame.standardExits(exitId);

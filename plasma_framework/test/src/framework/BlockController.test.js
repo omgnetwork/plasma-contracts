@@ -1,10 +1,12 @@
 const BlockController = artifacts.require('BlockController');
 const DummyVault = artifacts.require('DummyVault');
 
-const { BN, expectRevert, expectEvent } = require('openzeppelin-test-helpers');
+const {
+    BN, constants, expectRevert, expectEvent,
+} = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
-contract('BlockController', ([_, other]) => {
+contract('BlockController', ([operator, other]) => {
     const MIN_EXIT_PERIOD = 10;
     const INITIAL_IMMUNE_VAULTS = 1;
 
@@ -21,9 +23,28 @@ contract('BlockController', ([_, other]) => {
         this.dummyVault.setBlockController(this.blockController.address);
         this.dummyVaultId = 1;
         this.blockController.registerVault(this.dummyVaultId, this.dummyVault.address);
+
+        // to make these tests easier authority address will be the same as default caller (account[0])
+        await this.blockController.initAuthority();
     });
 
     describe('constructor', () => {
+        it('who is operator', async () => {
+            // this test only demonstrates assumptions regarding which truffle address deploys contracts
+            // and which is default transaction sender address. In both cases this is account[0].
+            expect(await this.blockController.operator()).to.equal(operator);
+            expect(await this.blockController.authority()).to.equal(operator);
+        });
+
+        it('init can be called only once', async () => {
+            expect(await this.blockController.authority()).to.equal(operator);
+
+            await expectRevert(
+                this.blockController.initAuthority(),
+                'Authority address has been already set.',
+            );
+        });
+
         it('nextChildBlock is set to "childBlockInterval"', async () => {
             expect(await this.blockController.nextChildBlock())
                 .to.be.bignumber.equal(new BN(this.childBlockInterval));
@@ -36,6 +57,20 @@ contract('BlockController', ([_, other]) => {
         it('childBlockInterval is set as the inserted value', async () => {
             expect(await this.blockController.childBlockInterval())
                 .to.be.bignumber.equal(new BN(this.childBlockInterval));
+        });
+
+        it('setAuthority rejects zero-address as new authority', async () => {
+            await expectRevert(
+                this.blockController.setAuthority(constants.ZERO_ADDRESS),
+                'Authority cannot be zero-address.',
+            );
+        });
+
+        it('setAuthority can be called only by the operator', async () => {
+            await expectRevert(
+                this.blockController.setAuthority(other, { from: other }),
+                'Not being called by operator.',
+            );
         });
     });
 
@@ -69,11 +104,22 @@ contract('BlockController', ([_, other]) => {
             await expectEvent.inLogs(tx.logs, 'BlockSubmitted', { blockNumber: new BN(this.childBlockInterval) });
         });
 
-        it('reverts when not called by operator', async () => {
+        it('reverts when not called by authority', async () => {
             await expectRevert(
                 this.blockController.submitBlock(this.dummyBlockHash, { from: other }),
-                'Not being called by operator',
+                'Can be called only by the Authority.',
             );
+        });
+
+        it('allows authority address to be changed', async () => {
+            await expectRevert(
+                this.blockController.submitBlock(this.dummyBlockHash, { from: other }),
+                'Can be called only by the Authority.',
+            );
+
+            await this.blockController.setAuthority(other, { from: operator });
+
+            await this.blockController.submitBlock(this.dummyBlockHash, { from: other });
         });
     });
 

@@ -7,17 +7,27 @@ import "../../src/exits/models/OutputGuardModel.sol";
 contract ExpectedOutputGuardHandler is IOutputGuardHandler {
     bool expectedIsValid;
     address payable expectedExitTarget;
+    address expectedConfirmSigAddress;
     OutputGuardModel.Data expectedData;
-
-    /** Set the expected return value in constructor */
-    constructor(bool isValid, address payable exitTarget) public {
-        expectedIsValid = isValid;
-        expectedExitTarget = exitTarget;
-    }
 
     /** If this function is set, all tested method would check whether the argument is the same as expected */
     function shouldVerifyArgumentEquals(OutputGuardModel.Data memory data) public {
         expectedData = data;
+    }
+
+    /** Mock the isValid() function return value */
+    function mockIsValid(bool isValid) public {
+        expectedIsValid = isValid;
+    }
+
+    /** Mock the getExitTarget() function return value */
+    function mockGetExitTarget(address payable exitTarget) public {
+        expectedExitTarget = exitTarget;
+    }
+
+    /** Mock the getConfirmSigAddress() function return value  */
+    function mockGetConfirmSigAddress(address payable confirmSigAddress) public {
+        expectedConfirmSigAddress = confirmSigAddress;
     }
 
     /** overrride */
@@ -30,6 +40,12 @@ contract ExpectedOutputGuardHandler is IOutputGuardHandler {
     function getExitTarget(OutputGuardModel.Data memory data) public view returns (address payable) {
         require(isDataExpected(data), "Input args of 'getExitTarget' function mismatch the expected data");
         return expectedExitTarget;
+    }
+
+    /** override */
+    function getConfirmSigAddress(OutputGuardModel.Data memory data) public view returns (address) {
+        require(isDataExpected(data), "Input args of 'getExitTgetConfirmSigAddressarget' function mismatch the expected data");
+        return expectedConfirmSigAddress;
     }
 
     function isDataExpected(OutputGuardModel.Data memory data) private view returns (bool) {
