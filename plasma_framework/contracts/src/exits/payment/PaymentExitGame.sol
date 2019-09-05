@@ -27,4 +27,21 @@ contract PaymentExitGame is IExitProcessor, PaymentStandardExitRouter {
             require(false, "TODO: implement process in flight exit");
         }
     }
+
+    function getStandardExitId(bool _isDeposit, bytes memory _txBytes, uint256 _utxoPos)
+        public
+        pure
+        returns (uint192)
+    {
+        UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(_utxoPos);
+        return ExitId.getStandardExitId(_isDeposit, _txBytes, utxoPos);
+    }
+
+    function getInFlightExitId(bytes memory _txBytes)
+        public
+        pure
+        returns (uint192)
+    {
+        return ExitId.getInFlightExitId(_txBytes);
+    }
 }
