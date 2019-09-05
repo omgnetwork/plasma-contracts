@@ -98,6 +98,7 @@ library PaymentChallengeStandardExit {
             outputType: data.args.outputType,
             preimage: data.args.outputGuardPreimage
         });
+
         IOutputGuardHandler outputGuardHandler = data.controller
                                                 .outputGuardHandlerRegistry
                                                 .outputGuardHandlers(data.args.outputType);
@@ -105,7 +106,7 @@ library PaymentChallengeStandardExit {
         require(address(outputGuardHandler) != address(0), "Failed to get the outputGuardHandler of the output type");
 
         require(outputGuardHandler.isValid(outputGuardData),
-                "Output guard information is invalid for the input tx");
+                "Output guard information is invalid");
 
         uint8 protocol = data.controller.framework.protocols(data.args.challengeTxType);
         TxFinalization.Verifier memory verifier = TxFinalization.Verifier({

@@ -1,12 +1,10 @@
-const OutputGuardHandlerRegistry = artifacts.require('PaymentChallengeStandardExit');
+const ExpectedOutputGuardHandler = artifacts.require('ExpectedOutputGuardHandler');
+const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry');
 const PaymentChallengeStandardExit = artifacts.require('PaymentChallengeStandardExit');
 const PaymentProcessStandardExit = artifacts.require('PaymentProcessStandardExit');
 const PaymentStandardExitRouter = artifacts.require('PaymentStandardExitRouterMock');
-const PaymentSpendingConditionExpected = artifacts.require('PaymentSpendingConditionExpected');
-const PaymentSpendingConditionFalse = artifacts.require('PaymentSpendingConditionFalse');
-const PaymentSpendingConditionTrue = artifacts.require('PaymentSpendingConditionTrue');
-const PaymentSpendingConditionRevert = artifacts.require('PaymentSpendingConditionRevert');
-const PaymentSpendingConditionRegistry = artifacts.require('PaymentSpendingConditionRegistry');
+const SpendingConditionMock = artifacts.require('SpendingConditionMock');
+const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry');
 const PaymentStartStandardExit = artifacts.require('PaymentStartStandardExit');
 const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
@@ -17,10 +15,14 @@ const {
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
-const { buildUtxoPos } = require('../../../helpers/positions.js');
 const {
-    addressToOutputGuard, spentOnGas,
+    TX_TYPE, OUTPUT_TYPE, PROTOCOL, EMPTY_BYTES, EMPTY_BYTES_32,
+} = require('../../../helpers/constants.js');
+const { buildUtxoPos, UtxoPos } = require('../../../helpers/positions.js');
+const {
+    addressToOutputGuard, spentOnGas, computeNormalOutputId,
 } = require('../../../helpers/utils.js');
+const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
 
 
 contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
@@ -28,9 +30,9 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week in seconds
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
     const INITIAL_IMMUNE_EXIT_GAME_NUM = 1;
-    const OUTPUT_TYPE_ONE = 1;
-    const EMPTY_BYTES = '0x0000000000000000000000000000000000000000000000000000000000000000000000';
-    const EMPTY_BYTES32 = '0x0000000000000000000000000000000000000000000000000000000000000000';
+    const TEST_AMOUNT = 666666;
+    const TEST_BLOCK_NUM = 1000;
+    const TEST_OUTPUT_INDEX = 0;
 
     before('deploy and link with controller lib', async () => {
         const startStandardExit = await PaymentStartStandardExit.new();
@@ -43,39 +45,35 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
     });
 
     describe('challengeStandardExit', () => {
-        const getTestInputArgs = (outputType, outputGuard) => ({
-            exitId: 123,
-            outputType,
-            outputGuard,
-            challengeTxType: 1,
-            challengeTx: EMPTY_BYTES,
-            inputIndex: 0,
-            witness: EMPTY_BYTES,
-        });
+        const getTestInputArgs = (outputType, ouputOwner) => {
+            const output = new PaymentTransactionOutput(TEST_AMOUNT, addressToOutputGuard(ouputOwner), ETH);
+            const txObj = new PaymentTransaction(outputType, [0], [output]);
+            const tx = web3.utils.bytesToHex(txObj.rlpEncoded());
 
-        const getOutputTypeAndGuardHash = input => web3.utils.soliditySha3(
-            { t: 'uint256', v: input.outputType },
-            { t: 'bytes32', v: input.outputGuard },
-        );
+            return {
+                exitId: 123,
+                outputType,
+                exitingTx: tx,
+                challengeTxType: TX_TYPE.PAYMENT,
+                challengeTx: web3.utils.utf8ToHex('dummy challenge tx'),
+                inputIndex: 0,
+                witness: web3.utils.utf8ToHex('dummy witness'),
+                spendingConditionOptionalArgs: web3.utils.utf8ToHex('dummy optional args'),
+                outputGuardPreimage: web3.utils.utf8ToHex('dummy outputguard preimage'),
+                challengeTxPos: 0,
+                challengeTxInclusionProof: EMPTY_BYTES_32,
+                challengeTxConfirmSig: web3.utils.utf8ToHex('dummy confirm sig'),
+            };
+        };
 
-        const getTestExitData = (outputTypeAndGuardHash, exitTarget) => ({
+        const getTestExitData = (args, exitTarget, bondSize) => ({
             exitable: true,
-            utxoPos: buildUtxoPos(1, 0, 0),
-            outputId: web3.utils.sha3('random'),
-            outputTypeAndGuardHash,
+            utxoPos: buildUtxoPos(TEST_BLOCK_NUM, 0, TEST_OUTPUT_INDEX),
+            outputId: computeNormalOutputId(args.exitingTx, TEST_OUTPUT_INDEX),
             token: ETH,
             exitTarget,
-            amount: 66666,
-            bondSize: this.startStandardExitBondSize.toString(),
-        });
-
-        const getExpectedConditionInputArgs = (input, exitData) => ({
-            outputGuard: input.outputGuard,
-            utxoPos: 0, // should not be used, see: https://github.com/omisego/plasma-contracts/pull/212
-            outputId: web3.eth.abi.encodeParameter('uint256', exitData.utxoPos.toString()),
-            spendingTx: input.challengeTx,
-            inputIndex: input.inputIndex,
-            witness: input.witness,
+            amount: TEST_AMOUNT,
+            bondSize: bondSize.toString(),
         });
 
         beforeEach(async () => {
@@ -83,219 +81,222 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
                 MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
             );
 
-            const ethVault = await SpyEthVault.new(this.framework.address);
-            const erc20Vault = await SpyErc20Vault.new(this.framework.address);
-            const outputGuardParserRegistry = await OutputGuardHandlerRegistry.new();
-            this.spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
+            this.ethVault = await SpyEthVault.new(this.framework.address);
+            this.erc20Vault = await SpyErc20Vault.new(this.framework.address);
+            this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
+            this.outputGuardHandler = await ExpectedOutputGuardHandler.new();
+            await this.outputGuardHandler.mockIsValid(true);
+            await this.outputGuardHandler.mockGetConfirmSigAddress(constants.ZERO_ADDRESS);
+
+            this.spendingConditionRegistry = await SpendingConditionRegistry.new();
+            this.spendingCondition = await SpendingConditionMock.new();
+            // let's the spending condition pass by default
+            await this.spendingCondition.mockResult(true);
 
             this.exitGame = await PaymentStandardExitRouter.new(
-                this.framework.address, ethVault.address, erc20Vault.address,
-                outputGuardParserRegistry.address, this.spendingConditionRegistry.address,
+                this.framework.address, this.ethVault.address, this.erc20Vault.address,
+                this.outputGuardHandlerRegistry.address, this.spendingConditionRegistry.address,
             );
+            await this.framework.registerExitGame(TX_TYPE.PAYMENT, this.exitGame.address, PROTOCOL.MORE_VP);
 
             this.startStandardExitBondSize = await this.exitGame.startStandardExitBondSize();
         });
 
-        it('should fail when exit for such exit id does not exists', async () => {
-            const input = getTestInputArgs(OUTPUT_TYPE_ONE, addressToOutputGuard(alice));
-            await expectRevert(
-                this.exitGame.challengeStandardExit(input),
-                'Such exit does not exist',
-            );
-        });
+        describe('When spending condition not registered', () => {
+            beforeEach(async () => {
+                await this.outputGuardHandlerRegistry.registerOutputGuardHandler(
+                    OUTPUT_TYPE.PAYMENT, this.outputGuardHandler.address,
+                );
+            });
 
-        it('should fail when output type mismatch exit data', async () => {
-            const input = getTestInputArgs(OUTPUT_TYPE_ONE, addressToOutputGuard(alice));
-            const mismatchInput = Object.assign({}, input);
-            mismatchInput.outputType += 1;
+            it('should fail by not able to find the spending condition contract', async () => {
+                const args = getTestInputArgs(OUTPUT_TYPE.PAYMENT, alice);
+                const exitData = getTestExitData(args, alice, this.startStandardExitBondSize);
+                await this.exitGame.setExit(args.exitId, exitData);
 
-            const outputTypeAndGuardHash = getOutputTypeAndGuardHash(mismatchInput);
-            await this.exitGame.setExit(input.exitId, getTestExitData(outputTypeAndGuardHash, alice));
-
-            await expectRevert(
-                this.exitGame.challengeStandardExit(input),
-                'Either output type or output guard of challenge input args is invalid for the exit',
-            );
-        });
-
-        it('should fail when output guard mismatch exit data', async () => {
-            const input = getTestInputArgs(OUTPUT_TYPE_ONE, addressToOutputGuard(alice));
-            const mismatchInput = Object.assign({}, input);
-            mismatchInput.outputGuard = web3.utils.sha3(mismatchInput.outputGuard);
-
-            const outputTypeAndGuardHash = getOutputTypeAndGuardHash(mismatchInput);
-            await this.exitGame.setExit(input.exitId, getTestExitData(outputTypeAndGuardHash, alice));
-
-            await expectRevert(
-                this.exitGame.challengeStandardExit(input),
-                'Either output type or output guard of challenge input args is invalid for the exit',
-            );
-        });
-
-        it('should fail when not able to find the spending condition contract', async () => {
-            const input = getTestInputArgs(OUTPUT_TYPE_ONE, addressToOutputGuard(alice));
-            const outputTypeAndGuardHash = getOutputTypeAndGuardHash(input);
-            await this.exitGame.setExit(input.exitId, getTestExitData(outputTypeAndGuardHash, alice));
-
-            await expectRevert(
-                this.exitGame.challengeStandardExit(input),
-                'Spending condition contract not found',
-            );
-        });
-
-        it('should fail when spending condition contract returns false', async () => {
-            const input = getTestInputArgs(OUTPUT_TYPE_ONE, addressToOutputGuard(alice));
-            const outputTypeAndGuardHash = getOutputTypeAndGuardHash(input);
-            const conditionFalse = await PaymentSpendingConditionFalse.new();
-            await this.spendingConditionRegistry.registerSpendingCondition(
-                input.outputType, input.challengeTxType, conditionFalse.address,
-            );
-
-            await this.exitGame.setExit(input.exitId, getTestExitData(outputTypeAndGuardHash, alice));
-
-            await expectRevert(
-                this.exitGame.challengeStandardExit(input),
-                'Spending condition failed',
-            );
-        });
-
-        it('should fail when spending condition contract reverts', async () => {
-            const input = getTestInputArgs(OUTPUT_TYPE_ONE, addressToOutputGuard(alice));
-            const outputTypeAndGuardHash = getOutputTypeAndGuardHash(input);
-            const conditionRevert = await PaymentSpendingConditionRevert.new();
-            await this.spendingConditionRegistry.registerSpendingCondition(
-                input.outputType, input.challengeTxType, conditionRevert.address,
-            );
-
-            await this.exitGame.setExit(input.exitId, getTestExitData(outputTypeAndGuardHash, alice));
-
-            const revertMessage = await conditionRevert.revertMessage();
-            await expectRevert(
-                this.exitGame.challengeStandardExit(input),
-                revertMessage,
-            );
-        });
-
-        it('should call the Spending Condition contract with expected params given output type 0', async () => {
-            await this.exitGame.depositFundForTest({ value: this.startStandardExitBondSize });
-
-            const input = getTestInputArgs(OUTPUT_TYPE_ONE, addressToOutputGuard(alice));
-            const outputTypeAndGuardHash = getOutputTypeAndGuardHash(input);
-            const conditionExpected = await PaymentSpendingConditionExpected.new();
-            const exitTarget = alice;
-            const testExitData = getTestExitData(outputTypeAndGuardHash, exitTarget);
-
-            // Spending condition mock reverts when it's called with arguments
-            // that does not match expectedConditionInput
-            const expectedConditionInput = getExpectedConditionInputArgs(input, testExitData);
-            await conditionExpected.setExpected(expectedConditionInput);
-
-            await this.spendingConditionRegistry.registerSpendingCondition(
-                input.outputType, input.challengeTxType, conditionExpected.address,
-            );
-
-            await this.exitGame.setExit(input.exitId, testExitData);
-
-            await this.exitGame.challengeStandardExit(input);
-            const exitData = await this.exitGame.standardExits(input.exitId);
-            expect(exitData.exitable).to.be.false;
-        });
-
-        it('should call the Spending Condition contract with expected params given output type non 0', async () => {
-            await this.exitGame.depositFundForTest({ value: this.startStandardExitBondSize });
-
-            const outputType = 1;
-            const dummyOutputGuard = `0x${Array(64).fill(1).join('')}`;
-            const input = getTestInputArgs(outputType, dummyOutputGuard);
-            const outputTypeAndGuardHash = getOutputTypeAndGuardHash(input);
-            const conditionExpected = await PaymentSpendingConditionExpected.new();
-            const exitTarget = alice;
-            const testExitData = getTestExitData(outputTypeAndGuardHash, exitTarget);
-
-            // Spending condition mock reverts when it's called with arguments
-            // that does not match expectedConditionInput
-            const expectedConditionInput = getExpectedConditionInputArgs(input, testExitData);
-            await conditionExpected.setExpected(expectedConditionInput);
-
-            await this.spendingConditionRegistry.registerSpendingCondition(
-                input.outputType, input.challengeTxType, conditionExpected.address,
-            );
-
-            await this.exitGame.setExit(input.exitId, testExitData);
-
-            await this.exitGame.challengeStandardExit(input);
-            const exitData = await this.exitGame.standardExits(input.exitId);
-            expect(exitData.exitable).to.be.false;
-        });
-
-        it('should delete the exit data when successfully challenged', async () => {
-            await this.exitGame.depositFundForTest({ value: this.startStandardExitBondSize });
-
-            const input = getTestInputArgs(OUTPUT_TYPE_ONE, addressToOutputGuard(alice));
-            const outputTypeAndGuardHash = getOutputTypeAndGuardHash(input);
-            const conditionTrue = await PaymentSpendingConditionTrue.new();
-            await this.spendingConditionRegistry.registerSpendingCondition(
-                input.outputType, input.challengeTxType, conditionTrue.address,
-            );
-
-            await this.exitGame.setExit(input.exitId, getTestExitData(outputTypeAndGuardHash, alice));
-
-            await this.exitGame.challengeStandardExit(input);
-
-            const exitData = await this.exitGame.standardExits(input.exitId);
-            Object.values(exitData).forEach((val) => {
-                expect(val).to.be.oneOf([false, '0', EMPTY_BYTES32, constants.ZERO_ADDRESS]);
+                await expectRevert(
+                    this.exitGame.challengeStandardExit(args),
+                    'Spending condition contract not found',
+                );
             });
         });
 
-        it('should transfer the standard exit bond to challenger when successfully challenged', async () => {
-            await this.exitGame.depositFundForTest({ value: this.startStandardExitBondSize });
+        describe('When output guard handler not registered', () => {
+            beforeEach(async () => {
+                await this.spendingConditionRegistry.registerSpendingCondition(
+                    OUTPUT_TYPE.PAYMENT, TX_TYPE.PAYMENT, this.spendingCondition.address,
+                );
+            });
 
-            const input = getTestInputArgs(OUTPUT_TYPE_ONE, addressToOutputGuard(alice));
-            const outputTypeAndGuardHash = getOutputTypeAndGuardHash(input);
-            const conditionTrue = await PaymentSpendingConditionTrue.new();
-            await this.spendingConditionRegistry.registerSpendingCondition(
-                input.outputType, input.challengeTxType, conditionTrue.address,
-            );
+            it('should fail by not able to find the output guard handler contract', async () => {
+                const nonRegisteredOutputType = 3;
+                const args = getTestInputArgs(nonRegisteredOutputType, alice);
+                const exitData = getTestExitData(args, alice, this.startStandardExitBondSize);
+                await this.exitGame.setExit(args.exitId, exitData);
 
-            await this.exitGame.setExit(input.exitId, getTestExitData(outputTypeAndGuardHash, alice));
-
-            const preBalance = new BN(await web3.eth.getBalance(bob));
-
-            const tx = await this.exitGame.challengeStandardExit(
-                input, { from: bob },
-            );
-
-            const actualPostBalance = new BN(await web3.eth.getBalance(bob));
-            const expectedPostBalance = preBalance
-                .add(this.startStandardExitBondSize)
-                .sub(await spentOnGas(tx.receipt));
-
-            expect(actualPostBalance).to.be.bignumber.equal(expectedPostBalance);
+                await expectRevert(
+                    this.exitGame.challengeStandardExit(args),
+                    'Failed to get the outputGuardHandler of the output type',
+                );
+            });
         });
 
-        it('should emit ExitChallenged event when successfully challenged', async () => {
-            await this.exitGame.depositFundForTest({ value: this.startStandardExitBondSize });
+        describe('Given everything registered', () => {
+            beforeEach(async () => {
+                await this.spendingConditionRegistry.registerSpendingCondition(
+                    OUTPUT_TYPE.PAYMENT, TX_TYPE.PAYMENT, this.spendingCondition.address,
+                );
 
-            const input = getTestInputArgs(OUTPUT_TYPE_ONE, addressToOutputGuard(alice));
-            const outputTypeAndGuardHash = getOutputTypeAndGuardHash(input);
-            const testExitData = getTestExitData(outputTypeAndGuardHash, alice);
+                await this.outputGuardHandlerRegistry.registerOutputGuardHandler(
+                    OUTPUT_TYPE.PAYMENT, this.outputGuardHandler.address,
+                );
+            });
 
-            const conditionTrue = await PaymentSpendingConditionTrue.new();
-            await this.spendingConditionRegistry.registerSpendingCondition(
-                input.outputType, input.challengeTxType, conditionTrue.address,
-            );
+            it('should fail when exit for such exit id does not exists', async () => {
+                const args = getTestInputArgs(OUTPUT_TYPE.PAYMENT, alice);
+                await expectRevert(
+                    this.exitGame.challengeStandardExit(args),
+                    'Such exit does not exist',
+                );
+            });
 
-            await this.exitGame.setExit(input.exitId, testExitData);
+            it('should fail when output guard related info is not valid', async () => {
+                const args = getTestInputArgs(OUTPUT_TYPE.PAYMENT, alice);
 
-            const { receipt } = await this.exitGame.challengeStandardExit(input);
+                await this.outputGuardHandler.mockIsValid(false);
 
-            await expectEvent.inTransaction(
-                receipt.transactionHash,
-                PaymentChallengeStandardExit,
-                'ExitChallenged',
-                { utxoPos: new BN(testExitData.utxoPos) },
-            );
+                await this.exitGame.setExit(args.exitId, getTestExitData(args, alice, this.startStandardExitBondSize));
+
+                await expectRevert(
+                    this.exitGame.challengeStandardExit(args),
+                    'Output guard information is invalid',
+                );
+            });
+
+            it('should fail when challenge tx is not protocol finalized', async () => {
+                const dummyExitGame = await PaymentStandardExitRouter.new(
+                    this.framework.address, this.ethVault.address, this.erc20Vault.address,
+                    this.outputGuardHandlerRegistry.address, this.spendingConditionRegistry.address,
+                );
+
+                const args = getTestInputArgs(OUTPUT_TYPE.PAYMENT, alice);
+
+                // the test data is only setup for MoreVp, MVP would fail for inclusion proof + confirm sig check
+                const mvpTxType = 999;
+                await this.framework.registerExitGame(mvpTxType, dummyExitGame.address, PROTOCOL.MVP);
+                args.challengeTxType = mvpTxType;
+
+                await this.exitGame.setExit(args.exitId, getTestExitData(args, alice, this.startStandardExitBondSize));
+
+                await expectRevert(
+                    this.exitGame.challengeStandardExit(args),
+                    'Challenge transaction is not protocol finalized',
+                );
+            });
+
+            it('should fail when spending condition contract returns false', async () => {
+                const args = getTestInputArgs(OUTPUT_TYPE.PAYMENT, alice);
+                await this.spendingCondition.mockResult(false);
+
+                await this.exitGame.setExit(args.exitId, getTestExitData(args, alice, this.startStandardExitBondSize));
+
+                await expectRevert(
+                    this.exitGame.challengeStandardExit(args),
+                    'Spending condition failed',
+                );
+            });
+
+            it('should fail when spending condition contract reverts', async () => {
+                const args = getTestInputArgs(OUTPUT_TYPE.PAYMENT, alice);
+
+                await this.spendingCondition.mockRevert();
+
+                await this.exitGame.setExit(args.exitId, getTestExitData(args, alice, this.startStandardExitBondSize));
+
+                await expectRevert(
+                    this.exitGame.challengeStandardExit(args),
+                    'Test spending condition reverts',
+                );
+            });
+
+            it('should call the OutputGuardHandler contract with expected params', async () => {
+                await this.exitGame.depositFundForTest({ value: this.startStandardExitBondSize });
+
+                const args = getTestInputArgs(OUTPUT_TYPE.PAYMENT, alice);
+                const exitData = getTestExitData(args, alice, this.startStandardExitBondSize);
+                await this.exitGame.setExit(args.exitId, exitData);
+
+                const expectedArgs = {
+                    guard: addressToOutputGuard(alice),
+                    outputType: OUTPUT_TYPE.PAYMENT,
+                    preimage: args.outputGuardPreimage,
+                };
+
+                // would revert if called without the expected data
+                await this.outputGuardHandler.shouldVerifyArgumentEquals(expectedArgs);
+                await this.exitGame.challengeStandardExit(args);
+            });
+
+            it('should call the Spending Condition contract with expected params', async () => {
+                await this.exitGame.depositFundForTest({ value: this.startStandardExitBondSize });
+
+                const args = getTestInputArgs(OUTPUT_TYPE.PAYMENT, alice);
+                const exitData = getTestExitData(args, alice, this.startStandardExitBondSize);
+                await this.exitGame.setExit(args.exitId, exitData);
+
+                const expectedArgs = {
+                    inputTx: args.exitingTx,
+                    outputIndex: (new UtxoPos(exitData.utxoPos)).outputIndex,
+                    inputTxPos: (new UtxoPos(exitData.utxoPos)).txPos,
+                    spendingTx: args.challengeTx,
+                    inputIndex: args.inputIndex,
+                    witness: args.witness,
+                    optionalArgs: args.spendingConditionOptionalArgs,
+                };
+
+                // would revert if called without the expected data
+                await this.spendingCondition.shouldVerifyArgumentEquals(expectedArgs);
+                await this.exitGame.challengeStandardExit(args);
+            });
+
+            describe('When successfully challenged', () => {
+                beforeEach(async () => {
+                    await this.exitGame.depositFundForTest({ value: this.startStandardExitBondSize });
+
+                    this.args = getTestInputArgs(OUTPUT_TYPE.PAYMENT, alice);
+                    this.exitData = getTestExitData(this.args, alice, this.startStandardExitBondSize);
+
+                    await this.exitGame.setExit(this.args.exitId, this.exitData);
+
+                    this.preBalance = new BN(await web3.eth.getBalance(bob));
+                    this.tx = await this.exitGame.challengeStandardExit(this.args, { from: bob });
+                });
+
+                it('should delete the exit data when successfully challenged', async () => {
+                    const exitData = await this.exitGame.standardExits(this.args.exitId);
+                    Object.values(exitData).forEach((val) => {
+                        expect(val).to.be.oneOf([false, '0', EMPTY_BYTES_32, constants.ZERO_ADDRESS]);
+                    });
+                });
+
+                it('should transfer the standard exit bond to challenger when successfully challenged', async () => {
+                    const actualPostBalance = new BN(await web3.eth.getBalance(bob));
+                    const expectedPostBalance = this.preBalance
+                        .add(this.startStandardExitBondSize)
+                        .sub(await spentOnGas(this.tx.receipt));
+
+                    expect(actualPostBalance).to.be.bignumber.equal(expectedPostBalance);
+                });
+
+                it('should emit ExitChallenged event when successfully challenged', async () => {
+                    await expectEvent.inTransaction(
+                        this.tx.receipt.transactionHash,
+                        PaymentChallengeStandardExit,
+                        'ExitChallenged',
+                        { utxoPos: new BN(this.exitData.utxoPos) },
+                    );
+                });
+            });
         });
     });
 });
