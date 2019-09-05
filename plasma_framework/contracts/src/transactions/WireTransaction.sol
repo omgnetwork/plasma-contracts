@@ -33,4 +33,13 @@ library WireTransaction {
         
         return Output(amount, outputGuard, token);
     }
+
+    /**
+    * @dev Returns transaction type for transaction in wire format.
+    * Transaction type is the value of first field in rlp encoded list.
+    */
+    function getTransactionType(bytes memory transaction) internal pure returns (uint256) {
+        RLP.RLPItem[] memory rlpTx = transaction.toRLPItem().toList();
+        return rlpTx[0].toUint();
+    }
 }

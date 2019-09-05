@@ -70,4 +70,26 @@ library PaymentInFlightExitRouterArgs {
         bytes competingTxInclusionProof;
         bytes competingTxWitness;
     }
+
+     /*
+     * @notice Wraps arguments for challenging in-flight transaction output exit.
+     * @param inFlightTx RLP encoded in-flight transaction.
+     * @param inFlightTxInclusionProof Proof that in-flight transaction is included in Plasma.
+     * @param outputType output type of exiting output.
+     * @param outputGuardPreimage preimage for the output guard of the exiting output.
+     * @param outputUtxoPos Utxo position of challenged output.
+     * @param challengingTx RLP encoded challenging transaction.
+     * @param challengingTxInputIndex input index of challenged output in challenging transaction.
+     * @param challengingTxWitness Witness for challenging transaction.
+     */
+    struct ChallengeOutputSpent {
+        bytes inFlightTx;
+        bytes inFlightTxInclusionProof;
+        uint256 outputType;
+        bytes outputGuardPreimage;
+        uint256 outputUtxoPos;
+        bytes challengingTx;
+        uint8 challengingTxInputIndex;
+        bytes challengingTxWitness;
+    }
 }
