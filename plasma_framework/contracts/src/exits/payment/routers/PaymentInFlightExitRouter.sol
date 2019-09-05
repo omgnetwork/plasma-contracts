@@ -106,8 +106,17 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyWithValue {
      */
     function challengeInFlightExitNotCanonical(PaymentInFlightExitRouterArgs.ChallengeCanonicityArgs memory args)
         public
-        payable
     {
         challengeCanonicityController.run(inFlightExitMap, args);
+    }
+
+    function respondToNonCanonicalChallenge(
+        bytes memory inFlightTx,
+        uint256 inFlightTxPos,
+        bytes memory inFlightTxInclusionProof
+    )
+        public
+    {
+        challengeCanonicityController.respond(inFlightExitMap, inFlightTx, inFlightTxPos, inFlightTxInclusionProof);
     }
 }
