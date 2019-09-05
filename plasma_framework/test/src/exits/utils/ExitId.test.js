@@ -8,6 +8,7 @@ const { PaymentTransaction, PaymentTransactionOutput } = require('../../../helpe
 contract('ExitId', () => {
     const OUTPUT_GUARD = `0x${Array(64).fill(1).join('')}`;
     const EMPTY_BYTES32 = `0x${Array(64).fill(0).join('')}`;
+    const DUMMY_INPUT = '0x000000000000000000000000000000000000000000000000000000003b9aca00';
 
     before('setup', async () => {
         this.contract = await ExitId.new();
@@ -49,7 +50,7 @@ contract('ExitId', () => {
             const dummyUtxoPos = 1000000000;
 
             expect(await this.contract.getStandardExitId(isDeposit, dummyTxBytes, dummyUtxoPos))
-                .to.be.bignumber.equal(new BN('1689944644183802670505857770498004820948604745'));
+                .to.be.bignumber.equal(new BN('875820471800989289891627481718386259727369323'));
         });
 
         it('should return distinct exit ids for deposits that differ only in utxo pos', async () => {
@@ -68,24 +69,24 @@ contract('ExitId', () => {
 
         it('should get the correct exit id for non deposit tx output', async () => {
             const output = new PaymentTransactionOutput(100, OUTPUT_GUARD, constants.ZERO_ADDRESS);
-            const transaction = new PaymentTransaction(1, [1000000000], [output], EMPTY_BYTES32);
+            const transaction = new PaymentTransaction(1, [DUMMY_INPUT], [output], EMPTY_BYTES32);
             const dummyTxBytes = web3.utils.bytesToHex(transaction.rlpEncoded());
 
             const isDeposit = false;
             const dummyUtxoPos = 123;
             expect(await this.contract.getStandardExitId(isDeposit, dummyTxBytes, dummyUtxoPos))
-                .to.be.bignumber.equal(new BN('703552653258022238271278712366387034216770541439'));
+                .to.be.bignumber.equal(new BN('704295667765845213537803190927618712114942801977'));
         });
     });
 
     describe('getInFlightExitId', () => {
         it('should get correct in-flight exit id', async () => {
             const output = new PaymentTransactionOutput(100, OUTPUT_GUARD, constants.ZERO_ADDRESS);
-            const transaction = new PaymentTransaction(1, [1000000000], [output], EMPTY_BYTES32);
+            const transaction = new PaymentTransaction(1, [DUMMY_INPUT], [output], EMPTY_BYTES32);
             const transactionBytes = web3.utils.bytesToHex(transaction.rlpEncoded());
 
             expect(await this.contract.getInFlightExitId(transactionBytes))
-                .to.be.bignumber.equal(new BN('4201283832101896552718587336134417389224695679'));
+                .to.be.bignumber.equal(new BN('4944298339924871819243065897366095287396956217'));
         });
     });
 });

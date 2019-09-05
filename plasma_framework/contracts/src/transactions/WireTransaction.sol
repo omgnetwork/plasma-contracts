@@ -27,10 +27,10 @@ library WireTransaction {
         require(outputIndex < outputs.length, "Invalid wire transaction format");
 
         RLP.RLPItem[] memory output = outputs[outputIndex].toList();
-        uint256 amount = output[0].toUint();
-        bytes32 outputGuard = output[1].toBytes32();
-        address token = output[2].toAddress();
-
+        bytes32 outputGuard = output[0].toBytes32();
+        address token = output[1].toAddress();
+        uint256 amount = output[2].toUint();
+        
         return Output(amount, outputGuard, token);
     }
 }
