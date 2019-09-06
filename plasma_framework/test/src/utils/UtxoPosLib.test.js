@@ -14,7 +14,14 @@ contract('UtxoPosLib', () => {
         const BLOCK_OFFSET = 1000000000;
         const TX_OFFSET = 10000;
         this.utxoPos = this.blockNumber * BLOCK_OFFSET + this.txIndex * TX_OFFSET + this.outputIndex;
-        this.txPos = this.utxoPos / TX_OFFSET;
+        this.txPos = Math.floor(this.utxoPos / TX_OFFSET);
+    });
+
+    describe('build', () => {
+        it('should build the correct utxoPos from txPos and outputIndex', async () => {
+            const result = await this.contract.build(this.txPos, this.outputIndex);
+            expect(new BN(result.value)).to.be.bignumber.equal(new BN(this.utxoPos));
+        });
     });
 
     describe('blockNum', () => {
