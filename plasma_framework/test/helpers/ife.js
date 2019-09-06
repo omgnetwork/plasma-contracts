@@ -163,10 +163,10 @@ function createCompetitorTransaction(inputs, owner) {
 
 function createInclusionProof(encodedTx, txUtxoPos) {
     const merkleTree = new MerkleTree([encodedTx], MERKLE_TREE_HEIGHT);
-    const competingTxInclusionProof = merkleTree.getInclusionProof(encodedTx);
+    const inclusionProof = merkleTree.getInclusionProof(encodedTx);
 
     return {
-        competingTxInclusionProof,
+        inclusionProof,
         blockHash: merkleTree.root,
         blockNum: txUtxoPos.blockNum,
         blockTimestamp: 1000,
@@ -180,7 +180,7 @@ function buildValidNoncanonicalChallengeArgs(decodedIfeTx, competitorOwner) {
     );
 
     const {
-        competingTxInclusionProof, blockHash, blockNum, blockTimestamp,
+        inclusionProof, blockHash, blockNum, blockTimestamp,
     } = createInclusionProof(
         competingTx, competingTxPos,
     );
@@ -195,7 +195,7 @@ function buildValidNoncanonicalChallengeArgs(decodedIfeTx, competitorOwner) {
             competingTxInputIndex: 1,
             competingTxInputOutputType: OUTPUT_TYPE_ONE,
             competingTxPos: competingTxPos.utxoPos,
-            competingTxInclusionProof,
+            competingTxInclusionProof: inclusionProof,
             competingTxWitness,
         },
         block: {

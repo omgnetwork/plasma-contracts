@@ -18,9 +18,9 @@ const {
 const { expect } = require('chai');
 
 const { addressToOutputGuard } = require('../../../helpers/utils.js');
-const { buildUtxoPos } = require('../../../helpers/positions.js');
+const { buildUtxoPos, UtxoPos } = require('../../../helpers/positions.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
-const { buildValidNoncanonicalChallengeArgs } = require('../../../helpers/ife.js');
+const { buildValidNoncanonicalChallengeArgs, createInclusionProof } = require('../../../helpers/ife.js');
 
 contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, competitorOwner, challenger]) => {
     const CHILD_BLOCK_INTERVAL = 1000;
@@ -91,41 +91,41 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
         this.stateTransitionVerifierAccept = await StateTransitionVerifierAccept.new();
     });
 
-    describe('challenge in-flight exit non canonical', () => {
-        beforeEach(async () => {
-            this.framework = await SpyPlasmaFramework.new(
-                MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
-            );
-            this.spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
-            this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
-            this.exitGame = await PaymentInFlightExitRouter.new(
-                this.framework.address,
-                this.outputGuardHandlerRegistry.address,
-                this.spendingConditionRegistry.address,
-                this.stateTransitionVerifierAccept.address,
-                IFE_TX_TYPE,
-            );
+    beforeEach(async () => {
+        this.framework = await SpyPlasmaFramework.new(
+            MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
+        );
+        this.spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
+        this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
+        this.exitGame = await PaymentInFlightExitRouter.new(
+            this.framework.address,
+            this.outputGuardHandlerRegistry.address,
+            this.spendingConditionRegistry.address,
+            this.stateTransitionVerifierAccept.address,
+            IFE_TX_TYPE,
+        );
 
-            const conditionTrue = await PaymentSpendingConditionTrue.new();
-            await this.spendingConditionRegistry.registerSpendingCondition(
-                OUTPUT_TYPE_ONE, IFE_TX_TYPE, conditionTrue.address,
-            );
+        const conditionTrue = await PaymentSpendingConditionTrue.new();
+        await this.spendingConditionRegistry.registerSpendingCondition(
+            OUTPUT_TYPE_ONE, IFE_TX_TYPE, conditionTrue.address,
+        );
 
-            const { exitId, inFlightTx, inFlightExitData } = await buildInFlightExitData(this.exitIdHelper);
-            await this.exitGame.setInFlightExit(exitId, inFlightExitData);
-            this.inFlightTx = inFlightTx;
-            this.exitId = exitId;
+        const { exitId, inFlightTx, inFlightExitData } = await buildInFlightExitData(this.exitIdHelper);
+        await this.exitGame.setInFlightExit(exitId, inFlightExitData);
+        this.inFlightTx = inFlightTx;
+        this.exitId = exitId;
 
 
-            const {
-                args: cArgs, block, decodedCompetingTx,
-            } = buildValidNoncanonicalChallengeArgs(inFlightTx, competitorOwner);
+        const {
+            args: cArgs, block, decodedCompetingTx,
+        } = buildValidNoncanonicalChallengeArgs(inFlightTx, competitorOwner);
 
-            this.challengeArgs = cArgs;
-            this.competingTx = decodedCompetingTx;
-            this.competingTxBlock = block;
-        });
+        this.challengeArgs = cArgs;
+        this.competingTx = decodedCompetingTx;
+        this.competingTxBlock = block;
+    });
 
+    describe('challenge in-flight exit non-canonical', () => {
         describe('when successfully challenge inFlight exit', () => {
             beforeEach(async () => {
                 await this.framework.setBlock(
@@ -176,7 +176,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
                 expect(exit.bondOwner).to.be.equal(challenger);
             });
 
-            it('should flag the exit non canonical', async () => {
+            it('should flag the exit non-canonical', async () => {
                 await this.exitGame.challengeInFlightExitNotCanonical(
                     this.challengeArgs, { from: challenger },
                 );
@@ -309,6 +309,140 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
                         txHash: web3.utils.sha3(rlpInFlightTxBytes),
                         challengeTxPosition: expectedCompetitorPos,
                     },
+                );
+            });
+        });
+    });
+
+    describe('response to non-canonical challenge', () => {
+        beforeEach(async () => {
+            await this.framework.setBlock(
+                this.competingTxBlock.blockNum,
+                this.competingTxBlock.blockHash,
+                this.competingTxBlock.blockTimestamp,
+            );
+
+            await this.exitGame.challengeInFlightExitNotCanonical(
+                this.challengeArgs, { from: challenger },
+            );
+        });
+
+        describe('when successfully responded to non-canonical challenge', () => {
+            beforeEach('include in-flight tx in a previous block', async () => {
+                const competitorTxPos = new UtxoPos(this.challengeArgs.competingTxPos);
+                const prevBlockNum = competitorTxPos.blockNum - 1000;
+                const blockBeforeCompetitorTxPos = new UtxoPos(buildUtxoPos(prevBlockNum, 0, 0));
+
+                const { inclusionProof, blockHash } = createInclusionProof(
+                    this.challengeArgs.inFlightTx, blockBeforeCompetitorTxPos,
+                );
+
+                this.inFlightTxPos = blockBeforeCompetitorTxPos.utxoPos;
+                this.inFlightTxInclusionProof = inclusionProof;
+
+                await this.framework.setBlock(prevBlockNum, blockHash, 1000);
+            });
+
+            it('should emit InFlightExitChallengeResponded event', async () => {
+                const { receipt } = await this.exitGame.respondToNonCanonicalChallenge(
+                    this.challengeArgs.inFlightTx,
+                    this.inFlightTxPos,
+                    this.inFlightTxInclusionProof,
+                    { from: ifeOwner },
+                );
+
+                await expectEvent.inTransaction(
+                    receipt.transactionHash,
+                    PaymentChallengeIFENotCanonical,
+                    'InFlightExitChallengeResponded',
+                    {
+                        challenger: ifeOwner,
+                        txHash: web3.utils.sha3(this.challengeArgs.inFlightTx),
+                        challengeTxPosition: new BN(this.inFlightTxPos),
+                    },
+                );
+            });
+
+            it('should set isCanonical back to true', async () => {
+                await this.exitGame.respondToNonCanonicalChallenge(
+                    this.challengeArgs.inFlightTx,
+                    this.inFlightTxPos,
+                    this.inFlightTxInclusionProof,
+                    { from: ifeOwner },
+                );
+
+                const exit = await this.exitGame.inFlightExits(this.exitId);
+
+                expect(exit.isCanonical).to.be.true;
+            });
+
+            it('should set bond owner to caller', async () => {
+                await this.exitGame.respondToNonCanonicalChallenge(
+                    this.challengeArgs.inFlightTx,
+                    this.inFlightTxPos,
+                    this.inFlightTxInclusionProof,
+                    { from: ifeOwner },
+                );
+
+                const exit = await this.exitGame.inFlightExits(this.exitId);
+
+                expect(exit.bondOwner).to.equal(ifeOwner);
+            });
+
+            it('should set oldest competitor position to response position', async () => {
+                await this.exitGame.respondToNonCanonicalChallenge(
+                    this.challengeArgs.inFlightTx,
+                    this.inFlightTxPos,
+                    this.inFlightTxInclusionProof,
+                    { from: ifeOwner },
+                );
+
+                const exit = await this.exitGame.inFlightExits(this.exitId);
+
+                const oldestCompetitorPosition = new BN(exit.oldestCompetitorPosition);
+                expect(oldestCompetitorPosition).to.be.bignumber.equal(new BN(this.inFlightTxPos));
+            });
+        });
+
+        describe('is unsuccessful and', () => {
+            it('fails when in-flight exit does not exists', async () => {
+                const inflightTx = this.challengeArgs.competingTx;
+
+                await expectRevert(
+                    this.exitGame.respondToNonCanonicalChallenge(
+                        inflightTx,
+                        this.challengeArgs.competingTxPos,
+                        this.challengeArgs.competingTxInclusionProof,
+                        { from: ifeOwner },
+                    ),
+                    "In-flight exit doesn't exists",
+                );
+            });
+
+            it('fails when in-flight transaction is not younger than competitor', async () => {
+                await expectRevert(
+                    this.exitGame.respondToNonCanonicalChallenge(
+                        this.challengeArgs.inFlightTx,
+                        this.challengeArgs.competingTxPos,
+                        this.challengeArgs.competingTxInclusionProof,
+                        { from: ifeOwner },
+                    ),
+                    'In-flight transaction has to be younger than competitors to respond to non-canonical challenge.',
+                );
+            });
+
+            it('fails when in-flight transaction is not included in block', async () => {
+                const competitorTxPos = new UtxoPos(this.challengeArgs.competingTxPos);
+                const blockBeforeCompetitorTxPos = buildUtxoPos(competitorTxPos.blockNum - 1000, 0, 0);
+
+                await expectRevert(
+                    this.exitGame.respondToNonCanonicalChallenge(
+                        this.challengeArgs.inFlightTx,
+                        blockBeforeCompetitorTxPos,
+                        this.challengeArgs.competingTxInclusionProof,
+                        { from: ifeOwner },
+                    ),
+                    'Transaction is not included in block of plasma chain.',
                 );
             });
         });

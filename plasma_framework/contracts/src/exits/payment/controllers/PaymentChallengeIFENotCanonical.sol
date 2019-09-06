@@ -26,7 +26,13 @@ library PaymentChallengeIFENotCanonical {
         uint256 challengeTxPosition
     );
 
-    function run(
+    event InFlightExitChallengeResponded(
+        address challenger,
+        bytes32 txHash,
+        uint256 challengeTxPosition
+    );
+
+    function challenge(
         Controller memory self,
         PaymentExitDataModel.InFlightExitMap storage inFlightExitMap,
         PaymentInFlightExitRouterArgs.ChallengeCanonicityArgs memory args
@@ -83,6 +89,35 @@ library PaymentChallengeIFENotCanonical {
         ife.isCanonical = false;
 
         emit InFlightExitChallenged(msg.sender, keccak256(args.inFlightTx), competitorPosition);
+    }
+
+    function respond(
+        Controller memory self,
+        PaymentExitDataModel.InFlightExitMap storage inFlightExitMap,
+        bytes memory inFlightTx,
+        uint256 inFlightTxPos,
+        bytes memory inFlightTxInclusionProof
+    )
+        public
+    {
+        uint192 exitId = ExitId.getInFlightExitId(inFlightTx);
+        PaymentExitDataModel.InFlightExit storage ife = inFlightExitMap.exits[exitId];
+        require(ife.exitStartTimestamp != 0, "In-flight exit doesn't exists");
+
+        require(
+            ife.oldestCompetitorPosition > inFlightTxPos,
+            "In-flight transaction has to be younger than competitors to respond to non-canonical challenge.");
+
+        UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(inFlightTxPos);
+        (bytes32 root, ) = self.framework.blocks(utxoPos.blockNum());
+        ife.oldestCompetitorPosition = verifyAndDeterminePositionOfTransactionIncludedInBlock(
+            inFlightTx, utxoPos, root, inFlightTxInclusionProof
+        );
+
+        ife.isCanonical = true;
+        ife.bondOwner = msg.sender;
+
+        emit InFlightExitChallengeResponded(msg.sender, keccak256(inFlightTx), inFlightTxPos);
     }
 
     /**
