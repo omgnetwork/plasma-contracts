@@ -328,7 +328,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
         });
 
         describe('when successfully responded to non-canonical challenge', () => {
-            beforeEach('include in-flight Tx in a previous block', async () => {
+            beforeEach('include in-flight tx in a previous block', async () => {
                 const competitorTxPos = new UtxoPos(this.challengeArgs.competingTxPos);
                 const prevBlockNum = competitorTxPos.blockNum - 1000;
                 const blockBeforeCompetitorTxPos = new UtxoPos(buildUtxoPos(prevBlockNum, 0, 0));

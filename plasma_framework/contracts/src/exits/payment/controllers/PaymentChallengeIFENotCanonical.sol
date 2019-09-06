@@ -32,7 +32,7 @@ library PaymentChallengeIFENotCanonical {
         uint256 challengeTxPosition
     );
 
-    function run(
+    function challenge(
         Controller memory self,
         PaymentExitDataModel.InFlightExitMap storage inFlightExitMap,
         PaymentInFlightExitRouterArgs.ChallengeCanonicityArgs memory args
