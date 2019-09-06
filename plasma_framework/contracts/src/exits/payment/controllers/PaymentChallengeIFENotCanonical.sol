@@ -102,11 +102,11 @@ library PaymentChallengeIFENotCanonical {
     {
         uint192 exitId = ExitId.getInFlightExitId(inFlightTx);
         PaymentExitDataModel.InFlightExit storage ife = inFlightExitMap.exits[exitId];
-        require(ife.exitStartTimestamp != 0, "In-fligh exit doesn't exists");
+        require(ife.exitStartTimestamp != 0, "In-flight exit doesn't exists");
 
         require(
             ife.oldestCompetitorPosition > inFlightTxPos,
-            "In-flight transaction has to be older than competitors to respond to noncanonical challenge.");
+            "In-flight transaction has to be younger than competitors to respond to non-canonical challenge.");
 
         UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(inFlightTxPos);
         (bytes32 root, ) = self.framework.blocks(utxoPos.blockNum());
