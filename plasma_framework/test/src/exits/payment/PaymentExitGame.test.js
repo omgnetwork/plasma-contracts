@@ -481,40 +481,4 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
             });
         });
     });
-
-    describe('getStandardExitId', () => {
-        it('should get the correct exit id for deposit tx output', async () => {
-            const output = new PaymentTransactionOutput(100, OUTPUT_GUARD, constants.ZERO_ADDRESS);
-            const transaction = new PaymentTransaction(1, [EMPTY_BYTES32], [output], EMPTY_BYTES32);
-            const dummyTxBytes = web3.utils.bytesToHex(transaction.rlpEncoded());
-
-            const isDeposit = true;
-            const dummyUtxoPos = 1000000000;
-
-            expect(await this.exitGame.getStandardExitId(isDeposit, dummyTxBytes, dummyUtxoPos))
-                .to.be.bignumber.equal(new BN('1689944644183802670505857770498004820948604745'));
-        });
-
-        it('should get the correct exit id for non deposit tx output', async () => {
-            const output = new PaymentTransactionOutput(100, OUTPUT_GUARD, constants.ZERO_ADDRESS);
-            const transaction = new PaymentTransaction(1, [1000000000], [output], EMPTY_BYTES32);
-            const dummyTxBytes = web3.utils.bytesToHex(transaction.rlpEncoded());
-
-            const isDeposit = false;
-            const dummyUtxoPos = 123;
-            expect(await this.exitGame.getStandardExitId(isDeposit, dummyTxBytes, dummyUtxoPos))
-                .to.be.bignumber.equal(new BN('703552653258022238271278712366387034216770541439'));
-        });
-    });
-
-    describe('getInFlightExitId', () => {
-        it('should get correct in-flight exit id', async () => {
-            const output = new PaymentTransactionOutput(100, OUTPUT_GUARD, constants.ZERO_ADDRESS);
-            const transaction = new PaymentTransaction(1, [1000000000], [output], EMPTY_BYTES32);
-            const transactionBytes = web3.utils.bytesToHex(transaction.rlpEncoded());
-
-            expect(await this.exitGame.getInFlightExitId(transactionBytes))
-                .to.be.bignumber.equal(new BN('4201283832101896552718587336134417389224695679'));
-        });
-    });
 });

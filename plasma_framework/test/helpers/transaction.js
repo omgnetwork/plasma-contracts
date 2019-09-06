@@ -7,13 +7,13 @@ const TransactionTypes = {
 
 class PaymentTransactionOutput {
     constructor(amount, owner, token) {
-        this.amount = amount;
         this.outputGuard = owner;
         this.token = token;
+        this.amount = amount;
     }
 
     formatForRlpEncoding() {
-        return [this.amount, this.outputGuard, this.token];
+        return [this.outputGuard, this.token, this.amount];
     }
 
     rlpEncoded() {
@@ -50,13 +50,13 @@ class PaymentTransaction {
     }
 
     isDeposit() {
-        return this.inputs === [0];
+        return this.inputs === [EMPTY_BYTES32];
     }
 }
 
 class PlasmaDepositTransaction extends PaymentTransaction {
     constructor(output, metaData = EMPTY_BYTES32) {
-        super(TransactionTypes.PLASMA_DEPOSIT, [0], [output], metaData);
+        super(TransactionTypes.PLASMA_DEPOSIT, [EMPTY_BYTES32], [output], metaData);
     }
 }
 

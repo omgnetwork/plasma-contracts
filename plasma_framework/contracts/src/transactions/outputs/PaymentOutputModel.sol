@@ -9,9 +9,9 @@ library PaymentOutputModel {
     using RLP for RLP.RLPItem;
 
     struct Output {
-        uint256 amount;
         bytes32 outputGuard;
         address token;
+        uint256 amount;
     }
 
     /**
@@ -29,9 +29,9 @@ library PaymentOutputModel {
         require(rlpEncoded.length == 3, "Invalid output encoding");
 
         Output memory output = Output({
-            amount: rlpEncoded[0].toUint(),
-            outputGuard: rlpEncoded[1].toBytes32(),
-            token: rlpEncoded[2].toAddress()
+            outputGuard: rlpEncoded[0].toBytes32(),
+            token: rlpEncoded[1].toAddress(),
+            amount: rlpEncoded[2].toUint()
         });
 
         return output;
