@@ -23,7 +23,9 @@ const {
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
-const { PROTOCOL } = require('../../../helpers/constants.js');
+const {
+    PROTOCOL, TX_TYPE, OUTPUT_TYPE, EMPTY_BYTES,
+} = require('../../../helpers/constants.js');
 const { MerkleTree } = require('../../../helpers/merkle.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
 const { addressToOutputGuard, computeDepositOutputId, spentOnGas } = require('../../../helpers/utils.js');
@@ -37,13 +39,8 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
     const ETH = constants.ZERO_ADDRESS;
     const INITIAL_ERC20_SUPPLY = 10000000000;
     const DEPOSIT_VALUE = 1000000;
-    const EMPTY_BYTES = '0x';
-    const PAYMENT_OUTPUT_TYPE = 1;
-    const PAYMENT_TX_TYPE = 1;
     const INITIAL_IMMUNE_VAULTS = 2; // ETH and ERC20 vault
     const INITIAL_IMMUNE_EXIT_GAMES = 1; // 1 for PaymentExitGame
-    const OUTPUT_GUARD = `0x${Array(64).fill(1).join('')}`;
-    const EMPTY_BYTES32 = `0x${Array(64).fill(0).join('')}`;
 
     const alicePrivateKey = '0x7151e5dab6f8e95b5436515b83f423c4df64fe4c6149f864daa209b26adb10ca';
     let alice;
@@ -97,9 +94,9 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
         await this.framework.registerVault(2, this.erc20Vault.address);
 
         const outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
-        const paymentOutputGuardHandler = await PaymentOutputGuardHandler.new(PAYMENT_OUTPUT_TYPE);
+        const paymentOutputGuardHandler = await PaymentOutputGuardHandler.new(OUTPUT_TYPE.PAYMENT);
         await outputGuardHandlerRegistry.registerOutputGuardHandler(
-            PAYMENT_OUTPUT_TYPE, paymentOutputGuardHandler.address,
+            OUTPUT_TYPE.PAYMENT, paymentOutputGuardHandler.address,
         );
 
         const spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
@@ -110,11 +107,13 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
 
         this.startStandardExitBondSize = await this.exitGame.startStandardExitBondSize();
 
-        this.toPaymentCondition = await PaymentOutputToPaymentTxCondition.new(this.framework.address);
-        await spendingConditionRegistry.registerSpendingCondition(
-            PAYMENT_OUTPUT_TYPE, PAYMENT_TX_TYPE, this.toPaymentCondition.address,
+        this.toPaymentCondition = await PaymentOutputToPaymentTxCondition.new(
+            this.framework.address, TX_TYPE.PAYMENT, TX_TYPE.PAYMENT,
         );
-        await this.framework.registerExitGame(PAYMENT_TX_TYPE, this.exitGame.address, PROTOCOL.MORE_VP);
+        await spendingConditionRegistry.registerSpendingCondition(
+            OUTPUT_TYPE.PAYMENT, TX_TYPE.PAYMENT, this.toPaymentCondition.address,
+        );
+        await this.framework.registerExitGame(TX_TYPE.PAYMENT, this.exitGame.address, PROTOCOL.MORE_VP);
     };
 
     const aliceDepositsETH = async () => {
@@ -182,7 +181,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
                     const args = {
                         utxoPos: this.depositUtxoPos,
                         rlpOutputTx: this.depositTx,
-                        outputType: PAYMENT_OUTPUT_TYPE,
+                        outputType: OUTPUT_TYPE.PAYMENT,
                         outputGuardPreimage: EMPTY_BYTES,
                         outputTxInclusionProof: this.merkleProofForDepositTx,
                     };
@@ -199,14 +198,10 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
                     const outputId = computeDepositOutputId(
                         this.depositTx, outputIndexForDeposit, this.depositUtxoPos,
                     );
-                    const expectedOutputTypeAndGuardHash = web3.utils.soliditySha3(
-                        { t: 'uint256', v: PAYMENT_OUTPUT_TYPE }, { t: 'bytes32', v: addressToOutputGuard(alice) },
-                    );
 
                     expect(standardExitData.exitable).to.be.true;
                     expect(standardExitData.outputId).to.equal(outputId);
                     expect(new BN(standardExitData.utxoPos)).to.be.bignumber.equal(new BN(this.depositUtxoPos));
-                    expect(standardExitData.outputTypeAndGuardHash).to.equal(expectedOutputTypeAndGuardHash);
                     expect(standardExitData.token).to.equal(ETH);
                     expect(standardExitData.exitTarget).to.equal(alice);
                     expect(new BN(standardExitData.amount)).to.be.bignumber.equal(new BN(DEPOSIT_VALUE));
@@ -263,7 +258,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
                     const args = {
                         utxoPos: this.transferUtxoPos,
                         rlpOutputTx: this.transferTx,
-                        outputType: PAYMENT_OUTPUT_TYPE,
+                        outputType: OUTPUT_TYPE.PAYMENT,
                         outputGuardPreimage: EMPTY_BYTES,
                         outputTxInclusionProof: this.merkleProofForTransferTx,
                     };
@@ -313,7 +308,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
                     const args = {
                         utxoPos: this.depositUtxoPos,
                         rlpOutputTx: this.depositTx,
-                        outputType: PAYMENT_OUTPUT_TYPE,
+                        outputType: OUTPUT_TYPE.PAYMENT,
                         outputGuardPreimage: EMPTY_BYTES,
                         outputTxInclusionProof: this.merkleProofForDepositTx,
                     };
@@ -337,21 +332,24 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
                         const txHash = hashTx(this.transferTxObject, this.framework.address);
                         const signature = sign(txHash, alicePrivateKey);
 
-                        const input = {
+                        const args = {
                             exitId: this.exitId.toString(10),
-                            outputType: PAYMENT_OUTPUT_TYPE,
-                            outputUtxoPos: this.depositUtxoPos,
-                            outputId: computeDepositOutputId(this.depositTx, 0, this.depositUtxoPos),
-                            outputGuard: addressToOutputGuard(alice),
-                            challengeTxType: PAYMENT_TX_TYPE,
+                            outputType: OUTPUT_TYPE.PAYMENT,
+                            exitingTx: this.depositTx,
+                            challengeTxType: TX_TYPE.PAYMENT,
                             challengeTx: this.transferTx,
                             inputIndex: 0,
                             witness: signature,
+                            spendingConditionOptionalArgs: EMPTY_BYTES,
+                            outputGuardPreimage: EMPTY_BYTES,
+                            challengeTxPos: 0,
+                            challengeTxInclusionProof: EMPTY_BYTES,
+                            challengeTxConfirmSig: EMPTY_BYTES,
                         };
 
                         this.bobBalanceBeforeChallenge = new BN(await web3.eth.getBalance(bob));
                         const { receipt } = await this.exitGame.challengeStandardExit(
-                            input, { from: bob },
+                            args, { from: bob },
                         );
                         this.challengeTxReciept = receipt;
                     });
@@ -430,7 +428,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
                         const args = {
                             utxoPos: this.depositUtxoPos,
                             rlpOutputTx: this.depositTx,
-                            outputType: PAYMENT_OUTPUT_TYPE,
+                            outputType: OUTPUT_TYPE.PAYMENT,
                             outputGuardPreimage: EMPTY_BYTES,
                             outputTxInclusionProof: this.merkleProofForDepositTx,
                         };
