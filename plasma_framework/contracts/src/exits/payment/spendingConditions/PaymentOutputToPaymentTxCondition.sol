@@ -2,51 +2,64 @@ pragma solidity ^0.5.0;
 
 import 'openzeppelin-solidity/contracts/cryptography/ECDSA.sol';
 
-import "./IPaymentSpendingCondition.sol";
-import "../../../utils/AddressPayable.sol";
+import "../../interfaces/ISpendingCondition.sol";
+import "../../../utils/UtxoPosLib.sol";
+import "../../../utils/TxPosLib.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
+import "../../../transactions/outputs/PaymentOutputModel.sol";
 import "../../../transactions/eip712Libs/PaymentEip712Lib.sol";
 
-contract PaymentOutputToPaymentTxCondition is IPaymentSpendingCondition {
+contract PaymentOutputToPaymentTxCondition is ISpendingCondition {
     using PaymentEip712Lib for PaymentEip712Lib.Constants;
+    using PaymentOutputModel for PaymentOutputModel.Output;
+    using TxPosLib for TxPosLib.TxPos;
 
-    uint256 constant public PAYMENT_TX_TYPE = 1;
+    uint256 supportInputTxType;
+    uint256 supportSpendingTxType;
     PaymentEip712Lib.Constants eip712;
 
-    constructor(address _framework) public {
-        eip712 = PaymentEip712Lib.initConstants(_framework);
+    constructor(address framework, uint256 inputTxType, uint256 spendingTxType) public {
+        eip712 = PaymentEip712Lib.initConstants(framework);
+        supportInputTxType = inputTxType;
+        supportSpendingTxType = spendingTxType;
     }
 
     /**
-     * @notice Checks if given output has been spent by owner in given spending transaction.
-     * @dev _utxoPos not used, serves as the position identifier of output.
-     * @param _outputGuard bytes that hold the address of owner directly.
-     * @param _outputIdentifier serves as the identifier of output (spendingTx is supposed to contain it as input).
-     * @param _spendingTx The rlp encoded transaction that spends the output.
-     * @param _inputIndex The input index of the spending transaction that points to the output.
-     * @param _signature The signature of the output owner.
+     * @notice Verifies the spending condition
+     * @param inputTxBytes encoded input transaction in bytes
+     * @param outputIndex the output index of the input transaction
+     * @param inputTxPos the tx position of the input tx. (0 if in-flight)
+     * @param spendingTxBytes spending transaction in bytes
+     * @param inputIndex the input index of the spending tx that points to the output
+     * @param signature signature of the output owner
      */
     function verify(
-        bytes32 _outputGuard,
-        uint256, /*_utxoPos  NOTE: It's unclear how & if this will be used at all, see: https://github.com/omisego/plasma-contracts/pull/212*/
-        bytes32 _outputIdentifier,
-        bytes calldata _spendingTx,
-        uint8 _inputIndex,
-        bytes calldata _signature
+        bytes calldata inputTxBytes,
+        uint16 outputIndex,
+        uint256 inputTxPos,
+        bytes calldata spendingTxBytes,
+        uint16 inputIndex,
+        bytes calldata signature,
+        bytes calldata /*optionalArgs*/
     )
         external
         view
         returns (bool)
     {
-        PaymentTransactionModel.Transaction memory spendingTx = PaymentTransactionModel.decode(_spendingTx);
-        require(spendingTx.txType == PAYMENT_TX_TYPE, "The spending tx is not of payment tx type");
+        PaymentTransactionModel.Transaction memory inputTx = PaymentTransactionModel.decode(inputTxBytes);
+        require(inputTx.txType == supportInputTxType, "The input tx is not of the supported payment tx type");
+
+        PaymentTransactionModel.Transaction memory spendingTx = PaymentTransactionModel.decode(spendingTxBytes);
+        require(spendingTx.txType == supportSpendingTxType, "The spending tx is not of the supported payment tx type");
+
+        UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.build(TxPosLib.TxPos(inputTxPos), outputIndex);
         require(
-            spendingTx.inputs[_inputIndex] == _outputIdentifier,
-            "The spending tx does not spend the output specified by output identifier"
+            spendingTx.inputs[inputIndex] == bytes32(utxoPos.value),
+            "The spending tx does not point to the correct utxo position of the output"
         );
 
-        address payable owner = AddressPayable.convert(address(uint256(_outputGuard)));
-        require(owner == ECDSA.recover(eip712.hashTx(spendingTx), _signature), "Tx not correctly signed");
+        address payable owner = inputTx.outputs[outputIndex].owner();
+        require(owner == ECDSA.recover(eip712.hashTx(spendingTx), signature), "Tx not correctly signed");
 
         return true;
     }
