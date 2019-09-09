@@ -3,7 +3,7 @@ pragma solidity ^0.5.0;
 import "../../../../src/exits/payment/spendingConditions/IPaymentSpendingCondition.sol";
 
 contract PaymentSpendingConditionRevert is IPaymentSpendingCondition {
-    string constant public revertMessage = "testing payment spending condition reverts";
+    string constant public REVERT_MESSAGE = "testing payment spending condition reverts";
 
     function verify(
         bytes32,
@@ -13,6 +13,6 @@ contract PaymentSpendingConditionRevert is IPaymentSpendingCondition {
         uint8,
         bytes calldata
     ) external view returns (bool) {
-        require(false, revertMessage);
+        require(false, REVERT_MESSAGE);
     }
 }

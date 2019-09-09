@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-import 'openzeppelin-solidity/contracts/cryptography/ECDSA.sol';
+import "openzeppelin-solidity/contracts/cryptography/ECDSA.sol";
 
 import "./IPaymentSpendingCondition.sol";
 import "../../../utils/AddressPayable.sol";
@@ -11,7 +11,7 @@ contract PaymentOutputToPaymentTxCondition is IPaymentSpendingCondition {
     using PaymentEip712Lib for PaymentEip712Lib.Constants;
 
     uint256 constant public PAYMENT_TX_TYPE = 1;
-    PaymentEip712Lib.Constants eip712;
+    PaymentEip712Lib.Constants internal eip712;
 
     constructor(address _framework) public {
         eip712 = PaymentEip712Lib.initConstants(_framework);

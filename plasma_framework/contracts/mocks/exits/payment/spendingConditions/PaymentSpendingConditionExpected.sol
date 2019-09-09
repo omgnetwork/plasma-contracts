@@ -4,7 +4,8 @@ pragma experimental ABIEncoderV2;
 import "../../../../src/exits/payment/spendingConditions/IPaymentSpendingCondition.sol";
 
 contract PaymentSpendingConditionExpected is IPaymentSpendingCondition {
-    Expected expected;
+    Expected private expected;
+    
     struct Expected {
         bytes32 outputGuard;
         uint256 utxoPos;

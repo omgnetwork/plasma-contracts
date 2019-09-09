@@ -169,7 +169,7 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
 
             await this.exitGame.setExit(input.exitId, getTestExitData(outputTypeAndGuardHash, alice));
 
-            const revertMessage = await conditionRevert.revertMessage();
+            const revertMessage = await conditionRevert.REVERT_MESSAGE();
             await expectRevert(
                 this.exitGame.challengeStandardExit(input),
                 revertMessage,

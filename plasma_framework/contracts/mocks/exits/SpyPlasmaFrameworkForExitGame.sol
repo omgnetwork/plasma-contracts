@@ -8,6 +8,7 @@ import "../../src/framework/models/BlockModel.sol";
 contract SpyPlasmaFrameworkForExitGame is PlasmaFramework {
     uint256 public enqueuedCount = 0;
     mapping (uint256 => BlockModel.Block) public blocks;
+
     event EnqueueTriggered(
         address token,
         uint64 exitableAt,
@@ -18,7 +19,8 @@ contract SpyPlasmaFrameworkForExitGame is PlasmaFramework {
 
     constructor(uint256 _minExitPeriod, uint256 _initialImmuneVaults, uint256 _initialImmuneExitGames)
         public
-        PlasmaFramework(_minExitPeriod, _initialImmuneVaults, _initialImmuneExitGames) {
+        PlasmaFramework(_minExitPeriod, _initialImmuneVaults, _initialImmuneExitGames)
+    {
     }
 
     /** override for test */
@@ -40,7 +42,6 @@ contract SpyPlasmaFrameworkForExitGame is PlasmaFramework {
     /**
      Custom test helpers
      */
-
     function setBlock(uint256 _blockNum, bytes32 _root, uint256 _timestamp) external {
         blocks[_blockNum] = BlockModel.Block(_root, _timestamp);
     }

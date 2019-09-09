@@ -20,20 +20,18 @@ library RLP {
     uint internal constant LIST_LONG_OFFSET = 0xF7;
 
     struct RLPItem {
-        uint _unsafe_memPtr;    // Pointer to the RLP-encoded bytes.
-        uint _unsafe_length;    // Number of bytes. This is the full length of the string.
+        uint _unsafeMemPtr;    // Pointer to the RLP-encoded bytes.
+        uint _unsafeLength;    // Number of bytes. This is the full length of the string.
     }
 
     struct Iterator {
-        RLPItem _unsafe_item;   // Item that's being iterated over.
-        uint _unsafe_nextPtr;   // Position of the next item in the list.
+        RLPItem _unsafeItem;   // Item that's being iterated over.
+        uint _unsafeNextPtr;   // Position of the next item in the list.
     }
-
 
     /*
      * Internal functions
      */
-
     /**
      * @dev Creates an RLPItem from an array of RLP encoded bytes.
      * @param self The RLP encoded bytes.
@@ -49,6 +47,7 @@ library RLP {
             return RLPItem(0, 0);
         }
         uint memPtr;
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             memPtr := add(self, 0x20)
         }
@@ -70,7 +69,7 @@ library RLP {
         if (strict) {
             uint len = self.length;
             require(_payloadOffset(item) <= len, "Invalid RLP encoding - Payload offset to big");
-            require(_itemLength(item._unsafe_memPtr) == len, "Invalid RLP encoding - Implied item length does not match encoded length");
+            require(_itemLength(item._unsafeMemPtr) == len, "Invalid RLP encoding - Implied item length does not match encoded length");
             require(_validate(item), "Invalid RLP encoding");
         }
         return item;
@@ -86,7 +85,7 @@ library RLP {
         pure
         returns (bool ret)
     {
-        return self._unsafe_length == 0;
+        return self._unsafeLength == 0;
     }
 
     /**
@@ -99,10 +98,11 @@ library RLP {
         pure
         returns (bool ret)
     {
-        if (self._unsafe_length == 0) {
+        if (self._unsafeLength == 0) {
             return false;
         }
-        uint memPtr = self._unsafe_memPtr;
+        uint memPtr = self._unsafeMemPtr;
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             ret := iszero(lt(byte(0, mload(memPtr)), 0xC0))
         }
@@ -118,10 +118,11 @@ library RLP {
         pure
         returns (bool ret)
     {
-        if (self._unsafe_length == 0) {
+        if (self._unsafeLength == 0) {
             return false;
         }
-        uint memPtr = self._unsafe_memPtr;
+        uint memPtr = self._unsafeMemPtr;
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             ret := lt(byte(0, mload(memPtr)), 0xC0)
         }
@@ -141,7 +142,8 @@ library RLP {
             return false;
         }
         uint b0;
-        uint memPtr = self._unsafe_memPtr;
+        uint memPtr = self._unsafeMemPtr;
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             b0 := byte(0, mload(memPtr))
         }
@@ -162,12 +164,13 @@ library RLP {
             return 0;
         }
         uint b0;
-        uint memPtr = self._unsafe_memPtr;
+        uint memPtr = self._unsafeMemPtr;
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             b0 := byte(0, mload(memPtr))
         }
         uint pos = memPtr + _payloadOffset(self);
-        uint last = memPtr + self._unsafe_length - 1;
+        uint last = memPtr + self._unsafeLength - 1;
         uint itms;
         while (pos <= last) {
             pos += _itemLength(pos);
@@ -186,10 +189,10 @@ library RLP {
         pure
         returns (Iterator memory it)
     {
-        require(isList(self));
-        uint ptr = self._unsafe_memPtr + _payloadOffset(self);
-        it._unsafe_item = self;
-        it._unsafe_nextPtr = ptr;
+        require(isList(self), "Item is not a list");
+        uint ptr = self._unsafeMemPtr + _payloadOffset(self);
+        it._unsafeItem = self;
+        it._unsafeNextPtr = ptr;
     }
 
     /**
@@ -202,7 +205,7 @@ library RLP {
         pure
         returns (bytes memory bts)
     {
-        require(isData(self));
+        require(isData(self), "Item is not data");
         uint rStartPos;
         uint len;
         (rStartPos, len) = _decode(self);
@@ -221,7 +224,7 @@ library RLP {
         pure
         returns (RLPItem[] memory list)
     {
-        require(isList(self));
+        require(isList(self), "Item is not a list");
         uint numItems = items(self);
         list = new RLPItem[](numItems);
         Iterator memory it = iterator(self);
@@ -242,7 +245,7 @@ library RLP {
         pure
         returns (string memory str)
     {
-        require(isData(self));
+        require(isData(self), "These are not RLP encoded bytes");
         uint rStartPos;
         uint len;
         (rStartPos, len) = _decode(self);
@@ -266,6 +269,7 @@ library RLP {
         uint len;
         (rStartPos, len) = _decode(self);
         require(len <= 32, "These are not RLP encoded bytes32");
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             data := div(mload(rStartPos), exp(256, sub(32, len)))
         }
@@ -281,16 +285,17 @@ library RLP {
         pure
         returns (bool data)
     {
-        require(isData(self));
+        require(isData(self), "These are not RLP encoded bytes");
         uint rStartPos;
         uint len;
         (rStartPos, len) = _decode(self);
-        require(len == 1);
+        require(len == 1, "These are not RLP encoded bytes");
         uint temp;
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             temp := byte(0, mload(rStartPos))
         }
-        require(temp <= 1);
+        require(temp <= 1, "These are not RLP encoded bytes");
         return temp == 1 ? true : false;
     }
 
@@ -304,12 +309,13 @@ library RLP {
         pure
         returns (byte data)
     {
-        require(isData(self));
+        require(isData(self), "These are not RLP encoded bytes");
         uint rStartPos;
         uint len;
         (rStartPos, len) = _decode(self);
-        require(len == 1);
+        require(len == 1, "These are not RLP encoded bytes");
         uint temp;
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             temp := byte(0, mload(rStartPos))
         }
@@ -352,21 +358,20 @@ library RLP {
         pure
         returns (address data)
     {
-        require(isData(self));
+        require(isData(self), "These are not RLP encoded bytes");
         uint rStartPos;
         uint len;
         (rStartPos, len) = _decode(self);
-        require(len == 20);
+        require(len == 20, "These are not RLP encoded bytes");
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             data := div(mload(rStartPos), exp(256, 12))
         }
     }
 
-
     /*
      * Private functions
      */
-
     /**
      * @dev Returns the next RLP item for some iterator.
      * @param self The iterator.
@@ -377,12 +382,12 @@ library RLP {
         pure
         returns (RLPItem memory subItem)
     {
-        require(_hasNext(self));
-        uint ptr = self._unsafe_nextPtr;
+        require(_hasNext(self), "These are not RLP encoded bytes");
+        uint ptr = self._unsafeNextPtr;
         uint itemLength = _itemLength(ptr);
-        subItem._unsafe_memPtr = ptr;
-        subItem._unsafe_length = itemLength;
-        self._unsafe_nextPtr = ptr + itemLength;
+        subItem._unsafeMemPtr = ptr;
+        subItem._unsafeLength = itemLength;
+        self._unsafeNextPtr = ptr + itemLength;
     }
 
     /**
@@ -396,7 +401,7 @@ library RLP {
         returns (RLPItem memory subItem)
     {
         subItem = _next(self);
-        require(!strict || _validate(subItem));
+        require(!strict || _validate(subItem), "These are not RLP encoded bytes");
         return subItem;
     }
 
@@ -410,8 +415,8 @@ library RLP {
         pure
         returns (bool)
     {
-        RLPItem memory item = self._unsafe_item;
-        return self._unsafe_nextPtr < item._unsafe_memPtr + item._unsafe_length;
+        RLPItem memory item = self._unsafeItem;
+        return self._unsafeNextPtr < item._unsafeMemPtr + item._unsafeLength;
     }
 
     /**
@@ -424,11 +429,12 @@ library RLP {
         pure
         returns (uint)
     {
-        if (self._unsafe_length == 0) {
+        if (self._unsafeLength == 0) {
             return 0;
         }
         uint b0;
-        uint memPtr = self._unsafe_memPtr;
+        uint memPtr = self._unsafeMemPtr;
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             b0 := byte(0, mload(memPtr))
         }
@@ -455,26 +461,25 @@ library RLP {
         returns (uint len)
     {
         uint b0;
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             b0 := byte(0, mload(memPtr))
         }
         if (b0 < DATA_SHORT_START) {
             len = 1;
-        }
-        else if (b0 < DATA_LONG_START) {
+        } else if (b0 < DATA_LONG_START) {
             len = b0 - DATA_SHORT_START + 1;
-        }
-        else if (b0 < LIST_SHORT_START) {
+        } else if (b0 < LIST_SHORT_START) {
+            // solhint-disable-next-line no-inline-assembly
             assembly {
                 let bLen := sub(b0, 0xB7) // bytes length (DATA_LONG_OFFSET)
                 let dLen := div(mload(add(memPtr, 1)), exp(256, sub(32, bLen))) // data length
                 len := add(1, add(bLen, dLen)) // total length
             }
-        }
-        else if (b0 < LIST_LONG_START) {
+        } else if (b0 < LIST_LONG_START) {
             len = b0 - LIST_SHORT_START + 1;
-        }
-        else {
+        } else {
+            // solhint-disable-next-line no-inline-assembly
             assembly {
                 let bLen := sub(b0, 0xF7) // bytes length (LIST_LONG_OFFSET)
                 let dLen := div(mload(add(memPtr, 1)), exp(256, sub(32, bLen))) // data length
@@ -493,9 +498,10 @@ library RLP {
         pure
         returns (uint memPtr, uint len)
     {
-        require(isData(self));
+        require(isData(self), "These are not RLP encoded bytes");
         uint b0;
-        uint start = self._unsafe_memPtr;
+        uint start = self._unsafeMemPtr;
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             b0 := byte(0, mload(start))
         }
@@ -503,14 +509,15 @@ library RLP {
             return (start, 1);
         }
         if (b0 < DATA_LONG_START) {
-            len = self._unsafe_length - 1;
+            len = self._unsafeLength - 1;
             memPtr = start + 1;
         } else {
             uint bLen;
+            // solhint-disable-next-line no-inline-assembly
             assembly {
                 bLen := sub(b0, 0xB7) // DATA_LONG_OFFSET
             }
-            len = self._unsafe_length - 1 - bLen;
+            len = self._unsafeLength - 1 - bLen;
             memPtr = start + bLen + 1;
         }
         return (memPtr, len);
@@ -528,6 +535,7 @@ library RLP {
     {
         // Exploiting the fact that 'tgt' was the last thing to be allocated,
         // we can write entire words, and just overwrite any excess.
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             {
                 let i := 0
@@ -557,7 +565,8 @@ library RLP {
         // Check that RLP is well-formed.
         uint b0;
         uint b1;
-        uint memPtr = self._unsafe_memPtr;
+        uint memPtr = self._unsafeMemPtr;
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             b0 := byte(0, mload(memPtr))
             b1 := byte(1, mload(memPtr))

@@ -17,7 +17,6 @@ library OutputId {
         return keccak256(abi.encodePacked(_txBytes, _outputIndex, _utxoPosValue));
     }
 
-
     /**
      * @notice Computes the output id for normal (non deposit) tx
      * @param _txBytes Transaction bytes.

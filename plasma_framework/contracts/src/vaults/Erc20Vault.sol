@@ -16,7 +16,7 @@ contract Erc20Vault is Vault {
         uint256 amount
     );
 
-    constructor(PlasmaFramework _framework) Vault(_framework) public {}
+    constructor(PlasmaFramework _framework) public Vault(_framework) {}
 
     /**
      * @notice Deposits approved amount of ERC20 token. Approve must have been called first.

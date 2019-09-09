@@ -155,8 +155,8 @@ library PaymentStartStandardExit {
     )
         private
     {
-        bytes32 outputId = data.isTxDeposit?
-            OutputId.computeDepositOutputId(data.args.rlpOutputTx, data.utxoPos.outputIndex(), data.utxoPos.value)
+        bytes32 outputId = data.isTxDeposit
+            ? OutputId.computeDepositOutputId(data.args.rlpOutputTx, data.utxoPos.outputIndex(), data.utxoPos.value)
             : OutputId.computeNormalOutputId(data.args.rlpOutputTx, data.utxoPos.outputIndex());
 
         bytes32 outputTypeAndGuardHash = keccak256(

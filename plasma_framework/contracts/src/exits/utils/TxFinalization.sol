@@ -1,7 +1,7 @@
 pragma solidity ^0.5.0;
 pragma experimental ABIEncoderV2;
 
-import 'openzeppelin-solidity/contracts/cryptography/ECDSA.sol';
+import "openzeppelin-solidity/contracts/cryptography/ECDSA.sol";
 
 import "../../framework/PlasmaFramework.sol";
 import "../../framework/Protocol.sol";
@@ -37,7 +37,7 @@ library TxFinalization {
             txBytes: txBytes,
             txPos: txPos,
             inclusionProof: inclusionProof,
-            confirmSig: bytes(''),
+            confirmSig: bytes(""),
             confirmSigAddress: address(0)
         });
     }
@@ -53,6 +53,8 @@ library TxFinalization {
         } else if (self.protocol == Protocol.MORE_VP()) {
             return checkInclusionProof(self);
         } else {
+            // TODO: solhint disabled for now due to bug, https://github.com/protofire/solhint/issues/157
+            // solhint-disable-next-line reason-string
             revert("invalid protocol value");
         }
     }
@@ -68,6 +70,8 @@ library TxFinalization {
         } else if (self.protocol == Protocol.MORE_VP()) {
             return self.txBytes.length > 0;
         } else {
+            // TODO: solhint disabled for now due to bug, https://github.com/protofire/solhint/issues/157
+            // solhint-disable-next-line reason-string
             revert("invalid protocol value");
         }
     }

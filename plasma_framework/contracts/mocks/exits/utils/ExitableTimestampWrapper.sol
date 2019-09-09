@@ -4,7 +4,7 @@ import "../../../src/exits/utils/ExitableTimestamp.sol";
 
 contract ExitableTimestampWrapper {
     using ExitableTimestamp for ExitableTimestamp.Calculator;
-    ExitableTimestamp.Calculator calculator;
+    ExitableTimestamp.Calculator internal calculator;
 
     constructor(uint256 _minExitPeriod) public {
         calculator = ExitableTimestamp.Calculator(_minExitPeriod);

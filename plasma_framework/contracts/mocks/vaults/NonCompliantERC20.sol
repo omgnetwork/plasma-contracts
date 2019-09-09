@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 // A 'NonCompliantERC20' token is one that uses an old version of the ERC20 standard,
 // as described here https://medium.com/coinmonks/missing-return-value-bug-at-least-130-tokens-affected-d67bf08521ca
@@ -18,13 +18,13 @@ contract NonCompliantERC20 {
         totalSupply = _initialAmount;
     }
 
-   function balanceOf(address _account) public view returns (uint256) {
+    function balanceOf(address _account) public view returns (uint256) {
         return balances[_account];
     }
 
     function transfer(address _to, uint _value) public {
-       balances[msg.sender] = balances[msg.sender].sub(_value);
-       balances[_to] = balances[_to].add(_value);
+        balances[msg.sender] = balances[msg.sender].sub(_value);
+        balances[_to] = balances[_to].add(_value);
     }
 
     function transferFrom(address _from, address _to, uint _value) public {

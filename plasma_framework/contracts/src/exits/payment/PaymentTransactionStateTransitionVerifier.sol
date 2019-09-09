@@ -1,12 +1,12 @@
 pragma solidity ^0.5.0;
 pragma experimental ABIEncoderV2;
 
-import '../interfaces/IStateTransitionVerifier.sol';
-import '../payment/PaymentExitDataModel.sol';
-import '../../utils/UtxoPosLib.sol';
-import '../../transactions/WireTransaction.sol';
-import '../../transactions/PaymentTransactionModel.sol';
-import '../../transactions/outputs/PaymentOutputModel.sol';
+import "../interfaces/IStateTransitionVerifier.sol";
+import "../payment/PaymentExitDataModel.sol";
+import "../../utils/UtxoPosLib.sol";
+import "../../transactions/WireTransaction.sol";
+import "../../transactions/PaymentTransactionModel.sol";
+import "../../transactions/outputs/PaymentOutputModel.sol";
 
 /*
 * Verifies state transitions for payment transaction

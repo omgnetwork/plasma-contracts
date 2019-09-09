@@ -17,7 +17,8 @@ contract PaymentExitGame is IExitProcessor, PaymentStandardExitRouter {
         PaymentSpendingConditionRegistry _spendingConditionRegistry
     )
         public
-        PaymentStandardExitRouter(_framework, _ethVault, _erc20Vault, _outputGuardHandlerRegistry, _spendingConditionRegistry) {
+        PaymentStandardExitRouter(_framework, _ethVault, _erc20Vault, _outputGuardHandlerRegistry, _spendingConditionRegistry)
+    {
     }
 
     function processExit(uint192 _exitId) external {

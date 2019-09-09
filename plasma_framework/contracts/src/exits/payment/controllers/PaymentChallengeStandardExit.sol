@@ -50,7 +50,6 @@ library PaymentChallengeStandardExit {
         emit ExitChallenged(data.exitData.utxoPos);
     }
 
-
     function verifyChallengeExitExists(ChallengeStandardExitData memory data) private pure {
         require(data.exitData.exitable == true, "Such exit does not exist");
     }

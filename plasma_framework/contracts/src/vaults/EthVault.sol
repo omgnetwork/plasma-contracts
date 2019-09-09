@@ -10,7 +10,7 @@ contract EthVault is Vault {
         uint256 amount
     );
 
-    constructor(PlasmaFramework _framework) Vault(_framework) public {}
+    constructor(PlasmaFramework _framework) public Vault(_framework) {}
 
     /**
      * @notice Allows a user to submit a deposit.

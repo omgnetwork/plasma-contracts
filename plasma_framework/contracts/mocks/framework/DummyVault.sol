@@ -4,8 +4,8 @@ import "./registries/VaultRegistryMock.sol";
 import "../../src/framework/BlockController.sol";
 
 contract DummyVault {
-    VaultRegistryMock vaultRegistry;
-    BlockController blockController;
+    VaultRegistryMock internal vaultRegistry;
+    BlockController internal blockController;
 
     // setter function only for test, not a real Vault function
     function setVaultRegistry(address _contract) public {

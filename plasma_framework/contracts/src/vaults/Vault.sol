@@ -6,8 +6,8 @@ import "../framework/utils/Operated.sol";
 
 contract Vault is Operated {
     event SetDepositVerifierCalled(address nextDepositVerifier);
-    PlasmaFramework framework;
-    bytes32[16] zeroHashes;
+    PlasmaFramework internal framework;
+    bytes32[16] internal zeroHashes;
 
     /**
      * @notice Stores deposit verifier contracts addresses where first was effective upto
