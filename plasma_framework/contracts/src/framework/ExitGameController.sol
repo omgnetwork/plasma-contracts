@@ -117,13 +117,12 @@ contract ExitGameController is ExitGameRegistry {
         uint256 processedNum = 0;
 
         while (processedNum < _maxExitsToProcess && ExitPriority.parseExitableAt(uniquePriority) < block.timestamp) {
-            IExitProcessor processor = exit.exitProcessor;
-
-            processor.processExit(exit.exitId);
-
             delete exits[uniquePriority];
             queue.delMin();
             processedNum++;
+
+            IExitProcessor processor = exit.exitProcessor;
+            processor.processExit(exit.exitId);
 
             if (queue.currentSize() == 0) {
                 break;

@@ -1,9 +1,10 @@
 const PriorityQueue = artifacts.require('PriorityQueue');
 const ExitGameController = artifacts.require('ExitGameController');
 const DummyExitGame = artifacts.require('DummyExitGame');
+const ReentrancyExitGame = artifacts.require('ReentrancyExitGame');
 
 const {
-    BN, constants, expectEvent, expectRevert,
+    BN, constants, expectEvent, expectRevert, time,
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
@@ -389,6 +390,51 @@ contract('ExitGameController', () => {
 
                 await expectEvent.inLogs(tx.logs, 'ProcessedExitsNum', {
                     processedNum: new BN(maxExitsToProcess),
+                    token: this.dummyToken,
+                });
+            });
+        });
+
+        describe('When reentrancy happens', () => {
+            beforeEach(async () => {
+                this.reentryMaxExitToProcess = 1;
+                const reentrancyExitGame = await ReentrancyExitGame.new(
+                    this.controller.address, this.dummyToken, this.reentryMaxExitToProcess,
+                );
+                const txType = 999;
+                await this.controller.registerExitGame(
+                    txType, reentrancyExitGame.address, PROTOCOL.MORE_VP,
+                );
+
+                // bypass quarantined period
+                await time.increase(3 * MIN_EXIT_PERIOD + 1);
+
+                // put three items in the queue, the first one would trigger reentry
+                await reentrancyExitGame.enqueue(
+                    this.dummyExit.token,
+                    this.dummyExit.exitableAt,
+                    this.dummyExit.txPos,
+                    this.dummyExit.exitId,
+                    reentrancyExitGame.address,
+                );
+                await reentrancyExitGame.enqueue(
+                    this.dummyExit.token,
+                    this.dummyExit.exitableAt,
+                    this.dummyExit.txPos,
+                    this.dummyExit.exitId,
+                    this.dummyExit.exitProcessor,
+                );
+            });
+
+            it('should process the next item during reentry', async () => {
+                const maxExitToProcess = 2;
+                // The reentry would processed out some items from queue
+                // Leaving the original call continue the loop with the queue status after processed.
+                const expectedProcessedExit = maxExitToProcess - this.reentryMaxExitToProcess;
+
+                const tx = await this.controller.processExits(this.dummyToken, 0, 2);
+                await expectEvent.inLogs(tx.logs, 'ProcessedExitsNum', {
+                    processedNum: new BN(expectedProcessedExit),
                     token: this.dummyToken,
                 });
             });
