@@ -154,6 +154,7 @@ contract ExitGameController is ExitGameRegistry {
      */
     function batchFlagOutputsSpent(bytes32[] calldata _outputIds) external onlyFromNonQuarantinedExitGame {
         for (uint i = 0 ; i < _outputIds.length ; i++) {
+            require(_outputIds[i] != bytes32(''), "Should not flag empty output spent");
             isOutputSpent[_outputIds[i]] = true;
         }
     }
@@ -163,6 +164,7 @@ contract ExitGameController is ExitGameRegistry {
      * @param _outputId The output id to be flagged as spent
      */
     function flagOutputSpent(bytes32 _outputId) external onlyFromNonQuarantinedExitGame {
+        require(_outputId != bytes32(''), "Should not flag empty output spent");
         isOutputSpent[_outputId] = true;
     }
 }

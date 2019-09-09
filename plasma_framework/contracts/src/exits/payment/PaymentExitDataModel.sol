@@ -26,6 +26,7 @@ library PaymentExitDataModel {
         address payable exitTarget;
         address token;
         uint256 amount;
+        uint256 piggybackBondSize;
     }
 
     struct InFlightExit {
@@ -47,6 +48,7 @@ library PaymentExitDataModel {
         WithdrawData[MAX_OUTPUT_NUM] outputs;
         address payable bondOwner;
         uint256 oldestCompetitorPosition;
+        uint256 bondSize;
     }
 
     struct InFlightExitMap {
