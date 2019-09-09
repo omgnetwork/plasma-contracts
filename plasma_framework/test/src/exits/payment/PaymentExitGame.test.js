@@ -42,8 +42,6 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
     const PAYMENT_TX_TYPE = 1;
     const INITIAL_IMMUNE_VAULTS = 2; // ETH and ERC20 vault
     const INITIAL_IMMUNE_EXIT_GAMES = 1; // 1 for PaymentExitGame
-    const OUTPUT_GUARD = `0x${Array(64).fill(1).join('')}`;
-    const EMPTY_BYTES32 = `0x${Array(64).fill(0).join('')}`;
 
     const alicePrivateKey = '0x7151e5dab6f8e95b5436515b83f423c4df64fe4c6149f864daa209b26adb10ca';
     let alice;
@@ -207,7 +205,6 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
                     expect(standardExitData.outputId).to.equal(outputId);
                     expect(new BN(standardExitData.utxoPos)).to.be.bignumber.equal(new BN(this.depositUtxoPos));
                     expect(standardExitData.outputTypeAndGuardHash).to.equal(expectedOutputTypeAndGuardHash);
-                    expect(standardExitData.token).to.equal(ETH);
                     expect(standardExitData.exitTarget).to.equal(alice);
                     expect(new BN(standardExitData.amount)).to.be.bignumber.equal(new BN(DEPOSIT_VALUE));
                 });

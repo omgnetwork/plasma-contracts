@@ -122,7 +122,7 @@ contract ExitGameController is ExitGameRegistry {
             processedNum++;
 
             IExitProcessor processor = exit.exitProcessor;
-            processor.processExit(exit.exitId);
+            processor.processExit(exit.exitId, _token);
 
             if (queue.currentSize() == 0) {
                 break;

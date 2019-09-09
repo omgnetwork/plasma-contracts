@@ -12,7 +12,6 @@ library PaymentExitDataModel {
         // Correctness of them would be checked when exit starts.
         // For other steps, they just check data consistency of input args.
         bytes32 outputTypeAndGuardHash;
-        address token;
         address payable exitTarget;
         uint256 amount;
         uint256 bondSize;

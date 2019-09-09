@@ -20,9 +20,14 @@ contract PaymentExitGame is IExitProcessor, PaymentStandardExitRouter {
         PaymentStandardExitRouter(_framework, _ethVault, _erc20Vault, _outputGuardHandlerRegistry, _spendingConditionRegistry) {
     }
 
-    function processExit(uint192 _exitId) external {
-        if (ExitId.isStandardExit(_exitId)) {
-            PaymentStandardExitRouter.processStandardExit(_exitId);
+    /**
+     * @dev for ERC20, thus each erc contract address would be a token value
+     * @dev for ETH, using address(0) as a preserved address of ERC contract
+     */
+    function processExit(uint192 exitId, address ercContract) external {
+        address token = ercContract;
+        if (ExitId.isStandardExit(exitId)) {
+            PaymentStandardExitRouter.processStandardExit(exitId, token);
         } else {
             require(false, "TODO: implement process in flight exit");
         }
