@@ -159,15 +159,10 @@ library PaymentStartStandardExit {
             ? OutputId.computeDepositOutputId(data.args.rlpOutputTx, data.utxoPos.outputIndex(), data.utxoPos.value)
             : OutputId.computeNormalOutputId(data.args.rlpOutputTx, data.utxoPos.outputIndex());
 
-        bytes32 outputTypeAndGuardHash = keccak256(
-            abi.encodePacked(data.args.outputType, data.output.outputGuard)
-        );
-
         exitMap.exits[data.exitId] = PaymentExitDataModel.StandardExit({
             exitable: true,
             utxoPos: uint192(data.utxoPos.value),
             outputId: outputId,
-            outputTypeAndGuardHash: outputTypeAndGuardHash,
             token: data.output.token,
             exitTarget: msg.sender,
             amount: data.output.amount,

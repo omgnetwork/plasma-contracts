@@ -3,17 +3,18 @@ const PaymentOutputToPaymentTxCondition = artifacts.require('PaymentOutputToPaym
 const { constants, expectRevert } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
+const { EMPTY_BYTES } = require('../../../../helpers/constants.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../../helpers/transaction.js');
 const { addressToOutputGuard } = require('../../../../helpers/utils.js');
 const { hashTx } = require('../../../../helpers/paymentEip712.js');
-const { buildUtxoPos } = require('../../../../helpers/positions.js');
+const { buildUtxoPos, utxoPosToTxPos } = require('../../../../helpers/positions.js');
 const { sign } = require('../../../../helpers/sign.js');
 
-contract('PaymentOutputToPaymentTxCondition', ([richFather]) => {
+contract('PaymentOutputToPaymentTxCondition', ([richFather, bob]) => {
+    const TEST_INPUT_TX_TYPE = 1;
+    const TEST_SPENDING_TX_TYPE = 2;
     const ETH = constants.ZERO_ADDRESS;
-    const EMPTY_UTXO_POS = 0;
     const alicePrivateKey = '0x7151e5dab6f8e95b5436515b83f423c4df64fe4c6149f864daa209b26adb10ca';
-    const utxoPosToBytes32 = utxoPos => web3.eth.abi.encodeParameter('uint256', utxoPos.toString());
     let alice;
 
     before('setup alice account with custom private key', async () => {
@@ -30,84 +31,144 @@ contract('PaymentOutputToPaymentTxCondition', ([richFather]) => {
 
     beforeEach('setup contracts', async () => {
         this.dummyFramework = constants.ZERO_ADDRESS;
-        this.condition = await PaymentOutputToPaymentTxCondition.new(this.dummyFramework);
+        this.condition = await PaymentOutputToPaymentTxCondition.new(
+            this.dummyFramework, TEST_INPUT_TX_TYPE, TEST_SPENDING_TX_TYPE,
+        );
     });
 
     describe('verify', () => {
-        it('should fail when spending tx does not match type of payment tx', async () => {
-            const outputGuard = addressToOutputGuard(alice);
-            const output = new PaymentTransactionOutput(
-                1000, outputGuard, ETH,
+        const getTestData = () => {
+            const aliceOutputGuard = addressToOutputGuard(alice);
+            const outputInInputTx = new PaymentTransactionOutput(
+                1000, aliceOutputGuard, ETH,
             );
-            const utxoPos = buildUtxoPos(100, 0, 1);
+            const inputTx = new PaymentTransaction(TEST_INPUT_TX_TYPE, [buildUtxoPos(1000, 0, 0)], [outputInInputTx]);
+            const inputTxBytes = web3.utils.bytesToHex(inputTx.rlpEncoded());
+            const outputIndex = 0;
+
+            const utxoPos = buildUtxoPos(2000, 0, outputIndex);
+            const inputTxPos = utxoPosToTxPos(utxoPos);
+
+            const bobOutputGuard = addressToOutputGuard(bob);
+            const outputInSpendingTx = new PaymentTransactionOutput(
+                1000, bobOutputGuard, ETH,
+            );
+
+            const spendingTx = new PaymentTransaction(TEST_SPENDING_TX_TYPE, [utxoPos], [outputInSpendingTx]);
             const inputIndex = 0;
-            const wrongTxType = 2;
-            const tx = new PaymentTransaction(wrongTxType, [utxoPos], [output]);
-            const txBytes = web3.utils.bytesToHex(tx.rlpEncoded());
+            const spendingTxBytes = web3.utils.bytesToHex(spendingTx.rlpEncoded());
+            const txHash = hashTx(spendingTx, this.dummyFramework);
+            const signature = sign(txHash, alicePrivateKey);
+
+            const args = {
+                inputTxBytes,
+                outputIndex,
+                inputTxPos,
+                spendingTxBytes,
+                inputIndex,
+                signature,
+                optionalArgs: EMPTY_BYTES,
+            };
+
+            return {
+                args,
+                spendingTx,
+            };
+        };
+
+        it('should fail when input tx does not match the supported type of payment tx', async () => {
+            const { args } = getTestData();
+            const newSupportedInputTxType = 999;
+            const conditionWithDifferentTxType = await PaymentOutputToPaymentTxCondition.new(
+                this.dummyFramework, newSupportedInputTxType, TEST_SPENDING_TX_TYPE,
+            );
+
             await expectRevert(
-                this.condition.verify(
-                    outputGuard, EMPTY_UTXO_POS, utxoPosToBytes32(utxoPos),
-                    txBytes, inputIndex, '0x',
+                conditionWithDifferentTxType.verify(
+                    args.inputTxBytes,
+                    args.outputIndex,
+                    args.inputTxPos,
+                    args.spendingTxBytes,
+                    args.inputIndex,
+                    args.signature,
+                    args.optionalArgs,
                 ),
-                'The spending tx is not of payment tx type',
+                'The input tx is not of the supported payment tx type',
+            );
+        });
+
+        it('should fail when spending tx does not match the supported type of payment tx', async () => {
+            const { args } = getTestData();
+            const newSupportedSpendingTxType = 999;
+            const conditionWithDifferentTxType = await PaymentOutputToPaymentTxCondition.new(
+                this.dummyFramework, TEST_INPUT_TX_TYPE, newSupportedSpendingTxType,
+            );
+
+            await expectRevert(
+                conditionWithDifferentTxType.verify(
+                    args.inputTxBytes,
+                    args.outputIndex,
+                    args.inputTxPos,
+                    args.spendingTxBytes,
+                    args.inputIndex,
+                    args.signature,
+                    args.optionalArgs,
+                ),
+                'The spending tx is not of the supported payment tx type',
             );
         });
 
         it('should fail when spending tx does not point to the utxo pos in input', async () => {
-            const outputGuard = addressToOutputGuard(alice);
-            const output = new PaymentTransactionOutput(
-                1000, outputGuard, ETH,
-            );
-            const utxoPos = buildUtxoPos(100, 0, 1);
-            const wrongUtxoPosInTx = utxoPos + 1000;
-            const inputIndex = 0;
-            const tx = new PaymentTransaction(1, [wrongUtxoPosInTx], [output]);
-            const txBytes = web3.utils.bytesToHex(tx.rlpEncoded());
+            const { args } = getTestData();
+            const wrongUtxoPos = buildUtxoPos(9999, 999, 999);
+            const wrongTxPos = utxoPosToTxPos(wrongUtxoPos);
+
             await expectRevert(
                 this.condition.verify(
-                    outputGuard, EMPTY_UTXO_POS, utxoPosToBytes32(utxoPos),
-                    txBytes, inputIndex, '0x',
+                    args.inputTxBytes,
+                    args.outputIndex,
+                    wrongTxPos,
+                    args.spendingTxBytes,
+                    args.inputIndex,
+                    args.signature,
+                    args.optionalArgs,
                 ),
-                'The spending tx does not spend the output specified by output identifier',
+                'The spending tx does not point to the correct utxo position of the output',
             );
         });
 
         it('should fail when spending tx not correctly signed by the input owner', async () => {
-            const outputGuard = addressToOutputGuard(alice);
-            const output = new PaymentTransactionOutput(
-                1000, outputGuard, ETH,
-            );
-            const utxoPos = buildUtxoPos(100, 0, 1);
-            const inputIndex = 0;
-            const tx = new PaymentTransaction(1, [utxoPos], [output]);
-            const txBytes = web3.utils.bytesToHex(tx.rlpEncoded());
-            const txHash = hashTx(tx, this.dummyFramework);
+            const { args, spendingTx } = getTestData();
+
+            const txHash = hashTx(spendingTx, this.dummyFramework);
             const wrongPrivateKey = `0x${Array(64).fill(1).join('')}`;
             const wrongSignature = sign(txHash, wrongPrivateKey);
+
             await expectRevert(
                 this.condition.verify(
-                    outputGuard, EMPTY_UTXO_POS, utxoPosToBytes32(utxoPos),
-                    txBytes, inputIndex, wrongSignature,
+                    args.inputTxBytes,
+                    args.outputIndex,
+                    args.inputTxPos,
+                    args.spendingTxBytes,
+                    args.inputIndex,
+                    wrongSignature,
+                    args.optionalArgs,
                 ),
                 'Tx not correctly signed',
             );
         });
 
         it('should return true when all verification passes', async () => {
-            const outputGuard = addressToOutputGuard(alice);
-            const output = new PaymentTransactionOutput(
-                1000, outputGuard, ETH,
-            );
-            const utxoPos = buildUtxoPos(100, 0, 1);
-            const inputIndex = 0;
-            const tx = new PaymentTransaction(1, [utxoPos], [output]);
-            const txBytes = web3.utils.bytesToHex(tx.rlpEncoded());
-            const txHash = hashTx(tx, this.dummyFramework);
-            const signature = sign(txHash, alicePrivateKey);
+            const { args } = getTestData();
 
             const result = await this.condition.verify(
-                outputGuard, EMPTY_UTXO_POS, utxoPosToBytes32(utxoPos),
-                txBytes, inputIndex, signature,
+                args.inputTxBytes,
+                args.outputIndex,
+                args.inputTxPos,
+                args.spendingTxBytes,
+                args.inputIndex,
+                args.signature,
+                args.optionalArgs,
             );
             expect(result).to.be.true;
         });
