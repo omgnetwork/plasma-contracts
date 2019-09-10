@@ -6,7 +6,7 @@ import "../interfaces/ISpendingCondition.sol";
 /**
  * @title SpendingConditionRegistry
  * @notice The registry contracts of spending condition
- * @dev After regsiter all the essential condition contracts, the owner should renounce its ownership to make sure
+ * @dev After registering all the essential condition contracts, the owner should renounce its ownership to make sure
  *      no further conditions would be registered for an ExitGame contracts.
  *      https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/ownership/Ownable.sol#L55
  */
@@ -29,11 +29,11 @@ contract SpendingConditionRegistry is Ownable {
         onlyOwner
     {
         require(outputType != 0, "Should not register with output type 0");
-        require(spendingTxType != 0, "Should not register with output type 0");
+        require(spendingTxType != 0, "Should not register with spending tx type 0");
         require(address(condition) != address(0), "Should not register an empty address");
 
         bytes32 key = keccak256(abi.encode(outputType, spendingTxType));
-        require(address(_spendingConditions[key]) == address(0), "The output type has already been registered");
+        require(address(_spendingConditions[key]) == address(0), "The output + spending type has already been registered");
 
         _spendingConditions[key] = condition;
     }

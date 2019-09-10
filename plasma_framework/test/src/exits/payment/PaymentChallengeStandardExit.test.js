@@ -90,7 +90,7 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
 
             this.spendingConditionRegistry = await SpendingConditionRegistry.new();
             this.spendingCondition = await SpendingConditionMock.new();
-            // let's the spending condition pass by default
+            // lets the spending condition pass by default
             await this.spendingCondition.mockResult(true);
 
             this.exitGame = await PaymentStandardExitRouter.new(
@@ -152,7 +152,7 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
                 );
             });
 
-            it('should fail when exit for such exit id does not exists', async () => {
+            it('should fail when exit for such exit id does not exist', async () => {
                 const args = getTestInputArgs(OUTPUT_TYPE.PAYMENT, alice);
                 await expectRevert(
                     this.exitGame.challengeStandardExit(args),

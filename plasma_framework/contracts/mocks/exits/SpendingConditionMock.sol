@@ -8,7 +8,7 @@ contract SpendingConditionMock is ISpendingCondition {
     bool shouldRevert;
     Args expectedArgs;
 
-    string REVERT_MESSAGE = "Test spending condition reverts";
+    string constant REVERT_MESSAGE = "Test spending condition reverts";
 
     struct Args {
         bytes inputTx;
