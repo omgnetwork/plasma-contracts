@@ -31,11 +31,11 @@ contract PaymentStandardExitRouter is
     uint16 public constant BOND_LOWER_BOUND_DIVISOR = 2;
     uint16 public constant BOND_UPPER_BOUND_MULTIPLIER = 2;
 
-    PaymentExitDataModel.StandardExitMap standardExitMap;
-    PaymentStartStandardExit.Controller startStandardExitController;
-    PaymentProcessStandardExit.Controller processStandardExitController;
-    PaymentChallengeStandardExit.Controller challengeStandardExitController;
-    BondSize.Params startStandardExitBond;
+    PaymentExitDataModel.StandardExitMap internal standardExitMap;
+    PaymentStartStandardExit.Controller internal startStandardExitController;
+    PaymentProcessStandardExit.Controller internal processStandardExitController;
+    PaymentChallengeStandardExit.Controller internal challengeStandardExitController;
+    BondSize.Params internal startStandardExitBond;
 
     event StandardExitBondUpdated(uint128 bondSize);
 

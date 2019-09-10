@@ -16,7 +16,8 @@ contract PaymentInFlightExitRouterMock is PaymentInFlightExitRouter {
         uint256 supportedTxType
     )
         public
-        PaymentInFlightExitRouter(framework, outputGuardHandlerRegistry, spendingConditionRegistry, verifier, supportedTxType) {
+        PaymentInFlightExitRouter(framework, outputGuardHandlerRegistry, spendingConditionRegistry, verifier, supportedTxType)
+    {
     }
 
     // to override IExitProcessor function
@@ -35,11 +36,11 @@ contract PaymentInFlightExitRouterMock is PaymentInFlightExitRouter {
         ife.bondOwner = exit.bondOwner;
         ife.oldestCompetitorPosition = exit.oldestCompetitorPosition;
 
-        for (uint i = 0 ; i < exit.inputs.length ; i++) {
+        for (uint i = 0; i < exit.inputs.length; i++) {
             ife.inputs[i] = exit.inputs[i];
         }
 
-        for (uint i = 0 ; i < exit.outputs.length ; i++) {
+        for (uint i = 0; i < exit.outputs.length; i++) {
             ife.outputs[i] = exit.outputs[i];
         }
     }

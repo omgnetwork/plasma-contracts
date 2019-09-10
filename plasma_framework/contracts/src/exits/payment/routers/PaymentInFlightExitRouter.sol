@@ -21,10 +21,10 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyWithValue {
     uint256 public constant IN_FLIGHT_EXIT_BOND = 31415926535 wei;
     uint256 public constant PIGGYBACK_BOND = 31415926535 wei;
 
-    PaymentExitDataModel.InFlightExitMap inFlightExitMap;
-    PaymentStartInFlightExit.Controller startInFlightExitController;
-    PaymentPiggybackInFlightExit.Controller piggybackInFlightExitController;
-    PaymentChallengeIFENotCanonical.Controller challengeCanonicityController;
+    PaymentExitDataModel.InFlightExitMap internal inFlightExitMap;
+    PaymentStartInFlightExit.Controller internal startInFlightExitController;
+    PaymentPiggybackInFlightExit.Controller internal piggybackInFlightExitController;
+    PaymentChallengeIFENotCanonical.Controller internal challengeCanonicityController;
 
     constructor(
         PlasmaFramework framework,

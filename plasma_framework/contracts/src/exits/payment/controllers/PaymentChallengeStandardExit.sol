@@ -82,7 +82,6 @@ library PaymentChallengeStandardExit {
         emit ExitChallenged(data.exitData.utxoPos);
     }
 
-
     function verifyChallengeExitExists(ChallengeStandardExitData memory data) private pure {
         require(data.exitData.exitable == true, "Such exit does not exist");
     }
@@ -90,8 +89,8 @@ library PaymentChallengeStandardExit {
     function verifyChallengeTxProtocolFinalized(ChallengeStandardExitData memory data) private view {
         UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(data.exitData.utxoPos);
         PaymentOutputModel.Output memory output = PaymentTransactionModel
-                                                  .decode(data.args.exitingTx)
-                                                  .outputs[utxoPos.outputIndex()];
+            .decode(data.args.exitingTx)
+            .outputs[utxoPos.outputIndex()];
 
         IOutputGuardHandler outputGuardHandler = data.controller
                                                 .outputGuardHandlerRegistry
@@ -131,8 +130,8 @@ library PaymentChallengeStandardExit {
         require(address(condition) != address(0), "Spending condition contract not found");
 
         UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(data.exitData.utxoPos);
-        bytes32 outputId = data.controller.isDeposit.test(utxoPos.blockNum())?
-                OutputId.computeDepositOutputId(args.exitingTx, utxoPos.outputIndex(), utxoPos.value)
+        bytes32 outputId = data.controller.isDeposit.test(utxoPos.blockNum())
+                ? OutputId.computeDepositOutputId(args.exitingTx, utxoPos.outputIndex(), utxoPos.value)
                 : OutputId.computeNormalOutputId(args.exitingTx, utxoPos.outputIndex());
         require(outputId == data.exitData.outputId, "The exiting tx is not valid, thus causing outputId mismatch");
 

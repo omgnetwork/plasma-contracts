@@ -5,7 +5,7 @@ import "../../src/utils/IsDeposit.sol";
 contract IsDepositWrapper {
     using IsDeposit for IsDeposit.Predicate;
 
-    IsDeposit.Predicate isDeposit;
+    IsDeposit.Predicate internal isDeposit;
 
     constructor(uint256 _childBlockInterval) public {
         isDeposit = IsDeposit.Predicate(_childBlockInterval);

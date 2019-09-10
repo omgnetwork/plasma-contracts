@@ -141,7 +141,7 @@ contract ExitGameController is ExitGameRegistry {
      * @param _outputIds Output ids to be checked.
      */
     function isAnyOutputsSpent(bytes32[] calldata _outputIds) external view returns (bool) {
-        for (uint i = 0 ; i < _outputIds.length ; i++) {
+        for (uint i = 0; i < _outputIds.length; i++) {
             if (isOutputSpent[_outputIds[i]] == true) {
                 return true;
             }
@@ -154,7 +154,7 @@ contract ExitGameController is ExitGameRegistry {
      * @param _outputIds Output ids to be flagged
      */
     function batchFlagOutputsSpent(bytes32[] calldata _outputIds) external onlyFromNonQuarantinedExitGame {
-        for (uint i = 0 ; i < _outputIds.length ; i++) {
+        for (uint i = 0; i < _outputIds.length; i++) {
             isOutputSpent[_outputIds[i]] = true;
         }
     }

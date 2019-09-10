@@ -14,7 +14,6 @@ library Bits {
     /*
      * Internal functions
      */
-
     /**
      * @dev Sets the bit at the given '_index' in '_self' to '1'.
      * @param _self Uint to modify.

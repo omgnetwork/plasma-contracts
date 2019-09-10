@@ -4,11 +4,11 @@ pragma experimental ABIEncoderV2;
 import "../../src/exits/interfaces/ISpendingCondition.sol";
 
 contract SpendingConditionMock is ISpendingCondition {
-    bool expectedResult;
-    bool shouldRevert;
-    Args expectedArgs;
+    bool internal expectedResult;
+    bool internal shouldRevert;
+    Args internal expectedArgs;
 
-    string constant REVERT_MESSAGE = "Test spending condition reverts";
+    string constant internal REVERT_MESSAGE = "Test spending condition reverts";
 
     struct Args {
         bytes inputTx;
@@ -50,6 +50,8 @@ contract SpendingConditionMock is ISpendingCondition {
         returns (bool)
     {
         if (shouldRevert) {
+            // TODO: solhint disabled for now due to bug, https://github.com/protofire/solhint/issues/157
+            // solhint-disable-next-line reason-string
             revert(REVERT_MESSAGE);
         }
 

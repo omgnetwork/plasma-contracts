@@ -5,10 +5,10 @@ import "../../src/exits/interfaces/IOutputGuardHandler.sol";
 import "../../src/exits/models/OutputGuardModel.sol";
 
 contract ExpectedOutputGuardHandler is IOutputGuardHandler {
-    bool expectedIsValid;
-    address payable expectedExitTarget;
-    address expectedConfirmSigAddress;
-    OutputGuardModel.Data expectedData;
+    bool private expectedIsValid;
+    address payable private expectedExitTarget;
+    address private expectedConfirmSigAddress;
+    OutputGuardModel.Data private expectedData;
 
     /** If this function is set, all tested method would check whether the argument is the same as expected */
     function shouldVerifyArgumentEquals(OutputGuardModel.Data memory data) public {
@@ -50,7 +50,7 @@ contract ExpectedOutputGuardHandler is IOutputGuardHandler {
 
     function isDataExpected(OutputGuardModel.Data memory data) private view returns (bool) {
         // only test this when expected data is set. So we can tune only small portion of tests need to set this up.
-        if (expectedData.guard == bytes32(''))
+        if (expectedData.guard == bytes32(""))
             return true;
 
         return data.guard == expectedData.guard &&

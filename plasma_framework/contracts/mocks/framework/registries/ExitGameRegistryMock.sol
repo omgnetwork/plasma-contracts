@@ -4,7 +4,9 @@ import "../../../src/framework/registries/ExitGameRegistry.sol";
 
 contract ExitGameRegistryMock is ExitGameRegistry {
     constructor (uint256 _minExitPeriod, uint256 _initialImmuneExitGames)
-        ExitGameRegistry(_minExitPeriod, _initialImmuneExitGames) public {
+        public
+        ExitGameRegistry(_minExitPeriod, _initialImmuneExitGames)
+    {
     }
 
     function checkOnlyFromNonQuarantinedExitGame() public onlyFromNonQuarantinedExitGame view returns (bool) {

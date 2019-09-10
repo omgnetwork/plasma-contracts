@@ -7,7 +7,7 @@ import {PaymentOutputModel as DepositOutputModel} from "../../transactions/outpu
 contract EthDepositVerifier is IEthDepositVerifier {
     using DepositOutputModel for DepositOutputModel.Output;
 
-    uint8 constant DEPOSIT_TX_TYPE = 1;
+    uint8 constant internal DEPOSIT_TX_TYPE = 1;
 
     function verify(bytes calldata _depositTx, uint256 amount, address _sender) external view {
         DepositTx.Transaction memory decodedTx = DepositTx.decode(_depositTx);

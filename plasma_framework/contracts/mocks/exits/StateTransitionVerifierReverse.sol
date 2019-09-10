@@ -6,8 +6,8 @@ import "../../src/exits/interfaces/IStateTransitionVerifier.sol";
 contract StateTransitionVerifierReverse is IStateTransitionVerifier {
 
     function isCorrectStateTransition(
-        bytes calldata /*inFlightTx*/,
-        bytes[] calldata /*inputTxs*/,
+        bytes calldata, /*inFlightTx*/
+        bytes[] calldata, /*inputTxs*/
         uint256[] calldata /*inputUtxosPos*/
     )
         external

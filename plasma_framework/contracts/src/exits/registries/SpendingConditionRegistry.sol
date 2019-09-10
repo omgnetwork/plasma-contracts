@@ -11,7 +11,7 @@ import "../interfaces/ISpendingCondition.sol";
  *      https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/ownership/Ownable.sol#L55
  */
 contract SpendingConditionRegistry is Ownable {
-    mapping(bytes32 => ISpendingCondition) _spendingConditions;
+    mapping(bytes32 => ISpendingCondition) internal _spendingConditions;
 
     function spendingConditions(uint256 outputType, uint256 spendingTxType) public view returns (ISpendingCondition) {
         bytes32 key = keccak256(abi.encode(outputType, spendingTxType));

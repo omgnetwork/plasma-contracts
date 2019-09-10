@@ -34,7 +34,6 @@ contract PaymentStandardExitRouterMock is PaymentStandardExitRouter {
     }
 
     /** helper functions for testing */
-
     function setExit(uint192 _exitId, PaymentExitDataModel.StandardExit memory _exitData) public {
         PaymentStandardExitRouter.standardExitMap.exits[_exitId] = _exitData;
     }

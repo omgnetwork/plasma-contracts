@@ -1,7 +1,7 @@
 pragma solidity ^0.5.0;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
-import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 /**
  * @title PriorityQueue
@@ -15,7 +15,7 @@ contract PriorityQueue is Ownable {
         uint256 currentSize;
     }
 
-    Queue queue;
+    Queue internal queue;
 
     constructor() public {
         queue.heapList = [0];
@@ -63,11 +63,9 @@ contract PriorityQueue is Ownable {
         return queue.heapList[1];
     }
 
-
     /*
      *  Private functions
      */
-
     function percUp(Queue storage self, uint256 pointer) private {
         uint256 i = pointer;
         uint256 j = i;

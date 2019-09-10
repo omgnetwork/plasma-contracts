@@ -6,7 +6,7 @@ import "../../models/OutputGuardModel.sol";
 import "../../../utils/AddressPayable.sol";
 
 contract PaymentOutputGuardHandler is IOutputGuardHandler {
-    uint256 outputType;
+    uint256 internal outputType;
 
     constructor(uint256 _outputType) public {
         outputType = _outputType;

@@ -20,11 +20,13 @@
     "ethereumjs-util": "^6.1.0",
     "openzeppelin-test-helpers": "^0.4.0",
     "rlp": "^2.2.3",
+    "solhint": "^2.2.0",
     "truffle": "^5.0.25"
   },
   "scripts": {
     "test": "truffle test",
-    "linter": "node_modules/eslint/bin/eslint.js . --fix"
+    "linter": "node_modules/eslint/bin/eslint.js . --fix",
+    "linter-sol": "node_modules/.bin/solhint \"contracts/**/*.sol\""
   },
   "repository": {
     "type": "git",

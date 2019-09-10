@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-import 'openzeppelin-solidity/contracts/cryptography/ECDSA.sol';
+import "openzeppelin-solidity/contracts/cryptography/ECDSA.sol";
 
 import "../../interfaces/ISpendingCondition.sol";
 import "../../../utils/UtxoPosLib.sol";
@@ -14,9 +14,9 @@ contract PaymentOutputToPaymentTxCondition is ISpendingCondition {
     using PaymentOutputModel for PaymentOutputModel.Output;
     using TxPosLib for TxPosLib.TxPos;
 
-    uint256 supportInputTxType;
-    uint256 supportSpendingTxType;
-    PaymentEip712Lib.Constants eip712;
+    uint256 internal supportInputTxType;
+    uint256 internal supportSpendingTxType;
+    PaymentEip712Lib.Constants internal eip712;
 
     constructor(address framework, uint256 inputTxType, uint256 spendingTxType) public {
         eip712 = PaymentEip712Lib.initConstants(framework);

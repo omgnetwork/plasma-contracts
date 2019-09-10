@@ -8,7 +8,7 @@ contract BondSizeMock {
     BondSize.Params public bond;
 
     constructor (uint128 _initialBondSize, uint16 _lowerBoundDivisor, uint16 _upperBoundMultiplier) public {
-        bond = BondSize.buildParams(_initialBondSize,  _lowerBoundDivisor,  _upperBoundMultiplier);
+        bond = BondSize.buildParams(_initialBondSize, _lowerBoundDivisor, _upperBoundMultiplier);
     }
 
     function bondSize() public view returns (uint128) {
