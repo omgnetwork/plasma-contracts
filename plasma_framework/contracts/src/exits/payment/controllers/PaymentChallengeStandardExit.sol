@@ -93,18 +93,17 @@ library PaymentChallengeStandardExit {
                                                   .decode(data.args.exitingTx)
                                                   .outputs[utxoPos.outputIndex()];
 
-        OutputGuardModel.Data memory outputGuardData = OutputGuardModel.Data({
-            guard: output.outputGuard,
-            outputType: data.args.outputType,
-            preimage: data.args.outputGuardPreimage
-        });
-
         IOutputGuardHandler outputGuardHandler = data.controller
                                                 .outputGuardHandlerRegistry
                                                 .outputGuardHandlers(data.args.outputType);
 
         require(address(outputGuardHandler) != address(0), "Failed to get the outputGuardHandler of the output type");
 
+        OutputGuardModel.Data memory outputGuardData = OutputGuardModel.Data({
+            guard: output.outputGuard,
+            outputType: data.args.outputType,
+            preimage: data.args.outputGuardPreimage
+        });
         require(outputGuardHandler.isValid(outputGuardData),
                 "Output guard information is invalid");
 
