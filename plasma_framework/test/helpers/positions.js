@@ -16,6 +16,7 @@ function utxoPosToTxPos(utxoPos) {
 class UtxoPos {
     constructor(utxoPos) {
         this.utxoPos = utxoPos;
+        this.txPos = Math.floor(this.utxoPos / TX_OFFSET);
         this.blockNum = Math.floor(this.utxoPos / BLOCK_OFFSET);
         this.txIndex = Math.floor((this.utxoPos % BLOCK_OFFSET) / TX_OFFSET);
         this.outputIndex = this.utxoPos % TX_OFFSET;

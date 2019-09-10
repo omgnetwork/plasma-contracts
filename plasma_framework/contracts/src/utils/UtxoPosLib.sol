@@ -14,6 +14,20 @@ library UtxoPosLib {
     uint256 constant internal TX_OFFSET = 10000;
 
     /**
+     * @notice Given txPos and outputIndex, returns the Utxo struct.
+     * @param txPos tx position
+     * @param outputIndex the output's transaction index.
+     * @return UtxoPos of the according value
+     */
+    function build(TxPosLib.TxPos memory txPos, uint16 outputIndex)
+        internal
+        pure
+        returns (UtxoPos memory)
+    {
+        return UtxoPos(txPos.value * TX_OFFSET + outputIndex);
+    }
+
+    /**
      * @notice Given an UTXO position, returns the block number.
      * @param _utxoPos Output identifier in form of utxo position.
      * @return The output's block number.

@@ -14,7 +14,7 @@ contract PaymentStandardExitRouterMock is PaymentStandardExitRouter {
         EthVault _ethVault,
         Erc20Vault _erc20Vault,
         OutputGuardHandlerRegistry _outputGuardHandlerRegistry,
-        PaymentSpendingConditionRegistry _spendingConditionRegistry
+        SpendingConditionRegistry _spendingConditionRegistry
     )
         public
         PaymentStandardExitRouter(
