@@ -10,17 +10,27 @@ import "../../../../src/exits/registries/OutputGuardHandlerRegistry.sol";
 contract PaymentInFlightExitRouterMock is PaymentInFlightExitRouter {
     constructor(
         PlasmaFramework framework,
+        EthVault ethVault,
+        Erc20Vault erc20Vault,
         OutputGuardHandlerRegistry outputGuardHandlerRegistry,
         PaymentSpendingConditionRegistry spendingConditionRegistry,
         IStateTransitionVerifier verifier,
         uint256 supportedTxType
     )
         public
-        PaymentInFlightExitRouter(framework, outputGuardHandlerRegistry, spendingConditionRegistry, verifier, supportedTxType) {
+        PaymentInFlightExitRouter(
+            framework,
+            ethVault,
+            erc20Vault,
+            outputGuardHandlerRegistry,
+            spendingConditionRegistry,
+            verifier,
+            supportedTxType
+        ) {
     }
 
     // to override IExitProcessor function
-    function processExit(uint192 exitId) external {}
+    function processExit(uint192 exitId, address ercContract) external {}
 
     function finalizeExit(uint192 exitId) public {
         inFlightExitMap.exits[exitId].exitStartTimestamp = 1;

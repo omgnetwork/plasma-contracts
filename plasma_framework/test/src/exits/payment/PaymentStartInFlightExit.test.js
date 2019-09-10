@@ -6,6 +6,7 @@ const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry
 const PaymentInFlightExitRouter = artifacts.require('PaymentInFlightExitRouterMock');
 const PaymentStartInFlightExit = artifacts.require('PaymentStartInFlightExit');
 const PaymentPiggybackInFlightExit = artifacts.require('PaymentPiggybackInFlightExit');
+const PaymentProcessInFlightExit = artifacts.require('PaymentProcessInFlightExit');
 const PaymentChallengeIFENotCanonical = artifacts.require('PaymentChallengeIFENotCanonical');
 const PaymentSpendingConditionRegistry = artifacts.require('PaymentSpendingConditionRegistry');
 const PaymentSpendingConditionFalse = artifacts.require('PaymentSpendingConditionFalse');
@@ -14,6 +15,8 @@ const StateTransitionVerifierAccept = artifacts.require('StateTransitionVerifier
 const StateTransitionVerifierReject = artifacts.require('StateTransitionVerifierReject');
 const StateTransitionVerifierReverse = artifacts.require('StateTransitionVerifierReverse');
 const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
+const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
+const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
 
 const {
     BN, constants, expectEvent, expectRevert, time,
@@ -51,10 +54,12 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
         const startInFlightExit = await PaymentStartInFlightExit.new();
         const piggybackInFlightExit = await PaymentPiggybackInFlightExit.new();
         const challengeInFlightExitNotCanonical = await PaymentChallengeIFENotCanonical.new();
+        const processInFlightExit = await PaymentProcessInFlightExit.new();
 
         await PaymentInFlightExitRouter.link('PaymentStartInFlightExit', startInFlightExit.address);
         await PaymentInFlightExitRouter.link('PaymentPiggybackInFlightExit', piggybackInFlightExit.address);
         await PaymentInFlightExitRouter.link('PaymentChallengeIFENotCanonical', challengeInFlightExitNotCanonical.address);
+        await PaymentInFlightExitRouter.link('PaymentProcessInFlightExit', processInFlightExit.address);
     });
 
     before('setup bob account with custom private key', async () => {
@@ -115,6 +120,9 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                     MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
                 );
 
+                const ethVault = await SpyEthVault.new(this.framework.address);
+                const erc20Vault = await SpyErc20Vault.new(this.framework.address);
+
                 this.spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
                 await registerSpendingConditionTrue(this.spendingConditionRegistry);
 
@@ -129,6 +137,8 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
 
                 this.exitGame = await PaymentInFlightExitRouter.new(
                     this.framework.address,
+                    ethVault.address,
+                    erc20Vault.address,
                     this.outputGuardHandlerRegistry.address,
                     this.spendingConditionRegistry.address,
                     this.stateTransitionVerifierAccept.address,
@@ -237,6 +247,9 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 this.framework = await SpyPlasmaFramework.new(
                     MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
                 );
+                const ethVault = await SpyEthVault.new(this.framework.address);
+                const erc20Vault = await SpyErc20Vault.new(this.framework.address);
+
                 this.spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
                 await registerSpendingConditionTrue(this.spendingConditionRegistry);
 
@@ -251,6 +264,8 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
 
                 this.exitGame = await PaymentInFlightExitRouter.new(
                     this.framework.address,
+                    ethVault.address,
+                    erc20Vault.address,
                     this.outputGuardHandlerRegistry.address,
                     this.spendingConditionRegistry.address,
                     this.stateTransitionVerifierAccept.address,
@@ -275,6 +290,8 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 this.args.inputTxsConfirmSigs[0] = sign(inputTxsBlockRoot1, bobPrivateKey);
                 const dummyExitGame = await PaymentInFlightExitRouter.new(
                     this.framework.address,
+                    ethVault.address,
+                    erc20Vault.address,
                     this.outputGuardHandlerRegistry.address,
                     this.spendingConditionRegistry.address,
                     this.stateTransitionVerifierAccept.address,
@@ -308,6 +325,10 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 this.framework = await SpyPlasmaFramework.new(
                     MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
                 );
+
+                this.ethVault = await SpyEthVault.new(this.framework.address);
+                this.erc20Vault = await SpyErc20Vault.new(this.framework.address);
+
                 this.spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
 
                 // setup outputGuardHandler
@@ -322,6 +343,8 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
 
                 this.exitGame = await PaymentInFlightExitRouter.new(
                     this.framework.address,
+                    this.ethVault.address,
+                    this.erc20Vault.address,
                     this.outputGuardHandlerRegistry.address,
                     this.spendingConditionRegistry.address,
                     this.stateTransitionVerifierAccept.address,
@@ -481,6 +504,8 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 args.inputTxsConfirmSigs[0] = web3.utils.utf8ToHex('invalid confirm sig');
                 const dummyExitGame = await PaymentInFlightExitRouter.new(
                     this.framework.address,
+                    this.ethVault.address,
+                    this.erc20Vault.address,
                     this.outputGuardHandlerRegistry.address,
                     this.spendingConditionRegistry.address,
                     this.stateTransitionVerifierAccept.address,
@@ -682,6 +707,8 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 this.framework = await SpyPlasmaFramework.new(
                     MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
                 );
+                this.ethVault = await SpyEthVault.new(this.framework.address);
+                this.erc20Vault = await SpyErc20Vault.new(this.framework.address);
             });
 
             it('should fail when in-flight transaction is an invalid state transistion', async () => {
@@ -690,6 +717,8 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 this.spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
                 const exitGame = await PaymentInFlightExitRouter.new(
                     this.framework.address,
+                    this.ethVault.address,
+                    this.erc20Vault.address,
                     this.outputGuardHandlerRegistry.address,
                     this.spendingConditionRegistry.address,
                     stateTransitionVerifierReject.address,
@@ -732,6 +761,8 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 this.spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
                 const exitGame = await PaymentInFlightExitRouter.new(
                     this.framework.address,
+                    this.ethVault.address,
+                    this.erc20Vault.address,
                     this.outputGuardHandlerRegistry.address,
                     this.spendingConditionRegistry.address,
                     stateTransitionVerifierReverse.address,

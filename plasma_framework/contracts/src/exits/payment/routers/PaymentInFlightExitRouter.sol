@@ -6,6 +6,7 @@ import "../PaymentExitDataModel.sol";
 import "../controllers/PaymentStartInFlightExit.sol";
 import "../controllers/PaymentPiggybackInFlightExit.sol";
 import "../controllers/PaymentChallengeIFENotCanonical.sol";
+import "../controllers/PaymentProcessInFlightExit.sol";
 import "../spendingConditions/PaymentSpendingConditionRegistry.sol";
 import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../interfaces/IStateTransitionVerifier.sol";
@@ -17,6 +18,7 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyWithValue {
     using PaymentStartInFlightExit for PaymentStartInFlightExit.Controller;
     using PaymentPiggybackInFlightExit for PaymentPiggybackInFlightExit.Controller;
     using PaymentChallengeIFENotCanonical for PaymentChallengeIFENotCanonical.Controller;
+    using PaymentProcessInFlightExit for PaymentProcessInFlightExit.Controller;
 
     uint256 public constant IN_FLIGHT_EXIT_BOND = 31415926535 wei;
     uint256 public constant PIGGYBACK_BOND = 31415926535 wei;
@@ -25,9 +27,12 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyWithValue {
     PaymentStartInFlightExit.Controller startInFlightExitController;
     PaymentPiggybackInFlightExit.Controller piggybackInFlightExitController;
     PaymentChallengeIFENotCanonical.Controller challengeCanonicityController;
+    PaymentProcessInFlightExit.Controller processInflightExitController;
 
     constructor(
         PlasmaFramework framework,
+        EthVault ethVault,
+        Erc20Vault erc20Vault,
         OutputGuardHandlerRegistry outputGuardHandlerRegistry,
         PaymentSpendingConditionRegistry spendingConditionRegistry,
         IStateTransitionVerifier verifier,
@@ -53,6 +58,12 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyWithValue {
             framework: framework,
             spendingConditionRegistry: spendingConditionRegistry,
             supportedTxType: supportedTxType
+        });
+
+        processInflightExitController = PaymentProcessInFlightExit.Controller({
+            framework: framework,
+            ethVault: ethVault,
+            erc20Vault: erc20Vault
         });
     }
 
@@ -118,5 +129,15 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyWithValue {
         public
     {
         challengeCanonicityController.respond(inFlightExitMap, inFlightTx, inFlightTxPos, inFlightTxInclusionProof);
+    }
+
+    /**
+     * @notice Process in-flight exit.
+     * @dev This function is designed to be called in the main processExit function. Thus using internal.
+     * @param exitId The in-flight exit id.
+     * @param token The token (in erc20 address or address(0) for ETH) of the exiting output.
+     */
+    function processInFlightExit(uint192 exitId, address token) internal {
+        processInflightExitController.run(inFlightExitMap, exitId, token);
     }
 }

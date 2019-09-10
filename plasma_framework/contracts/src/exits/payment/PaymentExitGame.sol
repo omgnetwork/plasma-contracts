@@ -21,7 +21,7 @@ contract PaymentExitGame is IExitProcessor, PaymentStandardExitRouter {
     }
 
     /**
-     * @dev for ERC20, thus each erc contract address would be a token value
+     * @dev for ERC20, thus each erc contract address represent a token value
      * @dev for ETH, using address(0) as a preserved address of ERC contract
      */
     function processExit(uint192 exitId, address ercContract) external {
