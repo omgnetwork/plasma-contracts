@@ -47,8 +47,8 @@ library PaymentExitDataModel {
         WithdrawData[MAX_INPUT_NUM] inputs;
         WithdrawData[MAX_OUTPUT_NUM] outputs;
         address payable bondOwner;
-        uint256 oldestCompetitorPosition;
         uint256 bondSize;
+        uint256 oldestCompetitorPosition;
     }
 
     struct InFlightExitMap {

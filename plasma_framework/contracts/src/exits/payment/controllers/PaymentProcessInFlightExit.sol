@@ -24,6 +24,16 @@ library PaymentProcessInFlightExit {
         address token
     );
 
+    event InFlightExitOutputWithdrawn(
+        uint192 indexed exitId,
+        uint16 outputIndex
+    );
+
+    event InFlightExitInputWithdrawn(
+        uint192 indexed exitId,
+        uint16 inputIndex
+    );
+
     function run(
         Controller memory self,
         PaymentExitDataModel.InFlightExitMap storage exitMap,
@@ -37,38 +47,38 @@ library PaymentProcessInFlightExit {
         // check if any input spent already, this is required to prevent operator stealing fund.
         // Since process exit should not revert to avoid blocking the while loop, return directly.
         // see: https://github.com/omisego/plasma-contracts/issues/102#issuecomment-495809967
-        if (isAnyInputSpent(self.framework, exit, token)) {
+        if (exit.exitStartTimestamp == 0 || isAnyInputSpent(self.framework, exit, token)) {
             emit InFlightExitOmitted(exitId, token);
             return;
         }
 
-        if (exit.isCanonical) {
-            for (uint16 i = 0 ; i < MAX_OUTPUT_NUM ; i++) {
-                PaymentExitDataModel.WithdrawData memory withdrawal = exit.outputs[i];
-                if (shouldWithdrawOutput(self, exit, withdrawal, token, i)) {
-                    exit.clearOutputPiggybacked(i);
+        if (!exit.isCanonical) {
+            for (uint16 i = 0 ; i < MAX_INPUT_NUM ; i++) {
+                PaymentExitDataModel.WithdrawData memory withdrawal = exit.inputs[i];
+
+                if (shouldWithdrawInput(exit, withdrawal, token, i)) {
                     withdrawFromVault(self, withdrawal);
                     withdrawal.exitTarget.transfer(withdrawal.piggybackBondSize);
+                    emit InFlightExitInputWithdrawn(exitId, i);
                 }
             }
         } else {
-            for (uint16 i = 0 ; i < MAX_INPUT_NUM ; i++) {
-                PaymentExitDataModel.WithdrawData memory withdrawal = exit.inputs[i];
-                if (shouldWithdrawInput(exit, withdrawal, token, i)) {
-                    exit.clearInputPiggybacked(i);
+            for (uint16 i = 0 ; i < MAX_OUTPUT_NUM ; i++) {
+                PaymentExitDataModel.WithdrawData memory withdrawal = exit.outputs[i];
+
+                if (shouldWithdrawOutput(self, exit, withdrawal, token, i)) {
                     withdrawFromVault(self, withdrawal);
                     withdrawal.exitTarget.transfer(withdrawal.piggybackBondSize);
+                    emit InFlightExitOutputWithdrawn(exitId, i);
                 }
             }
         }
 
-        exit.bondOwner.transfer(exit.bondSize);
-
         flagInputAndOutputSpent(self.framework, exit, token);
+        clearPiggybackFlag(exit, token);
 
-        // TODO: do we still need isFinalized?
         if (allPiggybackCleared(exit)) {
-            exit.isFinalized = true;
+            exit.bondOwner.transfer(exit.bondSize);
         }
     }
 
@@ -98,6 +108,20 @@ library PaymentProcessInFlightExit {
         return framework.isAnyOutputsSpent(outputIdsOfInputs);
     }
 
+    function shouldWithdrawInput(
+        PaymentExitDataModel.InFlightExit memory exit,
+        PaymentExitDataModel.WithdrawData memory withdrawal,
+        address token,
+        uint16 index
+    )
+        private
+        pure
+        returns (bool)
+    {
+        return withdrawal.token == token &&
+                exit.isInputPiggybacked(index);
+    }
+
     function shouldWithdrawOutput(
         Controller memory controller,
         PaymentExitDataModel.InFlightExit memory exit,
@@ -114,17 +138,17 @@ library PaymentProcessInFlightExit {
                 !controller.framework.isOutputSpent(withdrawal.outputId);
     }
 
-    function shouldWithdrawInput(
-        PaymentExitDataModel.InFlightExit memory exit,
-        PaymentExitDataModel.WithdrawData memory withdrawal,
-        address token,
-        uint16 index
+    function withdrawFromVault(
+        Controller memory self,
+        PaymentExitDataModel.WithdrawData memory withdrawal
     )
         private
-        pure
-        returns (bool)
     {
-        return withdrawal.token == token && exit.isInputPiggybacked(index);
+        if (withdrawal.token == address(0)) {
+            self.ethVault.withdraw(withdrawal.exitTarget, withdrawal.amount);
+        } else {
+            self.erc20Vault.withdraw(withdrawal.exitTarget, withdrawal.token, withdrawal.amount);
+        }
     }
 
     function flagInputAndOutputSpent(
@@ -148,17 +172,39 @@ library PaymentProcessInFlightExit {
         }
 
         bytes32[] memory outputIdsToFlag = new bytes32[](inputNumOfTheToken + piggybackedOutputNumOfTheToken);
+        uint indexForOutputIds = 0;
         for (uint16 i = 0 ; i < MAX_INPUT_NUM ;  i++ ) {
             if (exit.inputs[i].token == token) {
-                outputIdsToFlag[i] = exit.inputs[i].outputId;
+                outputIdsToFlag[indexForOutputIds] = exit.inputs[i].outputId;
+                indexForOutputIds++;
             }
         }
         for (uint16 i = 0 ; i < MAX_OUTPUT_NUM ;  i++ ) {
             if (exit.outputs[i].token == token && exit.isOutputPiggybacked(i)) {
-                outputIdsToFlag[i + inputNumOfTheToken] = exit.outputs[i].outputId;
+                outputIdsToFlag[indexForOutputIds] = exit.outputs[i].outputId;
+                indexForOutputIds++;
             }
         }
         framework.batchFlagOutputsSpent(outputIdsToFlag);
+    }
+
+    function clearPiggybackFlag(
+        PaymentExitDataModel.InFlightExit storage exit,
+        address token
+    )
+        private
+    {
+        for (uint16 i = 0 ; i < MAX_INPUT_NUM ; i ++) {
+            if (token == exit.inputs[i].token) {
+                exit.clearInputPiggybacked(i);
+            }
+        }
+
+        for (uint16 i = 0 ; i < MAX_OUTPUT_NUM ; i ++) {
+            if (token == exit.outputs[i].token) {
+                exit.clearOutputPiggybacked(i);
+            }
+        }
     }
 
     function allPiggybackCleared(PaymentExitDataModel.InFlightExit memory exit) private pure returns (bool) {
@@ -173,18 +219,5 @@ library PaymentProcessInFlightExit {
         }
 
         return true;
-    }
-
-    function withdrawFromVault(
-        Controller memory self,
-        PaymentExitDataModel.WithdrawData memory withdrawal
-    )
-        private
-    {
-        if (withdrawal.token == address(0)) {
-            self.ethVault.withdraw(withdrawal.exitTarget, withdrawal.amount);
-        } else {
-            self.erc20Vault.withdraw(withdrawal.exitTarget, withdrawal.token, withdrawal.amount);
-        }
     }
 }
