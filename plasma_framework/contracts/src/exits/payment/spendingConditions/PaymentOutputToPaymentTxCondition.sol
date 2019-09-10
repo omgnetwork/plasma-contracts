@@ -14,8 +14,8 @@ contract PaymentOutputToPaymentTxCondition is ISpendingCondition {
     using PaymentOutputModel for PaymentOutputModel.Output;
     using TxPosLib for TxPosLib.TxPos;
 
-    uint256 supportInputTxType;
-    uint256 supportSpendingTxType;
+    uint256 internal supportInputTxType;
+    uint256 internal supportSpendingTxType;
     PaymentEip712Lib.Constants internal eip712;
 
     constructor(address framework, uint256 inputTxType, uint256 spendingTxType) public {

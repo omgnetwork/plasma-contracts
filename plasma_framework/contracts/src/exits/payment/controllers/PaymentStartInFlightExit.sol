@@ -163,8 +163,8 @@ library PaymentStartInFlightExit {
         bytes32[] memory outputIds = new bytes32[](inputTxs.length);
         for (uint i = 0; i < inputTxs.length; i++) {
             bool isDepositTx = controller.isDeposit.test(utxoPos[i].blockNum());
-            outputIds[i] = isDepositTx ?
-                OutputId.computeDepositOutputId(inputTxs[i], utxoPos[i].outputIndex(), utxoPos[i].value)
+            outputIds[i] = isDepositTx
+                ? OutputId.computeDepositOutputId(inputTxs[i], utxoPos[i].outputIndex(), utxoPos[i].value)
                 : OutputId.computeNormalOutputId(inputTxs[i], utxoPos[i].outputIndex());
         }
         return outputIds;
