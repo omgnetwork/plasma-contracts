@@ -33,7 +33,7 @@ contract SpendingConditionRegistry is Ownable {
         require(address(condition) != address(0), "Should not register an empty address");
 
         bytes32 key = keccak256(abi.encode(outputType, spendingTxType));
-        require(address(_spendingConditions[key]) == address(0), "The output + spending type has already been registered");
+        require(address(_spendingConditions[key]) == address(0), "The (output type, spending tx type) pair has already been registered");
 
         _spendingConditions[key] = condition;
     }
