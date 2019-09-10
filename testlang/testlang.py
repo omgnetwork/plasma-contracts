@@ -135,7 +135,7 @@ class TestingLanguage:
         blknum = self.root_chain.nextChildBlock()
         block = Block(transactions, number=blknum)
         signed_block = block.sign(signer.key)
-        self.root_chain.functions.submitBlock(signed_block.root).transact({'from': signer.address})
+        self.root_chain.submitBlock(signed_block.root, **{'from': signer.address})
         if force_invalid:
             self.child_chain.blocks[self.child_chain.next_child_block] = signed_block
             self.child_chain.next_deposit_block = self.child_chain.next_child_block + 1
