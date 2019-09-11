@@ -33,7 +33,6 @@ library PaymentExitDataModel {
         // Canonicity is assumed at start, then can be challenged and is set to `false`.
         // Response to non-canonical challenge can set it back to `true`.
         bool isCanonical;
-        bool isFinalized;
         uint64 exitStartTimestamp;
 
         /**

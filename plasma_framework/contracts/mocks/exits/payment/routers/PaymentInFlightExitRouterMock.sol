@@ -38,11 +38,6 @@ contract PaymentInFlightExitRouterMock is PaymentInFlightExitRouter {
         PaymentInFlightExitRouter.processInFlightExit(exitId, ercContract);
     }
 
-    function finalizeExit(uint192 exitId) public {
-        inFlightExitMap.exits[exitId].exitStartTimestamp = 1;
-        inFlightExitMap.exits[exitId].isFinalized = true;
-    }
-
     function setInFlightExit(uint192 exitId, PaymentExitDataModel.InFlightExit memory exit) public {
         PaymentExitDataModel.InFlightExit storage ife = inFlightExitMap.exits[exitId];
         ife.isCanonical = exit.isCanonical;

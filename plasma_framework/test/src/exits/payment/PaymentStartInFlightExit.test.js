@@ -413,27 +413,6 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 );
             });
 
-            it('should fail when the same in-flight exit is already finalized', async () => {
-                const {
-                    args,
-                    inputTxsBlockRoot1,
-                    inputTxsBlockRoot2,
-                } = buildValidIfeStartArgs(AMOUNT, [alice, bob, carol], BLOCK_NUMBER, DEPOSIT_BLOCK_NUMBER);
-                await registerSpendingConditionTrue(this.spendingConditionRegistry);
-                await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot1, 0);
-                await this.framework.setBlock(DEPOSIT_BLOCK_NUMBER, inputTxsBlockRoot2, 0);
-
-                await this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND });
-
-                const exitId = await this.exitIdHelper.getInFlightExitId(args.inFlightTx);
-                await this.exitGame.finalizeExit(exitId);
-
-                await expectRevert(
-                    this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
-                    'There is an active in-flight exit from this transaction',
-                );
-            });
-
             it('should fail when it failed to get the outputGuardHandler for input tx', async () => {
                 const {
                     args,
