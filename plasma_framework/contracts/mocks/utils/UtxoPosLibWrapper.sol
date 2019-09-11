@@ -7,6 +7,10 @@ import "../../src/utils/UtxoPosLib.sol";
 contract UtxoPosLibWrapper {
     using UtxoPosLib for UtxoPosLib.UtxoPos;
 
+    function build(uint256 txPos, uint16 outputIndex) public pure returns (UtxoPosLib.UtxoPos memory) {
+        return UtxoPosLib.build(TxPosLib.TxPos(txPos), outputIndex);
+    }
+
     function blockNum(uint256 _utxoPos) public pure returns (uint256) {
         return UtxoPosLib.UtxoPos(_utxoPos).blockNum();
     }

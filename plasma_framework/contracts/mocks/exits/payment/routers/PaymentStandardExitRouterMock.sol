@@ -14,7 +14,7 @@ contract PaymentStandardExitRouterMock is PaymentStandardExitRouter {
         EthVault _ethVault,
         Erc20Vault _erc20Vault,
         OutputGuardHandlerRegistry _outputGuardHandlerRegistry,
-        PaymentSpendingConditionRegistry _spendingConditionRegistry
+        SpendingConditionRegistry _spendingConditionRegistry
     )
         public
         PaymentStandardExitRouter(
@@ -34,7 +34,6 @@ contract PaymentStandardExitRouterMock is PaymentStandardExitRouter {
     }
 
     /** helper functions for testing */
-
     function setExit(uint192 _exitId, PaymentExitDataModel.StandardExit memory _exitData) public {
         PaymentStandardExitRouter.standardExitMap.exits[_exitId] = _exitData;
     }

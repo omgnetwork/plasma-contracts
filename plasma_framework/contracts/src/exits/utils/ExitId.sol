@@ -53,7 +53,6 @@ library ExitId {
     /**
     Private
     */
-
     function _computeStandardExitId(bytes32 _txhash, uint16 _outputIndex)
         private
         pure

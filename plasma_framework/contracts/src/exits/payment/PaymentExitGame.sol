@@ -14,10 +14,11 @@ contract PaymentExitGame is IExitProcessor, PaymentStandardExitRouter {
         EthVault _ethVault,
         Erc20Vault _erc20Vault,
         OutputGuardHandlerRegistry _outputGuardHandlerRegistry,
-        PaymentSpendingConditionRegistry _spendingConditionRegistry
+        SpendingConditionRegistry _spendingConditionRegistry
     )
         public
-        PaymentStandardExitRouter(_framework, _ethVault, _erc20Vault, _outputGuardHandlerRegistry, _spendingConditionRegistry) {
+        PaymentStandardExitRouter(_framework, _ethVault, _erc20Vault, _outputGuardHandlerRegistry, _spendingConditionRegistry)
+    {
     }
 
     /**

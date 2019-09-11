@@ -10,6 +10,13 @@ contract('OutputGuardHandlerRegistry', ([_, other]) => {
         this.registry = await OutputGuardHandlerRegistry.new();
     });
 
+    describe('outputGuardRegisters', () => {
+        it('should get empty address if not registered', async () => {
+            const nonRegisteredOutputType = 999;
+            expect(await this.registry.outputGuardHandlers(nonRegisteredOutputType)).to.equal(constants.ZERO_ADDRESS);
+        });
+    });
+
     describe('registerOutputGuardHandler', () => {
         it('should be able to register successfully', async () => {
             const outputType = 1;

@@ -76,14 +76,24 @@ jobs:
           command: npx codechecks
           working_directory: ~/repo/plasma_framework
           
-  Truffle linter:
+  Javascript linter:
     executor: truffle_executor
     working_directory: ~/repo
     steps:
       - setup_truffle_env
       - run:
-          name: Run linter
+          name: Run javascript linter
           command: eslint . 
+          working_directory: ~/repo/plasma_framework
+          
+  Solidity linter:
+    executor: truffle_executor
+    working_directory: ~/repo
+    steps:
+      - setup_truffle_env
+      - run:
+          name: Run solidity linter
+          command: npm run linter-sol 
           working_directory: ~/repo/plasma_framework
   
   Python tests:
@@ -124,7 +134,8 @@ workflows:
   Run truffle tests:
     jobs:
       - Truffle tests
-      - Truffle linter
+      - Javascript linter
+      - Solidity linter
   
   Run python slow tests:
     jobs:

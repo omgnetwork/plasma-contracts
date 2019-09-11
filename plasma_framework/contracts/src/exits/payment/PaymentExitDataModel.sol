@@ -8,10 +8,6 @@ library PaymentExitDataModel {
         bool exitable;
         uint192 utxoPos;
         bytes32 outputId;
-        // Hash of output type and output guard.
-        // Correctness of them would be checked when exit starts.
-        // For other steps, they just check data consistency of input args.
-        bytes32 outputTypeAndGuardHash;
         address payable exitTarget;
         uint256 amount;
         uint256 bondSize;

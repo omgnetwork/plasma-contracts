@@ -68,14 +68,14 @@ library PaymentInFlightExitModelUtils {
         returns (bool)
     {
         bool isPiggybackInput = true;
-        for (uint i = 0 ; i < MAX_INPUT_NUM ; i++) {
+        for (uint i = 0; i < MAX_INPUT_NUM; i++) {
             if (isInputPiggybacked(ife, uint16(i)) && ife.inputs[i].token == token) {
                 return false;
             }
         }
 
         isPiggybackInput = false;
-        for (uint i = 0 ; i < MAX_OUTPUT_NUM ; i++) {
+        for (uint i = 0; i < MAX_OUTPUT_NUM; i++) {
             if (isOutputPiggybacked(ife, uint16(i)) && ife.outputs[i].token == token) {
                 return false;
             }

@@ -6,7 +6,7 @@ import "../PaymentExitDataModel.sol";
 import "../controllers/PaymentStartStandardExit.sol";
 import "../controllers/PaymentProcessStandardExit.sol";
 import "../controllers/PaymentChallengeStandardExit.sol";
-import "../spendingConditions/PaymentSpendingConditionRegistry.sol";
+import "../../registries/SpendingConditionRegistry.sol";
 import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../utils/BondSize.sol";
 import "../../../vaults/EthVault.sol";
@@ -31,33 +31,33 @@ contract PaymentStandardExitRouter is
     uint16 public constant BOND_LOWER_BOUND_DIVISOR = 2;
     uint16 public constant BOND_UPPER_BOUND_MULTIPLIER = 2;
 
-    PaymentExitDataModel.StandardExitMap standardExitMap;
-    PaymentStartStandardExit.Controller startStandardExitController;
-    PaymentProcessStandardExit.Controller processStandardExitController;
-    PaymentChallengeStandardExit.Controller challengeStandardExitController;
-    BondSize.Params startStandardExitBond;
+    PaymentExitDataModel.StandardExitMap internal standardExitMap;
+    PaymentStartStandardExit.Controller internal startStandardExitController;
+    PaymentProcessStandardExit.Controller internal processStandardExitController;
+    PaymentChallengeStandardExit.Controller internal challengeStandardExitController;
+    BondSize.Params internal startStandardExitBond;
 
     event StandardExitBondUpdated(uint128 bondSize);
 
     constructor(
-        PlasmaFramework _framework,
-        EthVault _ethVault,
-        Erc20Vault _erc20Vault,
-        OutputGuardHandlerRegistry _outputGuardHandlerRegistry,
-        PaymentSpendingConditionRegistry _spendingConditionRegistry
+        PlasmaFramework framework,
+        EthVault ethVault,
+        Erc20Vault erc20Vault,
+        OutputGuardHandlerRegistry outputGuardHandlerRegistry,
+        SpendingConditionRegistry spendingConditionRegistry
     )
         public
     {
         startStandardExitController = PaymentStartStandardExit.buildController(
-            this, _framework, _outputGuardHandlerRegistry
+            this, framework, outputGuardHandlerRegistry
         );
 
-        challengeStandardExitController = PaymentChallengeStandardExit.Controller(
-            _framework, _spendingConditionRegistry
+        challengeStandardExitController = PaymentChallengeStandardExit.buildController(
+            framework, spendingConditionRegistry, outputGuardHandlerRegistry
         );
 
         processStandardExitController = PaymentProcessStandardExit.Controller(
-            _framework, _ethVault, _erc20Vault
+            framework, ethVault, erc20Vault
         );
 
         startStandardExitBond = BondSize.buildParams(INITIAL_BOND_SIZE, BOND_LOWER_BOUND_DIVISOR, BOND_UPPER_BOUND_MULTIPLIER);

@@ -246,16 +246,11 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
             const exitId = await this.exitIdHelper.getStandardExitId(isTxDeposit, args.rlpOutputTx, args.utxoPos);
             const outputId = computeDepositOutputId(args.rlpOutputTx, outputIndex, args.utxoPos);
 
-            const expectedOutputTypeAndGuardHash = web3.utils.soliditySha3(
-                { t: 'uint256', v: OUTPUT_TYPE.PAYMENT }, { t: 'bytes32', v: addressToOutputGuard(outputOwner) },
-            );
-
             const standardExitData = await this.exitGame.standardExits(exitId);
 
             expect(standardExitData.exitable).to.be.true;
             expect(new BN(standardExitData.utxoPos)).to.be.bignumber.equal(new BN(args.utxoPos));
             expect(standardExitData.outputId).to.equal(outputId);
-            expect(standardExitData.outputTypeAndGuardHash).to.equal(expectedOutputTypeAndGuardHash);
             expect(standardExitData.exitTarget).to.equal(outputOwner);
             expect(new BN(standardExitData.amount)).to.be.bignumber.equal(new BN(this.dummyAmount));
         });
@@ -274,16 +269,11 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
             const exitId = await this.exitIdHelper.getStandardExitId(isTxDeposit, args.rlpOutputTx, args.utxoPos);
             const outputId = computeNormalOutputId(args.rlpOutputTx, outputIndex);
 
-            const expectedOutputTypeAndGuardHash = web3.utils.soliditySha3(
-                { t: 'uint256', v: OUTPUT_TYPE.PAYMENT }, { t: 'bytes32', v: addressToOutputGuard(outputOwner) },
-            );
-
             const standardExitData = await this.exitGame.standardExits(exitId);
 
             expect(standardExitData.exitable).to.be.true;
             expect(new BN(standardExitData.utxoPos)).to.be.bignumber.equal(new BN(args.utxoPos));
             expect(standardExitData.outputId).to.equal(outputId);
-            expect(standardExitData.outputTypeAndGuardHash).to.equal(expectedOutputTypeAndGuardHash);
             expect(standardExitData.exitTarget).to.equal(outputOwner);
             expect(new BN(standardExitData.amount)).to.be.bignumber.equal(new BN(this.dummyAmount));
         });

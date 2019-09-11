@@ -3,16 +3,31 @@ pragma experimental ABIEncoderV2;
 
 import "../PaymentExitDataModel.sol";
 import "../routers/PaymentStandardExitRouterArgs.sol";
-import "../spendingConditions/IPaymentSpendingCondition.sol";
-import "../spendingConditions/PaymentSpendingConditionRegistry.sol";
+import "../../interfaces/IOutputGuardHandler.sol";
+import "../../interfaces/ISpendingCondition.sol";
+import "../../models/OutputGuardModel.sol";
+import "../../registries/OutputGuardHandlerRegistry.sol";
+import "../../registries/SpendingConditionRegistry.sol";
+import "../../utils/OutputId.sol";
+import "../../utils/TxFinalization.sol";
 import "../../../vaults/EthVault.sol";
 import "../../../vaults/Erc20Vault.sol";
 import "../../../framework/PlasmaFramework.sol";
+import "../../../utils/UtxoPosLib.sol";
+import "../../../utils/IsDeposit.sol";
+import "../../../transactions/PaymentTransactionModel.sol";
+import "../../../transactions/outputs/PaymentOutputModel.sol";
 
 library PaymentChallengeStandardExit {
+    using UtxoPosLib for UtxoPosLib.UtxoPos;
+    using IsDeposit for IsDeposit.Predicate;
+    using TxFinalization for TxFinalization.Verifier;
+
     struct Controller {
         PlasmaFramework framework;
-        PaymentSpendingConditionRegistry spendingConditionRegistry;
+        IsDeposit.Predicate isDeposit;
+        SpendingConditionRegistry spendingConditionRegistry;
+        OutputGuardHandlerRegistry outputGuardHandlerRegistry;
     }
 
     event ExitChallenged(
@@ -28,6 +43,23 @@ library PaymentChallengeStandardExit {
         PaymentExitDataModel.StandardExit exitData;
     }
 
+    function buildController(
+        PlasmaFramework framework,
+        SpendingConditionRegistry spendingConditionRegistry,
+        OutputGuardHandlerRegistry outputGuardHandlerRegistry
+    )
+        public
+        view
+        returns (Controller memory)
+    {
+        return Controller({
+            framework: framework,
+            isDeposit: IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL()),
+            spendingConditionRegistry: spendingConditionRegistry,
+            outputGuardHandlerRegistry: outputGuardHandlerRegistry
+        });
+    }
+
     function run(
         Controller memory self,
         PaymentExitDataModel.StandardExitMap storage exitMap,
@@ -41,7 +73,7 @@ library PaymentChallengeStandardExit {
             exitData: exitMap.exits[args.exitId]
         });
         verifyChallengeExitExists(data);
-        verifyOutputTypeAndGuardHash(data);
+        verifyChallengeTxProtocolFinalized(data);
         verifySpendingCondition(data);
 
         delete exitMap.exits[args.exitId];
@@ -50,36 +82,67 @@ library PaymentChallengeStandardExit {
         emit ExitChallenged(data.exitData.utxoPos);
     }
 
-
     function verifyChallengeExitExists(ChallengeStandardExitData memory data) private pure {
         require(data.exitData.exitable == true, "Such exit does not exist");
     }
 
-    function verifyOutputTypeAndGuardHash(ChallengeStandardExitData memory data) private pure {
-        PaymentStandardExitRouterArgs.ChallengeStandardExitArgs memory args = data.args;
-        bytes32 outputTypeAndGuardHash = keccak256(
-            abi.encodePacked(args.outputType, args.outputGuard)
-        );
+    function verifyChallengeTxProtocolFinalized(ChallengeStandardExitData memory data) private view {
+        UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(data.exitData.utxoPos);
+        PaymentOutputModel.Output memory output = PaymentTransactionModel
+            .decode(data.args.exitingTx)
+            .outputs[utxoPos.outputIndex()];
 
-        require(data.exitData.outputTypeAndGuardHash == outputTypeAndGuardHash,
-                "Either output type or output guard of challenge input args is invalid for the exit");
+        IOutputGuardHandler outputGuardHandler = data.controller
+                                                .outputGuardHandlerRegistry
+                                                .outputGuardHandlers(data.args.outputType);
+
+        require(address(outputGuardHandler) != address(0), "Failed to get the outputGuardHandler of the output type");
+
+        OutputGuardModel.Data memory outputGuardData = OutputGuardModel.Data({
+            guard: output.outputGuard,
+            outputType: data.args.outputType,
+            preimage: data.args.outputGuardPreimage
+        });
+        require(outputGuardHandler.isValid(outputGuardData),
+                "Output guard information is invalid");
+
+        uint8 protocol = data.controller.framework.protocols(data.args.challengeTxType);
+        TxFinalization.Verifier memory verifier = TxFinalization.Verifier({
+            framework: data.controller.framework,
+            protocol: protocol,
+            txBytes: data.args.challengeTx,
+            txPos: TxPosLib.TxPos(data.args.challengeTxPos),
+            inclusionProof: data.args.challengeTxInclusionProof,
+            confirmSig: data.args.challengeTxConfirmSig,
+            confirmSigAddress: outputGuardHandler.getConfirmSigAddress(outputGuardData)
+        });
+        require(verifier.isProtocolFinalized(), "Challenge transaction is not protocol finalized");
     }
 
     function verifySpendingCondition(ChallengeStandardExitData memory data) private view {
         PaymentStandardExitRouterArgs.ChallengeStandardExitArgs memory args = data.args;
 
-        IPaymentSpendingCondition condition = data.controller.spendingConditionRegistry.spendingConditions(
+        // correctness of output type is checked in the outputGuardHandler.isValid(...)
+        // inside verifyChallengeTxProtocolFinalized(...)
+        ISpendingCondition condition = data.controller.spendingConditionRegistry.spendingConditions(
             args.outputType, args.challengeTxType
         );
         require(address(condition) != address(0), "Spending condition contract not found");
 
+        UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(data.exitData.utxoPos);
+        bytes32 outputId = data.controller.isDeposit.test(utxoPos.blockNum())
+                ? OutputId.computeDepositOutputId(args.exitingTx, utxoPos.outputIndex(), utxoPos.value)
+                : OutputId.computeNormalOutputId(args.exitingTx, utxoPos.outputIndex());
+        require(outputId == data.exitData.outputId, "The exiting tx is not valid, thus causing outputId mismatch");
+
         bool isSpentByChallengeTx = condition.verify(
-            args.outputGuard,
-            uint256(0), // should not be used
-            bytes32(uint256(data.exitData.utxoPos)),
+            args.exitingTx,
+            utxoPos.outputIndex(),
+            utxoPos.txPos().value,
             args.challengeTx,
             args.inputIndex,
-            args.witness
+            args.witness,
+            args.spendingConditionOptionalArgs
         );
         require(isSpentByChallengeTx, "Spending condition failed");
     }

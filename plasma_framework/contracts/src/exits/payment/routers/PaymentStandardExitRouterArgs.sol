@@ -21,19 +21,29 @@ library PaymentStandardExitRouterArgs {
      * @notice Input args data for challengeStandardExit.
      * @param exitId Identifier of the standard exit to challenge.
      * @param outputType The output type of the exiting output.
-     * @param outputGuard The output guard of the output.
+     * @param exitingTx The transaction that is exiting.
      * @param challengeTxType The tx type of the challenge transaction.
      * @param challengeTx RLP encoded transaction that spends the exiting output.
      * @param inputIndex Which input of the challenging tx corresponds to the exiting output.
      * @param witness Witness data that can prove the exiting output is spent.
+     * @param spendingConditionOptionalArgs optional extra data for the spending condition.
+     * @param outputGuardPreimage (Optional) output guard preimage for the challenge tx to use the output
+     * @param challengeTxPos (Optional) tx position of the challenge tx if it is of MVP protocol.
+     * @param challengeTxInclusionProof (Optional) if the challenge tx is of MVP protocol provide the inclusion proof of it
+     * @param challengeTxConfirmSig (Optional) if the challenge tx is of MVP protocol provide the confirm sig of it
      */
     struct ChallengeStandardExitArgs {
         uint192 exitId;
         uint256 outputType;
-        bytes32 outputGuard;
+        bytes exitingTx;
         uint256 challengeTxType;
         bytes challengeTx;
-        uint8 inputIndex;
+        uint16 inputIndex;
         bytes witness;
+        bytes spendingConditionOptionalArgs;
+        bytes outputGuardPreimage;
+        uint256 challengeTxPos;
+        bytes challengeTxInclusionProof;
+        bytes challengeTxConfirmSig;
     }
 }

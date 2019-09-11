@@ -9,7 +9,7 @@ import {PaymentOutputModel as DepositOutputModel} from "../../transactions/outpu
 contract Erc20DepositVerifier is IErc20DepositVerifier {
     using DepositOutputModel for DepositOutputModel.Output;
 
-    uint8 constant DEPOSIT_TX_TYPE = 1;
+    uint8 constant internal DEPOSIT_TX_TYPE = 1;
 
     function verify(bytes calldata _depositTx, address _sender, address _vault)
         external
