@@ -5,7 +5,7 @@ const { PaymentTransaction, PaymentTransactionOutput } = require('../../helpers/
 
 const PaymentTransactionModelMock = artifacts.require('PaymentTransactionModelMock');
 
-const OUTPUT_GUARD = `0x${Array(64).fill(1).join('')}`;
+const OUTPUT_GUARD = `0x${Array(40).fill(1).join('')}`;
 const EMPTY_BYTES32 = `0x${Array(64).fill(0).join('')}`;
 
 contract('PaymentTransactionModel', () => {

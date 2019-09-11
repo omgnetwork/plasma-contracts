@@ -9,7 +9,7 @@ library PaymentOutputModel {
     using RLP for RLP.RLPItem;
 
     struct Output {
-        bytes32 outputGuard;
+        bytes20 outputGuard;
         address token;
         uint256 amount;
     }
@@ -21,7 +21,7 @@ library PaymentOutputModel {
      *       This should not and cannot be handled here.
      */
     function owner(Output memory _output) internal pure returns (address payable) {
-        return AddressPayable.convert(address(uint256(_output.outputGuard)));
+        return AddressPayable.convert(address(uint160(_output.outputGuard)));
     }
 
     function decode(RLP.RLPItem memory encoded) internal pure returns (Output memory) {
@@ -29,7 +29,7 @@ library PaymentOutputModel {
         require(rlpEncoded.length == 3, "Invalid output encoding");
 
         Output memory output = Output({
-            outputGuard: rlpEncoded[0].toBytes32(),
+            outputGuard: bytes20(rlpEncoded[0].toAddress()),
             token: rlpEncoded[1].toAddress(),
             amount: rlpEncoded[2].toUint()
         });

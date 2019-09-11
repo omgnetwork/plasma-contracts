@@ -9,7 +9,7 @@ const { addressToOutputGuard } = require('../../../helpers/utils.js');
 const { buildUtxoPos } = require('../../../helpers/positions.js');
 const { hashTx } = require('../../../helpers/paymentEip712.js');
 
-const OUTPUT_GUARD = `0x${Array(64).fill(1).join('')}`;
+const OUTPUT_GUARD = `0x${Array(40).fill(1).join('')}`;
 
 contract('PaymentEip712Lib', ([alice]) => {
     before(async () => {

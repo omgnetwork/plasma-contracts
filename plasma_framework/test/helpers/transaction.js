@@ -22,8 +22,7 @@ class PaymentTransactionOutput {
 
     static parseFromContractOutput(output) {
         const amount = parseInt(output.amount, 10);
-        const outputGuard = web3.eth.abi.decodeParameter('bytes32', output.outputGuard);
-        return new PaymentTransactionOutput(amount, outputGuard, output.token);
+        return new PaymentTransactionOutput(amount, output.outputGuard, output.token);
     }
 }
 

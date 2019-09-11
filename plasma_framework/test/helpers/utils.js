@@ -9,11 +9,11 @@ function buildOutputGuard(outputType, outputGuardPreimage) {
         { t: 'bytes', v: outputGuardPreimage },
     );
     const rightMostBytes20 = hashValue.substring(hashValue.length - 40, hashValue.length);
-    return `0x${rightMostBytes20.padStart(64, '0')}`;
+    return `0x${rightMostBytes20}`;
 }
 
 function addressToOutputGuard(address) {
-    return `0x${address.substring(2).padStart(64, '0')}`;
+    return address;
 }
 
 function computeDepositOutputId(txBytes, outputIndex, utxoPos) {

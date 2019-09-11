@@ -50,7 +50,7 @@ contract ExpectedOutputGuardHandler is IOutputGuardHandler {
 
     function isDataExpected(OutputGuardModel.Data memory data) private view returns (bool) {
         // only test this when expected data is set. So we can tune only small portion of tests need to set this up.
-        if (expectedData.guard == bytes32(""))
+        if (expectedData.guard == bytes20(""))
             return true;
 
         return data.guard == expectedData.guard &&
