@@ -53,7 +53,7 @@ library PaymentProcessInFlightExit {
         }
 
         if (!exit.isCanonical) {
-            for (uint16 i = 0 ; i < MAX_INPUT_NUM ; i++) {
+            for (uint16 i = 0; i < MAX_INPUT_NUM; i++) {
                 PaymentExitDataModel.WithdrawData memory withdrawal = exit.inputs[i];
 
                 if (shouldWithdrawInput(exit, withdrawal, token, i)) {
@@ -63,7 +63,7 @@ library PaymentProcessInFlightExit {
                 }
             }
         } else {
-            for (uint16 i = 0 ; i < MAX_OUTPUT_NUM ; i++) {
+            for (uint16 i = 0; i < MAX_OUTPUT_NUM; i++) {
                 PaymentExitDataModel.WithdrawData memory withdrawal = exit.outputs[i];
 
                 if (shouldWithdrawOutput(self, exit, withdrawal, token, i)) {
@@ -93,17 +93,17 @@ library PaymentProcessInFlightExit {
         returns (bool)
     {
         uint256 inputNumOfTheToken;
-        for (uint i = 0 ; i < MAX_INPUT_NUM ;  i++ ) {
+        for (uint i = 0; i < MAX_INPUT_NUM; i++) {
             if (exit.inputs[i].token == token) {
-                inputNumOfTheToken ++;
+                inputNumOfTheToken++;
             }
         }
         bytes32[] memory outputIdsOfInputs = new bytes32[](inputNumOfTheToken);
         uint sameTokenIndex = 0;
-        for (uint i = 0 ; i < MAX_INPUT_NUM ; i ++) {
+        for (uint i = 0; i < MAX_INPUT_NUM; i++) {
             if (exit.inputs[i].token == token) {
                 outputIdsOfInputs[sameTokenIndex] = exit.inputs[i].outputId;
-                sameTokenIndex ++;
+                sameTokenIndex++;
             }
         }
         return framework.isAnyOutputsSpent(outputIdsOfInputs);
@@ -160,27 +160,27 @@ library PaymentProcessInFlightExit {
         private
     {
         uint256 inputNumOfTheToken;
-        for (uint16 i = 0 ; i < MAX_INPUT_NUM ;  i++ ) {
+        for (uint16 i = 0; i < MAX_INPUT_NUM; i++) {
             if (exit.inputs[i].token == token) {
-                inputNumOfTheToken ++;
+                inputNumOfTheToken++;
             }
         }
         uint256 piggybackedOutputNumOfTheToken;
-        for (uint16 i = 0 ; i < MAX_OUTPUT_NUM ;  i++ ) {
+        for (uint16 i = 0; i < MAX_OUTPUT_NUM; i++) {
             if (exit.outputs[i].token == token && exit.isOutputPiggybacked(i)) {
-                piggybackedOutputNumOfTheToken ++;
+                piggybackedOutputNumOfTheToken++;
             }
         }
 
         bytes32[] memory outputIdsToFlag = new bytes32[](inputNumOfTheToken + piggybackedOutputNumOfTheToken);
         uint indexForOutputIds = 0;
-        for (uint16 i = 0 ; i < MAX_INPUT_NUM ;  i++ ) {
+        for (uint16 i = 0; i < MAX_INPUT_NUM; i++) {
             if (exit.inputs[i].token == token) {
                 outputIdsToFlag[indexForOutputIds] = exit.inputs[i].outputId;
                 indexForOutputIds++;
             }
         }
-        for (uint16 i = 0 ; i < MAX_OUTPUT_NUM ;  i++ ) {
+        for (uint16 i = 0; i < MAX_OUTPUT_NUM; i++) {
             if (exit.outputs[i].token == token && exit.isOutputPiggybacked(i)) {
                 outputIdsToFlag[indexForOutputIds] = exit.outputs[i].outputId;
                 indexForOutputIds++;
@@ -195,13 +195,13 @@ library PaymentProcessInFlightExit {
     )
         private
     {
-        for (uint16 i = 0 ; i < MAX_INPUT_NUM ; i ++) {
+        for (uint16 i = 0; i < MAX_INPUT_NUM; i++) {
             if (token == exit.inputs[i].token) {
                 exit.clearInputPiggybacked(i);
             }
         }
 
-        for (uint16 i = 0 ; i < MAX_OUTPUT_NUM ; i ++) {
+        for (uint16 i = 0; i < MAX_OUTPUT_NUM; i++) {
             if (token == exit.outputs[i].token) {
                 exit.clearOutputPiggybacked(i);
             }
@@ -209,12 +209,12 @@ library PaymentProcessInFlightExit {
     }
 
     function allPiggybackCleared(PaymentExitDataModel.InFlightExit memory exit) private pure returns (bool) {
-        for (uint16 i = 0 ; i < MAX_INPUT_NUM ; i ++) {
+        for (uint16 i = 0; i < MAX_INPUT_NUM; i++) {
             if (exit.isInputPiggybacked(i))
                 return false;
         }
 
-        for (uint16 i = 0 ; i < MAX_OUTPUT_NUM ; i ++) {
+        for (uint16 i = 0; i < MAX_OUTPUT_NUM; i++) {
             if (exit.isOutputPiggybacked(i))
                 return false;
         }

@@ -9,9 +9,9 @@ import "../../src/vaults/EthVault.sol";
 import "../../src/utils/TxPosLib.sol";
 
 contract ReentrancyExitGame is IExitProcessor {
-    ExitGameController exitGameController;
-    address testToken;
-    uint256 reentryMaxExitToProcess;
+    ExitGameController public exitGameController;
+    address public testToken;
+    uint256 public reentryMaxExitToProcess;
 
     constructor(ExitGameController _controller, address _token, uint256 _reentryMaxExitToProcess) public {
         exitGameController = _controller;

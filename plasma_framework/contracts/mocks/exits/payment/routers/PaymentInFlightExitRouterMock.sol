@@ -8,7 +8,7 @@ import "../../../../src/exits/interfaces/IStateTransitionVerifier.sol";
 import "../../../../src/exits/registries/OutputGuardHandlerRegistry.sol";
 
 contract PaymentInFlightExitRouterMock is PaymentInFlightExitRouter {
-    PlasmaFramework framework;
+    PlasmaFramework public framework;
 
     constructor(
         PlasmaFramework plasmaFramework,
