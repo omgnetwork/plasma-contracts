@@ -21,7 +21,7 @@ contract ReentrancyExitGame is IExitProcessor {
 
     // override ExitProcessor interface
     // This would call the processExits back to mimic reentracy attack
-    function processExit(uint192 /*exitId*/, address /*ercContract*/) public {
+    function processExit(uint192, address) public {
         exitGameController.processExits(testToken, 0, reentryMaxExitToProcess);
     }
 
