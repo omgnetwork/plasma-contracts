@@ -51,6 +51,25 @@ contract('Erc20Vault', (accounts) => {
             expect(postDepositBlockNumber).to.be.equal(preDepositBlockNumber + 1);
         });
 
+        it('should emit deposit event', async () => {
+            await this.erc20.approve(this.erc20Vault.address, DEPOSIT_VALUE, { from: alice });
+            const preDepositBlockNumber = await this.framework.nextDepositBlock();
+
+            const deposit = Testlang.deposit(DEPOSIT_VALUE, alice, this.erc20.address);
+            const { receipt } = await this.erc20Vault.deposit(deposit, { from: alice });
+            await expectEvent.inTransaction(
+                receipt.transactionHash,
+                Erc20Vault,
+                'DepositCreated',
+                {
+                    depositor: alice,
+                    blknum: preDepositBlockNumber,
+                    token: this.erc20.address,
+                    amount: new BN(DEPOSIT_VALUE),
+                },
+            );
+        });
+
         it('should spend erc20 tokens from depositing user', async () => {
             const preDepositBalance = await this.erc20.balanceOf(alice);
 

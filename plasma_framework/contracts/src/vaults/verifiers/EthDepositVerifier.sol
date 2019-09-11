@@ -23,6 +23,5 @@ contract EthDepositVerifier is IEthDepositVerifier {
 
         address depositorsAddress = decodedTx.outputs[0].owner();
         require(depositorsAddress == _sender, "Depositor's address does not match sender's address");
-
     }
 }

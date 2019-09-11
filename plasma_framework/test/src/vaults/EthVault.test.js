@@ -43,6 +43,24 @@ contract('EthVault', ([_, alice]) => {
             expect(postDepositBlockNumber).to.be.equal(preDepositBlockNumber + 1);
         });
 
+        it('should emit deposit event', async () => {
+            const preDepositBlockNumber = await this.framework.nextDepositBlock();
+
+            const deposit = Testlang.deposit(DEPOSIT_VALUE, alice);
+            const { receipt } = await this.ethVault.deposit(deposit, { from: alice, value: DEPOSIT_VALUE });
+            await expectEvent.inTransaction(
+                receipt.transactionHash,
+                EthVault,
+                'DepositCreated',
+                {
+                    depositor: alice,
+                    blknum: preDepositBlockNumber,
+                    token: constants.ZERO_ADDRESS,
+                    amount: new BN(DEPOSIT_VALUE),
+                },
+            );
+        });
+
         it('should charge eth from depositing user', async () => {
             const preDepositBalance = await web3.eth.getBalance(alice);
             const deposit = Testlang.deposit(DEPOSIT_VALUE, alice);
