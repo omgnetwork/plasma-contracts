@@ -9,7 +9,7 @@ const {
 const { expect } = require('chai');
 
 const { buildTxPos } = require('../../helpers/positions.js');
-const { PROTOCOL } = require('../../helpers/constants.js');
+const { PROTOCOL, EMPTY_BYTES_32 } = require('../../helpers/constants.js');
 
 contract('ExitGameController', () => {
     const MIN_EXIT_PERIOD = 10;
@@ -489,6 +489,14 @@ contract('ExitGameController', () => {
             expect(await this.controller.isOutputSpent(dummyOutputId2)).to.be.true;
         });
 
+        it('should fail when try to flag with empty outputId', async () => {
+            const dummyOutputId = web3.utils.sha3('output id');
+            await expectRevert(
+                this.dummyExitGame.proxyBatchFlagOutputsSpent([dummyOutputId, EMPTY_BYTES_32]),
+                'Should not flag empty output spent',
+            );
+        });
+
         it('should fail when not called by Exit Game contracts', async () => {
             const dummyOutputId = web3.utils.sha3('output id');
             await expectRevert(
@@ -516,6 +524,13 @@ contract('ExitGameController', () => {
             const dummyOutputId = web3.utils.sha3('output id');
             await this.dummyExitGame.proxyFlagOutputSpent(dummyOutputId);
             expect(await this.controller.isOutputSpent(dummyOutputId)).to.be.true;
+        });
+
+        it('should fail when try to flag withempty outputId', async () => {
+            await expectRevert(
+                this.dummyExitGame.proxyFlagOutputSpent(EMPTY_BYTES_32),
+                'Should not flag empty output spent',
+            );
         });
 
         it('should fail when not called by Exit Game contracts', async () => {
