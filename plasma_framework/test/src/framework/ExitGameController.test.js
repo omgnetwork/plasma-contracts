@@ -320,7 +320,7 @@ contract('ExitGameController', () => {
                     receipt.transactionHash,
                     DummyExitGame,
                     'ExitFinalizedFromDummyExitGame',
-                    { exitId: new BN(this.dummyExit.exitId) },
+                    { exitId: new BN(this.dummyExit.exitId), ercContract: this.dummyToken },
                 );
             });
 
