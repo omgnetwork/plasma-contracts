@@ -122,7 +122,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
         return inFlightExitData;
     };
 
-    describe.only('processInFlightExit', () => {
+    describe('processInFlightExit', () => {
         beforeEach(async () => {
             this.framework = await SpyPlasmaFramework.new(
                 MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
@@ -239,12 +239,6 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
                 await this.exitGame.processExit(this.dummyExitId, ETH);
             });
 
-            it('should NOT transfer exit bond to the IFE bond owner if not all piggybacked inputs/outputs are cleaned up', async () => {
-                // erc20 remained un-processed, thus should not return the bond yet
-                const postBalance = new BN(await web3.eth.getBalance(ifeBondOwner));
-                expect(postBalance).to.be.bignumber.equal(this.ifeBondOwnerPreBalance);
-            });
-
             it('should transfer exit bond to the IFE bond owner if all piggybacked inputs/outputs are cleaned up', async () => {
                 await this.exitGame.processExit(this.dummyExitId, erc20);
 
@@ -272,6 +266,38 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
                 const thirdOutputIndexInExitMap = MAX_INPUT_NUM + 2;
                 const exitMapWithErc20Outputs = 2 ** thirdOutputIndexInExitMap;
                 expect(exit.exitMap).to.equal(exitMapWithErc20Outputs.toString());
+            });
+
+            // erc20 are not processed yet, thus not fully resolved.
+            describe('When not all piggybacks are resolved', () => {
+                it('should NOT transfer exit bond to the IFE bond owner', async () => {
+                    // erc20 remained un-processed, thus should not return the bond yet
+                    const postBalance = new BN(await web3.eth.getBalance(ifeBondOwner));
+                    expect(postBalance).to.be.bignumber.equal(this.ifeBondOwnerPreBalance);
+                });
+
+                it('should NOT delete the exit from storage', async () => {
+                    const exit = await this.exitGame.inFlightExits(this.dummyExitId);
+                    expect(exit.exitStartTimestamp).to.not.equal('0');
+                });
+            });
+
+            describe('When all piggybacks are resolved', () => {
+                beforeEach(async () => {
+                    await this.exitGame.processExit(this.dummyExitId, erc20);
+                });
+
+                it('should transfer exit bond to the IFE bond owner', async () => {
+                    const postBalance = new BN(await web3.eth.getBalance(ifeBondOwner));
+                    const expectedBalance = this.ifeBondOwnerPreBalance.add(new BN(DUMMY_IFE_BOND_SIZE));
+
+                    expect(postBalance).to.be.bignumber.equal(expectedBalance);
+                });
+
+                it('should delete the exit from storage', async () => {
+                    const exit = await this.exitGame.inFlightExits(this.dummyExitId);
+                    expect(exit.exitStartTimestamp).to.equal('0');
+                });
             });
         });
 

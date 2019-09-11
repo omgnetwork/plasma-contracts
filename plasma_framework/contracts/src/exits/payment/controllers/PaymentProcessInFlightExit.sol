@@ -79,6 +79,7 @@ library PaymentProcessInFlightExit {
 
         if (allPiggybackCleared(exit)) {
             exit.bondOwner.transfer(exit.bondSize);
+            delete exitMap.exits[exitId];
         }
     }
 
