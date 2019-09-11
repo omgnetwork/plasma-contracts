@@ -26,7 +26,7 @@
   "scripts": {
     "test": "truffle test",
     "linter": "node_modules/eslint/bin/eslint.js . --fix",
-    "linter-sol": "node_modules/.bin/solhint \"contracts/**/*.sol\""
+    "linter-sol": "node_modules/.bin/solhint --max-warnings 0 \"contracts/**/*.sol\""
   },
   "repository": {
     "type": "git",
