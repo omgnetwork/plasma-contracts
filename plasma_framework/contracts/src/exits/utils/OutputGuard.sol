@@ -14,9 +14,9 @@ library OutputGuard {
     )
         internal
         pure
-        returns (bytes32)
+        returns (bytes20)
     {
         bytes32 hashData = keccak256(abi.encodePacked(_outputType, _outputGuardPreimage));
-        return bytes32(uint256(uint160(uint256(hashData))));
+        return bytes20(uint160(uint256(hashData)));
     }
 }
