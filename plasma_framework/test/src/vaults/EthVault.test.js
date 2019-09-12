@@ -116,24 +116,23 @@ contract('EthVault', ([_, alice]) => {
             );
         });
 
-        it('should not accept transaction that does not conform to deposit input format', async () => {
-            const invalidInput = Buffer.alloc(32, 1);
+        it('should not accept transaction with inputs', async () => {
             const output = new PaymentTransactionOutput(DEPOSIT_VALUE, alice, constants.ZERO_ADDRESS);
-            const deposit = new PaymentTransaction(1, [invalidInput], [output]);
+            const deposit = new PaymentTransaction(1, [0], [output]);
 
             await expectRevert(
                 this.ethVault.deposit(deposit.rlpEncoded(), { from: alice, value: DEPOSIT_VALUE }),
-                'Deposit input must be bytes32 of 0.',
+                'Deposit must have no inputs.',
             );
         });
 
         it('should not accept transaction with more than one output', async () => {
             const output = new PaymentTransactionOutput(DEPOSIT_VALUE, alice, constants.ZERO_ADDRESS);
-            const deposit = new PaymentTransaction(1, [0], [output, output]);
+            const deposit = new PaymentTransaction(1, [], [output, output]);
 
             await expectRevert(
                 this.ethVault.deposit(deposit.rlpEncoded(), { from: alice, value: DEPOSIT_VALUE }),
-                'Must have only one output.',
+                'Deposit must have exactly one output.',
             );
         });
 
