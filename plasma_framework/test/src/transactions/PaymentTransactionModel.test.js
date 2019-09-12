@@ -32,27 +32,6 @@ contract('PaymentTransactionModel', () => {
         expect(JSON.stringify(decoded)).to.equal(JSON.stringify(transaction));
     });
 
-    it('should fail when decoding transaction without inputs', async () => {
-        const output = new PaymentTransactionOutput(100, OUTPUT_GUARD, constants.ZERO_ADDRESS);
-        const transaction = new PaymentTransaction(1, [], [output], EMPTY_BYTES32);
-        const encoded = web3.utils.bytesToHex(transaction.rlpEncoded());
-
-        await expectRevert(
-            this.test.decode(encoded),
-            'Transaction must have inputs',
-        );
-    });
-
-    it('should fail when decoding transaction without outputs', async () => {
-        const transaction = new PaymentTransaction(1, [EMPTY_BYTES32], [], EMPTY_BYTES32);
-        const encoded = web3.utils.bytesToHex(transaction.rlpEncoded());
-
-        await expectRevert(
-            this.test.decode(encoded),
-            'Transaction must have outputs',
-        );
-    });
-
     it('should fail when decoding transaction have more inputs than MAX_INPUT limit', async () => {
         const inputsExceedLimit = Array(MAX_INPUT_NUM + 1).fill(EMPTY_BYTES32);
         const transaction = new PaymentTransaction(1, inputsExceedLimit, [], EMPTY_BYTES32);
