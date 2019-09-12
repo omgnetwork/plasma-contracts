@@ -166,4 +166,8 @@ contract ExitGameController is ExitGameRegistry {
     function flagOutputSpent(bytes32 _outputId) external onlyFromNonQuarantinedExitGame {
         isOutputSpent[_outputId] = true;
     }
+
+    function getNextExit(address _token) external view returns (uint256) {
+        return exitsQueues[_token].getMin();
+    }
 }
