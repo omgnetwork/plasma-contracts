@@ -12,10 +12,6 @@ function buildOutputGuard(outputType, outputGuardPreimage) {
     return `0x${rightMostBytes20}`;
 }
 
-function addressToOutputGuard(address) {
-    return address;
-}
-
 function computeDepositOutputId(txBytes, outputIndex, utxoPos) {
     return web3.utils.soliditySha3(
         { t: 'bytes', v: txBytes },
@@ -36,5 +32,4 @@ module.exports = {
     buildOutputGuard,
     computeDepositOutputId,
     computeNormalOutputId,
-    addressToOutputGuard,
 };

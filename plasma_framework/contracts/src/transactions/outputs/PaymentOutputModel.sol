@@ -29,7 +29,7 @@ library PaymentOutputModel {
         require(rlpEncoded.length == 3, "Invalid output encoding");
 
         Output memory output = Output({
-            outputGuard: bytes20(rlpEncoded[0].toAddress()),
+            outputGuard: rlpEncoded[0].toBytes20(),
             token: rlpEncoded[1].toAddress(),
             amount: rlpEncoded[2].toUint()
         });
