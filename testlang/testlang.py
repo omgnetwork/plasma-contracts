@@ -21,11 +21,15 @@ class StandardExit:
         position (int): UTXO position.
     """
 
-    def __init__(self, owner, token, amount, position=0):
-        self.owner = owner
+    def __init__(self, exitable, utxo_pos, output_id, token, exit_target, amount,
+                 bond_size):
+        self.owner = exit_target
         self.token = token
         self.amount = amount
-        self.position = position
+        self.position = utxo_pos
+        self.exitable = exitable
+        self.output_id = output_id
+        self.bond_size = bond_size
 
     def to_list(self):
         return [self.owner, self.token, self.amount, self.position]
