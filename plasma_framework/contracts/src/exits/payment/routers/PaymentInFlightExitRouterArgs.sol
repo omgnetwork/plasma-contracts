@@ -58,9 +58,11 @@ library PaymentInFlightExitRouterArgs {
      * @param competingTx RLP encoded competing transaction.
      * @param competingTxInputIndex Index of shared input in competing transaction.
      * @param outputType Output type of shared input.
+     * @param outputGuardPreimage Output guard preimage of the shared input.
      * @param competingTxPos (optional) Position of competing transaction in chain if included.
      * @param competingTxInclusionProof (optional) Merkle proofs that show the competing transaction was contained in chain.
      * @param competingTxWitness Witness for competing transaction.
+     * @param competingTxConfirmSig (optional) Confirm signature if the competing tx is of MVP protocol.
      * @param competingTxSpendingConditionOptionalArgs (optional) Optional arguments for the spending condition
      */
     struct ChallengeCanonicityArgs {
@@ -71,9 +73,11 @@ library PaymentInFlightExitRouterArgs {
         bytes competingTx;
         uint16 competingTxInputIndex;
         uint256 outputType;
+        bytes outputGuardPreimage;
         uint256 competingTxPos;
         bytes competingTxInclusionProof;
         bytes competingTxWitness;
+        bytes competingTxConfirmSig;
         bytes competingTxSpendingConditionOptionalArgs;
     }
 }
