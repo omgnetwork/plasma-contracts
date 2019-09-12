@@ -3,20 +3,25 @@ pragma experimental ABIEncoderV2;
 
 import "../PaymentExitDataModel.sol";
 import "../routers/PaymentInFlightExitRouterArgs.sol";
-import "../spendingConditions/IPaymentSpendingCondition.sol";
 import "../spendingConditions/PaymentSpendingConditionRegistry.sol";
+import "../../interfaces/ISpendingCondition.sol";
+import "../../registries/SpendingConditionRegistry.sol";
 import "../../utils/ExitId.sol";
+import "../../utils/OutputId.sol";
 import "../../../utils/UtxoPosLib.sol";
 import "../../../utils/Merkle.sol";
+import "../../../utils/IsDeposit.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
 
 library PaymentChallengeIFENotCanonical {
     using UtxoPosLib for UtxoPosLib.UtxoPos;
+    using IsDeposit for IsDeposit.Predicate;
 
     struct Controller {
         PlasmaFramework framework;
-        PaymentSpendingConditionRegistry spendingConditionRegistry;
+        IsDeposit.Predicate isDeposit;
+        SpendingConditionRegistry spendingConditionRegistry;
         uint256 supportedTxType;
     }
 
@@ -31,6 +36,23 @@ library PaymentChallengeIFENotCanonical {
         bytes32 txHash,
         uint256 challengeTxPosition
     );
+
+    function buildController(
+        PlasmaFramework framework,
+        SpendingConditionRegistry spendingConditionRegistry,
+        uint256 supportedTxType
+    )
+        public
+        view
+        returns (Controller memory)
+    {
+        return Controller({
+            framework: framework,
+            isDeposit: IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL()),
+            spendingConditionRegistry: spendingConditionRegistry,
+            supportedTxType: supportedTxType
+        });
+    }
 
     function challenge(
         Controller memory self,
@@ -50,30 +72,36 @@ library PaymentChallengeIFENotCanonical {
             "The competitor transaction is the same as transaction in-flight"
         );
 
-        IPaymentSpendingCondition condition = self.spendingConditionRegistry.spendingConditions(
-            args.competingTxInputOutputType, self.supportedTxType
+        ISpendingCondition condition = self.spendingConditionRegistry.spendingConditions(
+            args.outputType, self.supportedTxType
         );
         require(address(condition) != address(0), "Spending condition contract not found");
 
-        // FIXME: move to the finalized interface as https://github.com/omisego/plasma-contracts/issues/214
-        // Also, the tests should verify the args correctness
-        bool isSpentByInFlightTx = condition.verify(
-            bytes32(""), // tmp solution, we don't need outputGuard anymore for the interface of :point-up: GH-214
-            uint256(0), // should not be used
-            ife.inputs[args.inFlightTxInputIndex].outputId,
+        UtxoPosLib.UtxoPos memory inputUtxoPos = UtxoPosLib.UtxoPos(args.inputUtxoPos);
+        bytes32 outputId = self.isDeposit.test(inputUtxoPos.blockNum())?
+            OutputId.computeDepositOutputId(args.inputTx, inputUtxoPos.outputIndex(), inputUtxoPos.value)
+            : OutputId.computeNormalOutputId(args.inputTx, inputUtxoPos.outputIndex());
+        require(outputId == ife.inputs[args.inFlightTxInputIndex].outputId,
+                "Provided inputs data does not point to the same outputId from the in-flight exit");
+
+        bool isSpentByCompetingTx = condition.verify(
+            args.inputTx,
+            inputUtxoPos.outputIndex(),
+            inputUtxoPos.txPos().value,
             args.competingTx,
             args.competingTxInputIndex,
-            args.competingTxWitness
+            args.competingTxWitness,
+            args.competingTxSpendingConditionOptionalArgs
         );
-        require(isSpentByInFlightTx, "Competing input spending condition is not met");
+        require(isSpentByCompetingTx, "Competing input spending condition does not met");
 
         // Determine the position of the competing transaction
         uint256 competitorPosition = ~uint256(0);
         if (args.competingTxPos != 0) {
-            UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(args.competingTxPos);
-            (bytes32 root, ) = self.framework.blocks(utxoPos.blockNum());
+            UtxoPosLib.UtxoPos memory competingTxUtxoPos = UtxoPosLib.UtxoPos(args.competingTxPos);
+            (bytes32 root, ) = self.framework.blocks(competingTxUtxoPos.blockNum());
             competitorPosition = verifyAndDeterminePositionOfTransactionIncludedInBlock(
-                args.competingTx, utxoPos, root, args.competingTxInclusionProof
+                args.competingTx, competingTxUtxoPos, root, args.competingTxInclusionProof
             );
         }
 
