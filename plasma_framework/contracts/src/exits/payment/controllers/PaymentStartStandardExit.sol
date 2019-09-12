@@ -46,6 +46,7 @@ library PaymentStartStandardExit {
         uint192 exitId;
         bool isTxDeposit;
         uint256 txBlockTimeStamp;
+        bytes32 outputId;
         TxFinalization.Verifier finalizationVerifier;
     }
 
@@ -80,7 +81,7 @@ library PaymentStartStandardExit {
         public
     {
         StartStandardExitData memory data = setupStartStandardExitData(self, args);
-        verifyStartStandardExitData(data, exitMap);
+        verifyStartStandardExitData(self, data, exitMap);
         saveStandardExitData(data, exitMap);
         enqueueStandardExit(data);
 
@@ -117,6 +118,10 @@ library PaymentStartStandardExit {
             args.outputTxInclusionProof
         );
 
+        bytes32 outputId = isTxDeposit
+            ? OutputId.computeDepositOutputId(args.rlpOutputTx, utxoPos.outputIndex(), utxoPos.value)
+            : OutputId.computeNormalOutputId(args.rlpOutputTx, utxoPos.outputIndex());
+
         return StartStandardExitData({
             controller: controller,
             args: args,
@@ -128,11 +133,13 @@ library PaymentStartStandardExit {
             exitId: exitId,
             isTxDeposit: isTxDeposit,
             txBlockTimeStamp: blockTimestamp,
+            outputId: outputId,
             finalizationVerifier: finalizationVerifier
         });
     }
 
     function verifyStartStandardExitData(
+        Controller memory self,
         StartStandardExitData memory data,
         PaymentExitDataModel.StandardExitMap storage exitMap
     )
@@ -147,6 +154,8 @@ library PaymentStartStandardExit {
 
         require(data.finalizationVerifier.isStandardFinalized(), "The transaction must be standard finalized");
         require(exitMap.exits[data.exitId].exitable == false, "Exit already started");
+
+        require(self.framework.isOutputSpent(data.outputId) == false, "Output already spent");
     }
 
     function saveStandardExitData(
@@ -155,14 +164,10 @@ library PaymentStartStandardExit {
     )
         private
     {
-        bytes32 outputId = data.isTxDeposit
-            ? OutputId.computeDepositOutputId(data.args.rlpOutputTx, data.utxoPos.outputIndex(), data.utxoPos.value)
-            : OutputId.computeNormalOutputId(data.args.rlpOutputTx, data.utxoPos.outputIndex());
-
         exitMap.exits[data.exitId] = PaymentExitDataModel.StandardExit({
             exitable: true,
             utxoPos: uint192(data.utxoPos.value),
-            outputId: outputId,
+            outputId: data.outputId,
             token: data.output.token,
             exitTarget: msg.sender,
             amount: data.output.amount,
