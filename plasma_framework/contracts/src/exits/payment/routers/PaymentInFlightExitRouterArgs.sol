@@ -12,6 +12,7 @@ library PaymentInFlightExitRouterArgs {
     * @param inputTxsInclusionProofs Merkle proofs that show the input-creating transactions are valid. In the same order as input transactions.
     * @param inputTxsConfirmSigs Confirm signatures for the input txs. Should be empty bytes if the input tx is MoreVP.
     * @param inFlightTxWitnesses Witnesses for in-flight transaction. In the same order as input transactions.
+    * @param inputSpendingConditionOptionalArgs Optional args for the spending condition for checking inputs. Should provide empty bytes if nothing is required.
     */
     struct StartExitArgs {
         bytes inFlightTx;
@@ -23,6 +24,7 @@ library PaymentInFlightExitRouterArgs {
         bytes[] inputTxsInclusionProofs;
         bytes[] inputTxsConfirmSigs;
         bytes[] inFlightTxWitnesses;
+        bytes[] inputSpendingConditionOptionalArgs;
     }
 
     /**
