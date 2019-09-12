@@ -170,10 +170,18 @@ def utxo(testlang):
 
 
 def _encode_libs(libraries):
-    return {
-        libname + '.sol' + ':' + libname: libaddress
-        for libname, libaddress in libraries.items()
-    }
+    libs = dict()
+    for lib_name, lib_address in libraries.items():
+        file = _find_file(lib_name + ".sol", CONTRACTS_DIR)
+        libs[file + ":" + lib_name] = lib_address
+    return libs
+
+
+def _find_file(name, path):
+    for root, dirs, files in os.walk(path):
+        if name in files:
+            return os.path.join(root, name)
+    raise FileNotFoundError(name)
 
 
 def assert_event(event_obj, expected_event_name, expected_event_args=None):
