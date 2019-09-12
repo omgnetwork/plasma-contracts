@@ -21,7 +21,7 @@ const { OUTPUT_TYPE } = require('../../../helpers/constants.js');
 const { MerkleTree } = require('../../../helpers/merkle.js');
 const { buildUtxoPos, utxoPosToTxPos } = require('../../../helpers/positions.js');
 const {
-    addressToOutputGuard, computeDepositOutputId,
+    computeDepositOutputId,
     computeNormalOutputId, spentOnGas,
 } = require('../../../helpers/utils.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
@@ -51,7 +51,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
             outputType = OUTPUT_TYPE.PAYMENT,
             outputGuardPreimage = EMPTY_BYTES,
         ) => {
-            const output = new PaymentTransactionOutput(amount, addressToOutputGuard(owner), ETH);
+            const output = new PaymentTransactionOutput(amount, owner, ETH);
             const txObj = new PaymentTransaction(1, [0], [output]);
             const tx = web3.utils.bytesToHex(txObj.rlpEncoded());
 
