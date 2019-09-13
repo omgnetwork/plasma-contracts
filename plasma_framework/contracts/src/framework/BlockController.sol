@@ -68,11 +68,11 @@ contract BlockController is Operated, VaultRegistry {
     }
 
     /**
-     * @notice Allows vault contracts to submit a block for deposit.
+     * @notice Submits block for deposit and returns deposit block number.
      * @dev Block number adds 1 per submission, could have at most 'childBlockInterval' deposit blocks between two child chain blocks.
      * @param _blockRoot Merkle root of the block.
      */
-    function submitDepositBlock(bytes32 _blockRoot) public onlyFromNonQuarantinedVault {
+    function submitDepositBlock(bytes32 _blockRoot) public onlyFromNonQuarantinedVault returns (uint256) {
         require(nextDepositBlock < childBlockInterval, "Exceeded limit of deposits per child block interval");
 
         uint256 blknum = nextChildBlock - childBlockInterval + nextDepositBlock;
@@ -82,5 +82,6 @@ contract BlockController is Operated, VaultRegistry {
         });
 
         nextDepositBlock++;
+        return blknum;
     }
 }

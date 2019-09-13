@@ -24,10 +24,9 @@ contract Erc20DepositVerifier is IErc20DepositVerifier {
 
         require(decodedTx.txType == DEPOSIT_TX_TYPE, "Invalid transaction type");
 
-        require(decodedTx.inputs.length == 1, "Deposit should have exactly one input");
-        require(decodedTx.inputs[0] == bytes32(0), "Deposit input must be bytes32 of 0");
+        require(decodedTx.inputs.length == 0, "Deposit must have no inputs");
 
-        require(decodedTx.outputs.length == 1, "Must have only one output");
+        require(decodedTx.outputs.length == 1, "Deposit must have exactly one output");
         require(decodedTx.outputs[0].token != address(0), "Invalid output currency (ETH)");
 
         address depositorsAddress = decodedTx.outputs[0].owner();

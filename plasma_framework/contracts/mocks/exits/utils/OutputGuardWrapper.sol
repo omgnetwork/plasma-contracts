@@ -9,7 +9,7 @@ contract OutputGuardWrapper {
     )
         public
         pure
-        returns (bytes32)
+        returns (bytes20)
     {
         return OutputGuard.build(_outputType, _outputGuardData);
     }

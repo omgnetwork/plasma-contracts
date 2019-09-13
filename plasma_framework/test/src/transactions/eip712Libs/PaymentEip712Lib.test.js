@@ -5,11 +5,10 @@ const { constants } = require('openzeppelin-test-helpers');
 const {
     PaymentTransactionOutput, PaymentTransaction, PlasmaDepositTransaction,
 } = require('../../../helpers/transaction.js');
-const { addressToOutputGuard } = require('../../../helpers/utils.js');
 const { buildUtxoPos } = require('../../../helpers/positions.js');
 const { hashTx } = require('../../../helpers/paymentEip712.js');
 
-const OUTPUT_GUARD = `0x${Array(64).fill(1).join('')}`;
+const OUTPUT_GUARD = `0x${Array(40).fill(1).join('')}`;
 
 contract('PaymentEip712Lib', ([alice]) => {
     before(async () => {
@@ -31,7 +30,7 @@ contract('PaymentEip712Lib', ([alice]) => {
 
         it('should hash deposit transaction correctly', async () => {
             const output = new PaymentTransactionOutput(
-                100, addressToOutputGuard(alice), constants.ZERO_ADDRESS,
+                100, alice, constants.ZERO_ADDRESS,
             );
             const tx = new PlasmaDepositTransaction(output);
             const txBytes = web3.utils.bytesToHex(tx.rlpEncoded());

@@ -3,7 +3,6 @@ const { constants } = require('openzeppelin-test-helpers');
 const { MerkleTree } = require('./merkle.js');
 const { buildUtxoPos, UtxoPos } = require('./positions.js');
 const {
-    addressToOutputGuard,
     buildOutputGuard,
     computeNormalOutputId,
     computeDepositOutputId,
@@ -129,7 +128,7 @@ function createInFlightTx(inputTxs, inputUtxosPos, ifeOwner, amount, token = ETH
 
     const output = new PaymentTransactionOutput(
         amount * inputTxs.length,
-        addressToOutputGuard(ifeOwner),
+        ifeOwner,
         token,
     );
 
@@ -182,7 +181,7 @@ function buildValidNoncanonicalChallengeArgs(decodedIfeTx, competitorOwner) {
         competingTx, competingTxPos,
     );
 
-    const competingTxWitness = addressToOutputGuard(competitorOwner);
+    const competingTxWitness = competitorOwner;
 
     return {
         args: {

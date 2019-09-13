@@ -369,6 +369,19 @@ library RLP {
         }
     }
 
+    /**
+     * @dev Decode an RLPItem into a bytes20. This will not work if the RLPItem is a list.
+     * @param self The RLPItem.
+     * @return The decoded string.
+     */
+    function toBytes20(RLPItem memory self)
+        internal
+        pure
+        returns (bytes20 data)
+    {
+        return bytes20(toAddress(self));
+    }
+
     /*
      * Private functions
      */
