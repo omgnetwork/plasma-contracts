@@ -67,7 +67,7 @@ library PaymentInFlightExitRouterArgs {
      */
     struct ChallengeCanonicityArgs {
         bytes inputTx;
-        uint16 inputUtxoPos;
+        uint256 inputUtxoPos;
         bytes inFlightTx;
         uint16 inFlightTxInputIndex;
         bytes competingTx;

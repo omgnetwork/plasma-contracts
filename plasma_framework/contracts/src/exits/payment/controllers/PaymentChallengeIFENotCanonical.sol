@@ -76,7 +76,7 @@ library PaymentChallengeIFENotCanonical {
         PaymentExitDataModel.InFlightExit storage ife = inFlightExitMap.exits[exitId];
         require(ife.exitStartTimestamp != 0, "In-fligh exit doesn't exists");
 
-        require(!ife.isInFirstPhase(self.framework.minExitPeriod()),
+        require(ife.isInFirstPhase(self.framework.minExitPeriod()),
                 "Canonicity challege phase for this exit has ended");
 
         require(
@@ -93,6 +93,7 @@ library PaymentChallengeIFENotCanonical {
         bytes32 outputId = self.isDeposit.test(inputUtxoPos.blockNum())?
             OutputId.computeDepositOutputId(args.inputTx, inputUtxoPos.outputIndex(), inputUtxoPos.value)
             : OutputId.computeNormalOutputId(args.inputTx, inputUtxoPos.outputIndex());
+
         require(outputId == ife.inputs[args.inFlightTxInputIndex].outputId,
                 "Provided inputs data does not point to the same outputId from the in-flight exit");
 
