@@ -606,7 +606,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 await registerSpendingConditionTrue(this.spendingConditionRegistry);
                 await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot1, 0);
                 await this.framework.setBlock(DEPOSIT_BLOCK_NUMBER, inputTxsBlockRoot2, 0);
-                args.inputSpendingConditionOptionalArgs = [];
+                args.inputTxsConfirmSigs = [];
 
                 await expectRevert(
                     this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
@@ -623,7 +623,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 await registerSpendingConditionTrue(this.spendingConditionRegistry);
                 await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot1, 0);
                 await this.framework.setBlock(DEPOSIT_BLOCK_NUMBER, inputTxsBlockRoot2, 0);
-                args.inputTxsConfirmSigs = [];
+                args.inputSpendingConditionOptionalArgs = [];
 
                 await expectRevert(
                     this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
