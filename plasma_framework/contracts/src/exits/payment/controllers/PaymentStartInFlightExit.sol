@@ -238,7 +238,7 @@ library PaymentStartInFlightExit {
         );
         require(
             exitData.inputSpendingConditionOptionalArgs.length == exitData.inFlightTx.inputs.length,
-            "Number of input transactions confirm sigs does not match number of in-flight transaction inputs"
+            "Number of input spending condition optional args does not match number of in-flight transaction inputs"
         );
     }
 
@@ -302,7 +302,6 @@ library PaymentStartInFlightExit {
             require(outputGuardHandler.isValid(outputGuardData),
                     "Output guard information is invalid for the input tx");
 
-            //FIXME: consider moving spending conditions to PlasmaFramework
             ISpendingCondition condition = exitData.controller.spendingConditionRegistry.spendingConditions(
                 exitData.inputUtxosTypes[i], exitData.controller.supportedTxType
             );

@@ -86,6 +86,8 @@ function buildIfeStartArgs([inputTx1, inputTx2], [inputOwner1, inputOwner2], inp
 
     const inFlightTxWitnesses = [IN_FLIGHT_TX_WITNESS_BYTES, IN_FLIGHT_TX_WITNESS_BYTES];
 
+    const inputSpendingConditionOptionalArgs = [EMPTY_BYTES, EMPTY_BYTES];
+
     const inputTxTypes = [IFE_TX_TYPE, IFE_TX_TYPE];
 
     const outputGuardPreimagesForInputs = [
@@ -103,6 +105,7 @@ function buildIfeStartArgs([inputTx1, inputTx2], [inputOwner1, inputOwner2], inp
         inputTxsInclusionProofs,
         inputTxsConfirmSigs,
         inFlightTxWitnesses,
+        inputSpendingConditionOptionalArgs,
     };
 
     const inputTxsBlockRoot1 = merkleTree1.root;

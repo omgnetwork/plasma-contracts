@@ -3,8 +3,7 @@ const PaymentInFlightExitRouter = artifacts.require('PaymentInFlightExitRouterMo
 const PaymentStartInFlightExit = artifacts.require('PaymentStartInFlightExit');
 const PaymentPiggybackInFlightExit = artifacts.require('PaymentPiggybackInFlightExit');
 const PaymentChallengeIFENotCanonical = artifacts.require('PaymentChallengeIFENotCanonical');
-const PaymentSpendingConditionRegistry = artifacts.require('PaymentSpendingConditionRegistry');
-const PaymentSpendingConditionFalse = artifacts.require('PaymentSpendingConditionFalse');
+const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry');
 const SpendingConditionMock = artifacts.require('SpendingConditionMock');
 const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const StateTransitionVerifierAccept = artifacts.require('StateTransitionVerifierAccept');
@@ -171,7 +170,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
         this.framework = await SpyPlasmaFramework.new(
             MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
         );
-        this.spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
+        this.spendingConditionRegistry = await SpendingConditionRegistry.new();
         this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
         this.exitGame = await PaymentInFlightExitRouter.new(
             this.framework.address,
