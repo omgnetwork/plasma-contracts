@@ -20,7 +20,7 @@ const {
 } = require('../../../helpers/constants.js');
 const { buildUtxoPos, buildTxPos } = require('../../../helpers/positions.js');
 const { createInputTransaction, createInFlightTx, getOutputId } = require('../../../helpers/ife.js');
-const { addressToOutputGuard, spentOnGas } = require('../../../helpers/utils.js');
+const { spentOnGas } = require('../../../helpers/utils.js');
 
 contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, challenger]) => {
     const IN_FLIGHT_EXIT_BOND = 31415926535; // wei
@@ -202,7 +202,7 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                 spendingTxType: TX_TYPE.PAYMENT,
                 spendingTxInputIndex: 0,
                 spendingTxInputOutputType: OUTPUT_TYPE.PAYMENT,
-                spendingTxWitness: addressToOutputGuard(inputOwner),
+                spendingTxWitness: web3.utils.utf8ToHex('dummy witness'),
                 inputTx: inputTx.txBytes,
                 inputTxOutputIndex: inputTx.outputIndex,
                 inputTxPos: inputTx.txPos,
