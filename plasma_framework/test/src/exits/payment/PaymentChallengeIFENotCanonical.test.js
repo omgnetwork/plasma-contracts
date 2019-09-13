@@ -104,6 +104,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
             this.framework.address,
             this.outputGuardHandlerRegistry.address,
             this.spendingConditionRegistry.address,
+            this.spendingConditionRegistry.address,
             this.stateTransitionVerifierAccept.address,
             IFE_TX_TYPE,
         );

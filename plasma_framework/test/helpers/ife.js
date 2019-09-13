@@ -139,11 +139,8 @@ function createInFlightTx(inputTxs, inputUtxosPos, ifeOwner, amount, token = ETH
 function createInputsForInFlightTx(inputTxs, inputUtxosPos) {
     const inputs = [];
     for (let i = 0; i < inputTxs.length; i++) {
-        const inputUtxoPos = new UtxoPos(inputUtxosPos[i]);
         const inputTx = web3.utils.bytesToHex(inputTxs[i].rlpEncoded());
-        const outputId = isDeposit(inputUtxoPos.blockNum)
-            ? computeDepositOutputId(inputTx, inputUtxoPos.outputIndex, inputUtxoPos.utxoPos)
-            : computeNormalOutputId(inputTx, inputUtxoPos.outputIndex);
+        const outputId = getOutputId(inputTx, inputUtxosPos[i]);
         inputs.push(outputId);
     }
     return inputs;
@@ -205,6 +202,14 @@ function buildValidNoncanonicalChallengeArgs(decodedIfeTx, competitorOwner) {
     };
 }
 
+function getOutputId(txBytes, utxoPos) {
+    const inputUtxoPos = new UtxoPos(utxoPos);
+    const outputId = isDeposit(inputUtxoPos.blockNum)
+        ? computeDepositOutputId(txBytes, inputUtxoPos.outputIndex, inputUtxoPos.utxoPos)
+        : computeNormalOutputId(txBytes, inputUtxoPos.outputIndex);
+    return outputId;
+}
+
 module.exports = {
     isDeposit,
     buildValidIfeStartArgs,
@@ -216,4 +221,5 @@ module.exports = {
     createInputsForInFlightTx,
     createCompetitorTransaction,
     createInclusionProof,
+    getOutputId,
 };

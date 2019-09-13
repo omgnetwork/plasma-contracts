@@ -134,6 +134,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                     this.framework.address,
                     this.outputGuardHandlerRegistry.address,
                     this.spendingConditionRegistry.address,
+                    this.spendingConditionRegistry.address,
                     this.stateTransitionVerifierAccept.address,
                     IFE_TX_TYPE,
                 );
@@ -256,6 +257,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                     this.framework.address,
                     this.outputGuardHandlerRegistry.address,
                     this.spendingConditionRegistry.address,
+                    this.spendingConditionRegistry.address,
                     this.stateTransitionVerifierAccept.address,
                     IFE_TX_TYPE,
                 );
@@ -279,6 +281,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 const dummyExitGame = await PaymentInFlightExitRouter.new(
                     this.framework.address,
                     this.outputGuardHandlerRegistry.address,
+                    this.spendingConditionRegistry.address,
                     this.spendingConditionRegistry.address,
                     this.stateTransitionVerifierAccept.address,
                     IFE_TX_TYPE,
@@ -326,6 +329,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 this.exitGame = await PaymentInFlightExitRouter.new(
                     this.framework.address,
                     this.outputGuardHandlerRegistry.address,
+                    this.spendingConditionRegistry.address,
                     this.spendingConditionRegistry.address,
                     this.stateTransitionVerifierAccept.address,
                     IFE_TX_TYPE,
@@ -485,6 +489,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 const dummyExitGame = await PaymentInFlightExitRouter.new(
                     this.framework.address,
                     this.outputGuardHandlerRegistry.address,
+                    this.spendingConditionRegistry.address,
                     this.spendingConditionRegistry.address,
                     this.stateTransitionVerifierAccept.address,
                     IFE_TX_TYPE,
@@ -695,6 +700,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                     this.framework.address,
                     this.outputGuardHandlerRegistry.address,
                     this.spendingConditionRegistry.address,
+                    this.spendingConditionRegistry.address,
                     stateTransitionVerifierReject.address,
                     IFE_TX_TYPE,
                 );
@@ -736,6 +742,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 const exitGame = await PaymentInFlightExitRouter.new(
                     this.framework.address,
                     this.outputGuardHandlerRegistry.address,
+                    this.spendingConditionRegistry.address,
                     this.spendingConditionRegistry.address,
                     stateTransitionVerifierReverse.address,
                     IFE_TX_TYPE,

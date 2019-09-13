@@ -66,6 +66,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
             this.framework.address,
             this.outputGuardHandlerRegistry.address,
             spendingConditionRegistry.address,
+            spendingConditionRegistry.address,
             this.stateTransitionVerifierAccept.address,
             PAYMENT_TX_TYPE,
         );

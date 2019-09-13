@@ -5,9 +5,8 @@ const PaymentStartInFlightExit = artifacts.require('PaymentStartInFlightExit');
 const PaymentPiggybackInFlightExit = artifacts.require('PaymentPiggybackInFlightExit');
 const PaymentChallengeIFENotCanonical = artifacts.require('PaymentChallengeIFENotCanonical');
 const PaymentChallengeIFEInputSpent = artifacts.require('PaymentChallengeIFEInputSpent');
-const PaymentSpendingConditionRegistry = artifacts.require('PaymentSpendingConditionRegistry');
-const PaymentSpendingConditionFalse = artifacts.require('PaymentSpendingConditionFalse');
-const PaymentSpendingConditionTrue = artifacts.require('PaymentSpendingConditionTrue');
+const SpendingConditionMock = artifacts.require('SpendingConditionMock');
+const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry');
 const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const StateTransitionVerifierAccept = artifacts.require('StateTransitionVerifierAccept');
 const ExitId = artifacts.require('ExitIdWrapper');
@@ -16,26 +15,24 @@ const {
     BN, constants, expectEvent, expectRevert, time,
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
-
-const { buildUtxoPos } = require('../../../helpers/positions.js');
+const {
+    TX_TYPE, OUTPUT_TYPE, EMPTY_BYTES, EMPTY_BYTES_32,
+} = require('../../../helpers/constants.js');
+const { buildUtxoPos, buildTxPos } = require('../../../helpers/positions.js');
+const { createInputTransaction, createInFlightTx, getOutputId } = require('../../../helpers/ife.js');
 const { addressToOutputGuard, spentOnGas } = require('../../../helpers/utils.js');
-const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
 
 contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, challenger]) => {
     const IN_FLIGHT_EXIT_BOND = 31415926535; // wei
     const PIGGYBACK_BOND = 31415926535;
-    const CHILD_BLOCK_INTERVAL = 1000;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
     const INITIAL_IMMUNE_EXIT_GAME_NUM = 1;
-    const OUTPUT_TYPE_ONE = 1;
-    const IFE_TX_TYPE = 1;
     const YOUNGEST_POSITION_BLOCK = 1000;
     const INFLIGHT_EXIT_YOUNGEST_INPUT_POSITION = buildUtxoPos(YOUNGEST_POSITION_BLOCK, 0, 0);
     const ETH = constants.ZERO_ADDRESS;
     const BLOCK_NUMBER = 5000;
     const MAX_INPUT_SIZE = 4;
-    const PAYMENT_TX_TYPE = 1;
 
     before('deploy and link with controller lib', async () => {
         const startInFlightExit = await PaymentStartInFlightExit.new();
@@ -50,25 +47,42 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
 
         this.exitIdHelper = await ExitId.new();
         this.stateTransitionVerifierAccept = await StateTransitionVerifierAccept.new();
-
-        this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
-        const handler = await OutputGuardHandler.new(true, alice);
-        await this.outputGuardHandlerRegistry.registerOutputGuardHandler(OUTPUT_TYPE_ONE, handler.address);
     });
 
     describe('challenge in-flight exit input spent', () => {
-        /**
-         * This sets up an IFE tx with 2 inputs, starts the IFE and piggybacks on the 2nd input.
-         * It also creates a tx that spends that input, which will be used to challenge the piggyback.
-         */
-        const buildPiggybackInputData = async () => {
-            const outputAmount = 997;
-            const outputGuard = addressToOutputGuard(outputOwner);
-            const output = new PaymentTransactionOutput(outputAmount, outputGuard, ETH);
+        // This is the transaction whose output is the input piggyback in the IFE.
+        function buildInputTx() {
+            const tx = createInputTransaction(
+                [buildUtxoPos(2000, 4, 3), buildUtxoPos(2000, 10, 2)],
+                inputOwner,
+                334455,
+            );
 
-            const inputOneUtxoPos = buildUtxoPos(BLOCK_NUMBER, 0, 0);
-            const inputTwoUtxoPos = buildUtxoPos(BLOCK_NUMBER, 1, 0);
-            const inFlightTx = new PaymentTransaction(1, [inputOneUtxoPos, inputTwoUtxoPos], [output]);
+            const txBytes = web3.utils.bytesToHex(tx.rlpEncoded());
+            const outputIndex = 0;
+
+            return {
+                tx,
+                txBytes,
+                outputIndex,
+                txPos: buildTxPos(3000, 5),
+                utxoPos: buildUtxoPos(3000, 5, outputIndex),
+            };
+        }
+
+        // Sets up an IFE tx using inputTx as an input, starts the IFE and piggybacks on the input.
+        const buildPiggybackInputData = async (inputTx) => {
+            const outputAmount = 997;
+
+            const firstInput = createInputTransaction([buildUtxoPos(BLOCK_NUMBER, 3, 0)], outputOwner, 334455);
+            const firstInputUtxoPos = buildUtxoPos(3000, 66, 0);
+
+            const inFlightTx = createInFlightTx(
+                [firstInput, inputTx.tx],
+                [firstInputUtxoPos, inputTx.utxoPos],
+                alice,
+                outputAmount,
+            );
             const rlpInFlightTxBytes = web3.utils.bytesToHex(inFlightTx.rlpEncoded());
 
             const emptyWithdrawData = {
@@ -92,7 +106,7 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                     token: ETH,
                     amount: 999,
                 }, {
-                    outputId: web3.utils.sha3('dummy output id'),
+                    outputId: getOutputId(inputTx.txBytes, inputTx.utxoPos),
                     outputGuard: web3.utils.sha3('dummy output guard'),
                     exitTarget: inputOwner,
                     token: ETH,
@@ -121,9 +135,7 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
 
             return {
                 argsInputOne,
-                inputOneUtxoPos,
                 argsInputTwo,
-                inputTwoUtxoPos,
                 exitId,
                 inFlightExitData,
             };
@@ -133,22 +145,33 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
             this.framework = await SpyPlasmaFramework.new(
                 MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
             );
-            this.spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
+
+            this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
+            const handler = await OutputGuardHandler.new(true, alice);
+            await this.outputGuardHandlerRegistry.registerOutputGuardHandler(OUTPUT_TYPE.PAYMENT, handler.address);
+
+            this.spendingConditionRegistry = await SpendingConditionRegistry.new();
+            this.spendingCondition = await SpendingConditionMock.new();
+            // lets the spending condition pass by default
+            await this.spendingCondition.mockResult(true);
+            await this.spendingConditionRegistry.registerSpendingCondition(
+                OUTPUT_TYPE.PAYMENT, TX_TYPE.PAYMENT, this.spendingCondition.address,
+            );
+
             this.exitGame = await PaymentInFlightExitRouter.new(
                 this.framework.address,
                 this.outputGuardHandlerRegistry.address,
                 this.spendingConditionRegistry.address,
+                this.spendingConditionRegistry.address,
                 this.stateTransitionVerifierAccept.address,
-                IFE_TX_TYPE,
+                TX_TYPE.PAYMENT,
             );
 
-            const conditionTrue = await PaymentSpendingConditionTrue.new();
+            // Create the input tx
+            const inputTx = buildInputTx();
 
-            await this.spendingConditionRegistry.registerSpendingCondition(
-                OUTPUT_TYPE_ONE, IFE_TX_TYPE, conditionTrue.address,
-            );
-
-            this.testData = await buildPiggybackInputData();
+            // Set up the piggyback data
+            this.testData = await buildPiggybackInputData(inputTx);
 
             // set some different timestamp than "now" to the youngest position.
             this.youngestPositionTimestamp = (await time.latest()).sub(new BN(100)).toNumber();
@@ -157,27 +180,33 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
             );
             await this.exitGame.setInFlightExit(this.testData.exitId, this.testData.inFlightExitData);
 
-            // Piggyback input 2
+            // Piggyback the second input
             this.piggybackTx = await this.exitGame.piggybackInFlightExitOnInput(
                 this.testData.argsInputTwo, { from: inputOwner, value: PIGGYBACK_BOND },
             );
 
-            // Create a transaction that spends the input (input 2 of piggybacked tx)
-            this.spendingTx = new PaymentTransaction(
-                1,
-                [this.testData.inputTwoUtxoPos],
-                [new PaymentTransactionOutput(0, outputOwner, ETH)],
+            // Create a transaction that spends the same input
+            const spendingTx = createInputTransaction(
+                [inputTx.utxoPos],
+                outputOwner,
+                789,
             );
+
             this.inFlightTxNotPiggybackedIndex = 0;
             this.inFlightTxPiggybackedIndex = 1;
 
             this.challengeArgs = {
                 inFlightTx: this.testData.argsInputTwo.inFlightTx,
                 inFlightTxInputIndex: this.inFlightTxPiggybackedIndex,
-                spendingTx: web3.utils.bytesToHex(this.spendingTx.rlpEncoded()),
+                spendingTx: web3.utils.bytesToHex(spendingTx.rlpEncoded()),
+                spendingTxType: TX_TYPE.PAYMENT,
                 spendingTxInputIndex: 0,
-                spendingTxInputOutputType: OUTPUT_TYPE_ONE,
+                spendingTxInputOutputType: OUTPUT_TYPE.PAYMENT,
                 spendingTxWitness: addressToOutputGuard(inputOwner),
+                inputTx: inputTx.txBytes,
+                inputTxOutputIndex: inputTx.outputIndex,
+                inputTxPos: inputTx.txPos,
+                spendingConditionOptionalArgs: EMPTY_BYTES,
             };
         });
 
@@ -269,21 +298,21 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
 
             it('should fail when the spending transaction input index is incorrect', async () => {
                 this.challengeArgs.spendingTxInputIndex += 1;
+                // The spending condition will fail if the spendingTxInputIndex does not point to
+                // the correct inputTx output
+                await this.spendingCondition.mockResult(false);
                 await expectRevert(
                     this.exitGame.challengeInFlightExitInputSpent(this.challengeArgs, { from: challenger }),
-                    'Incorrect spending transaction input index',
+                    'Spending condition failed',
                 );
             });
 
             it('should fail when the spent input is not the same as piggybacked input', async () => {
-                // create another spending tx
-                const anotherInput = buildUtxoPos(BLOCK_NUMBER + 1, 3, 0);
-                const anotherTx = new PaymentTransaction(
-                    1,
-                    [anotherInput],
-                    [new PaymentTransactionOutput(0, outputOwner, ETH)],
-                );
-                this.challengeArgs.spendingTx = web3.utils.bytesToHex(anotherTx.rlpEncoded());
+                // create a different input tx
+                const anotherTx = createInputTransaction([buildUtxoPos(BLOCK_NUMBER, 3, 0)], outputOwner, 123);
+                this.challengeArgs.inputTx = web3.utils.bytesToHex(anotherTx.rlpEncoded());
+                this.challengeArgs.inputTxOutputIndex = 0;
+                this.challengeArgs.inputTxPos = buildTxPos(2000, 50);
                 await expectRevert(
                     this.exitGame.challengeInFlightExitInputSpent(this.challengeArgs, { from: challenger }),
                     'Spent input is not the same as piggybacked input',
@@ -291,7 +320,7 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
             });
 
             it('should fail when spending condition for given output is not registered', async () => {
-                this.challengeArgs.spendingTxInputOutputType = OUTPUT_TYPE_ONE + 1;
+                this.challengeArgs.spendingTxInputOutputType = OUTPUT_TYPE.PAYMENT + 1;
                 await expectRevert(
                     this.exitGame.challengeInFlightExitInputSpent(this.challengeArgs, { from: challenger }),
                     'Spending condition contract not found',
@@ -299,15 +328,10 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
             });
 
             it('should fail when spending condition is not met', async () => {
-                const newOutputType = OUTPUT_TYPE_ONE + 1;
-                const conditionFalse = await PaymentSpendingConditionFalse.new();
-                await this.spendingConditionRegistry.registerSpendingCondition(
-                    newOutputType, IFE_TX_TYPE, conditionFalse.address,
-                );
-                this.challengeArgs.spendingTxInputOutputType = newOutputType;
+                await this.spendingCondition.mockResult(false);
                 await expectRevert(
                     this.exitGame.challengeInFlightExitInputSpent(this.challengeArgs, { from: challenger }),
-                    'Spent input spending condition is not met',
+                    'Spending condition failed',
                 );
             });
         });

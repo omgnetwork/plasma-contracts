@@ -4,16 +4,19 @@ pragma experimental ABIEncoderV2;
 import "../PaymentExitDataModel.sol";
 import "../PaymentInFlightExitModelUtils.sol";
 import "../routers/PaymentInFlightExitRouterArgs.sol";
-import "../spendingConditions/IPaymentSpendingCondition.sol";
-import "../spendingConditions/PaymentSpendingConditionRegistry.sol";
+import "../../interfaces/ISpendingCondition.sol";
+import "../../registries/SpendingConditionRegistry.sol";
 import "../../utils/ExitId.sol";
+import "../../utils/OutputId.sol";
 import "../../../utils/UtxoPosLib.sol";
+import "../../../utils/IsDeposit.sol";
 import "../../../utils/Merkle.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
 
 library PaymentChallengeIFEInputSpent {
     using UtxoPosLib for UtxoPosLib.UtxoPos;
+    using IsDeposit for IsDeposit.Predicate;
     using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
 
     // TODO: Use BondSize lib.
@@ -21,7 +24,8 @@ library PaymentChallengeIFEInputSpent {
 
     struct Controller {
         PlasmaFramework framework;
-        PaymentSpendingConditionRegistry spendingConditionRegistry;
+        IsDeposit.Predicate isDeposit;
+        SpendingConditionRegistry spendingConditionRegistry;
         uint256 supportedTxType;
     }
 
@@ -30,6 +34,32 @@ library PaymentChallengeIFEInputSpent {
         bytes32 txHash,
         uint8 inputIndex
     );
+
+    /**
+     * @dev data to be passed around helper functions
+     */
+    struct ChallengeIFEData {
+        Controller controller;
+        PaymentInFlightExitRouterArgs.ChallengeInputSpentArgs args;
+        PaymentExitDataModel.InFlightExit ife;
+    }
+
+    function buildController(
+        PlasmaFramework framework,
+        SpendingConditionRegistry spendingConditionRegistry,
+        uint256 supportedTxType
+    )
+        public
+        view
+        returns (Controller memory)
+    {
+        return Controller({
+            framework: framework,
+            isDeposit: IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL()),
+            spendingConditionRegistry: spendingConditionRegistry,
+            supportedTxType: supportedTxType
+        });
+    }
 
     function run(
         Controller memory self,
@@ -42,7 +72,6 @@ library PaymentChallengeIFEInputSpent {
         PaymentExitDataModel.InFlightExit storage ife = inFlightExitMap.exits[exitId];
 
         require(ife.exitStartTimestamp != 0, "In-flight exit doesn't exist");
-
         require(ife.isInputPiggybacked(args.inFlightTxInputIndex), "The indexed input has not been piggybacked");
 
         require(
@@ -50,29 +79,15 @@ library PaymentChallengeIFEInputSpent {
             "The spending transaction is the same as the in-flight transaction"
         );
 
-        PaymentTransactionModel.Transaction memory spendingTx = PaymentTransactionModel.decode(args.spendingTx);
-        require(args.spendingTxInputIndex < spendingTx.inputs.length, "Incorrect spending transaction input index");
+        ChallengeIFEData memory data = ChallengeIFEData({
+            controller: self,
+            args: args,
+            ife: inFlightExitMap.exits[exitId]
+        });
 
-        bytes32 spendingInput = spendingTx.inputs[args.spendingTxInputIndex];
-        bytes32 ifeInput = PaymentTransactionModel.decode(args.inFlightTx).inputs[args.inFlightTxInputIndex];
-        require(ifeInput == spendingInput, "Spent input is not the same as piggybacked input");
+        verifySpentInputEqualsIFEInput(data);
 
-        IPaymentSpendingCondition condition = self.spendingConditionRegistry.spendingConditions(
-            args.spendingTxInputOutputType, spendingTx.txType
-        );
-        require(address(condition) != address(0), "Spending condition contract not found");
-
-        // FIXME: move to the finalized interface as https://github.com/omisego/plasma-contracts/issues/214
-        // Also, the tests should verify the args correctness
-        bool isSpentByInFlightTx = condition.verify(
-            bytes32(""), // tmp solution, we don't need outputGuard anymore for the interface of :point-up: GH-214
-            uint256(0), // should not be used
-            ife.inputs[args.inFlightTxInputIndex].outputId,
-            args.spendingTx,
-            args.spendingTxInputIndex,
-            args.spendingTxWitness
-        );
-        require(isSpentByInFlightTx, "Spent input spending condition is not met");
+        verifySpendingCondition(data);
 
         // Remove the input from the piggyback map
         ife.clearInputPiggybacked(args.inFlightTxInputIndex);
@@ -81,5 +96,34 @@ library PaymentChallengeIFEInputSpent {
         msg.sender.transfer(PIGGYBACK_BOND);
 
         emit InFlightExitInputBlocked(msg.sender, keccak256(args.inFlightTx), args.inFlightTxInputIndex);
+    }
+
+    function verifySpentInputEqualsIFEInput(ChallengeIFEData memory data) private pure {
+        bytes32 ifeInputOutputId = data.ife.inputs[data.args.inFlightTxInputIndex].outputId;
+
+        UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.build(TxPosLib.TxPos(data.args.inputTxPos), data.args.inputTxOutputIndex);
+        bytes32 spendingTxInputOutputId = data.controller.isDeposit.test(utxoPos.blockNum())
+                ? OutputId.computeDepositOutputId(data.args.inputTx, utxoPos.outputIndex(), utxoPos.value)
+                : OutputId.computeNormalOutputId(data.args.inputTx, utxoPos.outputIndex());
+
+        require(ifeInputOutputId == spendingTxInputOutputId, "Spent input is not the same as piggybacked input");
+    }
+
+    function verifySpendingCondition(ChallengeIFEData memory data) private view {
+        ISpendingCondition condition = data.controller.spendingConditionRegistry.spendingConditions(
+            data.args.spendingTxInputOutputType, data.args.spendingTxType
+        );
+        require(address(condition) != address(0), "Spending condition contract not found");
+
+        bool isSpent = condition.verify(
+            data.args.inputTx,
+            data.args.inputTxOutputIndex,
+            data.args.inputTxPos,
+            data.args.spendingTx,
+            data.args.spendingTxInputIndex,
+            data.args.spendingTxWitness,
+            data.args.spendingConditionOptionalArgs
+        );
+        require(isSpent, "Spending condition failed");
     }
 }

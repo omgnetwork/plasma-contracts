@@ -84,8 +84,13 @@ library PaymentInFlightExitRouterArgs {
         bytes inFlightTx;
         uint8 inFlightTxInputIndex;
         bytes spendingTx;
+        uint8 spendingTxType;
         uint8 spendingTxInputIndex;
         uint256 spendingTxInputOutputType;
         bytes spendingTxWitness;
+        bytes inputTx;
+        uint16 inputTxOutputIndex;
+        uint256 inputTxPos;
+        bytes spendingConditionOptionalArgs;
     }
 }

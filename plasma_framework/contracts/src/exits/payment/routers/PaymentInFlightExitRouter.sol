@@ -8,6 +8,7 @@ import "../controllers/PaymentPiggybackInFlightExit.sol";
 import "../controllers/PaymentChallengeIFENotCanonical.sol";
 import "../controllers/PaymentChallengeIFEInputSpent.sol";
 import "../spendingConditions/PaymentSpendingConditionRegistry.sol";
+import "../../registries/SpendingConditionRegistry.sol";
 import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../interfaces/IStateTransitionVerifier.sol";
 import "../../../utils/OnlyWithValue.sol";
@@ -32,7 +33,12 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyWithValue {
     constructor(
         PlasmaFramework framework,
         OutputGuardHandlerRegistry outputGuardHandlerRegistry,
-        PaymentSpendingConditionRegistry spendingConditionRegistry,
+        SpendingConditionRegistry spendingConditionRegistry,
+
+        // TODO: We should use SpendingConditionRegistry everywhere, but for now keep 
+        // using PaymentSpendingConditionRegistry where necessary to avoid mega PR.
+        // REMOVE when all controllers use SpendingConditionRegistry!!
+        PaymentSpendingConditionRegistry paymentSpendingConditionRegistry,
         IStateTransitionVerifier verifier,
         uint256 supportedTxType
     )
@@ -41,7 +47,7 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyWithValue {
         startInFlightExitController = PaymentStartInFlightExit.buildController(
             framework,
             outputGuardHandlerRegistry,
-            spendingConditionRegistry,
+            paymentSpendingConditionRegistry,
             verifier,
             supportedTxType
         );
@@ -54,15 +60,15 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyWithValue {
 
         challengeCanonicityController = PaymentChallengeIFENotCanonical.Controller({
             framework: framework,
-            spendingConditionRegistry: spendingConditionRegistry,
+            spendingConditionRegistry: paymentSpendingConditionRegistry,
             supportedTxType: supportedTxType
         });
 
-        challengeInputSpentController = PaymentChallengeIFEInputSpent.Controller({
-            framework: framework,
-            spendingConditionRegistry: spendingConditionRegistry,
-            supportedTxType: supportedTxType
-        });
+        challengeInputSpentController = PaymentChallengeIFEInputSpent.buildController(
+            framework,
+            spendingConditionRegistry,
+            supportedTxType
+        );
     }
 
     function inFlightExits(uint192 _exitId) public view returns (PaymentExitDataModel.InFlightExit memory) {
