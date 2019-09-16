@@ -18,7 +18,7 @@ from tests.tests_utils.constants import (
     INITIAL_IMMUNE_VAULTS,
     INITIAL_IMMUNE_EXIT_GAMES,
 )
-from tests.tests_utils.conveniece_wrappers import ConvenienceContractWrapper, AutominingEth
+from tests.tests_utils.convenience_wrappers import ConvenienceContractWrapper, AutominingEth
 from tests.tests_utils.deployer import Deployer
 from tests.tests_utils.plasma_framework import PlasmaFramework
 

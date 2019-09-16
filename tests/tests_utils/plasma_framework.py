@@ -83,8 +83,8 @@ class PlasmaFramework:
     def blocks(self, block):
         return self.plasma_framework.blocks(block)
 
-    def addToken(self, token):
-        raise NotImplementedError
+    def addToken(self, token, **kwargs):
+        return self.plasma_framework.addToken(token, **kwargs)
 
     def submitBlock(self, block_root, **kwargs):
         self.plasma_framework.submitBlock(block_root, **kwargs)
@@ -165,7 +165,7 @@ class PlasmaFramework:
         raise NotImplementedError
 
     def hasToken(self, token):
-        raise NotImplementedError
+        return self.plasma_framework.hasToken(token)
 
     def getInFlightExitOutput(self, tx, output_index):
         raise NotImplementedError

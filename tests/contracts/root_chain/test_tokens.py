@@ -2,8 +2,6 @@ import pytest
 from eth_tester.exceptions import TransactionFailed
 from plasma_core.constants import NULL_ADDRESS
 
-pytestmark = pytest.mark.skip()
-
 
 def test_token_adding(token, plasma_framework):
     assert not plasma_framework.hasToken(token.address)
