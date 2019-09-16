@@ -18,7 +18,6 @@ const {
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
-const { addressToOutputGuard } = require('../../../helpers/utils.js');
 const { buildUtxoPos, UtxoPos } = require('../../../helpers/positions.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
 const { buildValidNoncanonicalChallengeArgs, createInclusionProof } = require('../../../helpers/ife.js');
@@ -44,8 +43,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
             amount: 0,
         };
 
-        const outputGuard = addressToOutputGuard(outputOwner);
-        const output = new PaymentTransactionOutput(AMOUNT, outputGuard, ETH);
+        const output = new PaymentTransactionOutput(AMOUNT, outputOwner, ETH);
         const inFlightTx = new PaymentTransaction(
             IFE_TX_TYPE, [buildUtxoPos(BLOCK_NUMBER, 0, 0)], [output],
         );

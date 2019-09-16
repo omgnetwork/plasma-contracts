@@ -13,7 +13,7 @@ library WireTransaction {
 
     struct Output {
         uint256 amount;
-        bytes32 outputGuard;
+        bytes20 outputGuard;
         address token;
     }
 
@@ -27,7 +27,7 @@ library WireTransaction {
         require(outputIndex < outputs.length, "Invalid wire transaction format");
 
         RLP.RLPItem[] memory output = outputs[outputIndex].toList();
-        bytes32 outputGuard = output[0].toBytes32();
+        bytes20 outputGuard = bytes20(output[0].toAddress());
         address token = output[1].toAddress();
         uint256 amount = output[2].toUint();
         

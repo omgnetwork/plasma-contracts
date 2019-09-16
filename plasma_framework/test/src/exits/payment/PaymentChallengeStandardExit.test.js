@@ -20,7 +20,7 @@ const {
 } = require('../../../helpers/constants.js');
 const { buildUtxoPos, UtxoPos } = require('../../../helpers/positions.js');
 const {
-    addressToOutputGuard, spentOnGas, computeNormalOutputId,
+    spentOnGas, computeNormalOutputId,
 } = require('../../../helpers/utils.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
 
@@ -46,7 +46,7 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
 
     describe('challengeStandardExit', () => {
         const getTestInputArgs = (outputType, ouputOwner) => {
-            const output = new PaymentTransactionOutput(TEST_AMOUNT, addressToOutputGuard(ouputOwner), ETH);
+            const output = new PaymentTransactionOutput(TEST_AMOUNT, ouputOwner, ETH);
             const txObj = new PaymentTransaction(outputType, [0], [output]);
             const tx = web3.utils.bytesToHex(txObj.rlpEncoded());
 
@@ -227,7 +227,7 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
                 await this.exitGame.setExit(args.exitId, exitData);
 
                 const expectedArgs = {
-                    guard: addressToOutputGuard(alice),
+                    guard: alice,
                     outputType: OUTPUT_TYPE.PAYMENT,
                     preimage: args.outputGuardPreimage,
                 };

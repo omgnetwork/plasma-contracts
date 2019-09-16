@@ -10,6 +10,13 @@ contract EthVault is Vault {
         uint256 amount
     );
 
+    event DepositCreated(
+        address indexed depositor,
+        uint256 indexed blknum,
+        address indexed token,
+        uint256 amount
+    );
+
     constructor(PlasmaFramework _framework) public Vault(_framework) {}
 
     /**
@@ -18,8 +25,9 @@ contract EthVault is Vault {
      */
     function deposit(bytes calldata _depositTx) external payable {
         IEthDepositVerifier(getEffectiveDepositVerifier()).verify(_depositTx, msg.value, msg.sender);
+        uint256 blknum = super._submitDepositBlock(_depositTx);
 
-        super._submitDepositBlock(_depositTx);
+        emit DepositCreated(msg.sender, blknum, address(0), msg.value);
     }
 
     /**

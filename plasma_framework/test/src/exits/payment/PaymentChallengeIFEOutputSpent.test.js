@@ -18,7 +18,7 @@ const {
 const { expect } = require('chai');
 
 const { buildUtxoPos } = require('../../../helpers/positions.js');
-const { addressToOutputGuard, computeNormalOutputId, spentOnGas } = require('../../../helpers/utils.js');
+const { computeNormalOutputId, spentOnGas } = require('../../../helpers/utils.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
 const { MerkleTree } = require('../../../helpers/merkle.js');
 
@@ -58,8 +58,8 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
 
     describe('challengeInFlightExitOutputSpent', () => {
         const buildValidChallengeOutputArgs = async () => {
-            const output1 = new PaymentTransactionOutput(AMOUNT, addressToOutputGuard(alice), ETH);
-            const output2 = new PaymentTransactionOutput(AMOUNT, addressToOutputGuard(alice), ETH);
+            const output1 = new PaymentTransactionOutput(AMOUNT, alice, ETH);
+            const output2 = new PaymentTransactionOutput(AMOUNT, alice, ETH);
             const inFlightTx = new PaymentTransaction(IFE_TX_TYPE, [0], [output1, output2]);
             const inFlightTxBytes = web3.utils.bytesToHex(inFlightTx.rlpEncoded());
 
@@ -67,7 +67,7 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
             const inclusionProof = merkleTree.getInclusionProof(inFlightTxBytes);
 
             const outputId = computeNormalOutputId(inFlightTxBytes, 0);
-            const challengingTxOutput = new PaymentTransactionOutput(AMOUNT, addressToOutputGuard(alice), ETH);
+            const challengingTxOutput = new PaymentTransactionOutput(AMOUNT, alice, ETH);
             const challengingTx = new PaymentTransaction(IFE_TX_TYPE, [outputId], [challengingTxOutput]);
             const challengingTxBytes = web3.utils.bytesToHex(challengingTx.rlpEncoded());
 
@@ -256,7 +256,7 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
 
         it('should fail when spending condition for challenging tx is not registered', async () => {
             const outputId = computeNormalOutputId(this.challengeArgs.inFlightTx, 0);
-            const challengingTxOutput = new PaymentTransactionOutput(AMOUNT, addressToOutputGuard(alice), ETH);
+            const challengingTxOutput = new PaymentTransactionOutput(AMOUNT, alice, ETH);
             const challengingTx = new PaymentTransaction(OTHER_TX_TYPE, [outputId], [challengingTxOutput]);
 
             this.challengeArgs.challengingTx = web3.utils.bytesToHex(challengingTx.rlpEncoded());
@@ -268,7 +268,7 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
 
         it('should fail when challenging transaction does not spend the output', async () => {
             const outputId = computeNormalOutputId(this.challengeArgs.inFlightTx, 0);
-            const challengingTxOutput = new PaymentTransactionOutput(AMOUNT, addressToOutputGuard(alice), ETH);
+            const challengingTxOutput = new PaymentTransactionOutput(AMOUNT, alice, ETH);
             const challengingTx = new PaymentTransaction(OTHER_TX_TYPE, [outputId], [challengingTxOutput]);
 
             this.challengeArgs.challengingTx = web3.utils.bytesToHex(challengingTx.rlpEncoded());

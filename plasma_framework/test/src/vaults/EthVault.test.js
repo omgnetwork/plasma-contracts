@@ -43,6 +43,24 @@ contract('EthVault', ([_, alice]) => {
             expect(postDepositBlockNumber).to.be.equal(preDepositBlockNumber + 1);
         });
 
+        it('should emit deposit event', async () => {
+            const preDepositBlockNumber = await this.framework.nextDepositBlock();
+
+            const deposit = Testlang.deposit(DEPOSIT_VALUE, alice);
+            const { receipt } = await this.ethVault.deposit(deposit, { from: alice, value: DEPOSIT_VALUE });
+            await expectEvent.inTransaction(
+                receipt.transactionHash,
+                EthVault,
+                'DepositCreated',
+                {
+                    depositor: alice,
+                    blknum: preDepositBlockNumber,
+                    token: constants.ZERO_ADDRESS,
+                    amount: new BN(DEPOSIT_VALUE),
+                },
+            );
+        });
+
         it('should charge eth from depositing user', async () => {
             const preDepositBalance = await web3.eth.getBalance(alice);
             const deposit = Testlang.deposit(DEPOSIT_VALUE, alice);
@@ -98,24 +116,23 @@ contract('EthVault', ([_, alice]) => {
             );
         });
 
-        it('should not accept transaction that does not conform to deposit input format', async () => {
-            const invalidInput = Buffer.alloc(32, 1);
+        it('should not accept transaction with inputs', async () => {
             const output = new PaymentTransactionOutput(DEPOSIT_VALUE, alice, constants.ZERO_ADDRESS);
-            const deposit = new PaymentTransaction(1, [invalidInput], [output]);
+            const deposit = new PaymentTransaction(1, [0], [output]);
 
             await expectRevert(
                 this.ethVault.deposit(deposit.rlpEncoded(), { from: alice, value: DEPOSIT_VALUE }),
-                'Deposit input must be bytes32 of 0.',
+                'Deposit must have no inputs.',
             );
         });
 
         it('should not accept transaction with more than one output', async () => {
             const output = new PaymentTransactionOutput(DEPOSIT_VALUE, alice, constants.ZERO_ADDRESS);
-            const deposit = new PaymentTransaction(1, [0], [output, output]);
+            const deposit = new PaymentTransaction(1, [], [output, output]);
 
             await expectRevert(
                 this.ethVault.deposit(deposit.rlpEncoded(), { from: alice, value: DEPOSIT_VALUE }),
-                'Must have only one output.',
+                'Deposit must have exactly one output.',
             );
         });
 

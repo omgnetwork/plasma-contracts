@@ -28,7 +28,7 @@ const {
 } = require('../../../helpers/constants.js');
 const { MerkleTree } = require('../../../helpers/merkle.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
-const { addressToOutputGuard, computeDepositOutputId, spentOnGas } = require('../../../helpers/utils.js');
+const { computeDepositOutputId, spentOnGas } = require('../../../helpers/utils.js');
 const { sign } = require('../../../helpers/sign.js');
 const { hashTx } = require('../../../helpers/paymentEip712.js');
 const { buildUtxoPos, utxoPosToTxPos } = require('../../../helpers/positions.js');
@@ -131,9 +131,9 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
         this.transferUtxoPos = buildUtxoPos(tranferTxBlockNum, 0, 0);
 
         const transferAmount = 1000;
-        const outputBob = new PaymentTransactionOutput(transferAmount, addressToOutputGuard(bob), ETH);
+        const outputBob = new PaymentTransactionOutput(transferAmount, bob, ETH);
         const outputAlice = new PaymentTransactionOutput(
-            DEPOSIT_VALUE - transferAmount, addressToOutputGuard(alice), ETH,
+            DEPOSIT_VALUE - transferAmount, alice, ETH,
         );
         this.transferTxObject = new PaymentTransaction(1, [this.depositUtxoPos], [outputBob, outputAlice]);
         this.transferTx = this.transferTxObject.rlpEncoded();

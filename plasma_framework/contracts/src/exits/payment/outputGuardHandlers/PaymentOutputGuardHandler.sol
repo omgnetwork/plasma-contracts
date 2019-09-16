@@ -19,7 +19,7 @@ contract PaymentOutputGuardHandler is IOutputGuardHandler {
     }
 
     function getExitTarget(OutputGuardModel.Data calldata data) external view returns (address payable) {
-        return AddressPayable.convert(address(uint256(data.guard)));
+        return AddressPayable.convert(address(uint160(data.guard)));
     }
 
     function getConfirmSigAddress(OutputGuardModel.Data calldata /*data*/)

@@ -8,7 +8,7 @@ library OutputGuardModel {
      * @param preimage the original data of the output guard aside from output type information
      */
     struct Data {
-        bytes32 guard;
+        bytes20 guard;
         uint256 outputType;
         bytes preimage;
     }

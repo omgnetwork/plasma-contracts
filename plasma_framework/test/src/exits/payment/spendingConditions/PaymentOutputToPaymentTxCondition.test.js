@@ -5,7 +5,6 @@ const { expect } = require('chai');
 
 const { EMPTY_BYTES } = require('../../../../helpers/constants.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../../helpers/transaction.js');
-const { addressToOutputGuard } = require('../../../../helpers/utils.js');
 const { hashTx } = require('../../../../helpers/paymentEip712.js');
 const { buildUtxoPos, utxoPosToTxPos } = require('../../../../helpers/positions.js');
 const { sign } = require('../../../../helpers/sign.js');
@@ -38,7 +37,7 @@ contract('PaymentOutputToPaymentTxCondition', ([richFather, bob]) => {
 
     describe('verify', () => {
         const getTestData = () => {
-            const aliceOutputGuard = addressToOutputGuard(alice);
+            const aliceOutputGuard = alice;
             const outputInInputTx = new PaymentTransactionOutput(
                 1000, aliceOutputGuard, ETH,
             );
@@ -49,7 +48,7 @@ contract('PaymentOutputToPaymentTxCondition', ([richFather, bob]) => {
             const utxoPos = buildUtxoPos(2000, 0, outputIndex);
             const inputTxPos = utxoPosToTxPos(utxoPos);
 
-            const bobOutputGuard = addressToOutputGuard(bob);
+            const bobOutputGuard = bob;
             const outputInSpendingTx = new PaymentTransactionOutput(
                 1000, bobOutputGuard, ETH,
             );

@@ -17,9 +17,7 @@ const { expect } = require('chai');
 
 const { calculateNormalExitable } = require('../../../helpers/exitable.js');
 const { buildUtxoPos, utxoPosToTxPos } = require('../../../helpers/positions.js');
-const {
-    addressToOutputGuard, buildOutputGuard,
-} = require('../../../helpers/utils.js');
+const { buildOutputGuard } = require('../../../helpers/utils.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
 
 contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, outputOwner, nonOutputOwner]) => {
@@ -92,7 +90,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, outputOwner, nonOu
          * */
         const buildPiggybackOutputData = async () => {
             const outputAmount1 = 499;
-            const outputGuard1 = addressToOutputGuard(outputOwner);
+            const outputGuard1 = outputOwner;
             const output1 = new PaymentTransactionOutput(outputAmount1, outputGuard1, ETH);
 
             const outputAmount2 = 498;
