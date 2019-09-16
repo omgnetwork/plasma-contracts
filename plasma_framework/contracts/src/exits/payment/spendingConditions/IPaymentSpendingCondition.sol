@@ -15,7 +15,7 @@ interface IPaymentSpendingCondition {
         uint256 _utxoPos,
         bytes32 _outputId,
         bytes calldata _spendingTx,
-        uint8 _inputIndex,
+        uint16 _inputIndex,
         bytes calldata _witness
     ) external view returns (bool);
 }

@@ -4,10 +4,10 @@ pragma experimental ABIEncoderV2;
 import "../PaymentExitDataModel.sol";
 import "../PaymentInFlightExitModelUtils.sol";
 import "../routers/PaymentInFlightExitRouterArgs.sol";
-import "../spendingConditions/IPaymentSpendingCondition.sol";
-import "../spendingConditions/PaymentSpendingConditionRegistry.sol";
-import "../../models/OutputGuardModel.sol";
 import "../../interfaces/IOutputGuardHandler.sol";
+import "../../interfaces/ISpendingCondition.sol";
+import "../../models/OutputGuardModel.sol";
+import "../../registries/SpendingConditionRegistry.sol";
 import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../utils/ExitId.sol";
 import "../../../utils/UtxoPosLib.sol";
@@ -25,7 +25,7 @@ library PaymentChallengeIFEOutputSpent {
 
     struct Controller {
         PlasmaFramework framework;
-        PaymentSpendingConditionRegistry spendingConditionRegistry;
+        SpendingConditionRegistry spendingConditionRegistry;
         OutputGuardHandlerRegistry outputGuardHandlerRegistry;
     }
 
@@ -37,7 +37,7 @@ library PaymentChallengeIFEOutputSpent {
 
     function buildController(
         PlasmaFramework framework,
-        PaymentSpendingConditionRegistry spendingConditionRegistry,
+        SpendingConditionRegistry spendingConditionRegistry,
         OutputGuardHandlerRegistry outputGuardHandlerRegistry
     )
         public
@@ -137,7 +137,7 @@ library PaymentChallengeIFEOutputSpent {
         uint256 challengingTxType = WireTransaction.getTransactionType(args.challengingTx);
         bytes32 outputId = ife.outputs[outputIndex].outputId;
 
-        IPaymentSpendingCondition condition = controller.spendingConditionRegistry.spendingConditions(
+        ISpendingCondition condition = controller.spendingConditionRegistry.spendingConditions(
             args.outputType,
             challengingTxType
         );
@@ -149,7 +149,8 @@ library PaymentChallengeIFEOutputSpent {
             outputId,
             args.challengingTx,
             args.challengingTxInputIndex,
-            args.challengingTxWitness
+            args.challengingTxWitness,
+            args.spendingConditionOptionalArgs
         );
 
         require(isSpentBySpendingTx, "Challenging transaction does not spent the output");

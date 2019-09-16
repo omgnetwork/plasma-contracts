@@ -81,6 +81,7 @@ library PaymentInFlightExitRouterArgs {
      * @param challengingTx RLP encoded challenging transaction.
      * @param challengingTxInputIndex input index of challenged output in challenging transaction.
      * @param challengingTxWitness Witness for challenging transaction.
+     * @param spendingConditionOptionalArgs optional extra data for the spending condition.
      */
     struct ChallengeOutputSpent {
         bytes inFlightTx;
@@ -89,7 +90,8 @@ library PaymentInFlightExitRouterArgs {
         bytes outputGuardPreimage;
         uint256 outputUtxoPos;
         bytes challengingTx;
-        uint8 challengingTxInputIndex;
+        uint16 challengingTxInputIndex;
         bytes challengingTxWitness;
+        bytes spendingConditionOptionalArgs;
     }
 }
