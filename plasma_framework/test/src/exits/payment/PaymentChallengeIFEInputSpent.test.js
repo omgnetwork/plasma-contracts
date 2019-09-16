@@ -18,7 +18,7 @@ const { expect } = require('chai');
 const {
     TX_TYPE, OUTPUT_TYPE, EMPTY_BYTES, EMPTY_BYTES_32,
 } = require('../../../helpers/constants.js');
-const { buildUtxoPos, buildTxPos } = require('../../../helpers/positions.js');
+const { buildUtxoPos } = require('../../../helpers/positions.js');
 const { createInputTransaction, createInFlightTx, getOutputId } = require('../../../helpers/ife.js');
 const { spentOnGas } = require('../../../helpers/utils.js');
 
@@ -65,7 +65,6 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                 tx,
                 txBytes,
                 outputIndex,
-                txPos: buildTxPos(3000, 5),
                 utxoPos: buildUtxoPos(3000, 5, outputIndex),
             };
         }
@@ -204,8 +203,7 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                 challengingTxInputOutputType: OUTPUT_TYPE.PAYMENT,
                 challengingTxWitness: web3.utils.utf8ToHex('dummy witness'),
                 inputTx: inputTx.txBytes,
-                inputTxOutputIndex: inputTx.outputIndex,
-                inputTxPos: inputTx.txPos,
+                inputUtxoPos: inputTx.utxoPos,
                 spendingConditionOptionalArgs: EMPTY_BYTES,
             };
         });
@@ -311,8 +309,7 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                 // create a different input tx
                 const anotherTx = createInputTransaction([buildUtxoPos(BLOCK_NUMBER, 3, 0)], outputOwner, 123);
                 this.challengeArgs.inputTx = web3.utils.bytesToHex(anotherTx.rlpEncoded());
-                this.challengeArgs.inputTxOutputIndex = 0;
-                this.challengeArgs.inputTxPos = buildTxPos(2000, 50);
+                this.challengeArgs.inputUtxoPos = buildUtxoPos(2000, 50, 0);
                 await expectRevert(
                     this.exitGame.challengeInFlightExitInputSpent(this.challengeArgs, { from: challenger }),
                     'Spent input is not the same as piggybacked input',

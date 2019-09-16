@@ -101,7 +101,7 @@ library PaymentChallengeIFEInputSpent {
     function verifySpentInputEqualsIFEInput(ChallengeIFEData memory data) private pure {
         bytes32 ifeInputOutputId = data.ife.inputs[data.args.inFlightTxInputIndex].outputId;
 
-        UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.build(TxPosLib.TxPos(data.args.inputTxPos), data.args.inputTxOutputIndex);
+        UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(data.args.inputUtxoPos);
         bytes32 challengingTxInputOutputId = data.controller.isDeposit.test(utxoPos.blockNum())
                 ? OutputId.computeDepositOutputId(data.args.inputTx, utxoPos.outputIndex(), utxoPos.value)
                 : OutputId.computeNormalOutputId(data.args.inputTx, utxoPos.outputIndex());
@@ -115,10 +115,12 @@ library PaymentChallengeIFEInputSpent {
         );
         require(address(condition) != address(0), "Spending condition contract not found");
 
+        UtxoPosLib.UtxoPos memory inputUtxoPos = UtxoPosLib.UtxoPos(data.args.inputUtxoPos);
+
         bool isSpent = condition.verify(
             data.args.inputTx,
-            data.args.inputTxOutputIndex,
-            data.args.inputTxPos,
+            inputUtxoPos.outputIndex(),
+            inputUtxoPos.txPos().value,
             data.args.challengingTx,
             data.args.challengingTxInputIndex,
             data.args.challengingTxWitness,
