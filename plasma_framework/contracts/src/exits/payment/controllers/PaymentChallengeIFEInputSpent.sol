@@ -75,8 +75,8 @@ library PaymentChallengeIFEInputSpent {
         require(ife.isInputPiggybacked(args.inFlightTxInputIndex), "The indexed input has not been piggybacked");
 
         require(
-            keccak256(args.inFlightTx) != keccak256(args.spendingTx),
-            "The spending transaction is the same as the in-flight transaction"
+            keccak256(args.inFlightTx) != keccak256(args.challengingTx),
+            "The challenging transaction is the same as the in-flight transaction"
         );
 
         ChallengeIFEData memory data = ChallengeIFEData({
@@ -102,16 +102,16 @@ library PaymentChallengeIFEInputSpent {
         bytes32 ifeInputOutputId = data.ife.inputs[data.args.inFlightTxInputIndex].outputId;
 
         UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.build(TxPosLib.TxPos(data.args.inputTxPos), data.args.inputTxOutputIndex);
-        bytes32 spendingTxInputOutputId = data.controller.isDeposit.test(utxoPos.blockNum())
+        bytes32 challengingTxInputOutputId = data.controller.isDeposit.test(utxoPos.blockNum())
                 ? OutputId.computeDepositOutputId(data.args.inputTx, utxoPos.outputIndex(), utxoPos.value)
                 : OutputId.computeNormalOutputId(data.args.inputTx, utxoPos.outputIndex());
 
-        require(ifeInputOutputId == spendingTxInputOutputId, "Spent input is not the same as piggybacked input");
+        require(ifeInputOutputId == challengingTxInputOutputId, "Spent input is not the same as piggybacked input");
     }
 
     function verifySpendingCondition(ChallengeIFEData memory data) private view {
         ISpendingCondition condition = data.controller.spendingConditionRegistry.spendingConditions(
-            data.args.spendingTxInputOutputType, data.args.spendingTxType
+            data.args.challengingTxInputOutputType, data.args.challengingTxType
         );
         require(address(condition) != address(0), "Spending condition contract not found");
 
@@ -119,9 +119,9 @@ library PaymentChallengeIFEInputSpent {
             data.args.inputTx,
             data.args.inputTxOutputIndex,
             data.args.inputTxPos,
-            data.args.spendingTx,
-            data.args.spendingTxInputIndex,
-            data.args.spendingTxWitness,
+            data.args.challengingTx,
+            data.args.challengingTxInputIndex,
+            data.args.challengingTxWitness,
             data.args.spendingConditionOptionalArgs
         );
         require(isSpent, "Spending condition failed");

@@ -186,7 +186,7 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
             );
 
             // Create a transaction that spends the same input
-            const spendingTx = createInputTransaction(
+            const challengingTx = createInputTransaction(
                 [inputTx.utxoPos],
                 outputOwner,
                 789,
@@ -198,11 +198,11 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
             this.challengeArgs = {
                 inFlightTx: this.testData.argsInputTwo.inFlightTx,
                 inFlightTxInputIndex: this.inFlightTxPiggybackedIndex,
-                spendingTx: web3.utils.bytesToHex(spendingTx.rlpEncoded()),
-                spendingTxType: TX_TYPE.PAYMENT,
-                spendingTxInputIndex: 0,
-                spendingTxInputOutputType: OUTPUT_TYPE.PAYMENT,
-                spendingTxWitness: web3.utils.utf8ToHex('dummy witness'),
+                challengingTx: web3.utils.bytesToHex(challengingTx.rlpEncoded()),
+                challengingTxType: TX_TYPE.PAYMENT,
+                challengingTxInputIndex: 0,
+                challengingTxInputOutputType: OUTPUT_TYPE.PAYMENT,
+                challengingTxWitness: web3.utils.utf8ToHex('dummy witness'),
                 inputTx: inputTx.txBytes,
                 inputTxOutputIndex: inputTx.outputIndex,
                 inputTxPos: inputTx.txPos,
@@ -272,7 +272,7 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
 
         describe('failures', () => {
             it('should fail when ife not started', async () => {
-                this.challengeArgs.inFlightTx = this.challengeArgs.spendingTx;
+                this.challengeArgs.inFlightTx = this.challengeArgs.challengingTx;
 
                 await expectRevert(
                     this.exitGame.challengeInFlightExitInputSpent(this.challengeArgs, { from: challenger }),
@@ -288,17 +288,17 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                 );
             });
 
-            it('should fail when spending tx is the same as in-flight one', async () => {
-                this.challengeArgs.spendingTx = this.challengeArgs.inFlightTx;
+            it('should fail when challenging tx is the same as in-flight one', async () => {
+                this.challengeArgs.challengingTx = this.challengeArgs.inFlightTx;
                 await expectRevert(
                     this.exitGame.challengeInFlightExitInputSpent(this.challengeArgs, { from: challenger }),
-                    'The spending transaction is the same as the in-flight transaction',
+                    'The challenging transaction is the same as the in-flight transaction',
                 );
             });
 
-            it('should fail when the spending transaction input index is incorrect', async () => {
-                this.challengeArgs.spendingTxInputIndex += 1;
-                // The spending condition will fail if the spendingTxInputIndex does not point to
+            it('should fail when the challenging transaction input index is incorrect', async () => {
+                this.challengeArgs.challengingTxInputIndex += 1;
+                // The spending condition will fail if the challengingTxInputIndex does not point to
                 // the correct inputTx output
                 await this.spendingCondition.mockResult(false);
                 await expectRevert(
@@ -320,7 +320,7 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
             });
 
             it('should fail when spending condition for given output is not registered', async () => {
-                this.challengeArgs.spendingTxInputOutputType = OUTPUT_TYPE.PAYMENT + 1;
+                this.challengeArgs.challengingTxInputOutputType = OUTPUT_TYPE.PAYMENT + 1;
                 await expectRevert(
                     this.exitGame.challengeInFlightExitInputSpent(this.challengeArgs, { from: challenger }),
                     'Spending condition contract not found',
