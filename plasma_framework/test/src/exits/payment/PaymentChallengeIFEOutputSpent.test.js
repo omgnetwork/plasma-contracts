@@ -51,10 +51,13 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
         await PaymentInFlightExitRouter.link('PaymentPiggybackInFlightExit', piggybackInFlightExit.address);
         await PaymentInFlightExitRouter.link('PaymentChallengeIFENotCanonical', challengeInFlightExitNotCanonical.address);
         await PaymentInFlightExitRouter.link('PaymentChallengeIFEOutputSpent', challengeIFEOutput.address);
+    });
 
+    before('deploy helper contracts', async () => {
         this.exitIdHelper = await ExitId.new();
         this.stateTransitionVerifierAccept = await StateTransitionVerifierAccept.new();
     });
+
 
     describe('challengeInFlightExitOutputSpent', () => {
         const buildValidChallengeOutputArgs = async () => {
@@ -76,7 +79,7 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
             const filler = web3.utils.sha3('filler');
             const inFlightExit = {
                 exitStartTimestamp: (await time.latest()).toNumber(),
-                exitMap: 0,
+                exitMap: 2 ** 4, // output with index 0 is piggybacked
                 position: 0,
                 bondOwner: bob,
                 oldestCompetitorPosition: 0,
@@ -139,6 +142,7 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
                 this.stateTransitionVerifierAccept.address,
                 IFE_TX_TYPE,
             );
+            this.exitGame.fundForBondPayOut({ from: alice, value: PIGGYBACK_BOND });
 
             const args = await buildValidChallengeOutputArgs();
 
@@ -146,17 +150,6 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
             await this.exitGame.setInFlightExit(args.exitId, args.inFlightExit);
 
             const preimage = web3.utils.bytesToHex('preimage');
-            const piggybackArgs = {
-                inFlightTx: args.inFlightTxBytes,
-                outputIndex: 0,
-                outputType: OUTPUT_TYPE_ONE,
-                outputGuardPreimage: preimage,
-            };
-
-            await this.exitGame.piggybackInFlightExitOnOutput(
-                piggybackArgs, { from: alice, value: PIGGYBACK_BOND },
-            );
-
             this.challengeArgs = {
                 inFlightTx: args.inFlightTxBytes,
                 inFlightTxInclusionProof: args.inclusionProof,
