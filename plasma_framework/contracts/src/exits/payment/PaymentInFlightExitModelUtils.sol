@@ -33,7 +33,7 @@ library PaymentInFlightExitModelUtils {
         ife.exitMap = ife.exitMap.setBit(uint8(index));
     }
 
-    function cancelOutputPiggyback(ExitModel.InFlightExit storage ife, uint16 index)
+    function clearOutputPiggyback(ExitModel.InFlightExit storage ife, uint16 index)
         internal
     {
         uint8 indexInExitMap = uint8(index + MAX_INPUT_NUM);

@@ -4,7 +4,7 @@ const PaymentInFlightExitRouter = artifacts.require('PaymentInFlightExitRouterMo
 const PaymentStartInFlightExit = artifacts.require('PaymentStartInFlightExit');
 const PaymentPiggybackInFlightExit = artifacts.require('PaymentPiggybackInFlightExit');
 const PaymentChallengeIFENotCanonical = artifacts.require('PaymentChallengeIFENotCanonical');
-const PaymentChallengeIFEOutput = artifacts.require('PaymentChallengeIFEOutput');
+const PaymentChallengeIFEOutputSpent = artifacts.require('PaymentChallengeIFEOutputSpent');
 const PaymentSpendingConditionRegistry = artifacts.require('PaymentSpendingConditionRegistry');
 const PaymentSpendingConditionFalse = artifacts.require('PaymentSpendingConditionFalse');
 const PaymentSpendingConditionTrue = artifacts.require('PaymentSpendingConditionTrue');
@@ -22,7 +22,7 @@ const { addressToOutputGuard, computeNormalOutputId, spentOnGas } = require('../
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
 const { MerkleTree } = require('../../../helpers/merkle.js');
 
-contract('PaymentChallengeIFEInputSpent', ([_, alice, bob]) => {
+contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
     const PIGGYBACK_BOND = 31415926535;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
@@ -45,12 +45,12 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, bob]) => {
         const startInFlightExit = await PaymentStartInFlightExit.new();
         const piggybackInFlightExit = await PaymentPiggybackInFlightExit.new();
         const challengeInFlightExitNotCanonical = await PaymentChallengeIFENotCanonical.new();
-        const challengeIFEOutput = await PaymentChallengeIFEOutput.new();
+        const challengeIFEOutput = await PaymentChallengeIFEOutputSpent.new();
 
         await PaymentInFlightExitRouter.link('PaymentStartInFlightExit', startInFlightExit.address);
         await PaymentInFlightExitRouter.link('PaymentPiggybackInFlightExit', piggybackInFlightExit.address);
         await PaymentInFlightExitRouter.link('PaymentChallengeIFENotCanonical', challengeInFlightExitNotCanonical.address);
-        await PaymentInFlightExitRouter.link('PaymentChallengeIFEOutput', challengeIFEOutput.address);
+        await PaymentInFlightExitRouter.link('PaymentChallengeIFEOutputSpent', challengeIFEOutput.address);
 
         this.exitIdHelper = await ExitId.new();
         this.stateTransitionVerifierAccept = await StateTransitionVerifierAccept.new();
@@ -175,7 +175,7 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, bob]) => {
             );
             await expectEvent.inTransaction(
                 receipt.transactionHash,
-                PaymentChallengeIFEOutput,
+                PaymentChallengeIFEOutputSpent,
                 'InFlightExitOutputBlocked',
                 {
                     challenger: bob,
@@ -222,14 +222,6 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, bob]) => {
             await expectRevert(
                 this.exitGame.challengeInFlightExitOutputSpent(this.challengeArgs, { from: bob }),
                 'Output is not piggybacked',
-            );
-        });
-
-        it('should fail when challenging transaction is the same as in-flight transaction', async () => {
-            this.challengeArgs.challengingTx = this.challengeArgs.inFlightTx;
-            await expectRevert(
-                this.exitGame.challengeInFlightExitOutputSpent(this.challengeArgs, { from: bob }),
-                'In-flight transaction and challenging transaction must be different',
             );
         });
 

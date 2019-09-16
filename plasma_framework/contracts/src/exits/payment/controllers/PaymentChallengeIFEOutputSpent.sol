@@ -17,8 +17,9 @@ import "../../../framework/PlasmaFramework.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
 import "../../utils/TxFinalization.sol";
 
-library PaymentChallengeIFEOutput {
+library PaymentChallengeIFEOutputSpent {
     using UtxoPosLib for UtxoPosLib.UtxoPos;
+    using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
 
     uint256 public constant PIGGYBACK_BOND = 31415926535 wei;
 
@@ -59,28 +60,27 @@ library PaymentChallengeIFEOutput {
     {
         uint192 exitId = ExitId.getInFlightExitId(args.inFlightTx);
         PaymentExitDataModel.InFlightExit storage ife = inFlightExitMap.exits[exitId];
-        require(ife.exitStartTimestamp != 0, "In-flight exit doesn't exists");
+        require(ife.exitStartTimestamp != 0, "In-flight exit doesn't exist");
 
         UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(args.outputUtxoPos);
         uint16 outputIndex = UtxoPosLib.outputIndex(utxoPos);
         require(
-            PaymentInFlightExitModelUtils.isOutputPiggybacked(ife, outputIndex),
+            ife.isOutputPiggybacked(outputIndex),
             "Output is not piggybacked"
         );
 
-        verifyInFlightTransactionIncludedInPlasma(controller, args);
-        verifyChallengingAndInFlightTransactionAreDifferent(args);
+        verifyInFlightTransactionStandardFinalized(controller, args);
         verifyOutputType(controller, args);
         verifyChallengingTransactionSpendsOutput(controller, args, ife);
 
-        PaymentInFlightExitModelUtils.cancelOutputPiggyback(ife, outputIndex);
+        ife.clearOutputPiggyback(outputIndex);
 
         //pay bond to challenger
         msg.sender.transfer(PIGGYBACK_BOND);
         emit InFlightExitOutputBlocked(msg.sender, keccak256(args.inFlightTx), outputIndex);
     }
 
-    function verifyInFlightTransactionIncludedInPlasma(
+    function verifyInFlightTransactionStandardFinalized(
         Controller memory controller,
         PaymentInFlightExitRouterArgs.ChallengeOutputSpent memory args
     )
@@ -96,17 +96,6 @@ library PaymentChallengeIFEOutput {
         );
 
         require(TxFinalization.isStandardFinalized(finalizationVerifier), "In-flight transaction not finalized");
-    }
-
-    function verifyChallengingAndInFlightTransactionAreDifferent(
-        PaymentInFlightExitRouterArgs.ChallengeOutputSpent memory args
-    )
-        private
-        pure
-    {
-        bytes32 ifeHash = keccak256(args.inFlightTx);
-        bytes32 challengingTxHash = keccak256(args.challengingTx);
-        require(ifeHash != challengingTxHash, "In-flight transaction and challenging transaction must be different");
     }
 
     function verifyOutputType(
@@ -144,7 +133,7 @@ library PaymentChallengeIFEOutput {
     {
         UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(args.outputUtxoPos);
         uint16 outputIndex = UtxoPosLib.outputIndex(utxoPos);
-        WireTransaction.Output memory output = WireTransaction.getOutput(args.inFlightTx, outputIndex);
+        PaymentTransactionModel.Transaction memory inFlightTx = PaymentTransactionModel.decode(args.inFlightTx);
         uint256 challengingTxType = WireTransaction.getTransactionType(args.challengingTx);
         bytes32 outputId = ife.outputs[outputIndex].outputId;
 
@@ -155,8 +144,8 @@ library PaymentChallengeIFEOutput {
         require(address(condition) != address(0), "Spending condition contract not found");
 
         bool isSpentBySpendingTx = condition.verify(
-            output.outputGuard,
-            uint256(0), // should not be used
+            inFlightTx.outputs[outputIndex].outputGuard,
+            0, // should not be used
             outputId,
             args.challengingTx,
             args.challengingTxInputIndex,

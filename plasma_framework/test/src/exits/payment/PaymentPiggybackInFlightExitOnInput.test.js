@@ -2,7 +2,7 @@ const ExpectedOutputGuardHandler = artifacts.require('ExpectedOutputGuardHandler
 const ExitIdWrapper = artifacts.require('ExitIdWrapper');
 const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry');
 const PaymentChallengeIFENotCanonical = artifacts.require('PaymentChallengeIFENotCanonical');
-const PaymentChallengeIFEOutput = artifacts.require('PaymentChallengeIFEOutput');
+const PaymentChallengeIFEOutputSpent = artifacts.require('PaymentChallengeIFEOutputSpent');
 const PaymentInFlightExitRouter = artifacts.require('PaymentInFlightExitRouterMock');
 const PaymentPiggybackInFlightExit = artifacts.require('PaymentPiggybackInFlightExit');
 const PaymentStartInFlightExit = artifacts.require('PaymentStartInFlightExit');
@@ -41,12 +41,12 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
         const startInFlightExit = await PaymentStartInFlightExit.new();
         const piggybackInFlightExit = await PaymentPiggybackInFlightExit.new();
         const challengeInFlightExitNotCanonical = await PaymentChallengeIFENotCanonical.new();
-        const challengeIFEOutput = await PaymentChallengeIFEOutput.new();
+        const challengeIFEOutput = await PaymentChallengeIFEOutputSpent.new();
 
         await PaymentInFlightExitRouter.link('PaymentStartInFlightExit', startInFlightExit.address);
         await PaymentInFlightExitRouter.link('PaymentPiggybackInFlightExit', piggybackInFlightExit.address);
         await PaymentInFlightExitRouter.link('PaymentChallengeIFENotCanonical', challengeInFlightExitNotCanonical.address);
-        await PaymentInFlightExitRouter.link('PaymentChallengeIFEOutput', challengeIFEOutput.address);
+        await PaymentInFlightExitRouter.link('PaymentChallengeIFEOutputSpent', challengeIFEOutput.address);
     });
 
     before('deploy helper contracts', async () => {
