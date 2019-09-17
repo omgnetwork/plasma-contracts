@@ -88,6 +88,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
                 exitTarget: constants.ZERO_ADDRESS,
                 token: constants.ZERO_ADDRESS,
                 amount: 0,
+                piggybackBondSize: 0,
             };
 
             const inFlightExitData = {
@@ -101,17 +102,20 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
                     exitTarget: inputOwner,
                     token: ETH,
                     amount: 999,
+                    piggybackBondSize: 0,
                 }, {
                     outputId: web3.utils.sha3('dummy output id'),
                     exitTarget: inputOwner,
                     token: ETH,
                     amount: 998,
+                    piggybackBondSize: 0,
                 }, emptyWithdrawData, emptyWithdrawData],
                 outputs: [{
                     outputId: web3.utils.sha3('dummy output id'),
                     exitTarget: outputOwner,
                     token: ETH,
                     amount: outputAmount,
+                    piggybackBondSize: 0,
                 }, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData],
             };
 
@@ -268,6 +272,12 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
 
                 // input index = 0 --> flag the right most position to 1 on exit map thus equals 1
                 expect(new BN(exit.exitMap)).to.be.bignumber.equal(new BN(1));
+            });
+
+            it('should set a proper piggyback bond size', async () => {
+                const exit = await this.exitGame.inFlightExits(this.testData.exitId);
+
+                expect(new BN(exit.inputs[0].piggybackBondSize)).to.be.bignumber.equal(new BN(PIGGYBACK_BOND));
             });
 
             it('should emit InFlightExitInputPiggybacked event', async () => {

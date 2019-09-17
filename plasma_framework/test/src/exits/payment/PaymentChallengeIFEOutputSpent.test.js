@@ -37,6 +37,7 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
         exitTarget: constants.ZERO_ADDRESS,
         token: constants.ZERO_ADDRESS,
         amount: 0,
+        piggybackBondSize: 0,
     };
     const BLOCK_NUM = 1000;
     const MAX_NUM_OF_INPUTS = 4;
@@ -89,6 +90,7 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
                     exitTarget: alice,
                     token: ETH,
                     amount: AMOUNT,
+                    piggybackBondSize: PIGGYBACK_BOND,
                 }, DUMMY_WITHDRAW_DATA, DUMMY_WITHDRAW_DATA, DUMMY_WITHDRAW_DATA],
                 outputs: [{
                     outputId: filler,
@@ -96,12 +98,14 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
                     exitTarget: alice,
                     token: ETH,
                     amount: AMOUNT,
+                    piggybackBondSize: PIGGYBACK_BOND,
                 }, {
                     outputId: filler,
                     outputGuard: filler,
                     exitTarget: alice,
                     token: ETH,
                     amount: AMOUNT,
+                    piggybackBondSize: PIGGYBACK_BOND,
                 }, DUMMY_WITHDRAW_DATA, DUMMY_WITHDRAW_DATA],
             };
 

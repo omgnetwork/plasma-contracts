@@ -21,8 +21,6 @@ library PaymentChallengeIFEOutputSpent {
     using UtxoPosLib for UtxoPosLib.UtxoPos;
     using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
 
-    uint256 public constant PIGGYBACK_BOND = 31415926535 wei;
-
     struct Controller {
         PlasmaFramework framework;
         SpendingConditionRegistry spendingConditionRegistry;
@@ -76,7 +74,7 @@ library PaymentChallengeIFEOutputSpent {
         ife.clearOutputPiggyback(outputIndex);
 
         //pay bond to challenger
-        msg.sender.transfer(PIGGYBACK_BOND);
+        msg.sender.transfer(ife.outputs[outputIndex].piggybackBondSize);
         emit InFlightExitOutputBlocked(msg.sender, keccak256(args.inFlightTx), outputIndex);
     }
 

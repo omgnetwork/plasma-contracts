@@ -23,6 +23,7 @@ library PaymentExitDataModel {
         address payable exitTarget;
         address token;
         uint256 amount;
+        uint256 piggybackBondSize;
     }
 
     struct InFlightExit {

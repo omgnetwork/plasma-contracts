@@ -105,6 +105,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, outputOwner, nonOu
                 exitTarget: constants.ZERO_ADDRESS,
                 token: constants.ZERO_ADDRESS,
                 amount: 0,
+                piggybackBondSize: 0,
             };
 
             const inFlightExitData = {
@@ -118,17 +119,20 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, outputOwner, nonOu
                     exitTarget: inputOwner,
                     token: ETH,
                     amount: 999,
+                    piggybackBondSize: 0,
                 }, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData],
                 outputs: [{
                     outputId: web3.utils.sha3('dummy output id'),
                     exitTarget: constants.ZERO_ADDRESS, // would not be set during start IFE
                     token: ETH,
                     amount: outputAmount1,
+                    piggybackBondSize: 0,
                 }, {
                     outputId: web3.utils.sha3('dummy output id'),
                     exitTarget: constants.ZERO_ADDRESS, // would not be set during start IFE
                     token: ETH,
                     amount: outputAmount2,
+                    piggybackBondSize: 0,
                 }, emptyWithdrawData, emptyWithdrawData],
             };
 
@@ -357,6 +361,12 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, outputOwner, nonOu
                 const positionToFlag = MAX_INPUT_SIZE + this.testData.outputOneCase.args.outputIndex;
                 const expectedExitMap = (new BN(2)).pow(new BN(positionToFlag));
                 expect(new BN(exit.exitMap)).to.be.bignumber.equal(expectedExitMap);
+            });
+
+            it('should set a proper piggyback bond size', async () => {
+                const exit = await this.exitGame.inFlightExits(this.testData.exitId);
+
+                expect(new BN(exit.outputs[0].piggybackBondSize)).to.be.bignumber.equal(new BN(PIGGYBACK_BOND));
             });
 
             it('should set the correct exit target to withdraw data on the output of exit data', async () => {
