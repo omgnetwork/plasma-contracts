@@ -13,7 +13,7 @@ library WireTransaction {
 
     struct Output {
         uint256 amount;
-        bytes32 outputGuard;
+        bytes20 outputGuard;
         address token;
     }
 
@@ -27,10 +27,19 @@ library WireTransaction {
         require(outputIndex < outputs.length, "Invalid wire transaction format");
 
         RLP.RLPItem[] memory output = outputs[outputIndex].toList();
-        bytes32 outputGuard = output[0].toBytes32();
+        bytes20 outputGuard = bytes20(output[0].toAddress());
         address token = output[1].toAddress();
         uint256 amount = output[2].toUint();
-        
+
         return Output(amount, outputGuard, token);
+    }
+
+    /**
+    * @dev Returns transaction type for transaction in wire format.
+    * Transaction type is the value of first field in rlp encoded list.
+    */
+    function getTransactionType(bytes memory transaction) internal pure returns (uint256) {
+        RLP.RLPItem[] memory rlpTx = transaction.toRLPItem().toList();
+        return rlpTx[0].toUint();
     }
 }

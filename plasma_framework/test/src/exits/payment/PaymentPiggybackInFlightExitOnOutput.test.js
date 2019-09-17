@@ -6,7 +6,7 @@ const PaymentInFlightExitRouter = artifacts.require('PaymentInFlightExitRouterMo
 const PaymentPiggybackInFlightExit = artifacts.require('PaymentPiggybackInFlightExit');
 const PaymentStartInFlightExit = artifacts.require('PaymentStartInFlightExit');
 const PaymentProcessInFlightExit = artifacts.require('PaymentProcessInFlightExit');
-const PaymentSpendingConditionRegistry = artifacts.require('PaymentSpendingConditionRegistry');
+const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry');
 const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const StateTransitionVerifierAccept = artifacts.require('StateTransitionVerifierAccept');
 const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
@@ -19,9 +19,7 @@ const { expect } = require('chai');
 
 const { calculateNormalExitable } = require('../../../helpers/exitable.js');
 const { buildUtxoPos, utxoPosToTxPos } = require('../../../helpers/positions.js');
-const {
-    addressToOutputGuard, buildOutputGuard,
-} = require('../../../helpers/utils.js');
+const { buildOutputGuard } = require('../../../helpers/utils.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
 
 contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, outputOwner, nonOutputOwner]) => {
@@ -68,7 +66,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, outputOwner, nonOu
         const erc20Vault = await SpyErc20Vault.new(this.framework.address);
 
         this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
-        const spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
+        const spendingConditionRegistry = await SpendingConditionRegistry.new();
 
         this.exitGame = await PaymentInFlightExitRouter.new(
             this.framework.address,
@@ -100,7 +98,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, outputOwner, nonOu
          * */
         const buildPiggybackOutputData = async () => {
             const outputAmount1 = 499;
-            const outputGuard1 = addressToOutputGuard(outputOwner);
+            const outputGuard1 = outputOwner;
             const output1 = new PaymentTransactionOutput(outputAmount1, outputGuard1, ETH);
 
             const outputAmount2 = 498;

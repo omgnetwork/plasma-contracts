@@ -16,6 +16,13 @@ contract Erc20Vault is Vault {
         uint256 amount
     );
 
+    event DepositCreated(
+        address indexed depositor,
+        uint256 indexed blknum,
+        address indexed token,
+        uint256 amount
+    );
+
     constructor(PlasmaFramework _framework) public Vault(_framework) {}
 
     /**
@@ -28,7 +35,9 @@ contract Erc20Vault is Vault {
 
         IERC20(token).safeTransferFrom(owner, address(this), amount);
 
-        super._submitDepositBlock(_depositTx);
+        uint256 blknum = super._submitDepositBlock(_depositTx);
+
+        emit DepositCreated(msg.sender, blknum, token, amount);
     }
 
     /**

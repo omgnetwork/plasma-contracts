@@ -7,7 +7,7 @@ import "../controllers/PaymentStartInFlightExit.sol";
 import "../controllers/PaymentPiggybackInFlightExit.sol";
 import "../controllers/PaymentChallengeIFENotCanonical.sol";
 import "../controllers/PaymentProcessInFlightExit.sol";
-import "../spendingConditions/PaymentSpendingConditionRegistry.sol";
+import "../../registries/SpendingConditionRegistry.sol";
 import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../interfaces/IStateTransitionVerifier.sol";
 import "../../../utils/OnlyWithValue.sol";
@@ -34,7 +34,7 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyWithValue {
         EthVault ethVault,
         Erc20Vault erc20Vault,
         OutputGuardHandlerRegistry outputGuardHandlerRegistry,
-        PaymentSpendingConditionRegistry spendingConditionRegistry,
+        SpendingConditionRegistry spendingConditionRegistry,
         IStateTransitionVerifier verifier,
         uint256 supportedTxType
     )
@@ -54,11 +54,12 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyWithValue {
             outputGuardHandlerRegistry
         );
 
-        challengeCanonicityController = PaymentChallengeIFENotCanonical.Controller({
-            framework: framework,
-            spendingConditionRegistry: spendingConditionRegistry,
-            supportedTxType: supportedTxType
-        });
+        challengeCanonicityController = PaymentChallengeIFENotCanonical.buildController(
+            framework,
+            spendingConditionRegistry,
+            outputGuardHandlerRegistry,
+            supportedTxType
+        );
 
         processInflightExitController = PaymentProcessInFlightExit.Controller({
             framework: framework,

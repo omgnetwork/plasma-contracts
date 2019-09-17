@@ -15,7 +15,7 @@ contract PaymentInFlightExitRouterMock is PaymentInFlightExitRouter {
         EthVault ethVault,
         Erc20Vault erc20Vault,
         OutputGuardHandlerRegistry outputGuardHandlerRegistry,
-        PaymentSpendingConditionRegistry spendingConditionRegistry,
+        SpendingConditionRegistry spendingConditionRegistry,
         IStateTransitionVerifier verifier,
         uint256 supportedTxType
     )

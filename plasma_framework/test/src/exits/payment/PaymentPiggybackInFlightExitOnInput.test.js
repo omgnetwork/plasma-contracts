@@ -6,7 +6,7 @@ const PaymentInFlightExitRouter = artifacts.require('PaymentInFlightExitRouterMo
 const PaymentPiggybackInFlightExit = artifacts.require('PaymentPiggybackInFlightExit');
 const PaymentStartInFlightExit = artifacts.require('PaymentStartInFlightExit');
 const PaymentProcessInFlightExit = artifacts.require('PaymentProcessInFlightExit');
-const PaymentSpendingConditionRegistry = artifacts.require('PaymentSpendingConditionRegistry');
+const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry');
 const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
@@ -19,9 +19,6 @@ const { expect } = require('chai');
 
 const { calculateNormalExitable } = require('../../../helpers/exitable.js');
 const { buildUtxoPos, utxoPosToTxPos } = require('../../../helpers/positions.js');
-const {
-    addressToOutputGuard,
-} = require('../../../helpers/utils.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
 
 contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, outputOwner]) => {
@@ -66,7 +63,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
         const erc20Vault = await SpyErc20Vault.new(this.framework.address);
 
         this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
-        const spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
+        const spendingConditionRegistry = await SpendingConditionRegistry.new();
 
         this.exitGame = await PaymentInFlightExitRouter.new(
             this.framework.address,
@@ -86,7 +83,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
          */
         const buildPiggybackInputData = async () => {
             const outputAmount = 997;
-            const outputGuard = addressToOutputGuard(outputOwner);
+            const outputGuard = outputOwner;
             const output = new PaymentTransactionOutput(outputAmount, outputGuard, ETH);
 
             const dummyInputUtxopos1 = buildUtxoPos(BLOCK_NUMBER, 0, 0);

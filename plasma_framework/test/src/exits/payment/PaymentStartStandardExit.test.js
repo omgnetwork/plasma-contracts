@@ -7,7 +7,7 @@ const PaymentChallengeStandardExit = artifacts.require('PaymentChallengeStandard
 const PaymentProcessStandardExit = artifacts.require('PaymentProcessStandardExit');
 const PaymentStandardExitRouter = artifacts.require('PaymentStandardExitRouterMock');
 const PaymentStartStandardExit = artifacts.require('PaymentStartStandardExit');
-const PaymentSpendingConditionRegistry = artifacts.require('PaymentSpendingConditionRegistry');
+const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry');
 const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
@@ -21,7 +21,7 @@ const { OUTPUT_TYPE } = require('../../../helpers/constants.js');
 const { MerkleTree } = require('../../../helpers/merkle.js');
 const { buildUtxoPos, utxoPosToTxPos } = require('../../../helpers/positions.js');
 const {
-    addressToOutputGuard, computeDepositOutputId,
+    computeDepositOutputId,
     computeNormalOutputId, spentOnGas,
 } = require('../../../helpers/utils.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
@@ -51,7 +51,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
             outputType = OUTPUT_TYPE.PAYMENT,
             outputGuardPreimage = EMPTY_BYTES,
         ) => {
-            const output = new PaymentTransactionOutput(amount, addressToOutputGuard(owner), ETH);
+            const output = new PaymentTransactionOutput(amount, owner, ETH);
             const txObj = new PaymentTransaction(1, [0], [output]);
             const tx = web3.utils.bytesToHex(txObj.rlpEncoded());
 
@@ -89,7 +89,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
 
             const ethVault = await SpyEthVault.new(this.framework.address);
             const erc20Vault = await SpyErc20Vault.new(this.framework.address);
-            const spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
+            const spendingConditionRegistry = await SpendingConditionRegistry.new();
             this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
 
             const handler = await ExpectedOutputGuardHandler.new();

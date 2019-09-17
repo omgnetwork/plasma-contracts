@@ -12,6 +12,7 @@ library PaymentInFlightExitRouterArgs {
     * @param inputTxsInclusionProofs Merkle proofs that show the input-creating transactions are valid. In the same order as input transactions.
     * @param inputTxsConfirmSigs Confirm signatures for the input txs. Should be empty bytes if the input tx is MoreVP.
     * @param inFlightTxWitnesses Witnesses for in-flight transaction. In the same order as input transactions.
+    * @param inputSpendingConditionOptionalArgs Optional args for the spending condition for checking inputs. Should provide empty bytes if nothing is required.
     */
     struct StartExitArgs {
         bytes inFlightTx;
@@ -23,6 +24,7 @@ library PaymentInFlightExitRouterArgs {
         bytes[] inputTxsInclusionProofs;
         bytes[] inputTxsConfirmSigs;
         bytes[] inFlightTxWitnesses;
+        bytes[] inputSpendingConditionOptionalArgs;
     }
 
     /**
@@ -55,19 +57,27 @@ library PaymentInFlightExitRouterArgs {
      * @param inFlightTxInputIndex Index of shared input in transaction in flight.
      * @param competingTx RLP encoded competing transaction.
      * @param competingTxInputIndex Index of shared input in competing transaction.
-     * @param competingTxInputOutputType Output type of shared input.
+     * @param outputType Output type of shared input.
+     * @param outputGuardPreimage Output guard preimage of the shared input.
      * @param competingTxPos (optional) Position of competing transaction in chain if included.
      * @param competingTxInclusionProof (optional) Merkle proofs that show the competing transaction was contained in chain.
      * @param competingTxWitness Witness for competing transaction.
+     * @param competingTxConfirmSig (optional) Confirm signature if the competing tx is of MVP protocol.
+     * @param competingTxSpendingConditionOptionalArgs (optional) Optional arguments for the spending condition
      */
     struct ChallengeCanonicityArgs {
+        bytes inputTx;
+        uint256 inputUtxoPos;
         bytes inFlightTx;
-        uint8 inFlightTxInputIndex;
+        uint16 inFlightTxInputIndex;
         bytes competingTx;
-        uint8 competingTxInputIndex;
-        uint256 competingTxInputOutputType;
+        uint16 competingTxInputIndex;
+        uint256 outputType;
+        bytes outputGuardPreimage;
         uint256 competingTxPos;
         bytes competingTxInclusionProof;
         bytes competingTxWitness;
+        bytes competingTxConfirmSig;
+        bytes competingTxSpendingConditionOptionalArgs;
     }
 }

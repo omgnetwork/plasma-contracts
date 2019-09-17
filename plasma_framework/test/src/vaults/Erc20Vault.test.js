@@ -51,6 +51,25 @@ contract('Erc20Vault', (accounts) => {
             expect(postDepositBlockNumber).to.be.equal(preDepositBlockNumber + 1);
         });
 
+        it('should emit deposit event', async () => {
+            await this.erc20.approve(this.erc20Vault.address, DEPOSIT_VALUE, { from: alice });
+            const preDepositBlockNumber = await this.framework.nextDepositBlock();
+
+            const deposit = Testlang.deposit(DEPOSIT_VALUE, alice, this.erc20.address);
+            const { receipt } = await this.erc20Vault.deposit(deposit, { from: alice });
+            await expectEvent.inTransaction(
+                receipt.transactionHash,
+                Erc20Vault,
+                'DepositCreated',
+                {
+                    depositor: alice,
+                    blknum: preDepositBlockNumber,
+                    token: this.erc20.address,
+                    amount: new BN(DEPOSIT_VALUE),
+                },
+            );
+        });
+
         it('should spend erc20 tokens from depositing user', async () => {
             const preDepositBalance = await this.erc20.balanceOf(alice);
 
@@ -110,24 +129,23 @@ contract('Erc20Vault', (accounts) => {
             );
         });
 
-        it('should not accept transaction that does not conform to deposit input format', async () => {
-            const invalidInput = Buffer.alloc(32, 1);
+        it('should not accept transaction with inputs', async () => {
             const output = new PaymentTransactionOutput(DEPOSIT_VALUE, alice, this.erc20.address);
-            const deposit = new PaymentTransaction(1, [invalidInput], [output]);
+            const deposit = new PaymentTransaction(1, [0], [output]);
 
             await expectRevert(
                 this.erc20Vault.deposit(deposit.rlpEncoded(), { from: alice }),
-                'Deposit input must be bytes32 of 0',
+                'Deposit must have no inputs',
             );
         });
 
         it('should not accept transaction with more than one output', async () => {
             const output = new PaymentTransactionOutput(DEPOSIT_VALUE, alice, this.erc20.address);
-            const deposit = new PaymentTransaction(1, [0], [output, output]);
+            const deposit = new PaymentTransaction(1, [], [output, output]);
 
             await expectRevert(
                 this.erc20Vault.deposit(deposit.rlpEncoded(), { from: alice }),
-                'Must have only one output',
+                'Deposit must have exactly one output',
             );
         });
     });

@@ -123,7 +123,7 @@ library PaymentPiggybackInFlightExit {
 
         // Though for inputs, exit target is set during start inFlight exit.
         // For outputs since the output preimage data is hold by the output owners themselves, need to get those on piggyback.
-        bytes32 outputGuard = getOutputGuardFromPaymentTxBytes(args.inFlightTx, args.outputIndex);
+        bytes20 outputGuard = getOutputGuardFromPaymentTxBytes(args.inFlightTx, args.outputIndex);
         address payable exitTarget = getExitTargetOfOutput(self, outputGuard, args.outputType, args.outputGuardPreimage);
         require(exitTarget == msg.sender, "Can be called by the exit target only");
 
@@ -161,7 +161,7 @@ library PaymentPiggybackInFlightExit {
     function getOutputGuardFromPaymentTxBytes(bytes memory txBytes, uint16 outputIndex)
         private
         pure
-        returns (bytes32)
+        returns (bytes20)
     {
         PaymentOutputModel.Output memory output = PaymentTransactionModel.decode(txBytes).outputs[outputIndex];
         return output.outputGuard;
@@ -169,7 +169,7 @@ library PaymentPiggybackInFlightExit {
 
     function getExitTargetOfOutput(
         Controller memory controller,
-        bytes32 outputGuard,
+        bytes20 outputGuard,
         uint256 outputType,
         bytes memory outputGuardPreimage
     )

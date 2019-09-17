@@ -20,7 +20,7 @@ const {
 } = require('../../../helpers/constants.js');
 const { buildUtxoPos, UtxoPos } = require('../../../helpers/positions.js');
 const {
-    addressToOutputGuard, spentOnGas, computeNormalOutputId,
+    spentOnGas, computeNormalOutputId,
 } = require('../../../helpers/utils.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
 
@@ -33,6 +33,7 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
     const TEST_AMOUNT = 666666;
     const TEST_BLOCK_NUM = 1000;
     const TEST_OUTPUT_INDEX = 0;
+    const EXITING_TX_UTXOPOS = buildUtxoPos(TEST_BLOCK_NUM, 0, TEST_OUTPUT_INDEX);
 
     before('deploy and link with controller lib', async () => {
         const startStandardExit = await PaymentStartStandardExit.new();
@@ -46,16 +47,18 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
 
     describe('challengeStandardExit', () => {
         const getTestInputArgs = (outputType, ouputOwner) => {
-            const output = new PaymentTransactionOutput(TEST_AMOUNT, addressToOutputGuard(ouputOwner), ETH);
-            const txObj = new PaymentTransaction(outputType, [0], [output]);
-            const tx = web3.utils.bytesToHex(txObj.rlpEncoded());
+            const output = new PaymentTransactionOutput(TEST_AMOUNT, ouputOwner, ETH);
+            const exitingTxObj = new PaymentTransaction(TX_TYPE.PAYMENT, [0], [output]);
+            const exitingTx = web3.utils.bytesToHex(exitingTxObj.rlpEncoded());
+
+            const challengeTxObj = new PaymentTransaction(TX_TYPE.PAYMENT, [EXITING_TX_UTXOPOS], [output]);
+            const challengeTx = web3.utils.bytesToHex(challengeTxObj.rlpEncoded());
 
             return {
                 exitId: 123,
                 outputType,
-                exitingTx: tx,
-                challengeTxType: TX_TYPE.PAYMENT,
-                challengeTx: web3.utils.utf8ToHex('dummy challenge tx'),
+                exitingTx,
+                challengeTx,
                 inputIndex: 0,
                 witness: web3.utils.utf8ToHex('dummy witness'),
                 spendingConditionOptionalArgs: web3.utils.utf8ToHex('dummy optional args'),
@@ -68,7 +71,7 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
 
         const getTestExitData = (args, exitTarget, bondSize) => ({
             exitable: true,
-            utxoPos: buildUtxoPos(TEST_BLOCK_NUM, 0, TEST_OUTPUT_INDEX),
+            utxoPos: EXITING_TX_UTXOPOS,
             outputId: computeNormalOutputId(args.exitingTx, TEST_OUTPUT_INDEX),
             token: ETH,
             exitTarget,
@@ -184,7 +187,12 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
                 // the test data is only setup for MoreVp, MVP would fail for inclusion proof + confirm sig check
                 const mvpTxType = 999;
                 await this.framework.registerExitGame(mvpTxType, dummyExitGame.address, PROTOCOL.MVP);
-                args.challengeTxType = mvpTxType;
+
+                // override the challenge tx with new tx type
+                const output = new PaymentTransactionOutput(TEST_AMOUNT, alice, ETH);
+                const challengeTxObj = new PaymentTransaction(mvpTxType, [EXITING_TX_UTXOPOS], [output]);
+                const challengeTx = web3.utils.bytesToHex(challengeTxObj.rlpEncoded());
+                args.challengeTx = challengeTx;
 
                 await this.exitGame.setExit(args.exitId, getTestExitData(args, alice, this.startStandardExitBondSize));
 
@@ -227,7 +235,7 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
                 await this.exitGame.setExit(args.exitId, exitData);
 
                 const expectedArgs = {
-                    guard: addressToOutputGuard(alice),
+                    guard: alice,
                     outputType: OUTPUT_TYPE.PAYMENT,
                     preimage: args.outputGuardPreimage,
                 };

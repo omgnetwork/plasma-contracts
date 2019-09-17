@@ -3,7 +3,7 @@ const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry
 const PaymentChallengeStandardExit = artifacts.require('PaymentChallengeStandardExit');
 const PaymentProcessStandardExit = artifacts.require('PaymentProcessStandardExit');
 const PaymentStandardExitRouter = artifacts.require('PaymentStandardExitRouterMock');
-const PaymentSpendingConditionRegistry = artifacts.require('PaymentSpendingConditionRegistry');
+const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry');
 const PaymentStartStandardExit = artifacts.require('PaymentStartStandardExit');
 const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
@@ -43,7 +43,7 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
             const ethVault = await SpyEthVault.new(this.framework.address);
             const erc20Vault = await SpyErc20Vault.new(this.framework.address);
             const outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
-            const spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
+            const spendingConditionRegistry = await SpendingConditionRegistry.new();
 
             this.exitGame = await PaymentStandardExitRouter.new(
                 this.framework.address, ethVault.address, erc20Vault.address,

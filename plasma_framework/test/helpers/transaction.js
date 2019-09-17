@@ -22,8 +22,7 @@ class PaymentTransactionOutput {
 
     static parseFromContractOutput(output) {
         const amount = parseInt(output.amount, 10);
-        const outputGuard = web3.eth.abi.decodeParameter('bytes32', output.outputGuard);
-        return new PaymentTransactionOutput(amount, outputGuard, output.token);
+        return new PaymentTransactionOutput(amount, output.outputGuard, output.token);
     }
 }
 
@@ -50,13 +49,13 @@ class PaymentTransaction {
     }
 
     isDeposit() {
-        return this.inputs === [EMPTY_BYTES32];
+        return this.inputs === [];
     }
 }
 
 class PlasmaDepositTransaction extends PaymentTransaction {
     constructor(output, metaData = EMPTY_BYTES32) {
-        super(TransactionTypes.PLASMA_DEPOSIT, [EMPTY_BYTES32], [output], metaData);
+        super(TransactionTypes.PLASMA_DEPOSIT, [], [output], metaData);
     }
 }
 

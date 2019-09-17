@@ -30,12 +30,10 @@ library PaymentTransactionModel {
         );
 
         RLP.RLPItem[] memory rlpInputs = rlpTx[1].toList();
-        require(rlpInputs.length > 0, "Transaction must have inputs");
-        require(rlpInputs.length < MAX_INPUT_NUM, "Transaction inputs num exceeds limit");
+        require(rlpInputs.length <= MAX_INPUT_NUM, "Transaction inputs num exceeds limit");
 
         RLP.RLPItem[] memory rlpOutputs = rlpTx[2].toList();
-        require(rlpOutputs.length > 0, "Transaction must have outputs");
-        require(rlpOutputs.length < MAX_OUTPUT_NUM, "Transaction outputs num exceeds limit");
+        require(rlpOutputs.length <= MAX_OUTPUT_NUM, "Transaction outputs num exceeds limit");
 
         uint txType = rlpTx[0].toUint();
 

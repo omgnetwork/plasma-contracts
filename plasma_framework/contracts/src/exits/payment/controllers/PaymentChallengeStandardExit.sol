@@ -16,6 +16,7 @@ import "../../../framework/PlasmaFramework.sol";
 import "../../../utils/UtxoPosLib.sol";
 import "../../../utils/IsDeposit.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
+import "../../../transactions/WireTransaction.sol";
 import "../../../transactions/outputs/PaymentOutputModel.sol";
 
 library PaymentChallengeStandardExit {
@@ -106,7 +107,8 @@ library PaymentChallengeStandardExit {
         require(outputGuardHandler.isValid(outputGuardData),
                 "Output guard information is invalid");
 
-        uint8 protocol = data.controller.framework.protocols(data.args.challengeTxType);
+        uint256 challengeTxType = WireTransaction.getTransactionType(data.args.challengeTx);
+        uint8 protocol = data.controller.framework.protocols(challengeTxType);
         TxFinalization.Verifier memory verifier = TxFinalization.Verifier({
             framework: data.controller.framework,
             protocol: protocol,
@@ -124,8 +126,9 @@ library PaymentChallengeStandardExit {
 
         // correctness of output type is checked in the outputGuardHandler.isValid(...)
         // inside verifyChallengeTxProtocolFinalized(...)
+        uint256 challengeTxType = WireTransaction.getTransactionType(data.args.challengeTx);
         ISpendingCondition condition = data.controller.spendingConditionRegistry.spendingConditions(
-            args.outputType, args.challengeTxType
+            args.outputType, challengeTxType
         );
         require(address(condition) != address(0), "Spending condition contract not found");
 
@@ -134,7 +137,6 @@ library PaymentChallengeStandardExit {
                 ? OutputId.computeDepositOutputId(args.exitingTx, utxoPos.outputIndex(), utxoPos.value)
                 : OutputId.computeNormalOutputId(args.exitingTx, utxoPos.outputIndex());
         require(outputId == data.exitData.outputId, "The exiting tx is not valid, thus causing outputId mismatch");
-
         bool isSpentByChallengeTx = condition.verify(
             args.exitingTx,
             utxoPos.outputIndex(),

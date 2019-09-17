@@ -29,13 +29,14 @@ contract Vault is Operated {
         _;
     }
 
-    function _submitDepositBlock(bytes memory _depositTx) internal {
+    function _submitDepositBlock(bytes memory _depositTx) internal returns (uint256) {
         bytes32 root = keccak256(_depositTx);
         for (uint i = 0; i < 16; i++) {
             root = keccak256(abi.encodePacked(root, zeroHashes[i]));
         }
 
-        framework.submitDepositBlock(root);
+        uint256 depositBlkNum = framework.submitDepositBlock(root);
+        return depositBlkNum;
     }
 
     /**
