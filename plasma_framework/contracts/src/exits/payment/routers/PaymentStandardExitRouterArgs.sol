@@ -22,7 +22,6 @@ library PaymentStandardExitRouterArgs {
      * @param exitId Identifier of the standard exit to challenge.
      * @param outputType The output type of the exiting output.
      * @param exitingTx The transaction that is exiting.
-     * @param challengeTxType The tx type of the challenge transaction.
      * @param challengeTx RLP encoded transaction that spends the exiting output.
      * @param inputIndex Which input of the challenging tx corresponds to the exiting output.
      * @param witness Witness data that can prove the exiting output is spent.
@@ -36,7 +35,6 @@ library PaymentStandardExitRouterArgs {
         uint192 exitId;
         uint256 outputType;
         bytes exitingTx;
-        uint256 challengeTxType;
         bytes challengeTx;
         uint16 inputIndex;
         bytes witness;

@@ -17,11 +17,9 @@ const OUTPUT_TYPE_TWO = 2;
 const IFE_TX_TYPE = 1;
 const WITNESS_LENGTH_IN_BYTES = 65;
 const IN_FLIGHT_TX_WITNESS_BYTES = web3.utils.bytesToHex('a'.repeat(WITNESS_LENGTH_IN_BYTES));
-const BLOCK_NUMBER = 1000;
 const DUMMY_INPUT_1 = '0x0000000000000000000000000000000000000000000000000000000000000001';
 const DUMMY_INPUT_2 = '0x0000000000000000000000000000000000000000000000000000000000000002';
 const MERKLE_TREE_HEIGHT = 3;
-const AMOUNT = 10;
 
 function isDeposit(blockNum) {
     return blockNum % CHILD_BLOCK_INTERVAL !== 0;
@@ -88,6 +86,8 @@ function buildIfeStartArgs([inputTx1, inputTx2], [inputOwner1, inputOwner2], inp
 
     const inFlightTxWitnesses = [IN_FLIGHT_TX_WITNESS_BYTES, IN_FLIGHT_TX_WITNESS_BYTES];
 
+    const inputSpendingConditionOptionalArgs = [EMPTY_BYTES, EMPTY_BYTES];
+
     const inputTxTypes = [IFE_TX_TYPE, IFE_TX_TYPE];
 
     const outputGuardPreimagesForInputs = [
@@ -105,6 +105,7 @@ function buildIfeStartArgs([inputTx1, inputTx2], [inputOwner1, inputOwner2], inp
         inputTxsInclusionProofs,
         inputTxsConfirmSigs,
         inFlightTxWitnesses,
+        inputSpendingConditionOptionalArgs,
     };
 
     const inputTxsBlockRoot1 = merkleTree1.root;
@@ -148,17 +149,6 @@ function createInputsForInFlightTx(inputTxs, inputUtxosPos) {
     return inputs;
 }
 
-function createCompetitorTransaction(inputs, owner) {
-    const utxoPos = new UtxoPos(inputs[0]);
-    const competingTx = createInputTransaction(inputs, owner, AMOUNT);
-    const competingTxPos = new UtxoPos(buildUtxoPos(utxoPos.blockNum + CHILD_BLOCK_INTERVAL, 0, 0));
-
-    return {
-        competingTx: web3.utils.bytesToHex(competingTx.rlpEncoded()),
-        decodedCompetingTx: competingTx,
-        competingTxPos,
-    };
-}
 
 function createInclusionProof(encodedTx, txUtxoPos) {
     const merkleTree = new MerkleTree([encodedTx], MERKLE_TREE_HEIGHT);
@@ -172,47 +162,13 @@ function createInclusionProof(encodedTx, txUtxoPos) {
     };
 }
 
-function buildValidNoncanonicalChallengeArgs(decodedIfeTx, competitorOwner) {
-    const utxoPos = new UtxoPos(buildUtxoPos(BLOCK_NUMBER, 2, 2));
-    const { competingTx, decodedCompetingTx, competingTxPos } = createCompetitorTransaction(
-        [utxoPos.utxoPos, decodedIfeTx.inputs[0]], competitorOwner,
-    );
-
-    const {
-        inclusionProof, blockHash, blockNum, blockTimestamp,
-    } = createInclusionProof(
-        competingTx, competingTxPos,
-    );
-
-    const competingTxWitness = competitorOwner;
-
-    return {
-        args: {
-            inFlightTx: web3.utils.bytesToHex(decodedIfeTx.rlpEncoded()),
-            inFlightTxInputIndex: 0,
-            competingTx,
-            competingTxInputIndex: 1,
-            competingTxInputOutputType: OUTPUT_TYPE_ONE,
-            competingTxPos: competingTxPos.utxoPos,
-            competingTxInclusionProof: inclusionProof,
-            competingTxWitness,
-        },
-        block: {
-            blockHash, blockNum, blockTimestamp,
-        },
-        decodedCompetingTx,
-    };
-}
-
 module.exports = {
     isDeposit,
     buildValidIfeStartArgs,
-    buildValidNoncanonicalChallengeArgs,
     buildIfeStartArgs,
     createInputTransaction,
     createDepositTransaction,
     createInFlightTx,
     createInputsForInFlightTx,
-    createCompetitorTransaction,
     createInclusionProof,
 };

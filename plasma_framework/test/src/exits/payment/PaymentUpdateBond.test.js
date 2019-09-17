@@ -4,7 +4,7 @@ const PaymentChallengeStandardExit = artifacts.require('PaymentChallengeStandard
 const PaymentProcessStandardExit = artifacts.require('PaymentProcessStandardExit');
 const PaymentStandardExitRouter = artifacts.require('PaymentStandardExitRouterMock');
 const PaymentStartStandardExit = artifacts.require('PaymentStartStandardExit');
-const PaymentSpendingConditionRegistry = artifacts.require('PaymentSpendingConditionRegistry');
+const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry');
 const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
@@ -12,12 +12,10 @@ const { expect } = require('chai');
 const { expectEvent, time } = require('openzeppelin-test-helpers');
 
 contract('PaymentStandardExitRouter', ([_, outputOwner]) => {
-    const CHILD_BLOCK_INTERVAL = 1000;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
     const INITIAL_IMMUNE_EXIT_GAME_NUM = 1;
     const PAYMENT_OUTPUT_TYPE = 1;
-    const EMPTY_BYTES = '0x0000000000000000000000000000000000000000000000000000000000000000000000';
     const UPDATE_BOND_WAITING_PERIOD = time.duration.days(2);
 
     before('deploy and link with controller lib', async () => {
@@ -38,7 +36,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner]) => {
 
             const ethVault = await SpyEthVault.new(this.framework.address);
             const erc20Vault = await SpyErc20Vault.new(this.framework.address);
-            const spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
+            const spendingConditionRegistry = await SpendingConditionRegistry.new();
             this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
 
             const handler = await ExpectedOutputGuardHandler.new(true, outputOwner);

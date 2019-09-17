@@ -132,10 +132,8 @@ library PaymentChallengeIFEOutputSpent {
         view
     {
         UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(args.outputUtxoPos);
-        uint16 outputIndex = UtxoPosLib.outputIndex(utxoPos);
         PaymentTransactionModel.Transaction memory inFlightTx = PaymentTransactionModel.decode(args.inFlightTx);
         uint256 challengingTxType = WireTransaction.getTransactionType(args.challengingTx);
-        bytes32 outputId = ife.outputs[outputIndex].outputId;
 
         ISpendingCondition condition = controller.spendingConditionRegistry.spendingConditions(
             args.outputType,
@@ -144,9 +142,9 @@ library PaymentChallengeIFEOutputSpent {
         require(address(condition) != address(0), "Spending condition contract not found");
 
         bool isSpentBySpendingTx = condition.verify(
-            inFlightTx.outputs[outputIndex].outputGuard,
-            0, // should not be used
-            outputId,
+            args.inFlightTx,
+            utxoPos.outputIndex(),
+            utxoPos.txPos().value,
             args.challengingTx,
             args.challengingTxInputIndex,
             args.challengingTxWitness,

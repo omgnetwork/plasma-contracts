@@ -5,9 +5,8 @@ const PaymentStartInFlightExit = artifacts.require('PaymentStartInFlightExit');
 const PaymentPiggybackInFlightExit = artifacts.require('PaymentPiggybackInFlightExit');
 const PaymentChallengeIFENotCanonical = artifacts.require('PaymentChallengeIFENotCanonical');
 const PaymentChallengeIFEOutputSpent = artifacts.require('PaymentChallengeIFEOutputSpent');
-const PaymentSpendingConditionRegistry = artifacts.require('PaymentSpendingConditionRegistry');
-const PaymentSpendingConditionFalse = artifacts.require('PaymentSpendingConditionFalse');
-const PaymentSpendingConditionTrue = artifacts.require('PaymentSpendingConditionTrue');
+const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry');
+const SpendingConditionMock = artifacts.require('SpendingConditionMock');
 const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const StateTransitionVerifierAccept = artifacts.require('StateTransitionVerifierAccept');
 const ExitId = artifacts.require('ExitIdWrapper');
@@ -129,8 +128,9 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
                 MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
             );
 
-            this.spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
-            const conditionTrue = await PaymentSpendingConditionTrue.new();
+            this.spendingConditionRegistry = await SpendingConditionRegistry.new();
+            const conditionTrue = await SpendingConditionMock.new();
+            await conditionTrue.mockResult(true);
             await this.spendingConditionRegistry.registerSpendingCondition(
                 OUTPUT_TYPE_ONE, IFE_TX_TYPE, conditionTrue.address,
             );
@@ -159,6 +159,7 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
                 challengingTx: args.challengingTxBytes,
                 challengingTxInputIndex: 0,
                 challengingTxWitness: web3.utils.sha3('sig'),
+                spendingConditionOptionalArgs: web3.utils.bytesToHex(''),
             };
         });
 
@@ -266,7 +267,8 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
 
             this.challengeArgs.challengingTx = web3.utils.bytesToHex(challengingTx.rlpEncoded());
 
-            const conditionFalse = await PaymentSpendingConditionFalse.new();
+            const conditionFalse = await SpendingConditionMock.new();
+            await conditionFalse.mockResult(false);
             await this.spendingConditionRegistry.registerSpendingCondition(
                 OUTPUT_TYPE_ONE, OTHER_TX_TYPE, conditionFalse.address,
             );

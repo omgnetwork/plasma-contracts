@@ -7,7 +7,7 @@ import "../controllers/PaymentStartInFlightExit.sol";
 import "../controllers/PaymentPiggybackInFlightExit.sol";
 import "../controllers/PaymentChallengeIFENotCanonical.sol";
 import "../controllers/PaymentChallengeIFEOutputSpent.sol";
-import "../spendingConditions/PaymentSpendingConditionRegistry.sol";
+import "../../registries/SpendingConditionRegistry.sol";
 import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../interfaces/IStateTransitionVerifier.sol";
 import "../../../utils/OnlyWithValue.sol";
@@ -32,7 +32,7 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyWithValue {
     constructor(
         PlasmaFramework framework,
         OutputGuardHandlerRegistry outputGuardHandlerRegistry,
-        PaymentSpendingConditionRegistry spendingConditionRegistry,
+        SpendingConditionRegistry spendingConditionRegistry,
         IStateTransitionVerifier verifier,
         uint256 supportedTxType
     )
@@ -52,17 +52,18 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyWithValue {
             outputGuardHandlerRegistry
         );
 
-        challengeCanonicityController = PaymentChallengeIFENotCanonical.Controller({
-            framework: framework,
-            spendingConditionRegistry: spendingConditionRegistry,
-            supportedTxType: supportedTxType
-        });
+        challengeCanonicityController = PaymentChallengeIFENotCanonical.buildController(
+            framework,
+            spendingConditionRegistry,
+            outputGuardHandlerRegistry,
+            supportedTxType
+        );
 
-        challengeOutputSpentController = PaymentChallengeIFEOutputSpent.Controller({
-            framework: framework,
-            spendingConditionRegistry: spendingConditionRegistry,
-            outputGuardHandlerRegistry: outputGuardHandlerRegistry
-        });
+        challengeOutputSpentController = PaymentChallengeIFEOutputSpent.Controller(
+            framework,
+            spendingConditionRegistry,
+            outputGuardHandlerRegistry
+        );
     }
 
     function inFlightExits(uint192 _exitId) public view returns (PaymentExitDataModel.InFlightExit memory) {
