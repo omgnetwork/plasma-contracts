@@ -39,6 +39,7 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
         amount: 0,
     };
     const BLOCK_NUM = 1000;
+    const MAX_NUM_OF_INPUTS = 4;
 
     before('deploy and link with controller lib', async () => {
         const startInFlightExit = await PaymentStartInFlightExit.new();
@@ -78,7 +79,7 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
             const filler = web3.utils.sha3('filler');
             const inFlightExit = {
                 exitStartTimestamp: (await time.latest()).toNumber(),
-                exitMap: 2 ** 4, // output with index 0 is piggybacked
+                exitMap: 2 ** MAX_NUM_OF_INPUTS, // output with index 0 is piggybacked
                 position: 0,
                 bondOwner: bob,
                 oldestCompetitorPosition: 0,
@@ -142,7 +143,7 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
                 this.stateTransitionVerifierAccept.address,
                 IFE_TX_TYPE,
             );
-            this.exitGame.fundForBondPayOut({ from: alice, value: PIGGYBACK_BOND });
+            this.exitGame.depositFundForTest({ from: alice, value: PIGGYBACK_BOND });
 
             const args = await buildValidChallengeOutputArgs();
 

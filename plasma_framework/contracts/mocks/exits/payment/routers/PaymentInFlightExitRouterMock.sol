@@ -59,6 +59,6 @@ contract PaymentInFlightExitRouterMock is PaymentInFlightExitRouter {
         return inFlightExitMap.exits[exitId].outputs[outputIndex];
     }
 
-    function fundForBondPayOut() public payable {
+    function depositFundForTest() public payable {
     }
 }
