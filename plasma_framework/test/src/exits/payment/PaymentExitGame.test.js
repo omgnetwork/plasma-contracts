@@ -13,10 +13,10 @@ const PaymentOutputGuardHandler = artifacts.require('PaymentOutputGuardHandler')
 const PaymentOutputToPaymentTxCondition = artifacts.require('PaymentOutputToPaymentTxCondition');
 const PaymentStartInFlightExit = artifacts.require('PaymentStartInFlightExit');
 const PaymentStartStandardExit = artifacts.require('PaymentStartStandardExit');
-const PaymentSpendingConditionRegistry = artifacts.require('PaymentSpendingConditionRegistry');
 const PaymentProcessStandardExit = artifacts.require('PaymentProcessStandardExit');
 const PlasmaFramework = artifacts.require('PlasmaFramework');
 const PriorityQueue = artifacts.require('PriorityQueue');
+const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry');
 
 const {
     BN, constants, expectEvent, time,
@@ -99,7 +99,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
             OUTPUT_TYPE.PAYMENT, paymentOutputGuardHandler.address,
         );
 
-        const spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
+        const spendingConditionRegistry = await SpendingConditionRegistry.new();
         this.exitGame = await PaymentExitGame.new(
             this.framework.address, this.ethVault.address, this.erc20Vault.address,
             outputGuardHandlerRegistry.address, spendingConditionRegistry.address,
