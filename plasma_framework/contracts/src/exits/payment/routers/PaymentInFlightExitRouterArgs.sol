@@ -97,7 +97,7 @@ library PaymentInFlightExitRouterArgs {
         bytes inFlightTx;
         uint8 inFlightTxInputIndex;
         bytes challengingTx;
-        uint8 challengingTxInputIndex;
+        uint16 challengingTxInputIndex;
         uint256 challengingTxInputOutputType;
         bytes challengingTxInputOutputGuardPreimage;
         bytes challengingTxWitness;
