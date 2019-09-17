@@ -117,7 +117,7 @@ library PaymentChallengeIFEInputSpent {
 
     function verifyOutputType(ChallengeIFEData memory data) private view {
         UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(data.args.inputUtxoPos);
-        uint16 outputIndex = UtxoPosLib.outputIndex(utxoPos);
+        uint16 outputIndex = utxoPos.outputIndex();
         WireTransaction.Output memory output = WireTransaction.getOutput(data.args.inputTx, outputIndex);
         OutputGuardModel.Data memory outputGuardData = OutputGuardModel.Data({
             guard: output.outputGuard,
