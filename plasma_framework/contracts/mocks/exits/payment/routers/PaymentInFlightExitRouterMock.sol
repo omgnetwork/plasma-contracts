@@ -58,4 +58,7 @@ contract PaymentInFlightExitRouterMock is PaymentInFlightExitRouter {
     function getInFlightExitOutput(uint192 exitId, uint16 outputIndex) public view returns (PaymentExitDataModel.WithdrawData memory) {
         return inFlightExitMap.exits[exitId].outputs[outputIndex];
     }
+
+    function depositFundForTest() public payable {
+    }
 }
