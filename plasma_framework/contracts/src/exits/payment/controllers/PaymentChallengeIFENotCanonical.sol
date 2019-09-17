@@ -2,21 +2,34 @@ pragma solidity ^0.5.0;
 pragma experimental ABIEncoderV2;
 
 import "../PaymentExitDataModel.sol";
+import "../PaymentInFlightExitModelUtils.sol";
 import "../routers/PaymentInFlightExitRouterArgs.sol";
-import "../spendingConditions/IPaymentSpendingCondition.sol";
-import "../spendingConditions/PaymentSpendingConditionRegistry.sol";
+import "../../interfaces/IOutputGuardHandler.sol";
+import "../../interfaces/ISpendingCondition.sol";
+import "../../models/OutputGuardModel.sol";
+import "../../registries/OutputGuardHandlerRegistry.sol";
+import "../../registries/SpendingConditionRegistry.sol";
 import "../../utils/ExitId.sol";
+import "../../utils/OutputId.sol";
+import "../../utils/TxFinalization.sol";
 import "../../../utils/UtxoPosLib.sol";
 import "../../../utils/Merkle.sol";
+import "../../../utils/IsDeposit.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
+import "../../../transactions/WireTransaction.sol";
 
 library PaymentChallengeIFENotCanonical {
     using UtxoPosLib for UtxoPosLib.UtxoPos;
+    using IsDeposit for IsDeposit.Predicate;
+    using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
+    using TxFinalization for TxFinalization.Verifier;
 
     struct Controller {
         PlasmaFramework framework;
-        PaymentSpendingConditionRegistry spendingConditionRegistry;
+        IsDeposit.Predicate isDeposit;
+        SpendingConditionRegistry spendingConditionRegistry;
+        OutputGuardHandlerRegistry outputGuardHandlerRegistry;
         uint256 supportedTxType;
     }
 
@@ -32,6 +45,25 @@ library PaymentChallengeIFENotCanonical {
         uint256 challengeTxPosition
     );
 
+    function buildController(
+        PlasmaFramework framework,
+        SpendingConditionRegistry spendingConditionRegistry,
+        OutputGuardHandlerRegistry outputGuardHandlerRegistry,
+        uint256 supportedTxType
+    )
+        public
+        view
+        returns (Controller memory)
+    {
+        return Controller({
+            framework: framework,
+            isDeposit: IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL()),
+            spendingConditionRegistry: spendingConditionRegistry,
+            outputGuardHandlerRegistry: outputGuardHandlerRegistry,
+            supportedTxType: supportedTxType
+        });
+    }
+
     function challenge(
         Controller memory self,
         PaymentExitDataModel.InFlightExitMap storage inFlightExitMap,
@@ -43,39 +75,45 @@ library PaymentChallengeIFENotCanonical {
         PaymentExitDataModel.InFlightExit storage ife = inFlightExitMap.exits[exitId];
         require(ife.exitStartTimestamp != 0, "In-fligh exit doesn't exists");
 
-        verifyFirstPhaseNotOver(ife, self.framework.minExitPeriod());
+        require(ife.isInFirstPhase(self.framework.minExitPeriod()),
+                "Canonicity challege phase for this exit has ended");
 
         require(
             keccak256(args.inFlightTx) != keccak256(args.competingTx),
             "The competitor transaction is the same as transaction in-flight"
         );
 
-        IPaymentSpendingCondition condition = self.spendingConditionRegistry.spendingConditions(
-            args.competingTxInputOutputType, self.supportedTxType
+
+        UtxoPosLib.UtxoPos memory inputUtxoPos = UtxoPosLib.UtxoPos(args.inputUtxoPos);
+
+        bytes32 outputId;
+        if (self.isDeposit.test(inputUtxoPos.blockNum())) {
+            outputId = OutputId.computeDepositOutputId(args.inputTx, inputUtxoPos.outputIndex(), inputUtxoPos.value);
+        } else {
+            outputId = OutputId.computeNormalOutputId(args.inputTx, inputUtxoPos.outputIndex());
+        }
+        require(outputId == ife.inputs[args.inFlightTxInputIndex].outputId,
+                "Provided inputs data does not point to the same outputId from the in-flight exit");
+
+        ISpendingCondition condition = self.spendingConditionRegistry.spendingConditions(
+            args.outputType, self.supportedTxType
         );
         require(address(condition) != address(0), "Spending condition contract not found");
-
-        // FIXME: move to the finalized interface as https://github.com/omisego/plasma-contracts/issues/214
-        // Also, the tests should verify the args correctness
-        bool isSpentByInFlightTx = condition.verify(
-            bytes32(""), // tmp solution, we don't need outputGuard anymore for the interface of :point-up: GH-214
-            uint256(0), // should not be used
-            ife.inputs[args.inFlightTxInputIndex].outputId,
+        bool isSpentByCompetingTx = condition.verify(
+            args.inputTx,
+            inputUtxoPos.outputIndex(),
+            inputUtxoPos.txPos().value,
             args.competingTx,
             args.competingTxInputIndex,
-            args.competingTxWitness
+            args.competingTxWitness,
+            args.competingTxSpendingConditionOptionalArgs
         );
-        require(isSpentByInFlightTx, "Competing input spending condition is not met");
+        require(isSpentByCompetingTx, "Competing input spending condition does not met");
+
+        (IOutputGuardHandler outputGuardHandler, OutputGuardModel.Data memory outputGuardData) = verifyOutputTypeAndPreimage(self, args);
 
         // Determine the position of the competing transaction
-        uint256 competitorPosition = ~uint256(0);
-        if (args.competingTxPos != 0) {
-            UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(args.competingTxPos);
-            (bytes32 root, ) = self.framework.blocks(utxoPos.blockNum());
-            competitorPosition = verifyAndDeterminePositionOfTransactionIncludedInBlock(
-                args.competingTx, utxoPos, root, args.competingTxInclusionProof
-            );
-        }
+        uint256 competitorPosition = verifyCompetingTxFinalized(self, args, outputGuardHandler, outputGuardData);
 
         require(
             ife.oldestCompetitorPosition == 0 || ife.oldestCompetitorPosition > competitorPosition,
@@ -120,22 +158,6 @@ library PaymentChallengeIFENotCanonical {
         emit InFlightExitChallengeResponded(msg.sender, keccak256(inFlightTx), inFlightTxPos);
     }
 
-    /**
-     * @dev Checks that in-flight exit is in phase that allows for piggybacks and canonicity challenges.
-     * @param ife in-flight exit to check.
-     */
-    function verifyFirstPhaseNotOver(
-        PaymentExitDataModel.InFlightExit storage ife,
-        uint256 minExitPeriod
-    )
-        private
-        view
-    {
-        uint256 phasePeriod = minExitPeriod / 2;
-        bool firstPhasePassed = ((block.timestamp - ife.exitStartTimestamp) / phasePeriod) >= 1;
-        require(!firstPhasePassed, "Canonicity challege phase for this exit has ended");
-    }
-
     function verifyAndDeterminePositionOfTransactionIncludedInBlock(
         bytes memory txbytes,
         UtxoPosLib.UtxoPos memory utxoPos,
@@ -153,5 +175,66 @@ library PaymentChallengeIFENotCanonical {
         );
 
         return utxoPos.value;
+    }
+
+    function verifyOutputTypeAndPreimage(
+        Controller memory self,
+        PaymentInFlightExitRouterArgs.ChallengeCanonicityArgs memory args
+    )
+        private
+        view
+        returns (IOutputGuardHandler, OutputGuardModel.Data memory)
+    {
+        IOutputGuardHandler outputGuardHandler = self.outputGuardHandlerRegistry.outputGuardHandlers(args.outputType);
+
+        require(address(outputGuardHandler) != address(0), "Failed to get the outputGuardHandler of the output type");
+
+        WireTransaction.Output memory output = WireTransaction.getOutput(args.inputTx, args.inFlightTxInputIndex);
+        OutputGuardModel.Data memory outputGuardData = OutputGuardModel.Data({
+            guard: output.outputGuard,
+            outputType: args.outputType,
+            preimage: args.outputGuardPreimage
+        });
+        require(outputGuardHandler.isValid(outputGuardData),
+                "Output guard information is invalid");
+
+        return (outputGuardHandler, outputGuardData);
+    }
+
+    function verifyCompetingTxFinalized(
+        Controller memory self,
+        PaymentInFlightExitRouterArgs.ChallengeCanonicityArgs memory args,
+        IOutputGuardHandler outputGuardHandler,
+        OutputGuardModel.Data memory outputGuardData
+    )
+        private
+        view
+        returns (uint256)
+    {
+        // default to infinite low priority position
+        uint256 competitorPosition = ~uint256(0);
+
+        UtxoPosLib.UtxoPos memory competingTxUtxoPos = UtxoPosLib.UtxoPos(args.competingTxPos);
+        uint256 competingTxType = WireTransaction.getTransactionType(args.competingTx);
+        uint8 protocol = self.framework.protocols(competingTxType);
+
+        if (args.competingTxPos == 0) {
+            // skip the verifier.isProtocolFinalized() for MoreVP since it only needs to check the existence of tx.
+            require(protocol == Protocol.MORE_VP(), "Competing tx without position must be a more vp tx");
+        } else {
+            TxFinalization.Verifier memory verifier = TxFinalization.Verifier({
+                framework: self.framework,
+                protocol: protocol,
+                txBytes: args.competingTx,
+                txPos: competingTxUtxoPos.txPos(),
+                inclusionProof: args.competingTxInclusionProof,
+                confirmSig: args.competingTxConfirmSig,
+                confirmSigAddress: outputGuardHandler.getConfirmSigAddress(outputGuardData)
+            });
+            require(verifier.isStandardFinalized(), "Failed to verify the position of competing tx");
+
+            competitorPosition = competingTxUtxoPos.value;
+        }
+        return competitorPosition;
     }
 }

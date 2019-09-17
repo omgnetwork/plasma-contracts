@@ -166,7 +166,6 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                 this.framework.address,
                 this.outputGuardHandlerRegistry.address,
                 this.spendingConditionRegistry.address,
-                this.spendingConditionRegistry.address,
                 this.stateTransitionVerifierAccept.address,
                 TX_TYPE.PAYMENT,
             );

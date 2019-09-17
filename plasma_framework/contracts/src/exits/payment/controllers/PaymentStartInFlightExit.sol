@@ -4,12 +4,12 @@ pragma experimental ABIEncoderV2;
 import "../PaymentExitDataModel.sol";
 import "../PaymentInFlightExitModelUtils.sol";
 import "../routers/PaymentInFlightExitRouterArgs.sol";
-import "../spendingConditions/IPaymentSpendingCondition.sol";
-import "../spendingConditions/PaymentSpendingConditionRegistry.sol";
 import "../../interfaces/IOutputGuardHandler.sol";
-import "../../models/OutputGuardModel.sol";
-import "../../registries/OutputGuardHandlerRegistry.sol";
+import "../../interfaces/ISpendingCondition.sol";
 import "../../interfaces/IStateTransitionVerifier.sol";
+import "../../models/OutputGuardModel.sol";
+import "../../registries/SpendingConditionRegistry.sol";
+import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../utils/ExitableTimestamp.sol";
 import "../../utils/ExitId.sol";
 import "../../utils/OutputGuard.sol";
@@ -38,7 +38,7 @@ library PaymentStartInFlightExit {
         IsDeposit.Predicate isDeposit;
         ExitableTimestamp.Calculator exitTimestampCalculator;
         OutputGuardHandlerRegistry outputGuardHandlerRegistry;
-        PaymentSpendingConditionRegistry spendingConditionRegistry;
+        SpendingConditionRegistry spendingConditionRegistry;
         IStateTransitionVerifier transitionVerifier;
         uint256 supportedTxType;
     }
@@ -62,6 +62,7 @@ library PaymentStartInFlightExit {
      * @param inputTxsInclusionProofs Merkle proofs for input transactions.
      * @param inputTxsConfirmSigs Confirm signatures for the input txs.
      * @param inFlightTxWitnesses Witnesses for in-flight transactions.
+     * @param inputSpendingConditionOptionalArgs Optional args for the spending condition for checking inputs.
      * @param outputIds Output ids for input transactions.
      */
     struct StartExitData {
@@ -79,13 +80,14 @@ library PaymentStartInFlightExit {
         bytes[] inputTxsInclusionProofs;
         bytes[] inputTxsConfirmSigs;
         bytes[] inFlightTxWitnesses;
+        bytes[] inputSpendingConditionOptionalArgs;
         bytes32[] outputIds;
     }
 
     function buildController(
         PlasmaFramework framework,
         OutputGuardHandlerRegistry outputGuardHandlerRegistry,
-        PaymentSpendingConditionRegistry spendingConditionRegistry,
+        SpendingConditionRegistry spendingConditionRegistry,
         IStateTransitionVerifier transitionVerifier,
         uint256 supportedTxType
     )
@@ -140,6 +142,7 @@ library PaymentStartInFlightExit {
         exitData.inputTxsConfirmSigs = args.inputTxsConfirmSigs;
         exitData.outputGuardPreimagesForInputs = args.outputGuardPreimagesForInputs;
         exitData.inFlightTxWitnesses = args.inFlightTxWitnesses;
+        exitData.inputSpendingConditionOptionalArgs = args.inputSpendingConditionOptionalArgs;
         exitData.outputIds = getOutputIds(controller, exitData.inputTxs, exitData.inputUtxosPos);
         return exitData;
     }
@@ -233,6 +236,10 @@ library PaymentStartInFlightExit {
             exitData.inputTxsConfirmSigs.length == exitData.inFlightTx.inputs.length,
             "Number of input transactions confirm sigs does not match number of in-flight transaction inputs"
         );
+        require(
+            exitData.inputSpendingConditionOptionalArgs.length == exitData.inFlightTx.inputs.length,
+            "Number of input spending condition optional args does not match number of in-flight transaction inputs"
+        );
     }
 
     function verifyNoInputSpentMoreThanOnce(PaymentTransactionModel.Transaction memory inFlightTx) private pure {
@@ -279,7 +286,7 @@ library PaymentStartInFlightExit {
     }
 
     function verifyInputsSpent(StartExitData memory exitData) private view {
-        for (uint i = 0; i < exitData.inputTxs.length; i++) {
+        for (uint16 i = 0; i < exitData.inputTxs.length; i++) {
             uint16 outputIndex = exitData.inputUtxosPos[i].outputIndex();
             WireTransaction.Output memory output = WireTransaction.getOutput(exitData.inputTxs[i], outputIndex);
 
@@ -295,20 +302,20 @@ library PaymentStartInFlightExit {
             require(outputGuardHandler.isValid(outputGuardData),
                     "Output guard information is invalid for the input tx");
 
-            //FIXME: consider moving spending conditions to PlasmaFramework
-            IPaymentSpendingCondition condition = exitData.controller.spendingConditionRegistry.spendingConditions(
+            ISpendingCondition condition = exitData.controller.spendingConditionRegistry.spendingConditions(
                 exitData.inputUtxosTypes[i], exitData.controller.supportedTxType
             );
 
             require(address(condition) != address(0), "Spending condition contract not found");
 
             bool isSpentByInFlightTx = condition.verify(
-                output.outputGuard,
-                exitData.inputUtxosPos[i].value,
-                exitData.outputIds[i],
+                exitData.inputTxs[i],
+                exitData.inputUtxosPos[i].outputIndex(),
+                exitData.inputUtxosPos[i].txPos().value,
                 exitData.inFlightTxRaw,
-                uint8(i),
-                exitData.inFlightTxWitnesses[i]
+                i,
+                exitData.inFlightTxWitnesses[i],
+                exitData.inputSpendingConditionOptionalArgs[i]
             );
             require(isSpentByInFlightTx, "Spending condition failed");
         }

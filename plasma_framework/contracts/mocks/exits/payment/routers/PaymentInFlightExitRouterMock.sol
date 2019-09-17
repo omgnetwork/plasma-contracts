@@ -12,12 +12,17 @@ contract PaymentInFlightExitRouterMock is PaymentInFlightExitRouter {
         PlasmaFramework framework,
         OutputGuardHandlerRegistry outputGuardHandlerRegistry,
         SpendingConditionRegistry spendingConditionRegistry,
-        PaymentSpendingConditionRegistry paymentSpendingConditionRegistry,
         IStateTransitionVerifier verifier,
         uint256 supportedTxType
     )
         public
-        PaymentInFlightExitRouter(framework, outputGuardHandlerRegistry, spendingConditionRegistry, paymentSpendingConditionRegistry, verifier, supportedTxType)
+        PaymentInFlightExitRouter(
+            framework,
+            outputGuardHandlerRegistry,
+            spendingConditionRegistry,
+            verifier,
+            supportedTxType
+        )
     {
     }
 

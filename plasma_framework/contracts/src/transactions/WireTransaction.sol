@@ -30,7 +30,7 @@ library WireTransaction {
         bytes20 outputGuard = bytes20(output[0].toAddress());
         address token = output[1].toAddress();
         uint256 amount = output[2].toUint();
-        
+
         return Output(amount, outputGuard, token);
     }
 
