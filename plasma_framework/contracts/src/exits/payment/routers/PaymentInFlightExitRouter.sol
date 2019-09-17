@@ -7,6 +7,7 @@ import "../controllers/PaymentStartInFlightExit.sol";
 import "../controllers/PaymentPiggybackInFlightExit.sol";
 import "../controllers/PaymentChallengeIFENotCanonical.sol";
 import "../controllers/PaymentChallengeIFEInputSpent.sol";
+import "../controllers/PaymentChallengeIFEOutputSpent.sol";
 import "../../registries/SpendingConditionRegistry.sol";
 import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../interfaces/IStateTransitionVerifier.sol";
@@ -19,6 +20,7 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyWithValue {
     using PaymentPiggybackInFlightExit for PaymentPiggybackInFlightExit.Controller;
     using PaymentChallengeIFENotCanonical for PaymentChallengeIFENotCanonical.Controller;
     using PaymentChallengeIFEInputSpent for PaymentChallengeIFEInputSpent.Controller;
+    using PaymentChallengeIFEOutputSpent for PaymentChallengeIFEOutputSpent.Controller;
 
     uint256 public constant IN_FLIGHT_EXIT_BOND = 31415926535 wei;
     uint256 public constant PIGGYBACK_BOND = 31415926535 wei;
@@ -28,6 +30,7 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyWithValue {
     PaymentPiggybackInFlightExit.Controller internal piggybackInFlightExitController;
     PaymentChallengeIFENotCanonical.Controller internal challengeCanonicityController;
     PaymentChallengeIFEInputSpent.Controller internal challengeInputSpentController;
+    PaymentChallengeIFEOutputSpent.Controller internal challengeOutputSpentController;
 
     constructor(
         PlasmaFramework framework,
@@ -60,6 +63,12 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyWithValue {
         );
         
         challengeInputSpentController = PaymentChallengeIFEInputSpent.buildController(
+            framework,
+            spendingConditionRegistry,
+            outputGuardHandlerRegistry
+        );
+
+        challengeOutputSpentController = PaymentChallengeIFEOutputSpent.Controller(
             framework,
             spendingConditionRegistry,
             outputGuardHandlerRegistry
@@ -134,5 +143,15 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyWithValue {
         public
     {
         challengeInputSpentController.run(inFlightExitMap, args);
+    }
+
+     /**
+     * @notice Challenges an exit from in-flight transaction output.
+     * @param args argument data to challenge. See struct 'ChallengeOutputSpent' for detailed info.
+     */
+    function challengeInFlightExitOutputSpent(PaymentInFlightExitRouterArgs.ChallengeOutputSpent memory args)
+        public
+    {
+        challengeOutputSpentController.run(inFlightExitMap, args);
     }
 }

@@ -5,6 +5,7 @@ const PaymentStartInFlightExit = artifacts.require('PaymentStartInFlightExit');
 const PaymentPiggybackInFlightExit = artifacts.require('PaymentPiggybackInFlightExit');
 const PaymentChallengeIFENotCanonical = artifacts.require('PaymentChallengeIFENotCanonical');
 const PaymentChallengeIFEInputSpent = artifacts.require('PaymentChallengeIFEInputSpent');
+const PaymentChallengeIFEOutputSpent = artifacts.require('PaymentChallengeIFEOutputSpent');
 const SpendingConditionMock = artifacts.require('SpendingConditionMock');
 const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry');
 const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
@@ -38,11 +39,13 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
         const piggybackInFlightExit = await PaymentPiggybackInFlightExit.new();
         const challengeInFlightExitNotCanonical = await PaymentChallengeIFENotCanonical.new();
         const challengeIFEInputSpent = await PaymentChallengeIFEInputSpent.new();
+        const challengeIFEOutputSpent = await PaymentChallengeIFEOutputSpent.new();
 
         await PaymentInFlightExitRouter.link('PaymentStartInFlightExit', startInFlightExit.address);
         await PaymentInFlightExitRouter.link('PaymentPiggybackInFlightExit', piggybackInFlightExit.address);
         await PaymentInFlightExitRouter.link('PaymentChallengeIFENotCanonical', challengeInFlightExitNotCanonical.address);
         await PaymentInFlightExitRouter.link('PaymentChallengeIFEInputSpent', challengeIFEInputSpent.address);
+        await PaymentInFlightExitRouter.link('PaymentChallengeIFEOutputSpent', challengeIFEOutputSpent.address);
     });
 
     before('deploy helper contracts', async () => {
@@ -94,6 +97,7 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                 exitTarget: constants.ZERO_ADDRESS,
                 token: constants.ZERO_ADDRESS,
                 amount: 0,
+                piggybackBondSize: 0,
             };
 
             const inFlightExitData = {
@@ -108,12 +112,14 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                     exitTarget: inputOwner,
                     token: ETH,
                     amount: 999,
+                    piggybackBondSize: PIGGYBACK_BOND,
                 }, {
                     outputId: getOutputId(inputTx.txBytes, inputTx.utxoPos),
                     outputGuard: web3.utils.sha3('dummy output guard'),
                     exitTarget: inputOwner,
                     token: ETH,
                     amount: INPUT_TX_AMOUNT,
+                    piggybackBondSize: PIGGYBACK_BOND,
                 }, emptyWithdrawData, emptyWithdrawData],
                 outputs: [{
                     outputId: web3.utils.sha3('dummy output id'),
@@ -121,6 +127,7 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                     exitTarget: outputOwner,
                     token: ETH,
                     amount: outputAmount,
+                    piggybackBondSize: PIGGYBACK_BOND,
                 }, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData],
             };
 

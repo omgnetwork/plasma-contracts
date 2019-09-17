@@ -88,6 +88,7 @@ library PaymentInFlightExitRouterArgs {
      * @param challengingTx RLP encoded challenging transaction.
      * @param challengingTxInputIndex Index of spent input in challenging transaction.
      * @param challengingTxInputOutputType Output type of spent input.
+     * @param challengingTxInputOutputGuardPreimage OutputGuard preimage of spent input.
      * @param challengingTxWitness Witness for challenging transaction.
      * @param inputTx RLP encoded input transaction.
      * @param inputUtxoPos Utxo position of input transaction's output.
@@ -103,6 +104,30 @@ library PaymentInFlightExitRouterArgs {
         bytes challengingTxWitness;
         bytes inputTx;
         uint256 inputUtxoPos;
+        bytes spendingConditionOptionalArgs;
+    }
+
+     /*
+     * @notice Wraps arguments for challenging in-flight transaction output exit.
+     * @param inFlightTx RLP encoded in-flight transaction.
+     * @param inFlightTxInclusionProof Proof that in-flight transaction is included in Plasma.
+     * @param outputType output type of exiting output.
+     * @param outputGuardPreimage preimage for the output guard of the exiting output.
+     * @param outputUtxoPos Utxo position of challenged output.
+     * @param challengingTx RLP encoded challenging transaction.
+     * @param challengingTxInputIndex input index of challenged output in challenging transaction.
+     * @param challengingTxWitness Witness for challenging transaction.
+     * @param spendingConditionOptionalArgs optional extra data for the spending condition.
+     */
+    struct ChallengeOutputSpent {
+        bytes inFlightTx;
+        bytes inFlightTxInclusionProof;
+        uint256 outputType;
+        bytes outputGuardPreimage;
+        uint256 outputUtxoPos;
+        bytes challengingTx;
+        uint16 challengingTxInputIndex;
+        bytes challengingTxWitness;
         bytes spendingConditionOptionalArgs;
     }
 }

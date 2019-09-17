@@ -11,6 +11,7 @@ import "../../registries/SpendingConditionRegistry.sol";
 import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../utils/ExitId.sol";
 import "../../utils/OutputId.sol";
+import "../../utils/TxFinalization.sol";
 import "../../../utils/UtxoPosLib.sol";
 import "../../../utils/IsDeposit.sol";
 import "../../../utils/Merkle.sol";
@@ -90,9 +91,8 @@ library PaymentChallengeIFEInputSpent {
         });
 
         verifySpentInputEqualsIFEInput(data);
-
         verifyOutputType(data);
-
+        verifyChallengingTransactionProtocolFinalized(data);
         verifySpendingCondition(data);
 
         // Remove the input from the piggyback map
@@ -131,6 +131,20 @@ library PaymentChallengeIFEInputSpent {
 
         require(handler.isValid(outputGuardData),
             "Some of the output guard related information is not valid");
+    }
+
+    function verifyChallengingTransactionProtocolFinalized(ChallengeIFEData memory data)
+        private
+        view
+    {
+        TxFinalization.Verifier memory finalizationVerifier = TxFinalization.moreVpVerifier(
+            data.controller.framework,
+            data.args.challengingTx,
+            TxPosLib.TxPos(0),
+            bytes("")
+        );
+
+        require(TxFinalization.isProtocolFinalized(finalizationVerifier), "Challenging transaction not finalized");
     }
 
     function verifySpendingCondition(ChallengeIFEData memory data) private view {
