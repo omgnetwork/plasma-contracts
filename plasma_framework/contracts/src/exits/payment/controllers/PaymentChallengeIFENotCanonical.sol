@@ -219,6 +219,7 @@ library PaymentChallengeIFENotCanonical {
         uint8 protocol = self.framework.protocols(competingTxType);
 
         if (args.competingTxPos == 0) {
+            // skip the verifier.isProtocolFinalized() for MoreVP since it only needs to check the existence of tx.
             require(protocol == Protocol.MORE_VP(), "Competing tx without position must be a more vp tx");
         } else {
             TxFinalization.Verifier memory verifier = TxFinalization.Verifier({
