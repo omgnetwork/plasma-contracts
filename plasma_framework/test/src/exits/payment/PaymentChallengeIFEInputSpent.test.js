@@ -16,12 +16,12 @@ const {
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 const {
-    TX_TYPE, OUTPUT_TYPE, EMPTY_BYTES, EMPTY_BYTES_32,
+    TX_TYPE, OUTPUT_TYPE, EMPTY_BYTES, EMPTY_BYTES_32, CHILD_BLOCK_INTERVAL,
 } = require('../../../helpers/constants.js');
 const { buildUtxoPos } = require('../../../helpers/positions.js');
-const { createInputTransaction, createInFlightTx, getOutputId } = require('../../../helpers/ife.js');
+const { createInputTransaction, createInFlightTx } = require('../../../helpers/ife.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
-const { spentOnGas, computeNormalOutputId } = require('../../../helpers/utils.js');
+const { spentOnGas, computeNormalOutputId, getOutputId } = require('../../../helpers/utils.js');
 
 contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, challenger]) => {
     const IN_FLIGHT_EXIT_BOND = 31415926535; // wei
@@ -29,11 +29,9 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
     const INITIAL_IMMUNE_EXIT_GAME_NUM = 1;
-    const YOUNGEST_POSITION_BLOCK = 1000;
-    const INFLIGHT_EXIT_YOUNGEST_INPUT_POSITION = buildUtxoPos(YOUNGEST_POSITION_BLOCK, 0, 0);
     const ETH = constants.ZERO_ADDRESS;
+    const INPUT_TX_AMOUNT = 123456;
     const BLOCK_NUMBER = 5000;
-    const MAX_INPUT_SIZE = 4;
 
     before('deploy and link with controller lib', async () => {
         const startInFlightExit = await PaymentStartInFlightExit.new();
@@ -45,7 +43,9 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
         await PaymentInFlightExitRouter.link('PaymentPiggybackInFlightExit', piggybackInFlightExit.address);
         await PaymentInFlightExitRouter.link('PaymentChallengeIFENotCanonical', challengeInFlightExitNotCanonical.address);
         await PaymentInFlightExitRouter.link('PaymentChallengeIFEInputSpent', challengeIFEInputSpent.address);
+    });
 
+    before('deploy helper contracts', async () => {
         this.exitIdHelper = await ExitId.new();
         this.stateTransitionVerifierAccept = await StateTransitionVerifierAccept.new();
     });
@@ -54,9 +54,12 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
         // This is the transaction whose output is the input piggyback in the IFE.
         function buildInputTx() {
             const tx = createInputTransaction(
-                [buildUtxoPos(2000, 4, 3), buildUtxoPos(2000, 10, 2)],
+                [
+                    buildUtxoPos(BLOCK_NUMBER - CHILD_BLOCK_INTERVAL, 4, 3),
+                    buildUtxoPos(BLOCK_NUMBER - CHILD_BLOCK_INTERVAL, 10, 2),
+                ],
                 inputOwner,
-                334455,
+                INPUT_TX_AMOUNT,
             );
 
             const txBytes = web3.utils.bytesToHex(tx.rlpEncoded());
@@ -66,7 +69,7 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                 tx,
                 txBytes,
                 outputIndex,
-                utxoPos: buildUtxoPos(3000, 5, outputIndex),
+                utxoPos: buildUtxoPos(BLOCK_NUMBER, 5, outputIndex),
             };
         }
 
@@ -75,7 +78,7 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
             const outputAmount = 997;
 
             const firstInput = createInputTransaction([buildUtxoPos(BLOCK_NUMBER, 3, 0)], outputOwner, 334455);
-            const firstInputUtxoPos = buildUtxoPos(3000, 66, 0);
+            const firstInputUtxoPos = buildUtxoPos(BLOCK_NUMBER, 66, 0);
 
             const inFlightTx = createInFlightTx(
                 [firstInput, inputTx.tx],
@@ -96,7 +99,7 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
             const inFlightExitData = {
                 exitStartTimestamp: (await time.latest()).toNumber(),
                 exitMap: 0,
-                position: INFLIGHT_EXIT_YOUNGEST_INPUT_POSITION,
+                position: buildUtxoPos(BLOCK_NUMBER, 0, 0),
                 bondOwner: alice,
                 oldestCompetitorPosition: 0,
                 inputs: [{
@@ -110,7 +113,7 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                     outputGuard: web3.utils.sha3('dummy output guard'),
                     exitTarget: inputOwner,
                     token: ETH,
-                    amount: 998,
+                    amount: INPUT_TX_AMOUNT,
                 }, emptyWithdrawData, emptyWithdrawData],
                 outputs: [{
                     outputId: web3.utils.sha3('dummy output id'),
@@ -123,19 +126,8 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
 
             const exitId = await this.exitIdHelper.getInFlightExitId(rlpInFlightTxBytes);
 
-            const argsInputOne = {
-                inFlightTx: rlpInFlightTxBytes,
-                inputIndex: 0,
-            };
-
-            const argsInputTwo = {
-                inFlightTx: rlpInFlightTxBytes,
-                inputIndex: 1,
-            };
-
             return {
-                argsInputOne,
-                argsInputTwo,
+                inFlightTx: rlpInFlightTxBytes,
                 exitId,
                 inFlightExitData,
             };
@@ -176,16 +168,14 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
             // Set up the piggyback data
             this.testData = await buildPiggybackInputData(inputTx);
 
-            // set some different timestamp than "now" to the youngest position.
-            this.youngestPositionTimestamp = (await time.latest()).sub(new BN(100)).toNumber();
-            await this.framework.setBlock(
-                YOUNGEST_POSITION_BLOCK, web3.utils.sha3('dummy root'), this.youngestPositionTimestamp,
-            );
+            await this.framework.setBlock(BLOCK_NUMBER, web3.utils.sha3('dummy root'), 0);
             await this.exitGame.setInFlightExit(this.testData.exitId, this.testData.inFlightExitData);
 
             // Piggyback the second input
-            this.piggybackTx = await this.exitGame.piggybackInFlightExitOnInput(
-                this.testData.argsInputTwo, { from: inputOwner, value: PIGGYBACK_BOND },
+            await this.exitGame.setInFlightExitInputPiggybacked(
+                this.testData.exitId,
+                1,
+                { from: inputOwner, value: PIGGYBACK_BOND },
             );
 
             // Create a transaction that spends the same input
@@ -199,7 +189,7 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
             this.inFlightTxPiggybackedIndex = 1;
 
             this.challengeArgs = {
-                inFlightTx: this.testData.argsInputTwo.inFlightTx,
+                inFlightTx: this.testData.inFlightTx,
                 inFlightTxInputIndex: this.inFlightTxPiggybackedIndex,
                 challengingTx: web3.utils.bytesToHex(challengingTx.rlpEncoded()),
                 challengingTxInputIndex: 0,
@@ -251,9 +241,11 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
 
         describe('check exitMap before and after challenge', () => {
             beforeEach(async () => {
-                // Piggyback input1 as well.
-                await this.exitGame.piggybackInFlightExitOnInput(
-                    this.testData.argsInputOne, { from: inputOwner, value: PIGGYBACK_BOND },
+                // Piggyback input0 as well.
+                await this.exitGame.setInFlightExitInputPiggybacked(
+                    this.testData.exitId,
+                    0,
+                    { from: inputOwner, value: PIGGYBACK_BOND },
                 );
             });
 
@@ -313,7 +305,7 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                 // create a different input tx
                 const anotherTx = createInputTransaction([buildUtxoPos(BLOCK_NUMBER, 3, 0)], outputOwner, 123);
                 this.challengeArgs.inputTx = web3.utils.bytesToHex(anotherTx.rlpEncoded());
-                this.challengeArgs.inputUtxoPos = buildUtxoPos(2000, 50, 0);
+                this.challengeArgs.inputUtxoPos = buildUtxoPos(BLOCK_NUMBER, 50, 0);
                 await expectRevert(
                     this.exitGame.challengeInFlightExitInputSpent(this.challengeArgs, { from: challenger }),
                     'Spent input is not the same as piggybacked input',

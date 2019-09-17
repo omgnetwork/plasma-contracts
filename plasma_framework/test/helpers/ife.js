@@ -1,17 +1,12 @@
 const { constants } = require('openzeppelin-test-helpers');
 
 const { MerkleTree } = require('./merkle.js');
-const { buildUtxoPos, UtxoPos } = require('./positions.js');
-const {
-    buildOutputGuard,
-    computeNormalOutputId,
-    computeDepositOutputId,
-} = require('./utils.js');
+const { buildUtxoPos } = require('./positions.js');
+const { buildOutputGuard, isDeposit, getOutputId } = require('./utils.js');
 const { PaymentTransactionOutput, PaymentTransaction, PlasmaDepositTransaction } = require('./transaction.js');
 const { EMPTY_BYTES } = require('./constants.js');
 
 const ETH = constants.ZERO_ADDRESS;
-const CHILD_BLOCK_INTERVAL = 1000;
 const OUTPUT_TYPE_ONE = 1;
 const OUTPUT_TYPE_TWO = 2;
 const IFE_TX_TYPE = 1;
@@ -20,10 +15,6 @@ const IN_FLIGHT_TX_WITNESS_BYTES = web3.utils.bytesToHex('a'.repeat(WITNESS_LENG
 const DUMMY_INPUT_1 = '0x0000000000000000000000000000000000000000000000000000000000000001';
 const DUMMY_INPUT_2 = '0x0000000000000000000000000000000000000000000000000000000000000002';
 const MERKLE_TREE_HEIGHT = 3;
-
-function isDeposit(blockNum) {
-    return blockNum % CHILD_BLOCK_INTERVAL !== 0;
-}
 
 /**
  * This returns a setup with the two inputs and one output.
@@ -159,14 +150,6 @@ function createInclusionProof(encodedTx, txUtxoPos) {
     };
 }
 
-function getOutputId(txBytes, utxoPos) {
-    const inputUtxoPos = new UtxoPos(utxoPos);
-    const outputId = isDeposit(inputUtxoPos.blockNum)
-        ? computeDepositOutputId(txBytes, inputUtxoPos.outputIndex, inputUtxoPos.utxoPos)
-        : computeNormalOutputId(txBytes, inputUtxoPos.outputIndex);
-    return outputId;
-}
-
 module.exports = {
     isDeposit,
     buildValidIfeStartArgs,
@@ -176,5 +159,4 @@ module.exports = {
     createInFlightTx,
     createInputsForInFlightTx,
     createInclusionProof,
-    getOutputId,
 };

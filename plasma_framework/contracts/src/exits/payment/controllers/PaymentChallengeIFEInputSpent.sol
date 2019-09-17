@@ -36,7 +36,7 @@ library PaymentChallengeIFEInputSpent {
     event InFlightExitInputBlocked(
         address indexed challenger,
         bytes32 txHash,
-        uint8 inputIndex
+        uint16 inputIndex
     );
 
     /**
