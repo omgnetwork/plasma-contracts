@@ -233,7 +233,7 @@ contract('ExitGameController', () => {
             const fakeNonAddedTokenAddress = (await DummyExitGame.new()).address;
             await expectRevert(
                 this.controller.processExits(fakeNonAddedTokenAddress, 0, 1),
-                'Such token has not be added to the plasma framework yet',
+                'Such token has not been added to the plasma framework yet',
             );
         });
 
@@ -409,7 +409,7 @@ contract('ExitGameController', () => {
                 // bypass quarantined period
                 await time.increase(3 * MIN_EXIT_PERIOD + 1);
 
-                // put three items in the queue, the first one would trigger reentry
+                // put two items in the queue, the first one would trigger reentry
                 await reentrancyExitGame.enqueue(
                     this.dummyExit.token,
                     this.dummyExit.exitableAt,
@@ -493,7 +493,7 @@ contract('ExitGameController', () => {
             const dummyOutputId = web3.utils.sha3('output id');
             await expectRevert(
                 this.dummyExitGame.proxyBatchFlagOutputsSpent([dummyOutputId, EMPTY_BYTES_32]),
-                'Should not flag empty output spent',
+                'Should not flag with empty outputId',
             );
         });
 
@@ -529,7 +529,7 @@ contract('ExitGameController', () => {
         it('should fail when try to flag withempty outputId', async () => {
             await expectRevert(
                 this.dummyExitGame.proxyFlagOutputSpent(EMPTY_BYTES_32),
-                'Should not flag empty output spent',
+                'Should not flag with empty outputId',
             );
         });
 

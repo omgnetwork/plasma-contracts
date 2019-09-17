@@ -230,7 +230,8 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
                 this.dummyExitId = 666;
                 this.exit = await buildInFlightExitData();
 
-                // piggybacks the first output for ETH and third for ERC20
+                // piggybacks the first input for ETH and third for ERC20
+                // second input is left unpiggybacked
                 const firstOutputIndexInExitMap = MAX_INPUT_NUM + 0;
                 const thirdOutputIndexInExitMap = MAX_INPUT_NUM + 2;
                 this.exit.exitMap = (2 ** firstOutputIndexInExitMap) | (2 ** thirdOutputIndexInExitMap);
@@ -248,8 +249,10 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
                 expect(postBalance).to.be.bignumber.equal(expectedBalance);
             });
 
-            it('should flag all inputs with the same token as spent', async () => {
+            it('should flag all inputs with the same token as spent no matter piggybacke or not', async () => {
+                // piggybacked input
                 expect(await this.framework.isOutputSpent(TEST_OUTPUT_ID_FOR_INPUT_1)).to.be.true;
+                // unpiggybacked input
                 expect(await this.framework.isOutputSpent(TEST_OUTPUT_ID_FOR_INPUT_2)).to.be.true;
             });
 

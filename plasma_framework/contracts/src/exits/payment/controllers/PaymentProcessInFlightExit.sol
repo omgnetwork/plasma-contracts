@@ -74,10 +74,11 @@ library PaymentProcessInFlightExit {
             }
         }
 
-        flagInputAndOutputSpent(self.framework, exit, token);
-        clearPiggybackFlag(exit, token);
+        flagInputsAndOutputsSpent(self.framework, exit, token);
+        clearPiggybackInputFlag(exit, token);
+        clearPiggybackOutputFlag(exit, token);
 
-        if (allPiggybackCleared(exit)) {
+        if (allPiggybacksCleared(exit)) {
             exit.bondOwner.transfer(exit.bondSize);
             delete exitMap.exits[exitId];
         }
@@ -119,6 +120,8 @@ library PaymentProcessInFlightExit {
         pure
         returns (bool)
     {
+        // whether input is spent is already checked all together in 'isAnyInputSpent'
+        // thus do not need to re-check here.
         return withdrawal.token == token &&
                 exit.isInputPiggybacked(index);
     }
@@ -152,19 +155,25 @@ library PaymentProcessInFlightExit {
         }
     }
 
-    function flagInputAndOutputSpent(
+    function flagInputsAndOutputsSpent(
         PlasmaFramework framework,
         PaymentExitDataModel.InFlightExit memory exit,
         address token
     )
         private
     {
+        // we flag _all_ inputs no matter it is piggybacked or not
+        // if exiting from output, all inputs are consider spent and can only exit from output furthre on.
+        // if exiting from input, for simplicity, we force all users to piggyback the input together at once
+        // instead of re-start the IFE and re-piggyback their input.
         uint256 inputNumOfTheToken;
         for (uint16 i = 0; i < MAX_INPUT_NUM; i++) {
             if (exit.inputs[i].token == token) {
                 inputNumOfTheToken++;
             }
         }
+
+        // only the piggybacked outputs are flagged. User can still standard exit if non-piggybacked.
         uint256 piggybackedOutputNumOfTheToken;
         for (uint16 i = 0; i < MAX_OUTPUT_NUM; i++) {
             if (exit.outputs[i].token == token && exit.isOutputPiggybacked(i)) {
@@ -189,7 +198,7 @@ library PaymentProcessInFlightExit {
         framework.batchFlagOutputsSpent(outputIdsToFlag);
     }
 
-    function clearPiggybackFlag(
+    function clearPiggybackInputFlag(
         PaymentExitDataModel.InFlightExit storage exit,
         address token
     )
@@ -200,7 +209,14 @@ library PaymentProcessInFlightExit {
                 exit.clearInputPiggybacked(i);
             }
         }
+    }
 
+    function clearPiggybackOutputFlag(
+        PaymentExitDataModel.InFlightExit storage exit,
+        address token
+    )
+        private
+    {
         for (uint16 i = 0; i < MAX_OUTPUT_NUM; i++) {
             if (token == exit.outputs[i].token) {
                 exit.clearOutputPiggybacked(i);
@@ -208,7 +224,7 @@ library PaymentProcessInFlightExit {
         }
     }
 
-    function allPiggybackCleared(PaymentExitDataModel.InFlightExit memory exit) private pure returns (bool) {
+    function allPiggybacksCleared(PaymentExitDataModel.InFlightExit memory exit) private pure returns (bool) {
         for (uint16 i = 0; i < MAX_INPUT_NUM; i++) {
             if (exit.isInputPiggybacked(i))
                 return false;

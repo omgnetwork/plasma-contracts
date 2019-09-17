@@ -22,8 +22,8 @@ contract DummyExitGame is IExitProcessor {
     );
 
     // override ExitProcessor interface
-    function processExit(uint192 _exitId, address ercContract) public {
-        emit ExitFinalizedFromDummyExitGame(_exitId, ercContract);
+    function processExit(uint192 exitId, address ercContract) public {
+        emit ExitFinalizedFromDummyExitGame(exitId, ercContract);
     }
 
     // setter function only for test, not a real Exit Game function
