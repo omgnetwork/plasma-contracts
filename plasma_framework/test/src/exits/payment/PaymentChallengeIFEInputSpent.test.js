@@ -20,7 +20,8 @@ const {
 } = require('../../../helpers/constants.js');
 const { buildUtxoPos } = require('../../../helpers/positions.js');
 const { createInputTransaction, createInFlightTx, getOutputId } = require('../../../helpers/ife.js');
-const { spentOnGas } = require('../../../helpers/utils.js');
+const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
+const { spentOnGas, computeNormalOutputId } = require('../../../helpers/utils.js');
 
 contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, challenger]) => {
     const IN_FLIGHT_EXIT_BOND = 31415926535; // wei
@@ -146,8 +147,12 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
             );
 
             this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
-            const handler = await OutputGuardHandler.new(true, alice);
-            await this.outputGuardHandlerRegistry.registerOutputGuardHandler(OUTPUT_TYPE.PAYMENT, handler.address);
+            const expectedOutputGuardHandler = await OutputGuardHandler.new();
+            await expectedOutputGuardHandler.mockIsValid(true);
+            await expectedOutputGuardHandler.mockGetExitTarget(alice);
+            await this.outputGuardHandlerRegistry.registerOutputGuardHandler(
+                OUTPUT_TYPE.PAYMENT, expectedOutputGuardHandler.address,
+            );
 
             this.spendingConditionRegistry = await SpendingConditionRegistry.new();
             this.spendingCondition = await SpendingConditionMock.new();
@@ -198,9 +203,9 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                 inFlightTx: this.testData.argsInputTwo.inFlightTx,
                 inFlightTxInputIndex: this.inFlightTxPiggybackedIndex,
                 challengingTx: web3.utils.bytesToHex(challengingTx.rlpEncoded()),
-                challengingTxType: TX_TYPE.PAYMENT,
                 challengingTxInputIndex: 0,
                 challengingTxInputOutputType: OUTPUT_TYPE.PAYMENT,
+                challengingTxInputOutputGuardPreimage: web3.utils.bytesToHex('preimage'),
                 challengingTxWitness: web3.utils.utf8ToHex('dummy witness'),
                 inputTx: inputTx.txBytes,
                 inputUtxoPos: inputTx.utxoPos,
@@ -316,8 +321,25 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                 );
             });
 
+            it('should fail when provided output type does not match exiting output', async () => {
+                this.challengeArgs.challengingTxInputOutputType = 2;
+                const expectedOutputGuardHandler = await OutputGuardHandler.new();
+                await expectedOutputGuardHandler.mockIsValid(false);
+                await this.outputGuardHandlerRegistry.registerOutputGuardHandler(
+                    this.challengeArgs.challengingTxInputOutputType, expectedOutputGuardHandler.address,
+                );
+                await expectRevert(
+                    this.exitGame.challengeInFlightExitInputSpent(this.challengeArgs, { from: challenger }),
+                    'Some of the output guard related information is not valid',
+                );
+            });
+
             it('should fail when spending condition for given output is not registered', async () => {
-                this.challengeArgs.challengingTxInputOutputType = OUTPUT_TYPE.PAYMENT + 1;
+                const outputId = computeNormalOutputId(this.challengeArgs.inputTx, 0);
+                const challengingTxOutput = new PaymentTransactionOutput(123, alice, ETH);
+                const challengingTx = new PaymentTransaction(23, [outputId], [challengingTxOutput]);
+
+                this.challengeArgs.challengingTx = web3.utils.bytesToHex(challengingTx.rlpEncoded());
                 await expectRevert(
                     this.exitGame.challengeInFlightExitInputSpent(this.challengeArgs, { from: challenger }),
                     'Spending condition contract not found',

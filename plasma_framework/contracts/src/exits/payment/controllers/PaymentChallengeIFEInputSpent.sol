@@ -4,8 +4,11 @@ pragma experimental ABIEncoderV2;
 import "../PaymentExitDataModel.sol";
 import "../PaymentInFlightExitModelUtils.sol";
 import "../routers/PaymentInFlightExitRouterArgs.sol";
+import "../../interfaces/IOutputGuardHandler.sol";
 import "../../interfaces/ISpendingCondition.sol";
+import "../../models/OutputGuardModel.sol";
 import "../../registries/SpendingConditionRegistry.sol";
+import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../utils/ExitId.sol";
 import "../../utils/OutputId.sol";
 import "../../../utils/UtxoPosLib.sol";
@@ -13,6 +16,7 @@ import "../../../utils/IsDeposit.sol";
 import "../../../utils/Merkle.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
+import "../../../transactions/WireTransaction.sol";
 
 library PaymentChallengeIFEInputSpent {
     using UtxoPosLib for UtxoPosLib.UtxoPos;
@@ -26,7 +30,7 @@ library PaymentChallengeIFEInputSpent {
         PlasmaFramework framework;
         IsDeposit.Predicate isDeposit;
         SpendingConditionRegistry spendingConditionRegistry;
-        uint256 supportedTxType;
+        OutputGuardHandlerRegistry outputGuardHandlerRegistry;
     }
 
     event InFlightExitInputBlocked(
@@ -47,7 +51,7 @@ library PaymentChallengeIFEInputSpent {
     function buildController(
         PlasmaFramework framework,
         SpendingConditionRegistry spendingConditionRegistry,
-        uint256 supportedTxType
+        OutputGuardHandlerRegistry outputGuardHandlerRegistry
     )
         public
         view
@@ -57,7 +61,7 @@ library PaymentChallengeIFEInputSpent {
             framework: framework,
             isDeposit: IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL()),
             spendingConditionRegistry: spendingConditionRegistry,
-            supportedTxType: supportedTxType
+            outputGuardHandlerRegistry: outputGuardHandlerRegistry
         });
     }
 
@@ -87,6 +91,8 @@ library PaymentChallengeIFEInputSpent {
 
         verifySpentInputEqualsIFEInput(data);
 
+        verifyOutputType(data);
+
         verifySpendingCondition(data);
 
         // Remove the input from the piggyback map
@@ -109,9 +115,28 @@ library PaymentChallengeIFEInputSpent {
         require(ifeInputOutputId == challengingTxInputOutputId, "Spent input is not the same as piggybacked input");
     }
 
+    function verifyOutputType(ChallengeIFEData memory data) private view {
+        UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(data.args.inputUtxoPos);
+        uint16 outputIndex = UtxoPosLib.outputIndex(utxoPos);
+        WireTransaction.Output memory output = WireTransaction.getOutput(data.args.inputTx, outputIndex);
+        OutputGuardModel.Data memory outputGuardData = OutputGuardModel.Data({
+            guard: output.outputGuard,
+            outputType: data.args.challengingTxInputOutputType,
+            preimage: data.args.challengingTxInputOutputGuardPreimage
+        });
+        IOutputGuardHandler handler = data.controller.outputGuardHandlerRegistry.outputGuardHandlers(data.args.challengingTxInputOutputType);
+
+        require(address(handler) != address(0),
+            "Does not have outputGuardHandler registered for the output type");
+
+        require(handler.isValid(outputGuardData),
+            "Some of the output guard related information is not valid");
+    }
+
     function verifySpendingCondition(ChallengeIFEData memory data) private view {
+        uint256 challengingTxType = WireTransaction.getTransactionType(data.args.challengingTx);
         ISpendingCondition condition = data.controller.spendingConditionRegistry.spendingConditions(
-            data.args.challengingTxInputOutputType, data.args.challengingTxType
+            data.args.challengingTxInputOutputType, challengingTxType
         );
         require(address(condition) != address(0), "Spending condition contract not found");
 
