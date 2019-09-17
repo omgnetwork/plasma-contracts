@@ -95,7 +95,7 @@ library PaymentInFlightExitRouterArgs {
      */
     struct ChallengeInputSpentArgs {
         bytes inFlightTx;
-        uint8 inFlightTxInputIndex;
+        uint16 inFlightTxInputIndex;
         bytes challengingTx;
         uint16 challengingTxInputIndex;
         uint256 challengingTxInputOutputType;
