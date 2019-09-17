@@ -90,6 +90,7 @@ library PaymentPiggybackInFlightExit {
 
         // In startInFlightExit, exitTarget for inputs would be saved as those are the neccesarry data to create the transaction
         require(withdrawData.exitTarget == msg.sender, "Can be called by the exit target only");
+        withdrawData.piggybackBondSize = msg.value;
 
         if (exit.isFirstPiggybackOfTheToken(withdrawData.token)) {
             enqueue(self, withdrawData.token, UtxoPosLib.UtxoPos(exit.position), exitId);
@@ -133,6 +134,7 @@ library PaymentPiggybackInFlightExit {
 
         // Exit Target for outputs is set in piggyback instead of start in-flight exit
         withdrawData.exitTarget = exitTarget;
+        withdrawData.piggybackBondSize = msg.value;
 
         exit.setOutputPiggybacked(args.outputIndex);
 

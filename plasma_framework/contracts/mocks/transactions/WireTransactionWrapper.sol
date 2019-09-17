@@ -10,4 +10,7 @@ contract WireTransactionWrapper {
         return output;
     }
 
+    function getTransactionType(bytes memory transaction) public pure returns (uint256) {
+        return WireTransaction.getTransactionType(transaction);
+    }
 }
