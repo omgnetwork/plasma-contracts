@@ -83,19 +83,22 @@ library PaymentChallengeIFENotCanonical {
             "The competitor transaction is the same as transaction in-flight"
         );
 
+
+        UtxoPosLib.UtxoPos memory inputUtxoPos = UtxoPosLib.UtxoPos(args.inputUtxoPos);
+
+        bytes32 outputId;
+        if (self.isDeposit.test(inputUtxoPos.blockNum())) {
+            outputId = OutputId.computeDepositOutputId(args.inputTx, inputUtxoPos.outputIndex(), inputUtxoPos.value);
+        } else {
+            outputId = OutputId.computeNormalOutputId(args.inputTx, inputUtxoPos.outputIndex());
+        }
+        require(outputId == ife.inputs[args.inFlightTxInputIndex].outputId,
+                "Provided inputs data does not point to the same outputId from the in-flight exit");
+
         ISpendingCondition condition = self.spendingConditionRegistry.spendingConditions(
             args.outputType, self.supportedTxType
         );
         require(address(condition) != address(0), "Spending condition contract not found");
-
-        UtxoPosLib.UtxoPos memory inputUtxoPos = UtxoPosLib.UtxoPos(args.inputUtxoPos);
-        bytes32 outputId = self.isDeposit.test(inputUtxoPos.blockNum())?
-            OutputId.computeDepositOutputId(args.inputTx, inputUtxoPos.outputIndex(), inputUtxoPos.value)
-            : OutputId.computeNormalOutputId(args.inputTx, inputUtxoPos.outputIndex());
-
-        require(outputId == ife.inputs[args.inFlightTxInputIndex].outputId,
-                "Provided inputs data does not point to the same outputId from the in-flight exit");
-
         bool isSpentByCompetingTx = condition.verify(
             args.inputTx,
             inputUtxoPos.outputIndex(),
@@ -107,8 +110,10 @@ library PaymentChallengeIFENotCanonical {
         );
         require(isSpentByCompetingTx, "Competing input spending condition does not met");
 
+        (IOutputGuardHandler outputGuardHandler, OutputGuardModel.Data memory outputGuardData) = verifyOutputTypeAndPreimage(self, args);
+
         // Determine the position of the competing transaction
-        uint256 competitorPosition = verifyCompetingTxFinalized(self, args);
+        uint256 competitorPosition = verifyCompetingTxFinalized(self, args, outputGuardHandler, outputGuardData);
 
         require(
             ife.oldestCompetitorPosition == 0 || ife.oldestCompetitorPosition > competitorPosition,
@@ -172,9 +177,35 @@ library PaymentChallengeIFENotCanonical {
         return utxoPos.value;
     }
 
-    function verifyCompetingTxFinalized(
+    function verifyOutputTypeAndPreimage(
         Controller memory self,
         PaymentInFlightExitRouterArgs.ChallengeCanonicityArgs memory args
+    )
+        private
+        view
+        returns (IOutputGuardHandler, OutputGuardModel.Data memory)
+    {
+        IOutputGuardHandler outputGuardHandler = self.outputGuardHandlerRegistry.outputGuardHandlers(args.outputType);
+
+        require(address(outputGuardHandler) != address(0), "Failed to get the outputGuardHandler of the output type");
+
+        WireTransaction.Output memory output = WireTransaction.getOutput(args.inputTx, args.inFlightTxInputIndex);
+        OutputGuardModel.Data memory outputGuardData = OutputGuardModel.Data({
+            guard: output.outputGuard,
+            outputType: args.outputType,
+            preimage: args.outputGuardPreimage
+        });
+        require(outputGuardHandler.isValid(outputGuardData),
+                "Output guard information is invalid");
+
+        return (outputGuardHandler, outputGuardData);
+    }
+
+    function verifyCompetingTxFinalized(
+        Controller memory self,
+        PaymentInFlightExitRouterArgs.ChallengeCanonicityArgs memory args,
+        IOutputGuardHandler outputGuardHandler,
+        OutputGuardModel.Data memory outputGuardData
     )
         private
         view
@@ -190,21 +221,6 @@ library PaymentChallengeIFENotCanonical {
         if (args.competingTxPos == 0) {
             require(protocol == Protocol.MORE_VP(), "Competing tx without position must be a more vp tx");
         } else {
-            IOutputGuardHandler outputGuardHandler = self
-                                                    .outputGuardHandlerRegistry
-                                                    .outputGuardHandlers(args.outputType);
-
-            require(address(outputGuardHandler) != address(0), "Failed to get the outputGuardHandler of the output type");
-
-            WireTransaction.Output memory output = WireTransaction.getOutput(args.inputTx, args.inFlightTxInputIndex);
-            OutputGuardModel.Data memory outputGuardData = OutputGuardModel.Data({
-                guard: output.outputGuard,
-                outputType: args.outputType,
-                preimage: args.outputGuardPreimage
-            });
-            require(outputGuardHandler.isValid(outputGuardData),
-                    "Output guard information is invalid");
-
             TxFinalization.Verifier memory verifier = TxFinalization.Verifier({
                 framework: self.framework,
                 protocol: protocol,
