@@ -69,7 +69,7 @@ library PaymentChallengeIFEOutputSpent {
 
         verifyInFlightTransactionStandardFinalized(controller, args);
         verifyOutputType(controller, args);
-        verifyChallengingTransactionSpendsOutput(controller, args, ife);
+        verifyChallengingTransactionSpendsOutput(controller, args);
 
         ife.clearOutputPiggybacked(outputIndex);
 
@@ -123,14 +123,12 @@ library PaymentChallengeIFEOutputSpent {
 
     function verifyChallengingTransactionSpendsOutput(
         Controller memory controller,
-        PaymentInFlightExitRouterArgs.ChallengeOutputSpent memory args,
-        PaymentExitDataModel.InFlightExit storage ife
+        PaymentInFlightExitRouterArgs.ChallengeOutputSpent memory args
     )
         private
         view
     {
         UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(args.outputUtxoPos);
-        PaymentTransactionModel.Transaction memory inFlightTx = PaymentTransactionModel.decode(args.inFlightTx);
         uint256 challengingTxType = WireTransaction.getTransactionType(args.challengingTx);
 
         ISpendingCondition condition = controller.spendingConditionRegistry.spendingConditions(
