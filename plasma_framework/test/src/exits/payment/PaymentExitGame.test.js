@@ -9,11 +9,17 @@ const ERC20Mintable = artifacts.require('ERC20Mintable');
 const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry');
 const PaymentExitGame = artifacts.require('PaymentExitGame');
 const PaymentChallengeStandardExit = artifacts.require('PaymentChallengeStandardExit');
+const PaymentChallengeIFENotCanonical = artifacts.require('PaymentChallengeIFENotCanonical');
+const PaymentChallengeIFEInputSpent = artifacts.require('PaymentChallengeIFEInputSpent');
+const PaymentChallengeIFEOutputSpent = artifacts.require('PaymentChallengeIFEOutputSpent');
 const PaymentOutputGuardHandler = artifacts.require('PaymentOutputGuardHandler');
 const PaymentOutputToPaymentTxCondition = artifacts.require('PaymentOutputToPaymentTxCondition');
 const PaymentStartInFlightExit = artifacts.require('PaymentStartInFlightExit');
 const PaymentStartStandardExit = artifacts.require('PaymentStartStandardExit');
+const PaymentTransactionStateTransitionVerifier = artifacts.require('PaymentTransactionStateTransitionVerifier');
+const PaymentPiggybackInFlightExit = artifacts.require('PaymentPiggybackInFlightExit');
 const PaymentProcessStandardExit = artifacts.require('PaymentProcessStandardExit');
+const PaymentProcessInFlightExit = artifacts.require('PaymentProcessInFlightExit');
 const PlasmaFramework = artifacts.require('PlasmaFramework');
 const PriorityQueue = artifacts.require('PriorityQueue');
 const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry');
@@ -50,11 +56,21 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
         const challengeStandardExit = await PaymentChallengeStandardExit.new();
         const processStandardExit = await PaymentProcessStandardExit.new();
         const startInFlightExit = await PaymentStartInFlightExit.new();
+        const piggybackInFlightExit = await PaymentPiggybackInFlightExit.new();
+        const challengeInFlightExitNotCanonical = await PaymentChallengeIFENotCanonical.new();
+        const challengeIFEInputSpent = await PaymentChallengeIFEInputSpent.new();
+        const challengeIFEOutput = await PaymentChallengeIFEOutputSpent.new();
+        const processInFlightExit = await PaymentProcessInFlightExit.new();
 
         await PaymentExitGame.link('PaymentStartStandardExit', startStandardExit.address);
         await PaymentExitGame.link('PaymentChallengeStandardExit', challengeStandardExit.address);
         await PaymentExitGame.link('PaymentProcessStandardExit', processStandardExit.address);
         await PaymentExitGame.link('PaymentStartInFlightExit', startInFlightExit.address);
+        await PaymentExitGame.link('PaymentPiggybackInFlightExit', piggybackInFlightExit.address);
+        await PaymentExitGame.link('PaymentChallengeIFENotCanonical', challengeInFlightExitNotCanonical.address);
+        await PaymentExitGame.link('PaymentChallengeIFEInputSpent', challengeIFEInputSpent.address);
+        await PaymentExitGame.link('PaymentChallengeIFEOutputSpent', challengeIFEOutput.address);
+        await PaymentExitGame.link('PaymentProcessInFlightExit', processInFlightExit.address);
     };
 
     const setupAccount = async () => {
@@ -100,9 +116,15 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
         );
 
         const spendingConditionRegistry = await SpendingConditionRegistry.new();
+        const stateVerifier = await PaymentTransactionStateTransitionVerifier.new();
         this.exitGame = await PaymentExitGame.new(
-            this.framework.address, this.ethVault.address, this.erc20Vault.address,
-            outputGuardHandlerRegistry.address, spendingConditionRegistry.address,
+            this.framework.address,
+            this.ethVault.address,
+            this.erc20Vault.address,
+            outputGuardHandlerRegistry.address,
+            spendingConditionRegistry.address,
+            stateVerifier.address,
+            TX_TYPE.PAYMENT,
         );
 
         this.startStandardExitBondSize = await this.exitGame.startStandardExitBondSize();
@@ -202,7 +224,6 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
                     expect(standardExitData.exitable).to.be.true;
                     expect(standardExitData.outputId).to.equal(outputId);
                     expect(new BN(standardExitData.utxoPos)).to.be.bignumber.equal(new BN(this.depositUtxoPos));
-                    expect(standardExitData.token).to.equal(ETH);
                     expect(standardExitData.exitTarget).to.equal(alice);
                     expect(new BN(standardExitData.amount)).to.be.bignumber.equal(new BN(DEPOSIT_VALUE));
                 });

@@ -252,7 +252,6 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
             expect(new BN(standardExitData.utxoPos)).to.be.bignumber.equal(new BN(args.utxoPos));
             expect(standardExitData.outputId).to.equal(outputId);
             expect(standardExitData.exitTarget).to.equal(outputOwner);
-            expect(standardExitData.token).to.equal(ETH);
             expect(new BN(standardExitData.amount)).to.be.bignumber.equal(new BN(this.dummyAmount));
         });
 
@@ -276,7 +275,6 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
             expect(new BN(standardExitData.utxoPos)).to.be.bignumber.equal(new BN(args.utxoPos));
             expect(standardExitData.outputId).to.equal(outputId);
             expect(standardExitData.exitTarget).to.equal(outputOwner);
-            expect(standardExitData.token).to.equal(ETH);
             expect(new BN(standardExitData.amount)).to.be.bignumber.equal(new BN(this.dummyAmount));
         });
 

@@ -2,12 +2,15 @@ const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry
 const PaymentInFlightExitRouter = artifacts.require('PaymentInFlightExitRouterMock');
 const PaymentStartInFlightExit = artifacts.require('PaymentStartInFlightExit');
 const PaymentPiggybackInFlightExit = artifacts.require('PaymentPiggybackInFlightExit');
+const PaymentProcessInFlightExit = artifacts.require('PaymentProcessInFlightExit');
 const PaymentChallengeIFENotCanonical = artifacts.require('PaymentChallengeIFENotCanonical');
 const PaymentChallengeIFEInputSpent = artifacts.require('PaymentChallengeIFEInputSpent');
 const PaymentChallengeIFEOutputSpent = artifacts.require('PaymentChallengeIFEOutputSpent');
 const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry');
 const SpendingConditionMock = artifacts.require('SpendingConditionMock');
 const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
+const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
+const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
 const StateTransitionVerifierAccept = artifacts.require('StateTransitionVerifierAccept');
 const ExitId = artifacts.require('ExitIdWrapper');
 const IsDeposit = artifacts.require('IsDepositWrapper');
@@ -27,7 +30,8 @@ const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpe
 const { createInclusionProof } = require('../../../helpers/ife.js');
 
 contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, competitorOwner, challenger]) => {
-    const PIGGYBACK_BOND = 31415926535;
+    const DUMMY_IFE_BOND_SIZE = 31415926535; // wei
+    const PIGGYBACK_BOND = 31415926535; // wei
     const CHILD_BLOCK_INTERVAL = 1000;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week in second
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
@@ -147,6 +151,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
                 amount: TEST_IFE_OUTPUT_AMOUNT,
                 piggybackBondSize: PIGGYBACK_BOND,
             }, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData],
+            bondSize: DUMMY_IFE_BOND_SIZE,
         };
 
         const rlpInFlightTxBytes = web3.utils.bytesToHex(inFlightTx.rlpEncoded());
@@ -160,12 +165,14 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
         const challengeInFlightExitNotCanonical = await PaymentChallengeIFENotCanonical.new();
         const challengeIFEInputSpent = await PaymentChallengeIFEInputSpent.new();
         const challengeIFEOutputSpent = await PaymentChallengeIFEOutputSpent.new();
+        const processInFlightExit = await PaymentProcessInFlightExit.new();
 
         await PaymentInFlightExitRouter.link('PaymentStartInFlightExit', startInFlightExit.address);
         await PaymentInFlightExitRouter.link('PaymentPiggybackInFlightExit', piggybackInFlightExit.address);
         await PaymentInFlightExitRouter.link('PaymentChallengeIFENotCanonical', challengeInFlightExitNotCanonical.address);
         await PaymentInFlightExitRouter.link('PaymentChallengeIFEInputSpent', challengeIFEInputSpent.address);
         await PaymentInFlightExitRouter.link('PaymentChallengeIFEOutputSpent', challengeIFEOutputSpent.address);
+        await PaymentInFlightExitRouter.link('PaymentProcessInFlightExit', processInFlightExit.address);
     });
 
     before('deploy helper contracts', async () => {
@@ -180,10 +187,14 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
         this.framework = await SpyPlasmaFramework.new(
             MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
         );
+        const ethVault = await SpyEthVault.new(this.framework.address);
+        const erc20Vault = await SpyErc20Vault.new(this.framework.address);
         this.spendingConditionRegistry = await SpendingConditionRegistry.new();
         this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
         this.exitGame = await PaymentInFlightExitRouter.new(
             this.framework.address,
+            ethVault.address,
+            erc20Vault.address,
             this.outputGuardHandlerRegistry.address,
             this.spendingConditionRegistry.address,
             this.stateTransitionVerifierAccept.address,

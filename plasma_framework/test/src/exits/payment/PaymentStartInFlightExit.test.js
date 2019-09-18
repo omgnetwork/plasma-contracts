@@ -6,6 +6,7 @@ const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry
 const PaymentInFlightExitRouter = artifacts.require('PaymentInFlightExitRouterMock');
 const PaymentStartInFlightExit = artifacts.require('PaymentStartInFlightExit');
 const PaymentPiggybackInFlightExit = artifacts.require('PaymentPiggybackInFlightExit');
+const PaymentProcessInFlightExit = artifacts.require('PaymentProcessInFlightExit');
 const PaymentChallengeIFENotCanonical = artifacts.require('PaymentChallengeIFENotCanonical');
 const PaymentChallengeIFEInputSpent = artifacts.require('PaymentChallengeIFEInputSpent');
 const PaymentChallengeIFEOutputSpent = artifacts.require('PaymentChallengeIFEOutputSpent');
@@ -15,6 +16,8 @@ const StateTransitionVerifierAccept = artifacts.require('StateTransitionVerifier
 const StateTransitionVerifierReject = artifacts.require('StateTransitionVerifierReject');
 const StateTransitionVerifierReverse = artifacts.require('StateTransitionVerifierReverse');
 const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
+const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
+const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
 
 const {
     BN, constants, expectEvent, expectRevert, time,
@@ -54,12 +57,14 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
         const challengeInFlightExitNotCanonical = await PaymentChallengeIFENotCanonical.new();
         const challengeIFEInputSpent = await PaymentChallengeIFEInputSpent.new();
         const challengeIFEOutputSpent = await PaymentChallengeIFEOutputSpent.new();
+        const processInFlightExit = await PaymentProcessInFlightExit.new();
 
         await PaymentInFlightExitRouter.link('PaymentStartInFlightExit', startInFlightExit.address);
         await PaymentInFlightExitRouter.link('PaymentPiggybackInFlightExit', piggybackInFlightExit.address);
         await PaymentInFlightExitRouter.link('PaymentChallengeIFENotCanonical', challengeInFlightExitNotCanonical.address);
         await PaymentInFlightExitRouter.link('PaymentChallengeIFEInputSpent', challengeIFEInputSpent.address);
         await PaymentInFlightExitRouter.link('PaymentChallengeIFEOutputSpent', challengeIFEOutputSpent.address);
+        await PaymentInFlightExitRouter.link('PaymentProcessInFlightExit', processInFlightExit.address);
     });
 
     before('setup bob account with custom private key', async () => {
@@ -124,6 +129,9 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                     MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
                 );
 
+                const ethVault = await SpyEthVault.new(this.framework.address);
+                const erc20Vault = await SpyErc20Vault.new(this.framework.address);
+
                 this.spendingConditionRegistry = await SpendingConditionRegistry.new();
                 const { condition1, condition2 } = registerSpendingConditionTrue(this.spendingConditionRegistry);
                 this.condition1 = condition1;
@@ -140,6 +148,8 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
 
                 this.exitGame = await PaymentInFlightExitRouter.new(
                     this.framework.address,
+                    ethVault.address,
+                    erc20Vault.address,
                     this.outputGuardHandlerRegistry.address,
                     this.spendingConditionRegistry.address,
                     this.stateTransitionVerifierAccept.address,
@@ -248,6 +258,8 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 this.framework = await SpyPlasmaFramework.new(
                     MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
                 );
+                const ethVault = await SpyEthVault.new(this.framework.address);
+                const erc20Vault = await SpyErc20Vault.new(this.framework.address);
 
                 this.spendingConditionRegistry = await SpendingConditionRegistry.new();
                 const { condition1, condition2 } = registerSpendingConditionTrue(this.spendingConditionRegistry);
@@ -265,6 +277,8 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
 
                 this.exitGame = await PaymentInFlightExitRouter.new(
                     this.framework.address,
+                    ethVault.address,
+                    erc20Vault.address,
                     this.outputGuardHandlerRegistry.address,
                     this.spendingConditionRegistry.address,
                     this.stateTransitionVerifierAccept.address,
@@ -289,6 +303,8 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 this.args.inputTxsConfirmSigs[0] = sign(inputTxsBlockRoot1, bobPrivateKey);
                 const dummyExitGame = await PaymentInFlightExitRouter.new(
                     this.framework.address,
+                    ethVault.address,
+                    erc20Vault.address,
                     this.outputGuardHandlerRegistry.address,
                     this.spendingConditionRegistry.address,
                     this.stateTransitionVerifierAccept.address,
@@ -323,6 +339,9 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                     MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
                 );
 
+                this.ethVault = await SpyEthVault.new(this.framework.address);
+                this.erc20Vault = await SpyErc20Vault.new(this.framework.address);
+
                 this.spendingConditionRegistry = await SpendingConditionRegistry.new();
 
                 // setup outputGuardHandler
@@ -337,6 +356,8 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
 
                 this.exitGame = await PaymentInFlightExitRouter.new(
                     this.framework.address,
+                    this.ethVault.address,
+                    this.erc20Vault.address,
                     this.outputGuardHandlerRegistry.address,
                     this.spendingConditionRegistry.address,
                     this.stateTransitionVerifierAccept.address,
@@ -400,27 +421,6 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 await this.framework.setBlock(DEPOSIT_BLOCK_NUMBER, inputTxsBlockRoot2, 0);
 
                 await this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND });
-                await expectRevert(
-                    this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
-                    'There is an active in-flight exit from this transaction',
-                );
-            });
-
-            it('should fail when the same in-flight exit is already finalized', async () => {
-                const {
-                    args,
-                    inputTxsBlockRoot1,
-                    inputTxsBlockRoot2,
-                } = buildValidIfeStartArgs(AMOUNT, [alice, bob, carol], BLOCK_NUMBER, DEPOSIT_BLOCK_NUMBER);
-                await registerSpendingConditionTrue(this.spendingConditionRegistry);
-                await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot1, 0);
-                await this.framework.setBlock(DEPOSIT_BLOCK_NUMBER, inputTxsBlockRoot2, 0);
-
-                await this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND });
-
-                const exitId = await this.exitIdHelper.getInFlightExitId(args.inFlightTx);
-                await this.exitGame.finalizeExit(exitId);
-
                 await expectRevert(
                     this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
                     'There is an active in-flight exit from this transaction',
@@ -497,6 +497,8 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 args.inputTxsConfirmSigs[0] = web3.utils.utf8ToHex('invalid confirm sig');
                 const dummyExitGame = await PaymentInFlightExitRouter.new(
                     this.framework.address,
+                    this.ethVault.address,
+                    this.erc20Vault.address,
                     this.outputGuardHandlerRegistry.address,
                     this.spendingConditionRegistry.address,
                     this.stateTransitionVerifierAccept.address,
@@ -715,6 +717,8 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 this.framework = await SpyPlasmaFramework.new(
                     MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
                 );
+                this.ethVault = await SpyEthVault.new(this.framework.address);
+                this.erc20Vault = await SpyErc20Vault.new(this.framework.address);
             });
 
             it('should fail when in-flight transaction is an invalid state transistion', async () => {
@@ -723,6 +727,8 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 this.spendingConditionRegistry = await SpendingConditionRegistry.new();
                 const exitGame = await PaymentInFlightExitRouter.new(
                     this.framework.address,
+                    this.ethVault.address,
+                    this.erc20Vault.address,
                     this.outputGuardHandlerRegistry.address,
                     this.spendingConditionRegistry.address,
                     stateTransitionVerifierReject.address,
@@ -765,6 +771,8 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 this.spendingConditionRegistry = await SpendingConditionRegistry.new();
                 const exitGame = await PaymentInFlightExitRouter.new(
                     this.framework.address,
+                    this.ethVault.address,
+                    this.erc20Vault.address,
                     this.outputGuardHandlerRegistry.address,
                     this.spendingConditionRegistry.address,
                     stateTransitionVerifierReverse.address,

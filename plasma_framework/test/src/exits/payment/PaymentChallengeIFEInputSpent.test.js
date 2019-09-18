@@ -3,6 +3,7 @@ const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry
 const PaymentInFlightExitRouter = artifacts.require('PaymentInFlightExitRouterMock');
 const PaymentStartInFlightExit = artifacts.require('PaymentStartInFlightExit');
 const PaymentPiggybackInFlightExit = artifacts.require('PaymentPiggybackInFlightExit');
+const PaymentProcessInFlightExit = artifacts.require('PaymentProcessInFlightExit');
 const PaymentChallengeIFENotCanonical = artifacts.require('PaymentChallengeIFENotCanonical');
 const PaymentChallengeIFEInputSpent = artifacts.require('PaymentChallengeIFEInputSpent');
 const PaymentChallengeIFEOutputSpent = artifacts.require('PaymentChallengeIFEOutputSpent');
@@ -11,6 +12,8 @@ const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry')
 const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const StateTransitionVerifierAccept = artifacts.require('StateTransitionVerifierAccept');
 const ExitId = artifacts.require('ExitIdWrapper');
+const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
+const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
 
 const {
     BN, constants, expectEvent, expectRevert, time,
@@ -25,7 +28,7 @@ const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpe
 const { spentOnGas, computeNormalOutputId, getOutputId } = require('../../../helpers/utils.js');
 
 contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, challenger]) => {
-    const IN_FLIGHT_EXIT_BOND = 31415926535; // wei
+    const DUMMY_IFE_BOND_SIZE = 31415926535;
     const PIGGYBACK_BOND = 31415926535;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
@@ -40,12 +43,14 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
         const challengeInFlightExitNotCanonical = await PaymentChallengeIFENotCanonical.new();
         const challengeIFEInputSpent = await PaymentChallengeIFEInputSpent.new();
         const challengeIFEOutputSpent = await PaymentChallengeIFEOutputSpent.new();
+        const processInFlightExit = await PaymentProcessInFlightExit.new();
 
         await PaymentInFlightExitRouter.link('PaymentStartInFlightExit', startInFlightExit.address);
         await PaymentInFlightExitRouter.link('PaymentPiggybackInFlightExit', piggybackInFlightExit.address);
         await PaymentInFlightExitRouter.link('PaymentChallengeIFENotCanonical', challengeInFlightExitNotCanonical.address);
         await PaymentInFlightExitRouter.link('PaymentChallengeIFEInputSpent', challengeIFEInputSpent.address);
         await PaymentInFlightExitRouter.link('PaymentChallengeIFEOutputSpent', challengeIFEOutputSpent.address);
+        await PaymentInFlightExitRouter.link('PaymentProcessInFlightExit', processInFlightExit.address);
     });
 
     before('deploy helper contracts', async () => {
@@ -105,6 +110,7 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                 exitMap: 0,
                 position: buildUtxoPos(BLOCK_NUMBER, 0, 0),
                 bondOwner: alice,
+                bondSize: DUMMY_IFE_BOND_SIZE,
                 oldestCompetitorPosition: 0,
                 inputs: [{
                     outputId: web3.utils.sha3('dummy output id'),
@@ -145,6 +151,9 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                 MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
             );
 
+            const ethVault = await SpyEthVault.new(this.framework.address);
+            const erc20Vault = await SpyErc20Vault.new(this.framework.address);
+
             this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
             const expectedOutputGuardHandler = await OutputGuardHandler.new();
             await expectedOutputGuardHandler.mockIsValid(true);
@@ -163,6 +172,8 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
 
             this.exitGame = await PaymentInFlightExitRouter.new(
                 this.framework.address,
+                ethVault.address,
+                erc20Vault.address,
                 this.outputGuardHandlerRegistry.address,
                 this.spendingConditionRegistry.address,
                 this.stateTransitionVerifierAccept.address,

@@ -71,7 +71,7 @@ library PaymentChallengeIFEOutputSpent {
         verifyOutputType(controller, args);
         verifyChallengingTransactionSpendsOutput(controller, args);
 
-        ife.clearOutputPiggyback(outputIndex);
+        ife.clearOutputPiggybacked(outputIndex);
 
         //pay bond to challenger
         msg.sender.transfer(ife.outputs[outputIndex].piggybackBondSize);
