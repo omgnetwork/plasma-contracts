@@ -8,8 +8,12 @@ import "../../../../src/exits/interfaces/IStateTransitionVerifier.sol";
 import "../../../../src/exits/registries/OutputGuardHandlerRegistry.sol";
 
 contract PaymentInFlightExitRouterMock is PaymentInFlightExitRouter {
+    PlasmaFramework public framework;
+
     constructor(
-        PlasmaFramework framework,
+        PlasmaFramework plasmaFramework,
+        EthVault ethVault,
+        Erc20Vault erc20Vault,
         OutputGuardHandlerRegistry outputGuardHandlerRegistry,
         SpendingConditionRegistry spendingConditionRegistry,
         IStateTransitionVerifier verifier,
@@ -17,29 +21,31 @@ contract PaymentInFlightExitRouterMock is PaymentInFlightExitRouter {
     )
         public
         PaymentInFlightExitRouter(
-            framework,
+            plasmaFramework,
+            ethVault,
+            erc20Vault,
             outputGuardHandlerRegistry,
             spendingConditionRegistry,
             verifier,
             supportedTxType
         )
     {
+        framework = plasmaFramework;
     }
 
-    // to override IExitProcessor function
-    function processExit(uint192 exitId) external {}
-
-    function finalizeExit(uint192 exitId) public {
-        inFlightExitMap.exits[exitId].exitStartTimestamp = 1;
-        inFlightExitMap.exits[exitId].isFinalized = true;
+    /** override and calls processInFlightExit for test */
+    function processExit(uint192 exitId, address ercContract) external {
+        PaymentInFlightExitRouter.processInFlightExit(exitId, ercContract);
     }
 
     function setInFlightExit(uint192 exitId, PaymentExitDataModel.InFlightExit memory exit) public {
         PaymentExitDataModel.InFlightExit storage ife = inFlightExitMap.exits[exitId];
+        ife.isCanonical = exit.isCanonical;
         ife.exitStartTimestamp = exit.exitStartTimestamp;
         ife.exitMap = exit.exitMap;
         ife.position = exit.position;
         ife.bondOwner = exit.bondOwner;
+        ife.bondSize = exit.bondSize;
         ife.oldestCompetitorPosition = exit.oldestCompetitorPosition;
 
         for (uint i = 0; i < exit.inputs.length; i++) {
@@ -59,6 +65,11 @@ contract PaymentInFlightExitRouterMock is PaymentInFlightExitRouter {
         return inFlightExitMap.exits[exitId].outputs[outputIndex];
     }
 
-    function depositFundForTest() public payable {
+    /** calls the flagOutputSpent function on behalf of the exit game */
+    function proxyFlagOutputSpent(bytes32 _outputId) public {
+        framework.flagOutputSpent(_outputId);
     }
+
+    /** empty function that accepts ETH to fund the contract as test setup */
+    function depositFundForTest() public payable {}
 }

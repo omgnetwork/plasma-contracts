@@ -104,7 +104,7 @@ contract ExitGameController is ExitGameRegistry {
      * @return total number of processed exits
      */
     function processExits(address _token, uint256 _topUniquePriority, uint256 _maxExitsToProcess) external {
-        require(hasToken(_token), "Such token has not be added to the plasma framework yet");
+        require(hasToken(_token), "Such token has not been added to the plasma framework yet");
 
         PriorityQueue queue = exitsQueues[_token];
         require(queue.currentSize() > 0, "Exit queue is empty");
@@ -117,13 +117,12 @@ contract ExitGameController is ExitGameRegistry {
         uint256 processedNum = 0;
 
         while (processedNum < _maxExitsToProcess && ExitPriority.parseExitableAt(uniquePriority) < block.timestamp) {
-            IExitProcessor processor = exit.exitProcessor;
-
-            processor.processExit(exit.exitId);
-
             delete exits[uniquePriority];
             queue.delMin();
             processedNum++;
+
+            IExitProcessor processor = exit.exitProcessor;
+            processor.processExit(exit.exitId, _token);
 
             if (queue.currentSize() == 0) {
                 break;
@@ -155,6 +154,7 @@ contract ExitGameController is ExitGameRegistry {
      */
     function batchFlagOutputsSpent(bytes32[] calldata _outputIds) external onlyFromNonQuarantinedExitGame {
         for (uint i = 0; i < _outputIds.length; i++) {
+            require(_outputIds[i] != bytes32(""), "Should not flag with empty outputId");
             isOutputSpent[_outputIds[i]] = true;
         }
     }
@@ -164,6 +164,7 @@ contract ExitGameController is ExitGameRegistry {
      * @param _outputId The output id to be flagged as spent
      */
     function flagOutputSpent(bytes32 _outputId) external onlyFromNonQuarantinedExitGame {
+        require(_outputId != bytes32(""), "Should not flag with empty outputId");
         isOutputSpent[_outputId] = true;
     }
 }

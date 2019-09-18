@@ -163,7 +163,6 @@ library PaymentStartStandardExit {
             exitable: true,
             utxoPos: uint192(data.utxoPos.value),
             outputId: outputId,
-            token: data.output.token,
             exitTarget: msg.sender,
             amount: data.output.amount,
             bondSize: msg.value

@@ -1,14 +1,15 @@
 const PriorityQueue = artifacts.require('PriorityQueue');
 const ExitGameController = artifacts.require('ExitGameController');
 const DummyExitGame = artifacts.require('DummyExitGame');
+const ReentrancyExitGame = artifacts.require('ReentrancyExitGame');
 
 const {
-    BN, constants, expectEvent, expectRevert,
+    BN, constants, expectEvent, expectRevert, time,
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
 const { buildTxPos } = require('../../helpers/positions.js');
-const { PROTOCOL } = require('../../helpers/constants.js');
+const { PROTOCOL, EMPTY_BYTES_32 } = require('../../helpers/constants.js');
 
 contract('ExitGameController', () => {
     const MIN_EXIT_PERIOD = 10;
@@ -232,7 +233,7 @@ contract('ExitGameController', () => {
             const fakeNonAddedTokenAddress = (await DummyExitGame.new()).address;
             await expectRevert(
                 this.controller.processExits(fakeNonAddedTokenAddress, 0, 1),
-                'Such token has not be added to the plasma framework yet',
+                'Such token has not been added to the plasma framework yet',
             );
         });
 
@@ -319,7 +320,7 @@ contract('ExitGameController', () => {
                     receipt.transactionHash,
                     DummyExitGame,
                     'ExitFinalizedFromDummyExitGame',
-                    { exitId: new BN(this.dummyExit.exitId) },
+                    { exitId: new BN(this.dummyExit.exitId), ercContract: this.dummyToken },
                 );
             });
 
@@ -393,6 +394,51 @@ contract('ExitGameController', () => {
                 });
             });
         });
+
+        describe('When reentrancy happens', () => {
+            beforeEach(async () => {
+                this.reentryMaxExitToProcess = 1;
+                const reentrancyExitGame = await ReentrancyExitGame.new(
+                    this.controller.address, this.dummyToken, this.reentryMaxExitToProcess,
+                );
+                const txType = 999;
+                await this.controller.registerExitGame(
+                    txType, reentrancyExitGame.address, PROTOCOL.MORE_VP,
+                );
+
+                // bypass quarantined period
+                await time.increase(3 * MIN_EXIT_PERIOD + 1);
+
+                // put two items in the queue, the first one would trigger reentry
+                await reentrancyExitGame.enqueue(
+                    this.dummyExit.token,
+                    this.dummyExit.exitableAt,
+                    this.dummyExit.txPos,
+                    this.dummyExit.exitId,
+                    reentrancyExitGame.address,
+                );
+                await reentrancyExitGame.enqueue(
+                    this.dummyExit.token,
+                    this.dummyExit.exitableAt,
+                    this.dummyExit.txPos,
+                    this.dummyExit.exitId,
+                    this.dummyExit.exitProcessor,
+                );
+            });
+
+            it('should process the next item during reentry', async () => {
+                const maxExitToProcess = 2;
+                // The reentry would processed out some items from queue
+                // Leaving the original call continue the loop with the queue status after processed.
+                const expectedProcessedExit = maxExitToProcess - this.reentryMaxExitToProcess;
+
+                const tx = await this.controller.processExits(this.dummyToken, 0, 2);
+                await expectEvent.inLogs(tx.logs, 'ProcessedExitsNum', {
+                    processedNum: new BN(expectedProcessedExit),
+                    token: this.dummyToken,
+                });
+            });
+        });
     });
 
     describe('isAnyOutputsSpent', () => {
@@ -443,6 +489,14 @@ contract('ExitGameController', () => {
             expect(await this.controller.isOutputSpent(dummyOutputId2)).to.be.true;
         });
 
+        it('should fail when try to flag with empty outputId', async () => {
+            const dummyOutputId = web3.utils.sha3('output id');
+            await expectRevert(
+                this.dummyExitGame.proxyBatchFlagOutputsSpent([dummyOutputId, EMPTY_BYTES_32]),
+                'Should not flag with empty outputId',
+            );
+        });
+
         it('should fail when not called by Exit Game contracts', async () => {
             const dummyOutputId = web3.utils.sha3('output id');
             await expectRevert(
@@ -470,6 +524,13 @@ contract('ExitGameController', () => {
             const dummyOutputId = web3.utils.sha3('output id');
             await this.dummyExitGame.proxyFlagOutputSpent(dummyOutputId);
             expect(await this.controller.isOutputSpent(dummyOutputId)).to.be.true;
+        });
+
+        it('should fail when try to flag withempty outputId', async () => {
+            await expectRevert(
+                this.dummyExitGame.proxyFlagOutputSpent(EMPTY_BYTES_32),
+                'Should not flag with empty outputId',
+            );
         });
 
         it('should fail when not called by Exit Game contracts', async () => {

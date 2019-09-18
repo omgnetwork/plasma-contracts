@@ -33,11 +33,10 @@ library PaymentInFlightExitModelUtils {
         ife.exitMap = ife.exitMap.setBit(uint8(index));
     }
 
-    function clearOutputPiggyback(ExitModel.InFlightExit storage ife, uint16 index)
+    function clearInputPiggybacked(ExitModel.InFlightExit storage ife, uint16 index)
         internal
     {
-        uint8 indexInExitMap = uint8(index + MAX_INPUT_NUM);
-        ife.exitMap = ife.exitMap.clearBit(indexInExitMap);
+        ife.exitMap = ife.exitMap.clearBit(uint8(index));
     }
 
     function setOutputPiggybacked(ExitModel.InFlightExit storage ife, uint16 index)
@@ -45,6 +44,13 @@ library PaymentInFlightExitModelUtils {
     {
         uint8 indexInExitMap = uint8(index + MAX_INPUT_NUM);
         ife.exitMap = ife.exitMap.setBit(indexInExitMap);
+    }
+
+    function clearOutputPiggybacked(ExitModel.InFlightExit storage ife, uint16 index)
+        internal
+    {
+        uint8 indexInExitMap = uint8(index + MAX_INPUT_NUM);
+        ife.exitMap = ife.exitMap.clearBit(indexInExitMap);
     }
 
     function isInFirstPhase(ExitModel.InFlightExit memory ife, uint256 minExitPeriod)

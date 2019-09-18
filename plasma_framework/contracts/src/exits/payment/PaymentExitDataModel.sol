@@ -8,7 +8,6 @@ library PaymentExitDataModel {
         bool exitable;
         uint192 utxoPos;
         bytes32 outputId;
-        address token;
         address payable exitTarget;
         uint256 amount;
         uint256 bondSize;
@@ -30,7 +29,6 @@ library PaymentExitDataModel {
         // Canonicity is assumed at start, then can be challenged and is set to `false`.
         // Response to non-canonical challenge can set it back to `true`.
         bool isCanonical;
-        bool isFinalized;
         uint64 exitStartTimestamp;
 
         /**
@@ -44,6 +42,7 @@ library PaymentExitDataModel {
         WithdrawData[MAX_INPUT_NUM] inputs;
         WithdrawData[MAX_OUTPUT_NUM] outputs;
         address payable bondOwner;
+        uint256 bondSize;
         uint256 oldestCompetitorPosition;
     }
 

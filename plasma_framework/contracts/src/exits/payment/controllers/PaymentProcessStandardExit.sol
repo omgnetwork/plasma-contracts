@@ -25,7 +25,8 @@ library PaymentProcessStandardExit {
     function run(
         Controller memory self,
         PaymentExitDataModel.StandardExitMap storage exitMap,
-        uint192 exitId
+        uint192 exitId,
+        address token
     )
         public
     {
@@ -39,10 +40,10 @@ library PaymentProcessStandardExit {
         self.framework.flagOutputSpent(exit.outputId);
 
         exit.exitTarget.transfer(exit.bondSize);
-        if (exit.token == address(0)) {
+        if (token == address(0)) {
             self.ethVault.withdraw(exit.exitTarget, exit.amount);
         } else {
-            self.erc20Vault.withdraw(exit.exitTarget, exit.token, exit.amount);
+            self.erc20Vault.withdraw(exit.exitTarget, token, exit.amount);
         }
 
         delete exitMap.exits[exitId];
