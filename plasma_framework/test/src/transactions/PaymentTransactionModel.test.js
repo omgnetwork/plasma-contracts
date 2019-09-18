@@ -74,6 +74,23 @@ contract('PaymentTransactionModel', () => {
         );
     });
 
+    it('should fail when transaction does not contain metadata', async () => {
+        const transaction = new PaymentTransaction(1, [EMPTY_BYTES32], [OUTPUT, OUTPUT], EMPTY_BYTES32);
+
+        const wireFormat = [
+            transaction.transactionType,
+            transaction.inputs,
+            PaymentTransaction.formatForRlpEncoding(transaction.outputs),
+        ];
+
+        const encoded = web3.utils.bytesToHex(rlp.encode(wireFormat));
+
+        await expectRevert(
+            this.test.decode(encoded),
+            'Invalid encoding of transaction',
+        );
+    });
+
     it('should fail when decoding invalid transaction', async () => {
         const encoded = web3.utils.bytesToHex(rlp.encode([0, 0]));
 
