@@ -22,20 +22,20 @@ contract PaymentTransactionStateTransitionVerifier {
     function isCorrectStateTransition(
         bytes calldata inFlightTx,
         bytes[] calldata inputTxs,
-        uint256[] calldata inputUtxosPos
+        uint16[] calldata outputIndexOfInputTxs
     )
         external
         pure
         returns (bool)
     {
-        if (inputTxs.length != inputUtxosPos.length) {
+        if (inputTxs.length != outputIndexOfInputTxs.length) {
             return false;
         }
 
         //TODO: refactor that to smaller function as soon as this issue is resolved: https://github.com/ethereum/solidity/issues/6835
         WireTransaction.Output[] memory inputs = new WireTransaction.Output[](inputTxs.length);
         for (uint i = 0; i < inputTxs.length; i++) {
-            uint16 outputIndex = UtxoPosLib.outputIndex(UtxoPosLib.UtxoPos(inputUtxosPos[i]));
+            uint16 outputIndex = outputIndexOfInputTxs[i];
             WireTransaction.Output memory output = WireTransaction.getOutput(inputTxs[i], outputIndex);
             inputs[i] = output;
         }

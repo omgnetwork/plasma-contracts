@@ -9,7 +9,7 @@ interface IStateTransitionVerifier {
     function isCorrectStateTransition(
         bytes calldata inFlightTx,
         bytes[] calldata inputTxs,
-        uint256[] calldata inputUtxosPos
+        uint16[] calldata outputIndexOfInputTxs
     )
         external
         view
