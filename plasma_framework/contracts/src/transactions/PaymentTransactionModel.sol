@@ -12,7 +12,7 @@ library PaymentTransactionModel {
     uint8 constant public MAX_INPUT_NUM = 4;
     uint8 constant public MAX_OUTPUT_NUM = 4;
 
-    uint8 constant private ENCODED_LENGTH_WITH_METADATA = 4;
+    uint8 constant private ENCODED_LENGTH = 4;
 
     struct Transaction {
         uint256 txType;
@@ -23,7 +23,7 @@ library PaymentTransactionModel {
 
     function decode(bytes memory _tx) internal pure returns (PaymentTransactionModel.Transaction memory) {
         RLP.RLPItem[] memory rlpTx = _tx.toRLPItem().toList();
-        require(rlpTx.length == ENCODED_LENGTH_WITH_METADATA, "Invalid encoding of transaction");
+        require(rlpTx.length == ENCODED_LENGTH, "Invalid encoding of transaction");
 
         RLP.RLPItem[] memory rlpInputs = rlpTx[1].toList();
         require(rlpInputs.length <= MAX_INPUT_NUM, "Transaction inputs num exceeds limit");
