@@ -21,7 +21,7 @@ const {
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
-const { buildUtxoPos } = require('../../../helpers/positions.js');
+const { buildUtxoPos, UtxoPos } = require('../../../helpers/positions.js');
 const { computeNormalOutputId, spentOnGas } = require('../../../helpers/utils.js');
 const { PROTOCOL } = require('../../../helpers/constants.js');
 const { sign } = require('../../../helpers/sign.js');
@@ -164,6 +164,22 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
 
                 await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot1, 0);
                 await this.framework.setBlock(DEPOSIT_BLOCK_NUMBER, inputTxsBlockRoot2, 0);
+            });
+
+            it('should call the StateTransitionVerifier with correct arguments', async () => {
+                const expectedArgs = {
+                    inFlightTx: this.args.inFlightTx,
+                    inputTxs: this.args.inputTxs,
+                    outputIndexOfInputTxs: this.args.inputUtxosPos.map(utxo => new UtxoPos(utxo).outputIndex),
+                };
+
+                // test would fail if called but not with the expected arguments
+                await this.stateTransitionVerifier.shouldVerifyArgumentEquals(expectedArgs);
+
+                await this.exitGame.startInFlightExit(
+                    this.args,
+                    { from: alice, value: IN_FLIGHT_EXIT_BOND },
+                );
             });
 
             it('should store in-flight exit data', async () => {
