@@ -10,7 +10,7 @@ contract SpyPlasmaFrameworkForExitGame is PlasmaFramework {
     mapping (uint256 => BlockModel.Block) public blocks;
 
     event EnqueueTriggered(
-        address token,
+        address ercContract,
         uint64 exitableAt,
         uint256 txPos,
         uint256 exitId,
@@ -24,13 +24,13 @@ contract SpyPlasmaFrameworkForExitGame is PlasmaFramework {
     }
 
     /** override for test */
-    function enqueue(address _token, uint64 _exitableAt, TxPosLib.TxPos calldata _txPos, uint192 _exitId, IExitProcessor _exitProcessor)
+    function enqueue(address _ercContract, uint64 _exitableAt, TxPosLib.TxPos calldata _txPos, uint192 _exitId, IExitProcessor _exitProcessor)
         external
         returns (uint256)
     {
         enqueuedCount += 1;
         emit EnqueueTriggered(
-            _token,
+            _ercContract,
             _exitableAt,
             _txPos.value,
             _exitId,

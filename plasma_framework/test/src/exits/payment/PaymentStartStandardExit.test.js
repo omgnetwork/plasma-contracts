@@ -301,7 +301,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
                 SpyPlasmaFramework,
                 'EnqueueTriggered',
                 {
-                    token: ETH,
+                    ercContract: ETH,
                     exitableAt,
                     txPos: new BN(utxoPosToTxPos(args.utxoPos)),
                     exitProcessor: this.exitGame.address,

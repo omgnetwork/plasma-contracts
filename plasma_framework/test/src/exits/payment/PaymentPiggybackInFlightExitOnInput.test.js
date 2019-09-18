@@ -254,7 +254,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
                     SpyPlasmaFramework,
                     'EnqueueTriggered',
                     {
-                        token: ETH,
+                        ercContract: ETH,
                         exitableAt: new BN(exitableAt),
                         txPos: new BN(utxoPosToTxPos(INFLIGHT_EXIT_YOUNGEST_INPUT_POSITION)),
                         exitProcessor: this.exitGame.address,
