@@ -18,13 +18,13 @@ contract ExitGameController is ExitGameRegistry {
         uint192 exitId; // The id for exit processor to identify specific exit within an exit game.
     }
 
-    event TokenAdded(
-        address token
+    event ErcContractAdded(
+        address ercContract
     );
 
     event ProcessedExitsNum(
         uint256 processedNum,
-        address token
+        address ercContract
     );
 
     event ExitQueued(
@@ -36,50 +36,51 @@ contract ExitGameController is ExitGameRegistry {
         public
         ExitGameRegistry(_minExitPeriod, _initialImmuneExitGames)
     {
-        address ethToken = address(0);
-        exitsQueues[ethToken] = new PriorityQueue();
+        address ethErcContractRepresentive = address(0);
+        exitsQueues[ethErcContractRepresentive] = new PriorityQueue();
     }
 
     /**
-     * @notice Add token to the plasma framework and initiate the priority queue.
-     * @notice ETH token is supported by default on deployment.
+     * @notice Add ERC contract to the plasma framework and initiate the priority queue.
+     * @dev ETH as address(0) is supported by default on deployment.
      * @dev the queue is created as a new contract instance.
-     * @param _token Address of the token.
+     * @dev Each ERC contract has a queue so that each untrusted external contract would only impact its own queue
+     * @param _ercContract Address of the erc contract.
      */
-    function addToken(address _token) external {
-        require(!hasToken(_token), "Such token has already been added");
+    function addErcContract(address _ercContract) external {
+        require(!hasQueueForErcContract(_ercContract), "Such ERC contract has already been added");
 
-        exitsQueues[_token] = new PriorityQueue();
-        emit TokenAdded(_token);
+        exitsQueues[_ercContract] = new PriorityQueue();
+        emit ErcContractAdded(_ercContract);
     }
 
     /**
-     * @notice Checks if queue for particular token was created.
-     * @param _token Address of the token.
-     * @return bool represents whether the queue for a token was created.
+     * @notice Checks if queue for particular ERC contract was created.
+     * @param _ercContract Address of the ERC contract. Use address(0) for ETH.
+     * @return bool represents whether the queue for a ERC contract was created.
      */
-    function hasToken(address _token) public view returns (bool) {
-        return address(exitsQueues[_token]) != address(0);
+    function hasQueueForErcContract(address _ercContract) public view returns (bool) {
+        return address(exitsQueues[_ercContract]) != address(0);
     }
 
     /**
      * @notice Enqueue exits from exit game contracts
      * @dev Caller of this function should add "pragma experimental ABIEncoderV2;" on top of file
-     * @param _token Token for the exit
+     * @param _ercContract Address of the ERC contract. Use address(0) for ETH.
      * @param _exitableAt The earliest time that such exit can be processed
      * @param _txPos Transaction position for the exit priority. For SE it should be the exit tx, for IFE it should be the youngest input tx position.
      * @param _exitId Id for the exit processor contract to understand how to process such exit
      * @param _exitProcessor The exit processor contract that would be called during "processExits"
      * @return a unique priority number computed for the exit
      */
-    function enqueue(address _token, uint64 _exitableAt, TxPosLib.TxPos calldata _txPos, uint192 _exitId, IExitProcessor _exitProcessor)
+    function enqueue(address _ercContract, uint64 _exitableAt, TxPosLib.TxPos calldata _txPos, uint192 _exitId, IExitProcessor _exitProcessor)
         external
         onlyFromNonQuarantinedExitGame
         returns (uint256)
     {
-        require(hasToken(_token), "Such token has not been added to the plasma framework yet");
+        require(hasQueueForErcContract(_ercContract), "Such ERC contract has not been added to the plasma framework yet");
 
-        PriorityQueue queue = exitsQueues[_token];
+        PriorityQueue queue = exitsQueues[_ercContract];
 
         uint256 uniquePriority = ExitPriority.computePriority(_exitableAt, _txPos, exitQueueNonce);
         exitQueueNonce++;
@@ -98,15 +99,15 @@ contract ExitGameController is ExitGameRegistry {
 
     /**
      * @notice Processes any exits that have completed the challenge period.
-     * @param _token Token type to process.
+     * @param _ercContract Address of the ERC contract. Use address(0) for ETH.
      * @param _topUniquePriority Unique priority of the first exit that should be processed. Set to zero to skip the check.
      * @param _maxExitsToProcess Maximal number of exits to process.
      * @return total number of processed exits
      */
-    function processExits(address _token, uint256 _topUniquePriority, uint256 _maxExitsToProcess) external {
-        require(hasToken(_token), "Such token has not been added to the plasma framework yet");
+    function processExits(address _ercContract, uint256 _topUniquePriority, uint256 _maxExitsToProcess) external {
+        require(hasQueueForErcContract(_ercContract), "Such ERC contract has not been added to the plasma framework yet");
 
-        PriorityQueue queue = exitsQueues[_token];
+        PriorityQueue queue = exitsQueues[_ercContract];
         require(queue.currentSize() > 0, "Exit queue is empty");
 
         uint256 uniquePriority = queue.getMin();
@@ -122,7 +123,7 @@ contract ExitGameController is ExitGameRegistry {
             processedNum++;
 
             IExitProcessor processor = exit.exitProcessor;
-            processor.processExit(exit.exitId, _token);
+            processor.processExit(exit.exitId, _ercContract);
 
             if (queue.currentSize() == 0) {
                 break;
@@ -132,7 +133,7 @@ contract ExitGameController is ExitGameRegistry {
             exit = exits[uniquePriority];
         }
 
-        emit ProcessedExitsNum(processedNum, _token);
+        emit ProcessedExitsNum(processedNum, _ercContract);
     }
 
     /**

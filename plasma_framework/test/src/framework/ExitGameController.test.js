@@ -23,60 +23,60 @@ contract('ExitGameController', () => {
         this.dummyTxType = 1;
         this.controller.registerExitGame(this.dummyTxType, this.dummyExitGame.address, PROTOCOL.MORE_VP);
 
-        // take any random contract address as token
-        this.dummyToken = (await DummyExitGame.new()).address;
+        // take any random contract address as ERC contract
+        this.dummyErcContract = (await DummyExitGame.new()).address;
     });
 
     describe('constructor', () => {
         it('should init the queue for ETH', async () => {
-            const ETH_TOKEN = constants.ZERO_ADDRESS;
-            expect(await this.controller.hasToken(ETH_TOKEN)).to.be.true;
+            const ETH_ERC_CONTRACT = constants.ZERO_ADDRESS;
+            expect(await this.controller.hasQueueForErcContract(ETH_ERC_CONTRACT)).to.be.true;
         });
     });
 
-    describe('hasToken', () => {
-        it('returns true when token already added', async () => {
-            await this.controller.addToken(this.dummyToken);
-            expect(await this.controller.hasToken(this.dummyToken)).to.be.true;
+    describe('hasQueueForErcContract', () => {
+        it('returns true when the ERC contract is already added', async () => {
+            await this.controller.addErcContract(this.dummyErcContract);
+            expect(await this.controller.hasQueueForErcContract(this.dummyErcContract)).to.be.true;
         });
 
-        it('returns false when token not added', async () => {
-            expect(await this.controller.hasToken(this.dummyToken)).to.not.be.true;
+        it('returns false when the ERC contract is not added', async () => {
+            expect(await this.controller.hasQueueForErcContract(this.dummyErcContract)).to.not.be.true;
         });
     });
 
-    describe('addToken', () => {
-        it('rejects when token already added', async () => {
-            await this.controller.addToken(this.dummyToken);
+    describe('addErcContract', () => {
+        it('rejects when the ERC contract is already added', async () => {
+            await this.controller.addErcContract(this.dummyErcContract);
             await expectRevert(
-                this.controller.addToken(this.dummyToken),
-                'Such token has already been added',
+                this.controller.addErcContract(this.dummyErcContract),
+                'Such ERC contract has already been added',
             );
         });
 
         it('generates a priority queue instance to the exitsQueues map', async () => {
-            await this.controller.addToken(this.dummyToken);
+            await this.controller.addErcContract(this.dummyErcContract);
 
-            const priorityQueue = await this.controller.exitsQueues(this.dummyToken);
+            const priorityQueue = await this.controller.exitsQueues(this.dummyErcContract);
             expect(priorityQueue).to.not.equal(constants.ZERO_ADDRESS);
         });
 
-        it('emits TokenAdded event', async () => {
-            const tx = await this.controller.addToken(this.dummyToken);
-            await expectEvent.inLogs(tx.logs, 'TokenAdded', { token: this.dummyToken });
+        it('emits ErcContractAdded event', async () => {
+            const tx = await this.controller.addErcContract(this.dummyErcContract);
+            await expectEvent.inLogs(tx.logs, 'ErcContractAdded', { ercContract: this.dummyErcContract });
         });
     });
 
     describe('enqueue', () => {
         beforeEach(async () => {
             this.dummyExit = {
-                token: this.dummyToken,
+                ercContract: this.dummyErcContract,
                 exitableAt: 1,
                 txPos: buildTxPos(1000, 1),
                 exitId: 123,
                 exitProcessor: this.dummyExitGame.address,
             };
-            this.controller.addToken(this.dummyToken);
+            this.controller.addErcContract(this.dummyErcContract);
         });
 
         it('rejects when not called from exit game contract', async () => {
@@ -93,17 +93,17 @@ contract('ExitGameController', () => {
             );
         });
 
-        it('rejects when such token has not been added yet', async () => {
-            const fakeNonAddedTokenAddress = (await DummyExitGame.new()).address;
+        it('rejects when the ERC contract has not been added yet', async () => {
+            const fakeNonAddedErcContractAddress = (await DummyExitGame.new()).address;
             await expectRevert(
                 this.dummyExitGame.enqueue(
-                    fakeNonAddedTokenAddress,
+                    fakeNonAddedErcContractAddress,
                     this.dummyExit.exitableAt,
                     this.dummyExit.txPos,
                     this.dummyExit.exitId,
                     this.dummyExit.exitProcessor,
                 ),
-                'Such token has not been added to the plasma framework yet',
+                'Such ERC contract has not been added to the plasma framework yet',
             );
         });
 
@@ -114,7 +114,7 @@ contract('ExitGameController', () => {
             await this.controller.registerExitGame(newDummyExitGameId, newDummyExitGame.address, PROTOCOL.MORE_VP);
             await expectRevert(
                 newDummyExitGame.enqueue(
-                    this.dummyExit.token,
+                    this.dummyExit.ercContract,
                     this.dummyExit.exitableAt,
                     this.dummyExit.txPos,
                     this.dummyExit.exitId,
@@ -126,7 +126,7 @@ contract('ExitGameController', () => {
 
         it('can enqueue with the same exitable timestamp (priority) multiple times', async () => {
             await this.dummyExitGame.enqueue(
-                this.dummyExit.token,
+                this.dummyExit.ercContract,
                 this.dummyExit.exitableAt,
                 this.dummyExit.txPos,
                 this.dummyExit.exitId,
@@ -134,14 +134,14 @@ contract('ExitGameController', () => {
             );
 
             await this.dummyExitGame.enqueue(
-                this.dummyExit.token,
+                this.dummyExit.ercContract,
                 this.dummyExit.exitableAt,
                 this.dummyExit.txPos,
                 this.dummyExit.exitId,
                 this.dummyExit.exitProcessor,
             );
 
-            const priorityQueueAddress = await this.controller.exitsQueues(this.dummyToken);
+            const priorityQueueAddress = await this.controller.exitsQueues(this.dummyErcContract);
             const priorityQueue = await PriorityQueue.at(priorityQueueAddress);
             expect(await priorityQueue.currentSize()).to.be.bignumber.equal(new BN(2));
         });
@@ -151,7 +151,7 @@ contract('ExitGameController', () => {
                 this.originExitQueueNonce = await this.controller.exitQueueNonce();
 
                 this.enqueueTx = await this.dummyExitGame.enqueue(
-                    this.dummyExit.token,
+                    this.dummyExit.ercContract,
                     this.dummyExit.exitableAt,
                     this.dummyExit.txPos,
                     this.dummyExit.exitId,
@@ -165,7 +165,7 @@ contract('ExitGameController', () => {
             });
 
             it('inserts the new unique priority to the queue', async () => {
-                const priorityQueueAddress = await this.controller.exitsQueues(this.dummyToken);
+                const priorityQueueAddress = await this.controller.exitsQueues(this.dummyErcContract);
                 const priorityQueue = await PriorityQueue.at(priorityQueueAddress);
                 const queueMin = await priorityQueue.getMin();
 
@@ -208,7 +208,7 @@ contract('ExitGameController', () => {
                 const { uniquePriority } = events[0].args;
 
                 // Find the exit's uniquePriority in the priority queue
-                const priorityQueueAddress = await this.controller.exitsQueues(this.dummyToken);
+                const priorityQueueAddress = await this.controller.exitsQueues(this.dummyErcContract);
                 const priorityQueue = await PriorityQueue.at(priorityQueueAddress);
                 const heapList = await priorityQueue.heapList();
                 const foundInQueue = heapList.find(e => e.eq(uniquePriority));
@@ -219,9 +219,9 @@ contract('ExitGameController', () => {
 
     describe('processExits', () => {
         beforeEach(async () => {
-            this.controller.addToken(this.dummyToken);
+            this.controller.addErcContract(this.dummyErcContract);
             this.dummyExit = {
-                token: this.dummyToken,
+                ercContract: this.dummyErcContract,
                 exitProcessor: this.dummyExitGame.address,
                 exitableAt: 1,
                 txPos: buildTxPos(1000, 0),
@@ -229,24 +229,24 @@ contract('ExitGameController', () => {
             };
         });
 
-        it('rejects when such token has not been added yet', async () => {
-            const fakeNonAddedTokenAddress = (await DummyExitGame.new()).address;
+        it('rejects when such ERC contract has not been added yet', async () => {
+            const fakeNonAddedErcContractAddress = (await DummyExitGame.new()).address;
             await expectRevert(
-                this.controller.processExits(fakeNonAddedTokenAddress, 0, 1),
-                'Such token has not been added to the plasma framework yet',
+                this.controller.processExits(fakeNonAddedErcContractAddress, 0, 1),
+                'Such ERC contract has not been added to the plasma framework yet',
             );
         });
 
         it('rejects when the exit queue is empty', async () => {
             await expectRevert(
-                this.controller.processExits(this.dummyToken, 0, 1),
+                this.controller.processExits(this.dummyErcContract, 0, 1),
                 'Exit queue is empty',
             );
         });
 
         it('rejects when the "top unique priority" mismatches with the specified one', async () => {
             await this.dummyExitGame.enqueue(
-                this.dummyExit.token,
+                this.dummyExit.ercContract,
                 this.dummyExit.exitableAt,
                 this.dummyExit.txPos,
                 this.dummyExit.exitId,
@@ -255,7 +255,7 @@ contract('ExitGameController', () => {
 
             const nonExistingUniqeuePriority = 123;
             await expectRevert(
-                this.controller.processExits(this.dummyToken, nonExistingUniqeuePriority, 1),
+                this.controller.processExits(this.dummyErcContract, nonExistingUniqeuePriority, 1),
                 'Top unique priority of the queue is not the same as the specified one',
             );
         });
@@ -269,25 +269,25 @@ contract('ExitGameController', () => {
                 exitId: 456,
             };
             await this.dummyExitGame.enqueue(
-                this.dummyExit.token,
+                this.dummyExit.ercContract,
                 notAbleToExitYetExit.exitableAt,
                 notAbleToExitYetExit.txPos,
                 notAbleToExitYetExit.exitId,
                 notAbleToExitYetExit.exitProcessor,
             );
 
-            const tx = await this.controller.processExits(this.dummyToken, 0, 1);
+            const tx = await this.controller.processExits(this.dummyErcContract, 0, 1);
 
             await expectEvent.inLogs(tx.logs, 'ProcessedExitsNum', {
                 processedNum: new BN(0),
-                token: this.dummyToken,
+                ercContract: this.dummyErcContract,
             });
         });
 
         describe('given the queue already has an exitable exit', () => {
             beforeEach(async () => {
                 await this.dummyExitGame.enqueue(
-                    this.dummyExit.token,
+                    this.dummyExit.ercContract,
                     this.dummyExit.exitableAt,
                     this.dummyExit.txPos,
                     this.dummyExit.exitId,
@@ -296,38 +296,38 @@ contract('ExitGameController', () => {
             });
 
             it('should be able to process when the "top unique priority" is set to 0', async () => {
-                const tx = await this.controller.processExits(this.dummyToken, 0, 1);
+                const tx = await this.controller.processExits(this.dummyErcContract, 0, 1);
                 await expectEvent.inLogs(tx.logs, 'ProcessedExitsNum', {
                     processedNum: new BN(1),
-                    token: this.dummyToken,
+                    ercContract: this.dummyErcContract,
                 });
             });
 
             it('should be able to process when the "top unique priority" is set to the exact top of the queue', async () => {
                 const uniquePriority = await this.dummyExitGame.uniquePriorityFromEnqueue();
 
-                const tx = await this.controller.processExits(this.dummyToken, uniquePriority, 1);
+                const tx = await this.controller.processExits(this.dummyErcContract, uniquePriority, 1);
                 await expectEvent.inLogs(tx.logs, 'ProcessedExitsNum', {
                     processedNum: new BN(1),
-                    token: this.dummyToken,
+                    ercContract: this.dummyErcContract,
                 });
             });
 
             it('should call the "processExit" function of the exit processor when processes', async () => {
-                const { receipt } = await this.controller.processExits(this.dummyToken, 0, 1);
+                const { receipt } = await this.controller.processExits(this.dummyErcContract, 0, 1);
 
                 await expectEvent.inTransaction(
                     receipt.transactionHash,
                     DummyExitGame,
                     'ExitFinalizedFromDummyExitGame',
-                    { exitId: new BN(this.dummyExit.exitId), ercContract: this.dummyToken },
+                    { exitId: new BN(this.dummyExit.exitId), ercContract: this.dummyErcContract },
                 );
             });
 
             it('should delete the exit data after processed', async () => {
                 const uniquePriority = await this.dummyExitGame.uniquePriorityFromEnqueue();
 
-                await this.controller.processExits(this.dummyToken, 0, 1);
+                await this.controller.processExits(this.dummyErcContract, 0, 1);
 
                 const exit = await this.controller.exits(uniquePriority);
                 expect(exit.exitProcessor).to.equal(constants.ZERO_ADDRESS);
@@ -337,11 +337,11 @@ contract('ExitGameController', () => {
             it('should stop to process when queue becomes empty', async () => {
                 const queueSize = 1;
                 const maxExitsToProcess = 2;
-                const tx = await this.controller.processExits(this.dummyToken, 0, maxExitsToProcess);
+                const tx = await this.controller.processExits(this.dummyErcContract, 0, maxExitsToProcess);
 
                 await expectEvent.inLogs(tx.logs, 'ProcessedExitsNum', {
                     processedNum: new BN(queueSize),
-                    token: this.dummyToken,
+                    ercContract: this.dummyErcContract,
                 });
             });
         });
@@ -349,7 +349,7 @@ contract('ExitGameController', () => {
         describe('given multiple exits with different priorities in queue', () => {
             beforeEach(async () => {
                 await this.dummyExitGame.enqueue(
-                    this.dummyExit.token,
+                    this.dummyExit.ercContract,
                     this.dummyExit.exitableAt,
                     this.dummyExit.txPos,
                     this.dummyExit.exitId,
@@ -357,14 +357,14 @@ contract('ExitGameController', () => {
                 );
 
                 const dummyExitLowerPriority = {
-                    token: this.dummyExit.token,
+                    ercContract: this.dummyExit.ercContract,
                     exitProcessor: this.dummyExitGame.address,
                     exitableAt: this.dummyExit.exitableAt + 1,
                     txPos: this.dummyExit.txPos,
                     exitId: 456,
                 };
                 await this.dummyExitGame.enqueue(
-                    dummyExitLowerPriority.token,
+                    dummyExitLowerPriority.ercContract,
                     dummyExitLowerPriority.exitableAt,
                     dummyExitLowerPriority.txPos,
                     dummyExitLowerPriority.exitId,
@@ -376,9 +376,9 @@ contract('ExitGameController', () => {
             });
 
             it('should process with the order of priority and delete the processed exit from queue', async () => {
-                await this.controller.processExits(this.dummyToken, 0, 1);
+                await this.controller.processExits(this.dummyErcContract, 0, 1);
 
-                const priorityQueueAddress = await this.controller.exitsQueues(this.dummyToken);
+                const priorityQueueAddress = await this.controller.exitsQueues(this.dummyErcContract);
                 const priorityQueue = await PriorityQueue.at(priorityQueueAddress);
                 expect(await priorityQueue.getMin()).to.be.bignumber.equal(new BN(this.lowerPriority));
                 expect(await priorityQueue.currentSize()).to.be.bignumber.equal(new BN(this.originalQueueSize - 1));
@@ -386,11 +386,11 @@ contract('ExitGameController', () => {
 
             it('should process no more than the "maxExitsToProcess" limit', async () => {
                 const maxExitsToProcess = 1;
-                const tx = await this.controller.processExits(this.dummyToken, 0, maxExitsToProcess);
+                const tx = await this.controller.processExits(this.dummyErcContract, 0, maxExitsToProcess);
 
                 await expectEvent.inLogs(tx.logs, 'ProcessedExitsNum', {
                     processedNum: new BN(maxExitsToProcess),
-                    token: this.dummyToken,
+                    ercContract: this.dummyErcContract,
                 });
             });
         });
@@ -399,7 +399,7 @@ contract('ExitGameController', () => {
             beforeEach(async () => {
                 this.reentryMaxExitToProcess = 1;
                 const reentrancyExitGame = await ReentrancyExitGame.new(
-                    this.controller.address, this.dummyToken, this.reentryMaxExitToProcess,
+                    this.controller.address, this.dummyErcContract, this.reentryMaxExitToProcess,
                 );
                 const txType = 999;
                 await this.controller.registerExitGame(
@@ -411,14 +411,14 @@ contract('ExitGameController', () => {
 
                 // put two items in the queue, the first one would trigger reentry
                 await reentrancyExitGame.enqueue(
-                    this.dummyExit.token,
+                    this.dummyExit.ercContract,
                     this.dummyExit.exitableAt,
                     this.dummyExit.txPos,
                     this.dummyExit.exitId,
                     reentrancyExitGame.address,
                 );
                 await reentrancyExitGame.enqueue(
-                    this.dummyExit.token,
+                    this.dummyExit.ercContract,
                     this.dummyExit.exitableAt,
                     this.dummyExit.txPos,
                     this.dummyExit.exitId,
@@ -432,10 +432,10 @@ contract('ExitGameController', () => {
                 // Leaving the original call continue the loop with the queue status after processed.
                 const expectedProcessedExit = maxExitToProcess - this.reentryMaxExitToProcess;
 
-                const tx = await this.controller.processExits(this.dummyToken, 0, 2);
+                const tx = await this.controller.processExits(this.dummyErcContract, 0, 2);
                 await expectEvent.inLogs(tx.logs, 'ProcessedExitsNum', {
                     processedNum: new BN(expectedProcessedExit),
-                    token: this.dummyToken,
+                    ercContract: this.dummyErcContract,
                 });
             });
         });

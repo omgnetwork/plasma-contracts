@@ -432,13 +432,13 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
                 expect(erc20VaultBalanceAfterDeposit).to.be.bignumber.equal(expectedErc20VaultBalance);
             });
 
-            describe('Given ERC20 token added to the PlasmaFramework', () => {
+            describe('Given ERC20 token contract is added to the PlasmaFramework', () => {
                 beforeEach(async () => {
-                    await this.framework.addToken(this.erc20.address);
+                    await this.framework.addErcContract(this.erc20.address);
                 });
 
-                it('should have the ERC20 token', async () => {
-                    expect(await this.framework.hasToken(this.erc20.address)).to.be.true;
+                it('should have the exit queue for the ERC20 token', async () => {
+                    expect(await this.framework.hasQueueForErcContract(this.erc20.address)).to.be.true;
                 });
 
                 describe('When Alice starts standard exit on the ERC20 deposit tx', () => {
