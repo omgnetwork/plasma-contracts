@@ -10,6 +10,7 @@ const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry
 const PaymentExitGame = artifacts.require('PaymentExitGame');
 const PaymentChallengeStandardExit = artifacts.require('PaymentChallengeStandardExit');
 const PaymentChallengeIFENotCanonical = artifacts.require('PaymentChallengeIFENotCanonical');
+const PaymentChallengeIFEOutputSpent = artifacts.require('PaymentChallengeIFEOutputSpent');
 const PaymentOutputGuardHandler = artifacts.require('PaymentOutputGuardHandler');
 const PaymentOutputToPaymentTxCondition = artifacts.require('PaymentOutputToPaymentTxCondition');
 const PaymentStartInFlightExit = artifacts.require('PaymentStartInFlightExit');
@@ -56,6 +57,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
         const startInFlightExit = await PaymentStartInFlightExit.new();
         const piggybackInFlightExit = await PaymentPiggybackInFlightExit.new();
         const challengeInFlightExitNotCanonical = await PaymentChallengeIFENotCanonical.new();
+        const challengeIFEOutput = await PaymentChallengeIFEOutputSpent.new();
         const processInFlightExit = await PaymentProcessInFlightExit.new();
 
         await PaymentExitGame.link('PaymentStartStandardExit', startStandardExit.address);
@@ -64,6 +66,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
         await PaymentExitGame.link('PaymentStartInFlightExit', startInFlightExit.address);
         await PaymentExitGame.link('PaymentPiggybackInFlightExit', piggybackInFlightExit.address);
         await PaymentExitGame.link('PaymentChallengeIFENotCanonical', challengeInFlightExitNotCanonical.address);
+        await PaymentExitGame.link('PaymentChallengeIFEOutputSpent', challengeIFEOutput.address);
         await PaymentExitGame.link('PaymentProcessInFlightExit', processInFlightExit.address);
     };
 

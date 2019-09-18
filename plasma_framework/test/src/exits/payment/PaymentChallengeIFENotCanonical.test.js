@@ -4,6 +4,7 @@ const PaymentStartInFlightExit = artifacts.require('PaymentStartInFlightExit');
 const PaymentPiggybackInFlightExit = artifacts.require('PaymentPiggybackInFlightExit');
 const PaymentProcessInFlightExit = artifacts.require('PaymentProcessInFlightExit');
 const PaymentChallengeIFENotCanonical = artifacts.require('PaymentChallengeIFENotCanonical');
+const PaymentChallengeIFEOutputSpent = artifacts.require('PaymentChallengeIFEOutputSpent');
 const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry');
 const SpendingConditionMock = artifacts.require('SpendingConditionMock');
 const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
@@ -29,7 +30,7 @@ const { createInclusionProof } = require('../../../helpers/ife.js');
 
 contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, competitorOwner, challenger]) => {
     const DUMMY_IFE_BOND_SIZE = 31415926535; // wei
-    const DUMMY_PIGGYBACK_BOND = 31415926535; // wei
+    const PIGGYBACK_BOND = 31415926535; // wei
     const CHILD_BLOCK_INTERVAL = 1000;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week in second
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
@@ -118,7 +119,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
             exitTarget: constants.ZERO_ADDRESS,
             token: constants.ZERO_ADDRESS,
             amount: 0,
-            piggybackBondSize: DUMMY_PIGGYBACK_BOND,
+            piggybackBondSize: 0,
         };
 
         const output = new PaymentTransactionOutput(TEST_IFE_OUTPUT_AMOUNT, outputOwner, ETH);
@@ -140,14 +141,14 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
                 exitTarget: inputOwner,
                 token: ETH,
                 amount: TEST_IFE_INPUT_AMOUNT,
-                piggybackBondSize: DUMMY_PIGGYBACK_BOND,
+                piggybackBondSize: PIGGYBACK_BOND,
             }, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData],
             outputs: [{
                 outputId: DUMMY_OUTPUT_ID_FOR_OUTPUT,
                 exitTarget: constants.ZERO_ADDRESS, // would not be set during start IFE
                 token: ETH,
                 amount: TEST_IFE_OUTPUT_AMOUNT,
-                piggybackBondSize: DUMMY_PIGGYBACK_BOND,
+                piggybackBondSize: PIGGYBACK_BOND,
             }, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData],
             bondSize: DUMMY_IFE_BOND_SIZE,
         };
@@ -161,11 +162,13 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
         const startInFlightExit = await PaymentStartInFlightExit.new();
         const piggybackInFlightExit = await PaymentPiggybackInFlightExit.new();
         const challengeInFlightExitNotCanonical = await PaymentChallengeIFENotCanonical.new();
+        const challengeIFEOutput = await PaymentChallengeIFEOutputSpent.new();
         const processInFlightExit = await PaymentProcessInFlightExit.new();
 
         await PaymentInFlightExitRouter.link('PaymentStartInFlightExit', startInFlightExit.address);
         await PaymentInFlightExitRouter.link('PaymentPiggybackInFlightExit', piggybackInFlightExit.address);
         await PaymentInFlightExitRouter.link('PaymentChallengeIFENotCanonical', challengeInFlightExitNotCanonical.address);
+        await PaymentInFlightExitRouter.link('PaymentChallengeIFEOutputSpent', challengeIFEOutput.address);
         await PaymentInFlightExitRouter.link('PaymentProcessInFlightExit', processInFlightExit.address);
     });
 

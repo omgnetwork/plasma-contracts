@@ -3,6 +3,7 @@
 const ERC20Mintable = artifacts.require('ERC20Mintable');
 const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry');
 const PaymentChallengeIFENotCanonical = artifacts.require('PaymentChallengeIFENotCanonical');
+const PaymentChallengeIFEOutputSpent = artifacts.require('PaymentChallengeIFEOutputSpent');
 const PaymentInFlightExitRouter = artifacts.require('PaymentInFlightExitRouterMock');
 const PaymentPiggybackInFlightExit = artifacts.require('PaymentPiggybackInFlightExit');
 const PaymentStartInFlightExit = artifacts.require('PaymentStartInFlightExit');
@@ -45,11 +46,13 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
         const startInFlightExit = await PaymentStartInFlightExit.new();
         const piggybackInFlightExit = await PaymentPiggybackInFlightExit.new();
         const challengeInFlightExitNotCanonical = await PaymentChallengeIFENotCanonical.new();
+        const challengeIFEOutput = await PaymentChallengeIFEOutputSpent.new();
         const processInFlightExit = await PaymentProcessInFlightExit.new();
 
         await PaymentInFlightExitRouter.link('PaymentStartInFlightExit', startInFlightExit.address);
         await PaymentInFlightExitRouter.link('PaymentPiggybackInFlightExit', piggybackInFlightExit.address);
         await PaymentInFlightExitRouter.link('PaymentChallengeIFENotCanonical', challengeInFlightExitNotCanonical.address);
+        await PaymentInFlightExitRouter.link('PaymentChallengeIFEOutputSpent', challengeIFEOutput.address);
         await PaymentInFlightExitRouter.link('PaymentProcessInFlightExit', processInFlightExit.address);
     });
 
