@@ -11,7 +11,7 @@ const SpendingConditionMock = artifacts.require('SpendingConditionMock');
 const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
-const StateTransitionVerifierAccept = artifacts.require('StateTransitionVerifierAccept');
+const StateTransitionVerifierMock = artifacts.require('StateTransitionVerifierMock');
 const ExitId = artifacts.require('ExitIdWrapper');
 const IsDeposit = artifacts.require('IsDepositWrapper');
 const ExitableTimestamp = artifacts.require('ExitableTimestampWrapper');
@@ -180,7 +180,8 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
         this.outputIdHelper = await OutputId.new();
         this.isDeposit = await IsDeposit.new(CHILD_BLOCK_INTERVAL);
         this.exitableHelper = await ExitableTimestamp.new(MIN_EXIT_PERIOD);
-        this.stateTransitionVerifierAccept = await StateTransitionVerifierAccept.new();
+        this.stateTransitionVerifier = await StateTransitionVerifierMock.new();
+        await this.stateTransitionVerifier.mockResult(true);
     });
 
     beforeEach(async () => {
@@ -197,7 +198,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
             erc20Vault.address,
             this.outputGuardHandlerRegistry.address,
             this.spendingConditionRegistry.address,
-            this.stateTransitionVerifierAccept.address,
+            this.stateTransitionVerifier.address,
             IFE_TX_TYPE,
         );
 

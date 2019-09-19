@@ -28,9 +28,10 @@ contract('PaymentTransactionStateTransitionVerifier', ([alice, bob]) => {
             const inputTxs = [inputTx1, inputTx2];
 
             const inputUtxosPos = [buildUtxoPos(BLOCK_NUM, 0, 0), buildUtxoPos(BLOCK_NUM, 1, 0)];
+            const outputIndexOfInputTxs = inputUtxosPos.map(utxo => new UtxoPos(utxo).outputIndex);
 
             const inFlightTx = createInFlightTx(inputTxs, inputUtxosPos, bob, AMOUNT);
-            const args = buildArgs(inputTxs, inputUtxosPos, inFlightTx);
+            const args = buildArgs(inputTxs, outputIndexOfInputTxs, inFlightTx);
 
             return args;
         }
@@ -47,12 +48,13 @@ contract('PaymentTransactionStateTransitionVerifier', ([alice, bob]) => {
             const output2 = new PaymentTransactionOutput(invalidAmount, bob, OTHER_TOKEN);
 
             const inFlightTx = new PaymentTransaction(IFE_TX_TYPE, inputs, [output1, output2]);
-            const args = buildArgs([inputTx1, inputTx2], inputUtxosPos, inFlightTx);
+            const outputIndexOfInputTxs = inputUtxosPos.map(utxo => new UtxoPos(utxo).outputIndex);
+            const args = buildArgs([inputTx1, inputTx2], outputIndexOfInputTxs, inFlightTx);
 
             return args;
         }
 
-        function buildArgs([inputTx1, inputTx2], inputUtxosPos, inFlightTx) {
+        function buildArgs([inputTx1, inputTx2], outputIndexOfInputTxs, inFlightTx) {
             const rlpInputTx1 = inputTx1.rlpEncoded();
             const encodedInputTx1 = web3.utils.bytesToHex(rlpInputTx1);
 
@@ -66,7 +68,7 @@ contract('PaymentTransactionStateTransitionVerifier', ([alice, bob]) => {
             const args = {
                 inFlightTx: inFlightTxRaw,
                 inputTxs,
-                inputUtxosPos,
+                outputIndexOfInputTxs,
             };
 
             return args;
@@ -105,7 +107,7 @@ contract('PaymentTransactionStateTransitionVerifier', ([alice, bob]) => {
             const verificationResult = await this.verifier.isCorrectStateTransition(
                 args.inFlightTx,
                 args.inputTxs,
-                args.inputUtxosPos,
+                args.outputIndexOfInputTxs,
             );
             expect(verificationResult).to.be.true;
         });
@@ -116,7 +118,7 @@ contract('PaymentTransactionStateTransitionVerifier', ([alice, bob]) => {
             const verificationResult = await this.verifier.isCorrectStateTransition(
                 args.inFlightTx,
                 args.inputTxs,
-                args.inputUtxosPos,
+                args.outputIndexOfInputTxs,
             );
             expect(verificationResult).to.be.false;
         });

@@ -73,7 +73,6 @@ library PaymentStartInFlightExit {
         bytes32 inFlightTxHash;
         bytes[] inputTxs;
         UtxoPosLib.UtxoPos[] inputUtxosPos;
-        uint256[] inputUtxosPosRaw;
         uint256[] inputUtxosTypes;
         uint256[] inputTxTypes;
         bytes[] outputGuardPreimagesForInputs;
@@ -136,7 +135,6 @@ library PaymentStartInFlightExit {
         exitData.inputTxs = args.inputTxs;
         exitData.inputTxTypes = args.inputTxTypes;
         exitData.inputUtxosPos = decodeInputTxsPositions(args.inputUtxosPos);
-        exitData.inputUtxosPosRaw = args.inputUtxosPos;
         exitData.inputUtxosTypes = args.inputUtxosTypes;
         exitData.inputTxsInclusionProofs = args.inputTxsInclusionProofs;
         exitData.inputTxsConfirmSigs = args.inputTxsConfirmSigs;
@@ -185,10 +183,7 @@ library PaymentStartInFlightExit {
         verifyNoInputSpentMoreThanOnce(exitData.inFlightTx);
         verifyInputTransactionIsStandardFinalized(exitData);
         verifyInputsSpent(exitData);
-        require(
-            exitData.controller.transitionVerifier.isCorrectStateTransition(exitData.inFlightTxRaw, exitData.inputTxs, exitData.inputUtxosPosRaw),
-            "Invalid state transition"
-        );
+        verifyStateTransition(exitData);
     }
 
     function verifyExitNotStarted(
@@ -318,6 +313,18 @@ library PaymentStartInFlightExit {
             );
             require(isSpentByInFlightTx, "Spending condition failed");
         }
+    }
+
+    function verifyStateTransition(StartExitData memory exitData) private view {
+        uint16[] memory outputIndexForInputTxs = new uint16[](exitData.inputTxs.length);
+        for (uint i = 0; i < exitData.inFlightTx.inputs.length; i++) {
+            outputIndexForInputTxs[i] = exitData.inputUtxosPos[i].outputIndex();
+        }
+
+        require(
+            exitData.controller.transitionVerifier.isCorrectStateTransition(exitData.inFlightTxRaw, exitData.inputTxs, outputIndexForInputTxs),
+            "Invalid state transition"
+        );
     }
 
     function startExit(

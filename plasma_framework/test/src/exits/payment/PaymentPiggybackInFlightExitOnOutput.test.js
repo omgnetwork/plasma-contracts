@@ -10,7 +10,7 @@ const PaymentStartInFlightExit = artifacts.require('PaymentStartInFlightExit');
 const PaymentProcessInFlightExit = artifacts.require('PaymentProcessInFlightExit');
 const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry');
 const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
-const StateTransitionVerifierAccept = artifacts.require('StateTransitionVerifierAccept');
+const StateTransitionVerifierMock = artifacts.require('StateTransitionVerifierMock');
 const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
 
@@ -60,7 +60,8 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, outputOwner, nonOu
 
     before('deploy helper contracts', async () => {
         this.exitIdHelper = await ExitIdWrapper.new();
-        this.stateTransitionVerifierAccept = await StateTransitionVerifierAccept.new();
+        this.stateTransitionVerifier = await StateTransitionVerifierMock.new();
+        await this.stateTransitionVerifier.mockResult(true);
     });
 
     beforeEach(async () => {
@@ -80,7 +81,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, outputOwner, nonOu
             erc20Vault.address,
             this.outputGuardHandlerRegistry.address,
             spendingConditionRegistry.address,
-            this.stateTransitionVerifierAccept.address,
+            this.stateTransitionVerifier.address,
             PAYMENT_TX_TYPE,
         );
     });
