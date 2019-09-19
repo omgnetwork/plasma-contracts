@@ -12,36 +12,29 @@ import "../../transactions/outputs/PaymentOutputModel.sol";
 * Verifies state transitions for payment transaction
 */
 contract PaymentTransactionStateTransitionVerifier {
-
-    struct StateTransitionArgs {
-        bytes inFlightTx;
-        bytes[] inputTxs;
-        uint256[] inputUtxosPos;
-    }
-
     function isCorrectStateTransition(
-        bytes calldata inFlightTx,
+        bytes calldata txBytes,
         bytes[] calldata inputTxs,
-        uint256[] calldata inputUtxosPos
+        uint16[] calldata outputIndexOfInputTxs
     )
         external
         pure
         returns (bool)
     {
-        if (inputTxs.length != inputUtxosPos.length) {
+        if (inputTxs.length != outputIndexOfInputTxs.length) {
             return false;
         }
 
         //TODO: refactor that to smaller function as soon as this issue is resolved: https://github.com/ethereum/solidity/issues/6835
         WireTransaction.Output[] memory inputs = new WireTransaction.Output[](inputTxs.length);
         for (uint i = 0; i < inputTxs.length; i++) {
-            uint16 outputIndex = UtxoPosLib.outputIndex(UtxoPosLib.UtxoPos(inputUtxosPos[i]));
+            uint16 outputIndex = outputIndexOfInputTxs[i];
             WireTransaction.Output memory output = WireTransaction.getOutput(inputTxs[i], outputIndex);
             inputs[i] = output;
         }
 
         WireTransaction.Output[] memory outputs = new WireTransaction.Output[](inputTxs.length);
-        PaymentTransactionModel.Transaction memory transaction = PaymentTransactionModel.decode(inFlightTx);
+        PaymentTransactionModel.Transaction memory transaction = PaymentTransactionModel.decode(txBytes);
         for (uint i = 0; i < transaction.outputs.length; i++) {
             outputs[i] = WireTransaction.Output(transaction.outputs[i].amount, transaction.outputs[i].outputGuard, transaction.outputs[i].token);
         }

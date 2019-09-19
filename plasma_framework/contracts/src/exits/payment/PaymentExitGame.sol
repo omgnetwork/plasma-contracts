@@ -9,8 +9,12 @@ import "../../framework/PlasmaFramework.sol";
 import "../../vaults/EthVault.sol";
 import "../../vaults/Erc20Vault.sol";
 import "../interfaces/IStateTransitionVerifier.sol";
+import "../../utils/OnlyFromAddress.sol";
 
-contract PaymentExitGame is IExitProcessor, PaymentStandardExitRouter, PaymentInFlightExitRouter {
+contract PaymentExitGame is IExitProcessor, PaymentStandardExitRouter, PaymentInFlightExitRouter, OnlyFromAddress {
+
+    PlasmaFramework private plasmaFramework;
+
     constructor(
         PlasmaFramework framework,
         EthVault ethVault,
@@ -38,6 +42,7 @@ contract PaymentExitGame is IExitProcessor, PaymentStandardExitRouter, PaymentIn
             supportTxType
         )
     {
+        plasmaFramework = framework;
     }
 
     /**
@@ -46,7 +51,7 @@ contract PaymentExitGame is IExitProcessor, PaymentStandardExitRouter, PaymentIn
      * @param exitId The exit id.
      * @param token The token (in ERC20 address or address(0) for ETH) of the exiting output.
      */
-    function processExit(uint192 exitId, address token) external {
+    function processExit(uint192 exitId, address token) external onlyFrom(address(plasmaFramework)) {
         if (ExitId.isStandardExit(exitId)) {
             PaymentStandardExitRouter.processStandardExit(exitId, token);
         } else {

@@ -25,7 +25,7 @@ const PriorityQueue = artifacts.require('PriorityQueue');
 const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry');
 
 const {
-    BN, constants, expectEvent, time,
+    BN, constants, expectEvent, expectRevert, time,
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
@@ -178,6 +178,13 @@ contract.skip('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
 
     describe('Given contracts deployed, exit game and both ETH and ERC20 vault registered', () => {
         beforeEach(setupContracts);
+
+        it('should not allow to call processExit from outside of exit game controller contract', async () => {
+            await expectRevert(
+                this.exitGame.processExit(0, constants.ZERO_ADDRESS),
+                'Not being called by expected caller.',
+            );
+        });
 
         describe('Given Alice deposited with ETH', () => {
             beforeEach(async () => {
