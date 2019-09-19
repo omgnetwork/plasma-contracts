@@ -173,7 +173,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                     outputIndexOfInputTxs: this.args.inputUtxosPos.map(utxo => new UtxoPos(utxo).outputIndex),
                 };
 
-                // test would fail if called but not with the expected arguments
+                // test would fail if called with unexpected arguments
                 await this.stateTransitionVerifier.shouldVerifyArgumentEquals(expectedArgs);
 
                 await this.exitGame.startInFlightExit(

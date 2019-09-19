@@ -14,12 +14,12 @@ contract StateTransitionVerifierMock is IStateTransitionVerifier {
         uint16[] outputIndexOfInputTxs;
     }
 
-    /** mock what would "isCorrectStateTransition()" returns */
+    /** mock what "isCorrectStateTransition()" returns */
     function mockResult(bool result) public {
         expectedResult = result;
     }
 
-    /** when called, the "isCorrectStateTransition" function would always revert on purpose */
+    /** when called, the "isCorrectStateTransition" function reverts on purpose */
     function mockRevert() public {
         shouldRevert = true;
     }
@@ -50,12 +50,12 @@ contract StateTransitionVerifierMock is IStateTransitionVerifier {
         if (expectedArgs.inFlightTx.length > 0) {
             require(keccak256(inFlightTx) == keccak256(expectedArgs.inFlightTx), "in-flight tx is not as expected");
 
-            require(inputTxs.length == expectedArgs.inputTxs.length, "input txs array length mismatch expected data");
+            require(inputTxs.length == expectedArgs.inputTxs.length, "input txs array length mismatches expected data");
             for (uint i = 0; i < expectedArgs.inputTxs.length; i++) {
                 require(keccak256(inputTxs[i]) == keccak256(expectedArgs.inputTxs[i]), "input tx is not as expected");
             }
 
-            require(outputIndexOfInputTxs.length == expectedArgs.outputIndexOfInputTxs.length, "outputIndex array length mismatch expected data");
+            require(outputIndexOfInputTxs.length == expectedArgs.outputIndexOfInputTxs.length, "outputIndex array length mismatches expected data");
             for (uint i = 0; i < expectedArgs.outputIndexOfInputTxs.length; i++) {
                 require(outputIndexOfInputTxs[i] == expectedArgs.outputIndexOfInputTxs[i], "output index of input txs is not as expected");
             }

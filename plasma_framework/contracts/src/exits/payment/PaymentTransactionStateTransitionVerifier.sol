@@ -12,15 +12,8 @@ import "../../transactions/outputs/PaymentOutputModel.sol";
 * Verifies state transitions for payment transaction
 */
 contract PaymentTransactionStateTransitionVerifier {
-
-    struct StateTransitionArgs {
-        bytes inFlightTx;
-        bytes[] inputTxs;
-        uint256[] inputUtxosPos;
-    }
-
     function isCorrectStateTransition(
-        bytes calldata inFlightTx,
+        bytes calldata txBytes,
         bytes[] calldata inputTxs,
         uint16[] calldata outputIndexOfInputTxs
     )
@@ -41,7 +34,7 @@ contract PaymentTransactionStateTransitionVerifier {
         }
 
         WireTransaction.Output[] memory outputs = new WireTransaction.Output[](inputTxs.length);
-        PaymentTransactionModel.Transaction memory transaction = PaymentTransactionModel.decode(inFlightTx);
+        PaymentTransactionModel.Transaction memory transaction = PaymentTransactionModel.decode(txBytes);
         for (uint i = 0; i < transaction.outputs.length; i++) {
             outputs[i] = WireTransaction.Output(transaction.outputs[i].amount, transaction.outputs[i].outputGuard, transaction.outputs[i].token);
         }
