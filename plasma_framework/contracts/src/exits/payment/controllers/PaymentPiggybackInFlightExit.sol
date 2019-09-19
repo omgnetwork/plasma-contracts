@@ -48,6 +48,10 @@ library PaymentPiggybackInFlightExit {
         uint16 outputIndex
     );
 
+    /**
+     * @notice Function that builds the controller struct
+     * @return Controller struct of PaymentPiggybackInFlightExit
+     */
     function buildController(
         PlasmaFramework framework,
         IExitProcessor exitProcessor,

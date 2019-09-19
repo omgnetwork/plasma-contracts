@@ -33,6 +33,10 @@ library PaymentChallengeIFEOutputSpent {
         uint16 outputIndex
     );
 
+    /**
+     * @notice Function that builds the controller struct
+     * @return Controller struct of PaymentChallengeIFEOutputSpent
+     */
     function buildController(
         PlasmaFramework framework,
         SpendingConditionRegistry spendingConditionRegistry,

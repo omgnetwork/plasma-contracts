@@ -83,6 +83,10 @@ library PaymentStartInFlightExit {
         bytes32[] outputIds;
     }
 
+    /**
+     * @notice Function that builds the controller struct
+     * @return Controller struct of PaymentStartInFlightExit
+     */
     function buildController(
         PlasmaFramework framework,
         OutputGuardHandlerRegistry outputGuardHandlerRegistry,

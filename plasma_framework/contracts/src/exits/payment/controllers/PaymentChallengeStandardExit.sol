@@ -44,6 +44,10 @@ library PaymentChallengeStandardExit {
         PaymentExitDataModel.StandardExit exitData;
     }
 
+    /**
+     * @notice Function that builds the controller struct
+     * @return Controller struct of PaymentChallengeStandardExit
+     */
     function buildController(
         PlasmaFramework framework,
         SpendingConditionRegistry spendingConditionRegistry,

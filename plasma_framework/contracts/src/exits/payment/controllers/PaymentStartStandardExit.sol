@@ -54,6 +54,10 @@ library PaymentStartStandardExit {
         uint192 exitId
     );
 
+    /**
+     * @notice Function that builds the controller struct
+     * @return Controller struct of PaymentStartStandardExit
+     */
     function buildController(
         IExitProcessor exitProcessor,
         PlasmaFramework framework,

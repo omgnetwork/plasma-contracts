@@ -45,6 +45,10 @@ library PaymentChallengeIFENotCanonical {
         uint256 challengeTxPosition
     );
 
+    /**
+     * @notice Function that builds the controller struct
+     * @return Controller struct of PaymentChallengeIFENotCanonical
+     */
     function buildController(
         PlasmaFramework framework,
         SpendingConditionRegistry spendingConditionRegistry,
