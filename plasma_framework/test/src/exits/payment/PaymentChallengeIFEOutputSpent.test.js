@@ -12,7 +12,7 @@ const SpendingConditionMock = artifacts.require('SpendingConditionMock');
 const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
-const StateTransitionVerifierAccept = artifacts.require('StateTransitionVerifierAccept');
+const StateTransitionVerifierMock = artifacts.require('StateTransitionVerifierMock');
 
 const {
     BN, constants, expectEvent, expectRevert, time,
@@ -62,7 +62,8 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
 
     before('deploy helper contracts', async () => {
         this.exitIdHelper = await ExitId.new();
-        this.stateTransitionVerifierAccept = await StateTransitionVerifierAccept.new();
+        this.stateTransitionVerifier = await StateTransitionVerifierMock.new();
+        await this.stateTransitionVerifier.mockResult(true);
     });
 
 
@@ -156,7 +157,7 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
                 erc20Vault.address,
                 this.outputGuardHandlerRegistry.address,
                 this.spendingConditionRegistry.address,
-                this.stateTransitionVerifierAccept.address,
+                this.stateTransitionVerifier.address,
                 IFE_TX_TYPE,
             );
             this.exitGame.depositFundForTest({ from: alice, value: PIGGYBACK_BOND });
