@@ -61,6 +61,13 @@ library PaymentChallengeStandardExit {
         });
     }
 
+    /**
+     * @notice Main logic function to challenge standard exit
+     * @dev emits ExitChallenged event if suceed
+     * @param self the controller struct
+     * @param exitMap the storage of all standard exit data
+     * @param args arguments of challenge standard exit function from client.
+     */
     function run(
         Controller memory self,
         PaymentExitDataModel.StandardExitMap storage exitMap,

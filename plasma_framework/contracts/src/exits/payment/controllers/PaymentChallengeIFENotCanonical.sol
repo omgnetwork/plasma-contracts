@@ -64,6 +64,13 @@ library PaymentChallengeIFENotCanonical {
         });
     }
 
+    /**
+     * @notice Main logic implementation for 'challengeInFlightExitNotCanonical'
+     * @dev emits InFlightExitChallenged event if suceed
+     * @param self the controller struct
+     * @param inFlightExitMap the storage of all in-flight exit data
+     * @param args arguments of 'challengeInFlightExitNotCanonical' function from client.
+     */
     function challenge(
         Controller memory self,
         PaymentExitDataModel.InFlightExitMap storage inFlightExitMap,
@@ -129,6 +136,15 @@ library PaymentChallengeIFENotCanonical {
         emit InFlightExitChallenged(msg.sender, keccak256(args.inFlightTx), competitorPosition);
     }
 
+    /**
+     * @notice Main logic implementation for 'respondToNonCanonicalChallenge'
+     * @dev emits InFlightExitChallengeResponded event if suceed
+     * @param self the controller struct
+     * @param inFlightExitMap the storage of all in-flight exit data
+     * @param inFlightTx the in-flight tx in rlp encoded bytes
+     * @param inFlightTxPos the UTXO position of the in-flight exit. Should hardcode 0 for the outputIndex.
+     * @param inFlightTxInclusionProof inclusion proof for the in-flight tx.
+     */
     function respond(
         Controller memory self,
         PaymentExitDataModel.InFlightExitMap storage inFlightExitMap,

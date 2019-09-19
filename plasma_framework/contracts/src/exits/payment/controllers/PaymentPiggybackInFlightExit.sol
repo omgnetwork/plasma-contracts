@@ -69,6 +69,10 @@ library PaymentPiggybackInFlightExit {
 
     /**
      * @notice The main controller logic for 'piggybackInFlightExitOnInput'
+     * @dev emits InFlightExitInputPiggybacked event if suceed
+     * @param self the controller struct
+     * @param inFlightExitMap the storage of all in-flight exit data
+     * @param args arguments of 'piggybackInFlightExitOnInput' function from client.
      */
     function piggybackInput(
         Controller memory self,
@@ -103,6 +107,10 @@ library PaymentPiggybackInFlightExit {
 
     /**
      * @notice The main controller logic for 'piggybackInFlightExitOnOutput'
+     * @dev emits InFlightExitOutputPiggybacked event if suceed
+     * @param self the controller struct
+     * @param inFlightExitMap the storage of all in-flight exit data
+     * @param args arguments of 'piggybackInFlightExitOnOutput' function from client.
      */
     function piggybackOutput(
         Controller memory self,
