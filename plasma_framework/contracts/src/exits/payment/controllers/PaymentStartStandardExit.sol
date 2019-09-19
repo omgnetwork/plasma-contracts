@@ -78,7 +78,7 @@ library PaymentStartStandardExit {
 
     /**
      * @notice Main logic function to start standard exit
-     * @dev emits ExitStarted event if suceed
+     * @dev emits ExitStarted event on success
      * @param self the controller struct
      * @param exitMap the storage of all standard exit data
      * @param args arguments of start standard exit function from client.

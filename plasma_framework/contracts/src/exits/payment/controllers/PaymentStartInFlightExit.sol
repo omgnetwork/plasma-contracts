@@ -111,7 +111,7 @@ library PaymentStartInFlightExit {
 
     /**
      * @notice Main logic function to start in-flight exit
-     * @dev emits InFlightExitStarted event if suceed
+     * @dev emits InFlightExitStarted event on success
      * @param self the controller struct
      * @param inFlightExitMap the storage of all in-flight exit data
      * @param args arguments of start in-flight exit function from client.

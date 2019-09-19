@@ -70,7 +70,7 @@ library PaymentChallengeIFENotCanonical {
 
     /**
      * @notice Main logic implementation for 'challengeInFlightExitNotCanonical'
-     * @dev emits InFlightExitChallenged event if suceed
+     * @dev emits InFlightExitChallenged event on success
      * @param self the controller struct
      * @param inFlightExitMap the storage of all in-flight exit data
      * @param args arguments of 'challengeInFlightExitNotCanonical' function from client.
@@ -142,7 +142,7 @@ library PaymentChallengeIFENotCanonical {
 
     /**
      * @notice Main logic implementation for 'respondToNonCanonicalChallenge'
-     * @dev emits InFlightExitChallengeResponded event if suceed
+     * @dev emits InFlightExitChallengeResponded event on success
      * @param self the controller struct
      * @param inFlightExitMap the storage of all in-flight exit data
      * @param inFlightTx the in-flight tx in rlp encoded bytes

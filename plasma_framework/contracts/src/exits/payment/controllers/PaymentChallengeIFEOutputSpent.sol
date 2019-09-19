@@ -55,7 +55,7 @@ library PaymentChallengeIFEOutputSpent {
 
     /**
      * @notice Main logic implementation for 'challengeInFlightExitOutputSpent'
-     * @dev emits InFlightExitOutputBlocked event if suceed
+     * @dev emits InFlightExitOutputBlocked event on success
      * @param controller the controller struct
      * @param inFlightExitMap the storage of all in-flight exit data
      * @param args arguments of 'challengeInFlightExitOutputSpent' function from client.

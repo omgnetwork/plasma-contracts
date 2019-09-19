@@ -67,7 +67,7 @@ library PaymentChallengeStandardExit {
 
     /**
      * @notice Main logic function to challenge standard exit
-     * @dev emits ExitChallenged event if suceed
+     * @dev emits ExitChallenged event on success
      * @param self the controller struct
      * @param exitMap the storage of all standard exit data
      * @param args arguments of challenge standard exit function from client.
