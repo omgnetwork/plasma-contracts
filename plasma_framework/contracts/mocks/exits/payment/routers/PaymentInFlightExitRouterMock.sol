@@ -6,8 +6,11 @@ import "../../../../src/exits/payment/routers/PaymentInFlightExitRouter.sol";
 import "../../../../src/framework/PlasmaFramework.sol";
 import "../../../../src/exits/interfaces/IStateTransitionVerifier.sol";
 import "../../../../src/exits/registries/OutputGuardHandlerRegistry.sol";
+import "../../../../src/exits/payment/PaymentInFlightExitModelUtils.sol";
 
 contract PaymentInFlightExitRouterMock is PaymentInFlightExitRouter {
+    using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
+
     PlasmaFramework public framework;
 
     constructor(
@@ -59,6 +62,10 @@ contract PaymentInFlightExitRouterMock is PaymentInFlightExitRouter {
 
     function getInFlightExitInput(uint192 exitId, uint16 inputIndex) public view returns (PaymentExitDataModel.WithdrawData memory) {
         return inFlightExitMap.exits[exitId].inputs[inputIndex];
+    }
+
+    function setInFlightExitInputPiggybacked(uint192 exitId, uint16 inputIndex) public payable {
+        inFlightExitMap.exits[exitId].setInputPiggybacked(inputIndex);
     }
 
     function getInFlightExitOutput(uint192 exitId, uint16 outputIndex) public view returns (PaymentExitDataModel.WithdrawData memory) {

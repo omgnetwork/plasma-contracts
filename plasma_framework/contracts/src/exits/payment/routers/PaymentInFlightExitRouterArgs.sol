@@ -81,6 +81,32 @@ library PaymentInFlightExitRouterArgs {
         bytes competingTxSpendingConditionOptionalArgs;
     }
 
+    /*
+     * @notice Wraps arguments for challenge in-flight exit input spent.
+     * @param inFlightTx RLP encoded in-flight transaction.
+     * @param inFlightTxInputIndex Index of input that's been spent.
+     * @param challengingTx RLP encoded challenging transaction.
+     * @param challengingTxInputIndex Index of spent input in challenging transaction.
+     * @param challengingTxInputOutputType Output type of spent input.
+     * @param challengingTxInputOutputGuardPreimage OutputGuard preimage of spent input.
+     * @param challengingTxWitness Witness for challenging transaction.
+     * @param inputTx RLP encoded input transaction.
+     * @param inputUtxoPos Utxo position of input transaction's output.
+     * @param spendingConditionOptionalArgs Optional arguments for spending condition of the input transaction.
+     */
+    struct ChallengeInputSpentArgs {
+        bytes inFlightTx;
+        uint16 inFlightTxInputIndex;
+        bytes challengingTx;
+        uint16 challengingTxInputIndex;
+        uint256 challengingTxInputOutputType;
+        bytes challengingTxInputOutputGuardPreimage;
+        bytes challengingTxWitness;
+        bytes inputTx;
+        uint256 inputUtxoPos;
+        bytes spendingConditionOptionalArgs;
+    }
+
      /*
      * @notice Wraps arguments for challenging in-flight transaction output exit.
      * @param inFlightTx RLP encoded in-flight transaction.

@@ -2,6 +2,7 @@ const ExpectedOutputGuardHandler = artifacts.require('ExpectedOutputGuardHandler
 const ExitIdWrapper = artifacts.require('ExitIdWrapper');
 const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry');
 const PaymentChallengeIFENotCanonical = artifacts.require('PaymentChallengeIFENotCanonical');
+const PaymentChallengeIFEInputSpent = artifacts.require('PaymentChallengeIFEInputSpent');
 const PaymentChallengeIFEOutputSpent = artifacts.require('PaymentChallengeIFEOutputSpent');
 const PaymentInFlightExitRouter = artifacts.require('PaymentInFlightExitRouterMock');
 const PaymentPiggybackInFlightExit = artifacts.require('PaymentPiggybackInFlightExit');
@@ -45,13 +46,15 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, outputOwner, nonOu
         const startInFlightExit = await PaymentStartInFlightExit.new();
         const piggybackInFlightExit = await PaymentPiggybackInFlightExit.new();
         const challengeInFlightExitNotCanonical = await PaymentChallengeIFENotCanonical.new();
-        const challengeIFEOutput = await PaymentChallengeIFEOutputSpent.new();
+        const challengeIFEInputSpent = await PaymentChallengeIFEInputSpent.new();
+        const challengeIFEOutputSpent = await PaymentChallengeIFEOutputSpent.new();
         const processInFlightExit = await PaymentProcessInFlightExit.new();
 
         await PaymentInFlightExitRouter.link('PaymentStartInFlightExit', startInFlightExit.address);
         await PaymentInFlightExitRouter.link('PaymentPiggybackInFlightExit', piggybackInFlightExit.address);
         await PaymentInFlightExitRouter.link('PaymentChallengeIFENotCanonical', challengeInFlightExitNotCanonical.address);
-        await PaymentInFlightExitRouter.link('PaymentChallengeIFEOutputSpent', challengeIFEOutput.address);
+        await PaymentInFlightExitRouter.link('PaymentChallengeIFEInputSpent', challengeIFEInputSpent.address);
+        await PaymentInFlightExitRouter.link('PaymentChallengeIFEOutputSpent', challengeIFEOutputSpent.address);
         await PaymentInFlightExitRouter.link('PaymentProcessInFlightExit', processInFlightExit.address);
     });
 

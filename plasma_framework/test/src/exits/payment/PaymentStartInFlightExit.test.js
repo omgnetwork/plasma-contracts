@@ -8,6 +8,7 @@ const PaymentStartInFlightExit = artifacts.require('PaymentStartInFlightExit');
 const PaymentPiggybackInFlightExit = artifacts.require('PaymentPiggybackInFlightExit');
 const PaymentProcessInFlightExit = artifacts.require('PaymentProcessInFlightExit');
 const PaymentChallengeIFENotCanonical = artifacts.require('PaymentChallengeIFENotCanonical');
+const PaymentChallengeIFEInputSpent = artifacts.require('PaymentChallengeIFEInputSpent');
 const PaymentChallengeIFEOutputSpent = artifacts.require('PaymentChallengeIFEOutputSpent');
 const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry');
 const SpendingConditionMock = artifacts.require('SpendingConditionMock');
@@ -51,14 +52,16 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
         const startInFlightExit = await PaymentStartInFlightExit.new();
         const piggybackInFlightExit = await PaymentPiggybackInFlightExit.new();
         const challengeInFlightExitNotCanonical = await PaymentChallengeIFENotCanonical.new();
+        const challengeIFEInputSpent = await PaymentChallengeIFEInputSpent.new();
+        const challengeIFEOutputSpent = await PaymentChallengeIFEOutputSpent.new();
         const processInFlightExit = await PaymentProcessInFlightExit.new();
-        const challengeIFEOutput = await PaymentChallengeIFEOutputSpent.new();
 
         await PaymentInFlightExitRouter.link('PaymentStartInFlightExit', startInFlightExit.address);
         await PaymentInFlightExitRouter.link('PaymentPiggybackInFlightExit', piggybackInFlightExit.address);
         await PaymentInFlightExitRouter.link('PaymentChallengeIFENotCanonical', challengeInFlightExitNotCanonical.address);
+        await PaymentInFlightExitRouter.link('PaymentChallengeIFEInputSpent', challengeIFEInputSpent.address);
+        await PaymentInFlightExitRouter.link('PaymentChallengeIFEOutputSpent', challengeIFEOutputSpent.address);
         await PaymentInFlightExitRouter.link('PaymentProcessInFlightExit', processInFlightExit.address);
-        await PaymentInFlightExitRouter.link('PaymentChallengeIFEOutputSpent', challengeIFEOutput.address);
     });
 
     before('setup bob account with custom private key', async () => {
