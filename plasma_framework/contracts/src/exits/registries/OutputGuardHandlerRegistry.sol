@@ -4,7 +4,16 @@ import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "../../framework/utils/Operated.sol";
 import "../interfaces/IOutputGuardHandler.sol";
 
+/**
+ * @title OutputGuardHandlerRegistry
+ * @notice The registry contracts of outputGuard handler
+ * @dev It is designed to renounce the ownership before injecting the registry contract to ExitGame contracts.
+ *      After registering all the essential condition contracts, the owner should renounce its ownership to
+ *      make sure no further conditions would be registered for an ExitGame contracts.
+ *      https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/ownership/Ownable.sol#L55
+ */
 contract OutputGuardHandlerRegistry is Operated {
+    // mapping of outputType to IOutputGuardHandler
     mapping(uint256 => IOutputGuardHandler) public outputGuardHandlers;
 
     /**
