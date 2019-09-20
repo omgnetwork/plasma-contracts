@@ -83,6 +83,10 @@ library PaymentStartInFlightExit {
         bytes32[] outputIds;
     }
 
+    /**
+     * @notice Function that builds the controller struct
+     * @return Controller struct of PaymentStartInFlightExit
+     */
     function buildController(
         PlasmaFramework framework,
         OutputGuardHandlerRegistry outputGuardHandlerRegistry,
@@ -105,6 +109,13 @@ library PaymentStartInFlightExit {
         });
     }
 
+    /**
+     * @notice Main logic function to start in-flight exit
+     * @dev emits InFlightExitStarted event on success
+     * @param self the controller struct
+     * @param inFlightExitMap the storage of all in-flight exit data
+     * @param args arguments of start in-flight exit function from client.
+     */
     function run(
         Controller memory self,
         PaymentExitDataModel.InFlightExitMap storage inFlightExitMap,
