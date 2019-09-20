@@ -134,7 +134,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
         this.startStandardExitBondSize = await this.exitGame.startStandardExitBondSize();
 
         this.toPaymentCondition = await PaymentOutputToPaymentTxCondition.new(
-            this.framework.address, TX_TYPE.PAYMENT, TX_TYPE.PAYMENT,
+            this.framework.address, OUTPUT_TYPE.PAYMENT, TX_TYPE.PAYMENT,
         );
         await spendingConditionRegistry.registerSpendingCondition(
             OUTPUT_TYPE.PAYMENT, TX_TYPE.PAYMENT, this.toPaymentCondition.address,
