@@ -44,6 +44,10 @@ library PaymentChallengeStandardExit {
         PaymentExitDataModel.StandardExit exitData;
     }
 
+    /**
+     * @notice Function that builds the controller struct
+     * @return Controller struct of PaymentChallengeStandardExit
+     */
     function buildController(
         PlasmaFramework framework,
         SpendingConditionRegistry spendingConditionRegistry,
@@ -61,6 +65,13 @@ library PaymentChallengeStandardExit {
         });
     }
 
+    /**
+     * @notice Main logic function to challenge standard exit
+     * @dev emits ExitChallenged event on success
+     * @param self the controller struct
+     * @param exitMap the storage of all standard exit data
+     * @param args arguments of challenge standard exit function from client.
+     */
     function run(
         Controller memory self,
         PaymentExitDataModel.StandardExitMap storage exitMap,

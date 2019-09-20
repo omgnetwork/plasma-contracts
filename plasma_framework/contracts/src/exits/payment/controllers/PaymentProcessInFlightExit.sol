@@ -34,6 +34,16 @@ library PaymentProcessInFlightExit {
         uint16 inputIndex
     );
 
+    /**
+     * @notice Main logic function to process in-flight exit
+     * @dev emits InFlightExitOmitted event if the exit is omitted
+     * @dev emits InFlightExitInputWithdrawn event if the input of IFE is withdrawn successfully
+     * @dev emits InFlightExitOutputWithdrawn event if the output of IFE is withdrawn successfully
+     * @param self the controller struct
+     * @param exitMap the storage of all in-flight exit data
+     * @param exitId the exitId of the in-flight exit
+     * @param token the ERC20 token address of the exit. Uses address(0) to represent ETH.
+     */
     function run(
         Controller memory self,
         PaymentExitDataModel.InFlightExitMap storage exitMap,

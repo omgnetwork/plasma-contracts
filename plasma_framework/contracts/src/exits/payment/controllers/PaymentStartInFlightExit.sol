@@ -83,6 +83,10 @@ library PaymentStartInFlightExit {
         bytes32[] outputIds;
     }
 
+    /**
+     * @notice Function that builds the controller struct
+     * @return Controller struct of PaymentStartInFlightExit
+     */
     function buildController(
         PlasmaFramework framework,
         OutputGuardHandlerRegistry outputGuardHandlerRegistry,
@@ -105,6 +109,13 @@ library PaymentStartInFlightExit {
         });
     }
 
+    /**
+     * @notice Main logic function to start in-flight exit
+     * @dev emits InFlightExitStarted event on success
+     * @param self the controller struct
+     * @param inFlightExitMap the storage of all in-flight exit data
+     * @param args arguments of start in-flight exit function from client.
+     */
     function run(
         Controller memory self,
         PaymentExitDataModel.InFlightExitMap storage inFlightExitMap,
@@ -336,6 +347,7 @@ library PaymentStartInFlightExit {
         PaymentExitDataModel.InFlightExit storage ife = inFlightExitMap.exits[startExitData.exitId];
         ife.isCanonical = true;
         ife.bondOwner = msg.sender;
+        ife.bondSize = msg.value;
         ife.position = getYoungestInputUtxoPosition(startExitData.inputUtxosPos);
         ife.exitStartTimestamp = uint64(block.timestamp);
         setInFlightExitInputs(ife, startExitData);

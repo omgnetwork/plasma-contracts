@@ -12,20 +12,29 @@ import "../controllers/PaymentChallengeIFEOutputSpent.sol";
 import "../../registries/SpendingConditionRegistry.sol";
 import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../interfaces/IStateTransitionVerifier.sol";
+import "../../utils/BondSize.sol";
 import "../../../utils/OnlyWithValue.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../framework/interfaces/IExitProcessor.sol";
+import "../../../framework/utils/Operated.sol";
 
-contract PaymentInFlightExitRouter is IExitProcessor, OnlyWithValue {
+contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue {
     using PaymentStartInFlightExit for PaymentStartInFlightExit.Controller;
     using PaymentPiggybackInFlightExit for PaymentPiggybackInFlightExit.Controller;
     using PaymentChallengeIFENotCanonical for PaymentChallengeIFENotCanonical.Controller;
     using PaymentChallengeIFEInputSpent for PaymentChallengeIFEInputSpent.Controller;
     using PaymentProcessInFlightExit for PaymentProcessInFlightExit.Controller;
     using PaymentChallengeIFEOutputSpent for PaymentChallengeIFEOutputSpent.Controller;
+    using BondSize for BondSize.Params;
 
-    uint256 public constant IN_FLIGHT_EXIT_BOND = 31415926535 wei;
-    uint256 public constant PIGGYBACK_BOND = 31415926535 wei;
+    // Initial IFE bond size = 185000 (gas cost of challenge) * 20 gwei (current fast gas price) * 10 (safety margin)
+    uint128 public constant INITIAL_IFE_BOND_SIZE = 37000000000000000 wei;
+
+    // Initial piggyback bond size = 140000 (gas cost of challenge) * 20 gwei (current fast gas price) * 10 (safety margin)
+    uint128 public constant INITIAL_PB_BOND_SIZE = 28000000000000000 wei;
+
+    uint16 public constant BOND_LOWER_BOUND_DIVISOR = 2;
+    uint16 public constant BOND_UPPER_BOUND_MULTIPLIER = 2;
 
     PaymentExitDataModel.InFlightExitMap internal inFlightExitMap;
     PaymentStartInFlightExit.Controller internal startInFlightExitController;
@@ -34,6 +43,11 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyWithValue {
     PaymentChallengeIFEInputSpent.Controller internal challengeInputSpentController;
     PaymentProcessInFlightExit.Controller internal processInflightExitController;
     PaymentChallengeIFEOutputSpent.Controller internal challengeOutputSpentController;
+    BondSize.Params internal startIFEBond;
+    BondSize.Params internal piggybackBond;
+
+    event IFEBondUpdated(uint128 bondSize);
+    event PiggybackBondUpdated(uint128 bondSize);
 
     constructor(
         PlasmaFramework framework,
@@ -84,6 +98,8 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyWithValue {
             ethVault: ethVault,
             erc20Vault: erc20Vault
         });
+        startIFEBond = BondSize.buildParams(INITIAL_IFE_BOND_SIZE, BOND_LOWER_BOUND_DIVISOR, BOND_UPPER_BOUND_MULTIPLIER);
+        piggybackBond = BondSize.buildParams(INITIAL_PB_BOND_SIZE, BOND_LOWER_BOUND_DIVISOR, BOND_UPPER_BOUND_MULTIPLIER);
     }
 
     function inFlightExits(uint192 _exitId) public view returns (PaymentExitDataModel.InFlightExit memory) {
@@ -97,7 +113,7 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyWithValue {
     function startInFlightExit(PaymentInFlightExitRouterArgs.StartExitArgs memory args)
         public
         payable
-        onlyWithValue(IN_FLIGHT_EXIT_BOND)
+        onlyWithValue(startIFEBondSize())
     {
         startInFlightExitController.run(inFlightExitMap, args);
     }
@@ -111,7 +127,7 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyWithValue {
     )
         public
         payable
-        onlyWithValue(PIGGYBACK_BOND)
+        onlyWithValue(piggybackBondSize())
     {
         piggybackInFlightExitController.piggybackInput(inFlightExitMap, args);
     }
@@ -125,7 +141,7 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyWithValue {
     )
         public
         payable
-        onlyWithValue(PIGGYBACK_BOND)
+        onlyWithValue(piggybackBondSize())
     {
         piggybackInFlightExitController.piggybackOutput(inFlightExitMap, args);
     }
@@ -174,5 +190,37 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyWithValue {
      */
     function processInFlightExit(uint192 exitId, address token) internal {
         processInflightExitController.run(inFlightExitMap, exitId, token);
+    }
+
+    /**
+     * @notice Gets the in-flight exit bond size.
+     */
+    function startIFEBondSize() public view returns (uint128) {
+        return startIFEBond.bondSize();
+    }
+
+    /**
+     * @notice Updates the in-flight exit bond size. Will take 2 days to come into effect.
+     * @param newBondSize The new bond size.
+     */
+    function updateStartIFEBondSize(uint128 newBondSize) public onlyOperator {
+        startIFEBond.updateBondSize(newBondSize);
+        emit IFEBondUpdated(newBondSize);
+    }
+
+    /**
+     * @notice Gets the piggyback bond size.
+     */
+    function piggybackBondSize() public view returns (uint128) {
+        return piggybackBond.bondSize();
+    }
+
+    /**
+     * @notice Updates the piggyback bond size. Will take 2 days to come into effect.
+     * @param newBondSize The new bond size.
+     */
+    function updatePiggybackBondSize(uint128 newBondSize) public onlyOperator {
+        piggybackBond.updateBondSize(newBondSize);
+        emit PiggybackBondUpdated(newBondSize);
     }
 }

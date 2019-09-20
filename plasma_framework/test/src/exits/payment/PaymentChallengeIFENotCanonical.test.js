@@ -224,7 +224,6 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
         this.inFlightTx = inFlightTx;
         this.exitId = exitId;
 
-
         const {
             args: cArgs, block, decodedCompetingTx,
         } = buildValidNoncanonicalChallengeArgs(inFlightTx, competitorOwner);

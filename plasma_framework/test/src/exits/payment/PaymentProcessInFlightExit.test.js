@@ -28,8 +28,6 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week in seconds
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
     const INITIAL_IMMUNE_EXIT_GAME_NUM = 1;
-    const DUMMY_IFE_BOND_SIZE = 31415926535; // wei
-    const DUMMY_PIGGYBACK_BOND = 31415926534; // wei
     const TEST_INPUT_AMOUNT = 667;
     const TEST_OUTPUT_AMOUNT = 666;
     const TEST_OUTPUT_ID_FOR_INPUT_1 = web3.utils.sha3('dummy outputId of input 1');
@@ -76,7 +74,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
             exitTarget: constants.ZERO_ADDRESS,
             token: constants.ZERO_ADDRESS,
             amount: 0,
-            piggybackBondSize: DUMMY_PIGGYBACK_BOND,
+            piggybackBondSize: this.piggybackBondSize.toString(),
         };
 
         const inFlightExitData = {
@@ -84,45 +82,45 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
             exitMap: 0,
             position: INFLIGHT_EXIT_YOUNGEST_INPUT_POSITION,
             bondOwner: ifeBondOwner,
-            bondSize: DUMMY_IFE_BOND_SIZE,
+            bondSize: this.startIFEBondSize.toString(),
             oldestCompetitorPosition: 0,
             inputs: [{
                 outputId: TEST_OUTPUT_ID_FOR_INPUT_1,
                 exitTarget: inputOwner1,
                 token: ETH,
                 amount: TEST_INPUT_AMOUNT,
-                piggybackBondSize: DUMMY_PIGGYBACK_BOND,
+                piggybackBondSize: this.piggybackBondSize.toString(),
             }, {
                 outputId: TEST_OUTPUT_ID_FOR_INPUT_2,
                 exitTarget: inputOwner2,
                 token: ETH,
                 amount: TEST_INPUT_AMOUNT,
-                piggybackBondSize: DUMMY_PIGGYBACK_BOND,
+                piggybackBondSize: this.piggybackBondSize.toString(),
             }, {
                 outputId: TEST_OUTPUT_ID_FOR_INPUT_3,
                 exitTarget: inputOwner3,
                 token: erc20,
                 amount: TEST_INPUT_AMOUNT,
-                piggybackBondSize: DUMMY_PIGGYBACK_BOND,
+                piggybackBondSize: this.piggybackBondSize.toString(),
             }, emptyWithdrawData],
             outputs: [{
                 outputId: TEST_OUTPUT_ID_FOR_OUTPUT_1,
                 exitTarget: outputOwner1,
                 token: ETH,
                 amount: TEST_OUTPUT_AMOUNT,
-                piggybackBondSize: DUMMY_PIGGYBACK_BOND,
+                piggybackBondSize: this.piggybackBondSize.toString(),
             }, {
                 outputId: TEST_OUTPUT_ID_FOR_OUTPUT_2,
                 exitTarget: outputOwner2,
                 token: ETH,
                 amount: TEST_OUTPUT_AMOUNT,
-                piggybackBondSize: DUMMY_PIGGYBACK_BOND,
+                piggybackBondSize: this.piggybackBondSize.toString(),
             }, {
                 outputId: TEST_OUTPUT_ID_FOR_OUTPUT_3,
                 exitTarget: outputOwner3,
                 token: erc20,
                 amount: TEST_OUTPUT_AMOUNT,
-                piggybackBondSize: DUMMY_PIGGYBACK_BOND,
+                piggybackBondSize: this.piggybackBondSize.toString(),
             }, emptyWithdrawData],
         };
 
@@ -151,8 +149,12 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
                 TX_TYPE.PAYMENT,
             );
             this.framework.registerExitGame(TX_TYPE.PAYMENT, this.exitGame.address, PROTOCOL.MORE_VP);
-            const maxNeededBond = DUMMY_IFE_BOND_SIZE + DUMMY_PIGGYBACK_BOND * 4;
-            await this.exitGame.depositFundForTest({ value: maxNeededBond });
+
+            this.startIFEBondSize = await this.exitGame.startIFEBondSize();
+            this.piggybackBondSize = await this.exitGame.piggybackBondSize();
+
+            const maxNeededBond = this.startIFEBondSize.add(this.piggybackBondSize).muln(4);
+            await this.exitGame.depositFundForTest({ value: maxNeededBond.toString() });
         });
 
         it('should omit the exit if the exit does not exist', async () => {
@@ -251,7 +253,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
                 await this.exitGame.processExit(this.dummyExitId, erc20);
 
                 const postBalance = new BN(await web3.eth.getBalance(ifeBondOwner));
-                const expectedBalance = this.ifeBondOwnerPreBalance.add(new BN(DUMMY_IFE_BOND_SIZE));
+                const expectedBalance = this.ifeBondOwnerPreBalance.add(this.startIFEBondSize);
 
                 expect(postBalance).to.be.bignumber.equal(expectedBalance);
             });
@@ -299,7 +301,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
 
                 it('should transfer exit bond to the IFE bond owner', async () => {
                     const postBalance = new BN(await web3.eth.getBalance(ifeBondOwner));
-                    const expectedBalance = this.ifeBondOwnerPreBalance.add(new BN(DUMMY_IFE_BOND_SIZE));
+                    const expectedBalance = this.ifeBondOwnerPreBalance.add(this.startIFEBondSize);
 
                     expect(postBalance).to.be.bignumber.equal(expectedBalance);
                 });
@@ -365,7 +367,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
             it('should return piggyback bond to the input owner', async () => {
                 await this.exitGame.processExit(this.dummyExitId, erc20);
                 const postBalance = new BN(await web3.eth.getBalance(inputOwner3));
-                const expectedBalance = this.inputOwner3PreBalance.add(new BN(DUMMY_PIGGYBACK_BOND));
+                const expectedBalance = this.inputOwner3PreBalance.add(this.piggybackBondSize);
 
                 expect(postBalance).to.be.bignumber.equal(expectedBalance);
             });
@@ -436,7 +438,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
             it('should return piggyback bond to the output owner', async () => {
                 await this.exitGame.processExit(this.dummyExitId, erc20);
                 const postBalance = new BN(await web3.eth.getBalance(outputOwner3));
-                const expectedBalance = this.outputOwner3PreBalance.add(new BN(DUMMY_PIGGYBACK_BOND));
+                const expectedBalance = this.outputOwner3PreBalance.add(this.piggybackBondSize);
 
                 expect(postBalance).to.be.bignumber.equal(expectedBalance);
             });

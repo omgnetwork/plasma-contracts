@@ -22,6 +22,15 @@ library PaymentProcessStandardExit {
         uint192 indexed exitId
     );
 
+    /**
+     * @notice Main logic function to process standard exit
+     * @dev emits ExitOmitted event if the exit is omitted
+     * @dev emits ExitFinalized event if the exit is processed and funds are withdrawn
+     * @param self the controller struct
+     * @param exitMap the storage of all standard exit data
+     * @param exitId the exitId of the standard exit
+     * @param token the ERC20 token address of the exit. Uses address(0) to represent ETH.
+     */
     function run(
         Controller memory self,
         PaymentExitDataModel.StandardExitMap storage exitMap,

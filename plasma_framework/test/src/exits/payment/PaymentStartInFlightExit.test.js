@@ -31,7 +31,6 @@ const {
 } = require('../../../helpers/ife.js');
 
 contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
-    const IN_FLIGHT_EXIT_BOND = 31415926535; // wei
     const CHILD_BLOCK_INTERVAL = 1000;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week in seconds
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
@@ -167,6 +166,8 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
 
                 await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot1, 0);
                 await this.framework.setBlock(DEPOSIT_BLOCK_NUMBER, inputTxsBlockRoot2, 0);
+
+                this.startIFEBondSize = await this.exitGame.startIFEBondSize();
             });
 
             it('should call the StateTransitionVerifier with correct arguments', async () => {
@@ -181,7 +182,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
 
                 await this.exitGame.startInFlightExit(
                     this.args,
-                    { from: alice, value: IN_FLIGHT_EXIT_BOND },
+                    { from: alice, value: this.startIFEBondSize.toString() },
                 );
             });
 
@@ -189,7 +190,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 const ethBlockTime = await time.latest();
                 await this.exitGame.startInFlightExit(
                     this.args,
-                    { from: alice, value: IN_FLIGHT_EXIT_BOND },
+                    { from: alice, value: this.startIFEBondSize.toString() },
                 );
                 const exitId = await this.exitIdHelper.getInFlightExitId(this.args.inFlightTx);
 
@@ -197,6 +198,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
 
                 expect(exit.isCanonical).to.be.true;
                 expect(exit.bondOwner).to.equal(alice);
+                expect(new BN(exit.bondSize)).to.be.bignumber.equal(this.startIFEBondSize);
                 expect(new BN(exit.oldestCompetitorPosition)).to.be.bignumber.equal(new BN(0));
                 expect(new BN(exit.exitStartTimestamp)).to.be.bignumber.closeTo(ethBlockTime, TOLERANCE_SECONDS);
                 expect(new BN(exit.exitMap)).to.be.bignumber.equal(new BN(0));
@@ -237,7 +239,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
             it('should emit InFlightExitStarted event', async () => {
                 const { receipt } = await this.exitGame.startInFlightExit(
                     this.args,
-                    { from: alice, value: IN_FLIGHT_EXIT_BOND },
+                    { from: alice, value: this.startIFEBondSize.toString() },
                 );
 
                 const expectedIfeHash = web3.utils.sha3(this.args.inFlightTx);
@@ -257,11 +259,11 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 const preBalance = new BN(await web3.eth.getBalance(alice));
                 const tx = await this.exitGame.startInFlightExit(
                     this.args,
-                    { from: alice, value: IN_FLIGHT_EXIT_BOND },
+                    { from: alice, value: this.startIFEBondSize.toString() },
                 );
                 const actualPostBalance = new BN(await web3.eth.getBalance(alice));
                 const expectedPostBalance = preBalance
-                    .sub(new BN(IN_FLIGHT_EXIT_BOND))
+                    .sub(this.startIFEBondSize)
                     .sub(await spentOnGas(tx.receipt));
 
                 expect(actualPostBalance).to.be.bignumber.equal(expectedPostBalance);
@@ -334,7 +336,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
             it('should be able to run it successfully', async () => {
                 const { receipt } = await this.exitGame.startInFlightExit(
                     this.args,
-                    { from: alice, value: IN_FLIGHT_EXIT_BOND },
+                    { from: alice, value: this.startIFEBondSize.toString() },
                 );
 
                 const expectedIfeHash = web3.utils.sha3(this.args.inFlightTx);
@@ -397,7 +399,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 await this.framework.setBlock(DEPOSIT_BLOCK_NUMBER, inputTxsBlockRoot2, 0);
 
                 await expectRevert(
-                    this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
+                    this.exitGame.startInFlightExit(args, { from: alice, value: this.startIFEBondSize.toString() }),
                     'Spending condition contract not found',
                 );
             });
@@ -418,15 +420,15 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 );
 
                 await expectRevert(
-                    this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
+                    this.exitGame.startInFlightExit(args, { from: alice, value: this.startIFEBondSize.toString() }),
                     'Spending condition failed',
                 );
             });
 
             it('should fail when not called with a valid exit bond', async () => {
-                const invalidExitBond = IN_FLIGHT_EXIT_BOND - 1;
+                const invalidExitBond = this.startIFEBondSize.subn(1);
                 await expectRevert(
-                    this.exitGame.startInFlightExit(this.args, { from: alice, value: invalidExitBond }),
+                    this.exitGame.startInFlightExit(this.args, { from: alice, value: invalidExitBond.toString() }),
                     'Input value mismatches with msg.value',
                 );
             });
@@ -441,9 +443,9 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot1, 0);
                 await this.framework.setBlock(DEPOSIT_BLOCK_NUMBER, inputTxsBlockRoot2, 0);
 
-                await this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND });
+                await this.exitGame.startInFlightExit(args, { from: alice, value: this.startIFEBondSize.toString() });
                 await expectRevert(
-                    this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
+                    this.exitGame.startInFlightExit(args, { from: alice, value: this.startIFEBondSize.toString() }),
                     'There is an active in-flight exit from this transaction',
                 );
             });
@@ -462,7 +464,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 args.inputUtxosTypes = [nonRegisteredOutputType, nonRegisteredOutputType];
 
                 await expectRevert(
-                    this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
+                    this.exitGame.startInFlightExit(args, { from: alice, value: this.startIFEBondSize.toString() }),
                     'Failed to get the outputGuardHandler of the output type',
                 );
             });
@@ -480,7 +482,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 await this.handler1.mockIsValid(false);
 
                 await expectRevert(
-                    this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
+                    this.exitGame.startInFlightExit(args, { from: alice, value: this.startIFEBondSize.toString() }),
                     'Output guard information is invalid for the input tx',
                 );
             });
@@ -498,7 +500,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 const invalidInclusionProof = web3.utils.bytesToHex('a'.repeat(INCLUSION_PROOF_LENGTH_IN_BYTES));
                 args.inputTxsInclusionProofs = [invalidInclusionProof, invalidInclusionProof];
                 await expectRevert(
-                    this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
+                    this.exitGame.startInFlightExit(args, { from: alice, value: this.startIFEBondSize.toString() }),
                     'Input transaction is not standard finalized',
                 );
             });
@@ -530,7 +532,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 await this.framework.registerExitGame(MVP_TX_TYPE, dummyExitGame.address, PROTOCOL.MVP);
 
                 await expectRevert(
-                    this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
+                    this.exitGame.startInFlightExit(args, { from: alice, value: this.startIFEBondSize.toString() }),
                     'Input transaction is not standard finalized',
                 );
             });
@@ -548,7 +550,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 args.inputUtxosPos = [];
 
                 await expectRevert(
-                    this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
+                    this.exitGame.startInFlightExit(args, { from: alice, value: this.startIFEBondSize.toString() }),
                     'Number of input transactions does not match number of in-flight transaction inputs',
                 );
             });
@@ -564,7 +566,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 args.inputUtxosPos = [];
 
                 await expectRevert(
-                    this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
+                    this.exitGame.startInFlightExit(args, { from: alice, value: this.startIFEBondSize.toString() }),
                     'Number of input transactions does not match number of provided input utxos positions.',
                 );
             });
@@ -587,7 +589,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 await this.framework.setBlock(DEPOSIT_BLOCK_NUMBER, inputTxsBlockRoot2, 0);
 
                 await expectRevert(
-                    this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
+                    this.exitGame.startInFlightExit(args, { from: alice, value: this.startIFEBondSize.toString() }),
                     'Number of input transactions does not match number of in-flight transaction inputs',
                 );
             });
@@ -604,7 +606,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 args.inputTxTypes = [];
 
                 await expectRevert(
-                    this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
+                    this.exitGame.startInFlightExit(args, { from: alice, value: this.startIFEBondSize.toString() }),
                     'Number of input tx types does not match number of in-flight transaction inputs',
                 );
             });
@@ -621,7 +623,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 args.outputGuardPreimagesForInputs = [];
 
                 await expectRevert(
-                    this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
+                    this.exitGame.startInFlightExit(args, { from: alice, value: this.startIFEBondSize.toString() }),
                     'Number of output guard preimages for inputs does not match number of in-flight transaction inputs',
                 );
             });
@@ -638,7 +640,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 args.inputTxsConfirmSigs = [];
 
                 await expectRevert(
-                    this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
+                    this.exitGame.startInFlightExit(args, { from: alice, value: this.startIFEBondSize.toString() }),
                     'Number of input transactions confirm sigs does not match number of in-flight transaction inputs',
                 );
             });
@@ -655,7 +657,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 args.inputSpendingConditionOptionalArgs = [];
 
                 await expectRevert(
-                    this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
+                    this.exitGame.startInFlightExit(args, { from: alice, value: this.startIFEBondSize.toString() }),
                     'Number of input spending condition optional args does not match number of in-flight transaction inputs',
                 );
             });
@@ -672,7 +674,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 args.inFlightTxWitnesses = [];
 
                 await expectRevert(
-                    this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
+                    this.exitGame.startInFlightExit(args, { from: alice, value: this.startIFEBondSize.toString() }),
                     'Number of input transactions witnesses does not match number of in-flight transaction inputs',
                 );
             });
@@ -689,7 +691,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 args.inputTxsInclusionProofs = [];
 
                 await expectRevert(
-                    this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
+                    this.exitGame.startInFlightExit(args, { from: alice, value: this.startIFEBondSize.toString() }),
                     'Number of input transactions inclusion proofs does not match number of in-flight transaction inputs',
                 );
             });
@@ -706,7 +708,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 args.inputUtxosTypes = [];
 
                 await expectRevert(
-                    this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
+                    this.exitGame.startInFlightExit(args, { from: alice, value: this.startIFEBondSize.toString() }),
                     'Number of input utxo types does not match number of in-flight transaction inputs.',
                 );
             });
@@ -727,7 +729,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 await this.framework.setBlock(BLOCK_NUMBER * 2, inputTxsBlockRoot2, 0);
 
                 await expectRevert(
-                    this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
+                    this.exitGame.startInFlightExit(args, { from: alice, value: this.startIFEBondSize.toString() }),
                     'In-flight transaction must have unique inputs',
                 );
             });
@@ -745,7 +747,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 await this.stateTransitionVerifier.mockResult(false);
 
                 await expectRevert(
-                    this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
+                    this.exitGame.startInFlightExit(args, { from: alice, value: this.startIFEBondSize.toString() }),
                     'Invalid state transition',
                 );
             });
@@ -763,7 +765,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 await this.stateTransitionVerifier.mockRevert();
 
                 await expectRevert(
-                    this.exitGame.startInFlightExit(args, { from: alice, value: IN_FLIGHT_EXIT_BOND }),
+                    this.exitGame.startInFlightExit(args, { from: alice, value: this.startIFEBondSize.toString() }),
                     'Failing on purpose',
                 );
             });

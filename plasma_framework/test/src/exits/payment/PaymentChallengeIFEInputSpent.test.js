@@ -184,17 +184,19 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
             // Create the input tx
             const inputTx = buildInputTx();
 
+            await this.framework.setBlock(BLOCK_NUMBER, web3.utils.sha3('dummy root'), 0);
+
+            this.piggybackBondSize = await this.exitGame.piggybackBondSize();
+
             // Set up the piggyback data
             this.testData = await buildPiggybackInputData(inputTx);
-
-            await this.framework.setBlock(BLOCK_NUMBER, web3.utils.sha3('dummy root'), 0);
             await this.exitGame.setInFlightExit(this.testData.exitId, this.testData.inFlightExitData);
 
             // Piggyback the second input
             await this.exitGame.setInFlightExitInputPiggybacked(
                 this.testData.exitId,
                 1,
-                { from: inputOwner, value: PIGGYBACK_BOND },
+                { from: inputOwner, value: this.piggybackBondSize.toString() },
             );
 
             // Create a transaction that spends the same input
@@ -264,7 +266,7 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                 await this.exitGame.setInFlightExitInputPiggybacked(
                     this.testData.exitId,
                     0,
-                    { from: inputOwner, value: PIGGYBACK_BOND },
+                    { from: inputOwner, value: this.piggybackBondSize.toString() },
                 );
             });
 

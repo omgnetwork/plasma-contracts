@@ -48,6 +48,10 @@ library PaymentPiggybackInFlightExit {
         uint16 outputIndex
     );
 
+    /**
+     * @notice Function that builds the controller struct
+     * @return Controller struct of PaymentPiggybackInFlightExit
+     */
     function buildController(
         PlasmaFramework framework,
         IExitProcessor exitProcessor,
@@ -69,6 +73,10 @@ library PaymentPiggybackInFlightExit {
 
     /**
      * @notice The main controller logic for 'piggybackInFlightExitOnInput'
+     * @dev emits InFlightExitInputPiggybacked event on success
+     * @param self the controller struct
+     * @param inFlightExitMap the storage of all in-flight exit data
+     * @param args arguments of 'piggybackInFlightExitOnInput' function from client.
      */
     function piggybackInput(
         Controller memory self,
@@ -103,6 +111,10 @@ library PaymentPiggybackInFlightExit {
 
     /**
      * @notice The main controller logic for 'piggybackInFlightExitOnOutput'
+     * @dev emits InFlightExitOutputPiggybacked event on success
+     * @param self the controller struct
+     * @param inFlightExitMap the storage of all in-flight exit data
+     * @param args arguments of 'piggybackInFlightExitOnOutput' function from client.
      */
     function piggybackOutput(
         Controller memory self,
