@@ -1,5 +1,10 @@
 pragma solidity ^0.5.0;
 
+/**
+ * @notice interface of the spending condition.
+ * @dev for the interface design and discussion, see the following GH issue
+ *      https://github.com/omisego/plasma-contracts/issues/214
+ */
 interface ISpendingCondition {
 
     /**
