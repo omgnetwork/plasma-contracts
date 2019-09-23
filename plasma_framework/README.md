@@ -5,6 +5,18 @@ Plasma M(ore)VP contract with upgradeability for new feature, work in progress.
 [![Build Status](https://circleci.com/gh/omisego/plasma-contracts.svg?style=svg)](https://circleci.com/gh/omisego/plasma-contracts)
 
 
+# Deploying (Truffle)
+
+```bash
+export DEPLOYER_PRIVATEKEY="<redacted>"
+export AUTHORITY_PRIVATEKEY="<redacted>"
+export INFURA_URL="https://rinkeby.infura.io/v3"
+export INFURA_API_KEY="<redacted>"
+
+npx truffle migrate --network rinkeby
+```
+
+
 # Building and running tests
 
 Installing dependencies needed for production:
