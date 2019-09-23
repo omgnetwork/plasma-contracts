@@ -32,7 +32,7 @@ library PaymentStandardExitRouterArgs {
      * @param challengeTxConfirmSig (Optional) if the challenge tx is of MVP protocol provide the confirm sig of it
      */
     struct ChallengeStandardExitArgs {
-        uint192 exitId;
+        uint160 exitId;
         uint256 outputType;
         bytes exitingTx;
         bytes challengeTx;

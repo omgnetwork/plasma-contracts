@@ -67,7 +67,7 @@ library PaymentChallengeIFEOutputSpent {
     )
         public
     {
-        uint192 exitId = ExitId.getInFlightExitId(args.inFlightTx);
+        uint160 exitId = ExitId.getInFlightExitId(args.inFlightTx);
         PaymentExitDataModel.InFlightExit storage ife = inFlightExitMap.exits[exitId];
         require(ife.exitStartTimestamp != 0, "In-flight exit doesn't exist");
 

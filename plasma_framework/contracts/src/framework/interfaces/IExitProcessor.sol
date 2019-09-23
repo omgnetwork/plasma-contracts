@@ -6,5 +6,5 @@ interface IExitProcessor {
      * @param exitId unique id for exit per tx type.
      * @param token The address of the contract for the token.
      */
-    function processExit(uint192 exitId, address token) external;
+    function processExit(uint160 exitId, address token) external;
 }

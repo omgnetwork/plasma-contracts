@@ -28,7 +28,7 @@ contract ExitGameController is ExitGameRegistry {
     );
 
     event ExitQueued(
-        uint192 indexed exitId,
+        uint160 indexed exitId,
         uint256 uniquePriority
     );
 

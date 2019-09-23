@@ -102,7 +102,7 @@ contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue {
         piggybackBond = BondSize.buildParams(INITIAL_PB_BOND_SIZE, BOND_LOWER_BOUND_DIVISOR, BOND_UPPER_BOUND_MULTIPLIER);
     }
 
-    function inFlightExits(uint192 _exitId) public view returns (PaymentExitDataModel.InFlightExit memory) {
+    function inFlightExits(uint160 _exitId) public view returns (PaymentExitDataModel.InFlightExit memory) {
         return inFlightExitMap.exits[_exitId];
     }
 
@@ -188,7 +188,7 @@ contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue {
      * @param exitId The in-flight exit id.
      * @param token The token (in erc20 address or address(0) for ETH) of the exiting output.
      */
-    function processInFlightExit(uint192 exitId, address token) internal {
+    function processInFlightExit(uint160 exitId, address token) internal {
         processInflightExitController.run(inFlightExitMap, exitId, token);
     }
 

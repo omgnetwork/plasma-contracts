@@ -1,6 +1,6 @@
 const ExitId = artifacts.require('ExitIdWrapper');
 
-const { BN, constants } = require('openzeppelin-test-helpers');
+const { BN, constants, expectRevert } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
 const { PaymentTransaction, PaymentTransactionOutput } = require('../../../helpers/transaction.js');
@@ -76,6 +76,25 @@ contract('ExitId', () => {
             const dummyUtxoPos = 123;
             expect(await this.contract.getStandardExitId(isDeposit, dummyTxBytes, dummyUtxoPos))
                 .to.be.bignumber.equal(new BN('704295667765845213537803190927618712114942801977'));
+        });
+        it('should overflow when created a tx with more than 255 outputs', async () => {
+            const output = new PaymentTransactionOutput(100, OUTPUT_GUARD, constants.ZERO_ADDRESS);
+            const isDeposit = false;
+
+            const notOverflowingTx = new PaymentTransaction(1, [DUMMY_INPUT], Array(255).fill(output), EMPTY_BYTES32);
+            const notOverflowingUtxoPos = 255;
+            const notOverflowingTxBytes = web3.utils.bytesToHex(notOverflowingTx.rlpEncoded());
+
+            await this.contract.getStandardExitId(isDeposit, notOverflowingTxBytes, notOverflowingUtxoPos);
+
+            const overflowingTx = new PaymentTransaction(1, [DUMMY_INPUT], Array(256).fill(output), EMPTY_BYTES32);
+            const overflowingUtxoPos = 256;
+            const overflowingTxBytes = web3.utils.bytesToHex(overflowingTx.rlpEncoded());
+
+            await expectRevert(
+                this.contract.getStandardExitId(isDeposit, overflowingTxBytes, overflowingUtxoPos),
+                'ExitId overflows',
+            );
         });
     });
 

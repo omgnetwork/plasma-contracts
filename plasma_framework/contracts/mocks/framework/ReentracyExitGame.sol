@@ -21,11 +21,11 @@ contract ReentrancyExitGame is IExitProcessor {
 
     // override ExitProcessor interface
     // This would call the processExits back to mimic reentracy attack
-    function processExit(uint192, address) public {
+    function processExit(uint160, address) public {
         exitGameController.processExits(testToken, 0, reentryMaxExitToProcess);
     }
 
-    function enqueue(address _token, uint64 _exitableAt, uint256 _txPos, uint192 _exitId, IExitProcessor _exitProcessor) public {
+    function enqueue(address _token, uint64 _exitableAt, uint256 _txPos, uint160 _exitId, IExitProcessor _exitProcessor) public {
         exitGameController.enqueue(_token, _exitableAt, TxPosLib.TxPos(_txPos), _exitId, _exitProcessor);
     }
 }

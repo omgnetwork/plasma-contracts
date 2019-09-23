@@ -20,17 +20,17 @@ library PaymentProcessInFlightExit {
     }
 
     event InFlightExitOmitted(
-        uint192 indexed exitId,
+        uint160 indexed exitId,
         address token
     );
 
     event InFlightExitOutputWithdrawn(
-        uint192 indexed exitId,
+        uint160 indexed exitId,
         uint16 outputIndex
     );
 
     event InFlightExitInputWithdrawn(
-        uint192 indexed exitId,
+        uint160 indexed exitId,
         uint16 inputIndex
     );
 
@@ -47,7 +47,7 @@ library PaymentProcessInFlightExit {
     function run(
         Controller memory self,
         PaymentExitDataModel.InFlightExitMap storage exitMap,
-        uint192 exitId,
+        uint160 exitId,
         address token
     )
         public
