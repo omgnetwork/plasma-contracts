@@ -2,30 +2,60 @@ pragma solidity ^0.5.0;
 pragma experimental ABIEncoderV2;
 
 import "./routers/PaymentStandardExitRouter.sol";
+import "./routers/PaymentInFlightExitRouter.sol";
 import "../utils/ExitId.sol";
 import "../../framework/interfaces/IExitProcessor.sol";
 import "../../framework/PlasmaFramework.sol";
 import "../../vaults/EthVault.sol";
 import "../../vaults/Erc20Vault.sol";
+import "../interfaces/IStateTransitionVerifier.sol";
+import "../../utils/OnlyFromAddress.sol";
 
-contract PaymentExitGame is IExitProcessor, PaymentStandardExitRouter {
+contract PaymentExitGame is IExitProcessor, PaymentStandardExitRouter, PaymentInFlightExitRouter, OnlyFromAddress {
+
+    PlasmaFramework private plasmaFramework;
+
     constructor(
-        PlasmaFramework _framework,
-        EthVault _ethVault,
-        Erc20Vault _erc20Vault,
-        OutputGuardHandlerRegistry _outputGuardHandlerRegistry,
-        SpendingConditionRegistry _spendingConditionRegistry
+        PlasmaFramework framework,
+        EthVault ethVault,
+        Erc20Vault erc20Vault,
+        OutputGuardHandlerRegistry outputGuardHandlerRegistry,
+        SpendingConditionRegistry spendingConditionRegistry,
+        IStateTransitionVerifier stateTransitionVerifier,
+        uint256 supportTxType
     )
         public
-        PaymentStandardExitRouter(_framework, _ethVault, _erc20Vault, _outputGuardHandlerRegistry, _spendingConditionRegistry)
+        PaymentStandardExitRouter(
+            framework,
+            ethVault,
+            erc20Vault,
+            outputGuardHandlerRegistry,
+            spendingConditionRegistry
+        )
+        PaymentInFlightExitRouter(
+            framework,
+            ethVault,
+            erc20Vault,
+            outputGuardHandlerRegistry,
+            spendingConditionRegistry,
+            stateTransitionVerifier,
+            supportTxType
+        )
     {
+        plasmaFramework = framework;
     }
 
-    function processExit(uint192 _exitId) external {
-        if (ExitId.isStandardExit(_exitId)) {
-            PaymentStandardExitRouter.processStandardExit(_exitId);
+    /**
+     * @notice Callback processes exit function for the PlasmaFramework to call.
+     * @dev in ERC20, each address of the ERC contract would represent the token directly.
+     * @param exitId The exit id.
+     * @param token The token (in ERC20 address or address(0) for ETH) of the exiting output.
+     */
+    function processExit(uint192 exitId, address token) external onlyFrom(address(plasmaFramework)) {
+        if (ExitId.isStandardExit(exitId)) {
+            PaymentStandardExitRouter.processStandardExit(exitId, token);
         } else {
-            require(false, "TODO: implement process in flight exit");
+            PaymentInFlightExitRouter.processInFlightExit(exitId, token);
         }
     }
 

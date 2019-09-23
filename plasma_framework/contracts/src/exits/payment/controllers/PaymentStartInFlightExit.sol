@@ -4,12 +4,12 @@ pragma experimental ABIEncoderV2;
 import "../PaymentExitDataModel.sol";
 import "../PaymentInFlightExitModelUtils.sol";
 import "../routers/PaymentInFlightExitRouterArgs.sol";
-import "../spendingConditions/IPaymentSpendingCondition.sol";
-import "../spendingConditions/PaymentSpendingConditionRegistry.sol";
 import "../../interfaces/IOutputGuardHandler.sol";
-import "../../models/OutputGuardModel.sol";
-import "../../registries/OutputGuardHandlerRegistry.sol";
+import "../../interfaces/ISpendingCondition.sol";
 import "../../interfaces/IStateTransitionVerifier.sol";
+import "../../models/OutputGuardModel.sol";
+import "../../registries/SpendingConditionRegistry.sol";
+import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../utils/ExitableTimestamp.sol";
 import "../../utils/ExitId.sol";
 import "../../utils/OutputGuard.sol";
@@ -38,7 +38,7 @@ library PaymentStartInFlightExit {
         IsDeposit.Predicate isDeposit;
         ExitableTimestamp.Calculator exitTimestampCalculator;
         OutputGuardHandlerRegistry outputGuardHandlerRegistry;
-        PaymentSpendingConditionRegistry spendingConditionRegistry;
+        SpendingConditionRegistry spendingConditionRegistry;
         IStateTransitionVerifier transitionVerifier;
         uint256 supportedTxType;
     }
@@ -62,6 +62,7 @@ library PaymentStartInFlightExit {
      * @param inputTxsInclusionProofs Merkle proofs for input transactions.
      * @param inputTxsConfirmSigs Confirm signatures for the input txs.
      * @param inFlightTxWitnesses Witnesses for in-flight transactions.
+     * @param inputSpendingConditionOptionalArgs Optional args for the spending condition for checking inputs.
      * @param outputIds Output ids for input transactions.
      */
     struct StartExitData {
@@ -72,20 +73,24 @@ library PaymentStartInFlightExit {
         bytes32 inFlightTxHash;
         bytes[] inputTxs;
         UtxoPosLib.UtxoPos[] inputUtxosPos;
-        uint256[] inputUtxosPosRaw;
         uint256[] inputUtxosTypes;
         uint256[] inputTxTypes;
         bytes[] outputGuardPreimagesForInputs;
         bytes[] inputTxsInclusionProofs;
         bytes[] inputTxsConfirmSigs;
         bytes[] inFlightTxWitnesses;
+        bytes[] inputSpendingConditionOptionalArgs;
         bytes32[] outputIds;
     }
 
+    /**
+     * @notice Function that builds the controller struct
+     * @return Controller struct of PaymentStartInFlightExit
+     */
     function buildController(
         PlasmaFramework framework,
         OutputGuardHandlerRegistry outputGuardHandlerRegistry,
-        PaymentSpendingConditionRegistry spendingConditionRegistry,
+        SpendingConditionRegistry spendingConditionRegistry,
         IStateTransitionVerifier transitionVerifier,
         uint256 supportedTxType
     )
@@ -104,6 +109,13 @@ library PaymentStartInFlightExit {
         });
     }
 
+    /**
+     * @notice Main logic function to start in-flight exit
+     * @dev emits InFlightExitStarted event on success
+     * @param self the controller struct
+     * @param inFlightExitMap the storage of all in-flight exit data
+     * @param args arguments of start in-flight exit function from client.
+     */
     function run(
         Controller memory self,
         PaymentExitDataModel.InFlightExitMap storage inFlightExitMap,
@@ -134,12 +146,12 @@ library PaymentStartInFlightExit {
         exitData.inputTxs = args.inputTxs;
         exitData.inputTxTypes = args.inputTxTypes;
         exitData.inputUtxosPos = decodeInputTxsPositions(args.inputUtxosPos);
-        exitData.inputUtxosPosRaw = args.inputUtxosPos;
         exitData.inputUtxosTypes = args.inputUtxosTypes;
         exitData.inputTxsInclusionProofs = args.inputTxsInclusionProofs;
         exitData.inputTxsConfirmSigs = args.inputTxsConfirmSigs;
         exitData.outputGuardPreimagesForInputs = args.outputGuardPreimagesForInputs;
         exitData.inFlightTxWitnesses = args.inFlightTxWitnesses;
+        exitData.inputSpendingConditionOptionalArgs = args.inputSpendingConditionOptionalArgs;
         exitData.outputIds = getOutputIds(controller, exitData.inputTxs, exitData.inputUtxosPos);
         return exitData;
     }
@@ -182,10 +194,7 @@ library PaymentStartInFlightExit {
         verifyNoInputSpentMoreThanOnce(exitData.inFlightTx);
         verifyInputTransactionIsStandardFinalized(exitData);
         verifyInputsSpent(exitData);
-        require(
-            exitData.controller.transitionVerifier.isCorrectStateTransition(exitData.inFlightTxRaw, exitData.inputTxs, exitData.inputUtxosPosRaw),
-            "Invalid state transition"
-        );
+        verifyStateTransition(exitData);
     }
 
     function verifyExitNotStarted(
@@ -197,7 +206,6 @@ library PaymentStartInFlightExit {
     {
         PaymentExitDataModel.InFlightExit storage exit = inFlightExitMap.exits[exitId];
         require(exit.exitStartTimestamp == 0, "There is an active in-flight exit from this transaction");
-        require(!exit.isFinalized, "This in-flight exit has already been finalized");
     }
 
     function verifyNumberOfInputsMatchesNumberOfInFlightTransactionInputs(StartExitData memory exitData) private pure {
@@ -232,6 +240,10 @@ library PaymentStartInFlightExit {
         require(
             exitData.inputTxsConfirmSigs.length == exitData.inFlightTx.inputs.length,
             "Number of input transactions confirm sigs does not match number of in-flight transaction inputs"
+        );
+        require(
+            exitData.inputSpendingConditionOptionalArgs.length == exitData.inFlightTx.inputs.length,
+            "Number of input spending condition optional args does not match number of in-flight transaction inputs"
         );
     }
 
@@ -279,7 +291,7 @@ library PaymentStartInFlightExit {
     }
 
     function verifyInputsSpent(StartExitData memory exitData) private view {
-        for (uint i = 0; i < exitData.inputTxs.length; i++) {
+        for (uint16 i = 0; i < exitData.inputTxs.length; i++) {
             uint16 outputIndex = exitData.inputUtxosPos[i].outputIndex();
             WireTransaction.Output memory output = WireTransaction.getOutput(exitData.inputTxs[i], outputIndex);
 
@@ -295,23 +307,35 @@ library PaymentStartInFlightExit {
             require(outputGuardHandler.isValid(outputGuardData),
                     "Output guard information is invalid for the input tx");
 
-            //FIXME: consider moving spending conditions to PlasmaFramework
-            IPaymentSpendingCondition condition = exitData.controller.spendingConditionRegistry.spendingConditions(
+            ISpendingCondition condition = exitData.controller.spendingConditionRegistry.spendingConditions(
                 exitData.inputUtxosTypes[i], exitData.controller.supportedTxType
             );
 
             require(address(condition) != address(0), "Spending condition contract not found");
 
             bool isSpentByInFlightTx = condition.verify(
-                output.outputGuard,
-                exitData.inputUtxosPos[i].value,
-                exitData.outputIds[i],
+                exitData.inputTxs[i],
+                exitData.inputUtxosPos[i].outputIndex(),
+                exitData.inputUtxosPos[i].txPos().value,
                 exitData.inFlightTxRaw,
-                uint8(i),
-                exitData.inFlightTxWitnesses[i]
+                i,
+                exitData.inFlightTxWitnesses[i],
+                exitData.inputSpendingConditionOptionalArgs[i]
             );
             require(isSpentByInFlightTx, "Spending condition failed");
         }
+    }
+
+    function verifyStateTransition(StartExitData memory exitData) private view {
+        uint16[] memory outputIndexForInputTxs = new uint16[](exitData.inputTxs.length);
+        for (uint i = 0; i < exitData.inFlightTx.inputs.length; i++) {
+            outputIndexForInputTxs[i] = exitData.inputUtxosPos[i].outputIndex();
+        }
+
+        require(
+            exitData.controller.transitionVerifier.isCorrectStateTransition(exitData.inFlightTxRaw, exitData.inputTxs, outputIndexForInputTxs),
+            "Invalid state transition"
+        );
     }
 
     function startExit(

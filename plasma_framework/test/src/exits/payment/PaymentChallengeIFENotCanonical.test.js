@@ -2,50 +2,134 @@ const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry
 const PaymentInFlightExitRouter = artifacts.require('PaymentInFlightExitRouterMock');
 const PaymentStartInFlightExit = artifacts.require('PaymentStartInFlightExit');
 const PaymentPiggybackInFlightExit = artifacts.require('PaymentPiggybackInFlightExit');
+const PaymentProcessInFlightExit = artifacts.require('PaymentProcessInFlightExit');
 const PaymentChallengeIFENotCanonical = artifacts.require('PaymentChallengeIFENotCanonical');
-const PaymentSpendingConditionRegistry = artifacts.require('PaymentSpendingConditionRegistry');
-const PaymentSpendingConditionFalse = artifacts.require('PaymentSpendingConditionFalse');
-const PaymentSpendingConditionTrue = artifacts.require('PaymentSpendingConditionTrue');
+const PaymentChallengeIFEInputSpent = artifacts.require('PaymentChallengeIFEInputSpent');
+const PaymentChallengeIFEOutputSpent = artifacts.require('PaymentChallengeIFEOutputSpent');
+const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry');
+const SpendingConditionMock = artifacts.require('SpendingConditionMock');
 const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
-const StateTransitionVerifierAccept = artifacts.require('StateTransitionVerifierAccept');
+const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
+const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
+const StateTransitionVerifierMock = artifacts.require('StateTransitionVerifierMock');
 const ExitId = artifacts.require('ExitIdWrapper');
 const IsDeposit = artifacts.require('IsDepositWrapper');
 const ExitableTimestamp = artifacts.require('ExitableTimestampWrapper');
+const OutputId = artifacts.require('OutputIdWrapper');
+const ExpectedOutputGuardHandler = artifacts.require('ExpectedOutputGuardHandler');
 
 const {
     BN, constants, expectEvent, expectRevert, time,
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
+const { PROTOCOL } = require('../../../helpers/constants.js');
+const { buildOutputGuard } = require('../../../helpers/utils.js');
 const { buildUtxoPos, UtxoPos } = require('../../../helpers/positions.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
-const { buildValidNoncanonicalChallengeArgs, createInclusionProof } = require('../../../helpers/ife.js');
+const { createInclusionProof } = require('../../../helpers/ife.js');
 
 contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, competitorOwner, challenger]) => {
+    const DUMMY_IFE_BOND_SIZE = 31415926535; // wei
+    const PIGGYBACK_BOND = 31415926535; // wei
     const CHILD_BLOCK_INTERVAL = 1000;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week in second
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
     const INITIAL_IMMUNE_EXIT_GAME_NUM = 1;
     const OUTPUT_TYPE_ONE = 1;
     const IFE_TX_TYPE = 1;
-    const BLOCK_NUMBER = 1000;
-    const AMOUNT = 10;
     const YOUNGEST_POSITION_BLOCK = 1000;
     const INFLIGHT_EXIT_YOUNGEST_INPUT_POSITION = buildUtxoPos(YOUNGEST_POSITION_BLOCK, 0, 0);
     const ETH = constants.ZERO_ADDRESS;
+    const DUMMY_OUTPUT_ID_FOR_OUTPUT = web3.utils.sha3('dummy output id for output');
+    const TEST_IFE_INPUT_AMOUNT = 999;
+    const TEST_IFE_OUTPUT_AMOUNT = 990;
+    const TEST_COMPETING_TX_OUTPUT_AMOUNT = 990;
+    const INPUT_TX_BLOCK_NUM = 1000;
+    const INPUT_UTXO_POS = new UtxoPos(buildUtxoPos(INPUT_TX_BLOCK_NUM, 0, 0));
+    const COMPETING_TX_BLOCK_NUM = 2000;
+    const DUMMY_OUTPUT_GUARD = web3.utils.utf8ToHex('dummy output guard for shared input');
+    const DUMMY_CONFIRM_SIG = web3.utils.utf8ToHex('dummy confirm sig for shared input');
+    const DUMMY_SPENDING_CONDITION_OPTIONAL_ARGS = web3.utils.utf8ToHex('dummy spending condition optional args');
 
-    const buildInFlightExitData = async (exitIdHelper) => {
+    const createInputTransaction = () => {
+        const output = new PaymentTransactionOutput(TEST_IFE_INPUT_AMOUNT, inputOwner, ETH);
+        const inputTx = new PaymentTransaction(
+            IFE_TX_TYPE, [buildUtxoPos(0, 0, 0)], [output],
+        );
+
+        return {
+            inputTx: web3.utils.bytesToHex(inputTx.rlpEncoded()),
+            decodedInputTx: inputTx,
+        };
+    };
+
+    const createCompetitorTransaction = () => {
+        const output = new PaymentTransactionOutput(
+            TEST_COMPETING_TX_OUTPUT_AMOUNT, buildOutputGuard(OUTPUT_TYPE_ONE, competitorOwner), ETH,
+        );
+        const competingTx = new PaymentTransaction(IFE_TX_TYPE, [INPUT_UTXO_POS.utxoPos], [output]);
+        const competingTxPos = new UtxoPos(buildUtxoPos(COMPETING_TX_BLOCK_NUM, 0, 0));
+
+        return {
+            competingTx: web3.utils.bytesToHex(competingTx.rlpEncoded()),
+            decodedCompetingTx: competingTx,
+            competingTxPos,
+        };
+    };
+
+    const buildValidNoncanonicalChallengeArgs = (decodedIfeTx) => {
+        const { inputTx } = createInputTransaction();
+
+        const { competingTx, decodedCompetingTx, competingTxPos } = createCompetitorTransaction();
+
+        const {
+            inclusionProof, blockHash, blockNum, blockTimestamp,
+        } = createInclusionProof(
+            competingTx, competingTxPos,
+        );
+
+        const competingTxWitness = competitorOwner;
+
+        return {
+            args: {
+                inputTx,
+                inputUtxoPos: INPUT_UTXO_POS.utxoPos,
+                inFlightTx: web3.utils.bytesToHex(decodedIfeTx.rlpEncoded()),
+                inFlightTxInputIndex: 0,
+                competingTx,
+                competingTxInputIndex: 0,
+                outputType: OUTPUT_TYPE_ONE,
+                outputGuardPreimage: DUMMY_OUTPUT_GUARD,
+                competingTxPos: competingTxPos.utxoPos,
+                competingTxInclusionProof: inclusionProof,
+                competingTxWitness,
+                competingTxConfirmSig: DUMMY_CONFIRM_SIG,
+                competingTxSpendingConditionOptionalArgs: DUMMY_SPENDING_CONDITION_OPTIONAL_ARGS,
+            },
+            block: {
+                blockHash, blockNum, blockTimestamp,
+            },
+            decodedCompetingTx,
+        };
+    };
+
+    const buildInFlightExitData = async (exitIdHelper, outputIdHelper) => {
         const emptyWithdrawData = {
             outputId: web3.utils.sha3('dummy output id'),
             exitTarget: constants.ZERO_ADDRESS,
             token: constants.ZERO_ADDRESS,
             amount: 0,
+            piggybackBondSize: 0,
         };
 
-        const output = new PaymentTransactionOutput(AMOUNT, outputOwner, ETH);
+        const output = new PaymentTransactionOutput(TEST_IFE_OUTPUT_AMOUNT, outputOwner, ETH);
         const inFlightTx = new PaymentTransaction(
-            IFE_TX_TYPE, [buildUtxoPos(BLOCK_NUMBER, 0, 0)], [output],
+            IFE_TX_TYPE, [INPUT_UTXO_POS.utxoPos], [output],
         );
+
+        const { inputTx } = createInputTransaction();
+        const outputIdOfInput = await outputIdHelper.computeNormalOutputId(inputTx, INPUT_UTXO_POS.outputIndex);
 
         const inFlightExitData = {
             exitStartTimestamp: (await time.latest()).toNumber(),
@@ -54,17 +138,20 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
             bondOwner: ifeOwner,
             oldestCompetitorPosition: 0,
             inputs: [{
-                outputId: web3.utils.sha3('dummy output id'),
+                outputId: outputIdOfInput,
                 exitTarget: inputOwner,
                 token: ETH,
-                amount: 999,
+                amount: TEST_IFE_INPUT_AMOUNT,
+                piggybackBondSize: PIGGYBACK_BOND,
             }, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData],
             outputs: [{
-                outputId: web3.utils.sha3('dummy output id'),
+                outputId: DUMMY_OUTPUT_ID_FOR_OUTPUT,
                 exitTarget: constants.ZERO_ADDRESS, // would not be set during start IFE
                 token: ETH,
-                amount: AMOUNT,
+                amount: TEST_IFE_OUTPUT_AMOUNT,
+                piggybackBondSize: PIGGYBACK_BOND,
             }, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData],
+            bondSize: DUMMY_IFE_BOND_SIZE,
         };
 
         const rlpInFlightTxBytes = web3.utils.bytesToHex(inFlightTx.rlpEncoded());
@@ -76,39 +163,63 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
         const startInFlightExit = await PaymentStartInFlightExit.new();
         const piggybackInFlightExit = await PaymentPiggybackInFlightExit.new();
         const challengeInFlightExitNotCanonical = await PaymentChallengeIFENotCanonical.new();
+        const challengeIFEInputSpent = await PaymentChallengeIFEInputSpent.new();
+        const challengeIFEOutputSpent = await PaymentChallengeIFEOutputSpent.new();
+        const processInFlightExit = await PaymentProcessInFlightExit.new();
 
         await PaymentInFlightExitRouter.link('PaymentStartInFlightExit', startInFlightExit.address);
         await PaymentInFlightExitRouter.link('PaymentPiggybackInFlightExit', piggybackInFlightExit.address);
         await PaymentInFlightExitRouter.link('PaymentChallengeIFENotCanonical', challengeInFlightExitNotCanonical.address);
+        await PaymentInFlightExitRouter.link('PaymentChallengeIFEInputSpent', challengeIFEInputSpent.address);
+        await PaymentInFlightExitRouter.link('PaymentChallengeIFEOutputSpent', challengeIFEOutputSpent.address);
+        await PaymentInFlightExitRouter.link('PaymentProcessInFlightExit', processInFlightExit.address);
     });
 
     before('deploy helper contracts', async () => {
         this.exitIdHelper = await ExitId.new();
+        this.outputIdHelper = await OutputId.new();
         this.isDeposit = await IsDeposit.new(CHILD_BLOCK_INTERVAL);
         this.exitableHelper = await ExitableTimestamp.new(MIN_EXIT_PERIOD);
-        this.stateTransitionVerifierAccept = await StateTransitionVerifierAccept.new();
+        this.stateTransitionVerifier = await StateTransitionVerifierMock.new();
+        await this.stateTransitionVerifier.mockResult(true);
     });
 
     beforeEach(async () => {
         this.framework = await SpyPlasmaFramework.new(
             MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
         );
-        this.spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
+        const ethVault = await SpyEthVault.new(this.framework.address);
+        const erc20Vault = await SpyErc20Vault.new(this.framework.address);
+        this.spendingConditionRegistry = await SpendingConditionRegistry.new();
         this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
         this.exitGame = await PaymentInFlightExitRouter.new(
             this.framework.address,
+            ethVault.address,
+            erc20Vault.address,
             this.outputGuardHandlerRegistry.address,
             this.spendingConditionRegistry.address,
-            this.stateTransitionVerifierAccept.address,
+            this.stateTransitionVerifier.address,
             IFE_TX_TYPE,
         );
 
-        const conditionTrue = await PaymentSpendingConditionTrue.new();
-        await this.spendingConditionRegistry.registerSpendingCondition(
-            OUTPUT_TYPE_ONE, IFE_TX_TYPE, conditionTrue.address,
+        this.framework.registerExitGame(IFE_TX_TYPE, this.exitGame.address, PROTOCOL.MORE_VP);
+
+        this.outputGuardHandler = await ExpectedOutputGuardHandler.new();
+        await this.outputGuardHandler.mockIsValid(true);
+        await this.outputGuardHandler.mockGetConfirmSigAddress(constants.ZERO_ADDRESS);
+        await this.outputGuardHandlerRegistry.registerOutputGuardHandler(
+            OUTPUT_TYPE_ONE, this.outputGuardHandler.address,
         );
 
-        const { exitId, inFlightTx, inFlightExitData } = await buildInFlightExitData(this.exitIdHelper);
+        this.condition = await SpendingConditionMock.new();
+        await this.condition.mockResult(true);
+        await this.spendingConditionRegistry.registerSpendingCondition(
+            OUTPUT_TYPE_ONE, IFE_TX_TYPE, this.condition.address,
+        );
+
+        const { exitId, inFlightTx, inFlightExitData } = await buildInFlightExitData(
+            this.exitIdHelper, this.outputIdHelper,
+        );
         await this.exitGame.setInFlightExit(exitId, inFlightExitData);
         this.inFlightTx = inFlightTx;
         this.exitId = exitId;
@@ -131,16 +242,16 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
                     this.competingTxBlock.blockHash,
                     this.competingTxBlock.blockTimestamp,
                 );
+
+                this.challengeIFETx = await this.exitGame.challengeInFlightExitNotCanonical(
+                    this.challengeArgs, { from: challenger },
+                );
             });
 
             it('should emit InFlightExitChallenged event', async () => {
-                const { receipt } = await this.exitGame.challengeInFlightExitNotCanonical(
-                    this.challengeArgs, { from: challenger },
-                );
-
                 const rlpInFlightTxBytes = web3.utils.bytesToHex(this.inFlightTx.rlpEncoded());
                 await expectEvent.inTransaction(
-                    receipt.transactionHash,
+                    this.challengeIFETx.receipt.transactionHash,
                     PaymentChallengeIFENotCanonical,
                     'InFlightExitChallenged',
                     {
@@ -154,10 +265,6 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
             it('should set the oldest competitorPosition', async () => {
                 const expectedCompetitorPosition = new BN(this.challengeArgs.competingTxPos);
 
-                await this.exitGame.challengeInFlightExitNotCanonical(
-                    this.challengeArgs, { from: challenger },
-                );
-
                 const exit = await this.exitGame.inFlightExits(this.exitId);
 
                 const oldestCompetitorPosition = new BN(exit.oldestCompetitorPosition);
@@ -165,20 +272,12 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
             });
 
             it('should set the bond owner to challenger', async () => {
-                await this.exitGame.challengeInFlightExitNotCanonical(
-                    this.challengeArgs, { from: challenger },
-                );
-
                 const exit = await this.exitGame.inFlightExits(this.exitId);
 
                 expect(exit.bondOwner).to.be.equal(challenger);
             });
 
             it('should flag the exit non-canonical', async () => {
-                await this.exitGame.challengeInFlightExitNotCanonical(
-                    this.challengeArgs, { from: challenger },
-                );
-
                 const exit = await this.exitGame.inFlightExits(this.exitId);
 
                 expect(exit.isCanonical).to.be.false;
@@ -207,7 +306,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
             it('fails when competing tx is not included in the given position', async () => {
                 await expectRevert(
                     this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: challenger }),
-                    'Transaction is not included in block of plasma chain.',
+                    'Failed to verify the position of competing tx',
                 );
             });
 
@@ -221,26 +320,28 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
             });
 
             it('fails when spending condition is not met', async () => {
-                const newOutputType = 999;
+                await this.condition.mockResult(false);
 
-                const conditionFalse = await PaymentSpendingConditionFalse.new();
-                await this.spendingConditionRegistry.registerSpendingCondition(
-                    newOutputType, IFE_TX_TYPE, conditionFalse.address,
-                );
-
-                this.challengeArgs.competingTxInputOutputType = newOutputType;
                 await expectRevert(
                     this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: challenger }),
-                    'Competing input spending condition is not met',
+                    'Competing input spending condition does not met',
                 );
             });
 
             it('fails when spending condition for given output is not registered', async () => {
-                this.challengeArgs.competingTxInputOutputType = OUTPUT_TYPE_ONE + 1;
+                this.challengeArgs.outputType = OUTPUT_TYPE_ONE + 1;
 
                 await expectRevert(
                     this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: challenger }),
                     'Spending condition contract not found',
+                );
+            });
+
+            it('fails when output guard information is not valid', async () => {
+                await this.outputGuardHandler.mockIsValid(false);
+                await expectRevert(
+                    this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: challenger }),
+                    'Output guard information is invalid',
                 );
             });
 

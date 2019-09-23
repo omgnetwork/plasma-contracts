@@ -9,17 +9,23 @@ const ERC20Mintable = artifacts.require('ERC20Mintable');
 const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry');
 const PaymentExitGame = artifacts.require('PaymentExitGame');
 const PaymentChallengeStandardExit = artifacts.require('PaymentChallengeStandardExit');
+const PaymentChallengeIFENotCanonical = artifacts.require('PaymentChallengeIFENotCanonical');
+const PaymentChallengeIFEInputSpent = artifacts.require('PaymentChallengeIFEInputSpent');
+const PaymentChallengeIFEOutputSpent = artifacts.require('PaymentChallengeIFEOutputSpent');
 const PaymentOutputGuardHandler = artifacts.require('PaymentOutputGuardHandler');
 const PaymentOutputToPaymentTxCondition = artifacts.require('PaymentOutputToPaymentTxCondition');
 const PaymentStartInFlightExit = artifacts.require('PaymentStartInFlightExit');
 const PaymentStartStandardExit = artifacts.require('PaymentStartStandardExit');
-const PaymentSpendingConditionRegistry = artifacts.require('PaymentSpendingConditionRegistry');
+const PaymentTransactionStateTransitionVerifier = artifacts.require('PaymentTransactionStateTransitionVerifier');
+const PaymentPiggybackInFlightExit = artifacts.require('PaymentPiggybackInFlightExit');
 const PaymentProcessStandardExit = artifacts.require('PaymentProcessStandardExit');
+const PaymentProcessInFlightExit = artifacts.require('PaymentProcessInFlightExit');
 const PlasmaFramework = artifacts.require('PlasmaFramework');
 const PriorityQueue = artifacts.require('PriorityQueue');
+const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry');
 
 const {
-    BN, constants, expectEvent, time,
+    BN, constants, expectEvent, expectRevert, time,
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
@@ -34,7 +40,8 @@ const { hashTx } = require('../../../helpers/paymentEip712.js');
 const { buildUtxoPos, utxoPosToTxPos } = require('../../../helpers/positions.js');
 const Testlang = require('../../../helpers/testlang.js');
 
-contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
+// Skipped for now due to https://github.com/omisego/plasma-contracts/issues/287
+contract.skip('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
     const ETH = constants.ZERO_ADDRESS;
     const INITIAL_ERC20_SUPPLY = 10000000000;
@@ -50,11 +57,21 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
         const challengeStandardExit = await PaymentChallengeStandardExit.new();
         const processStandardExit = await PaymentProcessStandardExit.new();
         const startInFlightExit = await PaymentStartInFlightExit.new();
+        const piggybackInFlightExit = await PaymentPiggybackInFlightExit.new();
+        const challengeInFlightExitNotCanonical = await PaymentChallengeIFENotCanonical.new();
+        const challengeIFEInputSpent = await PaymentChallengeIFEInputSpent.new();
+        const challengeIFEOutput = await PaymentChallengeIFEOutputSpent.new();
+        const processInFlightExit = await PaymentProcessInFlightExit.new();
 
         await PaymentExitGame.link('PaymentStartStandardExit', startStandardExit.address);
         await PaymentExitGame.link('PaymentChallengeStandardExit', challengeStandardExit.address);
         await PaymentExitGame.link('PaymentProcessStandardExit', processStandardExit.address);
         await PaymentExitGame.link('PaymentStartInFlightExit', startInFlightExit.address);
+        await PaymentExitGame.link('PaymentPiggybackInFlightExit', piggybackInFlightExit.address);
+        await PaymentExitGame.link('PaymentChallengeIFENotCanonical', challengeInFlightExitNotCanonical.address);
+        await PaymentExitGame.link('PaymentChallengeIFEInputSpent', challengeIFEInputSpent.address);
+        await PaymentExitGame.link('PaymentChallengeIFEOutputSpent', challengeIFEOutput.address);
+        await PaymentExitGame.link('PaymentProcessInFlightExit', processInFlightExit.address);
     };
 
     const setupAccount = async () => {
@@ -99,16 +116,22 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
             OUTPUT_TYPE.PAYMENT, paymentOutputGuardHandler.address,
         );
 
-        const spendingConditionRegistry = await PaymentSpendingConditionRegistry.new();
+        const spendingConditionRegistry = await SpendingConditionRegistry.new();
+        const stateVerifier = await PaymentTransactionStateTransitionVerifier.new();
         this.exitGame = await PaymentExitGame.new(
-            this.framework.address, this.ethVault.address, this.erc20Vault.address,
-            outputGuardHandlerRegistry.address, spendingConditionRegistry.address,
+            this.framework.address,
+            this.ethVault.address,
+            this.erc20Vault.address,
+            outputGuardHandlerRegistry.address,
+            spendingConditionRegistry.address,
+            stateVerifier.address,
+            TX_TYPE.PAYMENT,
         );
 
         this.startStandardExitBondSize = await this.exitGame.startStandardExitBondSize();
 
         this.toPaymentCondition = await PaymentOutputToPaymentTxCondition.new(
-            this.framework.address, TX_TYPE.PAYMENT, TX_TYPE.PAYMENT,
+            this.framework.address, OUTPUT_TYPE.PAYMENT, TX_TYPE.PAYMENT,
         );
         await spendingConditionRegistry.registerSpendingCondition(
             OUTPUT_TYPE.PAYMENT, TX_TYPE.PAYMENT, this.toPaymentCondition.address,
@@ -156,6 +179,13 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
     describe('Given contracts deployed, exit game and both ETH and ERC20 vault registered', () => {
         beforeEach(setupContracts);
 
+        it('should not allow to call processExit from outside of exit game controller contract', async () => {
+            await expectRevert(
+                this.exitGame.processExit(0, constants.ZERO_ADDRESS),
+                'Not being called by expected caller.',
+            );
+        });
+
         describe('Given Alice deposited with ETH', () => {
             beforeEach(async () => {
                 this.aliceBalanceBeforeDeposit = new BN(await web3.eth.getBalance(alice));
@@ -202,7 +232,6 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
                     expect(standardExitData.exitable).to.be.true;
                     expect(standardExitData.outputId).to.equal(outputId);
                     expect(new BN(standardExitData.utxoPos)).to.be.bignumber.equal(new BN(this.depositUtxoPos));
-                    expect(standardExitData.token).to.equal(ETH);
                     expect(standardExitData.exitTarget).to.equal(alice);
                     expect(new BN(standardExitData.amount)).to.be.bignumber.equal(new BN(DEPOSIT_VALUE));
                 });

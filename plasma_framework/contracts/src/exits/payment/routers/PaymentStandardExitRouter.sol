@@ -109,9 +109,10 @@ contract PaymentStandardExitRouter is
     /**
      * @notice Process standard exit.
      * @dev This function is designed to be called in the main processExit function. Thus using internal.
-     * @param _exitId The standard exit id.
+     * @param exitId The standard exit id.
+     * @param token The token (in erc20 address or address(0) for ETH) of the exiting output.
      */
-    function processStandardExit(uint192 _exitId) internal {
-        processStandardExitController.run(standardExitMap, _exitId);
+    function processStandardExit(uint192 exitId, address token) internal {
+        processStandardExitController.run(standardExitMap, exitId, token);
     }
 }
