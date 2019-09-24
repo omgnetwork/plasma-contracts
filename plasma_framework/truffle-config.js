@@ -43,6 +43,7 @@ module.exports = {
                     0, 2,
                 );
             },
+            gas: 7000000,
             network_id: '*',
         },
     },

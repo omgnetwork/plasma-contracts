@@ -55,6 +55,7 @@ module.exports = async (deployer) => {
         SpendingConditionRegistry.address,
         PaymentTransactionStateTransitionVerifier.address,
         PAYMENT_TX_TYPE,
+        { gas: 6500000 },
     );
 
     await deployer.deploy(

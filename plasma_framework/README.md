@@ -13,9 +13,10 @@ export AUTHORITY_PRIVATEKEY="<redacted>"
 export INFURA_URL="https://rinkeby.infura.io/v3"
 export INFURA_API_KEY="<redacted>"
 
+npm install
+
 npx truffle migrate --network rinkeby
 ```
-
 
 # Building and running tests
 
