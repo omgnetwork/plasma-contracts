@@ -8,14 +8,17 @@ library ExitId {
     using Bits for uint192;
     using Bits for uint256;
 
+    /**
+     * @notice Checks whether exitId is a standard exit id or not.
+     */
     function isStandardExit(uint192 _exitId) internal pure returns (bool) {
         return _exitId.getBit(151) == 0;
     }
 
     /**
      * @notice Given transaction bytes and UTXO position, returns its exit ID.
-     * @dev Id from a deposit is computed differently from any other tx.
-     * @param _isDeposit Predicate to check whether a block num is a deposit block.
+     * @dev Id from a deposit is computed differently from any other tx due to the fact that txBytes of deposit tx can be not unique.
+     * @param _isDeposit whether the tx for the exitId is an deposit tx or not
      * @param _txBytes Transaction bytes.
      * @param _utxoPos UTXO position of the exiting output.
      * @return _standardExitId Unique standard exit id.
@@ -50,9 +53,6 @@ library ExitId {
         return uint192((uint256(keccak256(_txBytes)) >> 105).setBit(151));
     }
 
-    /**
-    Private
-    */
     function _computeStandardExitId(bytes32 _txhash, uint16 _outputIndex)
         private
         pure
