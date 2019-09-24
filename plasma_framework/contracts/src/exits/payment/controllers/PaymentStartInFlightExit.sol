@@ -347,6 +347,7 @@ library PaymentStartInFlightExit {
         PaymentExitDataModel.InFlightExit storage ife = inFlightExitMap.exits[startExitData.exitId];
         ife.isCanonical = true;
         ife.bondOwner = msg.sender;
+        ife.bondSize = msg.value;
         ife.position = getYoungestInputUtxoPosition(startExitData.inputUtxosPos);
         ife.exitStartTimestamp = uint64(block.timestamp);
         setInFlightExitInputs(ife, startExitData);

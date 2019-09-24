@@ -163,7 +163,9 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
                 this.stateTransitionVerifier.address,
                 IFE_TX_TYPE,
             );
-            this.exitGame.depositFundForTest({ from: alice, value: PIGGYBACK_BOND });
+
+            this.piggybackBondSize = await this.exitGame.piggybackBondSize();
+            this.exitGame.depositFundForTest({ from: alice, value: this.piggybackBondSize.toString() });
 
             const args = await buildValidChallengeOutputArgs();
 
