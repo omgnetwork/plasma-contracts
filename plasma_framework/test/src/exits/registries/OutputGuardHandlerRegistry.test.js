@@ -24,10 +24,21 @@ contract('OutputGuardHandlerRegistry', ([_, other]) => {
             expect(await this.registry.outputGuardHandlers(outputType)).to.equal(this.dummyOutputGuardHandler.address);
         });
 
-        it('should reject when not registered by operator', async () => {
+        it('should reject when not registered by owner', async () => {
             await expectRevert(
                 this.registry.registerOutputGuardHandler(1, this.dummyOutputGuardHandler.address, { from: other }),
-                'Not being called by operator',
+                'Ownable: caller is not the owner',
+            );
+        });
+
+        it('should not be able to register after renouncing the ownership', async () => {
+            const outputType = 1;
+            await this.registry.renounceOwnership();
+            await expectRevert(
+                this.registry.registerOutputGuardHandler(
+                    outputType, this.dummyOutputGuardHandler.address,
+                ),
+                'Ownable: caller is not the owner',
             );
         });
 

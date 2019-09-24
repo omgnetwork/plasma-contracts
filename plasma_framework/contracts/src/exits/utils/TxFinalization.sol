@@ -8,9 +8,31 @@ import "../../framework/Protocol.sol";
 import "../../utils/Merkle.sol";
 import "../../utils/TxPosLib.sol";
 
+/**
+ * @notice Libarary that checks finalization status of a transaction
+ * @dev We define two kinds of finalization: standard finalization and protocol finalization.
+ *      1. Protocol Finalization: a transaction is considered finalized for the protocol to spend its input transaction.
+ *      2. Standard Finalization: a protocol finalized transaction has a clear position (being mined) in the plasma block.
+ *      > For MVP:
+ *         a. Protocol finalized: need to have confirm signature signed. Since confirm signature requires the transaction to be mined in a block,
+ *            it will have a clear position as well. Thus protocol finalization would be same as standard finalization for MVP protocol.
+ *         b. Standard finalized: have confirm signature singed plus the transaction mined in a plasma block.
+ *      > For MoreVp:
+ *         a. Protocol finalized: as long as the transaction exists, since we allow in-flight transaction in MoreVp, it would be finalized.
+ *         b. Standard finalized: the transaction is mined in a plasma block.
+ */
 library TxFinalization {
     using TxPosLib for TxPosLib.TxPos;
 
+    /**
+     * @param framework Plasma framework contract
+     * @param protocol Either MVP or MoreVp. see 'Protocol.sol' for the representive value.
+     * @param txBytes Encoded transaction in bytes format that is checking the finalization.
+     * @param txPos (Optional) Tx position of the transaction.
+     * @param inclusionProof (Optional) Inclusion proof of the merkle path of the transaction
+     * @param confirmSig (Optional) Confirm signature of the transaction.
+     * @param confirmSigAddress (Optional) Confirm signature address to check with.
+     */
     struct Verifier {
         PlasmaFramework framework;
         uint8 protocol;
@@ -31,6 +53,7 @@ library TxFinalization {
         pure
         returns (Verifier memory)
     {
+        // MoreVP protocol does not require check on confirm signature, thus putting empty value for related field.
         return Verifier({
             framework: framework,
             protocol: Protocol.MORE_VP(),
@@ -89,7 +112,7 @@ library TxFinalization {
     }
 
     /**
-    * @dev This checks confirm signature over the block root hash directly.
+    * @dev Checks confirm signature over the block root hash directly.
     * @dev All transactions within the root with same owner would be consider confirmed by this signature.
     */
     function checkConfirmSig(Verifier memory self) private view returns (bool) {

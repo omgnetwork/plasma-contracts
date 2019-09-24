@@ -6,11 +6,13 @@ import "../interfaces/ISpendingCondition.sol";
 /**
  * @title SpendingConditionRegistry
  * @notice The registry contracts of spending condition
- * @dev After registering all the essential condition contracts, the owner should renounce its ownership to make sure
- *      no further conditions would be registered for an ExitGame contracts.
+ * @dev It is designed to renounce the ownership before injecting the registry contract to ExitGame contracts.
+ *      After registering all the essential condition contracts, the owner should renounce its ownership to
+ *      make sure no further conditions are registered for an ExitGame contract.
  *      https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/ownership/Ownable.sol#L55
  */
 contract SpendingConditionRegistry is Ownable {
+    // mapping of hash(outputType, spendingTxTpye) => ISpendingCondition
     mapping(bytes32 => ISpendingCondition) internal _spendingConditions;
 
     function spendingConditions(uint256 outputType, uint256 spendingTxType) public view returns (ISpendingCondition) {
