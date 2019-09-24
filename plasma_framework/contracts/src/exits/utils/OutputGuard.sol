@@ -2,7 +2,7 @@ pragma solidity ^0.5.0;
 
 /**
  * @notice Utils library that builds the output guard
- * @dev Output guard is the design to enable private deposit to DEX.
+ * @dev Output guard is the design to enable private deposits to a DEX.
  *      OutputGuard itself looks exactly like an ethereum address however it requires the disclosure
  *      of preimage to be able to differentiate the DEX deposit output with a normal Payment output.
  *      For details and discussion: https://github.com/omisego/research/issues/84
