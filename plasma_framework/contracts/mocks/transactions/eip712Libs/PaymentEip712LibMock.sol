@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity 0.5.11;
 
 import "../../../src/transactions/eip712Libs/PaymentEip712Lib.sol";
 import "../../../src/transactions/PaymentTransactionModel.sol";

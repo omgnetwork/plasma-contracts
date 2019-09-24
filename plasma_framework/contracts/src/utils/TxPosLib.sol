@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity 0.5.11;
 
 /**
 @dev transaction position = (blockNumber * BLOCK_OFFSET_FOR_TX_POS + txIndex).

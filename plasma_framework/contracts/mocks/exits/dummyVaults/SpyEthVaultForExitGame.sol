@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity 0.5.11;
 
 import "../../../src/vaults/EthVault.sol";
 import "../../../src/framework/PlasmaFramework.sol";
