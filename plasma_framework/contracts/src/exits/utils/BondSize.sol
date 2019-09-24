@@ -4,17 +4,17 @@ pragma solidity ^0.5.0;
  * @notice Stores an updateable bond size.
  * @dev Design of the bond: https://github.com/omisego/research/issues/107#issuecomment-525267486
  * @dev Security relies on the min/max value that can be updated to compare to current bond size plus the waiting period.
- *      The min/max value of the next bond size prevent the possibility to update to a insane high/lower bond that breaks the system.
- *      The waiting period promises user would not get an unexpected bond without notice.
+ *      The min/max value of the next bond size prevent the possibility to update to an insane high/low bond that breaks the system.
+ *      The waiting period ensures that a user does not get an unexpected bond without notice.
  */
 library BondSize {
     uint64 constant public WAITING_PERIOD = 2 days;
 
     /**
-     * @dev It is desinged to be able to be packed into two 32-bytes slot storage. That is the reason of using uint128 and uin16 instead of purely uint256.
-     * @param previousBondSize the bond size before upgrade, should be keep using this before the waiting period has passed
+     * @dev Struct is designed to be packed into two 32-bytes storage slots
+     * @param previousBondSize the bond size before upgrade. Should be kept before the waiting period has passed
      * @param updatedBondSize the bond size that should be used after the waiting period has passed
-     * @param effectiveUpdateTime the timestamp when the waiting period would be passed and the updated bondsize taking effect
+     * @param effectiveUpdateTime the timestamp when the waiting period has passwd and the updated bond size takes effect
      * @param lowerBoundDivisor the divisor used to check the lower bound for an update. Each update cannot be lower than (current bond / lowerBoundDivisor)
      * @param upperBoundMultiplier the multiplier used to check the upper bound for an update. Each update cannot be larger than (current bond * upperBoundMultiplier)
      */
