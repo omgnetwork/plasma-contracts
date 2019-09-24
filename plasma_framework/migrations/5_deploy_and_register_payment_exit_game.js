@@ -55,6 +55,7 @@ module.exports = async (deployer) => {
         SpendingConditionRegistry.address,
         PaymentTransactionStateTransitionVerifier.address,
         PAYMENT_TX_TYPE,
+        { gas: 6500000 },
     );
 
     await deployer.deploy(
@@ -71,7 +72,7 @@ module.exports = async (deployer) => {
         PAYMENT_OUTPUT_TYPE, PaymentOutputGuardHandler.address,
     );
 
-    //TODO: await outputGuardHandlerRegistry.renounceOwnership();
+    // TODO: await outputGuardHandlerRegistry.renounceOwnership();
 
     const spendingConditionRegistry = await SpendingConditionRegistry.deployed();
     await spendingConditionRegistry.registerSpendingCondition(
@@ -79,6 +80,11 @@ module.exports = async (deployer) => {
     );
     await spendingConditionRegistry.renounceOwnership();
 
-    const framework = await PlasmaFramework.deployed();
-    await framework.registerExitGame(PAYMENT_TX_TYPE, PaymentExitGame.address, MORE_VP_PROTOCOL);
+    const plasmaFramework = await PlasmaFramework.deployed();
+    await plasmaFramework.registerExitGame(
+        PAYMENT_TX_TYPE,
+        PaymentExitGame.address,
+        MORE_VP_PROTOCOL,
+        { from: global.authorityAddress },
+    );
 };
