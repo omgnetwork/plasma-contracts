@@ -50,7 +50,7 @@ commands:
           name: Install dependencies
           command: |
             make init dev
-            python -m solcx.install v0.5.9
+            python -m solcx.install v0.5.11
       - save_cache:
           key: dependencies-{{ checksum "requirements.txt" }}
           paths:
