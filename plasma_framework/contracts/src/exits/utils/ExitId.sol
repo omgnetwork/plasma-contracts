@@ -9,7 +9,7 @@ library ExitId {
     using Bits for uint256;
 
     /**
-     * @notice Given a exitId, checks whether it is a standard exit id or not.
+     * @notice Checks whether exitId is a standard exit id or not.
      */
     function isStandardExit(uint192 _exitId) internal pure returns (bool) {
         return _exitId.getBit(151) == 0;
