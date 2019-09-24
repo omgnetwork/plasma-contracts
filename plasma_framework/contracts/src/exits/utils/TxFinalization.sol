@@ -112,7 +112,7 @@ library TxFinalization {
     }
 
     /**
-    * @dev This checks confirm signature over the block root hash directly.
+    * @dev Checks confirm signature over the block root hash directly.
     * @dev All transactions within the root with same owner would be consider confirmed by this signature.
     */
     function checkConfirmSig(Verifier memory self) private view returns (bool) {
