@@ -1,4 +1,5 @@
-const Web3 = require('web3');
+/* eslint-disable no-console */
+/* eslint-disable prefer-destructuring */
 
 const Migrations = artifacts.require('Migrations');
 
