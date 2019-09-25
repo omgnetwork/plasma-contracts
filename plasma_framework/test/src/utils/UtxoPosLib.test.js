@@ -1,6 +1,6 @@
 const UtxoPosLib = artifacts.require('UtxoPosLibWrapper');
 
-const { BN } = require('openzeppelin-test-helpers');
+const { BN, expectRevert } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
 contract('UtxoPosLib', () => {
@@ -21,6 +21,11 @@ contract('UtxoPosLib', () => {
         it('should build the correct utxoPos from txPos and outputIndex', async () => {
             const result = await this.contract.build(this.txPos, this.outputIndex);
             expect(new BN(result.value)).to.be.bignumber.equal(new BN(this.utxoPos));
+        });
+
+        it('should revert when there is an overflow', async () => {
+            const txPos = (new BN(2)).pow(new BN(255));
+            await expectRevert(this.contract.build(txPos, this.outputIndex), 'SafeMath: multiplication overflow');
         });
     });
 
