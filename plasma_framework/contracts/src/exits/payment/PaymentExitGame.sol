@@ -11,6 +11,9 @@ import "../../vaults/Erc20Vault.sol";
 import "../interfaces/IStateTransitionVerifier.sol";
 import "../../utils/OnlyFromAddress.sol";
 
+/**
+ * @notice The exit game contract implementation for Payment Transaction
+ */
 contract PaymentExitGame is IExitProcessor, PaymentStandardExitRouter, PaymentInFlightExitRouter, OnlyFromAddress {
 
     PlasmaFramework private plasmaFramework;
@@ -59,6 +62,9 @@ contract PaymentExitGame is IExitProcessor, PaymentStandardExitRouter, PaymentIn
         }
     }
 
+    /**
+     * @notice Helper function to compute standard exit id.
+     */
     function getStandardExitId(bool _isDeposit, bytes memory _txBytes, uint256 _utxoPos)
         public
         pure
@@ -68,6 +74,9 @@ contract PaymentExitGame is IExitProcessor, PaymentStandardExitRouter, PaymentIn
         return ExitId.getStandardExitId(_isDeposit, _txBytes, utxoPos);
     }
 
+    /**
+     * @notice Helper function to compute in-flight exit id.
+     */
     function getInFlightExitId(bytes memory _txBytes)
         public
         pure
