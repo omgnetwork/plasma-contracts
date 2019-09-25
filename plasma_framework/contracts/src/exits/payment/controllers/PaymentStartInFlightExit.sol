@@ -67,7 +67,7 @@ library PaymentStartInFlightExit {
      */
     struct StartExitData {
         Controller controller;
-        uint192 exitId;
+        uint160 exitId;
         bytes inFlightTxRaw;
         PaymentTransactionModel.Transaction inFlightTx;
         bytes32 inFlightTxHash;
@@ -198,7 +198,7 @@ library PaymentStartInFlightExit {
     }
 
     function verifyExitNotStarted(
-        uint192 exitId,
+        uint160 exitId,
         PaymentExitDataModel.InFlightExitMap storage inFlightExitMap
     )
         private

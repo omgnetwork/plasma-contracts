@@ -83,7 +83,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
 
     const deployStableContracts = async () => {
         this.exitIdHelper = await ExitId.new();
-        this.exirPriorityHelper = await ExitPriority.new();
+        this.exitPriorityHelper = await ExitPriority.new();
 
         this.erc20 = await ERC20Mintable.new();
         await this.erc20.mint(richFather, INITIAL_ERC20_SUPPLY);
@@ -246,9 +246,12 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
                     const exitableAt = await this.exitableHelper.calculate(
                         currentTimestamp, timestamp, isTxDeposit,
                     );
-                    const exitQueueNonceUsed = (await this.framework.exitQueueNonce()).sub(new BN(1));
-                    const priorityExpected = await this.exirPriorityHelper.computePriority(
-                        exitableAt, utxoPosToTxPos(this.depositUtxoPos), exitQueueNonceUsed,
+
+                    const exitIdExpected = await this.exitIdHelper.getStandardExitId(
+                        true, this.depositTx, this.depositUtxoPos,
+                    );
+                    const priorityExpected = await this.exitPriorityHelper.computePriority(
+                        exitableAt, utxoPosToTxPos(this.depositUtxoPos), exitIdExpected,
                     );
 
                     expect(uniquePriority).to.be.bignumber.equal(priorityExpected);

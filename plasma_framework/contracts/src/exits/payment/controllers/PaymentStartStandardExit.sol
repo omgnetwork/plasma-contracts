@@ -43,7 +43,7 @@ library PaymentStartStandardExit {
         PaymentOutputModel.Output output;
         IOutputGuardHandler outputGuardHandler;
         OutputGuardModel.Data outputGuardData;
-        uint192 exitId;
+        uint160 exitId;
         bool isTxDeposit;
         uint256 txBlockTimeStamp;
         TxFinalization.Verifier finalizationVerifier;
@@ -51,7 +51,7 @@ library PaymentStartStandardExit {
 
     event ExitStarted(
         address indexed owner,
-        uint192 exitId
+        uint160 exitId
     );
 
     /**
@@ -110,7 +110,7 @@ library PaymentStartStandardExit {
         PaymentTransactionModel.Transaction memory outputTx = PaymentTransactionModel.decode(args.rlpOutputTx);
         PaymentOutputModel.Output memory output = outputTx.outputs[utxoPos.outputIndex()];
         bool isTxDeposit = controller.isDeposit.test(utxoPos.blockNum());
-        uint192 exitId = ExitId.getStandardExitId(isTxDeposit, args.rlpOutputTx, utxoPos);
+        uint160 exitId = ExitId.getStandardExitId(isTxDeposit, args.rlpOutputTx, utxoPos);
         (, uint256 blockTimestamp) = controller.framework.blocks(utxoPos.blockNum());
 
         OutputGuardModel.Data memory outputGuardData = OutputGuardModel.Data({

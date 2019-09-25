@@ -10,36 +10,34 @@ contract('ExitPriority', () => {
         this.contract = await ExitPriority.new();
     });
 
-    const expectPriorityPossitivelyCorrelative = async (exitableAt1, exitableAt2, txPos1, txPos2, nonce1, nonce2) => {
-        const priority1 = await this.contract.computePriority(exitableAt1, txPos1, nonce1);
-        const priority2 = await this.contract.computePriority(exitableAt2, txPos2, nonce2);
+    const expectPriorityPossitivelyCorrelative = async (exitableAt1, exitableAt2, txPos1, txPos2, exitId1, exitId2) => {
+        const priority1 = await this.contract.computePriority(exitableAt1, txPos1, exitId1);
+        const priority2 = await this.contract.computePriority(exitableAt2, txPos2, exitId2);
         expect(priority1).to.be.a.bignumber.that.is.lessThan(priority2);
     };
 
     describe('computePriority', () => {
         describe('Given different exitableAt', () => {
             before(() => {
-                const smallerNonce = 1;
-                const largerNonce = 2;
-                this.nonces = [smallerNonce, largerNonce];
+                this.exitIds = [1, 2];
 
                 const smallerTxPos = buildTxPos(1000, 0);
-                const largerTxPos = buildTxPos(2000, 0);
+                const largerTxPos = buildTxPos(200, 0);
                 this.txPoses = [smallerTxPos, largerTxPos];
             });
 
-            it('should be positive correlative with "exitable" no matter txPos and nonce combination', async () => {
+            it('should be positive correlative with "exitable" no matter txPos and exit id combination', async () => {
                 const exitableAt1 = 1;
                 const exitableAt2 = 2;
 
                 await Promise.all(this.txPoses.map(
                     async txPos1 => Promise.all(this.txPoses.map(
-                        async txPos2 => Promise.all(this.nonces.map(
-                            async nonce1 => Promise.all(this.nonces.map(
-                                async nonce2 => expectPriorityPossitivelyCorrelative(
+                        async txPos2 => Promise.all(this.exitIds.map(
+                            async exitId1 => Promise.all(this.exitIds.map(
+                                async exitId2 => expectPriorityPossitivelyCorrelative(
                                     exitableAt1, exitableAt2,
                                     txPos1, txPos2,
-                                    nonce1, nonce2,
+                                    exitId1, exitId2,
                                 ),
                             )),
                         )),
@@ -51,22 +49,19 @@ contract('ExitPriority', () => {
         describe('Given exitableAt is the same', () => {
             before(() => {
                 this.exitableAt = 1;
-
-                const smallerNonce = 1;
-                const largerNonce = 2;
-                this.nonces = [smallerNonce, largerNonce];
+                this.exitIds = [1, 2];
             });
 
-            it('should be positive correlative with "txPos" no matter how nonces are', async () => {
+            it('should be positive correlative with "txPos" no matter how exit ids are', async () => {
                 const txPos1 = buildTxPos(1000, 0);
                 const txPos2 = buildTxPos(2000, 0);
 
-                await Promise.all(this.nonces.map(
-                    async nonce1 => Promise.all(this.nonces.map(
-                        async nonce2 => expectPriorityPossitivelyCorrelative(
+                await Promise.all(this.exitIds.map(
+                    async exitId1 => Promise.all(this.exitIds.map(
+                        async exitId2 => expectPriorityPossitivelyCorrelative(
                             this.exitableAt, this.exitableAt,
                             txPos1, txPos2,
-                            nonce1, nonce2,
+                            exitId1, exitId2,
                         ),
                     )),
                 ));
@@ -75,18 +70,18 @@ contract('ExitPriority', () => {
 
         describe('Given both exitableAt and txPos are the same', () => {
             before(() => {
-                this.smallerNonce = 1;
-                this.largerNonce = 2;
+                this.exitId1 = 1;
+                this.exitId2 = 2;
                 this.exitableAt = 1;
                 this.txPos = buildTxPos(1000, 0);
             });
 
-            it('should be positively correlative with "nonce"', async () => {
+            it('should be positively correlative with exid id', async () => {
                 const priority1 = await this.contract.computePriority(
-                    this.exitableAt, this.txPos, this.smallerNonce,
+                    this.exitableAt, this.txPos, this.exitId1,
                 );
                 const priority2 = await this.contract.computePriority(
-                    this.exitableAt, this.txPos, this.largerNonce,
+                    this.exitableAt, this.txPos, this.exitId2,
                 );
                 expect(priority1).to.be.a.bignumber.that.is.lessThan(priority2);
             });
@@ -94,58 +89,68 @@ contract('ExitPriority', () => {
     });
 
     describe('parseExitableAt', () => {
-        it('should be able to parse the "exitableAt" from priority given nonce is 0', async () => {
+        it('should be able to parse the "exitableAt" from priority given exit id is 0', async () => {
             const exitableAt = 123;
-            const nonce = 0;
+            const exitId = 0;
             const txPos = buildTxPos(1000, 0);
-            const priority = await this.contract.computePriority(exitableAt, txPos, nonce);
+            const priority = await this.contract.computePriority(exitableAt, txPos, exitId);
             const parsedExitableAt = await this.contract.parseExitableAt(priority);
             expect(parsedExitableAt).to.be.bignumber.equal(new BN(exitableAt));
         });
 
-        it('should be able to parse the "exitableAt" from priority given max nonce value', async () => {
+        it('should be able to parse the "exitableAt" from priority given max exit id value', async () => {
             const exitableAt = 123;
-            const nonce = (new BN(2)).pow(new BN(64)).sub(new BN(1)); // 2^64 - 1
+            const exitId = (new BN(2)).pow(new BN(160)).sub(new BN(1)); // 2^160 - 1
             const txPos = buildTxPos(1000, 0);
-            const priority = await this.contract.computePriority(exitableAt, txPos, nonce);
+            const priority = await this.contract.computePriority(exitableAt, txPos, exitId);
             const parsedExitableAt = await this.contract.parseExitableAt(priority);
             expect(parsedExitableAt).to.be.bignumber.equal(new BN(exitableAt));
         });
 
         it('should be able to parse the "exitableAt" from priority given exitable timestamp is 0', async () => {
             const exitableAt = 0;
-            const nonce = 123;
+            const exitId = 123;
             const txPos = buildTxPos(1000, 0);
-            const priority = await this.contract.computePriority(exitableAt, txPos, nonce);
+            const priority = await this.contract.computePriority(exitableAt, txPos, exitId);
             const parsedExitableAt = await this.contract.parseExitableAt(priority);
             expect(parsedExitableAt).to.be.bignumber.equal(new BN(exitableAt));
         });
 
-        it('should be able to parse the "exitableAt" from priority given max exitable timestamp of uint64', async () => {
-            const exitableAt = (new BN(2)).pow(new BN(64)).sub(new BN(1)); // 2^64 - 1
-            const nonce = 123;
+        it('should be able to parse the "exitableAt" from priority given max exitable timestamp of uint42', async () => {
+            const exitableAt = (new BN(2)).pow(new BN(42)).sub(new BN(1)); // 2^42 - 1
+            const exitId = 123;
             const txPos = buildTxPos(1000, 0);
-            const priority = await this.contract.computePriority(exitableAt, txPos, nonce);
+            const priority = await this.contract.computePriority(exitableAt, txPos, exitId);
             const parsedExitableAt = await this.contract.parseExitableAt(priority);
             expect(parsedExitableAt).to.be.bignumber.equal(exitableAt);
         });
 
         it('should be able to parse the "exitableAt" from priority given txPos is 0', async () => {
             const exitableAt = 123;
-            const nonce = 456;
+            const exitId = 456;
             const txPos = 0;
-            const priority = await this.contract.computePriority(exitableAt, txPos, nonce);
+            const priority = await this.contract.computePriority(exitableAt, txPos, exitId);
             const parsedExitableAt = await this.contract.parseExitableAt(priority);
             expect(parsedExitableAt).to.be.bignumber.equal(new BN(exitableAt));
         });
 
-        it('should be able to parse the "exitableAt" from priority given max txPos of uint128', async () => {
+        it('should be able to parse the "exitableAt" from priority given max txPos of uint54', async () => {
+            const exitId = (new BN(2)).pow(new BN(160)).sub(new BN(1)); // 2^160 - 1
             const exitableAt = 123;
-            const nonce = 456;
-            const txPos = (new BN(2)).pow(new BN(128)).sub(new BN(1)); // 2^128 - 1;
-            const priority = await this.contract.computePriority(exitableAt, txPos, nonce);
+            const txPos = (new BN(2)).pow(new BN(54)).sub(new BN(1)); // 2^54 - 1;
+            const priority = await this.contract.computePriority(exitableAt, txPos, exitId);
             const parsedExitableAt = await this.contract.parseExitableAt(priority);
             expect(parsedExitableAt).to.be.bignumber.equal(new BN(exitableAt));
+        });
+
+        it('should be able to parse exit id from priority', async () => {
+            const exitId = (new BN(2)).pow(new BN(160)).sub(new BN(1)); // 2^160 - 1
+            const exitableAt = 123;
+            const txPos = (new BN(2)).pow(new BN(52)); // 2^52 - some random tx pos
+            const priority = await this.contract.computePriority(exitableAt, txPos, exitId);
+            const parsedExitId = await this.contract.parseExitId(priority);
+
+            expect(parsedExitId).to.be.bignumber.equal(exitId);
         });
     });
 });
