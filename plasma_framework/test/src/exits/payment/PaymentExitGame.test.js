@@ -40,8 +40,7 @@ const { hashTx } = require('../../../helpers/paymentEip712.js');
 const { buildUtxoPos, utxoPosToTxPos } = require('../../../helpers/positions.js');
 const Testlang = require('../../../helpers/testlang.js');
 
-// Skipped for now due to https://github.com/omisego/plasma-contracts/issues/287
-contract.skip('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
+contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
     const ETH = constants.ZERO_ADDRESS;
     const INITIAL_ERC20_SUPPLY = 10000000000;
