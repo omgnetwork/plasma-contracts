@@ -6,7 +6,7 @@ const EMPTY_BYTES20 = '0x0000000000000000000000000000000000000000';
 
 const EIP191_PREFIX = '0x1901';
 const EIP712_DOMAIN_HASH = web3.utils.sha3('EIP712Domain(string name,string version,address verifyingContract,bytes32 salt)');
-const TX_TYPE_HASH = web3.utils.sha3('Transaction(uint256 txType,Input input0,Input input1,Input input2,Input input3,Output output0,Output output1,Output output2,Output output3,bytes32 metadata)Input(uint256 blknum,uint256 txindex,uint256 oindex)Output(bytes32 owner,address currency,uint256 amount)');
+const TX_TYPE_HASH = web3.utils.sha3('Transaction(uint256 txType,Input input0,Input input1,Input input2,Input input3,Output output0,Output output1,Output output2,Output output3,bytes32 metadata)Input(uint256 blknum,uint256 txindex,uint256 oindex)Output(bytes20 outputGuard,address currency,uint256 amount)');
 const INPUT_TYPE_HASH = web3.utils.sha3('Input(uint256 blknum,uint256 txindex,uint256 oindex)');
 const OUTPUT_TYPE_HASH = web3.utils.sha3('Output(bytes20 outputGuard,address currency,uint256 amount)');
 const SALT = '0xfad5c7f626d80f9256ef01929f3beb96e058b8b4b0e3fe52d84f054c0e2a7a83';
