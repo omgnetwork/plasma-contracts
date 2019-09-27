@@ -79,7 +79,6 @@ library PaymentChallengeIFEOutputSpent {
         );
 
         verifyInFlightTransactionStandardFinalized(controller, args);
-        verifyOutputType(controller, args);
         verifyChallengingTransactionSpendsOutput(controller, args);
 
         ife.clearOutputPiggybacked(outputIndex);
@@ -107,31 +106,6 @@ library PaymentChallengeIFEOutputSpent {
         require(TxFinalization.isStandardFinalized(finalizationVerifier), "In-flight transaction not finalized");
     }
 
-    function verifyOutputType(
-        Controller memory controller,
-        PaymentInFlightExitRouterArgs.ChallengeOutputSpent memory args
-    )
-        private
-        view
-    {
-        UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(args.outputUtxoPos);
-        uint16 outputIndex = UtxoPosLib.outputIndex(utxoPos);
-        WireTransaction.Output memory output = WireTransaction.getOutput(args.inFlightTx, outputIndex);
-        OutputGuardModel.Data memory outputGuardData = OutputGuardModel.Data({
-            guard: output.outputGuard,
-            outputType: args.outputType,
-            preimage: args.outputGuardPreimage
-        });
-        IOutputGuardHandler handler = controller.outputGuardHandlerRegistry
-                                                .outputGuardHandlers(args.outputType);
-
-        require(address(handler) != address(0),
-            "Does not have outputGuardHandler registered for the output type");
-
-        require(handler.isValid(outputGuardData),
-            "Some of the output guard related information is not valid");
-    }
-
     function verifyChallengingTransactionSpendsOutput(
         Controller memory controller,
         PaymentInFlightExitRouterArgs.ChallengeOutputSpent memory args
@@ -141,9 +115,10 @@ library PaymentChallengeIFEOutputSpent {
     {
         UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(args.outputUtxoPos);
         uint256 challengingTxType = WireTransaction.getTransactionType(args.challengingTx);
+        WireTransaction.Output memory output = WireTransaction.getOutput(args.challengingTx, utxoPos.outputIndex());
 
         ISpendingCondition condition = controller.spendingConditionRegistry.spendingConditions(
-            args.outputType,
+            output.outputType,
             challengingTxType
         );
         require(address(condition) != address(0), "Spending condition contract not found");

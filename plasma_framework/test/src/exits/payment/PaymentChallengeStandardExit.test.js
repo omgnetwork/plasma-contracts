@@ -46,8 +46,8 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
     });
 
     describe('challengeStandardExit', () => {
-        const getTestInputArgs = (outputType, ouputOwner) => {
-            const output = new PaymentTransactionOutput(TEST_AMOUNT, ouputOwner, ETH);
+        const getTestInputArgs = (outputType, outputOwner) => {
+            const output = new PaymentTransactionOutput(TEST_AMOUNT, outputOwner, ETH, outputType);
             const exitingTxObj = new PaymentTransaction(TX_TYPE.PAYMENT, [0], [output]);
             const exitingTx = web3.utils.bytesToHex(exitingTxObj.rlpEncoded());
 
@@ -56,7 +56,6 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
 
             return {
                 exitId: 123,
-                outputType,
                 exitingTx,
                 challengeTx,
                 inputIndex: 0,
@@ -236,7 +235,6 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
 
                 const expectedArgs = {
                     guard: alice,
-                    outputType: OUTPUT_TYPE.PAYMENT,
                     preimage: args.outputGuardPreimage,
                 };
 

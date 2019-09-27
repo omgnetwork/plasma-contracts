@@ -136,8 +136,8 @@ library PaymentPiggybackInFlightExit {
 
         // Though for inputs, exit target is set during start inFlight exit.
         // For outputs since the output preimage data is hold by the output owners themselves, need to get those on piggyback.
-        bytes20 outputGuard = getOutputGuardFromPaymentTxBytes(args.inFlightTx, args.outputIndex);
-        address payable exitTarget = getExitTargetOfOutput(self, outputGuard, args.outputType, args.outputGuardPreimage);
+        PaymentOutputModel.Output memory output = PaymentTransactionModel.decode(args.inFlightTx).outputs[args.outputIndex];
+        address payable exitTarget = getExitTargetOfOutput(self, output.outputGuard, output.outputType, args.outputGuardPreimage);
         require(exitTarget == msg.sender, "Can be called by the exit target only");
 
         if (exit.isFirstPiggybackOfTheToken(withdrawData.token)) {
@@ -172,15 +172,6 @@ library PaymentPiggybackInFlightExit {
         controller.framework.enqueue(token, exitableAt, utxoPos.txPos(), exitId, controller.exitProcessor);
     }
 
-    function getOutputGuardFromPaymentTxBytes(bytes memory txBytes, uint16 outputIndex)
-        private
-        pure
-        returns (bytes20)
-    {
-        PaymentOutputModel.Output memory output = PaymentTransactionModel.decode(txBytes).outputs[outputIndex];
-        return output.outputGuard;
-    }
-
     function getExitTargetOfOutput(
         Controller memory controller,
         bytes20 outputGuard,
@@ -193,7 +184,6 @@ library PaymentPiggybackInFlightExit {
     {
         OutputGuardModel.Data memory outputGuardData = OutputGuardModel.Data({
             guard: outputGuard,
-            outputType: outputType,
             preimage: outputGuardPreimage
         });
         IOutputGuardHandler handler = controller.outputGuardHandlerRegistry

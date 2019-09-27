@@ -5,14 +5,12 @@ library PaymentStandardExitRouterArgs {
      * @notice Wraps arguments for startStandardExit.
      * @param utxoPos Position of the exiting output.
      * @param rlpOutputTx RLP encoded transaction that created the exiting output.
-     * @param outputType Specific type of the output.
-     * @param outputGuardPreimage Output guard preimage data. (output type excluded)
+     * @param outputGuardPreimage Output guard preimage data.
      * @param outputTxInclusionProof A Merkle proof showing that the transaction was included.
     */
     struct StartStandardExitArgs {
         uint192 utxoPos;
         bytes rlpOutputTx;
-        uint256 outputType;
         bytes outputGuardPreimage;
         bytes outputTxInclusionProof;
     }
@@ -20,7 +18,6 @@ library PaymentStandardExitRouterArgs {
     /**
      * @notice Input args data for challengeStandardExit.
      * @param exitId Identifier of the standard exit to challenge.
-     * @param outputType The output type of the exiting output.
      * @param exitingTx The transaction that is exiting.
      * @param challengeTx RLP encoded transaction that spends the exiting output.
      * @param inputIndex Which input of the challenging tx corresponds to the exiting output.
@@ -33,7 +30,6 @@ library PaymentStandardExitRouterArgs {
      */
     struct ChallengeStandardExitArgs {
         uint160 exitId;
-        uint256 outputType;
         bytes exitingTx;
         bytes challengeTx;
         uint16 inputIndex;

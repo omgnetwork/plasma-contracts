@@ -176,7 +176,6 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
             this.challengeArgs = {
                 inFlightTx: args.inFlightTxBytes,
                 inFlightTxInclusionProof: args.inclusionProof,
-                outputType: OUTPUT_TYPE_ONE,
                 outputGuardPreimage: preimage,
                 outputUtxoPos: buildUtxoPos(BLOCK_NUM, 0, 0),
                 challengingTx: args.challengingTxBytes,
@@ -247,27 +246,6 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
             await expectRevert(
                 this.exitGame.challengeInFlightExitOutputSpent(this.challengeArgs, { from: bob }),
                 'In-flight transaction not finalized',
-            );
-        });
-
-        it('should fail when provided output type does not match exiting output', async () => {
-            this.challengeArgs.outputType = 2;
-            const expectedOutputGuardHandler = await OutputGuardHandler.new();
-            await expectedOutputGuardHandler.mockIsValid(false);
-            await this.outputGuardHandlerRegistry.registerOutputGuardHandler(
-                this.challengeArgs.outputType, expectedOutputGuardHandler.address,
-            );
-            await expectRevert(
-                this.exitGame.challengeInFlightExitOutputSpent(this.challengeArgs, { from: bob }),
-                'Some of the output guard related information is not valid',
-            );
-        });
-
-        it('should fail when output guard handler for a given output type is not registered', async () => {
-            this.challengeArgs.outputType = 2;
-            await expectRevert(
-                this.exitGame.challengeInFlightExitOutputSpent(this.challengeArgs, { from: bob }),
-                'Does not have outputGuardHandler registered for the output type',
             );
         });
 

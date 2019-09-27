@@ -54,7 +54,6 @@ contract ExpectedOutputGuardHandler is IOutputGuardHandler {
             return true;
 
         return data.guard == expectedData.guard &&
-            data.outputType == expectedData.outputType &&
             keccak256(data.preimage) == keccak256(expectedData.preimage);
     }
 }

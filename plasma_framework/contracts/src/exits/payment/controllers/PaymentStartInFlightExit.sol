@@ -263,7 +263,6 @@ library PaymentStartInFlightExit {
             WireTransaction.Output memory output = WireTransaction.getOutput(exitData.inputTxs[i], outputIndex);
             OutputGuardModel.Data memory outputGuardData = OutputGuardModel.Data({
                 guard: output.outputGuard,
-                outputType: exitData.inputUtxosTypes[i],
                 preimage: exitData.outputGuardPreimagesForInputs[i]
             });
             IOutputGuardHandler outputGuardHandler = exitData.controller
@@ -297,7 +296,6 @@ library PaymentStartInFlightExit {
 
             OutputGuardModel.Data memory outputGuardData = OutputGuardModel.Data({
                 guard: output.outputGuard,
-                outputType: exitData.inputUtxosTypes[i],
                 preimage: exitData.outputGuardPreimagesForInputs[i]
             });
             IOutputGuardHandler outputGuardHandler = exitData.controller
@@ -376,7 +374,6 @@ library PaymentStartInFlightExit {
 
             OutputGuardModel.Data memory outputGuardData = OutputGuardModel.Data(
                 output.outputGuard,
-                exitData.inputUtxosTypes[i],
                 exitData.outputGuardPreimagesForInputs[i]
             );
             IOutputGuardHandler handler = exitData.controller.outputGuardHandlerRegistry.outputGuardHandlers(exitData.inputUtxosTypes[i]);

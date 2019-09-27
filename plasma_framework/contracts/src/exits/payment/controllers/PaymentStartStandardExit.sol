@@ -115,11 +115,10 @@ library PaymentStartStandardExit {
 
         OutputGuardModel.Data memory outputGuardData = OutputGuardModel.Data({
             guard: output.outputGuard,
-            outputType: args.outputType,
             preimage: args.outputGuardPreimage
         });
 
-        IOutputGuardHandler outputGuardHandler = controller.outputGuardHandlerRegistry.outputGuardHandlers(args.outputType);
+        IOutputGuardHandler outputGuardHandler = controller.outputGuardHandlerRegistry.outputGuardHandlers(output.outputType);
 
         TxFinalization.Verifier memory finalizationVerifier = TxFinalization.moreVpVerifier(
             controller.framework,

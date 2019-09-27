@@ -6,15 +6,8 @@ import "../../models/OutputGuardModel.sol";
 import "../../../utils/AddressPayable.sol";
 
 contract PaymentOutputGuardHandler is IOutputGuardHandler {
-    uint256 internal outputType;
-
-    constructor(uint256 _outputType) public {
-        outputType = _outputType;
-    }
-
     function isValid(OutputGuardModel.Data memory data) public view returns (bool) {
-        require(data.preimage.length == 0, "Pre-imgage of the output guard should be empty");
-        require(data.outputType == outputType, "Output type mismatch");
+        require(data.preimage.length == 0, "Pre-image of the output guard should be empty");
         return true;
     }
 

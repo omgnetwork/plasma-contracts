@@ -110,7 +110,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, outputOwner, nonOu
 
             const outputAmount2 = 498;
             const outputGuard2 = buildOutputGuard(OUTPUT_TYPE.TWO, DUMMY_OUTPUT_GUARD_PREIMAGE);
-            const output2 = new PaymentTransactionOutput(outputAmount2, outputGuard2, ETH);
+            const output2 = new PaymentTransactionOutput(outputAmount2, outputGuard2, ETH, OUTPUT_TYPE.TWO);
 
             const inFlightTx = new PaymentTransaction(1, [buildUtxoPos(BLOCK_NUMBER, 0, 0)], [output1, output2]);
             const rlpInFlighTxBytes = web3.utils.bytesToHex(inFlightTx.rlpEncoded());
@@ -157,14 +157,12 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, outputOwner, nonOu
             const argsForOutputOne = {
                 inFlightTx: rlpInFlighTxBytes,
                 outputIndex: 0,
-                outputType: OUTPUT_TYPE.ONE,
                 outputGuardPreimage: '0x',
             };
 
             const argsForOutputTwo = {
                 inFlightTx: rlpInFlighTxBytes,
                 outputIndex: 1,
-                outputType: OUTPUT_TYPE.TWO,
                 outputGuardPreimage: DUMMY_OUTPUT_GUARD_PREIMAGE,
             };
 
@@ -300,7 +298,6 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, outputOwner, nonOu
 
             const expectedOutputGuardData = {
                 guard: data.outputTwoCase.outputGuard,
-                outputType: data.outputTwoCase.args.outputType,
                 preimage: data.outputTwoCase.args.outputGuardPreimage,
             };
             const expectedOutputGuardHandler = await ExpectedOutputGuardHandler.new();
