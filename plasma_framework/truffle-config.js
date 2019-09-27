@@ -8,7 +8,7 @@ module.exports = {
             host: process.env.ETH_CLIENT_HOST || '127.0.0.1',
             port: process.env.ETH_CLIENT_PORT || 8545,
             from: process.env.DEPLOYER_ADDRESS,
-            gas: 8000000, // TODO: move to lower value
+            gas: 6000000,
             network_id: '*',
         },
         mainnet: {
