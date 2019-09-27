@@ -27,5 +27,5 @@ module.exports = async (deployer, network, accounts) => {
     }
 
     // Deploy migrations
-    deployer.deploy(Migrations);
+    await deployer.deploy(Migrations);
 };
