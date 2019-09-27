@@ -10,7 +10,7 @@ contract ExitGameRegistry is Operated {
     mapping(uint256 => address) private _exitGames;
     mapping(address => uint256) private _exitGameToTxType;
     mapping(uint256 => uint8) private _protocols;
-    Quarantine.Data private _quarantine;
+    Quarantine.Data private _exitGameQuarantine;
 
     event ExitGameRegistered(
         uint256 txType,
@@ -21,13 +21,13 @@ contract ExitGameRegistry is Operated {
     constructor (uint256 _minExitPeriod, uint256 _initialImmuneExitGames)
         public
     {
-        _quarantine.quarantinePeriod = 3 * _minExitPeriod;
-        _quarantine.immunitiesRemaining = _initialImmuneExitGames;
+        _exitGameQuarantine.quarantinePeriod = 3 * _minExitPeriod;
+        _exitGameQuarantine.immunitiesRemaining = _initialImmuneExitGames;
     }
 
     modifier onlyFromNonQuarantinedExitGame() {
         require(_exitGameToTxType[msg.sender] != 0, "Not being called by registered exit game contract");
-        require(!_quarantine.isQuarantined(msg.sender), "ExitGame is quarantined.");
+        require(!_exitGameQuarantine.isQuarantined(msg.sender), "ExitGame is quarantined.");
         _;
     }
 
@@ -37,7 +37,7 @@ contract ExitGameRegistry is Operated {
      * @return A boolean value denoting whether contract is safe to use, is not under quarantine
      */
     function isExitGameSafeToUse(address _contract) public view returns (bool) {
-        return _exitGameToTxType[_contract] != 0 && !_quarantine.isQuarantined(_contract);
+        return _exitGameToTxType[_contract] != 0 && !_exitGameQuarantine.isQuarantined(_contract);
     }
 
     /**
@@ -56,7 +56,7 @@ contract ExitGameRegistry is Operated {
         _exitGames[_txType] = _contract;
         _exitGameToTxType[_contract] = _txType;
         _protocols[_txType] = _protocol;
-        _quarantine.quarantine(_contract);
+        _exitGameQuarantine.quarantine(_contract);
 
         emit ExitGameRegistered(_txType, _contract, _protocol);
     }

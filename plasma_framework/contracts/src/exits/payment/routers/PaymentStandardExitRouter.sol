@@ -63,7 +63,7 @@ contract PaymentStandardExitRouter is
         startStandardExitBond = BondSize.buildParams(INITIAL_BOND_SIZE, BOND_LOWER_BOUND_DIVISOR, BOND_UPPER_BOUND_MULTIPLIER);
     }
 
-    function standardExits(uint192 _exitId) public view returns (PaymentExitDataModel.StandardExit memory) {
+    function standardExits(uint160 _exitId) public view returns (PaymentExitDataModel.StandardExit memory) {
         return standardExitMap.exits[_exitId];
     }
 
@@ -112,7 +112,7 @@ contract PaymentStandardExitRouter is
      * @param exitId The standard exit id.
      * @param token The token (in erc20 address or address(0) for ETH) of the exiting output.
      */
-    function processStandardExit(uint192 exitId, address token) internal {
+    function processStandardExit(uint160 exitId, address token) internal {
         processStandardExitController.run(standardExitMap, exitId, token);
     }
 }

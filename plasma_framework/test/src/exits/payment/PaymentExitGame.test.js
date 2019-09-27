@@ -40,8 +40,7 @@ const { hashTx } = require('../../../helpers/paymentEip712.js');
 const { buildUtxoPos, utxoPosToTxPos } = require('../../../helpers/positions.js');
 const Testlang = require('../../../helpers/testlang.js');
 
-// Skipped for now due to https://github.com/omisego/plasma-contracts/issues/287
-contract.skip('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
+contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
     const ETH = constants.ZERO_ADDRESS;
     const INITIAL_ERC20_SUPPLY = 10000000000;
@@ -84,7 +83,7 @@ contract.skip('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
 
     const deployStableContracts = async () => {
         this.exitIdHelper = await ExitId.new();
-        this.exirPriorityHelper = await ExitPriority.new();
+        this.exitPriorityHelper = await ExitPriority.new();
 
         this.erc20 = await ERC20Mintable.new();
         await this.erc20.mint(richFather, INITIAL_ERC20_SUPPLY);
@@ -247,9 +246,12 @@ contract.skip('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
                     const exitableAt = await this.exitableHelper.calculate(
                         currentTimestamp, timestamp, isTxDeposit,
                     );
-                    const exitQueueNonceUsed = (await this.framework.exitQueueNonce()).sub(new BN(1));
-                    const priorityExpected = await this.exirPriorityHelper.computePriority(
-                        exitableAt, utxoPosToTxPos(this.depositUtxoPos), exitQueueNonceUsed,
+
+                    const exitIdExpected = await this.exitIdHelper.getStandardExitId(
+                        true, this.depositTx, this.depositUtxoPos,
+                    );
+                    const priorityExpected = await this.exitPriorityHelper.computePriority(
+                        exitableAt, utxoPosToTxPos(this.depositUtxoPos), exitIdExpected,
                     );
 
                     expect(uniquePriority).to.be.bignumber.equal(priorityExpected);

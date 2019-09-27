@@ -24,9 +24,6 @@ library PaymentChallengeIFEInputSpent {
     using IsDeposit for IsDeposit.Predicate;
     using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
 
-    // TODO: Use BondSize lib.
-    uint256 public constant PIGGYBACK_BOND = 31415926535 wei;
-
     struct Controller {
         PlasmaFramework framework;
         IsDeposit.Predicate isDeposit;
@@ -73,7 +70,7 @@ library PaymentChallengeIFEInputSpent {
     )
         public
     {
-        uint192 exitId = ExitId.getInFlightExitId(args.inFlightTx);
+        uint160 exitId = ExitId.getInFlightExitId(args.inFlightTx);
         PaymentExitDataModel.InFlightExit storage ife = inFlightExitMap.exits[exitId];
 
         require(ife.exitStartTimestamp != 0, "In-flight exit doesn't exist");
@@ -99,7 +96,7 @@ library PaymentChallengeIFEInputSpent {
         ife.clearInputPiggybacked(args.inFlightTxInputIndex);
 
         // Pay out the bond.
-        msg.sender.transfer(PIGGYBACK_BOND);
+        msg.sender.transfer(ife.inputs[args.inFlightTxInputIndex].piggybackBondSize);
 
         emit InFlightExitInputBlocked(msg.sender, keccak256(args.inFlightTx), args.inFlightTxInputIndex);
     }

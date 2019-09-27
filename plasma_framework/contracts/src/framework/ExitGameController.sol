@@ -8,15 +8,9 @@ import "./utils/ExitPriority.sol";
 import "../utils/TxPosLib.sol";
 
 contract ExitGameController is ExitGameRegistry {
-    uint64 public exitQueueNonce = 1;
-    mapping (uint256 => Exit) public exits;
+    mapping (uint256 => IExitProcessor) public delegations;
     mapping (address => PriorityQueue) public exitsQueues;
     mapping (bytes32 => bool) public isOutputSpent;
-
-    struct Exit {
-        IExitProcessor exitProcessor;
-        uint192 exitId; // The id for exit processor to identify specific exit within an exit game.
-    }
 
     event TokenAdded(
         address token
@@ -28,7 +22,7 @@ contract ExitGameController is ExitGameRegistry {
     );
 
     event ExitQueued(
-        uint192 indexed exitId,
+        uint160 indexed exitId,
         uint256 uniquePriority
     );
 
@@ -72,64 +66,58 @@ contract ExitGameController is ExitGameRegistry {
      * @param _exitProcessor The exit processor contract that would be called during "processExits"
      * @return a unique priority number computed for the exit
      */
-    function enqueue(address _token, uint64 _exitableAt, TxPosLib.TxPos calldata _txPos, uint192 _exitId, IExitProcessor _exitProcessor)
+    function enqueue(address _token, uint64 _exitableAt, TxPosLib.TxPos calldata _txPos, uint160 _exitId, IExitProcessor _exitProcessor)
         external
         onlyFromNonQuarantinedExitGame
         returns (uint256)
     {
         require(hasToken(_token), "Such token has not been added to the plasma framework yet");
-
         PriorityQueue queue = exitsQueues[_token];
 
-        uint256 uniquePriority = ExitPriority.computePriority(_exitableAt, _txPos, exitQueueNonce);
-        exitQueueNonce++;
-
+        uint256 uniquePriority = ExitPriority.computePriority(_exitableAt, _txPos, _exitId);
+       
         queue.insert(uniquePriority);
-
-        exits[uniquePriority] = Exit({
-            exitProcessor: _exitProcessor,
-            exitId: _exitId
-        });
+        delegations[uniquePriority] = _exitProcessor;
 
         emit ExitQueued(_exitId, uniquePriority);
-
         return uniquePriority;
     }
 
     /**
      * @notice Processes any exits that have completed the challenge period.
      * @param _token Token type to process.
-     * @param _topUniquePriority Unique priority of the first exit that should be processed. Set to zero to skip the check.
+     * @param _topExitId Unique priority of the first exit that should be processed. Set to zero to skip the check.
      * @param _maxExitsToProcess Maximal number of exits to process.
      * @return total number of processed exits
      */
-    function processExits(address _token, uint256 _topUniquePriority, uint256 _maxExitsToProcess) external {
+    function processExits(address _token, uint160 _topExitId, uint256 _maxExitsToProcess) external {
         require(hasToken(_token), "Such token has not been added to the plasma framework yet");
 
         PriorityQueue queue = exitsQueues[_token];
         require(queue.currentSize() > 0, "Exit queue is empty");
 
         uint256 uniquePriority = queue.getMin();
-        require(_topUniquePriority == 0 || uniquePriority == _topUniquePriority,
-            "Top unique priority of the queue is not the same as the specified one");
+        uint160 exitId = ExitPriority.parseExitId(uniquePriority);
+        require(_topExitId == 0 || exitId == _topExitId,
+            "Top exit id of the queue is not the same as the specified one");
 
-        Exit memory exit = exits[uniquePriority];
+        IExitProcessor processor = delegations[uniquePriority];
         uint256 processedNum = 0;
 
         while (processedNum < _maxExitsToProcess && ExitPriority.parseExitableAt(uniquePriority) < block.timestamp) {
-            delete exits[uniquePriority];
+            delete delegations[uniquePriority];
             queue.delMin();
             processedNum++;
 
-            IExitProcessor processor = exit.exitProcessor;
-            processor.processExit(exit.exitId, _token);
+            processor.processExit(exitId, _token);
 
             if (queue.currentSize() == 0) {
                 break;
             }
 
             uniquePriority = queue.getMin();
-            exit = exits[uniquePriority];
+            exitId = ExitPriority.parseExitId(uniquePriority);
+            processor = delegations[uniquePriority];
         }
 
         emit ProcessedExitsNum(processedNum, _token);

@@ -22,7 +22,7 @@ contract DummyExitGame is IExitProcessor {
     );
 
     // override ExitProcessor interface
-    function processExit(uint192 exitId, address ercContract) public {
+    function processExit(uint160 exitId, address ercContract) public {
         emit ExitFinalizedFromDummyExitGame(exitId, ercContract);
     }
 
@@ -40,7 +40,7 @@ contract DummyExitGame is IExitProcessor {
         exitGameController = ExitGameController(_contract);
     }
 
-    function enqueue(address _token, uint64 _exitableAt, uint256 _txPos, uint192 _exitId, IExitProcessor _exitProcessor) public {
+    function enqueue(address _token, uint64 _exitableAt, uint256 _txPos, uint160 _exitId, IExitProcessor _exitProcessor) public {
         uniquePriorityFromEnqueue = exitGameController.enqueue(_token, _exitableAt, TxPosLib.TxPos(_txPos), _exitId, _exitProcessor);
     }
 

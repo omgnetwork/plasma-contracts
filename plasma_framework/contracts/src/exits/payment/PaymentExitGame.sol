@@ -51,7 +51,7 @@ contract PaymentExitGame is IExitProcessor, PaymentStandardExitRouter, PaymentIn
      * @param exitId The exit id.
      * @param token The token (in ERC20 address or address(0) for ETH) of the exiting output.
      */
-    function processExit(uint192 exitId, address token) external onlyFrom(address(plasmaFramework)) {
+    function processExit(uint160 exitId, address token) external onlyFrom(address(plasmaFramework)) {
         if (ExitId.isStandardExit(exitId)) {
             PaymentStandardExitRouter.processStandardExit(exitId, token);
         } else {

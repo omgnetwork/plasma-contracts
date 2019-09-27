@@ -8,7 +8,7 @@ contract VaultRegistry is Operated {
 
     mapping(uint256 => address) private _vaults;
     mapping(address => uint256) private _vaultToId;
-    Quarantine.Data private _quarantine;
+    Quarantine.Data private _vaultQuarantine;
 
     event VaultRegistered(
         uint256 vaultId,
@@ -18,13 +18,13 @@ contract VaultRegistry is Operated {
     constructor (uint256 _minExitPeriod, uint256 _initialImmuneVaults)
         public
     {
-        _quarantine.quarantinePeriod = _minExitPeriod;
-        _quarantine.immunitiesRemaining = _initialImmuneVaults;
+        _vaultQuarantine.quarantinePeriod = _minExitPeriod;
+        _vaultQuarantine.immunitiesRemaining = _initialImmuneVaults;
     }
 
     modifier onlyFromNonQuarantinedVault() {
         require(_vaultToId[msg.sender] > 0, "Not being called by registered vaults");
-        require(!_quarantine.isQuarantined(msg.sender), "Vault is quarantined.");
+        require(!_vaultQuarantine.isQuarantined(msg.sender), "Vault is quarantined.");
         _;
     }
 
@@ -41,7 +41,7 @@ contract VaultRegistry is Operated {
 
         _vaults[_vaultId] = _vaultAddress;
         _vaultToId[_vaultAddress] = _vaultId;
-        _quarantine.quarantine(_vaultAddress);
+        _vaultQuarantine.quarantine(_vaultAddress);
 
         emit VaultRegistered(_vaultId, _vaultAddress);
     }

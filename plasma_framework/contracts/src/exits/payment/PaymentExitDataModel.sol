@@ -47,6 +47,6 @@ library PaymentExitDataModel {
     }
 
     struct InFlightExitMap {
-        mapping (uint192 => PaymentExitDataModel.InFlightExit) exits;
+        mapping (uint160 => PaymentExitDataModel.InFlightExit) exits;
     }
 }

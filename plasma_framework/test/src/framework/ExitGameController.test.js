@@ -148,8 +148,6 @@ contract('ExitGameController', () => {
 
         describe('when successfully enqueued', () => {
             beforeEach(async () => {
-                this.originExitQueueNonce = await this.controller.exitQueueNonce();
-
                 this.enqueueTx = await this.dummyExitGame.enqueue(
                     this.dummyExit.token,
                     this.dummyExit.exitableAt,
@@ -157,11 +155,6 @@ contract('ExitGameController', () => {
                     this.dummyExit.exitId,
                     this.dummyExit.exitProcessor,
                 );
-            });
-
-            it('increases `exitQueueNonce` once', async () => {
-                expect(await this.controller.exitQueueNonce())
-                    .to.be.bignumber.equal(this.originExitQueueNonce.add(new BN(1)));
             });
 
             it('inserts the new unique priority to the queue', async () => {
@@ -176,10 +169,9 @@ contract('ExitGameController', () => {
 
             it('saves the exit data to map', async () => {
                 const uniquePriority = await this.dummyExitGame.uniquePriorityFromEnqueue();
-                const exit = await this.controller.exits(uniquePriority);
+                const exitProcessor = await this.controller.delegations(uniquePriority);
 
-                expect(exit.exitProcessor).to.equal(this.dummyExit.exitProcessor);
-                expect(exit.exitId).to.be.bignumber.equal(new BN(this.dummyExit.exitId));
+                expect(exitProcessor).to.equal(this.dummyExit.exitProcessor);
             });
 
             it('emits an ExitEnqueued event', async () => {
@@ -244,7 +236,7 @@ contract('ExitGameController', () => {
             );
         });
 
-        it('rejects when the "top unique priority" mismatches with the specified one', async () => {
+        it('rejects when the top exit id mismatches with the specified one', async () => {
             await this.dummyExitGame.enqueue(
                 this.dummyExit.token,
                 this.dummyExit.exitableAt,
@@ -253,10 +245,10 @@ contract('ExitGameController', () => {
                 this.dummyExit.exitProcessor,
             );
 
-            const nonExistingUniqeuePriority = 123;
+            const nonExistingExitId = this.dummyExit.exitId - 1;
             await expectRevert(
-                this.controller.processExits(this.dummyToken, nonExistingUniqeuePriority, 1),
-                'Top unique priority of the queue is not the same as the specified one',
+                this.controller.processExits(this.dummyToken, nonExistingExitId, 1),
+                'Top exit id of the queue is not the same as the specified one',
             );
         });
 
@@ -329,9 +321,8 @@ contract('ExitGameController', () => {
 
                 await this.controller.processExits(this.dummyToken, 0, 1);
 
-                const exit = await this.controller.exits(uniquePriority);
-                expect(exit.exitProcessor).to.equal(constants.ZERO_ADDRESS);
-                expect(exit.exitId).to.be.bignumber.equal(new BN(0));
+                const exitProcessor = await this.controller.delegations(uniquePriority);
+                expect(exitProcessor).to.equal(constants.ZERO_ADDRESS);
             });
 
             it('should stop to process when queue becomes empty', async () => {
@@ -421,7 +412,7 @@ contract('ExitGameController', () => {
                     this.dummyExit.token,
                     this.dummyExit.exitableAt,
                     this.dummyExit.txPos,
-                    this.dummyExit.exitId,
+                    this.dummyExit.exitId + 1,
                     this.dummyExit.exitProcessor,
                 );
             });
