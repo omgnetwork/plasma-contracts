@@ -15,6 +15,7 @@ library PaymentInFlightExitModelUtils {
         pure
         returns (bool)
     {
+        require(index < MAX_INPUT_NUM, "Invalid input index");
         return ife.exitMap.bitSet(uint8(index));
     }
 
@@ -23,6 +24,7 @@ library PaymentInFlightExitModelUtils {
         pure
         returns (bool)
     {
+        require(index < MAX_OUTPUT_NUM, "Invalid output index");
         uint8 indexInExitMap = uint8(index + MAX_INPUT_NUM);
         return ife.exitMap.bitSet(indexInExitMap);
     }
@@ -30,24 +32,28 @@ library PaymentInFlightExitModelUtils {
     function setInputPiggybacked(ExitModel.InFlightExit storage ife, uint16 index)
         internal
     {
+        require(index < MAX_INPUT_NUM, "Invalid input index");
         ife.exitMap = ife.exitMap.setBit(uint8(index));
     }
 
     function clearInputPiggybacked(ExitModel.InFlightExit storage ife, uint16 index)
         internal
     {
+        require(index < MAX_INPUT_NUM, "Invalid input index");
         ife.exitMap = ife.exitMap.clearBit(uint8(index));
     }
 
     function clearOutputPiggyback(ExitModel.InFlightExit storage ife, uint16 index)
         internal
     {
+        require(index < MAX_OUTPUT_NUM, "Invalid output index");
         ife.exitMap = ife.exitMap.clearBit(uint8(index));
     }
 
     function setOutputPiggybacked(ExitModel.InFlightExit storage ife, uint16 index)
         internal
     {
+        require(index < MAX_OUTPUT_NUM, "Invalid output index");
         uint8 indexInExitMap = uint8(index + MAX_INPUT_NUM);
         ife.exitMap = ife.exitMap.setBit(indexInExitMap);
     }
@@ -55,6 +61,7 @@ library PaymentInFlightExitModelUtils {
     function clearOutputPiggybacked(ExitModel.InFlightExit storage ife, uint16 index)
         internal
     {
+        require(index < MAX_OUTPUT_NUM, "Invalid output index");
         uint8 indexInExitMap = uint8(index + MAX_INPUT_NUM);
         ife.exitMap = ife.exitMap.clearBit(indexInExitMap);
     }
