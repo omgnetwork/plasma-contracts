@@ -15,10 +15,13 @@ const PaymentProcessStandardExit = artifacts.require('PaymentProcessStandardExit
 const PaymentProcessInFlightExit = artifacts.require('PaymentProcessInFlightExit');
 const PlasmaFramework = artifacts.require('PlasmaFramework');
 
-const { TX_TYPE, OUTPUT_TYPE, VAULT_ID } = require('./configs/types_and_ids.js');
-const { PROTOCOL } = require('./configs/framework_variables.js');
+const config = require('./config.js');
 
 module.exports = async (_) => {
+    const PAYMENT_OUTPUT_TYPE = config.registerKeys.outputTypes.payment;
+    const PAYMENT_TX_TYPE = config.registerKeys.txTypes.payment;
+    const PAYMENT_V2_TX_TYPE = config.registerKeys.txTypes.paymentV2;
+
     // deploy and link exit game controllers
     const startStandardExit = await PaymentStartStandardExit.new();
     const challengeStandardExit = await PaymentChallengeStandardExit.new();
@@ -44,8 +47,8 @@ module.exports = async (_) => {
     const spendingConditionRegistry = await SpendingConditionRegistry.new();
     const stateVerifier = await PaymentTransactionStateTransitionVerifier.new();
     const plasmaFramework = await PlasmaFramework.deployed();
-    const ethVaultAddress = await plasmaFramework.vaults(VAULT_ID.ETH);
-    const erc20VaultAddress = await plasmaFramework.vaults(VAULT_ID.ERC20);
+    const ethVaultAddress = await plasmaFramework.vaults(config.registerKeys.vaultId.eth);
+    const erc20VaultAddress = await plasmaFramework.vaults(config.registerKeys.vaultId.erc20);
     const paymentExitGame = await PaymentExitGame.new(
         plasmaFramework.address,
         ethVaultAddress,
@@ -53,36 +56,36 @@ module.exports = async (_) => {
         outputGuardHandlerRegistry.address,
         spendingConditionRegistry.address,
         stateVerifier.address,
-        TX_TYPE.PAYMENT,
+        PAYMENT_TX_TYPE,
     );
 
     // handle output guard handler
-    const paymentOutputGuardHandler = await PaymentOutputGuardHandler.new(OUTPUT_TYPE.PAYMENT);
+    const paymentOutputGuardHandler = await PaymentOutputGuardHandler.new(PAYMENT_OUTPUT_TYPE);
     await outputGuardHandlerRegistry.registerOutputGuardHandler(
-        OUTPUT_TYPE.PAYMENT, paymentOutputGuardHandler.address,
+        PAYMENT_OUTPUT_TYPE, paymentOutputGuardHandler.address,
     );
     await outputGuardHandlerRegistry.renounceOwnership();
 
     // handle spending condition
     const paymentToPaymentCondition = await PaymentOutputToPaymentTxCondition.new(
-        plasmaFramework.address, OUTPUT_TYPE.PAYMENT, TX_TYPE.PAYMENT,
+        plasmaFramework.address, PAYMENT_OUTPUT_TYPE, PAYMENT_TX_TYPE,
     );
     const paymentToPaymentV2Condition = await PaymentOutputToPaymentTxCondition.new(
-        plasmaFramework.address, OUTPUT_TYPE.PAYMENT, TX_TYPE.PAYMENT_V2,
+        plasmaFramework.address, PAYMENT_OUTPUT_TYPE, PAYMENT_V2_TX_TYPE,
     );
     await spendingConditionRegistry.registerSpendingCondition(
-        OUTPUT_TYPE.PAYMENT, TX_TYPE.PAYMENT, paymentToPaymentCondition.address,
+        PAYMENT_OUTPUT_TYPE, PAYMENT_TX_TYPE, paymentToPaymentCondition.address,
     );
     await spendingConditionRegistry.registerSpendingCondition(
-        OUTPUT_TYPE.PAYMENT, TX_TYPE.PAYMENT_V2, paymentToPaymentV2Condition.address,
+        PAYMENT_OUTPUT_TYPE, PAYMENT_V2_TX_TYPE, paymentToPaymentV2Condition.address,
     );
     await spendingConditionRegistry.renounceOwnership();
 
     // register the exit game to framework
     await plasmaFramework.registerExitGame(
-        TX_TYPE.PAYMENT,
+        PAYMENT_TX_TYPE,
         paymentExitGame.address,
-        PROTOCOL.MORE_VP,
+        config.frameworks.protocols.moreVp,
         { from: global.authorityAddress },
     );
 };

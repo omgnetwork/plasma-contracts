@@ -2,13 +2,13 @@
 
 const PlasmaFramework = artifacts.require('PlasmaFramework');
 
-const { TX_TYPE, VAULT_ID } = require('./configs/types_and_ids.js');
+const config = require('./config.js');
 
 module.exports = async (_) => {
     const plasmaFramework = await PlasmaFramework.deployed();
-    const ethVault = await plasmaFramework.vaults(VAULT_ID.ETH);
-    const erc20Vault = await plasmaFramework.vaults(VAULT_ID.ERC20);
-    const paymentExitGame = await plasmaFramework.exitGames(TX_TYPE.PAYMENT);
+    const ethVault = await plasmaFramework.vaults(config.registerKeys.vaultId.eth);
+    const erc20Vault = await plasmaFramework.vaults(config.registerKeys.vaultId.erc20);
+    const paymentExitGame = await plasmaFramework.exitGames(config.registerKeys.txTypes.payment);
 
     console.log(JSON.stringify({
         plasma_framework: `${PlasmaFramework.address}`.toLowerCase(),

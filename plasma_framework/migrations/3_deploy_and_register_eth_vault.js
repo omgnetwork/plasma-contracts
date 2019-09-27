@@ -2,7 +2,7 @@ const EthDepositVerifier = artifacts.require('EthDepositVerifier');
 const EthVault = artifacts.require('EthVault');
 const PlasmaFramework = artifacts.require('PlasmaFramework');
 
-const { VAULT_ID } = require('./configs/types_and_ids.js');
+const config = require('./config.js');
 
 module.exports = async (_) => {
     const ethDepositVerifier = await EthDepositVerifier.new();
@@ -11,7 +11,7 @@ module.exports = async (_) => {
 
     const plasmaFramework = await PlasmaFramework.deployed();
     await plasmaFramework.registerVault(
-        VAULT_ID.ETH,
+        config.registerKeys.vaultId.eth,
         ethVault.address,
         { from: global.authorityAddress },
     );

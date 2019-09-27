@@ -1,15 +1,13 @@
 const PlasmaFramework = artifacts.require('PlasmaFramework');
 
-const {
-    MIN_EXIT_PERIOD, INITIAL_IMMUNE_VAULTS, INITIAL_IMMUNE_EXIT_GAMES,
-} = require('./configs/framework_variables.js');
+const config = require('./config.js');
 
 module.exports = async (deployer) => {
     await deployer.deploy(
         PlasmaFramework,
-        MIN_EXIT_PERIOD,
-        INITIAL_IMMUNE_VAULTS,
-        INITIAL_IMMUNE_EXIT_GAMES,
+        config.frameworks.minExitPeriod,
+        config.frameworks.initialImmuneVaults,
+        config.frameworks.initialImmuneExitGames,
         { from: global.authorityAddress },
     );
 
