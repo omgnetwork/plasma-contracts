@@ -52,7 +52,7 @@ contract PaymentExitGame is IExitProcessor, PaymentStandardExitRouter, PaymentIn
      * @notice Callback processes exit function for the PlasmaFramework to call.
      * @dev in ERC20, each address of the ERC contract would represent the token directly.
      * @param exitId The exit id.
-     * @param token The token (in ERC20 address or address(0) for ETH) of the exiting output.
+     * @param token The token (ERC20 address or address(0) for ETH) of the exiting output.
      */
     function processExit(uint160 exitId, address token) external onlyFrom(address(plasmaFramework)) {
         if (ExitId.isStandardExit(exitId)) {
