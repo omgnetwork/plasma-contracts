@@ -1,5 +1,3 @@
-const EthVault = artifacts.require('EthVault');
-const Erc20Vault = artifacts.require('Erc20Vault');
 const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry');
 const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry');
 const PaymentExitGame = artifacts.require('PaymentExitGame');
@@ -17,71 +15,73 @@ const PaymentProcessStandardExit = artifacts.require('PaymentProcessStandardExit
 const PaymentProcessInFlightExit = artifacts.require('PaymentProcessInFlightExit');
 const PlasmaFramework = artifacts.require('PlasmaFramework');
 
-const { TX_TYPE, OUTPUT_TYPE } = require('./configs/types_and_ids.js');
+const { TX_TYPE, OUTPUT_TYPE, VAULT_ID } = require('./configs/types_and_ids.js');
 const { PROTOCOL } = require('./configs/framework_variables.js');
 
-module.exports = async (deployer) => {
-    await deployer.deploy(PaymentChallengeStandardExit);
-    await deployer.deploy(PaymentChallengeIFENotCanonical);
-    await deployer.deploy(PaymentChallengeIFEInputSpent);
-    await deployer.deploy(PaymentChallengeIFEOutputSpent);
-    await deployer.deploy(PaymentStartInFlightExit);
-    await deployer.deploy(PaymentStartStandardExit);
-    await deployer.deploy(PaymentPiggybackInFlightExit);
-    await deployer.deploy(PaymentProcessStandardExit);
-    await deployer.deploy(PaymentProcessInFlightExit);
+module.exports = async (_) => {
+    // deploy and link exit game controllers
+    const startStandardExit = await PaymentStartStandardExit.new();
+    const challengeStandardExit = await PaymentChallengeStandardExit.new();
+    const processStandardExit = await PaymentProcessStandardExit.new();
+    const startInFlightExit = await PaymentStartInFlightExit.new();
+    const piggybackInFlightExit = await PaymentPiggybackInFlightExit.new();
+    const challengeInFlightExitNotCanonical = await PaymentChallengeIFENotCanonical.new();
+    const challengeIFEInputSpent = await PaymentChallengeIFEInputSpent.new();
+    const challengeIFEOutput = await PaymentChallengeIFEOutputSpent.new();
+    const processInFlightExit = await PaymentProcessInFlightExit.new();
+    await PaymentExitGame.link('PaymentStartStandardExit', startStandardExit.address);
+    await PaymentExitGame.link('PaymentChallengeStandardExit', challengeStandardExit.address);
+    await PaymentExitGame.link('PaymentProcessStandardExit', processStandardExit.address);
+    await PaymentExitGame.link('PaymentStartInFlightExit', startInFlightExit.address);
+    await PaymentExitGame.link('PaymentPiggybackInFlightExit', piggybackInFlightExit.address);
+    await PaymentExitGame.link('PaymentChallengeIFENotCanonical', challengeInFlightExitNotCanonical.address);
+    await PaymentExitGame.link('PaymentChallengeIFEInputSpent', challengeIFEInputSpent.address);
+    await PaymentExitGame.link('PaymentChallengeIFEOutputSpent', challengeIFEOutput.address);
+    await PaymentExitGame.link('PaymentProcessInFlightExit', processInFlightExit.address);
 
-    await deployer.link(PaymentChallengeStandardExit, PaymentExitGame);
-    await deployer.link(PaymentChallengeIFENotCanonical, PaymentExitGame);
-    await deployer.link(PaymentChallengeIFEInputSpent, PaymentExitGame);
-    await deployer.link(PaymentChallengeIFEOutputSpent, PaymentExitGame);
-    await deployer.link(PaymentStartInFlightExit, PaymentExitGame);
-    await deployer.link(PaymentStartStandardExit, PaymentExitGame);
-    await deployer.link(PaymentPiggybackInFlightExit, PaymentExitGame);
-    await deployer.link(PaymentProcessStandardExit, PaymentExitGame);
-    await deployer.link(PaymentProcessInFlightExit, PaymentExitGame);
-
-    await deployer.deploy(OutputGuardHandlerRegistry);
-    await deployer.deploy(SpendingConditionRegistry);
-    await deployer.deploy(PaymentTransactionStateTransitionVerifier);
-
-    await deployer.deploy(
-        PaymentExitGame,
-        PlasmaFramework.address,
-        EthVault.address,
-        Erc20Vault.address,
-        OutputGuardHandlerRegistry.address,
-        SpendingConditionRegistry.address,
-        PaymentTransactionStateTransitionVerifier.address,
-        TX_TYPE.PAYMENT,
-        { gas: 6500000 },
-    );
-
-    await deployer.deploy(
-        PaymentOutputToPaymentTxCondition,
-        PlasmaFramework.address,
-        OUTPUT_TYPE.PAYMENT,
+    // deploy exit game
+    const outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
+    const spendingConditionRegistry = await SpendingConditionRegistry.new();
+    const stateVerifier = await PaymentTransactionStateTransitionVerifier.new();
+    const plasmaFramework = await PlasmaFramework.deployed();
+    const ethVaultAddress = await plasmaFramework.vaults(VAULT_ID.ETH);
+    const erc20VaultAddress = await plasmaFramework.vaults(VAULT_ID.ERC20);
+    const paymentExitGame = await PaymentExitGame.new(
+        plasmaFramework.address,
+        ethVaultAddress,
+        erc20VaultAddress,
+        outputGuardHandlerRegistry.address,
+        spendingConditionRegistry.address,
+        stateVerifier.address,
         TX_TYPE.PAYMENT,
     );
 
-    await deployer.deploy(PaymentOutputGuardHandler, OUTPUT_TYPE.PAYMENT);
-    const outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.deployed();
-
+    // handle output guard handler
+    const paymentOutputGuardHandler = await PaymentOutputGuardHandler.new(OUTPUT_TYPE.PAYMENT);
     await outputGuardHandlerRegistry.registerOutputGuardHandler(
-        OUTPUT_TYPE.PAYMENT, PaymentOutputGuardHandler.address,
+        OUTPUT_TYPE.PAYMENT, paymentOutputGuardHandler.address,
     );
     await outputGuardHandlerRegistry.renounceOwnership();
 
-    const spendingConditionRegistry = await SpendingConditionRegistry.deployed();
+    // handle spending condition
+    const paymentToPaymentCondition = await PaymentOutputToPaymentTxCondition.new(
+        plasmaFramework.address, OUTPUT_TYPE.PAYMENT, TX_TYPE.PAYMENT,
+    );
+    const paymentToPaymentV2Condition = await PaymentOutputToPaymentTxCondition.new(
+        plasmaFramework.address, OUTPUT_TYPE.PAYMENT, TX_TYPE.PAYMENT_V2,
+    );
     await spendingConditionRegistry.registerSpendingCondition(
-        OUTPUT_TYPE.PAYMENT, TX_TYPE.PAYMENT, PaymentOutputToPaymentTxCondition.address,
+        OUTPUT_TYPE.PAYMENT, TX_TYPE.PAYMENT, paymentToPaymentCondition.address,
+    );
+    await spendingConditionRegistry.registerSpendingCondition(
+        OUTPUT_TYPE.PAYMENT, TX_TYPE.PAYMENT_V2, paymentToPaymentV2Condition.address,
     );
     await spendingConditionRegistry.renounceOwnership();
 
-    const plasmaFramework = await PlasmaFramework.deployed();
+    // register the exit game to framework
     await plasmaFramework.registerExitGame(
         TX_TYPE.PAYMENT,
-        PaymentExitGame.address,
+        paymentExitGame.address,
         PROTOCOL.MORE_VP,
         { from: global.authorityAddress },
     );

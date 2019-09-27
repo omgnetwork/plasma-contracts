@@ -4,17 +4,15 @@ const PlasmaFramework = artifacts.require('PlasmaFramework');
 
 const { VAULT_ID } = require('./configs/types_and_ids.js');
 
-module.exports = async (deployer) => {
-    await deployer.deploy(Erc20DepositVerifier);
-    await deployer.deploy(Erc20Vault, PlasmaFramework.address);
-
-    const erc20Vault = await Erc20Vault.deployed();
-    await erc20Vault.setDepositVerifier(Erc20DepositVerifier.address);
+module.exports = async (_) => {
+    const erc20DepositVerifier = await Erc20DepositVerifier.new();
+    const erc20Vault = await Erc20Vault.new(PlasmaFramework.address, { from: global.authorityAddress });
+    await erc20Vault.setDepositVerifier(erc20DepositVerifier.address, { from: global.authorityAddress });
 
     const plasmaFramework = await PlasmaFramework.deployed();
     await plasmaFramework.registerVault(
         VAULT_ID.ERC20,
-        Erc20Vault.address,
+        erc20Vault.address,
         { from: global.authorityAddress },
     );
 };

@@ -1,5 +1,6 @@
 const TX_TYPE = {
     PAYMENT: 1,
+    PAYMENT_V2: 2,
 };
 
 const OUTPUT_TYPE = {
