@@ -66,7 +66,7 @@ contract PaymentStandardExitRouter is
     }
 
     /**
-     * @notice Getter functions to recieve standard exit data of the PaymentExitGame.
+     * @notice Getter functions to retrieve standard exit data of the PaymentExitGame.
      * @param exitId the exit id of such standard exit.
      */
     function standardExits(uint160 exitId) public view returns (PaymentExitDataModel.StandardExit memory) {

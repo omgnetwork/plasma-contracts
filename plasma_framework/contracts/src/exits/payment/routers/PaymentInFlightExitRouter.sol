@@ -104,8 +104,8 @@ contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue {
     }
 
     /**
-     * @notice Getter functions to recieve in-flight exit data of the PaymentExitGame.
-     * @param exitId the exit id of such in-flight exit
+     * @notice Getter functions to retrieve in-flight exit data of the PaymentExitGame.
+     * @param exitId the exit id of the in-flight exit
      */
     function inFlightExits(uint160 exitId) public view returns (PaymentExitDataModel.InFlightExit memory) {
         return inFlightExitMap.exits[exitId];
@@ -162,9 +162,9 @@ contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue {
     }
 
     /**
-     * @notice Respond to the non canonical challenge by providing position and prove the correctness of it.
+     * @notice Respond to a non canonical challenge by providing position and proving the correctness of it.
      * @param inFlightTx the rlp encoded in-flight transaction.
-     * @param inFlightTxPos the UTXO position of the in-flight exit. Should hardcode 0 for the outputIndex.
+     * @param inFlightTxPos the UTXO position of the in-flight exit. The outputIndex should be set to 0.
      * @param inFlightTxInclusionProof inclusion proof for the in-flight tx.
      */
     function respondToNonCanonicalChallenge(

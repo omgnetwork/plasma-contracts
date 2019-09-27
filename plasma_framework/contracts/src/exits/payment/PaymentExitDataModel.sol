@@ -9,12 +9,12 @@ library PaymentExitDataModel {
 
     /**
      * @dev Exit model for a standard exit
-     * @param exitable a boolean to represent whether such exit is able to exit or not. The challenge game uses this to flag the result.
+     * @param exitable a boolean that represents whether the exit is able to exit or not. The challenge game uses this to flag the result.
      * @param utxoPos the utxo position of the exiting output of the transaction
      * @param outputId the output identifier in OutputId format
-     * @param exitTarget the address that the exit would withdraw fund to
-     * @param amount the amount of fund to be withdrawn from this exit
-     * @param bondSize the bond size put for this exit to start. Bond is used to cover the cost of challenges.
+     * @param exitTarget the address that the exit will withdraw funds to
+     * @param amount the amount of funds to be withdrawn with this exit
+     * @param bondSize the size of the bond put up for this exit to start. The bond is used to cover the cost of challenges.
      */
     struct StandardExit {
         bool exitable;
@@ -45,17 +45,17 @@ library PaymentExitDataModel {
 
     /**
      * @dev Exit model for an in-flight exit
-     * @param isCanonical a boolean to represent whether such exit is canonical or not.
-     *                    Canonical exit would withdraw from output while non-canonical would withdraw from input.
+     * @param isCanonical a boolean that represents whether the exit is canonical or not.
+     *                    A canonical exit withdraws the outputs while a non-canonical exit withdraws the  inputs.
      * @param exitStartTimestamp the timestamp when the exit starts.
      * @param exitMap a bitmap that stores piggyback flags.
-     * @param position the youngest position of the inputs of the in-flight exit transaction.
-     * @param inputs some necessary data for inputs for withdrawal on input.
-     * @param outputs some necessary data for outputs for withdrawal on output.
-     * @param bondOwner who would receive the bond when in-flight exit is processed.
-     * @param bondSize the bond size put for this exit to start. Bond is used to cover the cost of challenges.
-     * @param oldestCompetitorPosition the recorded oldest position of competing transactions.
-     *                                 The transaction is only canonical if all competing tx is younger than the exiting one.
+     * @param position the position of the youngest input of the in-flight exit transaction.
+     * @param inputs data necessary for withdrawing inputs.
+     * @param outputs data necessary for withdrawing outputs.
+     * @param bondOwner receiver of the bond when the in-flight exit is processed.
+     * @param bondSize the size of the bond put up for this exit to start. The bond is used to cover the cost of challenges.
+     * @param oldestCompetitorPosition the position of oldest competing transaction.
+     *                                 The exiting transaction is only canonical if all competing transactions are younger than it.
      */
     struct InFlightExit {
         // Canonicity is assumed at start, then can be challenged and is set to `false`.

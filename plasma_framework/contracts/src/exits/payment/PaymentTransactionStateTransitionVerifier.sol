@@ -12,13 +12,13 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 /**
 * @notice Verifies state transitions for payment transaction
-* @dev For Payment transaction to be valid, the state transition should check sum of inputs larger than sum of outputs
+* @dev For Payment transaction to be valid, the state transition should check that the sum of the inputs is larger than the sum of the outputs
 */
 contract PaymentTransactionStateTransitionVerifier {
     using SafeMath for uint256;
 
     /**
-     * @dev For Payment transaction to be valid, the state transition should check sum of inputs larger than sum of outputs
+     * @dev For Payment transaction to be valid, the state transition should check that the sum of the inputs is larger than the sum of the outputs
      */
     function isCorrectStateTransition(
         bytes calldata txBytes,
