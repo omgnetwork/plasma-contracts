@@ -1,4 +1,5 @@
 const rlp = require('rlp');
+const { BN } = require('openzeppelin-test-helpers');
 const { EMPTY_BYTES_32, OUTPUT_TYPE } = require('../helpers/constants.js');
 
 const TransactionTypes = {
@@ -14,6 +15,9 @@ class PaymentTransactionOutput {
     }
 
     formatForRlpEncoding() {
+        if (this.amount instanceof BN) {
+            return [this.outputType, this.outputGuard, this.token, web3.utils.numberToHex(this.amount)];
+        }
         return [this.outputType, this.outputGuard, this.token, this.amount];
     }
 

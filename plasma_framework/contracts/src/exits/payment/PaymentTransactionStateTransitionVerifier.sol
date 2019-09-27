@@ -8,10 +8,14 @@ import "../../transactions/WireTransaction.sol";
 import "../../transactions/PaymentTransactionModel.sol";
 import "../../transactions/outputs/PaymentOutputModel.sol";
 
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+
 /*
 * Verifies state transitions for payment transaction
 */
 contract PaymentTransactionStateTransitionVerifier {
+    using SafeMath for uint256;
+
     function isCorrectStateTransition(
         bytes calldata txBytes,
         bytes[] calldata inputTxs,
@@ -107,7 +111,7 @@ contract PaymentTransactionStateTransitionVerifier {
     function sumAmounts(WireTransaction.Output[] memory outputs) private pure returns (uint256) {
         uint256 amount = 0;
         for (uint i = 0; i < outputs.length; i++) {
-            amount += outputs[i].amount;
+            amount = amount.add(outputs[i].amount);
         }
         return amount;
     }
