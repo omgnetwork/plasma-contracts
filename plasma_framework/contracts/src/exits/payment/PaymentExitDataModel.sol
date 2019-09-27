@@ -50,8 +50,8 @@ library PaymentExitDataModel {
      * @param exitStartTimestamp the timestamp when the exit starts.
      * @param exitMap a bitmap that stores piggyback flags.
      * @param position the position of the youngest input of the in-flight exit transaction.
-     * @param inputs data necessary for withdrawing inputs.
-     * @param outputs data necessary for withdrawing outputs.
+     * @param inputs fix sized array of data necessary for withdrawing inputs. would be with empty default value if not set.
+     * @param outputs fix sized array of data necessary for withdrawing outputs. would be with empty default value if not set.
      * @param bondOwner receiver of the bond when the in-flight exit is processed.
      * @param bondSize the size of the bond put up for this exit to start. The bond is used to cover the cost of challenges.
      * @param oldestCompetitorPosition the position of oldest competing transaction.
