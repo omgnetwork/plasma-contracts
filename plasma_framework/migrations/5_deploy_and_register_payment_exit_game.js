@@ -17,11 +17,10 @@ const PaymentProcessStandardExit = artifacts.require('PaymentProcessStandardExit
 const PaymentProcessInFlightExit = artifacts.require('PaymentProcessInFlightExit');
 const PlasmaFramework = artifacts.require('PlasmaFramework');
 
-module.exports = async (deployer) => {
-    const PAYMENT_TX_TYPE = 1;
-    const PAYMENT_OUTPUT_TYPE = 1;
-    const MORE_VP_PROTOCOL = 2;
+const { TX_TYPE, OUTPUT_TYPE } = require('./configs/types_and_ids.js');
+const { PROTOCOL } = require('./configs/framework_variables.js');
 
+module.exports = async (deployer) => {
     await deployer.deploy(PaymentChallengeStandardExit);
     await deployer.deploy(PaymentChallengeIFENotCanonical);
     await deployer.deploy(PaymentChallengeIFEInputSpent);
@@ -54,37 +53,36 @@ module.exports = async (deployer) => {
         OutputGuardHandlerRegistry.address,
         SpendingConditionRegistry.address,
         PaymentTransactionStateTransitionVerifier.address,
-        PAYMENT_TX_TYPE,
+        TX_TYPE.PAYMENT,
         { gas: 6500000 },
     );
 
     await deployer.deploy(
         PaymentOutputToPaymentTxCondition,
         PlasmaFramework.address,
-        PAYMENT_OUTPUT_TYPE,
-        PAYMENT_TX_TYPE,
+        OUTPUT_TYPE.PAYMENT,
+        TX_TYPE.PAYMENT,
     );
 
-    await deployer.deploy(PaymentOutputGuardHandler, PAYMENT_OUTPUT_TYPE);
+    await deployer.deploy(PaymentOutputGuardHandler, OUTPUT_TYPE.PAYMENT);
     const outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.deployed();
 
     await outputGuardHandlerRegistry.registerOutputGuardHandler(
-        PAYMENT_OUTPUT_TYPE, PaymentOutputGuardHandler.address,
+        OUTPUT_TYPE.PAYMENT, PaymentOutputGuardHandler.address,
     );
-
-    // TODO: await outputGuardHandlerRegistry.renounceOwnership();
+    await outputGuardHandlerRegistry.renounceOwnership();
 
     const spendingConditionRegistry = await SpendingConditionRegistry.deployed();
     await spendingConditionRegistry.registerSpendingCondition(
-        PAYMENT_OUTPUT_TYPE, PAYMENT_TX_TYPE, PaymentOutputToPaymentTxCondition.address,
+        OUTPUT_TYPE.PAYMENT, TX_TYPE.PAYMENT, PaymentOutputToPaymentTxCondition.address,
     );
     await spendingConditionRegistry.renounceOwnership();
 
     const plasmaFramework = await PlasmaFramework.deployed();
     await plasmaFramework.registerExitGame(
-        PAYMENT_TX_TYPE,
+        TX_TYPE.PAYMENT,
         PaymentExitGame.address,
-        MORE_VP_PROTOCOL,
+        PROTOCOL.MORE_VP,
         { from: global.authorityAddress },
     );
 };
