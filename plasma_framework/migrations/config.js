@@ -1,6 +1,6 @@
 const clonedeep = require('lodash.clonedeep');
 
-const env = process.env.ENV_NAME || 'development';
+const env = process.env.NODE_ENV || 'development';
 
 const development = {
     frameworks: {
