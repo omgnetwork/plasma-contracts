@@ -87,7 +87,7 @@ contract BlockController is Operated, VaultRegistry {
     function submitDepositBlock(bytes32 _blockRoot) public onlyFromNonQuarantinedVault returns (uint256) {
         require(nextDepositBlock < childBlockInterval, "Exceeded limit of deposits per child block interval");
 
-        uint256 blknum = nextChildBlock - childBlockInterval + nextDepositBlock;
+        uint256 blknum = getDepositBlockNumber();
         blocks[blknum] = BlockModel.Block({
             root : _blockRoot,
             timestamp : block.timestamp
@@ -95,5 +95,9 @@ contract BlockController is Operated, VaultRegistry {
 
         nextDepositBlock++;
         return blknum;
+    }
+
+    function getDepositBlockNumber() public view returns (uint256) {
+        return nextChildBlock - childBlockInterval + nextDepositBlock;
     }
 }

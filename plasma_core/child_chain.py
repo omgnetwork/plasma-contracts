@@ -53,7 +53,10 @@ class ChildChain(object):
             del self.parent_queue[block.number]
         return True
 
-    def validate_transaction(self, tx, temp_spent={}):
+    def validate_transaction(self, tx, temp_spent=None):
+        if not temp_spent:
+            temp_spent = dict()
+
         input_amount = 0
         output_amount = sum([o.amount for o in tx.outputs])
 

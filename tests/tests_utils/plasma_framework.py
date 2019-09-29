@@ -1,9 +1,13 @@
 import enum
 
+from web3.exceptions import MismatchedABI
+
 from plasma_core.constants import CHILD_BLOCK_INTERVAL
 from plasma_core.transaction import TxOutputTypes, TxTypes
 from plasma_core.utils.transactions import decode_utxo_id
+from plasma_core.utils.exit_priority import parse_exit_priority
 from .constants import EXIT_PERIOD, INITIAL_IMMUNE_EXIT_GAMES, INITIAL_IMMUNE_VAULTS
+from .convenience_wrappers import ConvenienceContractWrapper
 
 
 class Protocols(enum.Enum):
@@ -23,6 +27,7 @@ class PlasmaFramework:
         self._setup_vaults(get_contract, maintainer)
         self._setup_output_guards(get_contract, maintainer)
         self._setup_spending_conditions(get_contract, maintainer)
+        self._setup_state_verifiers(get_contract, maintainer)
         self._setup_exit_games(get_contract, maintainer)
 
     def _setup_deposit_verifiers(self, get_contract, maintainer):
@@ -40,7 +45,7 @@ class PlasmaFramework:
         self.plasma_framework.registerVault(2, self.erc20_vault.address, **{"from": maintainer.address})
 
     def _setup_spending_conditions(self, get_contract, maintainer):
-        self.payment_spending_condition_registry = get_contract("PaymentSpendingConditionRegistry", sender=maintainer)
+        self.spending_condition_registry = get_contract("SpendingConditionRegistry", sender=maintainer)
 
     def _setup_output_guards(self, get_contract, maintainer):
         self.output_guard_registry = get_contract("OutputGuardHandlerRegistry", sender=maintainer)
@@ -52,8 +57,12 @@ class PlasmaFramework:
                                                               self.payment_output_guard.address,
                                                               **{'from': maintainer.address})
 
+    def _setup_state_verifiers(self, get_contract, maintainer):
+        self.payment_state_verifier = get_contract('PaymentTransactionStateTransitionVerifier', sender=maintainer)
+
     def _setup_exit_games(self, get_contract, maintainer):
         self.payment_exit_game = self._get_payment_exit_game(get_contract, maintainer)
+
         self.plasma_framework.registerExitGame(TxTypes.PAYMENT.value,
                                                self.payment_exit_game.address,
                                                Protocols.MoreVP.value,
@@ -61,9 +70,19 @@ class PlasmaFramework:
                                                )
 
     def _get_payment_exit_game(self, get_contract, maintainer):
-        start_exit_lib = get_contract('PaymentStartStandardExit', sender=maintainer)
-        challenge_exit_lib = get_contract('PaymentChallengeStandardExit', sender=maintainer)
-        process_exit_lib = get_contract('PaymentProcessStandardExit', sender=maintainer)
+        libs = [
+            'PaymentStartStandardExit',
+            'PaymentChallengeStandardExit',
+            'PaymentProcessStandardExit',
+            'PaymentStartInFlightExit',
+            'PaymentPiggybackInFlightExit',
+            'PaymentChallengeIFENotCanonical',
+            'PaymentChallengeIFEInputSpent',
+            'PaymentChallengeIFEOutputSpent',
+            'PaymentProcessInFlightExit',
+        ]
+
+        libs, libs_map = self._deploy_libraries(libs, get_contract, maintainer)
 
         payment_exit_game = get_contract("PaymentExitGame",
                                          sender=maintainer,
@@ -71,14 +90,47 @@ class PlasmaFramework:
                                                self.eth_vault.address,
                                                self.erc20_vault.address,
                                                self.output_guard_registry.address,
-                                               self.payment_spending_condition_registry.address),
-                                         libraries={
-                                             "PaymentStartStandardExit": start_exit_lib.address,
-                                             "PaymentChallengeStandardExit": challenge_exit_lib.address,
-                                             "PaymentProcessStandardExit": process_exit_lib.address,
-                                         }
-                                         )
+                                               self.spending_condition_registry.address,
+                                               self.payment_state_verifier.address,
+                                               TxTypes.PAYMENT.value,
+                                               ),
+                                         libraries=libs_map)
+
+        # collect events emitted by libraries
+        for lib in libs:
+            lib_events = lib.get_contract_events()
+            for event in lib_events:
+                try:
+                    if hasattr(payment_exit_game.events, event.event_name):
+                        raise AttributeError(event.event_name)
+                except MismatchedABI:
+                    pass
+                finally:
+                    setattr(payment_exit_game.events, event.event_name, event)
+            payment_exit_game.events._events += lib.events._events
         return payment_exit_game
+
+    @staticmethod
+    def _deploy_libraries(libraries, get_contract, sender):
+        lib_map = dict()
+        libs = []
+        for lib_name in libraries:
+            library = get_contract(lib_name, sender=sender)
+            lib_map[lib_name] = library.address
+            libs.append(library)
+
+        return libs, lib_map
+
+    def event_filters(self, w3):
+        filters = dict()
+
+        for attribute in dir(self):
+            attribute = getattr(self, attribute)
+            if isinstance(attribute, ConvenienceContractWrapper):
+                contract_filter = w3.eth.filter({'address': attribute.address, 'fromBlock': 'latest'})
+                filters[attribute.address] = attribute, contract_filter
+
+        return filters
 
     def blocks(self, block):
         return self.plasma_framework.blocks(block)
@@ -139,11 +191,7 @@ class PlasmaFramework:
         raise NotImplementedError
 
     def processExits(self, token, top_exit_id, exits_to_process):
-        next_exit_id = top_exit_id if top_exit_id != 0 else self.getNextExit(token)
-
-        tx1_hash = self.plasma_framework.processExits(token, top_exit_id, exits_to_process)
-        tx2_hash = self.payment_exit_game.processExit(next_exit_id)
-        return tx1_hash, tx2_hash
+        return self.plasma_framework.processExits(token, top_exit_id, exits_to_process)
 
     def getInFlightExitId(self, tx):
         raise NotImplementedError
@@ -158,8 +206,7 @@ class PlasmaFramework:
 
     def getNextExit(self, token):
         exit_priority = self.plasma_framework.getNextExit(token)
-        _, exit_id = self.plasma_framework.exits(exit_priority)
-        return exit_id
+        return parse_exit_priority(exit_priority)
 
     def unpackExitId(self, priority):
         raise NotImplementedError
@@ -176,6 +223,9 @@ class PlasmaFramework:
     def nextDepositBlock(self):
         return self.plasma_framework.nextDepositBlock()
 
+    def getDepositBlockNumber(self):
+        return self.plasma_framework.getDepositBlockNumber()
+
     def childBlockInterval(self):
         return self.plasma_framework.childBlockInterval()
 
@@ -184,3 +234,8 @@ class PlasmaFramework:
 
     def exits(self, exit_id):
         return self.payment_exit_game.standardExits(exit_id)
+
+    # additional convenience proxies (not taken from RootChain) #
+
+    def isOutputSpent(self, utxo_pos):
+        return self.plasma_framework.isOutputSpent(utxo_pos)

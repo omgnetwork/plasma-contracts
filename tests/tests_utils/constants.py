@@ -1,4 +1,7 @@
-EXIT_PERIOD = 4 * 60  # 4 minutes
+import plasma_core.constants
+
+EXIT_PERIOD = plasma_core.constants.MIN_EXIT_PERIOD
+
 INITIAL_IMMUNE_VAULTS = 2
 INITIAL_IMMUNE_EXIT_GAMES = 1
 

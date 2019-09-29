@@ -16,15 +16,15 @@ class StandardExit:
 
     Attributes:
         owner (str): Address of the exit's owner.
-        token (str): Address of the token being exited.
         amount (int): How much value is being exited.
-        position (int): UTXO position.
+        position (int): UTXO position
+        exitable (boolean): whether will exit at processing
+        output_id (str): output exit identifier (not exit id)
+        bond_size (int): value of paid bond
     """
 
-    def __init__(self, exitable, utxo_pos, output_id, token, exit_target, amount,
-                 bond_size):
+    def __init__(self, exitable, utxo_pos, output_id, exit_target, amount, bond_size):
         self.owner = exit_target
-        self.token = token
         self.amount = amount
         self.position = utxo_pos
         self.exitable = exitable
@@ -32,7 +32,7 @@ class StandardExit:
         self.bond_size = bond_size
 
     def to_list(self):
-        return [self.owner, self.token, self.amount, self.position]
+        return [self.owner, self.amount, self.position, self.exitable, self.output_id, self.bond_size]
 
     def __str__(self):
         return self.to_list().__str__()
@@ -43,7 +43,7 @@ class StandardExit:
     def __eq__(self, other):
         if hasattr(other, "to_list"):
             return self.to_list() == other.to_list()
-        return (self.to_list() == other) or (self.to_list()[:3] == other)
+        return (self.to_list() == other) or (self.to_list()[:4] == other)
 
 
 class PlasmaBlock:
@@ -120,20 +120,19 @@ class TestingLanguage:
         self.accounts = accounts
         self.operator = self.accounts[0]
         self.child_chain = ChildChain(operator=self.operator)
-
-        # TODO: collect events from all contracts
-        # self.events_filter = w3.eth.filter({'address': root_chain.address, 'fromBlock': 'latest'})
+        self.events_filters: dict = plasma_framework.event_filters(w3)
 
     def flush_events(self):
-        logs = self.events_filter.get_new_entries()
+        logs = [(contract, event_filter.get_new_entries()) for contract, event_filter in self.events_filters.values()]
         events = []
-        contract_events = self.root_chain.get_contract_events()
-        for contract_event in contract_events:
-            for log in logs:
-                try:
-                    events.append(contract_event().processLog(log))
-                except MismatchedABI:
-                    pass
+        for contract, contract_logs in logs:
+            contract_events = contract.get_contract_events()
+            for contract_event in contract_events:
+                for log in contract_logs:
+                    try:
+                        events.append((contract.address, contract_event().processLog(log)))
+                    except MismatchedABI:
+                        pass
         return events
 
     def submit_block(self, transactions, signer=None, force_invalid=False):
@@ -157,7 +156,7 @@ class TestingLanguage:
 
     def deposit(self, owner, amount):
         deposit_tx = Transaction(outputs=[(owner.address, NULL_ADDRESS, amount)])
-        blknum = self.root_chain.nextDepositBlock()
+        blknum = self.root_chain.getDepositBlockNumber()
         self.root_chain.deposit(deposit_tx.encoded, **{'from': owner.address, 'value': amount})
         deposit_id = encode_utxo_id(blknum, 0, 0)
         block = Block([deposit_tx], number=blknum)
@@ -179,7 +178,7 @@ class TestingLanguage:
         deposit_tx = Transaction(outputs=[(owner.address, token.address, amount)])
         token.mint(owner.address, amount)
         token.approve(self.root_chain.erc20_vault.address, amount, **{'from': owner.address})
-        blknum = self.root_chain.nextDepositBlock()
+        blknum = self.root_chain.getDepositBlockNumber()
         pre_balance = self.get_balance(self.root_chain.erc20_vault, token)
         self.root_chain.depositFrom(deposit_tx.encoded, **{'from': owner.address})
         balance = self.get_balance(self.root_chain.erc20_vault, token)
@@ -330,7 +329,7 @@ class TestingLanguage:
             utxo_pos (int): position of utxo being exited
 
         Returns:
-            tuple: (owner (address), token (address), amount (int))
+            tuple: (owner (address), amount (int))
         """
 
         exit_id = self.get_standard_exit_id(utxo_pos)

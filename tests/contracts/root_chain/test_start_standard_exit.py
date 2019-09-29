@@ -9,7 +9,7 @@ from testlang.testlang import StandardExit
 
 def test_start_standard_exit_should_succeed(testlang, utxo):
     testlang.start_standard_exit(utxo.spend_id, utxo.owner)
-    assert testlang.get_standard_exit(utxo.spend_id) == [utxo.owner.address, NULL_ADDRESS_HEX, utxo.amount]
+    assert testlang.get_standard_exit(utxo.spend_id) == [utxo.owner.address, utxo.amount, utxo.spend_id, True]
 
 
 @pytest.mark.parametrize("num_outputs", [1, 2, 3, 4])
@@ -24,7 +24,7 @@ def test_start_standard_exit_multiple_outputs_should_succeed(testlang, num_outpu
     output_index = num_outputs - 1
     output_id = spend_id + output_index
     testlang.start_standard_exit(output_id, owners[output_index])
-    assert testlang.get_standard_exit(output_id) == [owners[output_index].address, NULL_ADDRESS_HEX, 1]
+    assert testlang.get_standard_exit(output_id) == [owners[output_index].address, 1, output_id, True]
 
 
 def test_start_standard_exit_twice_should_fail(testlang, utxo):
@@ -78,7 +78,7 @@ def test_start_standard_exit_old_utxo_has_required_exit_period_to_start_exit(tes
     testlang.forward_timestamp(minimal_required_period - 1)
     testlang.start_standard_exit(utxo.spend_id, utxo.owner)
 
-    next_exit_id = testlang.root_chain.getNextExit(NULL_ADDRESS)
+    _, _, next_exit_id = testlang.root_chain.getNextExit(NULL_ADDRESS)
     next_exit = StandardExit(*testlang.root_chain.exits(next_exit_id))
     assert next_exit.position == utxo.spend_id
 
@@ -128,7 +128,7 @@ def test_start_standard_exit_from_deposit_must_be_exitable_in_minimal_finalizati
     testlang.forward_timestamp(required_exit_period + 1)
     testlang.process_exits(NULL_ADDRESS, 0, 1)
 
-    assert testlang.get_standard_exit(deposit_id) == [NULL_ADDRESS_HEX, NULL_ADDRESS_HEX, 0]
+    assert testlang.get_standard_exit(deposit_id) == [NULL_ADDRESS_HEX, 0, 0, False]
 
 
 @pytest.mark.skip("Skipped due to mix with IFE")
