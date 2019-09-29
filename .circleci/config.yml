@@ -21,17 +21,17 @@ commands:
           command: echo 'export PATH="$(npm bin):$PATH"' >> $BASH_ENV
       - restore_cache:
           keys:
-            - v2-dependencies-{{ checksum "plasma_framework/package-lock.json" }}
+            - v4-dependencies-{{ checksum "plasma_framework/package-lock.json" }}
       - run:
           name: Install dependencies
           working_directory: ~/repo/plasma_framework
           command: |
             npm install
-            rm -rf node_modules/*/.git # workaround for problem with git dependencies
+            find node_modules -name .git | xargs rm -fr  # workaround for a problem with git dependencies
       - save_cache:
           paths:
             - plasma_framework/node_modules
-          key: v2-dependencies-{{ checksum "plasma_framework/package-lock.json" }}
+          key: v4-dependencies-{{ checksum "plasma_framework/package-lock.json" }}
 
   setup_python_env:
     steps:
