@@ -2,9 +2,9 @@ import enum
 
 import rlp
 from eth_utils import address, keccak
-from rlp.sedes import big_endian_int, binary, CountableList, Binary
+from rlp.sedes import big_endian_int, CountableList, Binary
 
-from plasma_core.constants import NULL_SIGNATURE, NULL_ADDRESS
+from plasma_core.constants import NULL_SIGNATURE, NULL_ADDRESS, EMPTY_METADATA
 from plasma_core.utils.eip712_struct_hash import hash_struct
 from plasma_core.utils.transactions import encode_utxo_id
 
@@ -52,7 +52,7 @@ class Transaction(rlp.Serializable):
         ('tx_type', big_endian_int),
         ('inputs', CountableList(Binary.fixed_length(32), NUM_TXOS)),
         ('outputs', CountableList(TransactionOutput, NUM_TXOS)),
-        ('metadata', binary)
+        ('metadata', Binary.fixed_length(32))
     )
 
     def __init__(self,
@@ -70,6 +70,8 @@ class Transaction(rlp.Serializable):
             inputs = []
         if outputs is None:
             outputs = []
+        if metadata is None:
+            metadata = EMPTY_METADATA
         if signatures is None:
             signatures = [NULL_SIGNATURE] * len(inputs)
         if signers is None:
@@ -110,9 +112,6 @@ class Transaction(rlp.Serializable):
             obj.outputs,
             obj.metadata
         ]
-        if not obj.metadata:
-            sedes_list.pop(-1)
-            tx_elems.pop(-1)
 
         tx_sedes = rlp.sedes.List(sedes_list)
         return tx_sedes.serialize(tx_elems)
