@@ -10,21 +10,24 @@
     "dotenv": "^8.0.0"
   },
   "devDependencies": {
-    "@codechecks/client": "^0.1.5",
+    "@codechecks/client": "^0.1.10",
     "chai": "^4.2.0",
+    "coveralls": "^3.0.6",
     "eslint": "^5.3.0",
     "eslint-config-airbnb-base": "^13.1.0",
     "eslint-plugin-import": "^2.17.3",
     "eth-gas-reporter": "^0.2.12",
     "eth-sig-util": "^2.2.0",
     "ethereumjs-util": "^6.1.0",
-    "openzeppelin-test-helpers": "^0.4.0",
+    "openzeppelin-test-helpers": "^0.4.3",
     "rlp": "^2.2.3",
     "solhint": "^2.2.0",
-    "truffle": "^5.0.25"
+    "solidity-coverage": "^0.7.0-beta.2",
+    "truffle": "^5.0.37"
   },
   "scripts": {
     "test": "truffle test",
+    "coverage": "truffle run coverage",
     "linter": "node_modules/eslint/bin/eslint.js . --fix",
     "linter-sol": "node_modules/.bin/solhint --max-warnings 0 \"contracts/**/*.sol\""
   },
