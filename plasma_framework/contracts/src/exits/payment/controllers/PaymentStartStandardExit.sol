@@ -24,6 +24,9 @@ library PaymentStartStandardExit {
     using UtxoPosLib for UtxoPosLib.UtxoPos;
     using TxFinalization for TxFinalization.Verifier;
 
+    // we use a single exit processing queue
+    uint256 constant public EXIT_FUNDING_VAULT_ID = 1;
+
     struct Controller {
         IExitProcessor exitProcessor;
         PlasmaFramework framework;
@@ -186,7 +189,7 @@ library PaymentStartStandardExit {
         );
 
         data.controller.framework.enqueue(
-            data.output.token, exitableAt, data.utxoPos.txPos(),
+            EXIT_FUNDING_VAULT_ID, data.output.token, exitableAt, data.utxoPos.txPos(),
             data.exitId, data.controller.exitProcessor
         );
     }

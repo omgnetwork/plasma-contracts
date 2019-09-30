@@ -36,6 +36,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
     };
     const MAX_INPUT_SIZE = 4;
     const PAYMENT_TX_TYPE = 1;
+    const VAULT_ID = 1;
 
     before('deploy and link with controller lib', async () => {
         const startInFlightExit = await PaymentStartInFlightExit.new();
@@ -242,6 +243,8 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
                     YOUNGEST_POSITION_BLOCK, web3.utils.sha3('dummy root'), this.youngestPositionTimestamp,
                 );
                 await this.exitGame.setInFlightExit(this.testData.exitId, this.testData.inFlightExitData);
+                await this.framework.addVault(VAULT_ID);
+                await this.framework.addToken(VAULT_ID, ETH);
 
                 this.piggybackTx = await this.exitGame.piggybackInFlightExitOnInput(
                     this.testData.argsInputOne, { from: inputOwner, value: this.piggybackBondSize.toString() },

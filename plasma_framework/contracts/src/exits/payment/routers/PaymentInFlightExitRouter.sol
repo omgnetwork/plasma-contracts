@@ -80,7 +80,7 @@ contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue {
             outputGuardHandlerRegistry,
             supportedTxType
         );
-        
+
         challengeInputSpentController = PaymentChallengeIFEInputSpent.buildController(
             framework,
             spendingConditionRegistry,

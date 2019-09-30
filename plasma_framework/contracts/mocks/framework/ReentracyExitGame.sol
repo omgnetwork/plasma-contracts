@@ -9,6 +9,10 @@ import "../../src/vaults/EthVault.sol";
 import "../../src/utils/TxPosLib.sol";
 
 contract ReentrancyExitGame is IExitProcessor {
+
+    // we use a single exit processing queue
+    uint256 constant public EXIT_FUNDING_VAULT_ID = 1;
+
     ExitGameController public exitGameController;
     address public testToken;
     uint256 public reentryMaxExitToProcess;
@@ -22,10 +26,12 @@ contract ReentrancyExitGame is IExitProcessor {
     // override ExitProcessor interface
     // This would call the processExits back to mimic reentracy attack
     function processExit(uint160, address) public {
-        exitGameController.processExits(testToken, 0, reentryMaxExitToProcess);
+        exitGameController.processExits(EXIT_FUNDING_VAULT_ID, testToken, 0, reentryMaxExitToProcess);
     }
 
-    function enqueue(address _token, uint64 _exitableAt, uint256 _txPos, uint160 _exitId, IExitProcessor _exitProcessor) public {
-        exitGameController.enqueue(_token, _exitableAt, TxPosLib.TxPos(_txPos), _exitId, _exitProcessor);
+    function enqueue(uint256 _vaultId, address _token, uint64 _exitableAt, uint256 _txPos, uint160 _exitId, IExitProcessor _exitProcessor)
+    public
+    {
+        exitGameController.enqueue(_vaultId, _token, _exitableAt, TxPosLib.TxPos(_txPos), _exitId, _exitProcessor);
     }
 }

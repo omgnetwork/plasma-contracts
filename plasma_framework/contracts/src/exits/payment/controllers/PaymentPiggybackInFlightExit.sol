@@ -27,6 +27,9 @@ library PaymentPiggybackInFlightExit {
     uint8 constant public MAX_INPUT_NUM = 4;
     uint8 constant public MAX_OUTPUT_NUM = 4;
 
+    // we use a single exit processing queue
+    uint256 constant public EXIT_FUNDING_VAULT_ID = 1;
+
     struct Controller {
         PlasmaFramework framework;
         IsDeposit.Predicate isDeposit;
@@ -169,7 +172,7 @@ library PaymentPiggybackInFlightExit {
         bool isPositionDeposit = false;
         uint64 exitableAt = controller.exitableTimestampCalculator.calculate(now, blockTimestamp, isPositionDeposit);
 
-        controller.framework.enqueue(token, exitableAt, utxoPos.txPos(), exitId, controller.exitProcessor);
+        controller.framework.enqueue(EXIT_FUNDING_VAULT_ID, token, exitableAt, utxoPos.txPos(), exitId, controller.exitProcessor);
     }
 
     function getOutputGuardFromPaymentTxBytes(bytes memory txBytes, uint16 outputIndex)

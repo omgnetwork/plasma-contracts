@@ -24,7 +24,9 @@ contract SpyPlasmaFrameworkForExitGame is PlasmaFramework {
     }
 
     /** override for test */
-    function enqueue(address _token, uint64 _exitableAt, TxPosLib.TxPos calldata _txPos, uint160 _exitId, IExitProcessor _exitProcessor)
+    function enqueue(uint256 /*vaultId*/, address _token, uint64 _exitableAt,
+            TxPosLib.TxPos calldata _txPos, uint160 _exitId, IExitProcessor _exitProcessor
+    )
         external
         returns (uint256)
     {

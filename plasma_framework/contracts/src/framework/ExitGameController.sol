@@ -8,12 +8,19 @@ import "./utils/ExitPriority.sol";
 import "../utils/TxPosLib.sol";
 
 contract ExitGameController is ExitGameRegistry {
+
     mapping (uint256 => IExitProcessor) public delegations;
-    mapping (address => PriorityQueue) public exitsQueues;
+    mapping (uint256 => bool) public registeredVaults;
+    mapping (bytes32 => PriorityQueue) public exitsQueues;
     mapping (bytes32 => bool) public isOutputSpent;
 
     event TokenAdded(
+        uint256 vaultId,
         address token
+    );
+
+    event VaultAdded(
+        uint256 vaultId
     );
 
     event ProcessedExitsNum(
@@ -30,86 +37,114 @@ contract ExitGameController is ExitGameRegistry {
         public
         ExitGameRegistry(_minExitPeriod, _initialImmuneExitGames)
     {
-        address ethToken = address(0);
-        exitsQueues[ethToken] = new PriorityQueue();
     }
 
     /**
-     * @notice Add token to the plasma framework and initiate the priority queue.
-     * @notice ETH token is supported by default on deployment.
-     * @dev the queue is created as a new contract instance.
-     * @param _token Address of the token.
+     * @notice Returns true only if vault has been registered.
+     * @param vaultId Id of the vault.
      */
-    function addToken(address _token) external {
-        require(!hasToken(_token), "Such token has already been added");
+    function hasVault(uint256 vaultId) public view returns (bool) {
+        return registeredVaults[vaultId] == true;
+    }
 
-        exitsQueues[_token] = new PriorityQueue();
-        emit TokenAdded(_token);
+    /**
+     * @notice Enables vault to be used for processing exits.
+     * @dev the queue is created as a new contract instance.
+     * @param vaultId Id of the vault.
+     */
+    function addVault(uint256 vaultId) external onlyOperator {
+        require(vaultId != 0, "Vault id must not be 0");
+        require(!hasVault(vaultId), "The vault has already been registered");
+        registeredVaults[vaultId] = true;
+        emit VaultAdded(vaultId);
     }
 
     /**
      * @notice Checks if queue for particular token was created.
-     * @param _token Address of the token.
+     * @param vaultId Id of the vault that handles the token
+     * @param token Address of the token.
      * @return bool represents whether the queue for a token was created.
      */
-    function hasToken(address _token) public view returns (bool) {
-        return address(exitsQueues[_token]) != address(0);
+    function vaultHasToken(uint256 vaultId, address token) public view returns (bool) {
+        bytes32 key = exitQueueKey(vaultId, token);
+        return address(exitsQueues[key]) != address(0);
+    }
+
+    /**
+     * @notice Add token to the plasma framework and initiate the priority queue.
+     * @dev the queue is created as a new contract instance.
+     * @param vaultId Id of the vault
+     * @param token Address of the token.
+     */
+    function addToken(uint256 vaultId, address token) external {
+        require(hasVault(vaultId), "Vault is not registered for funding exits");
+        require(!vaultHasToken(vaultId, token), "Such token has already been added");
+        bytes32 key = exitQueueKey(vaultId, token);
+        exitsQueues[key] = new PriorityQueue();
+        emit TokenAdded(vaultId, token);
+    }
+
+    function hasToken(bytes32 key) private view returns (bool) {
+        return address(exitsQueues[key]) != address(0);
     }
 
     /**
      * @notice Enqueue exits from exit game contracts
      * @dev Caller of this function should add "pragma experimental ABIEncoderV2;" on top of file
-     * @param _token Token for the exit
-     * @param _exitableAt The earliest time that such exit can be processed
-     * @param _txPos Transaction position for the exit priority. For SE it should be the exit tx, for IFE it should be the youngest input tx position.
-     * @param _exitId Id for the exit processor contract to understand how to process such exit
-     * @param _exitProcessor The exit processor contract that would be called during "processExits"
+     * @param vaultId Vault id of the vault that stores exiting funds
+     * @param token Token for the exit
+     * @param exitableAt The earliest time that such exit can be processed
+     * @param txPos Transaction position for the exit priority. For SE it should be the exit tx, for IFE it should be the youngest input tx position.
+     * @param exitId Id for the exit processor contract to understand how to process such exit
+     * @param exitProcessor The exit processor contract that would be called during "processExits"
      * @return a unique priority number computed for the exit
      */
-    function enqueue(address _token, uint64 _exitableAt, TxPosLib.TxPos calldata _txPos, uint160 _exitId, IExitProcessor _exitProcessor)
+    function enqueue(uint256 vaultId, address token, uint64 exitableAt, TxPosLib.TxPos calldata txPos, uint160 exitId, IExitProcessor exitProcessor)
         external
         onlyFromNonQuarantinedExitGame
         returns (uint256)
     {
-        require(hasToken(_token), "Such token has not been added to the plasma framework yet");
-        PriorityQueue queue = exitsQueues[_token];
+        bytes32 key = exitQueueKey(vaultId, token);
+        require(hasToken(key), "Such token has not been added to the plasma framework yet");
+        PriorityQueue queue = exitsQueues[key];
 
-        uint256 uniquePriority = ExitPriority.computePriority(_exitableAt, _txPos, _exitId);
-       
+        uint256 uniquePriority = ExitPriority.computePriority(exitableAt, txPos, exitId);
+
         queue.insert(uniquePriority);
-        delegations[uniquePriority] = _exitProcessor;
+        delegations[uniquePriority] = exitProcessor;
 
-        emit ExitQueued(_exitId, uniquePriority);
+        emit ExitQueued(exitId, uniquePriority);
         return uniquePriority;
     }
 
     /**
      * @notice Processes any exits that have completed the challenge period.
-     * @param _token Token type to process.
-     * @param _topExitId Unique priority of the first exit that should be processed. Set to zero to skip the check.
-     * @param _maxExitsToProcess Maximal number of exits to process.
+     * @param vaultId Vault id of the vault that stores exiting funds
+     * @param token Token type to process.
+     * @param topExitId Unique priority of the first exit that should be processed. Set to zero to skip the check.
+     * @param maxExitsToProcess Maximal number of exits to process.
      * @return total number of processed exits
      */
-    function processExits(address _token, uint160 _topExitId, uint256 _maxExitsToProcess) external {
-        require(hasToken(_token), "Such token has not been added to the plasma framework yet");
-
-        PriorityQueue queue = exitsQueues[_token];
+    function processExits(uint256 vaultId, address token, uint160 topExitId, uint256 maxExitsToProcess) external {
+        bytes32 key = exitQueueKey(vaultId, token);
+        require(hasToken(key), "Such token has not been added to the plasma framework yet");
+        PriorityQueue queue = exitsQueues[key];
         require(queue.currentSize() > 0, "Exit queue is empty");
 
         uint256 uniquePriority = queue.getMin();
         uint160 exitId = ExitPriority.parseExitId(uniquePriority);
-        require(_topExitId == 0 || exitId == _topExitId,
+        require(topExitId == 0 || exitId == topExitId,
             "Top exit id of the queue is not the same as the specified one");
 
         IExitProcessor processor = delegations[uniquePriority];
         uint256 processedNum = 0;
 
-        while (processedNum < _maxExitsToProcess && ExitPriority.parseExitableAt(uniquePriority) < block.timestamp) {
+        while (processedNum < maxExitsToProcess && ExitPriority.parseExitableAt(uniquePriority) < block.timestamp) {
             delete delegations[uniquePriority];
             queue.delMin();
             processedNum++;
 
-            processor.processExit(exitId, _token);
+            processor.processExit(exitId, token);
 
             if (queue.currentSize() == 0) {
                 break;
@@ -120,7 +155,7 @@ contract ExitGameController is ExitGameRegistry {
             processor = delegations[uniquePriority];
         }
 
-        emit ProcessedExitsNum(processedNum, _token);
+        emit ProcessedExitsNum(processedNum, token);
     }
 
     /**
@@ -154,5 +189,9 @@ contract ExitGameController is ExitGameRegistry {
     function flagOutputSpent(bytes32 _outputId) external onlyFromNonQuarantinedExitGame {
         require(_outputId != bytes32(""), "Should not flag with empty outputId");
         isOutputSpent[_outputId] = true;
+    }
+
+    function exitQueueKey(uint256 vaultId, address token) private pure returns (bytes32) {
+        return keccak256(abi.encodePacked(vaultId, token));
     }
 }

@@ -34,7 +34,7 @@ const {
 } = require('../../../helpers/constants.js');
 const { MerkleTree } = require('../../../helpers/merkle.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
-const { computeDepositOutputId, spentOnGas } = require('../../../helpers/utils.js');
+const { computeDepositOutputId, spentOnGas, exitQueueKey } = require('../../../helpers/utils.js');
 const { sign } = require('../../../helpers/sign.js');
 const { hashTx } = require('../../../helpers/paymentEip712.js');
 const { buildUtxoPos, utxoPosToTxPos } = require('../../../helpers/positions.js');
@@ -47,6 +47,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
     const DEPOSIT_VALUE = 1000000;
     const INITIAL_IMMUNE_VAULTS = 2; // ETH and ERC20 vault
     const INITIAL_IMMUNE_EXIT_GAMES = 1; // 1 for PaymentExitGame
+    const VAULT_ID = 1;
 
     const alicePrivateKey = '0x7151e5dab6f8e95b5436515b83f423c4df64fe4c6149f864daa209b26adb10ca';
     let alice;
@@ -108,6 +109,9 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
 
         await this.framework.registerVault(1, this.ethVault.address);
         await this.framework.registerVault(2, this.erc20Vault.address);
+
+        await this.framework.addVault(VAULT_ID);
+        await this.framework.addToken(VAULT_ID, ETH);
 
         const outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
         const paymentOutputGuardHandler = await PaymentOutputGuardHandler.new(OUTPUT_TYPE.PAYMENT);
@@ -236,7 +240,8 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
                 });
 
                 it('should put the exit data into the queue of framework', async () => {
-                    const priorityQueueAddress = await this.framework.exitsQueues(ETH);
+                    const queueKey = exitQueueKey(VAULT_ID, ETH);
+                    const priorityQueueAddress = await this.framework.exitsQueues(queueKey);
                     const priorityQueue = await PriorityQueue.at(priorityQueueAddress);
                     const uniquePriority = await priorityQueue.getMin();
 
@@ -263,7 +268,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
 
                         this.aliceBalanceBeforeProcessExit = new BN(await web3.eth.getBalance(alice));
 
-                        await this.framework.processExits(ETH, 0, 1);
+                        await this.framework.processExits(VAULT_ID, ETH, 0, 1);
                     });
 
                     it('should return the fund plus standard exit bond to Alice', async () => {
@@ -313,7 +318,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
 
                         this.bobBalanceBeforeProcessExit = new BN(await web3.eth.getBalance(bob));
 
-                        await this.framework.processExits(ETH, 0, 1);
+                        await this.framework.processExits(VAULT_ID, ETH, 0, 1);
                     });
 
                     it('should return the output amount plus standard exit bond to Bob', async () => {
@@ -407,7 +412,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
                         beforeEach(async () => {
                             await time.increase(time.duration.weeks(2).add(time.duration.seconds(1)));
 
-                            const { receipt } = await this.framework.processExits(ETH, 0, 1);
+                            const { receipt } = await this.framework.processExits(VAULT_ID, ETH, 0, 1);
                             this.processExitsReceipt = receipt;
                         });
 
@@ -447,11 +452,11 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
 
             describe('Given ERC20 token added to the PlasmaFramework', () => {
                 beforeEach(async () => {
-                    await this.framework.addToken(this.erc20.address);
+                    await this.framework.addToken(VAULT_ID, this.erc20.address);
                 });
 
                 it('should have the ERC20 token', async () => {
-                    expect(await this.framework.hasToken(this.erc20.address)).to.be.true;
+                    expect(await this.framework.vaultHasToken(VAULT_ID, this.erc20.address)).to.be.true;
                 });
 
                 describe('When Alice starts standard exit on the ERC20 deposit tx', () => {
@@ -485,7 +490,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
                             this.aliceEthBalanceBeforeProcessExit = new BN(await web3.eth.getBalance(alice));
                             this.aliceErc20BalanceBeforeProcessExit = new BN(await this.erc20.balanceOf(alice));
 
-                            await this.framework.processExits(this.erc20.address, 0, 1);
+                            await this.framework.processExits(VAULT_ID, this.erc20.address, 0, 1);
                         });
 
                         it('should return the standard exit bond in ETH to Alice', async () => {
