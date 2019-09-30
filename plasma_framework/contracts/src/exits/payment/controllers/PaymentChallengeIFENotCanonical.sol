@@ -25,6 +25,9 @@ library PaymentChallengeIFENotCanonical {
     using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
     using TxFinalization for TxFinalization.Verifier;
 
+    /**
+     * @dev supportedTxType is there to enable reuse of code in different Payment Tx versions
+     */
     struct Controller {
         PlasmaFramework framework;
         IsDeposit.Predicate isDeposit;

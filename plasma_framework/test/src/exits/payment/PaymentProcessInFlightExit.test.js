@@ -74,7 +74,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
             exitTarget: constants.ZERO_ADDRESS,
             token: constants.ZERO_ADDRESS,
             amount: 0,
-            piggybackBondSize: this.piggybackBondSize.toString(),
+            piggybackBondSize: 0,
         };
 
         const inFlightExitData = {

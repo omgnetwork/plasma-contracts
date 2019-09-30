@@ -110,7 +110,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
         await this.framework.registerVault(2, this.erc20Vault.address);
 
         const outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
-        const paymentOutputGuardHandler = await PaymentOutputGuardHandler.new(OUTPUT_TYPE.PAYMENT);
+        const paymentOutputGuardHandler = await PaymentOutputGuardHandler.new();
         await outputGuardHandlerRegistry.registerOutputGuardHandler(
             OUTPUT_TYPE.PAYMENT, paymentOutputGuardHandler.address,
         );

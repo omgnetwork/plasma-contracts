@@ -21,17 +21,17 @@ commands:
           command: echo 'export PATH="$(npm bin):$PATH"' >> $BASH_ENV
       - restore_cache:
           keys:
-            - v2-dependencies-{{ checksum "plasma_framework/package.json" }}
+            - v4-dependencies-{{ checksum "plasma_framework/package-lock.json" }}
       - run:
           name: Install dependencies
           working_directory: ~/repo/plasma_framework
           command: |
             npm install
-            rm -rf node_modules/*/.git # workaround for problem with git dependencies
+            find node_modules -name .git | xargs rm -fr  # workaround for a problem with git dependencies
       - save_cache:
           paths:
             - plasma_framework/node_modules
-          key: v2-dependencies-{{ checksum "plasma_framework/package.json" }}
+          key: v4-dependencies-{{ checksum "plasma_framework/package-lock.json" }}
 
   setup_python_env:
     steps:
@@ -76,6 +76,16 @@ jobs:
           command: npx codechecks
           working_directory: ~/repo/plasma_framework
           
+  Solidity coverage:
+    executor: truffle_executor
+    working_directory: ~/repo
+    steps:
+      - setup_truffle_env
+      - run:
+          name: Run solidity coverage
+          command: npm run coverage && cat coverage/lcov.info | coveralls
+          working_directory: ~/repo/plasma_framework
+
   Javascript linter:
     executor: truffle_executor
     working_directory: ~/repo
@@ -134,6 +144,7 @@ workflows:
   Run truffle tests:
     jobs:
       - Truffle tests
+      - Solidity coverage
       - Javascript linter
       - Solidity linter
   
