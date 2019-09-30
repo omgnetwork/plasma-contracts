@@ -10,22 +10,24 @@ contract PaymentStandardExitRouterMock is PaymentStandardExitRouter {
     PlasmaFramework private framework;
 
     constructor(
-        PlasmaFramework _framework,
-        EthVault _ethVault,
-        Erc20Vault _erc20Vault,
-        OutputGuardHandlerRegistry _outputGuardHandlerRegistry,
-        SpendingConditionRegistry _spendingConditionRegistry
+        PlasmaFramework plasmaFramework,
+        EthVault ethVault,
+        Erc20Vault erc20Vault,
+        OutputGuardHandlerRegistry outputGuardHandlerRegistry,
+        SpendingConditionRegistry spendingConditionRegistry,
+        ITxFinalizationVerifier txFinalizationVerifier
     )
         public
         PaymentStandardExitRouter(
-            _framework,
-            _ethVault,
-            _erc20Vault,
-            _outputGuardHandlerRegistry,
-            _spendingConditionRegistry
+            framework,
+            ethVault,
+            erc20Vault,
+            outputGuardHandlerRegistry,
+            spendingConditionRegistry,
+            txFinalizationVerifier
         )
     {
-        framework = _framework;
+        framework = plasmaFramework;
     }
 
     /** override and calls processStandardExit for test */

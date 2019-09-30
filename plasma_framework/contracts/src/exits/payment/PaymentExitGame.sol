@@ -3,12 +3,13 @@ pragma experimental ABIEncoderV2;
 
 import "./routers/PaymentStandardExitRouter.sol";
 import "./routers/PaymentInFlightExitRouter.sol";
+import "../interfaces/IStateTransitionVerifier.sol";
+import "../interfaces/ITxFinalizationVerifier.sol";
 import "../utils/ExitId.sol";
 import "../../framework/interfaces/IExitProcessor.sol";
 import "../../framework/PlasmaFramework.sol";
 import "../../vaults/EthVault.sol";
 import "../../vaults/Erc20Vault.sol";
-import "../interfaces/IStateTransitionVerifier.sol";
 import "../../utils/OnlyFromAddress.sol";
 
 /**
@@ -25,6 +26,7 @@ contract PaymentExitGame is IExitProcessor, PaymentStandardExitRouter, PaymentIn
         OutputGuardHandlerRegistry outputGuardHandlerRegistry,
         SpendingConditionRegistry spendingConditionRegistry,
         IStateTransitionVerifier stateTransitionVerifier,
+        ITxFinalizationVerifier txFinalizationVerifier,
         uint256 supportTxType
     )
         public
@@ -33,7 +35,8 @@ contract PaymentExitGame is IExitProcessor, PaymentStandardExitRouter, PaymentIn
             ethVault,
             erc20Vault,
             outputGuardHandlerRegistry,
-            spendingConditionRegistry
+            spendingConditionRegistry,
+            txFinalizationVerifier
         )
         PaymentInFlightExitRouter(
             framework,
@@ -42,6 +45,7 @@ contract PaymentExitGame is IExitProcessor, PaymentStandardExitRouter, PaymentIn
             outputGuardHandlerRegistry,
             spendingConditionRegistry,
             stateTransitionVerifier,
+            txFinalizationVerifier,
             supportTxType
         )
     {
