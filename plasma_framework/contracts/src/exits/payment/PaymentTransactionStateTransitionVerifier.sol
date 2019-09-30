@@ -33,7 +33,6 @@ contract PaymentTransactionStateTransitionVerifier {
             return false;
         }
 
-        //TODO: refactor that to smaller function as soon as this issue is resolved: https://github.com/ethereum/solidity/issues/6835
         WireTransaction.Output[] memory inputs = new WireTransaction.Output[](inputTxs.length);
         for (uint i = 0; i < inputTxs.length; i++) {
             uint16 outputIndex = outputIndexOfInputTxs[i];
