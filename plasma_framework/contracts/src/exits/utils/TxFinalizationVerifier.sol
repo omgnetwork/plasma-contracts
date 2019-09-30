@@ -13,7 +13,7 @@ import {TxFinalizationModel as Model} from "../models/TxFinalizationModel.sol";
  * @dev We only implement MoreVP function for now. We would add the MVP functionality in the future when we need it.
  *      The new ExitGame can dependency inject a different implementation that adds the MVP functionality in the future.
  */
-contract TxFinalization is ITxFinalizationVerifier {
+contract TxFinalizationVerifier is ITxFinalizationVerifier {
     using TxPosLib for TxPosLib.TxPos;
 
     /**

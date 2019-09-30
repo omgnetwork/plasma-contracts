@@ -1,4 +1,4 @@
-const TxFinalization = artifacts.require('TxFinalizationWrapper');
+const TxFinalizationVerifier = artifacts.require('TxFinalizationVerifier');
 const PlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 
 const { expect } = require('chai');
@@ -9,13 +9,13 @@ const { MerkleTree } = require('../../../helpers/merkle.js');
 const { sign } = require('../../../helpers/sign.js');
 const { PROTOCOL, EMPTY_BYTES } = require('../../../helpers/constants.js');
 
-contract('TxFinalization', ([richFather]) => {
+contract.only('TxFinalizationVerifier', ([richFather]) => {
     const TEST_BLOCK_NUM = 1000;
     const alicePrivateKey = '0x7151e5dab6f8e95b5436515b83f423c4df64fe4c6149f864daa209b26adb10ca';
     let alice;
 
     before('setup test contract', async () => {
-        this.test = await TxFinalization.new();
+        this.test = await TxFinalizationVerifier.new();
     });
 
     before('setup alice account with custom private key', async () => {
@@ -38,18 +38,18 @@ contract('TxFinalization', ([richFather]) => {
         it('should revert when invalid protocol value provided', async () => {
             const invalidProtocol = 199;
 
-            const verifier = await this.test.getVerifier(
+            const data = [
                 constants.ZERO_ADDRESS,
                 invalidProtocol,
                 EMPTY_BYTES,
-                0,
+                [0],
                 EMPTY_BYTES,
                 EMPTY_BYTES,
                 constants.ZERO_ADDRESS,
-            );
+            ];
 
             await expectRevert(
-                this.test.isStandardFinalized(verifier),
+                this.test.isStandardFinalized(data),
                 'invalid protocol value',
             );
         });
@@ -60,35 +60,23 @@ contract('TxFinalization', ([richFather]) => {
                 const txPos = buildTxPos(TEST_BLOCK_NUM, 0);
                 this.merkle = new MerkleTree([txBytes], 3);
 
-                this.verifier = await this.test.getVerifier(
+                this.data = [
                     this.framework.address,
                     PROTOCOL.MVP,
                     txBytes,
-                    txPos,
+                    [txPos],
                     this.merkle.getInclusionProof(txBytes),
                     sign(this.merkle.root, alicePrivateKey),
                     alice,
-                );
+                ];
             });
 
-            it('should return true given valid confirm sig and inclusion proof', async () => {
+            it('should revert as it is not supported in this implementation', async () => {
                 await this.framework.setBlock(TEST_BLOCK_NUM, this.merkle.root, 0);
-                expect(await this.test.isStandardFinalized(this.verifier)).to.be.true;
-            });
-
-            it('should return false given invalid confirm sig', async () => {
-                const confirmSigAddressIndex = 6;
-                const mismatchConfirmSigAddress = richFather;
-                this.verifier[confirmSigAddressIndex] = mismatchConfirmSigAddress;
-                expect(await this.test.isStandardFinalized(this.verifier)).to.be.false;
-            });
-
-            it('should return false given invalid inclusion proof', async () => {
-                // makes sure the inclusion proof mismatch with the root hash
-                const invalidRoot = web3.utils.sha3('invalid root');
-                await this.framework.setBlock(TEST_BLOCK_NUM, invalidRoot, 0);
-
-                expect(await this.test.isStandardFinalized(this.verifier)).to.be.false;
+                await expectRevert(
+                    this.test.isStandardFinalized(this.data),
+                    'not supporting MVP yet',
+                );
             });
         });
 
@@ -98,21 +86,21 @@ contract('TxFinalization', ([richFather]) => {
                 const txPos = buildTxPos(TEST_BLOCK_NUM, 0);
                 this.merkle = new MerkleTree([txBytes], 3);
 
-                this.verifier = await this.test.getVerifier(
+                this.data = [
                     this.framework.address,
                     PROTOCOL.MORE_VP,
                     txBytes,
-                    txPos,
+                    [txPos],
                     this.merkle.getInclusionProof(txBytes),
                     EMPTY_BYTES,
                     constants.ZERO_ADDRESS,
-                );
+                ];
             });
 
             it('should return true given valid inclusion proof', async () => {
                 await this.framework.setBlock(TEST_BLOCK_NUM, this.merkle.root, 0);
 
-                expect(await this.test.isStandardFinalized(this.verifier)).to.be.true;
+                expect(await this.test.isStandardFinalized(this.data)).to.be.true;
             });
 
             it('should return false given invalid inclusion proof', async () => {
@@ -120,7 +108,7 @@ contract('TxFinalization', ([richFather]) => {
                 const invalidRoot = web3.utils.sha3('invalid root');
                 await this.framework.setBlock(TEST_BLOCK_NUM, invalidRoot, 0);
 
-                expect(await this.test.isStandardFinalized(this.verifier)).to.be.false;
+                expect(await this.test.isStandardFinalized(this.data)).to.be.false;
             });
         });
     });
@@ -129,18 +117,18 @@ contract('TxFinalization', ([richFather]) => {
         it('should revert when invalid protocol value provided', async () => {
             const invalidProtocol = 199;
 
-            const verifier = await this.test.getVerifier(
+            const data = [
                 constants.ZERO_ADDRESS,
                 invalidProtocol,
                 EMPTY_BYTES,
-                0,
+                [0],
                 EMPTY_BYTES,
                 EMPTY_BYTES,
                 constants.ZERO_ADDRESS,
-            );
+            ];
 
             await expectRevert(
-                this.test.isProtocolFinalized(verifier),
+                this.test.isProtocolFinalized(data),
                 'invalid protocol value',
             );
         });
@@ -151,53 +139,41 @@ contract('TxFinalization', ([richFather]) => {
                 const txPos = buildTxPos(TEST_BLOCK_NUM, 0);
                 this.merkle = new MerkleTree([txBytes], 3);
 
-                this.verifier = await this.test.getVerifier(
+                this.data = [
                     this.framework.address,
                     PROTOCOL.MVP,
                     txBytes,
-                    txPos,
+                    [txPos],
                     this.merkle.getInclusionProof(txBytes),
                     sign(this.merkle.root, alicePrivateKey),
                     alice,
-                );
+                ];
             });
 
-            it('should return true given valid confirm sig and inclusion proof', async () => {
+            it('should revert as it is not supported in this implementation', async () => {
                 await this.framework.setBlock(TEST_BLOCK_NUM, this.merkle.root, 0);
-                expect(await this.test.isProtocolFinalized(this.verifier)).to.be.true;
-            });
-
-            it('should return false given invalid confirm sig', async () => {
-                const confirmSigAddressIndex = 6;
-                const mismatchConfirmSigAddress = richFather;
-                this.verifier[confirmSigAddressIndex] = mismatchConfirmSigAddress;
-                expect(await this.test.isProtocolFinalized(this.verifier)).to.be.false;
-            });
-
-            it('should return false given invalid inclusion proof', async () => {
-                // makes sure the inclusion proof mismatch with the root hash
-                const invalidRoot = web3.utils.sha3('invalid root');
-                await this.framework.setBlock(TEST_BLOCK_NUM, invalidRoot, 0);
-
-                expect(await this.test.isProtocolFinalized(this.verifier)).to.be.false;
+                await expectRevert(
+                    this.test.isProtocolFinalized(this.data),
+                    'not supporting MVP yet',
+                );
             });
         });
 
         describe('Given MoreVP protocol', () => {
-            it('should return true given tx exist', async () => {
+            it('should return true when tx exist', async () => {
                 const txBytes = web3.utils.utf8ToHex('dummy tx');
 
-                const verifier = await this.test.getVerifier(
+                const data = [
                     constants.ZERO_ADDRESS,
                     PROTOCOL.MORE_VP,
                     txBytes, // should pass as long as this is non empty
-                    0,
+                    [0],
                     EMPTY_BYTES,
                     EMPTY_BYTES,
                     constants.ZERO_ADDRESS,
-                );
+                ];
 
-                expect(await this.test.isProtocolFinalized(verifier)).to.be.true;
+                expect(await this.test.isProtocolFinalized(data)).to.be.true;
             });
         });
     });
