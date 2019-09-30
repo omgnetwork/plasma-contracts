@@ -19,7 +19,7 @@ contract PaymentStandardExitRouterMock is PaymentStandardExitRouter {
     )
         public
         PaymentStandardExitRouter(
-            framework,
+            plasmaFramework,
             ethVault,
             erc20Vault,
             outputGuardHandlerRegistry,

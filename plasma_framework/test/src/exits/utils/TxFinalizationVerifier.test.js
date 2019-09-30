@@ -9,7 +9,7 @@ const { MerkleTree } = require('../../../helpers/merkle.js');
 const { sign } = require('../../../helpers/sign.js');
 const { PROTOCOL, EMPTY_BYTES } = require('../../../helpers/constants.js');
 
-contract.only('TxFinalizationVerifier', ([richFather]) => {
+contract('TxFinalizationVerifier', ([richFather]) => {
     const TEST_BLOCK_NUM = 1000;
     const alicePrivateKey = '0x7151e5dab6f8e95b5436515b83f423c4df64fe4c6149f864daa209b26adb10ca';
     let alice;

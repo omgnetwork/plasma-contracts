@@ -16,6 +16,8 @@ const StateTransitionVerifierMock = artifacts.require('StateTransitionVerifierMo
 const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
+const TxFinalizationVerifier = artifacts.require('TxFinalizationVerifier');
+
 const { expect } = require('chai');
 const { expectEvent, time } = require('openzeppelin-test-helpers');
 const { TX_TYPE } = require('../../../helpers/constants.js');
@@ -67,6 +69,8 @@ contract('PaymentStandardExitRouter', ([_, outputOwner]) => {
 
         const handler = await ExpectedOutputGuardHandler.new(true, outputOwner);
         await this.outputGuardHandlerRegistry.registerOutputGuardHandler(PAYMENT_OUTPUT_TYPE, handler.address);
+
+        this.txFinalizationVerifier = await TxFinalizationVerifier.new();
     });
 
     describe('updateStartStandardExitBondSize', () => {
@@ -77,6 +81,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner]) => {
                 this.erc20Vault.address,
                 this.outputGuardHandlerRegistry.address,
                 this.spendingConditionRegistry.address,
+                this.txFinalizationVerifier.address,
             );
 
             this.startStandardExitBondSize = await this.exitGame.startStandardExitBondSize();
@@ -112,6 +117,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner]) => {
                 this.outputGuardHandlerRegistry.address,
                 this.spendingConditionRegistry.address,
                 this.stateTransitionVerifier.address,
+                this.txFinalizationVerifier.address,
                 TX_TYPE.PAYMENT,
             );
 
@@ -148,6 +154,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner]) => {
                 this.outputGuardHandlerRegistry.address,
                 this.spendingConditionRegistry.address,
                 this.stateTransitionVerifier.address,
+                this.txFinalizationVerifier.address,
                 TX_TYPE.PAYMENT,
             );
 
