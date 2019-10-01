@@ -2,10 +2,14 @@ pragma solidity ^0.5.0;
 
 import "./TxPosLib.sol";
 
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+
 /**
 @dev UTXO position = (blockNumber * BLOCK_OFFSET + txIndex * TX_OFFSET + outputIndex).
  */
 library UtxoPosLib {
+    using SafeMath for uint256;
+
     struct UtxoPos {
         uint256 value;
     }
@@ -24,7 +28,7 @@ library UtxoPosLib {
         pure
         returns (UtxoPos memory)
     {
-        return UtxoPos(txPos.value * TX_OFFSET + outputIndex);
+        return UtxoPos(txPos.value.mul(TX_OFFSET).add(outputIndex));
     }
 
     /**

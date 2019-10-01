@@ -33,6 +33,9 @@ library PaymentStartInFlightExit {
 
     uint256 constant public MAX_INPUT_NUM = 4;
 
+    /**
+     * @dev supportedTxType is there to enable reuse of code in different Payment Tx versions
+     */
     struct Controller {
         PlasmaFramework framework;
         IsDeposit.Predicate isDeposit;

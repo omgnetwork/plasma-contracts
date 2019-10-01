@@ -28,6 +28,8 @@ contract PaymentStandardExitRouter is
 
     // Initial bond size = 70000 (gas cost of challenge) * 20 gwei (current fast gas price) * 10 (safety margin)
     uint128 public constant INITIAL_BOND_SIZE = 14000000000000000 wei;
+
+    // each bond size upgrade can either at most increase to 200% or decrease to 50% of current bond
     uint16 public constant BOND_LOWER_BOUND_DIVISOR = 2;
     uint16 public constant BOND_UPPER_BOUND_MULTIPLIER = 2;
 
@@ -63,8 +65,12 @@ contract PaymentStandardExitRouter is
         startStandardExitBond = BondSize.buildParams(INITIAL_BOND_SIZE, BOND_LOWER_BOUND_DIVISOR, BOND_UPPER_BOUND_MULTIPLIER);
     }
 
-    function standardExits(uint160 _exitId) public view returns (PaymentExitDataModel.StandardExit memory) {
-        return standardExitMap.exits[_exitId];
+    /**
+     * @notice Getter functions to retrieve standard exit data of the PaymentExitGame.
+     * @param exitId the exit id of such standard exit.
+     */
+    function standardExits(uint160 exitId) public view returns (PaymentExitDataModel.StandardExit memory) {
+        return standardExitMap.exits[exitId];
     }
 
     /**

@@ -8,10 +8,18 @@ import "../../transactions/WireTransaction.sol";
 import "../../transactions/PaymentTransactionModel.sol";
 import "../../transactions/outputs/PaymentOutputModel.sol";
 
-/*
-* Verifies state transitions for payment transaction
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+
+/**
+* @notice Verifies state transitions for payment transaction
+* @dev For Payment transaction to be valid, the state transition should check that the sum of the inputs is larger than the sum of the outputs
 */
 contract PaymentTransactionStateTransitionVerifier {
+    using SafeMath for uint256;
+
+    /**
+     * @dev For Payment transaction to be valid, the state transition should check that the sum of the inputs is larger than the sum of the outputs
+     */
     function isCorrectStateTransition(
         bytes calldata txBytes,
         bytes[] calldata inputTxs,
@@ -25,7 +33,6 @@ contract PaymentTransactionStateTransitionVerifier {
             return false;
         }
 
-        //TODO: refactor that to smaller function as soon as this issue is resolved: https://github.com/ethereum/solidity/issues/6835
         WireTransaction.Output[] memory inputs = new WireTransaction.Output[](inputTxs.length);
         for (uint i = 0; i < inputTxs.length; i++) {
             uint16 outputIndex = outputIndexOfInputTxs[i];
@@ -107,7 +114,7 @@ contract PaymentTransactionStateTransitionVerifier {
     function sumAmounts(WireTransaction.Output[] memory outputs) private pure returns (uint256) {
         uint256 amount = 0;
         for (uint i = 0; i < outputs.length; i++) {
-            amount += outputs[i].amount;
+            amount = amount.add(outputs[i].amount);
         }
         return amount;
     }

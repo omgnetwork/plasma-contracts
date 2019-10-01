@@ -3,6 +3,7 @@
 Plasma M(ore)VP contract with upgradeability for new feature, work in progress.
 
 [![Build Status](https://circleci.com/gh/omisego/plasma-contracts.svg?style=svg)](https://circleci.com/gh/omisego/plasma-contracts)
+[![Coverage Status](https://coveralls.io/repos/github/omisego/plasma-contracts/badge.svg?branch=master)](https://coveralls.io/github/omisego/plasma-contracts?branch=master)
 
 
 # Building and running tests

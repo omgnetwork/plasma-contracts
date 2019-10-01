@@ -1,6 +1,6 @@
 const PaymentTransactionStateTransitionVerifier = artifacts.require('PaymentTransactionStateTransitionVerifier');
 
-const { constants } = require('openzeppelin-test-helpers');
+const { BN, constants, expectRevert } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
 const { buildUtxoPos, UtxoPos } = require('../../../helpers/positions.js');
@@ -36,16 +36,15 @@ contract('PaymentTransactionStateTransitionVerifier', ([alice, bob]) => {
             return args;
         }
 
-        function buildInvalidStateTransitionArgs() {
+        function buildInvalidStateTransitionArgs(invalidAmount) {
             const inputTx1 = createInputTransaction(DUMMY_INPUT_1, alice, AMOUNT);
             const inputTx2 = createInputTransaction(DUMMY_INPUT_2, bob, AMOUNT, OTHER_TOKEN);
 
             const inputUtxosPos = [buildUtxoPos(BLOCK_NUM, 0, 0), buildUtxoPos(BLOCK_NUM, 1, 0)];
             const inputs = createInputsForInFlightTx([inputTx1, inputTx2], inputUtxosPos);
 
-            const output1 = new PaymentTransactionOutput(AMOUNT, alice, ETH);
-            const invalidAmount = AMOUNT + 1;
-            const output2 = new PaymentTransactionOutput(invalidAmount, bob, OTHER_TOKEN);
+            const output1 = new PaymentTransactionOutput(invalidAmount, alice, ETH);
+            const output2 = new PaymentTransactionOutput(invalidAmount, bob, ETH);
 
             const inFlightTx = new PaymentTransaction(IFE_TX_TYPE, inputs, [output1, output2]);
             const outputIndexOfInputTxs = inputUtxosPos.map(utxo => new UtxoPos(utxo).outputIndex);
@@ -113,7 +112,7 @@ contract('PaymentTransactionStateTransitionVerifier', ([alice, bob]) => {
         });
 
         it('should return false when in-flight transaction overspends', async () => {
-            const args = buildInvalidStateTransitionArgs();
+            const args = buildInvalidStateTransitionArgs(AMOUNT + 1);
 
             const verificationResult = await this.verifier.isCorrectStateTransition(
                 args.inFlightTx,
@@ -131,6 +130,20 @@ contract('PaymentTransactionStateTransitionVerifier', ([alice, bob]) => {
                 [],
             );
             expect(verificationResult).to.be.false;
+        });
+
+        it('should revert when sum of outputs overflows uint256', async () => {
+            const amount = (new BN(2)).pow(new BN(255));
+            const args = buildInvalidStateTransitionArgs(amount);
+
+            await expectRevert(
+                this.verifier.isCorrectStateTransition(
+                    args.inFlightTx,
+                    args.inputTxs,
+                    args.outputIndexOfInputTxs,
+                ),
+                'SafeMath: addition overflow',
+            );
         });
     });
 });
