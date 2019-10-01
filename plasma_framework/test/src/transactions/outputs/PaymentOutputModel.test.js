@@ -15,7 +15,7 @@ contract('PaymentOutputModel', ([alice]) => {
 
     describe('decode', () => {
         it('should decode output', async () => {
-            const expected = new PaymentTransactionOutput(100, OUTPUT_GUARD, constants.ZERO_ADDRESS, OUTPUT_TYPE);
+            const expected = new PaymentTransactionOutput(OUTPUT_TYPE, 100, OUTPUT_GUARD, constants.ZERO_ADDRESS);
             const encoded = web3.utils.bytesToHex(rlp.encode(expected.formatForRlpEncoding()));
 
             const output = await this.test.decode(encoded);

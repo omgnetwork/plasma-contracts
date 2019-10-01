@@ -51,7 +51,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
             outputType = OUTPUT_TYPE.PAYMENT,
             outputGuardPreimage = EMPTY_BYTES,
         ) => {
-            const output = new PaymentTransactionOutput(amount, owner, ETH, outputType);
+            const output = new PaymentTransactionOutput(outputType, amount, owner, ETH);
             const txObj = new PaymentTransaction(1, [0], [output]);
             const tx = web3.utils.bytesToHex(txObj.rlpEncoded());
 

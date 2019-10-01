@@ -141,7 +141,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
     const aliceDepositsETH = async () => {
         const depositBlockNum = (await this.framework.nextDepositBlock()).toNumber();
         this.depositUtxoPos = buildUtxoPos(depositBlockNum, 0, 0);
-        this.depositTx = Testlang.deposit(DEPOSIT_VALUE, alice);
+        this.depositTx = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice);
         this.merkleTreeForDepositTx = new MerkleTree([this.depositTx], 16);
         this.merkleProofForDepositTx = this.merkleTreeForDepositTx.getInclusionProof(this.depositTx);
 
@@ -153,9 +153,9 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
         this.transferUtxoPos = buildUtxoPos(tranferTxBlockNum, 0, 0);
 
         const transferAmount = 1000;
-        const outputBob = new PaymentTransactionOutput(transferAmount, bob, ETH);
+        const outputBob = new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, transferAmount, bob, ETH);
         const outputAlice = new PaymentTransactionOutput(
-            DEPOSIT_VALUE - transferAmount, alice, ETH,
+            OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE - transferAmount, alice, ETH,
         );
         this.transferTxObject = new PaymentTransaction(1, [this.depositUtxoPos], [outputBob, outputAlice]);
         this.transferTx = this.transferTxObject.rlpEncoded();
@@ -168,7 +168,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
     const aliceDepositsErc20 = async () => {
         const depositBlockNum = (await this.framework.nextDepositBlock()).toNumber();
         this.depositUtxoPos = buildUtxoPos(depositBlockNum, 0, 0);
-        this.depositTx = Testlang.deposit(DEPOSIT_VALUE, alice, this.erc20.address);
+        this.depositTx = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, this.erc20.address);
         this.merkleTreeForDepositTx = new MerkleTree([this.depositTx], 16);
         this.merkleProofForDepositTx = this.merkleTreeForDepositTx.getInclusionProof(this.depositTx);
 

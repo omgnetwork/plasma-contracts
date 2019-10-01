@@ -4,11 +4,10 @@ const { MerkleTree } = require('./merkle.js');
 const { buildUtxoPos } = require('./positions.js');
 const { buildOutputGuard, isDeposit, getOutputId } = require('./utils.js');
 const { PaymentTransactionOutput, PaymentTransaction, PlasmaDepositTransaction } = require('./transaction.js');
-const { EMPTY_BYTES, OUTPUT_TYPE } = require('./constants.js');
+const { EMPTY_BYTES } = require('./constants.js');
 
 const ETH = constants.ZERO_ADDRESS;
 const OUTPUT_TYPE_ONE = 1;
-const OUTPUT_TYPE_TWO = 2;
 const IFE_TX_TYPE = 1;
 const WITNESS_LENGTH_IN_BYTES = 65;
 const IN_FLIGHT_TX_WITNESS_BYTES = web3.utils.bytesToHex('a'.repeat(WITNESS_LENGTH_IN_BYTES));
@@ -26,23 +25,23 @@ const MERKLE_TREE_HEIGHT = 3;
 function buildValidIfeStartArgs(
     amount,
     [ifeOwner, inputOwner1, inputOwner2],
+    [input1OutputType, input2OutputType, ifeOutputType],
     blockNum1,
     blockNum2,
-    ifOutputType = OUTPUT_TYPE.PAYMENT,
 ) {
     const inputTx1 = isDeposit(blockNum1)
-        ? createDepositTransaction(inputOwner1, amount)
-        : createInputTransaction([DUMMY_INPUT_1], inputOwner1, amount);
+        ? createDepositTransaction(input1OutputType, inputOwner1, amount)
+        : createInputTransaction([DUMMY_INPUT_1], input1OutputType, inputOwner1, amount);
 
     const inputTx2 = isDeposit(blockNum2)
-        ? createDepositTransaction(inputOwner2, amount, ETH, ifOutputType)
-        : createInputTransaction([DUMMY_INPUT_2], inputOwner2, amount, ETH, ifOutputType);
+        ? createDepositTransaction(input2OutputType, inputOwner2, amount)
+        : createInputTransaction([DUMMY_INPUT_2], input2OutputType, inputOwner2, amount);
 
     const inputTxs = [inputTx1, inputTx2];
 
     const inputUtxosPos = [buildUtxoPos(blockNum1, 0, 0), buildUtxoPos(blockNum2, 0, 0)];
 
-    const inFlightTx = createInFlightTx(inputTxs, inputUtxosPos, ifeOwner, amount, ETH);
+    const inFlightTx = createInFlightTx(inputTxs, inputUtxosPos, ifeOutputType, ifeOwner, amount, ETH);
     const {
         args,
         inputTxsBlockRoot1,
@@ -108,24 +107,24 @@ function buildIfeStartArgs([inputTx1, inputTx2], [inputOwner1, inputOwner2], inp
     return { args, inputTxsBlockRoot1, inputTxsBlockRoot2 };
 }
 
-function createInputTransaction(inputs, owner, amount, token = ETH, outputType = OUTPUT_TYPE.PAYMENT) {
-    const output = new PaymentTransactionOutput(amount, buildOutputGuard(owner), token, outputType);
+function createInputTransaction(inputs, outputType, owner, amount, token = ETH) {
+    const output = new PaymentTransactionOutput(outputType, amount, buildOutputGuard(owner), token);
     return new PaymentTransaction(IFE_TX_TYPE, inputs, [output]);
 }
 
-function createDepositTransaction(owner, amount, token = ETH, outputType = OUTPUT_TYPE.PAYMENT) {
-    const output = new PaymentTransactionOutput(amount, buildOutputGuard(owner), token, outputType);
+function createDepositTransaction(outputType, owner, amount, token = ETH) {
+    const output = new PaymentTransactionOutput(outputType, amount, buildOutputGuard(owner), token);
     return new PlasmaDepositTransaction(output);
 }
 
-function createInFlightTx(inputTxs, inputUtxosPos, ifeOwner, amount, token = ETH, outputType = OUTPUT_TYPE.PAYMENT) {
+function createInFlightTx(inputTxs, inputUtxosPos, outputType, ifeOwner, amount, token = ETH) {
     const inputs = createInputsForInFlightTx(inputTxs, inputUtxosPos);
 
     const output = new PaymentTransactionOutput(
+        outputType,
         amount * inputTxs.length,
         ifeOwner,
         token,
-        outputType,
     );
 
     return new PaymentTransaction(1, inputs, [output]);

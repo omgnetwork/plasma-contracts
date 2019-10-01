@@ -106,11 +106,11 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, outputOwner, nonOu
         const buildPiggybackOutputData = async () => {
             const outputAmount1 = 499;
             const outputGuard1 = outputOwner;
-            const output1 = new PaymentTransactionOutput(outputAmount1, outputGuard1, ETH);
+            const output1 = new PaymentTransactionOutput(OUTPUT_TYPE.ONE, outputAmount1, outputGuard1, ETH);
 
             const outputAmount2 = 498;
             const outputGuard2 = buildOutputGuard(DUMMY_OUTPUT_GUARD_PREIMAGE);
-            const output2 = new PaymentTransactionOutput(outputAmount2, outputGuard2, ETH, OUTPUT_TYPE.TWO);
+            const output2 = new PaymentTransactionOutput(OUTPUT_TYPE.TWO, outputAmount2, outputGuard2, ETH);
 
             const inFlightTx = new PaymentTransaction(1, [buildUtxoPos(BLOCK_NUMBER, 0, 0)], [output1, output2]);
             const rlpInFlighTxBytes = web3.utils.bytesToHex(inFlightTx.rlpEncoded());

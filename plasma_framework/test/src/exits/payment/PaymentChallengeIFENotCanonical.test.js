@@ -52,7 +52,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
     const DUMMY_SPENDING_CONDITION_OPTIONAL_ARGS = web3.utils.utf8ToHex('dummy spending condition optional args');
 
     const createInputTransaction = (outputType) => {
-        const output = new PaymentTransactionOutput(TEST_IFE_INPUT_AMOUNT, inputOwner, ETH, outputType);
+        const output = new PaymentTransactionOutput(outputType, TEST_IFE_INPUT_AMOUNT, inputOwner, ETH);
         const inputTx = new PaymentTransaction(
             IFE_TX_TYPE, [buildUtxoPos(0, 0, 0)], [output],
         );
@@ -65,7 +65,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
 
     const createCompetitorTransaction = (outputType) => {
         const output = new PaymentTransactionOutput(
-            TEST_COMPETING_TX_OUTPUT_AMOUNT, buildOutputGuard(competitorOwner), ETH, outputType,
+            outputType, TEST_COMPETING_TX_OUTPUT_AMOUNT, buildOutputGuard(competitorOwner), ETH,
         );
         const competingTx = new PaymentTransaction(IFE_TX_TYPE, [INPUT_UTXO_POS.utxoPos], [output]);
         const competingTxPos = new UtxoPos(buildUtxoPos(COMPETING_TX_BLOCK_NUM, 0, 0));
@@ -121,7 +121,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
             piggybackBondSize: 0,
         };
 
-        const output = new PaymentTransactionOutput(TEST_IFE_OUTPUT_AMOUNT, outputOwner, ETH, outputType);
+        const output = new PaymentTransactionOutput(outputType, TEST_IFE_OUTPUT_AMOUNT, outputOwner, ETH);
         const inFlightTx = new PaymentTransaction(
             IFE_TX_TYPE, [INPUT_UTXO_POS.utxoPos], [output],
         );

@@ -67,6 +67,7 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                     buildUtxoPos(BLOCK_NUMBER - CHILD_BLOCK_INTERVAL, 4, 3),
                     buildUtxoPos(BLOCK_NUMBER - CHILD_BLOCK_INTERVAL, 10, 2),
                 ],
+                OUTPUT_TYPE.PAYMENT,
                 inputOwner,
                 INPUT_TX_AMOUNT,
             );
@@ -86,12 +87,18 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
         const buildPiggybackInputData = async (inputTx) => {
             const outputAmount = 997;
 
-            const firstInput = createInputTransaction([buildUtxoPos(BLOCK_NUMBER, 3, 0)], outputOwner, 334455);
+            const firstInput = createInputTransaction(
+                [buildUtxoPos(BLOCK_NUMBER, 3, 0)],
+                OUTPUT_TYPE.PAYMENT,
+                outputOwner,
+                334455,
+            );
             const firstInputUtxoPos = buildUtxoPos(BLOCK_NUMBER, 66, 0);
 
             const inFlightTx = createInFlightTx(
                 [firstInput, inputTx.tx],
                 [firstInputUtxoPos, inputTx.utxoPos],
+                OUTPUT_TYPE.PAYMENT,
                 alice,
                 outputAmount,
             );
@@ -202,6 +209,7 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
             // Create a transaction that spends the same input
             const challengingTx = createInputTransaction(
                 [this.inputTx.utxoPos],
+                OUTPUT_TYPE.PAYMENT,
                 outputOwner,
                 789,
             );
@@ -313,6 +321,7 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
             it('should fail when the challenging transaction input index is incorrect', async () => {
                 const challengingTx = createInputTransaction(
                     [buildUtxoPos(BLOCK_NUMBER - CHILD_BLOCK_INTERVAL, 4, 3), this.inputTx.utxoPos],
+                    OUTPUT_TYPE.PAYMENT,
                     outputOwner,
                     789,
                 );
@@ -329,7 +338,12 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
 
             it('should fail when the spent input is not the same as piggybacked input', async () => {
                 // create a different input tx
-                const anotherTx = createInputTransaction([buildUtxoPos(BLOCK_NUMBER, 3, 0)], outputOwner, 123);
+                const anotherTx = createInputTransaction(
+                    [buildUtxoPos(BLOCK_NUMBER, 3, 0)],
+                    OUTPUT_TYPE.PAYMENT,
+                    outputOwner,
+                    123,
+                );
                 this.challengeArgs.inputTx = web3.utils.bytesToHex(anotherTx.rlpEncoded());
                 this.challengeArgs.inputUtxoPos = buildUtxoPos(BLOCK_NUMBER, 50, 0);
                 await expectRevert(
@@ -340,7 +354,7 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
 
             it('should fail when spending condition for given output is not registered', async () => {
                 const outputId = computeNormalOutputId(this.challengeArgs.inputTx, 0);
-                const challengingTxOutput = new PaymentTransactionOutput(123, alice, ETH);
+                const challengingTxOutput = new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, 123, alice, ETH);
                 const challengingTx = new PaymentTransaction(23, [outputId], [challengingTxOutput]);
 
                 this.challengeArgs.challengingTx = web3.utils.bytesToHex(challengingTx.rlpEncoded());

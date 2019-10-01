@@ -7,7 +7,7 @@ const TransactionTypes = {
 };
 
 class PaymentTransactionOutput {
-    constructor(amount, owner, token, type = OUTPUT_TYPE.PAYMENT) {
+    constructor(type, amount, owner, token) {
         this.outputType = type;
         this.outputGuard = owner;
         this.token = token;
@@ -28,7 +28,7 @@ class PaymentTransactionOutput {
     static parseFromContractOutput(output) {
         const amount = parseInt(output.amount, 10);
         const outputType = parseInt(output.outputType, 10);
-        return new PaymentTransactionOutput(amount, output.outputGuard, output.token, outputType);
+        return new PaymentTransactionOutput(outputType, amount, output.outputGuard, output.token);
     }
 }
 

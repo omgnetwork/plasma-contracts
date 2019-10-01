@@ -15,7 +15,7 @@ const OUTPUT_TYPE = 1;
 contract('WireTransaction', () => {
     before(async () => {
         this.test = await WireTransaction.new();
-        const output = new PaymentTransactionOutput(AMOUNT, OUTPUT_GUARD, constants.ZERO_ADDRESS, OUTPUT_TYPE);
+        const output = new PaymentTransactionOutput(OUTPUT_TYPE, AMOUNT, OUTPUT_GUARD, constants.ZERO_ADDRESS);
         const transaction = new PaymentTransaction(TX_TYPE, [EMPTY_BYTES32], [output, output], EMPTY_BYTES32);
         this.paymentTransaction = web3.utils.bytesToHex(transaction.rlpEncoded());
     });

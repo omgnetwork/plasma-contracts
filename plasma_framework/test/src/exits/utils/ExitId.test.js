@@ -4,6 +4,7 @@ const { BN, constants, expectRevert } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
 const { PaymentTransaction, PaymentTransactionOutput } = require('../../../helpers/transaction.js');
+const { OUTPUT_TYPE } = require('../../../helpers/constants.js');
 
 contract('ExitId', () => {
     const OUTPUT_GUARD = `0x${Array(64).fill(1).join('')}`;
@@ -42,7 +43,7 @@ contract('ExitId', () => {
 
     describe('getStandardExitId', () => {
         it('should get the correct exit id for deposit tx output', async () => {
-            const output = new PaymentTransactionOutput(100, OUTPUT_GUARD, constants.ZERO_ADDRESS);
+            const output = new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, 100, OUTPUT_GUARD, constants.ZERO_ADDRESS);
             const transaction = new PaymentTransaction(1, [EMPTY_BYTES32], [output], EMPTY_BYTES32);
             const dummyTxBytes = web3.utils.bytesToHex(transaction.rlpEncoded());
 
@@ -54,7 +55,7 @@ contract('ExitId', () => {
         });
 
         it('should return distinct exit ids for deposits that differ only in utxo pos', async () => {
-            const output = new PaymentTransactionOutput(100, OUTPUT_GUARD, constants.ZERO_ADDRESS);
+            const output = new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, 100, OUTPUT_GUARD, constants.ZERO_ADDRESS);
             const transaction = new PaymentTransaction(1, [EMPTY_BYTES32], [output], EMPTY_BYTES32);
             const dummyTxBytes = web3.utils.bytesToHex(transaction.rlpEncoded());
 
@@ -68,7 +69,7 @@ contract('ExitId', () => {
         });
 
         it('should get the correct exit id for non deposit tx output', async () => {
-            const output = new PaymentTransactionOutput(100, OUTPUT_GUARD, constants.ZERO_ADDRESS);
+            const output = new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, 100, OUTPUT_GUARD, constants.ZERO_ADDRESS);
             const transaction = new PaymentTransaction(1, [DUMMY_INPUT], [output], EMPTY_BYTES32);
             const dummyTxBytes = web3.utils.bytesToHex(transaction.rlpEncoded());
 
@@ -78,7 +79,7 @@ contract('ExitId', () => {
                 .to.be.bignumber.equal(new BN('703443512390364917023199489483417852888669222572'));
         });
         it('should overflow when created a tx with more than 255 outputs', async () => {
-            const output = new PaymentTransactionOutput(100, OUTPUT_GUARD, constants.ZERO_ADDRESS);
+            const output = new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, 100, OUTPUT_GUARD, constants.ZERO_ADDRESS);
             const isDeposit = false;
 
             const notOverflowingTx = new PaymentTransaction(1, [DUMMY_INPUT], Array(255).fill(output), EMPTY_BYTES32);
@@ -100,7 +101,7 @@ contract('ExitId', () => {
 
     describe('getInFlightExitId', () => {
         it('should get correct in-flight exit id', async () => {
-            const output = new PaymentTransactionOutput(100, OUTPUT_GUARD, constants.ZERO_ADDRESS);
+            const output = new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, 100, OUTPUT_GUARD, constants.ZERO_ADDRESS);
             const transaction = new PaymentTransaction(1, [DUMMY_INPUT], [output], EMPTY_BYTES32);
             const transactionBytes = web3.utils.bytesToHex(transaction.rlpEncoded());
 

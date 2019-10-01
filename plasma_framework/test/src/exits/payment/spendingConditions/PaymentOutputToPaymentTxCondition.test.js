@@ -3,7 +3,7 @@ const PaymentOutputToPaymentTxCondition = artifacts.require('PaymentOutputToPaym
 const { constants, expectRevert } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
-const { EMPTY_BYTES } = require('../../../../helpers/constants.js');
+const { EMPTY_BYTES, OUTPUT_TYPE } = require('../../../../helpers/constants.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../../helpers/transaction.js');
 const { hashTx } = require('../../../../helpers/paymentEip712.js');
 const { buildUtxoPos, utxoPosToTxPos } = require('../../../../helpers/positions.js');
@@ -39,7 +39,7 @@ contract('PaymentOutputToPaymentTxCondition', ([richFather, bob]) => {
         const getTestData = () => {
             const aliceOutputGuard = alice;
             const outputInInputTx = new PaymentTransactionOutput(
-                1000, aliceOutputGuard, ETH,
+                OUTPUT_TYPE.PAYMENT, 1000, aliceOutputGuard, ETH,
             );
             const inputTx = new PaymentTransaction(TEST_INPUT_TX_TYPE, [buildUtxoPos(1000, 0, 0)], [outputInInputTx]);
             const inputTxBytes = web3.utils.bytesToHex(inputTx.rlpEncoded());
@@ -50,7 +50,7 @@ contract('PaymentOutputToPaymentTxCondition', ([richFather, bob]) => {
 
             const bobOutputGuard = bob;
             const outputInSpendingTx = new PaymentTransactionOutput(
-                1000, bobOutputGuard, ETH,
+                OUTPUT_TYPE.PAYMENT, 1000, bobOutputGuard, ETH,
             );
 
             const spendingTx = new PaymentTransaction(TEST_SPENDING_TX_TYPE, [utxoPos], [outputInSpendingTx]);
