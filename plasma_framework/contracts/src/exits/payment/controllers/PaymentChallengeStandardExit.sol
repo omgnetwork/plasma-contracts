@@ -5,11 +5,12 @@ import "../PaymentExitDataModel.sol";
 import "../routers/PaymentStandardExitRouterArgs.sol";
 import "../../interfaces/IOutputGuardHandler.sol";
 import "../../interfaces/ISpendingCondition.sol";
+import "../../interfaces/ITxFinalizationVerifier.sol";
 import "../../models/OutputGuardModel.sol";
+import "../../models/TxFinalizationModel.sol";
 import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../registries/SpendingConditionRegistry.sol";
 import "../../utils/OutputId.sol";
-import "../../utils/TxFinalization.sol";
 import "../../../vaults/EthVault.sol";
 import "../../../vaults/Erc20Vault.sol";
 import "../../../framework/PlasmaFramework.sol";
@@ -22,13 +23,13 @@ import "../../../transactions/outputs/PaymentOutputModel.sol";
 library PaymentChallengeStandardExit {
     using UtxoPosLib for UtxoPosLib.UtxoPos;
     using IsDeposit for IsDeposit.Predicate;
-    using TxFinalization for TxFinalization.Verifier;
 
     struct Controller {
         PlasmaFramework framework;
         IsDeposit.Predicate isDeposit;
         SpendingConditionRegistry spendingConditionRegistry;
         OutputGuardHandlerRegistry outputGuardHandlerRegistry;
+        ITxFinalizationVerifier txFinalizationVerifier;
     }
 
     event ExitChallenged(
@@ -51,7 +52,8 @@ library PaymentChallengeStandardExit {
     function buildController(
         PlasmaFramework framework,
         SpendingConditionRegistry spendingConditionRegistry,
-        OutputGuardHandlerRegistry outputGuardHandlerRegistry
+        OutputGuardHandlerRegistry outputGuardHandlerRegistry,
+        ITxFinalizationVerifier txFinalizationVerifier
     )
         public
         view
@@ -61,7 +63,8 @@ library PaymentChallengeStandardExit {
             framework: framework,
             isDeposit: IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL()),
             spendingConditionRegistry: spendingConditionRegistry,
-            outputGuardHandlerRegistry: outputGuardHandlerRegistry
+            outputGuardHandlerRegistry: outputGuardHandlerRegistry,
+            txFinalizationVerifier: txFinalizationVerifier
         });
     }
 
@@ -120,7 +123,7 @@ library PaymentChallengeStandardExit {
 
         uint256 challengeTxType = WireTransaction.getTransactionType(data.args.challengeTx);
         uint8 protocol = data.controller.framework.protocols(challengeTxType);
-        TxFinalization.Verifier memory verifier = TxFinalization.Verifier({
+        TxFinalizationModel.Data memory finalizationData = TxFinalizationModel.Data({
             framework: data.controller.framework,
             protocol: protocol,
             txBytes: data.args.challengeTx,
@@ -129,7 +132,8 @@ library PaymentChallengeStandardExit {
             confirmSig: data.args.challengeTxConfirmSig,
             confirmSigAddress: outputGuardHandler.getConfirmSigAddress(outputGuardData)
         });
-        require(verifier.isProtocolFinalized(), "Challenge transaction is not protocol finalized");
+        require(data.controller.txFinalizationVerifier.isProtocolFinalized(finalizationData),
+                "Challenge transaction is not protocol finalized");
     }
 
     function verifySpendingCondition(ChallengeStandardExitData memory data) private view {

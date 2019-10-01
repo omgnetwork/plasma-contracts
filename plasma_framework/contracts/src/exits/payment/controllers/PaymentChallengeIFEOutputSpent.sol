@@ -6,7 +6,9 @@ import "../PaymentInFlightExitModelUtils.sol";
 import "../routers/PaymentInFlightExitRouterArgs.sol";
 import "../../interfaces/IOutputGuardHandler.sol";
 import "../../interfaces/ISpendingCondition.sol";
+import "../../interfaces/ITxFinalizationVerifier.sol";
 import "../../models/OutputGuardModel.sol";
+import "../../models/TxFinalizationModel.sol";
 import "../../registries/SpendingConditionRegistry.sol";
 import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../utils/ExitId.sol";
@@ -15,7 +17,6 @@ import "../../../utils/Merkle.sol";
 import "../../../transactions/WireTransaction.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
-import "../../utils/TxFinalization.sol";
 
 library PaymentChallengeIFEOutputSpent {
     using UtxoPosLib for UtxoPosLib.UtxoPos;
@@ -25,6 +26,7 @@ library PaymentChallengeIFEOutputSpent {
         PlasmaFramework framework;
         SpendingConditionRegistry spendingConditionRegistry;
         OutputGuardHandlerRegistry outputGuardHandlerRegistry;
+        ITxFinalizationVerifier txFinalizationVerifier;
     }
 
     event InFlightExitOutputBlocked(
@@ -32,26 +34,6 @@ library PaymentChallengeIFEOutputSpent {
         bytes32 ifeTxHash,
         uint16 outputIndex
     );
-
-    /**
-     * @notice Function that builds the controller struct
-     * @return Controller struct of PaymentChallengeIFEOutputSpent
-     */
-    function buildController(
-        PlasmaFramework framework,
-        SpendingConditionRegistry spendingConditionRegistry,
-        OutputGuardHandlerRegistry outputGuardHandlerRegistry
-    )
-        public
-        pure
-        returns (Controller memory)
-    {
-        return Controller({
-            framework: framework,
-            spendingConditionRegistry: spendingConditionRegistry,
-            outputGuardHandlerRegistry: outputGuardHandlerRegistry
-        });
-    }
 
     /**
      * @notice Main logic implementation for 'challengeInFlightExitOutputSpent'
@@ -97,14 +79,14 @@ library PaymentChallengeIFEOutputSpent {
         view
     {
         UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(args.outputUtxoPos);
-        TxFinalization.Verifier memory finalizationVerifier = TxFinalization.moreVpVerifier(
+        TxFinalizationModel.Data memory finalizationData = TxFinalizationModel.moreVpData(
             controller.framework,
             args.inFlightTx,
             utxoPos.txPos(),
             args.inFlightTxInclusionProof
         );
 
-        require(TxFinalization.isStandardFinalized(finalizationVerifier), "In-flight transaction not finalized");
+        require(controller.txFinalizationVerifier.isStandardFinalized(finalizationData), "In-flight transaction not finalized");
     }
 
     function verifyOutputType(
