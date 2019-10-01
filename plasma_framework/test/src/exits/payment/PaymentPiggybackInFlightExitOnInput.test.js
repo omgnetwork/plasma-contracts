@@ -26,6 +26,7 @@ const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpe
 
 contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, outputOwner]) => {
     const ETH = constants.ZERO_ADDRESS;
+    const ERC20 = '0x0000000000000000000000000000000000000001';
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week in seconds
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
     const INITIAL_IMMUNE_EXIT_GAME_NUM = 1;
@@ -37,7 +38,8 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
     };
     const MAX_INPUT_SIZE = 4;
     const PAYMENT_TX_TYPE = 1;
-    const VAULT_ID = 1;
+    const ETH_VAULT_ID = 1;
+    const ERC20_VAULT_ID = 2;
 
     before('deploy and link with controller lib', async () => {
         const startInFlightExit = await PaymentStartInFlightExit.new();
@@ -68,6 +70,9 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
 
         const ethVault = await SpyEthVault.new(this.framework.address);
         const erc20Vault = await SpyErc20Vault.new(this.framework.address);
+
+        await this.framework.registerVault(ETH_VAULT_ID, ethVault.address);
+        await this.framework.registerVault(ERC20_VAULT_ID, erc20Vault.address);
 
         this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
         const spendingConditionRegistry = await SpendingConditionRegistry.new();
@@ -245,8 +250,8 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
                     YOUNGEST_POSITION_BLOCK, web3.utils.sha3('dummy root'), this.youngestPositionTimestamp,
                 );
                 await this.exitGame.setInFlightExit(this.testData.exitId, this.testData.inFlightExitData);
-                await this.framework.addVault(VAULT_ID);
-                await this.framework.addToken(VAULT_ID, ETH);
+                await this.framework.addVault(ETH_VAULT_ID);
+                await this.framework.addToken(ETH_VAULT_ID, ETH);
 
                 this.piggybackTx = await this.exitGame.piggybackInFlightExitOnInput(
                     this.testData.argsInputOne, { from: inputOwner, value: this.piggybackBondSize.toString() },
@@ -263,6 +268,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
                     SpyPlasmaFramework,
                     'EnqueueTriggered',
                     {
+                        vaultId: new BN(ETH_VAULT_ID),
                         token: ETH,
                         exitableAt: new BN(exitableAt),
                         txPos: new BN(utxoPosToTxPos(INFLIGHT_EXIT_YOUNGEST_INPUT_POSITION)),

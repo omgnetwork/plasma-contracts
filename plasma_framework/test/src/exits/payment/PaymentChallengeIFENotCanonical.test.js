@@ -52,6 +52,8 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
     const DUMMY_OUTPUT_GUARD = web3.utils.utf8ToHex('dummy output guard for shared input');
     const DUMMY_CONFIRM_SIG = web3.utils.utf8ToHex('dummy confirm sig for shared input');
     const DUMMY_SPENDING_CONDITION_OPTIONAL_ARGS = web3.utils.utf8ToHex('dummy spending condition optional args');
+    const ETH_VAULT_ID = 1;
+    const ERC20_VAULT_ID = 2;
 
     const createInputTransaction = () => {
         const output = new PaymentTransactionOutput(TEST_IFE_INPUT_AMOUNT, inputOwner, ETH);
@@ -192,6 +194,10 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
         );
         const ethVault = await SpyEthVault.new(this.framework.address);
         const erc20Vault = await SpyErc20Vault.new(this.framework.address);
+
+        await this.framework.registerVault(ETH_VAULT_ID, ethVault.address);
+        await this.framework.registerVault(ERC20_VAULT_ID, erc20Vault.address);
+
         this.spendingConditionRegistry = await SpendingConditionRegistry.new();
         this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
         this.exitGame = await PaymentInFlightExitRouter.new(

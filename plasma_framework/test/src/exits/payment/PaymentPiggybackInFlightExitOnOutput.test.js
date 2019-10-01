@@ -40,6 +40,8 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, outputOwner, nonOu
     const MAX_INPUT_SIZE = 4;
     const MAX_OUTPUT_SIZE = 4;
     const PAYMENT_TX_TYPE = 1;
+    const ETH_VAULT_ID = 1;
+    const ERC20_VAULT_ID = 2;
 
     before('deploy and link with controller lib', async () => {
         const startInFlightExit = await PaymentStartInFlightExit.new();
@@ -72,6 +74,9 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, outputOwner, nonOu
 
         const ethVault = await SpyEthVault.new(this.framework.address);
         const erc20Vault = await SpyErc20Vault.new(this.framework.address);
+
+        await this.framework.registerVault(ETH_VAULT_ID, ethVault.address);
+        await this.framework.registerVault(ERC20_VAULT_ID, erc20Vault.address);
 
         this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
         const spendingConditionRegistry = await SpendingConditionRegistry.new();
@@ -348,6 +353,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, outputOwner, nonOu
                     SpyPlasmaFramework,
                     'EnqueueTriggered',
                     {
+                        vaultId: new BN(ETH_VAULT_ID),
                         token: ETH,
                         exitableAt: new BN(exitableAt),
                         txPos: new BN(utxoPosToTxPos(INFLIGHT_EXIT_YOUNGEST_INPUT_POSITION)),

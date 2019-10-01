@@ -47,6 +47,8 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
     };
     const BLOCK_NUM = 1000;
     const MAX_NUM_OF_INPUTS = 4;
+    const ETH_VAULT_ID = 1;
+    const ERC20_VAULT_ID = 2;
 
     before('deploy and link with controller lib', async () => {
         const startInFlightExit = await PaymentStartInFlightExit.new();
@@ -156,6 +158,9 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
 
             const ethVault = await SpyEthVault.new(this.framework.address);
             const erc20Vault = await SpyErc20Vault.new(this.framework.address);
+
+            await this.framework.registerVault(ETH_VAULT_ID, ethVault.address);
+            await this.framework.registerVault(ERC20_VAULT_ID, erc20Vault.address);
 
             this.exitGame = await PaymentInFlightExitRouter.new(
                 this.framework.address,

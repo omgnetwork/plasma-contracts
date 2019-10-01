@@ -35,6 +35,8 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
     const TEST_BLOCK_NUM = 1000;
     const TEST_OUTPUT_INDEX = 0;
     const EXITING_TX_UTXOPOS = buildUtxoPos(TEST_BLOCK_NUM, 0, TEST_OUTPUT_INDEX);
+    const ETH_VAULT_ID = 1;
+    const ERC20_VAULT_ID = 2;
 
     before('deploy and link with controller lib', async () => {
         const startStandardExit = await PaymentStartStandardExit.new();
@@ -87,6 +89,10 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
 
             this.ethVault = await SpyEthVault.new(this.framework.address);
             this.erc20Vault = await SpyErc20Vault.new(this.framework.address);
+
+            await this.framework.registerVault(ETH_VAULT_ID, this.ethVault.address);
+            await this.framework.registerVault(ERC20_VAULT_ID, this.erc20Vault.address);
+
             this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
             this.outputGuardHandler = await ExpectedOutputGuardHandler.new();
             await this.outputGuardHandler.mockIsValid(true);

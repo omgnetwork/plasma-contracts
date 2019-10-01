@@ -24,6 +24,8 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
     const INITIAL_IMMUNE_EXIT_GAME_NUM = 1;
     const EMPTY_BYTES32 = '0x0000000000000000000000000000000000000000000000000000000000000000';
+    const ETH_VAULT_ID = 1;
+    const ERC20_VAULT_ID = 2;
 
     before('deploy and link with controller lib', async () => {
         const startStandardExit = await PaymentStartStandardExit.new();
@@ -43,6 +45,10 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
 
             const ethVault = await SpyEthVault.new(this.framework.address);
             const erc20Vault = await SpyErc20Vault.new(this.framework.address);
+
+            await this.framework.registerVault(ETH_VAULT_ID, ethVault.address);
+            await this.framework.registerVault(ERC20_VAULT_ID, erc20Vault.address);
+
             const outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
             const spendingConditionRegistry = await SpendingConditionRegistry.new();
             const txFinalizationVerifier = await TxFinalizationVerifier.new();

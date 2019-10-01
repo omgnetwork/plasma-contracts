@@ -45,6 +45,8 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
     const AMOUNT = 10;
     const TOLERANCE_SECONDS = new BN(1);
     const bobPrivateKey = '0x7151e5dab6f8e95b5436515b83f423c4df64fe4c6149f864daa209b26adb10ca';
+    const ETH_VAULT_ID = 1;
+    const ERC20_VAULT_ID = 2;
     let bob;
 
     before('deploy and link with controller lib', async () => {
@@ -126,6 +128,9 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
 
                 const ethVault = await SpyEthVault.new(this.framework.address);
                 const erc20Vault = await SpyErc20Vault.new(this.framework.address);
+
+                await this.framework.registerVault(ETH_VAULT_ID, ethVault.address);
+                await this.framework.registerVault(ERC20_VAULT_ID, erc20Vault.address);
 
                 this.spendingConditionRegistry = await SpendingConditionRegistry.new();
                 const { condition1, condition2 } = registerSpendingConditionTrue(this.spendingConditionRegistry);
@@ -281,6 +286,9 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
 
                 this.ethVault = await SpyEthVault.new(this.framework.address);
                 this.erc20Vault = await SpyErc20Vault.new(this.framework.address);
+
+                await this.framework.registerVault(ETH_VAULT_ID, this.ethVault.address);
+                await this.framework.registerVault(ERC20_VAULT_ID, this.erc20Vault.address);
 
                 this.spendingConditionRegistry = await SpendingConditionRegistry.new();
 

@@ -40,6 +40,8 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
     const YOUNGEST_POSITION_BLOCK = 1000;
     const INFLIGHT_EXIT_YOUNGEST_INPUT_POSITION = buildUtxoPos(YOUNGEST_POSITION_BLOCK, 0, 0);
     const ETH = constants.ZERO_ADDRESS;
+    const ETH_VAULT_ID = 1;
+    const ERC20_VAULT_ID = 2;
     let erc20;
 
     before('deploy and link with controller lib', async () => {
@@ -139,6 +141,9 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
 
             this.ethVault = await SpyEthVault.new(this.framework.address);
             this.erc20Vault = await SpyErc20Vault.new(this.framework.address);
+
+            await this.framework.registerVault(ETH_VAULT_ID, this.ethVault.address);
+            await this.framework.registerVault(ERC20_VAULT_ID, this.erc20Vault.address);
 
             this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
             const spendingConditionRegistry = await SpendingConditionRegistry.new();

@@ -73,7 +73,11 @@ contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue {
         );
 
         uint256 ethVaultId = framework.vaultToId(address(ethVault));
+        require(ethVaultId != 0, "Invalid ETH vault");
+
         uint256 erc20VaultId = framework.vaultToId(address(erc20Vault));
+        require(ethVaultId != 0, "Invalid ERC20 vault");
+
         piggybackInFlightExitController = PaymentPiggybackInFlightExit.buildController(
             framework,
             this,

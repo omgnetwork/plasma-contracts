@@ -37,6 +37,9 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
     const ETH = constants.ZERO_ADDRESS;
     const INPUT_TX_AMOUNT = 123456;
     const BLOCK_NUMBER = 5000;
+    const ETH_VAULT_ID = 1;
+    const ERC20_VAULT_ID = 2;
+
 
     before('deploy and link with controller lib', async () => {
         const startInFlightExit = await PaymentStartInFlightExit.new();
@@ -158,6 +161,9 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
 
             const ethVault = await SpyEthVault.new(this.framework.address);
             const erc20Vault = await SpyErc20Vault.new(this.framework.address);
+
+            await this.framework.registerVault(ETH_VAULT_ID, ethVault.address);
+            await this.framework.registerVault(ERC20_VAULT_ID, erc20Vault.address);
 
             this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
             const expectedOutputGuardHandler = await OutputGuardHandler.new();
