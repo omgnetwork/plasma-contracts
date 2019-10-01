@@ -37,7 +37,7 @@ contract TxFinalizationVerifier is ITxFinalizationVerifier {
 
     /**
     * @notice Checks a transaction is "protocol finalized" or not
-    * @dev MVP: need to be standard finalzied.
+    * @dev MVP: need to be standard finalized.
     * @dev MoreVp: it allows in-flight tx, so only checks existence of the transaction.
     */
     function isProtocolFinalized(Model.Data memory data) public view returns (bool) {

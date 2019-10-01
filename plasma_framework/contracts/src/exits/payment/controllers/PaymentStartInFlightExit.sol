@@ -283,7 +283,7 @@ library PaymentStartInFlightExit {
 
             uint8 protocol = exitData.controller.framework.protocols(exitData.inputTxTypes[i]);
 
-            TxFinalizationModel.Data memory finlizationData = TxFinalizationModel.Data({
+            TxFinalizationModel.Data memory finalizationData = TxFinalizationModel.Data({
                 framework: exitData.controller.framework,
                 protocol: protocol,
                 txBytes: exitData.inputTxs[i],
@@ -292,7 +292,7 @@ library PaymentStartInFlightExit {
                 confirmSig: exitData.inputTxsConfirmSigs[i],
                 confirmSigAddress: outputGuardHandler.getConfirmSigAddress(outputGuardData)
             });
-            require(exitData.controller.txFinalizationVerifier.isStandardFinalized(finlizationData),
+            require(exitData.controller.txFinalizationVerifier.isStandardFinalized(finalizationData),
                     "Input transaction is not standard finalized");
         }
     }
