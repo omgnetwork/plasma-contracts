@@ -21,11 +21,15 @@ class StandardExit:
         position (int): UTXO position.
     """
 
-    def __init__(self, owner, token, amount, position=0):
-        self.owner = owner
+    def __init__(self, exitable, utxo_pos, output_id, token, exit_target, amount,
+                 bond_size):
+        self.owner = exit_target
         self.token = token
         self.amount = amount
-        self.position = position
+        self.position = utxo_pos
+        self.exitable = exitable
+        self.output_id = output_id
+        self.bond_size = bond_size
 
     def to_list(self):
         return [self.owner, self.token, self.amount, self.position]
@@ -196,11 +200,16 @@ class TestingLanguage:
         return spend_id
 
     def start_standard_exit(self, output_id, account, bond=None):
-        output_tx = self.child_chain.get_transaction(output_id)
-        self.start_standard_exit_with_tx_body(output_id, output_tx, account, bond)
+        blknum, tx_index, _ = decode_utxo_id(output_id)
+        block = self.child_chain.get_block(blknum)
+        output_tx = block.transactions[tx_index]
+        return self.start_standard_exit_with_tx_body(output_id, output_tx, account, bond, block)
 
-    def start_standard_exit_with_tx_body(self, output_id, output_tx, account, bond=None):
-        merkle = FixedMerkle(16, [output_tx.encoded])
+    def start_standard_exit_with_tx_body(self, output_id, output_tx, account, bond=None, block=None):
+        transactions = [output_tx]
+        if block:
+            transactions = block.transactions
+        merkle = FixedMerkle(16, list(map(lambda tx: tx.encoded, transactions)))
         proof = merkle.create_membership_proof(output_tx.encoded)
         bond = bond if bond is not None else self.root_chain.standardExitBond()
         self.root_chain.startStandardExit(output_id, output_tx.encoded, proof,

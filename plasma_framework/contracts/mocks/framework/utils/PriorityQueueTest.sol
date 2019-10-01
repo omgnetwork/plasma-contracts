@@ -11,7 +11,7 @@ contract PriorityQueueTest{
      * Events
      */
 
-     event DelMin(uint256 val);
+    event DelMin(uint256 val);
 
     /*
      *  Storage

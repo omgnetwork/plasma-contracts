@@ -1,3 +1,8 @@
+import enum
+
+from plasma_core.constants import CHILD_BLOCK_INTERVAL
+from plasma_core.transaction import TxOutputTypes, TxTypes
+from plasma_core.utils.transactions import decode_utxo_id
 from .constants import EXIT_PERIOD, INITIAL_IMMUNE_EXIT_GAMES, INITIAL_IMMUNE_VAULTS
 
 
@@ -90,8 +95,9 @@ class PlasmaFramework:
     def depositFrom(self, deposit_tx, **kwargs):
         return self.erc20_vault.deposit(deposit_tx, **kwargs)
 
-    def startStandardExit(self, utxo_pos, output_tx, output_tx_inclusion_proof):
-        raise NotImplementedError
+    def startStandardExit(self, utxo_pos, output_tx, output_tx_inclusion_proof, **kwargs):
+        args = (utxo_pos, output_tx, 1, b'', output_tx_inclusion_proof)
+        return self.payment_exit_game.startStandardExit(args, **kwargs)
 
     def challengeStandardExit(self, standard_exit_id, challenge_tx, input_index, challenge_tx_sig):
         raise NotImplementedError
@@ -133,19 +139,27 @@ class PlasmaFramework:
         raise NotImplementedError
 
     def processExits(self, token, top_exit_id, exits_to_process):
-        raise NotImplementedError
+        next_exit_id = top_exit_id if top_exit_id != 0 else self.getNextExit(token)
+
+        tx1_hash = self.plasma_framework.processExits(token, top_exit_id, exits_to_process)
+        tx2_hash = self.payment_exit_game.processExit(next_exit_id)
+        return tx1_hash, tx2_hash
 
     def getInFlightExitId(self, tx):
         raise NotImplementedError
 
     def getStandardExitId(self, tx_bytes, utxo_pos):
-        raise NotImplementedError
+        blknum, _, _ = decode_utxo_id(utxo_pos)
+        is_deposit = blknum % CHILD_BLOCK_INTERVAL != 0
+        return self.payment_exit_game.getStandardExitId(is_deposit, tx_bytes, utxo_pos)
 
     def getFeeExitId(self, fee_exit_num):
         raise NotImplementedError
 
     def getNextExit(self, token):
-        raise NotImplementedError
+        exit_priority = self.plasma_framework.getNextExit(token)
+        _, exit_id = self.plasma_framework.exits(exit_priority)
+        return exit_id
 
     def unpackExitId(self, priority):
         raise NotImplementedError
@@ -164,3 +178,9 @@ class PlasmaFramework:
 
     def childBlockInterval(self):
         return self.plasma_framework.childBlockInterval()
+
+    def standardExitBond(self):
+        return self.payment_exit_game.startStandardExitBondSize()
+
+    def exits(self, exit_id):
+        return self.payment_exit_game.standardExits(exit_id)
