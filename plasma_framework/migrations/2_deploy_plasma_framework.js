@@ -8,7 +8,7 @@ module.exports = async (deployer) => {
         config.frameworks.minExitPeriod,
         config.frameworks.initialImmuneVaults,
         config.frameworks.initialImmuneExitGames,
-        { from: global.authorityAddress },
+        { from: global.maintainerAddress },
     );
 
     const plasmaFramework = await PlasmaFramework.deployed();

@@ -8,12 +8,12 @@ module.exports = async (_) => {
     const plasmaFramework = await PlasmaFramework.deployed();
 
     const erc20DepositVerifier = await Erc20DepositVerifier.new();
-    const erc20Vault = await Erc20Vault.new(plasmaFramework.address, { from: global.authorityAddress });
-    await erc20Vault.setDepositVerifier(erc20DepositVerifier.address, { from: global.authorityAddress });
+    const erc20Vault = await Erc20Vault.new(plasmaFramework.address, { from: global.maintainerAddress });
+    await erc20Vault.setDepositVerifier(erc20DepositVerifier.address, { from: global.maintainerAddress });
 
     await plasmaFramework.registerVault(
         config.registerKeys.vaultId.erc20,
         erc20Vault.address,
-        { from: global.authorityAddress },
+        { from: global.maintainerAddress },
     );
 };

@@ -86,6 +86,6 @@ module.exports = async (_) => {
         PAYMENT_TX_TYPE,
         paymentExitGame.address,
         config.frameworks.protocols.moreVp,
-        { from: global.authorityAddress },
+        { from: global.maintainerAddress },
     );
 };
