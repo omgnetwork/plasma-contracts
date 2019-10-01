@@ -7,6 +7,9 @@ import "./utils/PriorityQueue.sol";
 import "./utils/ExitPriority.sol";
 import "../utils/TxPosLib.sol";
 
+/**
+ * @notice Controls the logic and functions for ExitGame to interact with PlasmaFramework.
+ */
 contract ExitGameController is ExitGameRegistry {
     mapping (uint256 => IExitProcessor) public delegations;
     mapping (address => PriorityQueue) public exitsQueues;
@@ -58,6 +61,7 @@ contract ExitGameController is ExitGameRegistry {
 
     /**
      * @notice Enqueue exits from exit game contracts
+     * @dev emits ExitQueued event. The event can be used to back trace the priority inside the queue.
      * @dev Caller of this function should add "pragma experimental ABIEncoderV2;" on top of file
      * @param _token Token for the exit
      * @param _exitableAt The earliest time that such exit can be processed
@@ -75,7 +79,7 @@ contract ExitGameController is ExitGameRegistry {
         PriorityQueue queue = exitsQueues[_token];
 
         uint256 uniquePriority = ExitPriority.computePriority(_exitableAt, _txPos, _exitId);
-       
+
         queue.insert(uniquePriority);
         delegations[uniquePriority] = _exitProcessor;
 
@@ -85,6 +89,7 @@ contract ExitGameController is ExitGameRegistry {
 
     /**
      * @notice Processes any exits that have completed the challenge period.
+     * @dev emits ProcessedExitsNum event.
      * @param _token Token type to process.
      * @param _topExitId Unique priority of the first exit that should be processed. Set to zero to skip the check.
      * @param _maxExitsToProcess Maximal number of exits to process.

@@ -4,13 +4,23 @@ import "./models/BlockModel.sol";
 import "./registries/VaultRegistry.sol";
 import "./utils/Operated.sol";
 
+/**
+* @notice Controls the logic and functions for block submission in PlasmaFramework
+* @dev We have two kinds of blocks: child block and deposit block.
+*      Each child block would have an interval of 'childBlockInterval'.
+*      The interval is preserverd for deposits. Each deposit would result in one deposit block.
+*      For instance, a child block would be in block 1000 and the next deposit would result in block 1001.
+*
+*      Meanwhile, block submission can only be done by the authority address.
+*      There is some limitation on the authority address, see: https://github.com/omisego/elixir-omg#managing-the-operator-address
+*/
 contract BlockController is Operated, VaultRegistry {
     address public authority;
     uint256 public childBlockInterval;
     uint256 public nextChildBlock;
     uint256 public nextDepositBlock;
 
-    mapping (uint256 => BlockModel.Block) public blocks;
+    mapping (uint256 => BlockModel.Block) public blocks; // block number => Block data
 
     event BlockSubmitted(
         uint256 blockNumber
@@ -48,6 +58,7 @@ contract BlockController is Operated, VaultRegistry {
 
     /**
      * @notice Allows operator's authority address to submit a child chain block.
+     * @dev emit BlockSubmitted event
      * @dev Block number jumps 'childBlockInterval' per submission.
      * @dev see discussion in https://github.com/omisego/plasma-contracts/issues/233
      * @param _blockRoot Merkle root of the block.
