@@ -1,7 +1,7 @@
 pragma solidity 0.5.11;
 
 /**
-@dev transaction position = (blockNumber * BLOCK_OFFSET_FOR_TX_POS + txIndex).
+ * @dev transaction position = (blockNumber * BLOCK_OFFSET_FOR_TX_POS + txIndex).
  */
 library TxPosLib {
     struct TxPos {

@@ -5,7 +5,7 @@ import "./TxPosLib.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 /**
-@dev UTXO position = (blockNumber * BLOCK_OFFSET + txIndex * TX_OFFSET + outputIndex).
+ * @dev UTXO position = (blockNumber * BLOCK_OFFSET + txIndex * TX_OFFSET + outputIndex).
  */
 library UtxoPosLib {
     using SafeMath for uint256;
