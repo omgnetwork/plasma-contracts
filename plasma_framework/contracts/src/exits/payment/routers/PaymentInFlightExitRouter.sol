@@ -69,10 +69,14 @@ contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue {
             supportedTxType
         );
 
+        uint256 ethVaultId = framework.vaultToId(address(ethVault));
+        uint256 erc20VaultId = framework.vaultToId(address(erc20Vault));
         piggybackInFlightExitController = PaymentPiggybackInFlightExit.buildController(
             framework,
             this,
-            outputGuardHandlerRegistry
+            outputGuardHandlerRegistry,
+            ethVaultId,
+            erc20VaultId
         );
 
         challengeCanonicityController = PaymentChallengeIFENotCanonical.buildController(

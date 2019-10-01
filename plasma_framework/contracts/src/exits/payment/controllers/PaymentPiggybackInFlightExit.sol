@@ -27,9 +27,6 @@ library PaymentPiggybackInFlightExit {
     uint8 constant public MAX_INPUT_NUM = 4;
     uint8 constant public MAX_OUTPUT_NUM = 4;
 
-    // we use a single exit processing queue
-    uint256 constant public EXIT_FUNDING_VAULT_ID = 1;
-
     struct Controller {
         PlasmaFramework framework;
         IsDeposit.Predicate isDeposit;
@@ -37,6 +34,8 @@ library PaymentPiggybackInFlightExit {
         IExitProcessor exitProcessor;
         OutputGuardHandlerRegistry outputGuardHandlerRegistry;
         uint256 minExitPeriod;
+        uint256 ethVaultId;
+        uint256 erc20VaultId;
     }
 
     event InFlightExitInputPiggybacked(
@@ -58,7 +57,9 @@ library PaymentPiggybackInFlightExit {
     function buildController(
         PlasmaFramework framework,
         IExitProcessor exitProcessor,
-        OutputGuardHandlerRegistry outputGuardHandlerRegistry
+        OutputGuardHandlerRegistry outputGuardHandlerRegistry,
+        uint256 ethVaultId,
+        uint256 erc20VaultId
     )
         public
         view
@@ -70,7 +71,9 @@ library PaymentPiggybackInFlightExit {
             exitableTimestampCalculator: ExitableTimestamp.Calculator(framework.minExitPeriod()),
             exitProcessor: exitProcessor,
             outputGuardHandlerRegistry: outputGuardHandlerRegistry,
-            minExitPeriod: framework.minExitPeriod()
+            minExitPeriod: framework.minExitPeriod(),
+            ethVaultId: ethVaultId,
+            erc20VaultId: erc20VaultId
         });
     }
 
@@ -172,7 +175,14 @@ library PaymentPiggybackInFlightExit {
         bool isPositionDeposit = false;
         uint64 exitableAt = controller.exitableTimestampCalculator.calculate(now, blockTimestamp, isPositionDeposit);
 
-        controller.framework.enqueue(EXIT_FUNDING_VAULT_ID, token, exitableAt, utxoPos.txPos(), exitId, controller.exitProcessor);
+        uint256 vaultId;
+        if (token == address(0)) {
+            vaultId = controller.ethVaultId;
+        } else {
+            vaultId = controller.erc20VaultId;
+        }
+
+        controller.framework.enqueue(vaultId, token, exitableAt, utxoPos.txPos(), exitId, controller.exitProcessor);
     }
 
     function getOutputGuardFromPaymentTxBytes(bytes memory txBytes, uint16 outputIndex)

@@ -50,8 +50,10 @@ contract PaymentStandardExitRouter is
     )
         public
     {
+        uint256 ethVaultId = framework.vaultToId(address(ethVault));
+        uint256 erc20VaultId = framework.vaultToId(address(erc20Vault));
         startStandardExitController = PaymentStartStandardExit.buildController(
-            this, framework, outputGuardHandlerRegistry
+            this, framework, outputGuardHandlerRegistry, ethVaultId, erc20VaultId
         );
 
         challengeStandardExitController = PaymentChallengeStandardExit.buildController(

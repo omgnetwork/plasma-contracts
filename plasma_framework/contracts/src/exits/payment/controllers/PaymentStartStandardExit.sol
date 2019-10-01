@@ -24,15 +24,14 @@ library PaymentStartStandardExit {
     using UtxoPosLib for UtxoPosLib.UtxoPos;
     using TxFinalization for TxFinalization.Verifier;
 
-    // we use a single exit processing queue
-    uint256 constant public EXIT_FUNDING_VAULT_ID = 1;
-
     struct Controller {
         IExitProcessor exitProcessor;
         PlasmaFramework framework;
         IsDeposit.Predicate isDeposit;
         ExitableTimestamp.Calculator exitableTimestampCalculator;
         OutputGuardHandlerRegistry outputGuardHandlerRegistry;
+        uint256 ethVaultId;
+        uint256 erc20VaultId;
     }
 
     /**
@@ -64,7 +63,9 @@ library PaymentStartStandardExit {
     function buildController(
         IExitProcessor exitProcessor,
         PlasmaFramework framework,
-        OutputGuardHandlerRegistry outputGuardHandlerRegistry
+        OutputGuardHandlerRegistry outputGuardHandlerRegistry,
+        uint256 ethVaultId,
+        uint256 erc20VaultId
     )
         public
         view
@@ -75,7 +76,9 @@ library PaymentStartStandardExit {
             framework: framework,
             isDeposit: IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL()),
             exitableTimestampCalculator: ExitableTimestamp.Calculator(framework.minExitPeriod()),
-            outputGuardHandlerRegistry: outputGuardHandlerRegistry
+            outputGuardHandlerRegistry: outputGuardHandlerRegistry,
+            ethVaultId: ethVaultId,
+            erc20VaultId: erc20VaultId
         });
     }
 
@@ -188,8 +191,15 @@ library PaymentStartStandardExit {
             block.timestamp, data.txBlockTimeStamp, data.isTxDeposit
         );
 
+        uint256 vaultId;
+        if (data.output.token == address(0)) {
+            vaultId = data.controller.ethVaultId;
+        } else {
+            vaultId =  data.controller.erc20VaultId;
+        }
+
         data.controller.framework.enqueue(
-            EXIT_FUNDING_VAULT_ID, data.output.token, exitableAt, data.utxoPos.txPos(),
+            vaultId, data.output.token, exitableAt, data.utxoPos.txPos(),
             data.exitId, data.controller.exitProcessor
         );
     }
