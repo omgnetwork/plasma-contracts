@@ -4,6 +4,9 @@ pragma experimental ABIEncoderV2;
 import "../../utils/RLP.sol";
 import "../../utils/AddressPayable.sol";
 
+/**
+ * @notice Data structure and its decode function for Payment output
+ */
 library PaymentOutputModel {
 
     using RLP for RLP.RLPItem;

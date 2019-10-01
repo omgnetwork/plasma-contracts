@@ -5,6 +5,14 @@ import "../PaymentTransactionModel.sol";
 import "../outputs/PaymentOutputModel.sol";
 import "../../utils/UtxoPosLib.sol";
 
+/**
+ * @title PaymentEip712Lib
+ * @notice Utilities for hashing structural data for PaymentTransaction, see EIP-712.
+ *
+ * @dev EIP712: https://github.com/ethereum/EIPs/blob/master/EIPS/eip-712.md
+ *      Also, we rely on contract address to protect replay attack instead of using chain id.
+ *      see discussion here: https://github.com/omisego/plasma-contracts/issues/98#issuecomment-490792098
+ */
 library PaymentEip712Lib {
     using UtxoPosLib for UtxoPosLib.UtxoPos;
 
@@ -30,7 +38,7 @@ library PaymentEip712Lib {
 
     struct Constants {
         // solhint-disable-next-line var-name-mixedcase
-        bytes32 DOMAIN_SEPARATOR; 
+        bytes32 DOMAIN_SEPARATOR;
     }
 
     function initConstants(address _verifyingContract) internal pure returns (Constants memory) {

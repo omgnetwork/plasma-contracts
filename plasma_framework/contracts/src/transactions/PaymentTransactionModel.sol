@@ -3,6 +3,9 @@ pragma solidity 0.5.11;
 import "./outputs/PaymentOutputModel.sol";
 import "../utils/RLP.sol";
 
+/**
+ * @notice Data structure and its decode function for Payment transaction
+ */
 library PaymentTransactionModel {
 
     using RLP for bytes;
