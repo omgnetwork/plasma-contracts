@@ -103,6 +103,15 @@ contract('TxFinalizationVerifier', ([richFather]) => {
                 expect(await this.test.isStandardFinalized(this.data)).to.be.true;
             });
 
+            it('should return false given empty inclusion proof', async () => {
+                await this.framework.setBlock(TEST_BLOCK_NUM, this.merkle.root, 0);
+
+                const inclusionProofIndex = 4;
+                this.data[inclusionProofIndex] = EMPTY_BYTES;
+
+                expect(await this.test.isStandardFinalized(this.data)).to.be.false;
+            });
+
             it('should return false given invalid inclusion proof', async () => {
                 // makes sure the inclusion proof mismatch with the root hash
                 const invalidRoot = web3.utils.sha3('invalid root');
