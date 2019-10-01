@@ -1,4 +1,9 @@
+const ExitableTimestamp = artifacts.require('ExitableTimestampWrapper');
+const ExitId = artifacts.require('ExitIdWrapper');
+const ExpectedOutputGuardHandler = artifacts.require('ExpectedOutputGuardHandler');
+const IsDeposit = artifacts.require('IsDepositWrapper');
 const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry');
+const OutputId = artifacts.require('OutputIdWrapper');
 const PaymentInFlightExitRouter = artifacts.require('PaymentInFlightExitRouterMock');
 const PaymentStartInFlightExit = artifacts.require('PaymentStartInFlightExit');
 const PaymentPiggybackInFlightExit = artifacts.require('PaymentPiggybackInFlightExit');
@@ -12,11 +17,7 @@ const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
 const StateTransitionVerifierMock = artifacts.require('StateTransitionVerifierMock');
-const ExitId = artifacts.require('ExitIdWrapper');
-const IsDeposit = artifacts.require('IsDepositWrapper');
-const ExitableTimestamp = artifacts.require('ExitableTimestampWrapper');
-const OutputId = artifacts.require('OutputIdWrapper');
-const ExpectedOutputGuardHandler = artifacts.require('ExpectedOutputGuardHandler');
+const TxFinalizationVerifier = artifacts.require('TxFinalizationVerifier');
 
 const {
     BN, constants, expectEvent, expectRevert, time,
@@ -180,6 +181,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
         this.exitableHelper = await ExitableTimestamp.new(MIN_EXIT_PERIOD);
         this.stateTransitionVerifier = await StateTransitionVerifierMock.new();
         await this.stateTransitionVerifier.mockResult(true);
+        this.txFinalizationVerifier = await TxFinalizationVerifier.new();
     });
 
     beforeEach(async () => {
@@ -197,6 +199,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
             this.outputGuardHandlerRegistry.address,
             this.spendingConditionRegistry.address,
             this.stateTransitionVerifier.address,
+            this.txFinalizationVerifier.address,
             IFE_TX_TYPE,
         );
 

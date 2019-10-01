@@ -14,6 +14,7 @@ const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
 const StateTransitionVerifierMock = artifacts.require('StateTransitionVerifierMock');
+const TxFinalizationVerifier = artifacts.require('TxFinalizationVerifier');
 
 const {
     BN, constants, expectEvent, time,
@@ -59,8 +60,11 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
 
     before('deploy dummy and helper contracts', async () => {
         erc20 = (await ERC20Mintable.new()).address;
+
         this.stateTransitionVerifier = await StateTransitionVerifierMock.new();
         await this.stateTransitionVerifier.mockResult(true);
+
+        this.txFinalizationVerifier = await TxFinalizationVerifier.new();
     });
 
     /**
@@ -146,6 +150,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
                 this.outputGuardHandlerRegistry.address,
                 spendingConditionRegistry.address,
                 this.stateTransitionVerifier.address,
+                this.txFinalizationVerifier.address,
                 TX_TYPE.PAYMENT,
             );
             this.framework.registerExitGame(TX_TYPE.PAYMENT, this.exitGame.address, PROTOCOL.MORE_VP);

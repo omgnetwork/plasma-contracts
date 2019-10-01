@@ -14,6 +14,7 @@ const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
 const StateTransitionVerifierMock = artifacts.require('StateTransitionVerifierMock');
+const TxFinalizationVerifier = artifacts.require('TxFinalizationVerifier');
 
 const {
     BN, constants, expectEvent, expectRevert, time,
@@ -67,6 +68,8 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
         this.exitIdHelper = await ExitId.new();
         this.stateTransitionVerifier = await StateTransitionVerifierMock.new();
         await this.stateTransitionVerifier.mockResult(true);
+
+        this.txFinalizationVerifier = await TxFinalizationVerifier.new();
     });
 
 
@@ -161,6 +164,7 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
                 this.outputGuardHandlerRegistry.address,
                 this.spendingConditionRegistry.address,
                 this.stateTransitionVerifier.address,
+                this.txFinalizationVerifier.address,
                 IFE_TX_TYPE,
             );
 

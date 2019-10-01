@@ -14,6 +14,7 @@ const StateTransitionVerifierMock = artifacts.require('StateTransitionVerifierMo
 const ExitId = artifacts.require('ExitIdWrapper');
 const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
+const TxFinalizationVerifier = artifacts.require('TxFinalizationVerifier');
 
 const {
     BN, constants, expectEvent, expectRevert, time,
@@ -55,8 +56,11 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
 
     before('deploy helper contracts', async () => {
         this.exitIdHelper = await ExitId.new();
+
         this.stateTransitionVerifier = await StateTransitionVerifierMock.new();
         await this.stateTransitionVerifier.mockResult(true);
+
+        this.txFinalizationVerifier = await TxFinalizationVerifier.new();
     });
 
     describe('challenge in-flight exit input spent', () => {
@@ -185,6 +189,7 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                 this.outputGuardHandlerRegistry.address,
                 this.spendingConditionRegistry.address,
                 this.stateTransitionVerifier.address,
+                this.txFinalizationVerifier.address,
                 TX_TYPE.PAYMENT,
             );
 

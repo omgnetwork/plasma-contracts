@@ -6,12 +6,13 @@ import "../PaymentInFlightExitModelUtils.sol";
 import "../routers/PaymentInFlightExitRouterArgs.sol";
 import "../../interfaces/IOutputGuardHandler.sol";
 import "../../interfaces/ISpendingCondition.sol";
+import "../../interfaces/ITxFinalizationVerifier.sol";
 import "../../models/OutputGuardModel.sol";
+import "../../models/TxFinalizationModel.sol";
 import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../registries/SpendingConditionRegistry.sol";
 import "../../utils/ExitId.sol";
 import "../../utils/OutputId.sol";
-import "../../utils/TxFinalization.sol";
 import "../../../utils/UtxoPosLib.sol";
 import "../../../utils/Merkle.sol";
 import "../../../utils/IsDeposit.sol";
@@ -23,7 +24,6 @@ library PaymentChallengeIFENotCanonical {
     using UtxoPosLib for UtxoPosLib.UtxoPos;
     using IsDeposit for IsDeposit.Predicate;
     using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
-    using TxFinalization for TxFinalization.Verifier;
 
     /**
      * @dev supportedTxType is there to enable reuse of code in different Payment Tx versions
@@ -33,6 +33,7 @@ library PaymentChallengeIFENotCanonical {
         IsDeposit.Predicate isDeposit;
         SpendingConditionRegistry spendingConditionRegistry;
         OutputGuardHandlerRegistry outputGuardHandlerRegistry;
+        ITxFinalizationVerifier txFinalizationVerifier;
         uint256 supportedTxType;
     }
 
@@ -56,6 +57,7 @@ library PaymentChallengeIFENotCanonical {
         PlasmaFramework framework,
         SpendingConditionRegistry spendingConditionRegistry,
         OutputGuardHandlerRegistry outputGuardHandlerRegistry,
+        ITxFinalizationVerifier txFinalizationVerifier,
         uint256 supportedTxType
     )
         public
@@ -67,6 +69,7 @@ library PaymentChallengeIFENotCanonical {
             isDeposit: IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL()),
             spendingConditionRegistry: spendingConditionRegistry,
             outputGuardHandlerRegistry: outputGuardHandlerRegistry,
+            txFinalizationVerifier: txFinalizationVerifier,
             supportedTxType: supportedTxType
         });
     }
@@ -229,7 +232,7 @@ library PaymentChallengeIFENotCanonical {
             });
             require(outputGuardHandler.isValid(outputGuardData), "Output guard information is invalid");
 
-            TxFinalization.Verifier memory verifier = TxFinalization.Verifier({
+            TxFinalizationModel.Data memory finalizationData = TxFinalizationModel.Data({
                 framework: self.framework,
                 protocol: protocol,
                 txBytes: args.competingTx,
@@ -238,7 +241,7 @@ library PaymentChallengeIFENotCanonical {
                 confirmSig: args.competingTxConfirmSig,
                 confirmSigAddress: outputGuardHandler.getConfirmSigAddress(outputGuardData)
             });
-            require(verifier.isStandardFinalized(), "Failed to verify the position of competing tx");
+            require(self.txFinalizationVerifier.isStandardFinalized(finalizationData), "Failed to verify the position of competing tx");
 
             competitorPosition = competingTxUtxoPos.value;
         }

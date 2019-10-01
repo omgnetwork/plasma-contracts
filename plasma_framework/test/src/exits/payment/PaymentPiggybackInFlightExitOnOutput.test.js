@@ -13,6 +13,7 @@ const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const StateTransitionVerifierMock = artifacts.require('StateTransitionVerifierMock');
 const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
+const TxFinalizationVerifier = artifacts.require('TxFinalizationVerifier');
 
 const {
     BN, constants, expectEvent, expectRevert, time,
@@ -60,6 +61,8 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, outputOwner, nonOu
         this.exitIdHelper = await ExitIdWrapper.new();
         this.stateTransitionVerifier = await StateTransitionVerifierMock.new();
         await this.stateTransitionVerifier.mockResult(true);
+
+        this.txFinalizationVerifier = await TxFinalizationVerifier.new();
     });
 
     beforeEach(async () => {
@@ -80,6 +83,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, outputOwner, nonOu
             this.outputGuardHandlerRegistry.address,
             spendingConditionRegistry.address,
             this.stateTransitionVerifier.address,
+            this.txFinalizationVerifier.address,
             PAYMENT_TX_TYPE,
         );
         this.startIFEBondSize = await this.exitGame.startIFEBondSize();

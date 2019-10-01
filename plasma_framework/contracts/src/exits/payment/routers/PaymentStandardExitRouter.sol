@@ -6,6 +6,7 @@ import "../PaymentExitDataModel.sol";
 import "../controllers/PaymentStartStandardExit.sol";
 import "../controllers/PaymentProcessStandardExit.sol";
 import "../controllers/PaymentChallengeStandardExit.sol";
+import "../../interfaces/ITxFinalizationVerifier.sol";
 import "../../registries/SpendingConditionRegistry.sol";
 import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../utils/BondSize.sol";
@@ -46,16 +47,17 @@ contract PaymentStandardExitRouter is
         EthVault ethVault,
         Erc20Vault erc20Vault,
         OutputGuardHandlerRegistry outputGuardHandlerRegistry,
-        SpendingConditionRegistry spendingConditionRegistry
+        SpendingConditionRegistry spendingConditionRegistry,
+        ITxFinalizationVerifier txFinalizationVerifier
     )
         public
     {
         startStandardExitController = PaymentStartStandardExit.buildController(
-            this, framework, outputGuardHandlerRegistry
+            this, framework, outputGuardHandlerRegistry, txFinalizationVerifier
         );
 
         challengeStandardExitController = PaymentChallengeStandardExit.buildController(
-            framework, spendingConditionRegistry, outputGuardHandlerRegistry
+            framework, spendingConditionRegistry, outputGuardHandlerRegistry, txFinalizationVerifier
         );
 
         processStandardExitController = PaymentProcessStandardExit.Controller(
