@@ -6,10 +6,10 @@
     "test": "test"
   },
   "dependencies": {
+    "@truffle/hdwallet-provider": "^1.0.19",
     "dotenv": "^8.0.0",
     "lodash.clonedeep": "^4.5.0",
-    "openzeppelin-solidity": "^2.3.0",
-    "truffle-hdwallet-provider": "^1.0.17"
+    "openzeppelin-solidity": "^2.3.0"
   },
   "devDependencies": {
     "@codechecks/client": "^0.1.10",
