@@ -109,7 +109,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, outputOwner, nonOu
             const output1 = new PaymentTransactionOutput(outputAmount1, outputGuard1, ETH);
 
             const outputAmount2 = 498;
-            const outputGuard2 = buildOutputGuard(OUTPUT_TYPE.TWO, DUMMY_OUTPUT_GUARD_PREIMAGE);
+            const outputGuard2 = buildOutputGuard(DUMMY_OUTPUT_GUARD_PREIMAGE);
             const output2 = new PaymentTransactionOutput(outputAmount2, outputGuard2, ETH, OUTPUT_TYPE.TWO);
 
             const inFlightTx = new PaymentTransaction(1, [buildUtxoPos(BLOCK_NUMBER, 0, 0)], [output1, output2]);

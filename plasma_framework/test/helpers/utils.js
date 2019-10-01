@@ -6,9 +6,8 @@ async function spentOnGas(receipt) {
     return web3.utils.toBN(tx.gasPrice).muln(receipt.gasUsed);
 }
 
-function buildOutputGuard(outputType, outputGuardPreimage) {
+function buildOutputGuard(outputGuardPreimage) {
     const hashValue = web3.utils.soliditySha3(
-        { t: 'uint256', v: outputType },
         { t: 'bytes', v: outputGuardPreimage },
     );
     const rightMostBytes20 = hashValue.substring(hashValue.length - 40, hashValue.length);

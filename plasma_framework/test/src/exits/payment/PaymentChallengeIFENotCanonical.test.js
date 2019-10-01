@@ -65,7 +65,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
 
     const createCompetitorTransaction = (outputType) => {
         const output = new PaymentTransactionOutput(
-            TEST_COMPETING_TX_OUTPUT_AMOUNT, buildOutputGuard(outputType, competitorOwner), ETH, outputType,
+            TEST_COMPETING_TX_OUTPUT_AMOUNT, buildOutputGuard(competitorOwner), ETH, outputType,
         );
         const competingTx = new PaymentTransaction(IFE_TX_TYPE, [INPUT_UTXO_POS.utxoPos], [output]);
         const competingTxPos = new UtxoPos(buildUtxoPos(COMPETING_TX_BLOCK_NUM, 0, 0));

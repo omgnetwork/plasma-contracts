@@ -155,12 +155,16 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 );
                 await this.framework.registerExitGame(IFE_TX_TYPE, this.exitGame.address, PROTOCOL.MORE_VP);
 
+                console.log(`alice = ${alice}`);
+                console.log(`bob = ${bob}`);
+                console.log(`carol = ${carol}`);
+
                 const {
                     args,
                     argsDecoded,
                     inputTxsBlockRoot1,
                     inputTxsBlockRoot2,
-                } = buildValidIfeStartArgs(AMOUNT, [carol, alice, alice], BLOCK_NUMBER, DEPOSIT_BLOCK_NUMBER);
+                } = buildValidIfeStartArgs(AMOUNT, [carol, alice, alice], BLOCK_NUMBER, DEPOSIT_BLOCK_NUMBER, OUTPUT_TYPE_TWO);
                 this.args = args;
                 this.argsDecoded = argsDecoded;
 
@@ -450,25 +454,6 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 );
             });
 
-            it('should fail when it failed to get the outputGuardHandler for input tx', async () => {
-                const {
-                    args,
-                    inputTxsBlockRoot1,
-                    inputTxsBlockRoot2,
-                } = buildValidIfeStartArgs(AMOUNT, [alice, bob, carol], BLOCK_NUMBER, DEPOSIT_BLOCK_NUMBER);
-                await registerSpendingConditionTrue(this.spendingConditionRegistry);
-                await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot1, 0);
-                await this.framework.setBlock(DEPOSIT_BLOCK_NUMBER, inputTxsBlockRoot2, 0);
-
-                const nonRegisteredOutputType = 999;
-                args.inputUtxosTypes = [nonRegisteredOutputType, nonRegisteredOutputType];
-
-                await expectRevert(
-                    this.exitGame.startInFlightExit(args, { from: alice, value: this.startIFEBondSize.toString() }),
-                    'Failed to get the outputGuardHandler of the output type',
-                );
-            });
-
             it('should fail when the output guard related info is invalid for the input tx', async () => {
                 const {
                     args,
@@ -693,23 +678,6 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 await expectRevert(
                     this.exitGame.startInFlightExit(args, { from: alice, value: this.startIFEBondSize.toString() }),
                     'Number of input transactions inclusion proofs does not match number of in-flight transaction inputs',
-                );
-            });
-
-            it('should fail when number of input utxos types does not match in-flight transactions number of inputs', async () => {
-                const {
-                    args,
-                    inputTxsBlockRoot1,
-                    inputTxsBlockRoot2,
-                } = buildValidIfeStartArgs(AMOUNT, [alice, bob, carol], BLOCK_NUMBER, DEPOSIT_BLOCK_NUMBER);
-                await registerSpendingConditionTrue(this.spendingConditionRegistry);
-                await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot1, 0);
-                await this.framework.setBlock(DEPOSIT_BLOCK_NUMBER, inputTxsBlockRoot2, 0);
-                args.inputUtxosTypes = [];
-
-                await expectRevert(
-                    this.exitGame.startInFlightExit(args, { from: alice, value: this.startIFEBondSize.toString() }),
-                    'Number of input utxo types does not match number of in-flight transaction inputs.',
                 );
             });
 
