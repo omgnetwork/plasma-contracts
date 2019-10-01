@@ -6,6 +6,9 @@ import "./IErc20DepositVerifier.sol";
 import {PaymentTransactionModel as DepositTx} from "../../transactions/PaymentTransactionModel.sol";
 import {PaymentOutputModel as DepositOutputModel} from "../../transactions/outputs/PaymentOutputModel.sol";
 
+/**
+ * @dev implementation of Erc20 deposit verifier using Payment transaction as the deposit tx
+ */
 contract Erc20DepositVerifier is IErc20DepositVerifier {
     using DepositOutputModel for DepositOutputModel.Output;
 

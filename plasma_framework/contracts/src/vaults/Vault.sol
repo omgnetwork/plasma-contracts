@@ -4,10 +4,15 @@ import "./ZeroHashesProvider.sol";
 import "../framework/PlasmaFramework.sol";
 import "../framework/utils/Operated.sol";
 
+/**
+ * @notice Base contract for vault implementation
+ * @dev This is with the functionality to swap "deposit verifier".
+ *      By setting new deposit verifier, we can upgrade to new deposit tx type without whole upgrade of the vault.
+ */
 contract Vault is Operated {
     event SetDepositVerifierCalled(address nextDepositVerifier);
     PlasmaFramework internal framework;
-    bytes32[16] internal zeroHashes;
+    bytes32[16] internal zeroHashes; // Pre-computes zero hashes to be used for building merkle tree for deposit block
 
     /**
      * @notice Stores deposit verifier contracts addresses where first was effective upto
@@ -21,6 +26,9 @@ contract Vault is Operated {
         zeroHashes = ZeroHashesProvider.getZeroHashes();
     }
 
+    /**
+     * @notice Checks it is called by a non quarantined exit game contract
+    */
     modifier onlyFromNonQuarantinedExitGame() {
         require(
             ExitGameRegistry(framework).isExitGameSafeToUse(msg.sender),
@@ -29,19 +37,10 @@ contract Vault is Operated {
         _;
     }
 
-    function _submitDepositBlock(bytes memory _depositTx) internal returns (uint256) {
-        bytes32 root = keccak256(_depositTx);
-        for (uint i = 0; i < 16; i++) {
-            root = keccak256(abi.encodePacked(root, zeroHashes[i]));
-        }
-
-        uint256 depositBlkNum = framework.submitDepositBlock(root);
-        return depositBlkNum;
-    }
-
     /**
      * @notice Sets the deposit verifier contract. This can be only called by the operator.
-     * @notice When one contract is already set next will be effective after MIN_EXIT_PERIOD.
+     * @dev emit SetDepositVerifierCalled
+     * @dev When one contract is already set next will be effective after MIN_EXIT_PERIOD.
      * @param _verifier address of the verifier contract.
      */
     function setDepositVerifier(address _verifier) public onlyOperator {
@@ -51,11 +50,11 @@ contract Vault is Operated {
             depositVerifiers[0] = getEffectiveDepositVerifier();
             depositVerifiers[1] = _verifier;
             newDepositVerifierMaturityTimestamp = now + framework.minExitPeriod();
-
-            emit SetDepositVerifierCalled(depositVerifiers[1]);
         } else {
             depositVerifiers[0] = _verifier;
         }
+
+        emit SetDepositVerifierCalled(_verifier);
     }
 
     /**
@@ -68,5 +67,19 @@ contract Vault is Operated {
         } else {
             return depositVerifiers[0];
         }
+    }
+
+    /**
+     * @dev Function that should be called by the child contract inheritancing this on deposit.
+     *      It would submit the deposit block to the framework.
+     */
+    function _submitDepositBlock(bytes memory _depositTx) internal returns (uint256) {
+        bytes32 root = keccak256(_depositTx);
+        for (uint i = 0; i < 16; i++) {
+            root = keccak256(abi.encodePacked(root, zeroHashes[i]));
+        }
+
+        uint256 depositBlkNum = framework.submitDepositBlock(root);
+        return depositBlkNum;
     }
 }
