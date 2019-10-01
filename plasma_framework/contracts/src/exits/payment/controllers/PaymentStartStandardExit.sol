@@ -4,13 +4,14 @@ pragma experimental ABIEncoderV2;
 import "../PaymentExitDataModel.sol";
 import "../routers/PaymentStandardExitRouterArgs.sol";
 import "../../interfaces/IOutputGuardHandler.sol";
+import "../../interfaces/ITxFinalizationVerifier.sol";
 import "../../models/OutputGuardModel.sol";
+import "../../models/TxFinalizationModel.sol";
 import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../utils/ExitableTimestamp.sol";
 import "../../utils/ExitId.sol";
 import "../../utils/OutputId.sol";
 import "../../utils/OutputGuard.sol";
-import "../../utils/TxFinalization.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
 import "../../../transactions/outputs/PaymentOutputModel.sol";
 import "../../../utils/IsDeposit.sol";
@@ -22,7 +23,6 @@ library PaymentStartStandardExit {
     using IsDeposit for IsDeposit.Predicate;
     using PaymentOutputModel for PaymentOutputModel.Output;
     using UtxoPosLib for UtxoPosLib.UtxoPos;
-    using TxFinalization for TxFinalization.Verifier;
 
     struct Controller {
         IExitProcessor exitProcessor;
@@ -30,6 +30,7 @@ library PaymentStartStandardExit {
         IsDeposit.Predicate isDeposit;
         ExitableTimestamp.Calculator exitableTimestampCalculator;
         OutputGuardHandlerRegistry outputGuardHandlerRegistry;
+        ITxFinalizationVerifier txFinalizationVerifier;
         uint256 ethVaultId;
         uint256 erc20VaultId;
     }
@@ -48,7 +49,7 @@ library PaymentStartStandardExit {
         uint160 exitId;
         bool isTxDeposit;
         uint256 txBlockTimeStamp;
-        TxFinalization.Verifier finalizationVerifier;
+        TxFinalizationModel.Data finalizationData;
     }
 
     event ExitStarted(
@@ -64,6 +65,7 @@ library PaymentStartStandardExit {
         IExitProcessor exitProcessor,
         PlasmaFramework framework,
         OutputGuardHandlerRegistry outputGuardHandlerRegistry,
+        ITxFinalizationVerifier txFinalizationVerifier,
         uint256 ethVaultId,
         uint256 erc20VaultId
     )
@@ -77,6 +79,7 @@ library PaymentStartStandardExit {
             isDeposit: IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL()),
             exitableTimestampCalculator: ExitableTimestamp.Calculator(framework.minExitPeriod()),
             outputGuardHandlerRegistry: outputGuardHandlerRegistry,
+            txFinalizationVerifier: txFinalizationVerifier,
             ethVaultId: ethVaultId,
             erc20VaultId: erc20VaultId
         });
@@ -127,7 +130,7 @@ library PaymentStartStandardExit {
 
         IOutputGuardHandler outputGuardHandler = controller.outputGuardHandlerRegistry.outputGuardHandlers(args.outputType);
 
-        TxFinalization.Verifier memory finalizationVerifier = TxFinalization.moreVpVerifier(
+        TxFinalizationModel.Data memory finalizationData = TxFinalizationModel.moreVpData(
             controller.framework,
             args.rlpOutputTx,
             utxoPos.txPos(),
@@ -145,7 +148,7 @@ library PaymentStartStandardExit {
             exitId: exitId,
             isTxDeposit: isTxDeposit,
             txBlockTimeStamp: blockTimestamp,
-            finalizationVerifier: finalizationVerifier
+            finalizationData: finalizationData
         });
     }
 
@@ -162,7 +165,7 @@ library PaymentStartStandardExit {
         require(data.outputGuardHandler.isValid(data.outputGuardData), "Some of the output guard related information is not valid");
         require(data.outputGuardHandler.getExitTarget(data.outputGuardData) == msg.sender, "Only exit target can start an exit");
 
-        require(data.finalizationVerifier.isStandardFinalized(), "The transaction must be standard finalized");
+        require(data.controller.txFinalizationVerifier.isStandardFinalized(data.finalizationData), "The transaction must be standard finalized");
         require(exitMap.exits[data.exitId].exitable == false, "Exit already started");
     }
 
@@ -195,7 +198,7 @@ library PaymentStartStandardExit {
         if (data.output.token == address(0)) {
             vaultId = data.controller.ethVaultId;
         } else {
-            vaultId =  data.controller.erc20VaultId;
+            vaultId = data.controller.erc20VaultId;
         }
 
         data.controller.framework.enqueue(

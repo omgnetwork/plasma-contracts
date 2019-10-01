@@ -19,7 +19,8 @@ contract PaymentInFlightExitRouterMock is PaymentInFlightExitRouter {
         Erc20Vault erc20Vault,
         OutputGuardHandlerRegistry outputGuardHandlerRegistry,
         SpendingConditionRegistry spendingConditionRegistry,
-        IStateTransitionVerifier verifier,
+        IStateTransitionVerifier stateTransitionVerifier,
+        ITxFinalizationVerifier txFinalizationVerifier,
         uint256 supportedTxType
     )
         public
@@ -29,7 +30,8 @@ contract PaymentInFlightExitRouterMock is PaymentInFlightExitRouter {
             erc20Vault,
             outputGuardHandlerRegistry,
             spendingConditionRegistry,
-            verifier,
+            stateTransitionVerifier,
+            txFinalizationVerifier,
             supportedTxType
         )
     {

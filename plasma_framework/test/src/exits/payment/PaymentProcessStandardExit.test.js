@@ -8,6 +8,7 @@ const PaymentStartStandardExit = artifacts.require('PaymentStartStandardExit');
 const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
+const TxFinalizationVerifier = artifacts.require('TxFinalizationVerifier');
 
 const {
     BN, constants, expectEvent,
@@ -44,10 +45,15 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
             const erc20Vault = await SpyErc20Vault.new(this.framework.address);
             const outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
             const spendingConditionRegistry = await SpendingConditionRegistry.new();
+            const txFinalizationVerifier = await TxFinalizationVerifier.new();
 
             this.exitGame = await PaymentStandardExitRouter.new(
-                this.framework.address, ethVault.address, erc20Vault.address,
-                outputGuardHandlerRegistry.address, spendingConditionRegistry.address,
+                this.framework.address,
+                ethVault.address,
+                erc20Vault.address,
+                outputGuardHandlerRegistry.address,
+                spendingConditionRegistry.address,
+                txFinalizationVerifier.address,
             );
             this.framework.registerExitGame(1, this.exitGame.address, PROTOCOL.MORE_VP);
 

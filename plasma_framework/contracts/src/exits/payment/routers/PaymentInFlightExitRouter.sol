@@ -12,6 +12,7 @@ import "../controllers/PaymentChallengeIFEOutputSpent.sol";
 import "../../registries/SpendingConditionRegistry.sol";
 import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../interfaces/IStateTransitionVerifier.sol";
+import "../../interfaces/ITxFinalizationVerifier.sol";
 import "../../utils/BondSize.sol";
 import "../../../utils/OnlyWithValue.sol";
 import "../../../framework/PlasmaFramework.sol";
@@ -56,7 +57,8 @@ contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue {
         Erc20Vault erc20Vault,
         OutputGuardHandlerRegistry outputGuardHandlerRegistry,
         SpendingConditionRegistry spendingConditionRegistry,
-        IStateTransitionVerifier verifier,
+        IStateTransitionVerifier stateTransitionVerifier,
+        ITxFinalizationVerifier txFinalizationVerifier,
         uint256 supportedTxType
     )
         public
@@ -65,7 +67,8 @@ contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue {
             framework,
             outputGuardHandlerRegistry,
             spendingConditionRegistry,
-            verifier,
+            stateTransitionVerifier,
+            txFinalizationVerifier,
             supportedTxType
         );
 
@@ -83,19 +86,22 @@ contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue {
             framework,
             spendingConditionRegistry,
             outputGuardHandlerRegistry,
+            txFinalizationVerifier,
             supportedTxType
         );
 
         challengeInputSpentController = PaymentChallengeIFEInputSpent.buildController(
             framework,
             spendingConditionRegistry,
-            outputGuardHandlerRegistry
+            outputGuardHandlerRegistry,
+            txFinalizationVerifier
         );
 
         challengeOutputSpentController = PaymentChallengeIFEOutputSpent.Controller(
             framework,
             spendingConditionRegistry,
-            outputGuardHandlerRegistry
+            outputGuardHandlerRegistry,
+            txFinalizationVerifier
         );
 
         processInflightExitController = PaymentProcessInFlightExit.Controller({

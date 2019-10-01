@@ -9,6 +9,7 @@ const PaymentStartStandardExit = artifacts.require('PaymentStartStandardExit');
 const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
+const TxFinalizationVerifier = artifacts.require('TxFinalizationVerifier');
 
 const {
     BN, constants, expectEvent, expectRevert,
@@ -96,9 +97,15 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
             // lets the spending condition pass by default
             await this.spendingCondition.mockResult(true);
 
+            this.txFinalizationVerifier = await TxFinalizationVerifier.new();
+
             this.exitGame = await PaymentStandardExitRouter.new(
-                this.framework.address, this.ethVault.address, this.erc20Vault.address,
-                this.outputGuardHandlerRegistry.address, this.spendingConditionRegistry.address,
+                this.framework.address,
+                this.ethVault.address,
+                this.erc20Vault.address,
+                this.outputGuardHandlerRegistry.address,
+                this.spendingConditionRegistry.address,
+                this.txFinalizationVerifier.address,
             );
             await this.framework.registerExitGame(TX_TYPE.PAYMENT, this.exitGame.address, PROTOCOL.MORE_VP);
 
@@ -176,10 +183,14 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
                 );
             });
 
-            it('should fail when challenge tx is not protocol finalized', async () => {
+            it('should fail when TxFinalizationVerifier reverts while checking whether challenge tx is protocol finalized', async () => {
                 const dummyExitGame = await PaymentStandardExitRouter.new(
-                    this.framework.address, this.ethVault.address, this.erc20Vault.address,
-                    this.outputGuardHandlerRegistry.address, this.spendingConditionRegistry.address,
+                    this.framework.address,
+                    this.ethVault.address,
+                    this.erc20Vault.address,
+                    this.outputGuardHandlerRegistry.address,
+                    this.spendingConditionRegistry.address,
+                    this.txFinalizationVerifier.address,
                 );
 
                 const args = getTestInputArgs(OUTPUT_TYPE.PAYMENT, alice);
@@ -198,7 +209,7 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
 
                 await expectRevert(
                     this.exitGame.challengeStandardExit(args),
-                    'Challenge transaction is not protocol finalized',
+                    'not supporting MVP yet',
                 );
             });
 

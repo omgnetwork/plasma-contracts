@@ -23,6 +23,7 @@ const PaymentProcessInFlightExit = artifacts.require('PaymentProcessInFlightExit
 const PlasmaFramework = artifacts.require('PlasmaFramework');
 const PriorityQueue = artifacts.require('PriorityQueue');
 const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry');
+const TxFinalizationVerifier = artifacts.require('TxFinalizationVerifier');
 
 const {
     BN, constants, expectEvent, expectRevert, time,
@@ -124,6 +125,8 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
 
         const spendingConditionRegistry = await SpendingConditionRegistry.new();
         const stateVerifier = await PaymentTransactionStateTransitionVerifier.new();
+        const txFinalizationVerifier = await TxFinalizationVerifier.new();
+
         this.exitGame = await PaymentExitGame.new(
             this.framework.address,
             this.ethVault.address,
@@ -131,6 +134,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
             outputGuardHandlerRegistry.address,
             spendingConditionRegistry.address,
             stateVerifier.address,
+            txFinalizationVerifier.address,
             TX_TYPE.PAYMENT,
         );
 
