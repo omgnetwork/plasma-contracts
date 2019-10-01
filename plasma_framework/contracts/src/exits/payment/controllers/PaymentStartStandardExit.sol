@@ -9,7 +9,6 @@ import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../utils/ExitableTimestamp.sol";
 import "../../utils/ExitId.sol";
 import "../../utils/OutputId.sol";
-import "../../utils/OutputGuard.sol";
 import "../../utils/TxFinalization.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
 import "../../../transactions/outputs/PaymentOutputModel.sol";

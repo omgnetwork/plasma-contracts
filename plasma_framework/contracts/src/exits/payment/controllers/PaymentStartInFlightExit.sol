@@ -12,7 +12,6 @@ import "../../registries/SpendingConditionRegistry.sol";
 import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../utils/ExitableTimestamp.sol";
 import "../../utils/ExitId.sol";
-import "../../utils/OutputGuard.sol";
 import "../../utils/OutputId.sol";
 import "../../utils/TxFinalization.sol";
 import "../../../utils/IsDeposit.sol";

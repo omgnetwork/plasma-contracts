@@ -9,7 +9,6 @@ import "../../interfaces/IOutputGuardHandler.sol";
 import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../utils/ExitableTimestamp.sol";
 import "../../utils/ExitId.sol";
-import "../../utils/OutputGuard.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../framework/interfaces/IExitProcessor.sol";
 import "../../../transactions/outputs/PaymentOutputModel.sol";
