@@ -1,5 +1,4 @@
 const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry');
-const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry');
 const PaymentExitGame = artifacts.require('PaymentExitGame');
 const PaymentChallengeStandardExit = artifacts.require('PaymentChallengeStandardExit');
 const PaymentChallengeIFENotCanonical = artifacts.require('PaymentChallengeIFENotCanonical');
@@ -14,6 +13,8 @@ const PaymentPiggybackInFlightExit = artifacts.require('PaymentPiggybackInFlight
 const PaymentProcessStandardExit = artifacts.require('PaymentProcessStandardExit');
 const PaymentProcessInFlightExit = artifacts.require('PaymentProcessInFlightExit');
 const PlasmaFramework = artifacts.require('PlasmaFramework');
+const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry');
+const TxFinalizationVerifier = artifacts.require('TxFinalizationVerifier');
 
 const config = require('./config.js');
 
@@ -46,6 +47,7 @@ module.exports = async (_) => {
     const outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
     const spendingConditionRegistry = await SpendingConditionRegistry.new();
     const stateVerifier = await PaymentTransactionStateTransitionVerifier.new();
+    const txFinalizationVerifier = await TxFinalizationVerifier.new();
     const plasmaFramework = await PlasmaFramework.deployed();
     const ethVaultAddress = await plasmaFramework.vaults(config.registerKeys.vaultId.eth);
     const erc20VaultAddress = await plasmaFramework.vaults(config.registerKeys.vaultId.erc20);
@@ -56,6 +58,7 @@ module.exports = async (_) => {
         outputGuardHandlerRegistry.address,
         spendingConditionRegistry.address,
         stateVerifier.address,
+        txFinalizationVerifier.address,
         PAYMENT_TX_TYPE,
     );
 
