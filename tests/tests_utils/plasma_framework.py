@@ -221,10 +221,10 @@ class PlasmaFramework:
         return self.plasma_framework.nextChildBlock()
 
     def nextDepositBlock(self):
-        return self.plasma_framework.nextDepositBlock()
+        return self.plasma_framework.nextDeposit()
 
     def getDepositBlockNumber(self):
-        return self.plasma_framework.getDepositBlockNumber()
+        return self.plasma_framework.nextDepositBlock()
 
     def childBlockInterval(self):
         return self.plasma_framework.childBlockInterval()

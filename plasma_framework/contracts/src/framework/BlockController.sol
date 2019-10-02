@@ -18,7 +18,7 @@ contract BlockController is Operated, VaultRegistry {
     address public authority;
     uint256 public childBlockInterval;
     uint256 public nextChildBlock;
-    uint256 public nextDepositBlock;
+    uint256 public nextDeposit;
 
     mapping (uint256 => BlockModel.Block) public blocks; // block number => Block data
 
@@ -32,7 +32,7 @@ contract BlockController is Operated, VaultRegistry {
     {
         childBlockInterval = _interval;
         nextChildBlock = childBlockInterval;
-        nextDepositBlock = 1;
+        nextDeposit= 1;
     }
 
     /**
@@ -73,7 +73,7 @@ contract BlockController is Operated, VaultRegistry {
         });
 
         nextChildBlock += childBlockInterval;
-        nextDepositBlock = 1;
+        nextDeposit = 1;
 
         emit BlockSubmitted(submittedBlockNumber);
     }
@@ -85,19 +85,19 @@ contract BlockController is Operated, VaultRegistry {
      * @return the deposit block number
      */
     function submitDepositBlock(bytes32 _blockRoot) public onlyFromNonQuarantinedVault returns (uint256) {
-        require(nextDepositBlock < childBlockInterval, "Exceeded limit of deposits per child block interval");
+        require(nextDeposit < childBlockInterval, "Exceeded limit of deposits per child block interval");
 
-        uint256 blknum = getDepositBlockNumber();
+        uint256 blknum = nextDepositBlock();
         blocks[blknum] = BlockModel.Block({
             root : _blockRoot,
             timestamp : block.timestamp
         });
 
-        nextDepositBlock++;
+        nextDeposit++;
         return blknum;
     }
 
-    function getDepositBlockNumber() public view returns (uint256) {
-        return nextChildBlock - childBlockInterval + nextDepositBlock;
+    function nextDepositBlock() public view returns (uint256) {
+        return nextChildBlock - childBlockInterval + nextDeposit;
     }
 }
