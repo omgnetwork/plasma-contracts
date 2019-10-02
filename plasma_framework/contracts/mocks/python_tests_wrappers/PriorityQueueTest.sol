@@ -1,5 +1,5 @@
 pragma solidity ^0.5.0;
-import "../../../src/framework/utils/PriorityQueue.sol";
+import "../../src/framework/utils/PriorityQueue.sol";
 
 /**
  * @title PriorityQueue
