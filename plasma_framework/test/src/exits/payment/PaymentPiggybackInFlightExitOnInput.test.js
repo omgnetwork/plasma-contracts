@@ -248,8 +248,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
                     YOUNGEST_POSITION_BLOCK, web3.utils.sha3('dummy root'), this.youngestPositionTimestamp,
                 );
                 await this.exitGame.setInFlightExit(this.testData.exitId, this.testData.inFlightExitData);
-                await this.framework.addVault(ETH_VAULT_ID);
-                await this.framework.addToken(ETH_VAULT_ID, ETH);
+                await this.framework.addExitQueue(ETH_VAULT_ID, ETH);
 
                 this.piggybackTx = await this.exitGame.piggybackInFlightExitOnInput(
                     this.testData.argsInputOne, { from: inputOwner, value: this.piggybackBondSize.toString() },

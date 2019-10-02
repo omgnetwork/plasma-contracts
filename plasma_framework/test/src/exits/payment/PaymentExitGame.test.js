@@ -110,10 +110,8 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
         await this.framework.registerVault(ETH_VAULT_ID, this.ethVault.address);
         await this.framework.registerVault(ERC20_VAULT_ID, this.erc20Vault.address);
 
-        await this.framework.addVault(ETH_VAULT_ID);
-        await this.framework.addToken(ETH_VAULT_ID, ETH);
-        await this.framework.addVault(ERC20_VAULT_ID);
-        await this.framework.addToken(ERC20_VAULT_ID, this.erc20Vault.address);
+        await this.framework.addExitQueue(ETH_VAULT_ID, ETH);
+        await this.framework.addExitQueue(ERC20_VAULT_ID, this.erc20Vault.address);
 
         const outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
         const paymentOutputGuardHandler = await PaymentOutputGuardHandler.new(OUTPUT_TYPE.PAYMENT);
@@ -457,11 +455,11 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
 
             describe('Given ERC20 token added to the PlasmaFramework', () => {
                 beforeEach(async () => {
-                    await this.framework.addToken(ERC20_VAULT_ID, this.erc20.address);
+                    await this.framework.addExitQueue(ERC20_VAULT_ID, this.erc20.address);
                 });
 
                 it('should have the ERC20 token', async () => {
-                    expect(await this.framework.vaultHasToken(ERC20_VAULT_ID, this.erc20.address)).to.be.true;
+                    expect(await this.framework.hasExitQueue(ERC20_VAULT_ID, this.erc20.address)).to.be.true;
                 });
 
                 describe('When Alice starts standard exit on the ERC20 deposit tx', () => {

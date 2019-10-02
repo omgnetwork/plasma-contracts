@@ -10,21 +10,17 @@ import "../utils/TxPosLib.sol";
 contract ExitGameController is ExitGameRegistry {
 
     mapping (uint256 => IExitProcessor) public delegations;
-    mapping (uint256 => bool) public registeredVaults;
     mapping (bytes32 => PriorityQueue) public exitsQueues;
     mapping (bytes32 => bool) public isOutputSpent;
 
-    event TokenAdded(
+    event ExitQueueAdded(
         uint256 vaultId,
         address token
     );
 
-    event VaultAdded(
-        uint256 vaultId
-    );
-
     event ProcessedExitsNum(
         uint256 processedNum,
+        uint256 vaultId,
         address token
     );
 
@@ -40,52 +36,32 @@ contract ExitGameController is ExitGameRegistry {
     }
 
     /**
-     * @notice Returns true only if vault has been registered.
-     * @param vaultId Id of the vault.
-     */
-    function hasVault(uint256 vaultId) public view returns (bool) {
-        return registeredVaults[vaultId] == true;
-    }
-
-    /**
-     * @notice Enables vault to be used for processing exits.
-     * @dev the queue is created as a new contract instance.
-     * @param vaultId Id of the vault.
-     */
-    function addVault(uint256 vaultId) external onlyOperator {
-        require(vaultId != 0, "Vault id must not be 0");
-        require(!hasVault(vaultId), "The vault has already been registered");
-        registeredVaults[vaultId] = true;
-        emit VaultAdded(vaultId);
-    }
-
-    /**
      * @notice Checks if queue for particular token was created.
      * @param vaultId Id of the vault that handles the token
      * @param token Address of the token.
      * @return bool represents whether the queue for a token was created.
      */
-    function vaultHasToken(uint256 vaultId, address token) public view returns (bool) {
+    function hasExitQueue(uint256 vaultId, address token) public view returns (bool) {
         bytes32 key = exitQueueKey(vaultId, token);
         return address(exitsQueues[key]) != address(0);
     }
 
+    function hasExitQueue(bytes32 queueKey) private view returns (bool) {
+        return address(exitsQueues[queueKey]) != address(0);
+    }
+
     /**
-     * @notice Add token to the plasma framework and initiate the priority queue.
+     * @notice Adds queue to the plasma framework.
      * @dev the queue is created as a new contract instance.
      * @param vaultId Id of the vault
      * @param token Address of the token.
      */
-    function addToken(uint256 vaultId, address token) external {
-        require(hasVault(vaultId), "Vault is not registered for funding exits");
-        require(!vaultHasToken(vaultId, token), "Such token has already been added");
+    function addExitQueue(uint256 vaultId, address token) external {
+        require(vaultId != 0, "Invalid vault id");
         bytes32 key = exitQueueKey(vaultId, token);
+        require(!hasExitQueue(key), "Exit queue exists");
         exitsQueues[key] = new PriorityQueue();
-        emit TokenAdded(vaultId, token);
-    }
-
-    function hasToken(bytes32 key) private view returns (bool) {
-        return address(exitsQueues[key]) != address(0);
+        emit ExitQueueAdded(vaultId, token);
     }
 
     /**
@@ -105,7 +81,7 @@ contract ExitGameController is ExitGameRegistry {
         returns (uint256)
     {
         bytes32 key = exitQueueKey(vaultId, token);
-        require(hasToken(key), "Such token has not been added to the plasma framework yet");
+        require(hasExitQueue(key), "Such token has not been added to the plasma framework yet");
         PriorityQueue queue = exitsQueues[key];
 
         uint256 uniquePriority = ExitPriority.computePriority(exitableAt, txPos, exitId);
@@ -127,7 +103,7 @@ contract ExitGameController is ExitGameRegistry {
      */
     function processExits(uint256 vaultId, address token, uint160 topExitId, uint256 maxExitsToProcess) external {
         bytes32 key = exitQueueKey(vaultId, token);
-        require(hasToken(key), "Such token has not been added to the plasma framework yet");
+        require(hasExitQueue(key), "Such token has not been added to the plasma framework yet");
         PriorityQueue queue = exitsQueues[key];
         require(queue.currentSize() > 0, "Exit queue is empty");
 
@@ -155,7 +131,7 @@ contract ExitGameController is ExitGameRegistry {
             processor = delegations[uniquePriority];
         }
 
-        emit ProcessedExitsNum(processedNum, token);
+        emit ProcessedExitsNum(processedNum, vaultId, token);
     }
 
     /**

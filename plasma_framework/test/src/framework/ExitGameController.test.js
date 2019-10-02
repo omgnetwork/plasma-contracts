@@ -12,7 +12,7 @@ const { buildTxPos } = require('../../helpers/positions.js');
 const { PROTOCOL, EMPTY_BYTES_32 } = require('../../helpers/constants.js');
 const { exitQueueKey } = require('../../helpers/utils.js');
 
-contract('ExitGameController', ([_, nonOperator]) => {
+contract('ExitGameController', () => {
     const MIN_EXIT_PERIOD = 10;
     const INITIAL_IMMUNE_EXIT_GAMES = 1;
     const VAULT_ID = 1;
@@ -24,82 +24,49 @@ contract('ExitGameController', ([_, nonOperator]) => {
 
         this.dummyTxType = 1;
         await this.controller.registerExitGame(this.dummyTxType, this.dummyExitGame.address, PROTOCOL.MORE_VP);
-        this.vaultRegistrationReceipt = await this.controller.addVault(VAULT_ID);
 
         // take any random contract address as token
         this.dummyToken = (await DummyExitGame.new()).address;
     });
 
-    describe('addVault', () => {
-        it('emits vault added event', async () => {
-            await expectEvent.inLogs(this.vaultRegistrationReceipt.logs, 'VaultAdded', { vaultId: new BN(VAULT_ID) });
-        });
-
-        it('reverts when adding the same vault', async () => {
-            await expectRevert(
-                this.controller.addVault(VAULT_ID),
-                'The vault has already been registered',
-            );
-        });
-
-        it('reverts when adding vault with id 0', async () => {
-            await expectRevert(
-                this.controller.addVault(0),
-                'Vault id must not be 0',
-            );
-        });
-
-        it('can be valled only by operator', async () => {
-            await expectRevert(
-                this.controller.addVault(2, { from: nonOperator }),
-                'Not being called by operator.',
-            );
-        });
-    });
-
-    describe('vaultHasToken', () => {
-        it('returns true when token already added', async () => {
-            await this.controller.addToken(VAULT_ID, this.dummyToken);
-            expect(await this.controller.vaultHasToken(VAULT_ID, this.dummyToken)).to.be.true;
-        });
-
-        it('returns false when token not added', async () => {
-            expect(await this.controller.vaultHasToken(VAULT_ID, this.dummyToken)).to.be.false;
-        });
-
-        it('returns false when vault is not registered', async () => {
-            const unregisteredVaultId = VAULT_ID + 1;
-            expect(await this.controller.vaultHasToken(unregisteredVaultId, this.dummyToken)).to.be.false;
-        });
-    });
-
-    describe('addToken', () => {
-        it('rejects when vault is not registered', async () => {
-            const unregisteredVaultId = VAULT_ID + 1;
-            await expectRevert(
-                this.controller.addToken(unregisteredVaultId, this.dummyToken),
-                'Vault is not registered for funding exits',
-            );
-        });
-
-        it('rejects when token already added', async () => {
-            await this.controller.addToken(VAULT_ID, this.dummyToken);
-            await expectRevert(
-                this.controller.addToken(VAULT_ID, this.dummyToken),
-                'Such token has already been added',
-            );
+    describe('addExitQueue', () => {
+        beforeEach('exit queue is added', async () => {
+            this.queueAddedReceipt = await this.controller.addExitQueue(VAULT_ID, this.dummyToken);
         });
 
         it('generates a priority queue instance to the exitsQueues map', async () => {
-            await this.controller.addToken(VAULT_ID, this.dummyToken);
             const key = exitQueueKey(VAULT_ID, this.dummyToken);
             const priorityQueue = await this.controller.exitsQueues(key);
             expect(priorityQueue).to.not.equal(constants.ZERO_ADDRESS);
         });
 
-        it('emits TokenAdded event', async () => {
-            const tx = await this.controller.addToken(VAULT_ID, this.dummyToken);
-            await expectEvent.inLogs(tx.logs, 'TokenAdded', { vaultId: new BN(VAULT_ID), token: this.dummyToken });
+        it('emits event', async () => {
+            await expectEvent.inLogs(this.queueAddedReceipt.logs, 'ExitQueueAdded', { vaultId: new BN(VAULT_ID), token: this.dummyToken });
+        });
+
+        it('reverts when adding the same queue', async () => {
+            await expectRevert(
+                this.controller.addExitQueue(VAULT_ID, this.dummyToken),
+                'Exit queue exists',
+            );
+        });
+
+        it('reverts when adding queue with vault id 0', async () => {
+            await expectRevert(
+                this.controller.addExitQueue(0, this.dummyToken),
+                'Invalid vault id',
+            );
+        });
+    });
+
+    describe('hasExitQueue', () => {
+        it('returns true when queue is added', async () => {
+            await this.controller.addExitQueue(VAULT_ID, this.dummyToken);
+            expect(await this.controller.hasExitQueue(VAULT_ID, this.dummyToken)).to.be.true;
+        });
+
+        it('returns false when queue not added', async () => {
+            expect(await this.controller.hasExitQueue(VAULT_ID, this.dummyToken)).to.be.false;
         });
     });
 
@@ -112,7 +79,7 @@ contract('ExitGameController', ([_, nonOperator]) => {
                 exitId: 123,
                 exitProcessor: this.dummyExitGame.address,
             };
-            this.controller.addToken(VAULT_ID, this.dummyToken);
+            this.controller.addExitQueue(VAULT_ID, this.dummyToken);
         });
 
         it('rejects when not called from exit game contract', async () => {
@@ -256,7 +223,7 @@ contract('ExitGameController', ([_, nonOperator]) => {
 
     describe('processExits', () => {
         beforeEach(async () => {
-            this.controller.addToken(VAULT_ID, this.dummyToken);
+            this.controller.addExitQueue(VAULT_ID, this.dummyToken);
             this.dummyExit = {
                 token: this.dummyToken,
                 exitProcessor: this.dummyExitGame.address,
