@@ -221,6 +221,21 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
             );
         });
 
+        it('should fail when exit has already been spent', async () => {
+            const { args, merkleTree } = buildTestData(this.dummyAmount, outputOwner, this.dummyBlockNum);
+
+            const outputId = computeDepositOutputId(args.rlpOutputTx, 0, args.utxoPos);
+            await this.framework.setOutputSpent(outputId);
+            await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, 0);
+
+            await expectRevert(
+                this.exitGame.startStandardExit(
+                    args, { from: outputOwner, value: this.startStandardExitBondSize },
+                ),
+                'Output already spent',
+            );
+        });
+
         it('should charge the bond from the user', async () => {
             const { args, merkleTree } = buildTestData(this.dummyAmount, outputOwner, this.dummyBlockNum);
 
