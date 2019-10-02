@@ -2,7 +2,7 @@ const BondSizeMock = artifacts.require('BondSizeMock');
 const { BN, expectRevert, time } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
-contract.only('BondSize', () => {
+contract('BondSize', () => {
     const WAITING_PERIOD = time.duration.days(2);
     const HALF_WAITING_PERIOD = WAITING_PERIOD.divn(2);
 

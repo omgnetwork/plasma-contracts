@@ -62,10 +62,10 @@ contract Vault is Operated {
      * @return contract address of deposit verifier.
      */
     function getEffectiveDepositVerifier() public view returns (address) {
-        if (now > newDepositVerifierMaturityTimestamp) {
-            return depositVerifiers[1];
-        } else {
+        if (now < newDepositVerifierMaturityTimestamp) {
             return depositVerifiers[0];
+        } else {
+            return depositVerifiers[1];
         }
     }
 
