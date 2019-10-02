@@ -105,8 +105,8 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
 
             this.exitGame = await PaymentStandardExitRouter.new(
                 this.framework.address,
-                this.ethVault.address,
-                this.erc20Vault.address,
+                ETH_VAULT_ID,
+                ERC20_VAULT_ID,
                 this.outputGuardHandlerRegistry.address,
                 this.spendingConditionRegistry.address,
                 this.txFinalizationVerifier.address,
@@ -190,8 +190,8 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
             it('should fail when TxFinalizationVerifier reverts while checking whether challenge tx is protocol finalized', async () => {
                 const dummyExitGame = await PaymentStandardExitRouter.new(
                     this.framework.address,
-                    this.ethVault.address,
-                    this.erc20Vault.address,
+                    ETH_VAULT_ID,
+                    ERC20_VAULT_ID,
                     this.outputGuardHandlerRegistry.address,
                     this.spendingConditionRegistry.address,
                     this.txFinalizationVerifier.address,

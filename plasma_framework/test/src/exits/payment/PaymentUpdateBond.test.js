@@ -83,8 +83,8 @@ contract('PaymentStandardExitRouter', ([_, outputOwner]) => {
         beforeEach(async () => {
             this.exitGame = await PaymentStandardExitRouter.new(
                 this.framework.address,
-                this.ethVault.address,
-                this.erc20Vault.address,
+                ETH_VAULT_ID,
+                ERC20_VAULT_ID,
                 this.outputGuardHandlerRegistry.address,
                 this.spendingConditionRegistry.address,
                 this.txFinalizationVerifier.address,
@@ -118,8 +118,8 @@ contract('PaymentStandardExitRouter', ([_, outputOwner]) => {
         beforeEach(async () => {
             this.exitGame = await PaymentInFlightExitRouter.new(
                 this.framework.address,
-                this.ethVault.address,
-                this.erc20Vault.address,
+                ETH_VAULT_ID,
+                ERC20_VAULT_ID,
                 this.outputGuardHandlerRegistry.address,
                 this.spendingConditionRegistry.address,
                 this.stateTransitionVerifier.address,
@@ -155,8 +155,8 @@ contract('PaymentStandardExitRouter', ([_, outputOwner]) => {
         beforeEach(async () => {
             this.exitGame = await PaymentInFlightExitRouter.new(
                 this.framework.address,
-                this.ethVault.address,
-                this.erc20Vault.address,
+                ETH_VAULT_ID,
+                ERC20_VAULT_ID,
                 this.outputGuardHandlerRegistry.address,
                 this.spendingConditionRegistry.address,
                 this.stateTransitionVerifier.address,

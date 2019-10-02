@@ -151,8 +151,8 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
 
                 this.exitGame = await PaymentInFlightExitRouter.new(
                     this.framework.address,
-                    ethVault.address,
-                    erc20Vault.address,
+                    ETH_VAULT_ID,
+                    ERC20_VAULT_ID,
                     this.outputGuardHandlerRegistry.address,
                     this.spendingConditionRegistry.address,
                     this.stateTransitionVerifier.address,
@@ -307,8 +307,8 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
 
                 this.exitGame = await PaymentInFlightExitRouter.new(
                     this.framework.address,
-                    this.ethVault.address,
-                    this.erc20Vault.address,
+                    ETH_VAULT_ID,
+                    ERC20_VAULT_ID,
                     this.outputGuardHandlerRegistry.address,
                     this.spendingConditionRegistry.address,
                     this.stateTransitionVerifier.address,

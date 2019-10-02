@@ -8,8 +8,6 @@ import "../interfaces/ITxFinalizationVerifier.sol";
 import "../utils/ExitId.sol";
 import "../../framework/interfaces/IExitProcessor.sol";
 import "../../framework/PlasmaFramework.sol";
-import "../../vaults/EthVault.sol";
-import "../../vaults/Erc20Vault.sol";
 import "../../utils/OnlyFromAddress.sol";
 
 /**
@@ -21,8 +19,8 @@ contract PaymentExitGame is IExitProcessor, PaymentStandardExitRouter, PaymentIn
 
     constructor(
         PlasmaFramework framework,
-        EthVault ethVault,
-        Erc20Vault erc20Vault,
+        uint256 ethVaultId,
+        uint256 erc20VaultId,
         OutputGuardHandlerRegistry outputGuardHandlerRegistry,
         SpendingConditionRegistry spendingConditionRegistry,
         IStateTransitionVerifier stateTransitionVerifier,
@@ -32,16 +30,16 @@ contract PaymentExitGame is IExitProcessor, PaymentStandardExitRouter, PaymentIn
         public
         PaymentStandardExitRouter(
             framework,
-            ethVault,
-            erc20Vault,
+            ethVaultId,
+            erc20VaultId,
             outputGuardHandlerRegistry,
             spendingConditionRegistry,
             txFinalizationVerifier
         )
         PaymentInFlightExitRouter(
             framework,
-            ethVault,
-            erc20Vault,
+            ethVaultId,
+            erc20VaultId,
             outputGuardHandlerRegistry,
             spendingConditionRegistry,
             stateTransitionVerifier,

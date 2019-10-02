@@ -82,8 +82,8 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, outputOwner, nonOu
 
         this.exitGame = await PaymentInFlightExitRouter.new(
             this.framework.address,
-            ethVault.address,
-            erc20Vault.address,
+            ETH_VAULT_ID,
+            ERC20_VAULT_ID,
             this.outputGuardHandlerRegistry.address,
             spendingConditionRegistry.address,
             this.stateTransitionVerifier.address,

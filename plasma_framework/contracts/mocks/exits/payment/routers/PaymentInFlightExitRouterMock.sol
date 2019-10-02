@@ -15,8 +15,8 @@ contract PaymentInFlightExitRouterMock is PaymentInFlightExitRouter {
 
     constructor(
         PlasmaFramework plasmaFramework,
-        EthVault ethVault,
-        Erc20Vault erc20Vault,
+        uint256 ethVaultId,
+        uint256 erc20VaultId,
         OutputGuardHandlerRegistry outputGuardHandlerRegistry,
         SpendingConditionRegistry spendingConditionRegistry,
         IStateTransitionVerifier stateTransitionVerifier,
@@ -26,8 +26,8 @@ contract PaymentInFlightExitRouterMock is PaymentInFlightExitRouter {
         public
         PaymentInFlightExitRouter(
             plasmaFramework,
-            ethVault,
-            erc20Vault,
+            ethVaultId,
+            erc20VaultId,
             outputGuardHandlerRegistry,
             spendingConditionRegistry,
             stateTransitionVerifier,

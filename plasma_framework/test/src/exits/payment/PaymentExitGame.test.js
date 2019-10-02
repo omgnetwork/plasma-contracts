@@ -127,8 +127,8 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
 
         this.exitGame = await PaymentExitGame.new(
             this.framework.address,
-            this.ethVault.address,
-            this.erc20Vault.address,
+            ETH_VAULT_ID,
+            ERC20_VAULT_ID,
             outputGuardHandlerRegistry.address,
             spendingConditionRegistry.address,
             stateVerifier.address,

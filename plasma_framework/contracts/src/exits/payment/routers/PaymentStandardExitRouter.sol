@@ -44,19 +44,21 @@ contract PaymentStandardExitRouter is
 
     constructor(
         PlasmaFramework framework,
-        EthVault ethVault,
-        Erc20Vault erc20Vault,
+        uint256 ethVaultId,
+        uint256 erc20VaultId,
         OutputGuardHandlerRegistry outputGuardHandlerRegistry,
         SpendingConditionRegistry spendingConditionRegistry,
         ITxFinalizationVerifier txFinalizationVerifier
     )
         public
     {
-        uint256 ethVaultId = framework.vaultToId(address(ethVault));
-        require(ethVaultId != 0, "Invalid ETH vault");
+        address ethVaultAddress = framework.vaults(ethVaultId);
+        require(ethVaultAddress != address(0), "Invalid ETH vault");
+        EthVault ethVault = EthVault(ethVaultAddress);
 
-        uint256 erc20VaultId = framework.vaultToId(address(erc20Vault));
-        require(ethVaultId != 0, "Invalid ERC20 vault");
+        address erc20VaultAddress = framework.vaults(erc20VaultId);
+        require(erc20VaultAddress != address(0), "Invalid ERC20 vault");
+        Erc20Vault erc20Vault = Erc20Vault(erc20VaultAddress);
 
         startStandardExitController = PaymentStartStandardExit.buildController(
             this, framework, outputGuardHandlerRegistry, txFinalizationVerifier, ethVaultId, erc20VaultId

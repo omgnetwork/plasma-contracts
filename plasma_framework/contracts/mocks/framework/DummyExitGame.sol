@@ -41,7 +41,7 @@ contract DummyExitGame is IExitProcessor {
     }
 
     function enqueue(uint256 _vaultId, address _token, uint64 _exitableAt, uint256 _txPos, uint160 _exitId, IExitProcessor _exitProcessor)
-    public
+        public
     {
         uniquePriorityFromEnqueue = exitGameController.enqueue(_vaultId, _token, _exitableAt, TxPosLib.TxPos(_txPos), _exitId, _exitProcessor);
     }
