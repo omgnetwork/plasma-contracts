@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity 0.5.11;
 
 import "./IEthDepositVerifier.sol";
 import {PaymentTransactionModel as DepositTx} from "../../transactions/PaymentTransactionModel.sol";

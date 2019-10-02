@@ -37,7 +37,8 @@ npm-debug.log
 # coverage file output
 coverage
 coverage.json
-
+.coverage_artifacts/
+.coverage_contracts/
 
 # pytest-xprocess
 .xprocess/
