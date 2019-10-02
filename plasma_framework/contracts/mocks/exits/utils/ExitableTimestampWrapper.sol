@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity 0.5.11;
 
 import "../../../src/exits/utils/ExitableTimestamp.sol";
 

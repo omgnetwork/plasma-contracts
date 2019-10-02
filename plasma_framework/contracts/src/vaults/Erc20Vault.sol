@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity 0.5.11;
 
 import "./Vault.sol";
 import "./verifiers/IErc20DepositVerifier.sol";
