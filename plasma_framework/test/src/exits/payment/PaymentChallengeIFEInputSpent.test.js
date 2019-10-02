@@ -21,7 +21,7 @@ const {
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 const {
-    TX_TYPE, OUTPUT_TYPE, EMPTY_BYTES, EMPTY_BYTES_32, CHILD_BLOCK_INTERVAL,
+    TX_TYPE, OUTPUT_TYPE, EMPTY_BYTES, CHILD_BLOCK_INTERVAL, ETH_VAULT_ID, ERC20_VAULT_ID,
 } = require('../../../helpers/constants.js');
 const { buildUtxoPos } = require('../../../helpers/positions.js');
 const { createInputTransaction, createInFlightTx } = require('../../../helpers/ife.js');
@@ -37,9 +37,6 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
     const ETH = constants.ZERO_ADDRESS;
     const INPUT_TX_AMOUNT = 123456;
     const BLOCK_NUMBER = 5000;
-    const ETH_VAULT_ID = 1;
-    const ERC20_VAULT_ID = 2;
-
 
     before('deploy and link with controller lib', async () => {
         const startInFlightExit = await PaymentStartInFlightExit.new();

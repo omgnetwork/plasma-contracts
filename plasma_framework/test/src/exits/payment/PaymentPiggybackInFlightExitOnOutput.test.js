@@ -24,6 +24,7 @@ const { calculateNormalExitable } = require('../../../helpers/exitable.js');
 const { buildUtxoPos, utxoPosToTxPos } = require('../../../helpers/positions.js');
 const { buildOutputGuard } = require('../../../helpers/utils.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
+const { ETH_VAULT_ID, ERC20_VAULT_ID } = require('../../../helpers/constants.js');
 
 contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, outputOwner, nonOutputOwner]) => {
     const ETH = constants.ZERO_ADDRESS;
@@ -40,8 +41,6 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, outputOwner, nonOu
     const MAX_INPUT_SIZE = 4;
     const MAX_OUTPUT_SIZE = 4;
     const PAYMENT_TX_TYPE = 1;
-    const ETH_VAULT_ID = 1;
-    const ERC20_VAULT_ID = 2;
 
     before('deploy and link with controller lib', async () => {
         const startInFlightExit = await PaymentStartInFlightExit.new();

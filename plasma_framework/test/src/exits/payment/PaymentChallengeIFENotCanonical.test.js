@@ -24,7 +24,7 @@ const {
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
-const { PROTOCOL } = require('../../../helpers/constants.js');
+const { PROTOCOL, ETH_VAULT_ID, ERC20_VAULT_ID } = require('../../../helpers/constants.js');
 const { buildOutputGuard } = require('../../../helpers/utils.js');
 const { buildUtxoPos, UtxoPos } = require('../../../helpers/positions.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
@@ -52,8 +52,6 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
     const DUMMY_OUTPUT_GUARD = web3.utils.utf8ToHex('dummy output guard for shared input');
     const DUMMY_CONFIRM_SIG = web3.utils.utf8ToHex('dummy confirm sig for shared input');
     const DUMMY_SPENDING_CONDITION_OPTIONAL_ARGS = web3.utils.utf8ToHex('dummy spending condition optional args');
-    const ETH_VAULT_ID = 1;
-    const ERC20_VAULT_ID = 2;
 
     const createInputTransaction = () => {
         const output = new PaymentTransactionOutput(TEST_IFE_INPUT_AMOUNT, inputOwner, ETH);

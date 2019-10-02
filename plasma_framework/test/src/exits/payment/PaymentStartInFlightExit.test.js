@@ -25,7 +25,7 @@ const { expect } = require('chai');
 
 const { buildUtxoPos, UtxoPos } = require('../../../helpers/positions.js');
 const { computeNormalOutputId, spentOnGas } = require('../../../helpers/utils.js');
-const { PROTOCOL } = require('../../../helpers/constants.js');
+const { PROTOCOL, ETH_VAULT_ID, ERC20_VAULT_ID } = require('../../../helpers/constants.js');
 const {
     buildValidIfeStartArgs, buildIfeStartArgs, createInputTransaction, createDepositTransaction, createInFlightTx,
 } = require('../../../helpers/ife.js');
@@ -45,8 +45,6 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
     const AMOUNT = 10;
     const TOLERANCE_SECONDS = new BN(1);
     const bobPrivateKey = '0x7151e5dab6f8e95b5436515b83f423c4df64fe4c6149f864daa209b26adb10ca';
-    const ETH_VAULT_ID = 1;
-    const ERC20_VAULT_ID = 2;
     let bob;
 
     before('deploy and link with controller lib', async () => {

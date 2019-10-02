@@ -16,7 +16,7 @@ const {
 const { expect } = require('chai');
 
 const { buildUtxoPos } = require('../../../helpers/positions.js');
-const { PROTOCOL } = require('../../../helpers/constants.js');
+const { PROTOCOL, ETH_VAULT_ID, ERC20_VAULT_ID } = require('../../../helpers/constants.js');
 
 contract('PaymentStandardExitRouter', ([_, alice]) => {
     const ETH = constants.ZERO_ADDRESS;
@@ -24,8 +24,6 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
     const INITIAL_IMMUNE_EXIT_GAME_NUM = 1;
     const EMPTY_BYTES32 = '0x0000000000000000000000000000000000000000000000000000000000000000';
-    const ETH_VAULT_ID = 1;
-    const ERC20_VAULT_ID = 2;
 
     before('deploy and link with controller lib', async () => {
         const startStandardExit = await PaymentStartStandardExit.new();

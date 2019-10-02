@@ -31,7 +31,7 @@ const {
 const { expect } = require('chai');
 
 const {
-    PROTOCOL, TX_TYPE, OUTPUT_TYPE, EMPTY_BYTES,
+    PROTOCOL, TX_TYPE, OUTPUT_TYPE, EMPTY_BYTES, ETH_VAULT_ID, ERC20_VAULT_ID,
 } = require('../../../helpers/constants.js');
 const { MerkleTree } = require('../../../helpers/merkle.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
@@ -48,8 +48,6 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
     const DEPOSIT_VALUE = 1000000;
     const INITIAL_IMMUNE_VAULTS = 2; // ETH and ERC20 vault
     const INITIAL_IMMUNE_EXIT_GAMES = 1; // 1 for PaymentExitGame
-    const ETH_VAULT_ID = 1;
-    const ERC20_VAULT_ID = 2;
 
     const alicePrivateKey = '0x7151e5dab6f8e95b5436515b83f423c4df64fe4c6149f864daa209b26adb10ca';
     let alice;

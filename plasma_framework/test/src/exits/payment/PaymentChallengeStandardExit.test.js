@@ -17,7 +17,7 @@ const {
 const { expect } = require('chai');
 
 const {
-    TX_TYPE, OUTPUT_TYPE, PROTOCOL, EMPTY_BYTES, EMPTY_BYTES_32,
+    TX_TYPE, OUTPUT_TYPE, PROTOCOL, EMPTY_BYTES_32, ETH_VAULT_ID, ERC20_VAULT_ID,
 } = require('../../../helpers/constants.js');
 const { buildUtxoPos, UtxoPos } = require('../../../helpers/positions.js');
 const {
@@ -35,8 +35,6 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
     const TEST_BLOCK_NUM = 1000;
     const TEST_OUTPUT_INDEX = 0;
     const EXITING_TX_UTXOPOS = buildUtxoPos(TEST_BLOCK_NUM, 0, TEST_OUTPUT_INDEX);
-    const ETH_VAULT_ID = 1;
-    const ERC20_VAULT_ID = 2;
 
     before('deploy and link with controller lib', async () => {
         const startStandardExit = await PaymentStartStandardExit.new();

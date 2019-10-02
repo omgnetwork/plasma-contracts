@@ -25,6 +25,7 @@ const { buildUtxoPos } = require('../../../helpers/positions.js');
 const { computeNormalOutputId, spentOnGas } = require('../../../helpers/utils.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
 const { MerkleTree } = require('../../../helpers/merkle.js');
+const { ETH_VAULT_ID, ERC20_VAULT_ID } = require('../../../helpers/constants.js');
 
 contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
     const DUMMY_IFE_BOND_SIZE = 31415926535; // wei
@@ -47,8 +48,6 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
     };
     const BLOCK_NUM = 1000;
     const MAX_NUM_OF_INPUTS = 4;
-    const ETH_VAULT_ID = 1;
-    const ERC20_VAULT_ID = 2;
 
     before('deploy and link with controller lib', async () => {
         const startInFlightExit = await PaymentStartInFlightExit.new();

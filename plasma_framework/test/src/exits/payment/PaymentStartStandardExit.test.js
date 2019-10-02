@@ -18,7 +18,7 @@ const {
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
-const { OUTPUT_TYPE } = require('../../../helpers/constants.js');
+const { OUTPUT_TYPE, ETH_VAULT_ID, ERC20_VAULT_ID } = require('../../../helpers/constants.js');
 const { MerkleTree } = require('../../../helpers/merkle.js');
 const { buildUtxoPos, utxoPosToTxPos } = require('../../../helpers/positions.js');
 const {
@@ -35,8 +35,6 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
     const INITIAL_IMMUNE_EXIT_GAME_NUM = 1;
     const EMPTY_BYTES = '0x0000000000000000000000000000000000000000000000000000000000000000000000';
-    const ETH_VAULT_ID = 1;
-    const ERC20_VAULT_ID = 2;
 
     before('deploy and link with controller lib', async () => {
         const startStandardExit = await PaymentStartStandardExit.new();

@@ -23,10 +23,10 @@ const { expect } = require('chai');
 const { calculateNormalExitable } = require('../../../helpers/exitable.js');
 const { buildUtxoPos, utxoPosToTxPos } = require('../../../helpers/positions.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
+const { ETH_VAULT_ID, ERC20_VAULT_ID } = require('../../../helpers/constants.js');
 
 contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, outputOwner]) => {
     const ETH = constants.ZERO_ADDRESS;
-    const ERC20 = '0x0000000000000000000000000000000000000001';
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week in seconds
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
     const INITIAL_IMMUNE_EXIT_GAME_NUM = 1;
@@ -38,8 +38,6 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
     };
     const MAX_INPUT_SIZE = 4;
     const PAYMENT_TX_TYPE = 1;
-    const ETH_VAULT_ID = 1;
-    const ERC20_VAULT_ID = 2;
 
     before('deploy and link with controller lib', async () => {
         const startInFlightExit = await PaymentStartInFlightExit.new();

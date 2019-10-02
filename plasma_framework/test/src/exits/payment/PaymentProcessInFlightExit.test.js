@@ -21,7 +21,9 @@ const {
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
-const { TX_TYPE, PROTOCOL } = require('../../../helpers/constants.js');
+const {
+    TX_TYPE, PROTOCOL, ETH_VAULT_ID, ERC20_VAULT_ID,
+} = require('../../../helpers/constants.js');
 const { buildUtxoPos } = require('../../../helpers/positions.js');
 
 contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner2, inputOwner3, outputOwner1, outputOwner2, outputOwner3]) => {
@@ -40,8 +42,6 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
     const YOUNGEST_POSITION_BLOCK = 1000;
     const INFLIGHT_EXIT_YOUNGEST_INPUT_POSITION = buildUtxoPos(YOUNGEST_POSITION_BLOCK, 0, 0);
     const ETH = constants.ZERO_ADDRESS;
-    const ETH_VAULT_ID = 1;
-    const ERC20_VAULT_ID = 2;
     let erc20;
 
     before('deploy and link with controller lib', async () => {
