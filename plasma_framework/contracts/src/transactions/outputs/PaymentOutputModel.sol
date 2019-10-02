@@ -9,6 +9,7 @@ library PaymentOutputModel {
     using RLP for RLP.RLPItem;
 
     struct Output {
+        uint256 outputType;
         bytes20 outputGuard;
         address token;
         uint256 amount;
@@ -26,12 +27,13 @@ library PaymentOutputModel {
 
     function decode(RLP.RLPItem memory encoded) internal pure returns (Output memory) {
         RLP.RLPItem[] memory rlpEncoded = encoded.toList();
-        require(rlpEncoded.length == 3, "Invalid output encoding");
+        require(rlpEncoded.length == 4, "Invalid output encoding");
 
         Output memory output = Output({
-            outputGuard: rlpEncoded[0].toBytes20(),
-            token: rlpEncoded[1].toAddress(),
-            amount: rlpEncoded[2].toUint()
+            outputType: rlpEncoded[0].toUint(),
+            outputGuard: rlpEncoded[1].toBytes20(),
+            token: rlpEncoded[2].toAddress(),
+            amount: rlpEncoded[3].toUint()
         });
 
         return output;

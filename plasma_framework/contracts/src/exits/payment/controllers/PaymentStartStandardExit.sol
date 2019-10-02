@@ -11,7 +11,6 @@ import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../utils/ExitableTimestamp.sol";
 import "../../utils/ExitId.sol";
 import "../../utils/OutputId.sol";
-import "../../utils/OutputGuard.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
 import "../../../transactions/outputs/PaymentOutputModel.sol";
 import "../../../utils/IsDeposit.sol";
@@ -118,11 +117,10 @@ library PaymentStartStandardExit {
 
         OutputGuardModel.Data memory outputGuardData = OutputGuardModel.Data({
             guard: output.outputGuard,
-            outputType: args.outputType,
             preimage: args.outputGuardPreimage
         });
 
-        IOutputGuardHandler outputGuardHandler = controller.outputGuardHandlerRegistry.outputGuardHandlers(args.outputType);
+        IOutputGuardHandler outputGuardHandler = controller.outputGuardHandlerRegistry.outputGuardHandlers(output.outputType);
 
         TxFinalizationModel.Data memory finalizationData = TxFinalizationModel.moreVpData(
             controller.framework,

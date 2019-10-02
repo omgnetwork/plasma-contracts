@@ -66,7 +66,6 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
             exitable,
             utxoPos: buildUtxoPos(1, 0, 0),
             outputId: web3.utils.sha3('output id'),
-            outputTypeAndGuardHash: web3.utils.sha3('outputTypeAndGuardHash'),
             token,
             exitTarget: alice,
             amount: web3.utils.toWei('3', 'ether'),

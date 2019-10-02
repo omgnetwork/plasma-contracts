@@ -14,7 +14,6 @@ import "../../registries/SpendingConditionRegistry.sol";
 import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../utils/ExitableTimestamp.sol";
 import "../../utils/ExitId.sol";
-import "../../utils/OutputGuard.sol";
 import "../../utils/OutputId.sol";
 import "../../../utils/IsDeposit.sol";
 import "../../../utils/UtxoPosLib.sol";
@@ -61,7 +60,6 @@ library PaymentStartInFlightExit {
      * @param inputTxs Input transactions as bytes.
      * @param inputUtxosPos Postions of input utxos.
      * @param inputUtxosPos Postions of input utxos coded as integers.
-     * @param inputUtxosTypes Types of outputs that make in-flight transaction inputs.
      * @param outputGuardPreimagesForInputs Output guard pre-images for in-flight transaction inputs.
      * @param inputTxsInclusionProofs Merkle proofs for input transactions.
      * @param inputTxsConfirmSigs Confirm signatures for the input txs.
@@ -77,7 +75,6 @@ library PaymentStartInFlightExit {
         bytes32 inFlightTxHash;
         bytes[] inputTxs;
         UtxoPosLib.UtxoPos[] inputUtxosPos;
-        uint256[] inputUtxosTypes;
         uint256[] inputTxTypes;
         bytes[] outputGuardPreimagesForInputs;
         bytes[] inputTxsInclusionProofs;
@@ -152,7 +149,6 @@ library PaymentStartInFlightExit {
         exitData.inputTxs = args.inputTxs;
         exitData.inputTxTypes = args.inputTxTypes;
         exitData.inputUtxosPos = decodeInputTxsPositions(args.inputUtxosPos);
-        exitData.inputUtxosTypes = args.inputUtxosTypes;
         exitData.inputTxsInclusionProofs = args.inputTxsInclusionProofs;
         exitData.inputTxsConfirmSigs = args.inputTxsConfirmSigs;
         exitData.outputGuardPreimagesForInputs = args.outputGuardPreimagesForInputs;
@@ -228,10 +224,6 @@ library PaymentStartInFlightExit {
             "Number of input transactions positions does not match number of in-flight transaction inputs"
         );
         require(
-            exitData.inputUtxosTypes.length == exitData.inFlightTx.inputs.length,
-            "Number of input utxo types does not match number of in-flight transaction inputs"
-        );
-        require(
             exitData.outputGuardPreimagesForInputs.length == exitData.inFlightTx.inputs.length,
             "Number of output guard preimages for inputs does not match number of in-flight transaction inputs"
         );
@@ -269,12 +261,11 @@ library PaymentStartInFlightExit {
             WireTransaction.Output memory output = WireTransaction.getOutput(exitData.inputTxs[i], outputIndex);
             OutputGuardModel.Data memory outputGuardData = OutputGuardModel.Data({
                 guard: output.outputGuard,
-                outputType: exitData.inputUtxosTypes[i],
                 preimage: exitData.outputGuardPreimagesForInputs[i]
             });
             IOutputGuardHandler outputGuardHandler = exitData.controller
                                                     .outputGuardHandlerRegistry
-                                                    .outputGuardHandlers(exitData.inputUtxosTypes[i]);
+                                                    .outputGuardHandlers(output.outputType);
 
             require(address(outputGuardHandler) != address(0), "Failed to get the outputGuardHandler of the output type");
 
@@ -304,18 +295,17 @@ library PaymentStartInFlightExit {
 
             OutputGuardModel.Data memory outputGuardData = OutputGuardModel.Data({
                 guard: output.outputGuard,
-                outputType: exitData.inputUtxosTypes[i],
                 preimage: exitData.outputGuardPreimagesForInputs[i]
             });
             IOutputGuardHandler outputGuardHandler = exitData.controller
                                                     .outputGuardHandlerRegistry
-                                                    .outputGuardHandlers(exitData.inputUtxosTypes[i]);
+                                                    .outputGuardHandlers(output.outputType);
             require(address(outputGuardHandler) != address(0), "Failed to get the outputGuardHandler of the output type");
             require(outputGuardHandler.isValid(outputGuardData),
                     "Output guard information is invalid for the input tx");
 
             ISpendingCondition condition = exitData.controller.spendingConditionRegistry.spendingConditions(
-                exitData.inputUtxosTypes[i], exitData.controller.supportedTxType
+                output.outputType, exitData.controller.supportedTxType
             );
 
             require(address(condition) != address(0), "Spending condition contract not found");
@@ -383,10 +373,9 @@ library PaymentStartInFlightExit {
 
             OutputGuardModel.Data memory outputGuardData = OutputGuardModel.Data(
                 output.outputGuard,
-                exitData.inputUtxosTypes[i],
                 exitData.outputGuardPreimagesForInputs[i]
             );
-            IOutputGuardHandler handler = exitData.controller.outputGuardHandlerRegistry.outputGuardHandlers(exitData.inputUtxosTypes[i]);
+            IOutputGuardHandler handler = exitData.controller.outputGuardHandlerRegistry.outputGuardHandlers(output.outputType);
             require(address(handler) != address(0), "Output guard handler not registered");
             address payable exitTarget = handler.getExitTarget(outputGuardData);
 

@@ -12,7 +12,7 @@ const { expect } = require('chai');
 
 const Testlang = require('../../helpers/testlang.js');
 const { PaymentTransaction, PaymentTransactionOutput } = require('../../helpers/transaction.js');
-const { PROTOCOL } = require('../../helpers/constants.js');
+const { PROTOCOL, OUTPUT_TYPE } = require('../../helpers/constants.js');
 
 contract('Erc20Vault', (accounts) => {
     const alice = accounts[1];
@@ -44,7 +44,7 @@ contract('Erc20Vault', (accounts) => {
             await this.erc20.approve(this.erc20Vault.address, DEPOSIT_VALUE, { from: alice });
             const preDepositBlockNumber = (await this.framework.nextDepositBlock()).toNumber();
 
-            const deposit = Testlang.deposit(DEPOSIT_VALUE, alice, this.erc20.address);
+            const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, this.erc20.address);
             await this.erc20Vault.deposit(deposit, { from: alice });
             const postDepositBlockNumber = (await this.framework.nextDepositBlock()).toNumber();
 
@@ -55,7 +55,7 @@ contract('Erc20Vault', (accounts) => {
             await this.erc20.approve(this.erc20Vault.address, DEPOSIT_VALUE, { from: alice });
             const preDepositBlockNumber = await this.framework.nextDepositBlock();
 
-            const deposit = Testlang.deposit(DEPOSIT_VALUE, alice, this.erc20.address);
+            const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, this.erc20.address);
             const { receipt } = await this.erc20Vault.deposit(deposit, { from: alice });
             await expectEvent.inTransaction(
                 receipt.transactionHash,
@@ -74,7 +74,7 @@ contract('Erc20Vault', (accounts) => {
             const preDepositBalance = await this.erc20.balanceOf(alice);
 
             await this.erc20.approve(this.erc20Vault.address, DEPOSIT_VALUE, { from: alice });
-            const deposit = Testlang.deposit(DEPOSIT_VALUE, alice, this.erc20.address);
+            const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, this.erc20.address);
             await this.erc20Vault.deposit(deposit, { from: alice });
 
             const actualPostDepositBalance = new BN(await this.erc20.balanceOf(alice));
@@ -84,7 +84,7 @@ contract('Erc20Vault', (accounts) => {
         });
 
         it('should not store a deposit when the tokens have not been approved', async () => {
-            const deposit = Testlang.deposit(DEPOSIT_VALUE, alice, this.erc20.address);
+            const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, this.erc20.address);
 
             await expectRevert(
                 this.erc20Vault.deposit(deposit, { from: alice }),
@@ -93,7 +93,7 @@ contract('Erc20Vault', (accounts) => {
         });
 
         it('should not store a deposit from user who does not match output address', async () => {
-            const deposit = Testlang.deposit(DEPOSIT_VALUE, alice, this.erc20.address);
+            const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, this.erc20.address);
 
             await expectRevert(
                 this.erc20Vault.deposit(deposit),
@@ -102,7 +102,7 @@ contract('Erc20Vault', (accounts) => {
         });
 
         it('should not store an ethereum deposit that sends funds', async () => {
-            const deposit = Testlang.deposit(DEPOSIT_VALUE, alice);
+            const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice);
 
             await expectRevert.unspecified(
                 this.erc20Vault.deposit(deposit, { from: alice, value: DEPOSIT_VALUE }),
@@ -110,7 +110,7 @@ contract('Erc20Vault', (accounts) => {
         });
 
         it('should not store an ethereum deposit that does not send funds', async () => {
-            const deposit = Testlang.deposit(DEPOSIT_VALUE, alice);
+            const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice);
 
             await expectRevert(
                 this.erc20Vault.deposit(deposit, { from: alice }),
@@ -119,7 +119,7 @@ contract('Erc20Vault', (accounts) => {
         });
 
         it('should not accept transaction that does not match expected transaction type', async () => {
-            const output = new PaymentTransactionOutput(DEPOSIT_VALUE, alice, this.erc20.address);
+            const output = new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, this.erc20.address);
             const WRONG_TX_TYPE = 123;
             const deposit = new PaymentTransaction(WRONG_TX_TYPE, [0], [output]);
 
@@ -130,7 +130,7 @@ contract('Erc20Vault', (accounts) => {
         });
 
         it('should not accept transaction with inputs', async () => {
-            const output = new PaymentTransactionOutput(DEPOSIT_VALUE, alice, this.erc20.address);
+            const output = new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, this.erc20.address);
             const deposit = new PaymentTransaction(1, [0], [output]);
 
             await expectRevert(
@@ -140,7 +140,7 @@ contract('Erc20Vault', (accounts) => {
         });
 
         it('should not accept transaction with more than one output', async () => {
-            const output = new PaymentTransactionOutput(DEPOSIT_VALUE, alice, this.erc20.address);
+            const output = new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, this.erc20.address);
             const deposit = new PaymentTransaction(1, [], [output, output]);
 
             await expectRevert(
@@ -163,7 +163,7 @@ contract('Erc20Vault', (accounts) => {
             await this.nonCompliantERC20.approve(this.erc20Vault.address, DEPOSIT_VALUE, { from: alice });
             const preDepositBlockNumber = (await this.framework.nextDepositBlock()).toNumber();
 
-            const deposit = Testlang.deposit(DEPOSIT_VALUE, alice, this.nonCompliantERC20.address);
+            const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, this.nonCompliantERC20.address);
             await this.erc20Vault.deposit(deposit, { from: alice });
             const postDepositBlockNumber = (await this.framework.nextDepositBlock()).toNumber();
 

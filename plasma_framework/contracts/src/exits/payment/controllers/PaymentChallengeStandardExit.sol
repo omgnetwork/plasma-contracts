@@ -109,13 +109,12 @@ library PaymentChallengeStandardExit {
 
         IOutputGuardHandler outputGuardHandler = data.controller
                                                 .outputGuardHandlerRegistry
-                                                .outputGuardHandlers(data.args.outputType);
+                                                .outputGuardHandlers(output.outputType);
 
         require(address(outputGuardHandler) != address(0), "Failed to get the outputGuardHandler of the output type");
 
         OutputGuardModel.Data memory outputGuardData = OutputGuardModel.Data({
             guard: output.outputGuard,
-            outputType: data.args.outputType,
             preimage: data.args.outputGuardPreimage
         });
         require(outputGuardHandler.isValid(outputGuardData),
@@ -139,15 +138,17 @@ library PaymentChallengeStandardExit {
     function verifySpendingCondition(ChallengeStandardExitData memory data) private view {
         PaymentStandardExitRouterArgs.ChallengeStandardExitArgs memory args = data.args;
 
-        // correctness of output type is checked in the outputGuardHandler.isValid(...)
-        // inside verifyChallengeTxProtocolFinalized(...)
-        uint256 challengeTxType = WireTransaction.getTransactionType(data.args.challengeTx);
+        UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(data.exitData.utxoPos);
+        PaymentOutputModel.Output memory output = PaymentTransactionModel
+            .decode(args.exitingTx)
+            .outputs[utxoPos.outputIndex()];
+
+        uint256 challengeTxType = WireTransaction.getTransactionType(args.challengeTx);
         ISpendingCondition condition = data.controller.spendingConditionRegistry.spendingConditions(
-            args.outputType, challengeTxType
+            output.outputType, challengeTxType
         );
         require(address(condition) != address(0), "Spending condition contract not found");
 
-        UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(data.exitData.utxoPos);
         bytes32 outputId = data.controller.isDeposit.test(utxoPos.blockNum())
                 ? OutputId.computeDepositOutputId(args.exitingTx, utxoPos.outputIndex(), utxoPos.value)
                 : OutputId.computeNormalOutputId(args.exitingTx, utxoPos.outputIndex());

@@ -75,8 +75,8 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
 
     describe('challengeInFlightExitOutputSpent', () => {
         const buildValidChallengeOutputArgs = async () => {
-            const output1 = new PaymentTransactionOutput(AMOUNT, alice, ETH);
-            const output2 = new PaymentTransactionOutput(AMOUNT, alice, ETH);
+            const output1 = new PaymentTransactionOutput(OUTPUT_TYPE_ONE, AMOUNT, alice, ETH);
+            const output2 = new PaymentTransactionOutput(OUTPUT_TYPE_ONE, AMOUNT, alice, ETH);
             const inFlightTx = new PaymentTransaction(IFE_TX_TYPE, [0], [output1, output2]);
             const inFlightTxBytes = web3.utils.bytesToHex(inFlightTx.rlpEncoded());
 
@@ -84,7 +84,7 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
             const inclusionProof = merkleTree.getInclusionProof(inFlightTxBytes);
 
             const outputId = computeNormalOutputId(inFlightTxBytes, 0);
-            const challengingTxOutput = new PaymentTransactionOutput(AMOUNT, alice, ETH);
+            const challengingTxOutput = new PaymentTransactionOutput(OUTPUT_TYPE_ONE, AMOUNT, alice, ETH);
             const challengingTx = new PaymentTransaction(IFE_TX_TYPE, [outputId], [challengingTxOutput]);
             const challengingTxBytes = web3.utils.bytesToHex(challengingTx.rlpEncoded());
 
@@ -180,7 +180,6 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
             this.challengeArgs = {
                 inFlightTx: args.inFlightTxBytes,
                 inFlightTxInclusionProof: args.inclusionProof,
-                outputType: OUTPUT_TYPE_ONE,
                 outputGuardPreimage: preimage,
                 outputUtxoPos: buildUtxoPos(BLOCK_NUM, 0, 0),
                 challengingTx: args.challengingTxBytes,
@@ -254,30 +253,9 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
             );
         });
 
-        it('should fail when provided output type does not match exiting output', async () => {
-            this.challengeArgs.outputType = 2;
-            const expectedOutputGuardHandler = await OutputGuardHandler.new();
-            await expectedOutputGuardHandler.mockIsValid(false);
-            await this.outputGuardHandlerRegistry.registerOutputGuardHandler(
-                this.challengeArgs.outputType, expectedOutputGuardHandler.address,
-            );
-            await expectRevert(
-                this.exitGame.challengeInFlightExitOutputSpent(this.challengeArgs, { from: bob }),
-                'Some of the output guard related information is not valid',
-            );
-        });
-
-        it('should fail when output guard handler for a given output type is not registered', async () => {
-            this.challengeArgs.outputType = 2;
-            await expectRevert(
-                this.exitGame.challengeInFlightExitOutputSpent(this.challengeArgs, { from: bob }),
-                'Does not have outputGuardHandler registered for the output type',
-            );
-        });
-
         it('should fail when spending condition for challenging tx is not registered', async () => {
             const outputId = computeNormalOutputId(this.challengeArgs.inFlightTx, 0);
-            const challengingTxOutput = new PaymentTransactionOutput(AMOUNT, alice, ETH);
+            const challengingTxOutput = new PaymentTransactionOutput(OUTPUT_TYPE_ONE, AMOUNT, alice, ETH);
             const challengingTx = new PaymentTransaction(OTHER_TX_TYPE, [outputId], [challengingTxOutput]);
 
             this.challengeArgs.challengingTx = web3.utils.bytesToHex(challengingTx.rlpEncoded());
@@ -289,7 +267,7 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
 
         it('should fail when challenging transaction does not spend the output', async () => {
             const outputId = computeNormalOutputId(this.challengeArgs.inFlightTx, 0);
-            const challengingTxOutput = new PaymentTransactionOutput(AMOUNT, alice, ETH);
+            const challengingTxOutput = new PaymentTransactionOutput(OUTPUT_TYPE_ONE, AMOUNT, alice, ETH);
             const challengingTx = new PaymentTransaction(OTHER_TX_TYPE, [outputId], [challengingTxOutput]);
 
             this.challengeArgs.challengingTx = web3.utils.bytesToHex(challengingTx.rlpEncoded());

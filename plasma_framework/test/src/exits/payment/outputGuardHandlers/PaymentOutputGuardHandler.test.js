@@ -5,37 +5,24 @@ const { expect } = require('chai');
 
 
 contract('PaymentOutputGuardHandler', ([alice]) => {
-    const TEST_OUTPUT_TYPE = 1;
-
     beforeEach('setup contracts', async () => {
-        this.handler = await PaymentOutputGuardHandler.new(TEST_OUTPUT_TYPE);
+        this.handler = await PaymentOutputGuardHandler.new();
     });
 
     describe('isValid', () => {
         it('should fail when preimage is not empty', async () => {
             const nonEmptyPreimage = '0x11';
-            const args = [alice, TEST_OUTPUT_TYPE, nonEmptyPreimage];
+            const args = [alice, nonEmptyPreimage];
 
             await expectRevert(
                 this.handler.isValid(args),
-                'Pre-imgage of the output guard should be empty',
-            );
-        });
-
-        it('should fail when output type mismatch', async () => {
-            const preimage = '0x';
-            const mismatchOutputType = TEST_OUTPUT_TYPE + 1;
-            const args = [alice, mismatchOutputType, preimage];
-
-            await expectRevert(
-                this.handler.isValid(args),
-                'Output type mismatch',
+                'Pre-image of the output guard should be empty',
             );
         });
 
         it('should return true when succeed', async () => {
             const preimage = '0x';
-            const args = [alice, TEST_OUTPUT_TYPE, preimage];
+            const args = [alice, preimage];
             expect(await this.handler.isValid(args)).to.be.true;
         });
     });
@@ -43,7 +30,7 @@ contract('PaymentOutputGuardHandler', ([alice]) => {
     describe('getExitTarget', () => {
         it('should return the owner information directly from outputGuard field', async () => {
             const preimage = '0x';
-            const args = [alice, TEST_OUTPUT_TYPE, preimage];
+            const args = [alice, preimage];
             expect(await this.handler.getExitTarget(args)).to.equal(alice);
         });
     });

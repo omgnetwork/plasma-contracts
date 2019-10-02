@@ -93,7 +93,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
         const buildPiggybackInputData = async () => {
             const outputAmount = 997;
             const outputGuard = outputOwner;
-            const output = new PaymentTransactionOutput(outputAmount, outputGuard, ETH);
+            const output = new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, outputAmount, outputGuard, ETH);
 
             const dummyInputUtxopos1 = buildUtxoPos(BLOCK_NUMBER, 0, 0);
             const dummyInputUtxopos2 = buildUtxoPos(BLOCK_NUMBER, 1, 0);

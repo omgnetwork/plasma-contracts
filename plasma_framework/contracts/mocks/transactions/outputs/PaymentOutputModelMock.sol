@@ -14,8 +14,9 @@ contract PaymentOutputModelMock {
         return output;
     }
 
-    function owner(uint256 _amount, address _owner, address _token) public pure returns (address payable) {
+    function owner(uint256 _outputType, uint256 _amount, address _owner, address _token) public pure returns (address payable) {
         PaymentOutputModel.Output memory output = PaymentOutputModel.Output({
+            outputType: _outputType,
             amount: _amount,
             outputGuard: bytes20(uint160(_owner)),
             token: _token

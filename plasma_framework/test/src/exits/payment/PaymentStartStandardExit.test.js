@@ -52,7 +52,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
             outputType = OUTPUT_TYPE.PAYMENT,
             outputGuardPreimage = EMPTY_BYTES,
         ) => {
-            const output = new PaymentTransactionOutput(amount, owner, ETH);
+            const output = new PaymentTransactionOutput(outputType, amount, owner, ETH);
             const txObj = new PaymentTransaction(1, [0], [output]);
             const tx = web3.utils.bytesToHex(txObj.rlpEncoded());
 
@@ -64,7 +64,6 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
             const args = {
                 utxoPos,
                 rlpOutputTx: tx,
-                outputType,
                 outputGuardPreimage,
                 outputTxInclusionProof: merkleProof,
             };
@@ -171,7 +170,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
             );
         });
 
-        it('should fail when some of the output guard information (guard, output type, pre-image) is not valid', async () => {
+        it('should fail when some of the output guard information (guard, pre-image) is not valid', async () => {
             // register with handler that returns false when checking output guard information
             const expectedValid = false;
             const testOutputType = 2;

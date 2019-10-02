@@ -103,7 +103,6 @@ library PaymentChallengeIFEInputSpent {
         });
 
         verifySpentInputEqualsIFEInput(data);
-        verifyOutputType(data);
         verifyChallengingTransactionProtocolFinalized(data);
         verifySpendingCondition(data);
 
@@ -127,24 +126,6 @@ library PaymentChallengeIFEInputSpent {
         require(ifeInputOutputId == challengingTxInputOutputId, "Spent input is not the same as piggybacked input");
     }
 
-    function verifyOutputType(ChallengeIFEData memory data) private view {
-        UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(data.args.inputUtxoPos);
-        uint16 outputIndex = utxoPos.outputIndex();
-        WireTransaction.Output memory output = WireTransaction.getOutput(data.args.inputTx, outputIndex);
-        OutputGuardModel.Data memory outputGuardData = OutputGuardModel.Data({
-            guard: output.outputGuard,
-            outputType: data.args.challengingTxInputOutputType,
-            preimage: data.args.challengingTxInputOutputGuardPreimage
-        });
-        IOutputGuardHandler handler = data.controller.outputGuardHandlerRegistry.outputGuardHandlers(data.args.challengingTxInputOutputType);
-
-        require(address(handler) != address(0),
-            "Does not have outputGuardHandler registered for the output type");
-
-        require(handler.isValid(outputGuardData),
-            "Some of the output guard related information is not valid");
-    }
-
     function verifyChallengingTransactionProtocolFinalized(ChallengeIFEData memory data)
         private
         view
@@ -161,8 +142,10 @@ library PaymentChallengeIFEInputSpent {
 
     function verifySpendingCondition(ChallengeIFEData memory data) private view {
         uint256 challengingTxType = WireTransaction.getTransactionType(data.args.challengingTx);
+        WireTransaction.Output memory output = WireTransaction.getOutput(data.args.challengingTx, data.args.challengingTxInputIndex);
+
         ISpendingCondition condition = data.controller.spendingConditionRegistry.spendingConditions(
-            data.args.challengingTxInputOutputType, challengingTxType
+            output.outputType, challengingTxType
         );
         require(address(condition) != address(0), "Spending condition contract not found");
 

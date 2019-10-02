@@ -24,7 +24,7 @@ const {
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
-const { PROTOCOL } = require('../../../helpers/constants.js');
+const { PROTOCOL, OUTPUT_TYPE } = require('../../../helpers/constants.js');
 const { buildOutputGuard } = require('../../../helpers/utils.js');
 const { buildUtxoPos, UtxoPos } = require('../../../helpers/positions.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
@@ -37,7 +37,6 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week in second
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
     const INITIAL_IMMUNE_EXIT_GAME_NUM = 1;
-    const OUTPUT_TYPE_ONE = 1;
     const IFE_TX_TYPE = 1;
     const YOUNGEST_POSITION_BLOCK = 1000;
     const INFLIGHT_EXIT_YOUNGEST_INPUT_POSITION = buildUtxoPos(YOUNGEST_POSITION_BLOCK, 0, 0);
@@ -53,8 +52,8 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
     const DUMMY_CONFIRM_SIG = web3.utils.utf8ToHex('dummy confirm sig for shared input');
     const DUMMY_SPENDING_CONDITION_OPTIONAL_ARGS = web3.utils.utf8ToHex('dummy spending condition optional args');
 
-    const createInputTransaction = () => {
-        const output = new PaymentTransactionOutput(TEST_IFE_INPUT_AMOUNT, inputOwner, ETH);
+    const createInputTransaction = (outputType) => {
+        const output = new PaymentTransactionOutput(outputType, TEST_IFE_INPUT_AMOUNT, inputOwner, ETH);
         const inputTx = new PaymentTransaction(
             IFE_TX_TYPE, [buildUtxoPos(0, 0, 0)], [output],
         );
@@ -65,9 +64,9 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
         };
     };
 
-    const createCompetitorTransaction = () => {
+    const createCompetitorTransaction = (outputType) => {
         const output = new PaymentTransactionOutput(
-            TEST_COMPETING_TX_OUTPUT_AMOUNT, buildOutputGuard(OUTPUT_TYPE_ONE, competitorOwner), ETH,
+            outputType, TEST_COMPETING_TX_OUTPUT_AMOUNT, buildOutputGuard(competitorOwner), ETH,
         );
         const competingTx = new PaymentTransaction(IFE_TX_TYPE, [INPUT_UTXO_POS.utxoPos], [output]);
         const competingTxPos = new UtxoPos(buildUtxoPos(COMPETING_TX_BLOCK_NUM, 0, 0));
@@ -79,10 +78,10 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
         };
     };
 
-    const buildValidNoncanonicalChallengeArgs = (decodedIfeTx) => {
-        const { inputTx } = createInputTransaction();
+    const buildValidNoncanonicalChallengeArgs = (decodedIfeTx, outputType) => {
+        const { inputTx } = createInputTransaction(outputType);
 
-        const { competingTx, decodedCompetingTx, competingTxPos } = createCompetitorTransaction();
+        const { competingTx, decodedCompetingTx, competingTxPos } = createCompetitorTransaction(outputType);
 
         const {
             inclusionProof, blockHash, blockNum, blockTimestamp,
@@ -100,7 +99,6 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
                 inFlightTxInputIndex: 0,
                 competingTx,
                 competingTxInputIndex: 0,
-                outputType: OUTPUT_TYPE_ONE,
                 outputGuardPreimage: DUMMY_OUTPUT_GUARD,
                 competingTxPos: competingTxPos.utxoPos,
                 competingTxInclusionProof: inclusionProof,
@@ -115,7 +113,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
         };
     };
 
-    const buildInFlightExitData = async (exitIdHelper, outputIdHelper) => {
+    const buildInFlightExitData = async (exitIdHelper, outputIdHelper, outputType) => {
         const emptyWithdrawData = {
             outputId: web3.utils.sha3('dummy output id'),
             exitTarget: constants.ZERO_ADDRESS,
@@ -124,12 +122,12 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
             piggybackBondSize: 0,
         };
 
-        const output = new PaymentTransactionOutput(TEST_IFE_OUTPUT_AMOUNT, outputOwner, ETH);
+        const output = new PaymentTransactionOutput(outputType, TEST_IFE_OUTPUT_AMOUNT, outputOwner, ETH);
         const inFlightTx = new PaymentTransaction(
             IFE_TX_TYPE, [INPUT_UTXO_POS.utxoPos], [output],
         );
 
-        const { inputTx } = createInputTransaction();
+        const { inputTx } = createInputTransaction(outputType);
         const outputIdOfInput = await outputIdHelper.computeNormalOutputId(inputTx, INPUT_UTXO_POS.outputIndex);
 
         const inFlightExitData = {
@@ -211,17 +209,17 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
         await this.outputGuardHandler.mockIsValid(true);
         await this.outputGuardHandler.mockGetConfirmSigAddress(constants.ZERO_ADDRESS);
         await this.outputGuardHandlerRegistry.registerOutputGuardHandler(
-            OUTPUT_TYPE_ONE, this.outputGuardHandler.address,
+            OUTPUT_TYPE.PAYMENT, this.outputGuardHandler.address,
         );
 
         this.condition = await SpendingConditionMock.new();
         await this.condition.mockResult(true);
         await this.spendingConditionRegistry.registerSpendingCondition(
-            OUTPUT_TYPE_ONE, IFE_TX_TYPE, this.condition.address,
+            OUTPUT_TYPE.PAYMENT, IFE_TX_TYPE, this.condition.address,
         );
 
         const { exitId, inFlightTx, inFlightExitData } = await buildInFlightExitData(
-            this.exitIdHelper, this.outputIdHelper,
+            this.exitIdHelper, this.outputIdHelper, OUTPUT_TYPE.PAYMENT,
         );
         await this.exitGame.setInFlightExit(exitId, inFlightExitData);
         this.inFlightTx = inFlightTx;
@@ -229,7 +227,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
 
         const {
             args: cArgs, block, decodedCompetingTx,
-        } = buildValidNoncanonicalChallengeArgs(inFlightTx, competitorOwner);
+        } = buildValidNoncanonicalChallengeArgs(inFlightTx, OUTPUT_TYPE.PAYMENT);
 
         this.challengeArgs = cArgs;
         this.competingTx = decodedCompetingTx;
@@ -317,7 +315,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
 
                 await expectRevert(
                     this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: challenger }),
-                    "In-fligh exit doesn't exists",
+                    "In-flight exit doesn't exist",
                 );
             });
 
@@ -331,10 +329,17 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
             });
 
             it('fails when spending condition for given output is not registered', async () => {
-                this.challengeArgs.outputType = OUTPUT_TYPE_ONE + 1;
+                const NOT_REGISTERED_OUTPUT_TYPE = 99;
+
+                const { exitId, inFlightTx, inFlightExitData } = await buildInFlightExitData(
+                    this.exitIdHelper, this.outputIdHelper, NOT_REGISTERED_OUTPUT_TYPE,
+                );
+                await this.exitGame.setInFlightExit(exitId, inFlightExitData);
+
+                const { args } = buildValidNoncanonicalChallengeArgs(inFlightTx, NOT_REGISTERED_OUTPUT_TYPE);
 
                 await expectRevert(
-                    this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: challenger }),
+                    this.exitGame.challengeInFlightExitNotCanonical(args, { from: challenger }),
                     'Spending condition contract not found',
                 );
             });
