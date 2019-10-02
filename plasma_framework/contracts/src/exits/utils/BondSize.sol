@@ -50,7 +50,7 @@ library BondSize {
     function updateBondSize(Params storage self, uint128 newBondSize) internal {
         validateBondSize(self, newBondSize);
 
-        if (self.updatedBondSize != 0 && now > self.effectiveUpdateTime) {
+        if (self.updatedBondSize != 0 && now >= self.effectiveUpdateTime) {
             self.previousBondSize = self.updatedBondSize;
         }
         self.updatedBondSize = newBondSize;
