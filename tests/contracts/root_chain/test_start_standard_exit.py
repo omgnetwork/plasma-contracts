@@ -57,9 +57,8 @@ def test_start_standard_exit_by_non_owner_should_fail(testlang, utxo):
         testlang.start_standard_exit(utxo.spend_id, mallory)
 
 
-def test_start_standard_exit_unknown_token_should_fail(testlang, token):
-    utxo = testlang.create_utxo(token)
-
+def test_start_standard_exit_unknown_token_should_fail(testlang, no_exit_queue_token):
+    utxo = testlang.create_utxo(no_exit_queue_token)
     with pytest.raises(TransactionFailed):
         testlang.start_standard_exit(utxo.spend_id, utxo.owner)
 
@@ -78,7 +77,7 @@ def test_start_standard_exit_old_utxo_has_required_exit_period_to_start_exit(tes
     testlang.forward_timestamp(minimal_required_period - 1)
     testlang.start_standard_exit(utxo.spend_id, utxo.owner)
 
-    _, _, next_exit_id = testlang.root_chain.getNextExit(NULL_ADDRESS)
+    _, _, next_exit_id = testlang.root_chain.getNextExit(testlang.root_chain.eth_vault_id, NULL_ADDRESS)
     next_exit = StandardExit(*testlang.root_chain.exits(next_exit_id))
     assert next_exit.position == utxo.spend_id
 
@@ -88,7 +87,7 @@ def test_start_standard_exit_on_finalized_exit_should_fail(testlang, utxo):
     minimal_required_period = MIN_EXIT_PERIOD  # see tesuji blockchain design
     testlang.start_standard_exit(utxo.spend_id, utxo.owner)
     testlang.forward_timestamp(required_exit_period + minimal_required_period)
-    testlang.process_exits(NULL_ADDRESS, 0, 100)
+    testlang.process_exits(testlang.root_chain.eth_vault_id, NULL_ADDRESS, 0, 100)
 
     with pytest.raises(TransactionFailed):
         testlang.start_standard_exit(utxo.spend_id, utxo.owner)
@@ -126,7 +125,7 @@ def test_start_standard_exit_from_deposit_must_be_exitable_in_minimal_finalizati
 
     required_exit_period = MIN_EXIT_PERIOD  # see tesuji blockchain design
     testlang.forward_timestamp(required_exit_period + 1)
-    testlang.process_exits(NULL_ADDRESS, 0, 1)
+    testlang.process_exits(testlang.root_chain.eth_vault_id, NULL_ADDRESS, 0, 1)
 
     assert testlang.get_standard_exit(deposit_id) == [NULL_ADDRESS_HEX, 0, 0, False]
 
@@ -197,7 +196,7 @@ def test_start_standard_exit_on_finalized_in_flight_exit_output_should_fail(test
     testlang.start_in_flight_exit(spend_id)
     testlang.piggyback_in_flight_exit_output(spend_id, output_index, owner)
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
-    testlang.process_exits(NULL_ADDRESS, 0, 1)
+    testlang.process_exits(testlang.root_chain.eth_vault_id, NULL_ADDRESS, 0, 1)
 
     blknum, txindex, _ = decode_utxo_id(spend_id)
 

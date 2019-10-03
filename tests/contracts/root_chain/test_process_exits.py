@@ -30,7 +30,7 @@ def test_process_exits_standard_exit_should_succeed(testlang, num_outputs, plasm
     testlang.flush_events()
 
     testlang.start_standard_exit(utxo_pos, output_owner)
-    _, _, exit_id = plasma_framework.getNextExit(NULL_ADDRESS_HEX)
+    _, _, exit_id = plasma_framework.getNextExit(plasma_framework.eth_vault_id, NULL_ADDRESS_HEX)
     start_exit_events = testlang.flush_events()
 
     assert_events(start_exit_events,
@@ -38,7 +38,7 @@ def test_process_exits_standard_exit_should_succeed(testlang, num_outputs, plasm
                    ('ExitQueued', {"exitId": exit_id})])
 
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
-    testlang.process_exits(NULL_ADDRESS, 0, 100)
+    testlang.process_exits(testlang.root_chain.eth_vault_id, NULL_ADDRESS, 0, 100)
 
     assert_events(testlang.flush_events(),
                   [('EthWithdrawn', {'amount': amount, 'receiver': output_owner.address}),
@@ -56,7 +56,7 @@ def test_successful_process_exit_should_clear_exit_fields_and_set_output_as_spen
     started_exit = testlang.get_standard_exit(utxo_pos)
 
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
-    testlang.process_exits(NULL_ADDRESS, 0, 100)
+    testlang.process_exits(testlang.root_chain.eth_vault_id, NULL_ADDRESS, 0, 100)
 
     standard_exit = testlang.get_standard_exit(utxo_pos)
     assert standard_exit.owner == NULL_ADDRESS_HEX
@@ -74,7 +74,7 @@ def test_process_exits_in_flight_exit_should_succeed(testlang):
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
 
     pre_balance = testlang.get_balance(owner)
-    testlang.process_exits(NULL_ADDRESS, 0, 100)
+    testlang.process_exits(testlang.root_chain.eth_vault_id, NULL_ADDRESS, 0, 100)
 
     in_flight_exit = testlang.get_in_flight_exit(spend_id)
     assert in_flight_exit.exit_start_timestamp == 0
@@ -92,8 +92,7 @@ def test_process_exits_in_flight_exit_should_succeed(testlang):
 
 def test_finalize_exits_for_erc20_should_succeed(testlang, plasma_framework, token):
     owner, amount = testlang.accounts[0], 100
-    plasma_framework.addToken(token.address)
-    assert plasma_framework.hasToken(token.address)
+    assert plasma_framework.hasExitQueue(plasma_framework.erc20_vault_id, token.address)
     deposit_id = testlang.deposit_token(owner, token, amount)
     spend_id = testlang.spend_utxo([deposit_id], [owner], [(owner.address, token.address, amount)])
 
@@ -105,7 +104,7 @@ def test_finalize_exits_for_erc20_should_succeed(testlang, plasma_framework, tok
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
 
     pre_balance = token.balanceOf(owner.address)
-    testlang.process_exits(token.address, 0, 100)
+    testlang.process_exits(testlang.root_chain.erc20_vault_id, token.address, 0, 100)
 
     finalized_standard_exit = testlang.get_standard_exit(spend_id)
     assert finalized_standard_exit == [NULL_ADDRESS_HEX, 0, 0, False]
@@ -126,12 +125,12 @@ def test_finalize_exits_old_utxo_is_mature_after_single_mfp(testlang):
     testlang.forward_timestamp(minimal_finalization_period)
 
     assert testlang.get_standard_exit(spend_id).owner == owner.address
-    testlang.process_exits(NULL_ADDRESS, 0, 100)
+    testlang.process_exits(testlang.root_chain.eth_vault_id, NULL_ADDRESS, 0, 100)
 
     testlang.forward_timestamp(1)
     assert testlang.get_standard_exit(spend_id).owner == owner.address
 
-    testlang.process_exits(NULL_ADDRESS, 0, 100)
+    testlang.process_exits(testlang.root_chain.eth_vault_id, NULL_ADDRESS, 0, 100)
     assert testlang.get_standard_exit(spend_id).owner == NULL_ADDRESS_HEX
 
 
@@ -147,11 +146,11 @@ def test_finalize_exits_new_utxo_is_mature_after_mfp_plus_rep(testlang):
 
     testlang.forward_timestamp(required_exit_period)
     assert testlang.get_standard_exit(spend_id).owner == owner.address
-    testlang.process_exits(NULL_ADDRESS, 0, 100)
+    testlang.process_exits(testlang.root_chain.eth_vault_id, NULL_ADDRESS, 0, 100)
     assert testlang.get_standard_exit(spend_id).owner == owner.address
 
     testlang.forward_timestamp(minimal_finalization_period + 1)
-    testlang.process_exits(NULL_ADDRESS, 0, 100)
+    testlang.process_exits(testlang.root_chain.eth_vault_id, NULL_ADDRESS, 0, 100)
     assert testlang.get_standard_exit(spend_id).owner == NULL_ADDRESS_HEX
 
 
@@ -174,15 +173,16 @@ def test_finalize_exits_only_mature_exits_are_processed(testlang):
 
     assert testlang.get_standard_exit(spend_id_1).owner == owner.address
     assert testlang.get_standard_exit(spend_id_2).owner == owner.address
-    testlang.process_exits(NULL_ADDRESS, 0, 100)
+    testlang.process_exits(testlang.root_chain.eth_vault_id, NULL_ADDRESS, 0, 100)
     assert testlang.get_standard_exit(spend_id_1).owner == NULL_ADDRESS_HEX
     assert testlang.get_standard_exit(spend_id_2).owner == owner.address
 
 
-def test_finalize_exits_for_uninitialized_erc20_should_fail(testlang, plasma_framework, token):
-    assert not plasma_framework.hasToken(token.address)
+def test_finalize_exits_for_uninitialized_erc20_should_fail(testlang, plasma_framework):
+    token_address = b'\x00' * 19 + b'\x01'
+    assert not plasma_framework.hasExitQueue(plasma_framework.erc20_vault_id, token_address)
     with pytest.raises(TransactionFailed):
-        testlang.process_exits(token.address, 0, 100)
+        testlang.process_exits(plasma_framework.erc20_vault_id, token_address, 0, 100)
 
 
 def test_finalize_exits_partial_queue_processing(testlang):
@@ -197,7 +197,7 @@ def test_finalize_exits_partial_queue_processing(testlang):
     testlang.start_standard_exit(spend_id_2, owner)
 
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
-    testlang.process_exits(NULL_ADDRESS, testlang.get_standard_exit_id(spend_id_1), 1)
+    testlang.process_exits(testlang.root_chain.eth_vault_id, NULL_ADDRESS, testlang.get_standard_exit_id(spend_id_1), 1)
     plasma_exit = testlang.get_standard_exit(spend_id_1)
     assert plasma_exit.owner == NULL_ADDRESS_HEX
     plasma_exit = testlang.get_standard_exit(spend_id_2)
@@ -218,8 +218,8 @@ def test_processing_exits_with_specifying_top_exit_id_is_possible(testlang):
 
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
 
-    testlang.process_exits(NULL_ADDRESS, testlang.get_standard_exit_id(deposit_id_1), 1)
-    testlang.process_exits(NULL_ADDRESS, testlang.get_in_flight_exit_id(spend_id_2), 1)
+    testlang.process_exits(testlang.root_chain.eth_vault_id, NULL_ADDRESS, testlang.get_standard_exit_id(deposit_id_1), 1)
+    testlang.process_exits(testlang.root_chain.eth_vault_id, NULL_ADDRESS, testlang.get_in_flight_exit_id(spend_id_2), 1)
 
     in_flight_exit = testlang.get_in_flight_exit(spend_id_2)
     assert in_flight_exit.bond_owner == NULL_ADDRESS_HEX
@@ -236,12 +236,12 @@ def test_finalize_exits_tx_race_short_circuit(testlang, w3, plasma_framework):
     testlang.start_standard_exit(utxo4.spend_id, utxo4.owner)
 
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
-    testlang.process_exits(NULL_ADDRESS, testlang.get_standard_exit_id(utxo1.spend_id), 1)
+    testlang.process_exits(plasma_framework.eth_vault_id, NULL_ADDRESS, testlang.get_standard_exit_id(utxo1.spend_id), 1)
 
     w3.eth.disable_auto_mine()
 
     tx_hash = plasma_framework.plasma_framework.functions \
-        .processExits(NULL_ADDRESS, testlang.get_standard_exit_id(utxo1.spend_id), 3) \
+        .processExits(plasma_framework.eth_vault_id, NULL_ADDRESS, testlang.get_standard_exit_id(utxo1.spend_id), 3) \
         .transact({'gas': 100_000})  # reasonably high amount of gas (otherwise it fails on gas estimation)
 
     w3.eth.mine(expect_error=True)
@@ -264,10 +264,10 @@ def test_finalize_exits_tx_race_normal(testlang, w3):
     testlang.start_standard_exit(utxo4.spend_id, utxo4.owner)
 
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
-    testlang.process_exits(NULL_ADDRESS, testlang.get_standard_exit_id(utxo1.spend_id), 1)
+    testlang.process_exits(testlang.root_chain.eth_vault_id, NULL_ADDRESS, testlang.get_standard_exit_id(utxo1.spend_id), 1)
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
 
-    testlang.process_exits(NULL_ADDRESS, testlang.get_standard_exit_id(utxo2.spend_id), 3)
+    testlang.process_exits(testlang.root_chain.eth_vault_id, NULL_ADDRESS, testlang.get_standard_exit_id(utxo2.spend_id), 3)
     three_exits_tx_gas = w3.eth.last_gas_used
     assert three_exits_tx_gas > 26258  # value from _tx_race_short_circuit
 
@@ -280,12 +280,12 @@ def test_finalize_exits_empty_queue_should_crash(testlang):
     testlang.start_standard_exit(spend_id_1, owner)
 
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
-    testlang.process_exits(NULL_ADDRESS, testlang.get_standard_exit_id(spend_id_1), 1)
+    testlang.process_exits(testlang.root_chain.eth_vault_id, NULL_ADDRESS, testlang.get_standard_exit_id(spend_id_1), 1)
 
     with pytest.raises(TransactionFailed):
-        testlang.process_exits(NULL_ADDRESS, testlang.get_standard_exit_id(spend_id_1), 1)
+        testlang.process_exits(testlang.root_chain.eth_vault_id, NULL_ADDRESS, testlang.get_standard_exit_id(spend_id_1), 1)
     with pytest.raises(TransactionFailed):
-        testlang.process_exits(NULL_ADDRESS, 0, 1)
+        testlang.process_exits(testlang.root_chain.eth_vault_id, NULL_ADDRESS, 0, 1)
 
 
 def test_finalize_skipping_top_utxo_check_is_possible(testlang):
@@ -296,7 +296,7 @@ def test_finalize_skipping_top_utxo_check_is_possible(testlang):
     testlang.start_standard_exit(spend_id_1, owner)
 
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
-    testlang.process_exits(NULL_ADDRESS, 0, 1)
+    testlang.process_exits(testlang.root_chain.eth_vault_id, NULL_ADDRESS, 0, 1)
 
     standard_exit = testlang.get_standard_exit(spend_id_1)
     assert standard_exit.owner == NULL_ADDRESS_HEX
@@ -317,7 +317,7 @@ def test_finalize_challenged_exit_will_not_send_funds(testlang):
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
 
     pre_balance = testlang.get_balance(testlang.root_chain)
-    testlang.process_exits(NULL_ADDRESS, 0, 1, **{'from': finalizer.address})
+    testlang.process_exits(testlang.root_chain.eth_vault_id, NULL_ADDRESS, 0, 1, **{'from': finalizer.address})
     post_balance = testlang.get_balance(testlang.root_chain)
     assert post_balance == pre_balance
 
@@ -336,7 +336,7 @@ def test_finalize_challenged_exit_does_not_emit_events(testlang):
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
 
     testlang.flush_events()
-    testlang.process_exits(NULL_ADDRESS, 0, 1, **{'from': finalizer.address})
+    testlang.process_exits(testlang.root_chain.eth_vault_id, NULL_ADDRESS, 0, 1, **{'from': finalizer.address})
     assert [] == testlang.flush_events()
 
 
@@ -349,7 +349,7 @@ def test_finalize_exit_challenge_of_finalized_will_fail(testlang):
     testlang.start_standard_exit(spend_id, owner)
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
 
-    testlang.process_exits(NULL_ADDRESS, testlang.get_standard_exit_id(spend_id), 100)
+    testlang.process_exits(testlang.root_chain.eth_vault_id, NULL_ADDRESS, testlang.get_standard_exit_id(spend_id), 100)
     standard_exit = testlang.get_standard_exit(spend_id)
     assert standard_exit.owner == NULL_ADDRESS_HEX
     doublespend_id = testlang.spend_utxo([spend_id], [owner], [(owner.address, NULL_ADDRESS, 100)])
@@ -374,7 +374,7 @@ def test_finalize_exits_for_in_flight_exit_should_transfer_funds(testlang):
     exitable_timestamp, _, _ = testlang.root_chain.getNextExit(NULL_ADDRESS)
     pre_balance = testlang.get_balance(owner)
 
-    testlang.process_exits(NULL_ADDRESS, 0, 10)
+    testlang.process_exits(testlang.root_chain.eth_vault_id, NULL_ADDRESS, 0, 10)
     assert testlang.get_balance(owner) == \
         pre_balance + first_utxo + testlang.root_chain.inFlightExitBond() + testlang.root_chain.piggybackBond()
 
@@ -396,7 +396,7 @@ def test_finalize_in_flight_exit_finalizes_only_piggybacked_outputs(testlang):
     exitable_timestamp, _, _ = testlang.root_chain.getNextExit(NULL_ADDRESS)
     pre_balance = testlang.get_balance(owner)
 
-    testlang.process_exits(NULL_ADDRESS, 0, 10)
+    testlang.process_exits(testlang.root_chain.eth_vault_id, NULL_ADDRESS, 0, 10)
     assert testlang.get_balance(owner) == \
         pre_balance + first_utxo + testlang.root_chain.inFlightExitBond() + testlang.root_chain.piggybackBond()
 
@@ -429,23 +429,22 @@ def test_finalize_exits_priority_for_in_flight_exits_corresponds_to_the_age_of_y
 
     balance = testlang.get_balance(owner)
 
-    testlang.process_exits(NULL_ADDRESS, testlang.get_standard_exit_id(spend_00_id), 1)
+    testlang.process_exits(testlang.root_chain.eth_vault_id, NULL_ADDRESS, testlang.get_standard_exit_id(spend_00_id), 1)
     assert testlang.get_balance(owner) == balance + 30 + testlang.root_chain.standardExitBond()
 
     balance = testlang.get_balance(owner)
-    testlang.process_exits(NULL_ADDRESS, testlang.get_in_flight_exit_id(spend_1_id), 1)
+    testlang.process_exits(testlang.root_chain.eth_vault_id, NULL_ADDRESS, testlang.get_in_flight_exit_id(spend_1_id), 1)
     assert testlang.get_balance(
         owner) == balance + 70 + testlang.root_chain.inFlightExitBond() + testlang.root_chain.piggybackBond()
 
     balance = testlang.get_balance(owner)
-    testlang.process_exits(NULL_ADDRESS, testlang.get_standard_exit_id(spend_2_id), 1)
+    testlang.process_exits(testlang.root_chain.eth_vault_id, NULL_ADDRESS, testlang.get_standard_exit_id(spend_2_id), 1)
     assert testlang.get_balance(owner) == balance + 100 + testlang.root_chain.standardExitBond()
 
 
 @pytest.mark.skip("Includes IFE")
 def test_finalize_in_flight_exit_with_erc20_token_should_succeed(testlang, token):
     owner, amount = testlang.accounts[1], 100
-    testlang.root_chain.addToken(token.address)
     deposit_id = testlang.deposit_token(owner, token, amount)
     spend_id = testlang.spend_utxo([deposit_id], [owner], [(owner.address, token.address, amount)])
 
@@ -456,7 +455,7 @@ def test_finalize_in_flight_exit_with_erc20_token_should_succeed(testlang, token
 
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
 
-    testlang.process_exits(token.address, 0, 1)
+    testlang.process_exits(testlang.root_chain.erc20_vault_id, token.address, 0, 1)
 
     in_flight_exit = testlang.get_in_flight_exit(spend_id)
 
@@ -481,7 +480,6 @@ def test_finalize_in_flight_exit_with_erc20_token_should_succeed(testlang, token
 @pytest.mark.skip("Includes IFE")
 def test_finalize_in_flight_exit_with_erc20_token_should_transfer_funds_and_bond(testlang, token):
     owner, amount = testlang.accounts[1], 100
-    testlang.root_chain.addToken(token.address)
     deposit_id = testlang.deposit_token(owner, token, amount)
     spend_id = testlang.spend_utxo([deposit_id], [owner], [(owner.address, token.address, amount)])
 
@@ -493,7 +491,7 @@ def test_finalize_in_flight_exit_with_erc20_token_should_transfer_funds_and_bond
     token_balance = testlang.get_balance(owner, token)
     eth_balance = testlang.get_balance(owner)
 
-    testlang.process_exits(token.address, 0, 1, gas=800_000)
+    testlang.process_exits(testlang.root_chain.erc20_vault_id, token.address, 0, 1, gas=800_000)
 
     assert testlang.get_balance(owner, token) == token_balance + amount
     assert testlang.get_balance(owner) == eth_balance + testlang.root_chain.piggybackBond()
@@ -502,7 +500,6 @@ def test_finalize_in_flight_exit_with_erc20_token_should_transfer_funds_and_bond
 @pytest.mark.skip("Includes IFE")
 def test_finalize_in_flight_exit_with_eth_and_erc20_token(testlang, token):
     (owner_1, owner_2), amount = testlang.accounts[1:3], 100
-    testlang.root_chain.addToken(token.address)
     token_deposit = testlang.deposit_token(owner_1, token, amount)
     eth_deposit = testlang.deposit(owner_2, amount)
 
@@ -522,7 +519,7 @@ def test_finalize_in_flight_exit_with_eth_and_erc20_token(testlang, token):
     ]
 
     # finalize only ERC20 token
-    testlang.process_exits(token.address, 0, 1)
+    testlang.process_exits(testlang.root_chain.erc20_vault_id, token.address, 0, 1)
 
     assert testlang.get_balance(owner_1) == owner_1_balances[0]
     assert testlang.get_balance(owner_1, token) == owner_1_balances[1]
@@ -532,7 +529,7 @@ def test_finalize_in_flight_exit_with_eth_and_erc20_token(testlang, token):
     assert testlang.get_balance(owner_2, token) == owner_2_balances[1] + (amount - 2)
 
     # finalize Eth
-    testlang.process_exits(NULL_ADDRESS, 0, 1)
+    testlang.process_exits(testlang.root_chain.eth_vault_id, NULL_ADDRESS, 0, 1)
 
     assert testlang.get_balance(owner_1) == owner_1_balances[0] + (amount - 1) + testlang.root_chain.piggybackBond()
     assert testlang.get_balance(owner_1, token) == owner_1_balances[1]
@@ -545,7 +542,7 @@ def test_finalize_in_flight_exit_with_eth_and_erc20_token(testlang, token):
 @pytest.mark.skip("Includes IFE")
 def test_does_not_finalize_outputs_of_other_tokens(testlang, token):
     (owner_1, owner_2), amount = testlang.accounts[1:3], 100
-    testlang.root_chain.addToken(token.address)
+
     token_deposit = testlang.deposit_token(owner_1, token, amount)
     eth_deposit = testlang.deposit(owner_2, amount)
 
@@ -567,7 +564,7 @@ def test_does_not_finalize_outputs_of_other_tokens(testlang, token):
     ]
 
     # finalize Eth
-    testlang.process_exits(NULL_ADDRESS, 0, 1)
+    testlang.process_exits(testlang.root_chain.eth_vault_id, NULL_ADDRESS, 0, 1)
 
     assert testlang.get_balance(owner_1) == owner_1_balances[0] + (amount - 1) + testlang.root_chain.piggybackBond()
     assert testlang.get_balance(owner_1, token.address) == owner_1_balances[1]
@@ -579,7 +576,7 @@ def test_does_not_finalize_outputs_of_other_tokens(testlang, token):
 @pytest.mark.skip("Includes IFE")
 def test_when_processing_ife_finalization_of_erc20_token_does_not_clean_up_eth_outputs_data(testlang, token):
     (owner_1, owner_2), amount = testlang.accounts[1:3], 100
-    testlang.root_chain.addToken(token.address)
+
     token_deposit = testlang.deposit_token(owner_1, token, amount)
     eth_deposit = testlang.deposit(owner_2, amount)
 
@@ -595,7 +592,7 @@ def test_when_processing_ife_finalization_of_erc20_token_does_not_clean_up_eth_o
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
 
     # finalize only ERC20 token
-    testlang.process_exits(token.address, 0, 1)
+    testlang.process_exits(testlang.root_chain.erc20_vault_id, token.address, 0, 1)
     in_flight_exit = testlang.get_in_flight_exit(spend_id)
 
     assert not in_flight_exit.output_blocked(0)
@@ -613,7 +610,6 @@ def test_ife_is_enqueued_once_per_token(testlang, token):
     owner, amount = testlang.accounts[0], 100
     eth_deposit_id = testlang.deposit(owner, amount)
     token_deposit_id = testlang.deposit_token(owner, token, amount)
-    testlang.root_chain.addToken(token.address)
 
     spend_id = testlang.spend_utxo([token_deposit_id, eth_deposit_id], [owner] * 2,
                                    [(owner.address, NULL_ADDRESS, amount // 2),
@@ -628,22 +624,21 @@ def test_ife_is_enqueued_once_per_token(testlang, token):
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
 
     # check Eth
-    testlang.process_exits(NULL_ADDRESS, 0, 1)
+    testlang.process_exits(testlang.root_chain.eth_vault_id, NULL_ADDRESS, 0, 1)
 
     with pytest.raises(TransactionFailed):
-        testlang.process_exits(NULL_ADDRESS, 0, 1)
+        testlang.process_exits(testlang.root_chain.eth_vault_id, NULL_ADDRESS, 0, 1)
 
     # check ERC20 token
-    testlang.process_exits(token.address, 0, 1)
+    testlang.process_exits(testlang.root_chain.erc20_vault_id, token.address, 0, 1)
 
     with pytest.raises(TransactionFailed):
-        testlang.process_exits(token.address, 0, 1)
+        testlang.process_exits(testlang.root_chain.erc20_vault_id, token.address, 0, 1)
 
 
 @pytest.mark.skip("Includes IFE")
 def test_when_processing_an_ife_it_is_cleaned_up_when_all_piggybacked_outputs_finalized(testlang, token):
     (owner_1, owner_2), amount = testlang.accounts[1:3], 100
-    testlang.root_chain.addToken(token.address)
     token_deposit = testlang.deposit_token(owner_1, token, amount)
     eth_deposit = testlang.deposit(owner_2, amount)
 
@@ -659,11 +654,11 @@ def test_when_processing_an_ife_it_is_cleaned_up_when_all_piggybacked_outputs_fi
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
 
     # finalize both ERC20 token and Eth outputs
-    testlang.process_exits(token.address, 0, 1)
+    testlang.process_exits(testlang.root_chain.erc20_vault_id, token.address, 0, 1)
 
     pre_balance = testlang.get_balance(testlang.accounts[0])
 
-    testlang.process_exits(NULL_ADDRESS, 0, 1)
+    testlang.process_exits(testlang.root_chain.eth_vault_id, NULL_ADDRESS, 0, 1)
 
     in_flight_exit = testlang.get_in_flight_exit(spend_id)
 
@@ -692,7 +687,7 @@ def test_in_flight_exit_is_cleaned_up_even_though_none_of_outputs_exited(testlan
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
     pre_balance = testlang.get_balance(owner)
 
-    testlang.process_exits(NULL_ADDRESS, 0, 1)
+    testlang.process_exits(testlang.root_chain.eth_vault_id, NULL_ADDRESS, 0, 1)
 
     in_flight_exit = testlang.get_in_flight_exit(spend_id)
 

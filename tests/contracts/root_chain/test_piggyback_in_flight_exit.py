@@ -193,8 +193,6 @@ def test_piggybacking_an_output_of_supported_token_should_succeed(testlang, toke
     spend_id = testlang.spend_utxo([deposit_id], [owner], [(owner.address, token.address, amount)])
     testlang.start_in_flight_exit(spend_id)
 
-    testlang.root_chain.addToken(token.address)
-
     testlang.piggyback_in_flight_exit_input(spend_id, output, owner)
 
     in_flight_exit = testlang.get_in_flight_exit(spend_id)
@@ -204,7 +202,6 @@ def test_piggybacking_an_output_of_supported_token_should_succeed(testlang, toke
 @pytest.mark.parametrize("outputs", [[0, 1], [4, 5], [0, 4], [0, 1, 4, 5]])  # inputs and outputs
 def test_piggybacking_outputs_of_different_tokens_should_succeed(testlang, token, outputs):
     owner, amount = testlang.accounts[0], 100
-    testlang.root_chain.addToken(token.address)
     token_deposit_id = testlang.deposit_token(owner, token, amount)
     eth_deposit_id = testlang.deposit(owner, amount)
 

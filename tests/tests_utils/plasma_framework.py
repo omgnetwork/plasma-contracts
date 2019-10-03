@@ -38,11 +38,13 @@ class PlasmaFramework:
         self.eth_vault = get_contract('EthVault', args=(self.plasma_framework.address,), sender=maintainer)
         self.erc20_vault = get_contract('Erc20Vault', args=(self.plasma_framework.address,), sender=maintainer)
 
+        self.eth_vault_id = 1
         self.eth_vault.setDepositVerifier(self.eth_deposit_verifier.address, **{"from": maintainer.address})
-        self.plasma_framework.registerVault(1, self.eth_vault.address, **{"from": maintainer.address})
+        self.plasma_framework.registerVault(self.eth_vault_id, self.eth_vault.address, **{"from": maintainer.address})
 
+        self.erc20_vault_id = 2
         self.erc20_vault.setDepositVerifier(self.erc20_deposit_verifier.address, **{"from": maintainer.address})
-        self.plasma_framework.registerVault(2, self.erc20_vault.address, **{"from": maintainer.address})
+        self.plasma_framework.registerVault(self.erc20_vault_id, self.erc20_vault.address, **{"from": maintainer.address})
 
     def _setup_spending_conditions(self, get_contract, maintainer):
         self.spending_condition_registry = get_contract("SpendingConditionRegistry", sender=maintainer)
@@ -88,8 +90,8 @@ class PlasmaFramework:
         payment_exit_game = get_contract("PaymentExitGame",
                                          sender=maintainer,
                                          args=(self.plasma_framework.address,
-                                               self.eth_vault.address,
-                                               self.erc20_vault.address,
+                                               self.eth_vault_id,
+                                               self.erc20_vault_id,
                                                self.output_guard_registry.address,
                                                self.spending_condition_registry.address,
                                                self.payment_state_verifier.address,
@@ -137,8 +139,8 @@ class PlasmaFramework:
     def blocks(self, block):
         return self.plasma_framework.blocks(block)
 
-    def addToken(self, token, **kwargs):
-        return self.plasma_framework.addToken(token, **kwargs)
+    def addExitQueue(self, vaultId, token, **kwargs):
+        return self.plasma_framework.addExitQueue(vaultId, token, **kwargs)
 
     def submitBlock(self, block_root, **kwargs):
         self.plasma_framework.submitBlock(block_root, **kwargs)
@@ -192,8 +194,8 @@ class PlasmaFramework:
                                          spending_tx_sig):
         raise NotImplementedError
 
-    def processExits(self, token, top_exit_id, exits_to_process):
-        return self.plasma_framework.processExits(token, top_exit_id, exits_to_process)
+    def processExits(self, vaultId, token, top_exit_id, exits_to_process):
+        return self.plasma_framework.processExits(vaultId, token, top_exit_id, exits_to_process)
 
     def getInFlightExitId(self, tx):
         raise NotImplementedError
@@ -206,15 +208,15 @@ class PlasmaFramework:
     def getFeeExitId(self, fee_exit_num):
         raise NotImplementedError
 
-    def getNextExit(self, token):
-        exit_priority = self.plasma_framework.getNextExit(token)
+    def getNextExit(self, vaultId, token):
+        exit_priority = self.plasma_framework.getNextExit(vaultId, token)
         return parse_exit_priority(exit_priority)
 
     def unpackExitId(self, priority):
         raise NotImplementedError
 
-    def hasToken(self, token):
-        return self.plasma_framework.hasToken(token)
+    def hasExitQueue(self, vaultId, token):
+        return self.plasma_framework.hasExitQueue(vaultId, token)
 
     def getInFlightExitOutput(self, tx, output_index):
         raise NotImplementedError
