@@ -56,7 +56,7 @@ library PaymentEip712Lib {
         });
     }
 
-    // the 'encode(domainSeparator : 𝔹²⁵⁶, message : 𝕊)' of the EIP712 specification
+    // the 'encode(domainSeparator, message)' of the EIP712 specification
     // see: https://github.com/ethereum/EIPs/blob/master/EIPS/eip-712.md#specification
     function hashTx(Constants memory _eip712, PaymentTransactionModel.Transaction memory _tx)
         internal
