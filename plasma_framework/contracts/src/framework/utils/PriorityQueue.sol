@@ -72,6 +72,7 @@ contract PriorityQueue is Ownable {
     /*
      *  Private functions
      */
+
     function percUp(Queue storage self, uint256 pointer) private {
         uint256 i = pointer;
         uint256 j = i;
