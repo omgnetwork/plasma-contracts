@@ -172,8 +172,8 @@ def utxo(testlang):
 def _encode_libs(libraries):
     libs = dict()
     for lib_name, lib_address in libraries.items():
-        file = _find_file(lib_name + ".sol", CONTRACTS_DIR)
-        libs[file + ":" + lib_name] = lib_address
+        file_path = _find_file(lib_name + ".sol", CONTRACTS_DIR)
+        libs[file_path + ":" + lib_name] = lib_address
     return libs
 
 

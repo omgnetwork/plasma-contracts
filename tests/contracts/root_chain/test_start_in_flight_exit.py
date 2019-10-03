@@ -3,7 +3,7 @@ from eth_utils import to_canonical_address
 from eth_tester.exceptions import TransactionFailed
 from plasma_core.constants import NULL_ADDRESS, NULL_ADDRESS_HEX, MIN_EXIT_PERIOD
 
-pytestmark = pytest.mark.skip()
+pytestmark = pytest.mark.skip("WIP: moving tests to plasma framework")
 
 
 @pytest.mark.parametrize("num_inputs", [1, 2, 3, 4])

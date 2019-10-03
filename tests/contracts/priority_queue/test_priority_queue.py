@@ -101,6 +101,9 @@ def op_cost(n):
     tx_base_cost = 21000
     # Numbers were discovered experimentally. They represent upper bound of
     # gas cost of execution of delMin or insert operations.
+    # We assume that the op_cost is a sequence of a form: op_cost_n = alogn + c
+    # To discover the values, one should run many inserts, collect the gas costs
+    # for each insert and compute a and c
     return tx_base_cost + 40472 + 6689 * math.floor(math.log(n, 2))
 
 

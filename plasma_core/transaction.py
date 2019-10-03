@@ -34,16 +34,22 @@ class TransactionInput:
 
 class TransactionOutput(rlp.Serializable):
     fields = (
+        ('output_type', rlp.sedes.big_endian_int),
         ('output_guard', rlp.sedes.Binary.fixed_length(20)),
         ('token', rlp.sedes.Binary.fixed_length(20)),
         ('amount', big_endian_int)
     )
 
-    def __init__(self, output_guard=NULL_ADDRESS, token=NULL_ADDRESS, amount=0):
+    def __init__(self,
+                 output_guard=NULL_ADDRESS,
+                 token=NULL_ADDRESS,
+                 amount=0,
+                 output_type=TxOutputTypes.PAYMENT.value):
+
         output_guard = address.to_canonical_address(output_guard)
         token = address.to_canonical_address(token)
         amount = amount
-        super().__init__(output_guard, token, amount)
+        super().__init__(output_type, output_guard, token, amount)
 
 
 class Transaction(rlp.Serializable):

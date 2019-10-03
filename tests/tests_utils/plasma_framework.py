@@ -59,6 +59,7 @@ class PlasmaFramework:
 
     def _setup_state_verifiers(self, get_contract, maintainer):
         self.payment_state_verifier = get_contract('PaymentTransactionStateTransitionVerifier', sender=maintainer)
+        self.tx_finalization_verifier = get_contract('TxFinalizationVerifier', sender=maintainer)
 
     def _setup_exit_games(self, get_contract, maintainer):
         self.payment_exit_game = self._get_payment_exit_game(get_contract, maintainer)
@@ -92,6 +93,7 @@ class PlasmaFramework:
                                                self.output_guard_registry.address,
                                                self.spending_condition_registry.address,
                                                self.payment_state_verifier.address,
+                                               self.tx_finalization_verifier.address,
                                                TxTypes.PAYMENT.value,
                                                ),
                                          libraries=libs_map)
@@ -148,7 +150,7 @@ class PlasmaFramework:
         return self.erc20_vault.deposit(deposit_tx, **kwargs)
 
     def startStandardExit(self, utxo_pos, output_tx, output_tx_inclusion_proof, **kwargs):
-        args = (utxo_pos, output_tx, 1, b'', output_tx_inclusion_proof)
+        args = (utxo_pos, output_tx, b'', output_tx_inclusion_proof)
         return self.payment_exit_game.startStandardExit(args, **kwargs)
 
     def challengeStandardExit(self, standard_exit_id, challenge_tx, input_index, challenge_tx_sig):

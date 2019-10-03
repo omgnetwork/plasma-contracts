@@ -3,7 +3,7 @@ from eth_tester.exceptions import TransactionFailed
 from plasma_core.constants import MIN_EXIT_PERIOD, NULL_ADDRESS
 from plasma_core.utils.transactions import decode_utxo_id, encode_utxo_id
 
-pytestmark = pytest.mark.skip()
+pytestmark = pytest.mark.skip("WIP: moving tests to plasma framework")
 
 
 @pytest.mark.parametrize("num_inputs", [1, 2, 3, 4])

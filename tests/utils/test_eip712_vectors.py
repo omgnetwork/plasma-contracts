@@ -7,6 +7,7 @@ from plasma_core.utils.eip712_struct_hash import hash_struct
 
 # TODO: Run the tests on new tx format
 #  Metamask currently does not implement dynamic arrays
+
 pytestmark = pytest.mark.skip(reason="Dynamic arrays and optional fields in tx format")
 
 test_domain = make_domain(

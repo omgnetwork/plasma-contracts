@@ -32,7 +32,7 @@ contract BlockController is Operated, VaultRegistry {
     {
         childBlockInterval = _interval;
         nextChildBlock = childBlockInterval;
-        nextDeposit= 1;
+        nextDeposit = 1;
     }
 
     /**

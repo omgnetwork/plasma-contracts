@@ -94,7 +94,7 @@ def test_start_standard_exit_on_finalized_exit_should_fail(testlang, utxo):
         testlang.start_standard_exit(utxo.spend_id, utxo.owner)
 
 
-@pytest.mark.skip("Fails due to being non-conformant to ERC712")
+@pytest.mark.skip("Skipped due to usage of EIP712")
 def test_start_standard_exit_wrong_oindex_should_fail(testlang):
     alice, bob, alice_money, bob_money = testlang.accounts[0], testlang.accounts[1], 10, 90
 
@@ -226,7 +226,7 @@ def test_start_standard_exit_from_two_deposits_with_the_same_amount_and_owner_sh
     testlang.start_standard_exit(second_deposit_id, owner)
 
 
-@pytest.mark.skip("Fails due to being non-conformant to ERC712")
+@pytest.mark.skip("Skip due to usage of challenges")
 def test_old_signature_scheme_does_not_work_any_longer(testlang, utxo):
     # In this test I will challenge standard exit with old signature schema to show it no longer works
     # Then passing new signature to the same challenge data, challenge will succeed
@@ -250,7 +250,7 @@ def test_old_signature_scheme_does_not_work_any_longer(testlang, utxo):
     testlang.root_chain.challengeStandardExit(exit_id, spend_tx.encoded, 0, new_signature)
 
 
-@pytest.mark.skip("Fails due to being non-conformant to ERC712")
+@pytest.mark.skip("Skip due to usage of challenges")
 def test_signature_scheme_respects_verifying_contract(testlang, utxo):
     alice = testlang.accounts[0]
     outputs = [(alice.address, NULL_ADDRESS, 50)]

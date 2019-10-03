@@ -41,7 +41,7 @@ class Input(EIP712Struct):
 
 
 class Output(EIP712Struct):
-    output_guard = Bytes(32)
+    output_guard = Bytes(20)
     currency = Address()
     amount = Uint(256)
 

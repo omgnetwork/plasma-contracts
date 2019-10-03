@@ -1,7 +1,7 @@
 import pytest
 from eth_tester.exceptions import TransactionFailed
 
-pytestmark = pytest.mark.skip()
+pytestmark = pytest.mark.skip("WIP: moving tests to plasma framework")
 
 EXIT_PERIOD = 4 * 60
 

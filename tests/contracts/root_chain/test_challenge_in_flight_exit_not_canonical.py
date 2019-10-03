@@ -3,7 +3,7 @@ from eth_tester.exceptions import TransactionFailed
 
 from plasma_core.constants import NULL_ADDRESS, MIN_EXIT_PERIOD
 
-pytestmark = pytest.mark.skip()
+pytestmark = pytest.mark.skip("WIP: moving tests to plasma framework")
 
 
 def test_challenge_in_flight_exit_not_canonical_should_succeed(testlang):

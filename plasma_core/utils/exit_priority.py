@@ -3,12 +3,12 @@ def parse_exit_priority(priority):
 
 
 def parse_exitable_at(priority):
-    return priority // 2 ** 214  # take 42 most significant bits
+    return priority >> 214  # take 42 most significant bits
 
 
 def parse_tx_pos(priority):
-    return (priority % 2 ** 214) // 2 ** 160  # take 213-160 bits
+    return (((priority >> 214) << 214) ^ priority) >> 160  # take 213-160 bits
 
 
 def parse_exit_id(priority):
-    return priority % 2 ** 160  # take 160 least significant bits
+    return ((priority >> 160) << 160) ^ priority  # take 160 least significant bits

@@ -17,8 +17,7 @@ contract PriorityQueueTest{
      *  Storage
      */
 
-    PriorityQueue queue;
-
+    PriorityQueue public queue;
     /*
      *  Public functions
      */
@@ -38,7 +37,6 @@ contract PriorityQueueTest{
         queue.insert(_element);
     }
 
-
     /**
      * @dev Overrides the default implementation, by simply emitting an even on deletion, so that the result is testable.
      * @return The smallest element in the priority queue.
@@ -51,11 +49,9 @@ contract PriorityQueueTest{
         emit DelMin(value);
     }
 
-
     /*
      * Read-only functions
      */
-
     /**
      * @dev Returns the top element of the heap.
      * @return The smallest element in the priority queue.
