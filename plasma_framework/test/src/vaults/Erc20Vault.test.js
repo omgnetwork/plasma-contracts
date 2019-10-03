@@ -184,7 +184,7 @@ contract('Erc20Vault', (accounts) => {
             );
         });
 
-        it('should transfer ERC token to the target', async () => {
+        it('should transfer ERC token to the receiver', async () => {
             const preBalance = await this.erc20.balanceOf(alice);
 
             await this.exitGame.proxyErc20Withdraw(alice, this.erc20.address, this.testFundAmount);
@@ -205,7 +205,7 @@ contract('Erc20Vault', (accounts) => {
                 Erc20Vault,
                 'Erc20Withdrawn',
                 {
-                    target: alice,
+                    receiver: alice,
                     token: this.erc20.address,
                     amount: new BN(this.testFundAmount),
                 },
@@ -237,7 +237,7 @@ contract('Erc20Vault', (accounts) => {
                     Erc20Vault,
                     'Erc20Withdrawn',
                     {
-                        target: alice,
+                        receiver: alice,
                         token: this.erc20.address,
                         amount: new BN(this.testFundAmount),
                     },
@@ -253,7 +253,7 @@ contract('Erc20Vault', (accounts) => {
             await this.nonCompliantERC20.transfer(this.erc20Vault.address, this.testFundAmount, { from: accounts[0] });
         });
 
-        it('should transfer ERC token to the target', async () => {
+        it('should transfer ERC token to the receiver', async () => {
             const preBalance = await this.nonCompliantERC20.balanceOf(alice);
 
             await this.exitGame.proxyErc20Withdraw(alice, this.nonCompliantERC20.address, this.testFundAmount);

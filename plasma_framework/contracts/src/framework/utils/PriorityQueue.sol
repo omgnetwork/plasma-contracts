@@ -69,10 +69,6 @@ contract PriorityQueue is Ownable {
         return queue.heapList[1];
     }
 
-    /*
-     *  Private functions
-     */
-
     function percUp(Queue storage self, uint256 pointer) private {
         uint256 i = pointer;
         uint256 j = i;

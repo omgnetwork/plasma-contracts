@@ -170,7 +170,7 @@ contract('EthVault', ([_, alice]) => {
             );
         });
 
-        it('should transfer ETH to the target', async () => {
+        it('should transfer ETH to the receiver', async () => {
             const preBalance = new BN(await web3.eth.getBalance(alice));
 
             await this.exitGame.proxyEthWithdraw(alice, DEPOSIT_VALUE);
@@ -189,7 +189,7 @@ contract('EthVault', ([_, alice]) => {
                 EthVault,
                 'EthWithdrawn',
                 {
-                    target: alice,
+                    receiver: alice,
                     amount: new BN(DEPOSIT_VALUE),
                 },
             );
@@ -218,7 +218,7 @@ contract('EthVault', ([_, alice]) => {
                     EthVault,
                     'EthWithdrawn',
                     {
-                        target: alice,
+                        receiver: alice,
                         amount: new BN(DEPOSIT_VALUE),
                     },
                 );

@@ -6,7 +6,7 @@ import "../framework/PlasmaFramework.sol";
 
 contract EthVault is Vault {
     event EthWithdrawn(
-        address payable indexed target,
+        address payable indexed receiver,
         uint256 amount
     );
 
@@ -33,11 +33,11 @@ contract EthVault is Vault {
 
     /**
     * @notice Withdraw ETH that have been exited from the OMG network successfully.
-    * @param transferee address of the transferee
+    * @param receiver address of the transferee
     * @param amount amount of eth to transfer.
     */
-    function withdraw(address payable transferee, uint256 amount) external onlyFromNonQuarantinedExitGame {
-        transferee.transfer(amount);
-        emit EthWithdrawn(transferee, amount);
+    function withdraw(address payable receiver, uint256 amount) external onlyFromNonQuarantinedExitGame {
+        receiver.transfer(amount);
+        emit EthWithdrawn(receiver, amount);
     }
 }
