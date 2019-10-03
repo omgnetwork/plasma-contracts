@@ -7,8 +7,8 @@ import "./utils/Operated.sol";
 /**
 * @notice Controls the logic and functions for block submissions in PlasmaFramework
 * @dev We have two kinds of blocks: child block and deposit block.
-*      Each child block would have an interval of 'childBlockInterval'.
-*      The interval is preserved for deposits. Each deposit would result in one deposit block.
+*      Each child block has an interval of 'childBlockInterval'.
+*      The interval is preserved for deposits. Each deposit results in one deposit block.
 *      For instance, a child block would be in block 1000 and the next deposit would result in block 1001.
 *
 *      Meanwhile, block submission can only be done by the authority address.

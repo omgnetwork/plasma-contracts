@@ -6,8 +6,8 @@ import "../framework/utils/Operated.sol";
 
 /**
  * @notice Base contract for vault implementation
- * @dev This is with the functionality to swap "deposit verifier".
- *      By setting new deposit verifier, we can upgrade to new deposit tx type without whole upgrade of the vault.
+ * @dev This is the functionality to swap "deposit verifier".
+ *      By setting new deposit verifier, we can upgrade to a new deposit tx type without upgrading the vault.
  */
 contract Vault is Operated {
     event SetDepositVerifierCalled(address nextDepositVerifier);
