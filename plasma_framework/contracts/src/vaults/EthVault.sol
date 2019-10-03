@@ -33,11 +33,11 @@ contract EthVault is Vault {
 
     /**
     * @notice Withdraw ETH that have been exited from the OMG network successfully.
-    * @param _target Place to transfer eth.
-    * @param _amount Amount of eth to transfer.
+    * @param transferee address of the transferee
+    * @param amount amount of eth to transfer.
     */
-    function withdraw(address payable _target, uint256 _amount) external onlyFromNonQuarantinedExitGame {
-        _target.transfer(_amount);
-        emit EthWithdrawn(_target, _amount);
+    function withdraw(address payable transferee, uint256 amount) external onlyFromNonQuarantinedExitGame {
+        transferee.transfer(amount);
+        emit EthWithdrawn(transferee, amount);
     }
 }
