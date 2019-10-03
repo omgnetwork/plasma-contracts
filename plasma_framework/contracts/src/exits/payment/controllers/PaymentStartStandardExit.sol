@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity 0.5.11;
 pragma experimental ABIEncoderV2;
 
 import "../PaymentExitDataModel.sol";
@@ -11,7 +11,6 @@ import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../utils/ExitableTimestamp.sol";
 import "../../utils/ExitId.sol";
 import "../../utils/OutputId.sol";
-import "../../utils/OutputGuard.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
 import "../../../transactions/outputs/PaymentOutputModel.sol";
 import "../../../utils/IsDeposit.sol";
@@ -49,6 +48,7 @@ library PaymentStartStandardExit {
         uint160 exitId;
         bool isTxDeposit;
         uint256 txBlockTimeStamp;
+        bytes32 outputId;
         TxFinalizationModel.Data finalizationData;
     }
 
@@ -100,7 +100,7 @@ library PaymentStartStandardExit {
         public
     {
         StartStandardExitData memory data = setupStartStandardExitData(self, args);
-        verifyStartStandardExitData(data, exitMap);
+        verifyStartStandardExitData(self, data, exitMap);
         saveStandardExitData(data, exitMap);
         enqueueStandardExit(data);
 
@@ -124,11 +124,10 @@ library PaymentStartStandardExit {
 
         OutputGuardModel.Data memory outputGuardData = OutputGuardModel.Data({
             guard: output.outputGuard,
-            outputType: args.outputType,
             preimage: args.outputGuardPreimage
         });
 
-        IOutputGuardHandler outputGuardHandler = controller.outputGuardHandlerRegistry.outputGuardHandlers(args.outputType);
+        IOutputGuardHandler outputGuardHandler = controller.outputGuardHandlerRegistry.outputGuardHandlers(output.outputType);
 
         TxFinalizationModel.Data memory finalizationData = TxFinalizationModel.moreVpData(
             controller.framework,
@@ -136,6 +135,10 @@ library PaymentStartStandardExit {
             utxoPos.txPos(),
             args.outputTxInclusionProof
         );
+
+        bytes32 outputId = isTxDeposit
+            ? OutputId.computeDepositOutputId(args.rlpOutputTx, utxoPos.outputIndex(), utxoPos.value)
+            : OutputId.computeNormalOutputId(args.rlpOutputTx, utxoPos.outputIndex());
 
         return StartStandardExitData({
             controller: controller,
@@ -148,11 +151,13 @@ library PaymentStartStandardExit {
             exitId: exitId,
             isTxDeposit: isTxDeposit,
             txBlockTimeStamp: blockTimestamp,
+            outputId: outputId,
             finalizationData: finalizationData
         });
     }
 
     function verifyStartStandardExitData(
+        Controller memory self,
         StartStandardExitData memory data,
         PaymentExitDataModel.StandardExitMap storage exitMap
     )
@@ -167,6 +172,8 @@ library PaymentStartStandardExit {
 
         require(data.controller.txFinalizationVerifier.isStandardFinalized(data.finalizationData), "The transaction must be standard finalized");
         require(exitMap.exits[data.exitId].exitable == false, "Exit already started");
+
+        require(self.framework.isOutputSpent(data.outputId) == false, "Output already spent");
     }
 
     function saveStandardExitData(
@@ -175,14 +182,10 @@ library PaymentStartStandardExit {
     )
         private
     {
-        bytes32 outputId = data.isTxDeposit
-            ? OutputId.computeDepositOutputId(data.args.rlpOutputTx, data.utxoPos.outputIndex(), data.utxoPos.value)
-            : OutputId.computeNormalOutputId(data.args.rlpOutputTx, data.utxoPos.outputIndex());
-
         exitMap.exits[data.exitId] = PaymentExitDataModel.StandardExit({
             exitable: true,
             utxoPos: uint192(data.utxoPos.value),
-            outputId: outputId,
+            outputId: data.outputId,
             exitTarget: msg.sender,
             amount: data.output.amount,
             bondSize: msg.value

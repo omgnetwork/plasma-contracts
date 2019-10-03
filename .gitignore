@@ -22,6 +22,9 @@ build/
 .idea/
 *.iml
 
+# contracts dependencies
+openzeppelin-solidity
+
 # dotenv environment vars
 .env
 
@@ -37,7 +40,8 @@ npm-debug.log
 # coverage file output
 coverage
 coverage.json
-
+.coverage_artifacts/
+.coverage_contracts/
 
 # pytest-xprocess
 .xprocess/

@@ -1,11 +1,11 @@
-pragma solidity ^0.5.0;
+pragma solidity 0.5.11;
 
 import "./TxPosLib.sol";
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 /**
-@dev UTXO position = (blockNumber * BLOCK_OFFSET + txIndex * TX_OFFSET + outputIndex).
+ * @dev UTXO position = (blockNumber * BLOCK_OFFSET + txIndex * TX_OFFSET + outputIndex).
  */
 library UtxoPosLib {
     using SafeMath for uint256;

@@ -1,5 +1,5 @@
 from plasma_core.utils.transactions import decode_utxo_id
-from plasma_core.constants import NULL_SIGNATURE
+from plasma_core.constants import NULL_SIGNATURE, CHILD_BLOCK_INTERVAL
 from plasma_core.exceptions import (InvalidBlockSignatureException,
                                     InvalidTxSignatureException,
                                     TxAlreadySpentException,
@@ -12,7 +12,7 @@ class ChildChain(object):
         self.operator = operator
         self.blocks = {}
         self.parent_queue = {}
-        self.child_block_interval = 1000
+        self.child_block_interval = CHILD_BLOCK_INTERVAL
         self.next_child_block = self.child_block_interval
         self.next_deposit_block = 1
 
@@ -53,7 +53,10 @@ class ChildChain(object):
             del self.parent_queue[block.number]
         return True
 
-    def validate_transaction(self, tx, temp_spent={}):
+    def validate_transaction(self, tx, temp_spent=None):
+        if not temp_spent:
+            temp_spent = dict()
+
         input_amount = 0
         output_amount = sum([o.amount for o in tx.outputs])
 
@@ -67,7 +70,8 @@ class ChildChain(object):
             input_tx = self.get_transaction(i.identifier)
 
             # Check for a valid signature.
-            if tx.signatures[x] == NULL_SIGNATURE or tx.signers[x] != input_tx.outputs[i.oindex].owner:
+            output_guard = input_tx.outputs[i.oindex].output_guard
+            if tx.signatures[x] == NULL_SIGNATURE or tx.signers[x] != output_guard:
                 raise InvalidTxSignatureException('failed to validate tx')
 
             # Check to see if the input is already spent.

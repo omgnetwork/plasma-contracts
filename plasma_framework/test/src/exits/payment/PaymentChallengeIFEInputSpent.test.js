@@ -71,6 +71,7 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                     buildUtxoPos(BLOCK_NUMBER - CHILD_BLOCK_INTERVAL, 4, 3),
                     buildUtxoPos(BLOCK_NUMBER - CHILD_BLOCK_INTERVAL, 10, 2),
                 ],
+                OUTPUT_TYPE.PAYMENT,
                 inputOwner,
                 INPUT_TX_AMOUNT,
             );
@@ -90,12 +91,18 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
         const buildPiggybackInputData = async (inputTx) => {
             const outputAmount = 997;
 
-            const firstInput = createInputTransaction([buildUtxoPos(BLOCK_NUMBER, 3, 0)], outputOwner, 334455);
+            const firstInput = createInputTransaction(
+                [buildUtxoPos(BLOCK_NUMBER, 3, 0)],
+                OUTPUT_TYPE.PAYMENT,
+                outputOwner,
+                334455,
+            );
             const firstInputUtxoPos = buildUtxoPos(BLOCK_NUMBER, 66, 0);
 
             const inFlightTx = createInFlightTx(
                 [firstInput, inputTx.tx],
                 [firstInputUtxoPos, inputTx.utxoPos],
+                OUTPUT_TYPE.PAYMENT,
                 alice,
                 outputAmount,
             );
@@ -190,14 +197,14 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
             );
 
             // Create the input tx
-            const inputTx = buildInputTx();
+            this.inputTx = buildInputTx();
 
             await this.framework.setBlock(BLOCK_NUMBER, web3.utils.sha3('dummy root'), 0);
 
             this.piggybackBondSize = await this.exitGame.piggybackBondSize();
 
             // Set up the piggyback data
-            this.testData = await buildPiggybackInputData(inputTx);
+            this.testData = await buildPiggybackInputData(this.inputTx);
             await this.exitGame.setInFlightExit(this.testData.exitId, this.testData.inFlightExitData);
 
             // Piggyback the second input
@@ -209,7 +216,8 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
 
             // Create a transaction that spends the same input
             const challengingTx = createInputTransaction(
-                [inputTx.utxoPos],
+                [this.inputTx.utxoPos],
+                OUTPUT_TYPE.PAYMENT,
                 outputOwner,
                 789,
             );
@@ -222,11 +230,10 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                 inFlightTxInputIndex: this.inFlightTxPiggybackedIndex,
                 challengingTx: web3.utils.bytesToHex(challengingTx.rlpEncoded()),
                 challengingTxInputIndex: 0,
-                challengingTxInputOutputType: OUTPUT_TYPE.PAYMENT,
                 challengingTxInputOutputGuardPreimage: web3.utils.bytesToHex('preimage'),
                 challengingTxWitness: web3.utils.utf8ToHex('dummy witness'),
-                inputTx: inputTx.txBytes,
-                inputUtxoPos: inputTx.utxoPos,
+                inputTx: this.inputTx.txBytes,
+                inputUtxoPos: this.inputTx.utxoPos,
                 spendingConditionOptionalArgs: EMPTY_BYTES,
             };
         });
@@ -320,7 +327,14 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
             });
 
             it('should fail when the challenging transaction input index is incorrect', async () => {
-                this.challengeArgs.challengingTxInputIndex += 1;
+                const challengingTx = createInputTransaction(
+                    [buildUtxoPos(BLOCK_NUMBER - CHILD_BLOCK_INTERVAL, 4, 3), this.inputTx.utxoPos],
+                    OUTPUT_TYPE.PAYMENT,
+                    outputOwner,
+                    789,
+                );
+                this.challengeArgs.challengingTx = web3.utils.bytesToHex(challengingTx.rlpEncoded());
+                this.challengeArgs.challengingTxInputIndex = 0;
                 // The spending condition will fail if the challengingTxInputIndex does not point to
                 // the correct inputTx output
                 await this.spendingCondition.mockResult(false);
@@ -332,7 +346,12 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
 
             it('should fail when the spent input is not the same as piggybacked input', async () => {
                 // create a different input tx
-                const anotherTx = createInputTransaction([buildUtxoPos(BLOCK_NUMBER, 3, 0)], outputOwner, 123);
+                const anotherTx = createInputTransaction(
+                    [buildUtxoPos(BLOCK_NUMBER, 3, 0)],
+                    OUTPUT_TYPE.PAYMENT,
+                    outputOwner,
+                    123,
+                );
                 this.challengeArgs.inputTx = web3.utils.bytesToHex(anotherTx.rlpEncoded());
                 this.challengeArgs.inputUtxoPos = buildUtxoPos(BLOCK_NUMBER, 50, 0);
                 await expectRevert(
@@ -341,22 +360,9 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                 );
             });
 
-            it('should fail when provided output type does not match exiting output', async () => {
-                this.challengeArgs.challengingTxInputOutputType = 2;
-                const expectedOutputGuardHandler = await OutputGuardHandler.new();
-                await expectedOutputGuardHandler.mockIsValid(false);
-                await this.outputGuardHandlerRegistry.registerOutputGuardHandler(
-                    this.challengeArgs.challengingTxInputOutputType, expectedOutputGuardHandler.address,
-                );
-                await expectRevert(
-                    this.exitGame.challengeInFlightExitInputSpent(this.challengeArgs, { from: challenger }),
-                    'Some of the output guard related information is not valid',
-                );
-            });
-
             it('should fail when spending condition for given output is not registered', async () => {
                 const outputId = computeNormalOutputId(this.challengeArgs.inputTx, 0);
-                const challengingTxOutput = new PaymentTransactionOutput(123, alice, ETH);
+                const challengingTxOutput = new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, 123, alice, ETH);
                 const challengingTx = new PaymentTransaction(23, [outputId], [challengingTxOutput]);
 
                 this.challengeArgs.challengingTx = web3.utils.bytesToHex(challengingTx.rlpEncoded());

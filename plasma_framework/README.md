@@ -26,4 +26,5 @@ npx truffle test
 #### Configuration
 Certain configuration values need to be set. These values can be set in the environment or in a file called `.env`
 
- - `MOCHA_REPORTER` Please set to `eth-gas-reporter` if you want to turn on the gas reporter feature while running tests.
+- `MOCHA_REPORTER` Please set to `eth-gas-reporter` if you want to turn on the gas reporter feature while running tests.
+- `NODE_ENV` set to `development` or `production` for different environments. Migration scripts would take in different values in `migrations/config.js` according to the environments (default to `development` if not set).

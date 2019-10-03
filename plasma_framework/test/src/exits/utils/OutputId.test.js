@@ -5,6 +5,7 @@ const { expect } = require('chai');
 
 const { PaymentTransaction, PaymentTransactionOutput } = require('../../../helpers/transaction.js');
 const { computeDepositOutputId, computeNormalOutputId } = require('../../../helpers/utils.js');
+const { OUTPUT_TYPE } = require('../../../helpers/constants.js');
 
 contract('OutputId', () => {
     const OUTPUT_GUARD = `0x${Array(64).fill(1).join('')}`;
@@ -16,7 +17,7 @@ contract('OutputId', () => {
 
     describe('computeDepositOutputId', () => {
         it('should get the correct output id for deposit tx output', async () => {
-            const output = new PaymentTransactionOutput(100, OUTPUT_GUARD, constants.ZERO_ADDRESS);
+            const output = new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, 100, OUTPUT_GUARD, constants.ZERO_ADDRESS);
             const transaction = new PaymentTransaction(1, [EMPTY_BYTES32], [output], EMPTY_BYTES32);
             const dummyTxBytes = web3.utils.bytesToHex(transaction.rlpEncoded());
 
@@ -28,7 +29,7 @@ contract('OutputId', () => {
         });
 
         it('should return distinct output ids for deposits that differ in utxo pos', async () => {
-            const output = new PaymentTransactionOutput(100, OUTPUT_GUARD, constants.ZERO_ADDRESS);
+            const output = new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, 100, OUTPUT_GUARD, constants.ZERO_ADDRESS);
             const transaction = new PaymentTransaction(1, [EMPTY_BYTES32], [output], EMPTY_BYTES32);
             const dummyTxBytes = web3.utils.bytesToHex(transaction.rlpEncoded());
 
@@ -44,7 +45,7 @@ contract('OutputId', () => {
 
     describe('computeNormalOutputId', () => {
         it('should get the correct output id for non deposit tx output when output index is 0', async () => {
-            const output = new PaymentTransactionOutput(100, OUTPUT_GUARD, constants.ZERO_ADDRESS);
+            const output = new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, 100, OUTPUT_GUARD, constants.ZERO_ADDRESS);
             const transaction = new PaymentTransaction(1, [1000000000], [output, output], EMPTY_BYTES32);
             const dummyTxBytes = web3.utils.bytesToHex(transaction.rlpEncoded());
             const outputIndex = 0;
@@ -54,7 +55,7 @@ contract('OutputId', () => {
         });
 
         it('should get the correct output id for non deposit tx output when output index is not 0', async () => {
-            const output = new PaymentTransactionOutput(100, OUTPUT_GUARD, constants.ZERO_ADDRESS);
+            const output = new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, 100, OUTPUT_GUARD, constants.ZERO_ADDRESS);
             const transaction = new PaymentTransaction(1, [1000000000], [output, output], EMPTY_BYTES32);
             const dummyTxBytes = web3.utils.bytesToHex(transaction.rlpEncoded());
             const outputIndex = 1;

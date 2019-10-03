@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity 0.5.11;
 pragma experimental ABIEncoderV2;
 
 import "./interfaces/IExitProcessor.sol";
@@ -7,10 +7,18 @@ import "./utils/PriorityQueue.sol";
 import "./utils/ExitPriority.sol";
 import "../utils/TxPosLib.sol";
 
+/**
+ * @notice Controls the logic and functions for ExitGame to interact with PlasmaFramework.
+ *         Plasma M(ore)VP relies on exit priority to secure the user from invalid transactions.
+ *         As a result, priority queue is used here to promise the exit would be processed with the exit priority.
+ *         For details, see the Plasma MVP spec: https://ethresear.ch/t/minimal-viable-plasma/426
+ */
 contract ExitGameController is ExitGameRegistry {
-
+    // exit priority => IExitProcessor
     mapping (uint256 => IExitProcessor) public delegations;
+    // token => PriorityQueue
     mapping (bytes32 => PriorityQueue) public exitsQueues;
+    // outputId => bool
     mapping (bytes32 => bool) public isOutputSpent;
 
     event ExitQueueAdded(
@@ -65,7 +73,9 @@ contract ExitGameController is ExitGameRegistry {
     }
 
     /**
-     * @notice Enqueue exits from exit game contracts
+     * @notice Enqueue exits from exit game contracts. This 'enqueue' function puts the exit into the
+     *         priority queue to enforce the priority of exit during 'processExits'.
+     * @dev emits ExitQueued event. The event can be used to back trace the priority inside the queue.
      * @dev Caller of this function should add "pragma experimental ABIEncoderV2;" on top of file
      * @param vaultId Vault id of the vault that stores exiting funds
      * @param token Token for the exit
@@ -94,11 +104,12 @@ contract ExitGameController is ExitGameRegistry {
     }
 
     /**
-     * @notice Processes any exits that have completed the challenge period.
-     * @param vaultId Vault id of the vault that stores exiting funds
-     * @param token Token type to process.
-     * @param topExitId Unique priority of the first exit that should be processed. Set to zero to skip the check.
-     * @param maxExitsToProcess Maximal number of exits to process.
+     * @notice Processes any exits that have completed the challenge period. Exits would be processed according to the exit priority.
+     * @dev emits ProcessedExitsNum event.
+     * @param vaultId vault id of the vault that stores exiting funds.
+     * @param token token type to process.
+     * @param topExitId unique priority of the first exit that should be processed. Set to zero to skip the check.
+     * @param maxExitsToProcess maximal number of exits to process.
      * @return total number of processed exits
      */
     function processExits(uint256 vaultId, address token, uint160 topExitId, uint256 maxExitsToProcess) external {
@@ -148,7 +159,7 @@ contract ExitGameController is ExitGameRegistry {
     }
 
     /**
-     * @notice Batch flags outputs that is spent
+     * @notice Batch flags outputs that are spent
      * @param _outputIds Output ids to be flagged
      */
     function batchFlagOutputsSpent(bytes32[] calldata _outputIds) external onlyFromNonQuarantinedExitGame {
@@ -159,7 +170,7 @@ contract ExitGameController is ExitGameRegistry {
     }
 
     /**
-     * @notice Flags a single outputs as spent
+     * @notice Flags a single output as spent
      * @param _outputId The output id to be flagged as spent
      */
     function flagOutputSpent(bytes32 _outputId) external onlyFromNonQuarantinedExitGame {
@@ -169,5 +180,10 @@ contract ExitGameController is ExitGameRegistry {
 
     function exitQueueKey(uint256 vaultId, address token) private pure returns (bytes32) {
         return keccak256(abi.encodePacked(vaultId, token));
+    }
+
+    function getNextExit(uint256 vaultId, address token) external view returns (uint256) {
+        bytes32 key = exitQueueKey(vaultId, token);
+        return exitsQueues[key].getMin();
     }
 }

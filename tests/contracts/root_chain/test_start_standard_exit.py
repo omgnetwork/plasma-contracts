@@ -4,11 +4,12 @@ from plasma_core.constants import NULL_ADDRESS, NULL_ADDRESS_HEX, MIN_EXIT_PERIO
 from plasma_core.transaction import Transaction
 from plasma_core.utils.eip712_struct_hash import hash_struct
 from plasma_core.utils.transactions import decode_utxo_id, encode_utxo_id
+from testlang.testlang import StandardExit
 
 
 def test_start_standard_exit_should_succeed(testlang, utxo):
     testlang.start_standard_exit(utxo.spend_id, utxo.owner)
-    assert testlang.get_standard_exit(utxo.spend_id) == [utxo.owner.address, NULL_ADDRESS_HEX, utxo.amount]
+    assert testlang.get_standard_exit(utxo.spend_id) == [utxo.owner.address, utxo.amount, utxo.spend_id, True]
 
 
 @pytest.mark.parametrize("num_outputs", [1, 2, 3, 4])
@@ -23,7 +24,7 @@ def test_start_standard_exit_multiple_outputs_should_succeed(testlang, num_outpu
     output_index = num_outputs - 1
     output_id = spend_id + output_index
     testlang.start_standard_exit(output_id, owners[output_index])
-    assert testlang.get_standard_exit(output_id) == [owners[output_index].address, NULL_ADDRESS_HEX, 1]
+    assert testlang.get_standard_exit(output_id) == [owners[output_index].address, 1, output_id, True]
 
 
 def test_start_standard_exit_twice_should_fail(testlang, utxo):
@@ -77,9 +78,9 @@ def test_start_standard_exit_old_utxo_has_required_exit_period_to_start_exit(tes
     testlang.forward_timestamp(minimal_required_period - 1)
     testlang.start_standard_exit(utxo.spend_id, utxo.owner)
 
-    [_, exit_id, _] = testlang.root_chain.getNextExit(NULL_ADDRESS)
-    [_, _, _, position] = testlang.root_chain.exits(exit_id)
-    assert position == utxo.spend_id
+    _, _, next_exit_id = testlang.root_chain.getNextExit(NULL_ADDRESS)
+    next_exit = StandardExit(*testlang.root_chain.exits(next_exit_id))
+    assert next_exit.position == utxo.spend_id
 
 
 def test_start_standard_exit_on_finalized_exit_should_fail(testlang, utxo):
@@ -93,6 +94,7 @@ def test_start_standard_exit_on_finalized_exit_should_fail(testlang, utxo):
         testlang.start_standard_exit(utxo.spend_id, utxo.owner)
 
 
+@pytest.mark.skip("Skipped due to usage of EIP712")
 def test_start_standard_exit_wrong_oindex_should_fail(testlang):
     alice, bob, alice_money, bob_money = testlang.accounts[0], testlang.accounts[1], 10, 90
 
@@ -126,9 +128,10 @@ def test_start_standard_exit_from_deposit_must_be_exitable_in_minimal_finalizati
     testlang.forward_timestamp(required_exit_period + 1)
     testlang.process_exits(NULL_ADDRESS, 0, 1)
 
-    assert testlang.get_standard_exit(deposit_id) == [NULL_ADDRESS_HEX, NULL_ADDRESS_HEX, amount]
+    assert testlang.get_standard_exit(deposit_id) == [NULL_ADDRESS_HEX, 0, 0, False]
 
 
+@pytest.mark.skip("Skipped due to mix with IFE")
 @pytest.mark.parametrize("num_outputs", [1, 2, 3, 4])
 def test_start_standard_exit_on_piggyback_in_flight_exit_valid_output_owner_should_fail(testlang, num_outputs):
     # exit cross-spend test, case 9
@@ -154,6 +157,7 @@ def test_start_standard_exit_on_piggyback_in_flight_exit_valid_output_owner_shou
         testlang.start_standard_exit(output_id, testlang.accounts[output_index])
 
 
+@pytest.mark.skip("Skipped due to mix with IFE")
 @pytest.mark.parametrize("num_outputs", [1, 2, 3, 4])
 def test_start_standard_exit_on_in_flight_exit_output_should_block_future_piggybacks(testlang, num_outputs):
     # exit cross-spend test, case 7
@@ -180,6 +184,7 @@ def test_start_standard_exit_on_in_flight_exit_output_should_block_future_piggyb
     assert in_flight_exit.output_blocked(output_index)
 
 
+@pytest.mark.skip("Skipped due to mix with IFE")
 @pytest.mark.parametrize("num_outputs", [1, 2, 3, 4])
 def test_start_standard_exit_on_finalized_in_flight_exit_output_should_fail(testlang, num_outputs):
     owner, amount = testlang.accounts[0], 100
@@ -221,6 +226,7 @@ def test_start_standard_exit_from_two_deposits_with_the_same_amount_and_owner_sh
     testlang.start_standard_exit(second_deposit_id, owner)
 
 
+@pytest.mark.skip("Skip due to usage of challenges")
 def test_old_signature_scheme_does_not_work_any_longer(testlang, utxo):
     # In this test I will challenge standard exit with old signature schema to show it no longer works
     # Then passing new signature to the same challenge data, challenge will succeed
@@ -244,6 +250,7 @@ def test_old_signature_scheme_does_not_work_any_longer(testlang, utxo):
     testlang.root_chain.challengeStandardExit(exit_id, spend_tx.encoded, 0, new_signature)
 
 
+@pytest.mark.skip("Skip due to usage of challenges")
 def test_signature_scheme_respects_verifying_contract(testlang, utxo):
     alice = testlang.accounts[0]
     outputs = [(alice.address, NULL_ADDRESS, 50)]

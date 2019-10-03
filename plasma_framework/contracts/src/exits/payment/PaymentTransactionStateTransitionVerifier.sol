@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity 0.5.11;
 pragma experimental ABIEncoderV2;
 
 import "../interfaces/IStateTransitionVerifier.sol";
@@ -43,7 +43,7 @@ contract PaymentTransactionStateTransitionVerifier {
         WireTransaction.Output[] memory outputs = new WireTransaction.Output[](inputTxs.length);
         PaymentTransactionModel.Transaction memory transaction = PaymentTransactionModel.decode(txBytes);
         for (uint i = 0; i < transaction.outputs.length; i++) {
-            outputs[i] = WireTransaction.Output(transaction.outputs[i].amount, transaction.outputs[i].outputGuard, transaction.outputs[i].token);
+            outputs[i] = WireTransaction.Output(transaction.outputs[i].outputType, transaction.outputs[i].amount, transaction.outputs[i].outputGuard, transaction.outputs[i].token);
         }
 
         return _isCorrectStateTransition(inputs, outputs);

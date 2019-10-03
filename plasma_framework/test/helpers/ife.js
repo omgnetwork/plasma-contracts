@@ -8,7 +8,6 @@ const { EMPTY_BYTES } = require('./constants.js');
 
 const ETH = constants.ZERO_ADDRESS;
 const OUTPUT_TYPE_ONE = 1;
-const OUTPUT_TYPE_TWO = 2;
 const IFE_TX_TYPE = 1;
 const WITNESS_LENGTH_IN_BYTES = 65;
 const IN_FLIGHT_TX_WITNESS_BYTES = web3.utils.bytesToHex('a'.repeat(WITNESS_LENGTH_IN_BYTES));
@@ -23,20 +22,26 @@ const MERKLE_TREE_HEIGHT = 3;
  * This assumes the tx type would be using MoreVP so the confirm sig provided in this setup would be EMPTY_BYTES.
  * (protocol setting is on the framework side)
  */
-function buildValidIfeStartArgs(amount, [ifeOwner, inputOwner1, inputOwner2], blockNum1, blockNum2) {
+function buildValidIfeStartArgs(
+    amount,
+    [ifeOwner, inputOwner1, inputOwner2],
+    [input1OutputType, input2OutputType, ifeOutputType],
+    blockNum1,
+    blockNum2,
+) {
     const inputTx1 = isDeposit(blockNum1)
-        ? createDepositTransaction(inputOwner1, amount)
-        : createInputTransaction([DUMMY_INPUT_1], inputOwner1, amount);
+        ? createDepositTransaction(input1OutputType, inputOwner1, amount)
+        : createInputTransaction([DUMMY_INPUT_1], input1OutputType, inputOwner1, amount);
 
     const inputTx2 = isDeposit(blockNum2)
-        ? createDepositTransaction(inputOwner2, amount)
-        : createInputTransaction([DUMMY_INPUT_2], inputOwner2, amount);
+        ? createDepositTransaction(input2OutputType, inputOwner2, amount)
+        : createInputTransaction([DUMMY_INPUT_2], input2OutputType, inputOwner2, amount);
 
     const inputTxs = [inputTx1, inputTx2];
 
     const inputUtxosPos = [buildUtxoPos(blockNum1, 0, 0), buildUtxoPos(blockNum2, 0, 0)];
 
-    const inFlightTx = createInFlightTx(inputTxs, inputUtxosPos, ifeOwner, amount);
+    const inFlightTx = createInFlightTx(inputTxs, inputUtxosPos, ifeOutputType, ifeOwner, amount, ETH);
     const {
         args,
         inputTxsBlockRoot1,
@@ -69,8 +74,6 @@ function buildIfeStartArgs([inputTx1, inputTx2], [inputOwner1, inputOwner2], inp
 
     const inputTxsInclusionProofs = [inclusionProof1, inclusionProof2];
 
-    const inputUtxosTypes = [OUTPUT_TYPE_ONE, OUTPUT_TYPE_TWO];
-
     const inFlightTxRaw = web3.utils.bytesToHex(inFlightTx.rlpEncoded());
 
     const inputTxsConfirmSigs = [EMPTY_BYTES, EMPTY_BYTES];
@@ -91,7 +94,6 @@ function buildIfeStartArgs([inputTx1, inputTx2], [inputOwner1, inputOwner2], inp
         inputTxs,
         inputTxTypes,
         inputUtxosPos,
-        inputUtxosTypes,
         outputGuardPreimagesForInputs,
         inputTxsInclusionProofs,
         inputTxsConfirmSigs,
@@ -105,20 +107,21 @@ function buildIfeStartArgs([inputTx1, inputTx2], [inputOwner1, inputOwner2], inp
     return { args, inputTxsBlockRoot1, inputTxsBlockRoot2 };
 }
 
-function createInputTransaction(inputs, owner, amount, token = ETH) {
-    const output = new PaymentTransactionOutput(amount, buildOutputGuard(OUTPUT_TYPE_ONE, owner), token);
+function createInputTransaction(inputs, outputType, owner, amount, token = ETH) {
+    const output = new PaymentTransactionOutput(outputType, amount, buildOutputGuard(owner), token);
     return new PaymentTransaction(IFE_TX_TYPE, inputs, [output]);
 }
 
-function createDepositTransaction(owner, amount, token = ETH) {
-    const output = new PaymentTransactionOutput(amount, buildOutputGuard(OUTPUT_TYPE_ONE, owner), token);
+function createDepositTransaction(outputType, owner, amount, token = ETH) {
+    const output = new PaymentTransactionOutput(outputType, amount, buildOutputGuard(owner), token);
     return new PlasmaDepositTransaction(output);
 }
 
-function createInFlightTx(inputTxs, inputUtxosPos, ifeOwner, amount, token = ETH) {
+function createInFlightTx(inputTxs, inputUtxosPos, outputType, ifeOwner, amount, token = ETH) {
     const inputs = createInputsForInFlightTx(inputTxs, inputUtxosPos);
 
     const output = new PaymentTransactionOutput(
+        outputType,
         amount * inputTxs.length,
         ifeOwner,
         token,

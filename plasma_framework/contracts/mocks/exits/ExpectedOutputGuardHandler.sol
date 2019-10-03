@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity 0.5.11;
 pragma experimental ABIEncoderV2;
 
 import "../../src/exits/interfaces/IOutputGuardHandler.sol";
@@ -54,7 +54,6 @@ contract ExpectedOutputGuardHandler is IOutputGuardHandler {
             return true;
 
         return data.guard == expectedData.guard &&
-            data.outputType == expectedData.outputType &&
             keccak256(data.preimage) == keccak256(expectedData.preimage);
     }
 }

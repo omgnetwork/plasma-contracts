@@ -6,8 +6,11 @@
     "test": "test"
   },
   "dependencies": {
-    "openzeppelin-solidity": "^2.3.0",
-    "dotenv": "^8.0.0"
+    "@truffle/hdwallet-provider": "^1.0.19",
+    "dotenv": "^8.0.0",
+    "lodash.clonedeep": "^4.5.0",
+    "openzeppelin-solidity": "2.3.0",
+    "solidoc": "^1.0.5"
   },
   "devDependencies": {
     "@codechecks/client": "^0.1.10",
@@ -28,6 +31,7 @@
   "scripts": {
     "test": "truffle test",
     "coverage": "truffle run coverage",
+    "docgen": "[[ -z $(git status --porcelain) ]] && rm -rf contracts/mocks && solidoc ./ ./docs && git checkout -- contracts/mocks || echo 'Please make sure all files are committed and the git status is clean' ",
     "linter": "node_modules/eslint/bin/eslint.js . --fix",
     "linter-sol": "node_modules/.bin/solhint --max-warnings 0 \"contracts/**/*.sol\""
   },

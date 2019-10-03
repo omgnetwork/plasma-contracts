@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity 0.5.11;
 pragma experimental ABIEncoderV2;
 
 import "../../src/framework/PlasmaFramework.sol";
@@ -53,5 +53,9 @@ contract SpyPlasmaFrameworkForExitGame is PlasmaFramework {
      */
     function setBlock(uint256 _blockNum, bytes32 _root, uint256 _timestamp) external {
         blocks[_blockNum] = BlockModel.Block(_root, _timestamp);
+    }
+
+    function setOutputSpent(bytes32 _outputId) external {
+        isOutputSpent[_outputId] = true;
     }
 }

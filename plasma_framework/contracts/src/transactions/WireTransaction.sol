@@ -1,10 +1,12 @@
-pragma solidity ^0.5.0;
+pragma solidity 0.5.11;
 
 import "../utils/RLP.sol";
 
 /**
  * @title WireTransaction
- * @dev Utility functions for working with transactions in wire format.
+ * @dev Utility functions for working with transactions in wire format. This assumes our transaction would be under certain data structure limitation.
+ *      Current transaction structure should be able to support Payment and DEX related transactions.
+ *      If the assumption breaks, we can still upgrade to a new ExitGame with either another transaction data structure or replace this with interfaces.
  */
 library WireTransaction {
 
@@ -12,6 +14,7 @@ library WireTransaction {
     using RLP for RLP.RLPItem;
 
     struct Output {
+        uint256 outputType;
         uint256 amount;
         bytes20 outputGuard;
         address token;
@@ -27,11 +30,12 @@ library WireTransaction {
         require(outputIndex < outputs.length, "Invalid wire transaction format");
 
         RLP.RLPItem[] memory output = outputs[outputIndex].toList();
-        bytes20 outputGuard = bytes20(output[0].toAddress());
-        address token = output[1].toAddress();
-        uint256 amount = output[2].toUint();
+        uint256 outputType = output[0].toUint();
+        bytes20 outputGuard = bytes20(output[1].toAddress());
+        address token = output[2].toAddress();
+        uint256 amount = output[3].toUint();
 
-        return Output(amount, outputGuard, token);
+        return Output(outputType, amount, outputGuard, token);
     }
 
     /**

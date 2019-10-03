@@ -2,12 +2,13 @@ const rlp = require('rlp');
 const { expect } = require('chai');
 const { constants, expectRevert } = require('openzeppelin-test-helpers');
 const { PaymentTransaction, PaymentTransactionOutput } = require('../../helpers/transaction.js');
+const { OUTPUT_TYPE } = require('../../helpers/constants.js');
 
 const PaymentTransactionModelMock = artifacts.require('PaymentTransactionModelMock');
 
 const OUTPUT_GUARD = `0x${Array(40).fill(1).join('')}`;
 const EMPTY_BYTES32 = `0x${Array(64).fill(0).join('')}`;
-const OUTPUT = new PaymentTransactionOutput(100, OUTPUT_GUARD, constants.ZERO_ADDRESS);
+const OUTPUT = new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, 100, OUTPUT_GUARD, constants.ZERO_ADDRESS);
 
 contract('PaymentTransactionModel', () => {
     const MAX_INPUT_NUM = 4;

@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity 0.5.11;
 
 import "./Vault.sol";
 import "./verifiers/IEthDepositVerifier.sol";
@@ -6,7 +6,7 @@ import "../framework/PlasmaFramework.sol";
 
 contract EthVault is Vault {
     event EthWithdrawn(
-        address payable indexed target,
+        address payable indexed receiver,
         uint256 amount
     );
 
@@ -20,7 +20,8 @@ contract EthVault is Vault {
     constructor(PlasmaFramework _framework) public Vault(_framework) {}
 
     /**
-     * @notice Allows a user to submit a deposit.
+     * @notice Allows a user to deposit ETH into the contract.
+     * Once the deposit is recognized, the owner is able to make transactions on the OMG network.
      * @param _depositTx RLP encoded transaction to act as the deposit.
      */
     function deposit(bytes calldata _depositTx) external payable {
@@ -31,12 +32,12 @@ contract EthVault is Vault {
     }
 
     /**
-    * @notice Withdraw plasma chain eth via transferring ETH.
-    * @param _target Place to transfer eth.
-    * @param _amount Amount of eth to transfer.
+    * @notice Withdraw ETH that have been exited from the OMG network successfully.
+    * @param receiver address of the transferee
+    * @param amount amount of eth to transfer.
     */
-    function withdraw(address payable _target, uint256 _amount) external onlyFromNonQuarantinedExitGame {
-        _target.transfer(_amount);
-        emit EthWithdrawn(_target, _amount);
+    function withdraw(address payable receiver, uint256 amount) external onlyFromNonQuarantinedExitGame {
+        receiver.transfer(amount);
+        emit EthWithdrawn(receiver, amount);
     }
 }

@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity 0.5.11;
 
 // Import contracts from third party Solidity libraries to make them available in tests.
 

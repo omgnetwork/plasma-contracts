@@ -10,16 +10,17 @@ from web3.main import get_default_modules
 from xprocess import ProcessStarter
 
 from plasma_core.account import EthereumAccount
-from plasma_core.utils.deployer import Deployer
 from testlang.testlang import TestingLanguage
-from tests.conveniece_wrappers import ConvenienceContractWrapper, AutominingEth
-
-EXIT_PERIOD = 4 * 60  # 4 minutes
-
-GAS_LIMIT = 10000000
-START_GAS = GAS_LIMIT - 1000000
-
-HUNDRED_ETH = 100 * 10 ** 18
+from tests.tests_utils.constants import (
+    HUNDRED_ETH,
+    START_GAS,
+    GAS_LIMIT,
+    INITIAL_IMMUNE_VAULTS,
+    INITIAL_IMMUNE_EXIT_GAMES,
+)
+from tests.tests_utils.convenience_wrappers import ConvenienceContractWrapper, AutominingEth
+from tests.tests_utils.deployer import Deployer
+from tests.tests_utils.plasma_framework import PlasmaFramework
 
 
 # IMPORTANT NOTICE
@@ -27,16 +28,16 @@ HUNDRED_ETH = 100 * 10 ** 18
 # On the other hand, in plasma (transactions, blocks, etc.) we should pass addresses in binary form (canonical address).
 
 
-@pytest.fixture(scope="session")
-def deployer():
-    own_dir = os.path.dirname(os.path.realpath(__file__))
-    contracts_dir = os.path.abspath(os.path.realpath(os.path.join(own_dir, '../contracts')))
-    output_dir = os.path.abspath(os.path.realpath(os.path.join(own_dir, '../build')))
+# Compile contracts before testing
 
-    builder = Builder(contracts_dir, output_dir)
-    builder.compile_all()
-    deployer = Deployer(builder)
-    return deployer
+OWN_DIR = os.path.dirname(os.path.realpath(__file__))
+CONTRACTS_DIR = os.path.abspath(os.path.realpath(os.path.join(OWN_DIR, '../plasma_framework/contracts')))
+OUTPUT_DIR = os.path.abspath(os.path.realpath(os.path.join(OWN_DIR, '../build')))
+OPENZEPPELIN_DIR = os.path.abspath(os.path.realpath(os.path.join(OWN_DIR, '../openzeppelin-solidity')))
+builder = Builder(CONTRACTS_DIR, OUTPUT_DIR)
+builder.compile_all(allow_paths="*,",
+                    import_remappings=[f"openzeppelin-solidity={OPENZEPPELIN_DIR}"])
+deployer = Deployer(builder)
 
 
 @pytest.fixture(scope="session")
@@ -58,7 +59,6 @@ def parse_worker_no(worker_id):
         worker_no = int(worker_id[2:])
     except ValueError:
         pass
-
     return worker_no
 
 
@@ -66,7 +66,6 @@ def parse_worker_no(worker_id):
 def ganache_port(worker_id):
     default_port = 8545
     worker_no = parse_worker_no(worker_id)
-    print(f'{worker_id}, {worker_no}')
     return default_port + worker_no
 
 
@@ -90,7 +89,6 @@ def ganache_cli(accounts, port):
 
 @pytest.fixture(scope="session")
 def _w3_session(xprocess, accounts, ganache_port):
-
     web3_modules = get_default_modules()
     web3_modules.update(eth=(AutominingEth,))
 
@@ -113,14 +111,14 @@ def w3(_w3_session):
 
 
 @pytest.fixture
-def get_contract(w3, deployer, accounts):
+def get_contract(w3, accounts):
     def create_contract(path, args=(), sender=accounts[0], libraries=None):
         if libraries is None:
             libraries = dict()
         abi, hexcode = deployer.builder.get_contract_data(path)
 
         libraries = _encode_libs(libraries)
-        linked_hexcode = link_code(hexcode, libraries)
+        linked_hexcode = link_code(hexcode, libraries)[0:-len("\nLinking completed.")]  # trim trailing text
         factory = w3.eth.contract(abi=abi, bytecode=linked_hexcode)
         tx_hash = factory.constructor(*args).transact({'gas': START_GAS, 'from': sender.address})
         tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
@@ -131,28 +129,26 @@ def get_contract(w3, deployer, accounts):
 
 
 @pytest.fixture
-def root_chain(get_contract):
-    return initialized_contract(get_contract, EXIT_PERIOD)
+def plasma_framework(get_contract, accounts):
+    return PlasmaFramework(get_contract, maintainer=accounts[-1])
 
 
-def initialized_contract(get_contract, exit_period):
-    pql = get_contract('PriorityQueueLib')
-    pqf = get_contract('PriorityQueueFactory', libraries={'PriorityQueueLib': pql.address})
-    contract = get_contract('RootChain', libraries={'PriorityQueueFactory': pqf.address})
-    contract.init(exit_period)
+def initialized_contract(get_contract, exit_period, immune_vaults, immune_exit_games):
+    contract = get_contract('PlasmaFramework', args=[exit_period, immune_vaults, immune_exit_games])
     return contract
 
 
 @pytest.fixture
-def token(get_contract):
-    return get_contract('MintableToken')
+def testlang(plasma_framework, w3, accounts):
+    return TestingLanguage(plasma_framework, w3, accounts)
 
 
-@pytest.fixture
-def testlang(root_chain, w3, accounts):
-    return TestingLanguage(root_chain, w3, accounts)
+@pytest.fixture(params=["ERC20Mintable"])
+def token(get_contract, request):
+    return get_contract(request.param)
 
 
+# FIXME: delete fixture
 @pytest.fixture
 def root_chain_short_exit_period(get_contract):
     # Minimal valid exit period is 2, if we exit period to less than 2
@@ -160,7 +156,7 @@ def root_chain_short_exit_period(get_contract):
     # But, if we set exit period to 2, then we will automatically end up in the second phase as
     # blocks are mined with 1 second interval.
     exit_period = 4
-    return initialized_contract(get_contract, exit_period)
+    return initialized_contract(get_contract, exit_period, INITIAL_IMMUNE_VAULTS, INITIAL_IMMUNE_EXIT_GAMES)
 
 
 @pytest.fixture
@@ -174,15 +170,39 @@ def utxo(testlang):
 
 
 def _encode_libs(libraries):
-    return {
-        libname + '.sol' + ':' + libname: libaddress
-        for libname, libaddress in libraries.items()
-    }
+    libs = dict()
+    for lib_name, lib_address in libraries.items():
+        file_path = _find_file(lib_name + ".sol", CONTRACTS_DIR)
+        libs[file_path + ":" + lib_name] = lib_address
+    return libs
 
 
-def assert_event(event_obj, expected_event_name, expected_event_args=None):
+def _find_file(name, path):
+    for root, dirs, files in os.walk(path):
+        if name in files:
+            return os.path.join(root, name)
+    raise FileNotFoundError(name)
+
+
+def assert_events(events_objects, expected_events):
+    assert len(events_objects) == len(expected_events)
+
+    # sort received and expected events by name
+    events_objects = sorted(events_objects, key=lambda e: e[1].event)
+    expected_events = sorted(expected_events, key=lambda e: e[0])
+
+    for event_obj, expected_event in zip(events_objects, expected_events):
+        assert_event(event_obj, *expected_event)
+
+
+def assert_event(event_obj, expected_event_name, expected_event_args=None, expected_contract_address=None):
+    contract_address, event = event_obj
+
     if expected_event_args is None:
         expected_event_args = {}
 
-    assert event_obj['event'] == expected_event_name
-    assert expected_event_args.items() <= event_obj['args'].items()
+    if expected_contract_address:
+        assert contract_address == expected_contract_address
+
+    assert event['event'] == expected_event_name
+    assert expected_event_args.items() <= event['args'].items()

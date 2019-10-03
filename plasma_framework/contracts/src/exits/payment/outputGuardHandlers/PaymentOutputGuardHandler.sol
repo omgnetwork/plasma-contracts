@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity 0.5.11;
 pragma experimental ABIEncoderV2;
 
 import "../../interfaces/IOutputGuardHandler.sol";
@@ -6,19 +6,8 @@ import "../../models/OutputGuardModel.sol";
 import "../../../utils/AddressPayable.sol";
 
 contract PaymentOutputGuardHandler is IOutputGuardHandler {
-    uint256 internal outputType;
-
-    /**
-     * @dev This is designed to be re-useable for all versions of Payment output in Payment transaction.
-     *      As a result, outputType of the Payment output is injected instead.
-     */
-    constructor(uint256 _outputType) public {
-        outputType = _outputType;
-    }
-
     function isValid(OutputGuardModel.Data memory data) public view returns (bool) {
-        require(data.preimage.length == 0, "Pre-imgage of the output guard should be empty");
-        require(data.outputType == outputType, "Output type mismatch");
+        require(data.preimage.length == 0, "Pre-image of the output guard should be empty");
         return true;
     }
 

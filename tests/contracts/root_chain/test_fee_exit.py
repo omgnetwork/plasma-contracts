@@ -4,11 +4,12 @@ from eth_tester.exceptions import TransactionFailed
 from plasma_core.constants import NULL_ADDRESS, NULL_ADDRESS_HEX, MIN_EXIT_PERIOD
 from tests.conftest import assert_event
 
+pytestmark = pytest.mark.skip("WIP: moving tests to plasma framework")
 
 # TODO: test if fee exit generates events
 
 
-def test_start_fee_exit_should_succeed(testlang, root_chain):
+def test_start_fee_exit_should_succeed(testlang, plasma_framework):
     operator, amount = testlang.operator, 100
     exit_id, tx_hash = testlang.start_fee_exit(operator, amount)
 

@@ -4,8 +4,8 @@ TXINDEX_OFFSET = 10000
 
 def decode_utxo_id(utxo_id):
     blknum = utxo_id // BLKNUM_OFFSET
-    txindex = (utxo_id % BLKNUM_OFFSET) // BLKNUM_OFFSET
-    oindex = utxo_id - blknum * BLKNUM_OFFSET - txindex * TXINDEX_OFFSET
+    txindex = (utxo_id % BLKNUM_OFFSET) // TXINDEX_OFFSET
+    oindex = utxo_id % TXINDEX_OFFSET
     return blknum, txindex, oindex
 
 

@@ -10,7 +10,7 @@ const { expect } = require('chai');
 
 const { PaymentTransaction, PaymentTransactionOutput } = require('../../helpers/transaction.js');
 const { spentOnGas } = require('../../helpers/utils.js');
-const { PROTOCOL } = require('../../helpers/constants.js');
+const { PROTOCOL, OUTPUT_TYPE } = require('../../helpers/constants.js');
 const Testlang = require('../../helpers/testlang.js');
 
 contract('EthVault', ([_, alice]) => {
@@ -36,7 +36,7 @@ contract('EthVault', ([_, alice]) => {
         it('should store ethereum deposit', async () => {
             const preDepositBlockNumber = (await this.framework.nextDepositBlock()).toNumber();
 
-            const deposit = Testlang.deposit(DEPOSIT_VALUE, alice);
+            const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice);
             await this.ethVault.deposit(deposit, { from: alice, value: DEPOSIT_VALUE });
             const postDepositBlockNumber = (await this.framework.nextDepositBlock()).toNumber();
 
@@ -46,7 +46,7 @@ contract('EthVault', ([_, alice]) => {
         it('should emit deposit event', async () => {
             const preDepositBlockNumber = await this.framework.nextDepositBlock();
 
-            const deposit = Testlang.deposit(DEPOSIT_VALUE, alice);
+            const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice);
             const { receipt } = await this.ethVault.deposit(deposit, { from: alice, value: DEPOSIT_VALUE });
             await expectEvent.inTransaction(
                 receipt.transactionHash,
@@ -63,7 +63,7 @@ contract('EthVault', ([_, alice]) => {
 
         it('should charge eth from depositing user', async () => {
             const preDepositBalance = await web3.eth.getBalance(alice);
-            const deposit = Testlang.deposit(DEPOSIT_VALUE, alice);
+            const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice);
             const tx = await this.ethVault.deposit(deposit, { from: alice, value: DEPOSIT_VALUE });
 
             const actualPostDepositBalance = new BN(await web3.eth.getBalance(alice));
@@ -74,7 +74,7 @@ contract('EthVault', ([_, alice]) => {
         });
 
         it('should not store deposit when output value mismatches sent wei', async () => {
-            const deposit = Testlang.deposit(DEPOSIT_VALUE, alice);
+            const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice);
 
             await expectRevert(
                 this.ethVault.deposit(deposit, { from: alice, value: DEPOSIT_VALUE + 1 }),
@@ -88,7 +88,7 @@ contract('EthVault', ([_, alice]) => {
         });
 
         it('should not store a deposit from user who does not match output address', async () => {
-            const deposit = Testlang.deposit(DEPOSIT_VALUE, alice);
+            const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice);
 
             await expectRevert(
                 this.ethVault.deposit(deposit, { value: DEPOSIT_VALUE }),
@@ -98,7 +98,7 @@ contract('EthVault', ([_, alice]) => {
 
         it('should not store a non-ethereum deposit', async () => {
             const nonEth = Buffer.alloc(20, 1);
-            const deposit = Testlang.deposit(DEPOSIT_VALUE, alice, nonEth);
+            const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, nonEth);
 
             await expectRevert(
                 this.ethVault.deposit(deposit, { from: alice, value: DEPOSIT_VALUE }),
@@ -107,7 +107,9 @@ contract('EthVault', ([_, alice]) => {
         });
 
         it('should not accept transaction that does not match expected transaction type', async () => {
-            const output = new PaymentTransactionOutput(DEPOSIT_VALUE, alice, constants.ZERO_ADDRESS);
+            const output = new PaymentTransactionOutput(
+                OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, constants.ZERO_ADDRESS,
+            );
             const deposit = new PaymentTransaction(123, [0], [output]);
 
             await expectRevert(
@@ -117,7 +119,9 @@ contract('EthVault', ([_, alice]) => {
         });
 
         it('should not accept transaction with inputs', async () => {
-            const output = new PaymentTransactionOutput(DEPOSIT_VALUE, alice, constants.ZERO_ADDRESS);
+            const output = new PaymentTransactionOutput(
+                OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, constants.ZERO_ADDRESS,
+            );
             const deposit = new PaymentTransaction(1, [0], [output]);
 
             await expectRevert(
@@ -127,7 +131,9 @@ contract('EthVault', ([_, alice]) => {
         });
 
         it('should not accept transaction with more than one output', async () => {
-            const output = new PaymentTransactionOutput(DEPOSIT_VALUE, alice, constants.ZERO_ADDRESS);
+            const output = new PaymentTransactionOutput(
+                OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, constants.ZERO_ADDRESS,
+            );
             const deposit = new PaymentTransaction(1, [], [output, output]);
 
             await expectRevert(
@@ -153,7 +159,7 @@ contract('EthVault', ([_, alice]) => {
 
     describe('withdraw', () => {
         beforeEach(async () => {
-            const deposit = Testlang.deposit(DEPOSIT_VALUE, alice);
+            const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice);
             await this.ethVault.deposit(deposit, { from: alice, value: DEPOSIT_VALUE });
         });
 
@@ -164,7 +170,7 @@ contract('EthVault', ([_, alice]) => {
             );
         });
 
-        it('should transfer ETH to the target', async () => {
+        it('should transfer ETH to the receiver', async () => {
             const preBalance = new BN(await web3.eth.getBalance(alice));
 
             await this.exitGame.proxyEthWithdraw(alice, DEPOSIT_VALUE);
@@ -183,7 +189,7 @@ contract('EthVault', ([_, alice]) => {
                 EthVault,
                 'EthWithdrawn',
                 {
-                    target: alice,
+                    receiver: alice,
                     amount: new BN(DEPOSIT_VALUE),
                 },
             );
@@ -212,7 +218,7 @@ contract('EthVault', ([_, alice]) => {
                     EthVault,
                     'EthWithdrawn',
                     {
-                        target: alice,
+                        receiver: alice,
                         amount: new BN(DEPOSIT_VALUE),
                     },
                 );

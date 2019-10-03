@@ -166,7 +166,13 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                     argsDecoded,
                     inputTxsBlockRoot1,
                     inputTxsBlockRoot2,
-                } = buildValidIfeStartArgs(AMOUNT, [carol, alice, alice], BLOCK_NUMBER, DEPOSIT_BLOCK_NUMBER);
+                } = buildValidIfeStartArgs(
+                    AMOUNT,
+                    [carol, alice, alice],
+                    [OUTPUT_TYPE_ONE, OUTPUT_TYPE_TWO, OUTPUT_TYPE_ONE],
+                    BLOCK_NUMBER,
+                    DEPOSIT_BLOCK_NUMBER,
+                );
                 this.args = args;
                 this.argsDecoded = argsDecoded;
 
@@ -324,7 +330,13 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                     args,
                     inputTxsBlockRoot1,
                     inputTxsBlockRoot2,
-                } = buildValidIfeStartArgs(AMOUNT, [alice, bob, carol], BLOCK_NUMBER, DEPOSIT_BLOCK_NUMBER);
+                } = buildValidIfeStartArgs(
+                    AMOUNT,
+                    [alice, bob, carol],
+                    [OUTPUT_TYPE_ONE, OUTPUT_TYPE_ONE, OUTPUT_TYPE_ONE],
+                    BLOCK_NUMBER,
+                    DEPOSIT_BLOCK_NUMBER,
+                );
                 await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot1, 0);
                 await this.framework.setBlock(DEPOSIT_BLOCK_NUMBER, inputTxsBlockRoot2, 0);
 
@@ -339,7 +351,13 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                     args,
                     inputTxsBlockRoot1,
                     inputTxsBlockRoot2,
-                } = buildValidIfeStartArgs(AMOUNT, [alice, bob, carol], BLOCK_NUMBER, DEPOSIT_BLOCK_NUMBER);
+                } = buildValidIfeStartArgs(
+                    AMOUNT,
+                    [alice, bob, carol],
+                    [OUTPUT_TYPE_ONE, OUTPUT_TYPE_ONE, OUTPUT_TYPE_ONE],
+                    BLOCK_NUMBER,
+                    DEPOSIT_BLOCK_NUMBER,
+                );
                 await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot1, 0);
                 await this.framework.setBlock(DEPOSIT_BLOCK_NUMBER, inputTxsBlockRoot2, 0);
 
@@ -368,7 +386,13 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                     args,
                     inputTxsBlockRoot1,
                     inputTxsBlockRoot2,
-                } = buildValidIfeStartArgs(AMOUNT, [alice, bob, carol], BLOCK_NUMBER, DEPOSIT_BLOCK_NUMBER);
+                } = buildValidIfeStartArgs(
+                    AMOUNT,
+                    [alice, bob, carol],
+                    [OUTPUT_TYPE_ONE, OUTPUT_TYPE_ONE, OUTPUT_TYPE_ONE],
+                    BLOCK_NUMBER,
+                    DEPOSIT_BLOCK_NUMBER,
+                );
                 await registerSpendingConditionTrue(this.spendingConditionRegistry);
                 await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot1, 0);
                 await this.framework.setBlock(DEPOSIT_BLOCK_NUMBER, inputTxsBlockRoot2, 0);
@@ -380,31 +404,18 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 );
             });
 
-            it('should fail when it failed to get the outputGuardHandler for input tx', async () => {
-                const {
-                    args,
-                    inputTxsBlockRoot1,
-                    inputTxsBlockRoot2,
-                } = buildValidIfeStartArgs(AMOUNT, [alice, bob, carol], BLOCK_NUMBER, DEPOSIT_BLOCK_NUMBER);
-                await registerSpendingConditionTrue(this.spendingConditionRegistry);
-                await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot1, 0);
-                await this.framework.setBlock(DEPOSIT_BLOCK_NUMBER, inputTxsBlockRoot2, 0);
-
-                const nonRegisteredOutputType = 999;
-                args.inputUtxosTypes = [nonRegisteredOutputType, nonRegisteredOutputType];
-
-                await expectRevert(
-                    this.exitGame.startInFlightExit(args, { from: alice, value: this.startIFEBondSize.toString() }),
-                    'Failed to get the outputGuardHandler of the output type',
-                );
-            });
-
             it('should fail when the output guard related info is invalid for the input tx', async () => {
                 const {
                     args,
                     inputTxsBlockRoot1,
                     inputTxsBlockRoot2,
-                } = buildValidIfeStartArgs(AMOUNT, [alice, bob, carol], BLOCK_NUMBER, DEPOSIT_BLOCK_NUMBER);
+                } = buildValidIfeStartArgs(
+                    AMOUNT,
+                    [alice, bob, carol],
+                    [OUTPUT_TYPE_ONE, OUTPUT_TYPE_ONE, OUTPUT_TYPE_ONE],
+                    BLOCK_NUMBER,
+                    DEPOSIT_BLOCK_NUMBER,
+                );
                 await registerSpendingConditionTrue(this.spendingConditionRegistry);
                 await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot1, 0);
                 await this.framework.setBlock(DEPOSIT_BLOCK_NUMBER, inputTxsBlockRoot2, 0);
@@ -422,7 +433,13 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                     args,
                     inputTxsBlockRoot1,
                     inputTxsBlockRoot2,
-                } = buildValidIfeStartArgs(AMOUNT, [alice, bob, carol], BLOCK_NUMBER, DEPOSIT_BLOCK_NUMBER);
+                } = buildValidIfeStartArgs(
+                    AMOUNT,
+                    [alice, bob, carol],
+                    [OUTPUT_TYPE_ONE, OUTPUT_TYPE_ONE, OUTPUT_TYPE_ONE],
+                    BLOCK_NUMBER,
+                    DEPOSIT_BLOCK_NUMBER,
+                );
                 await registerSpendingConditionTrue(this.spendingConditionRegistry);
                 await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot1, 0);
                 await this.framework.setBlock(DEPOSIT_BLOCK_NUMBER, inputTxsBlockRoot2, 0);
@@ -440,7 +457,13 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                     args,
                     inputTxsBlockRoot1,
                     inputTxsBlockRoot2,
-                } = buildValidIfeStartArgs(AMOUNT, [alice, bob, carol], BLOCK_NUMBER, DEPOSIT_BLOCK_NUMBER);
+                } = buildValidIfeStartArgs(
+                    AMOUNT,
+                    [alice, bob, carol],
+                    [OUTPUT_TYPE_ONE, OUTPUT_TYPE_ONE, OUTPUT_TYPE_ONE],
+                    BLOCK_NUMBER,
+                    DEPOSIT_BLOCK_NUMBER,
+                );
                 await registerSpendingConditionTrue(this.spendingConditionRegistry);
                 await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot1, 0);
                 await this.framework.setBlock(DEPOSIT_BLOCK_NUMBER, inputTxsBlockRoot2, 0);
@@ -458,7 +481,13 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                     args,
                     inputTxsBlockRoot1,
                     inputTxsBlockRoot2,
-                } = buildValidIfeStartArgs(AMOUNT, [alice, bob, carol], BLOCK_NUMBER, DEPOSIT_BLOCK_NUMBER);
+                } = buildValidIfeStartArgs(
+                    AMOUNT,
+                    [alice, bob, carol],
+                    [OUTPUT_TYPE_ONE, OUTPUT_TYPE_ONE, OUTPUT_TYPE_ONE],
+                    BLOCK_NUMBER,
+                    DEPOSIT_BLOCK_NUMBER,
+                );
                 await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot1, 0);
                 await this.framework.setBlock(DEPOSIT_BLOCK_NUMBER, inputTxsBlockRoot2, 0);
                 args.inputUtxosPos = [];
@@ -470,11 +499,11 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
             });
 
             it('should fail when number of input transactions does not match in-flight transactions number of inputs', async () => {
-                const inputTx1 = createInputTransaction([DUMMY_INPUT_1], alice, AMOUNT);
-                const inputTx2 = createDepositTransaction(bob, AMOUNT);
+                const inputTx1 = createInputTransaction([DUMMY_INPUT_1], OUTPUT_TYPE_ONE, alice, AMOUNT);
+                const inputTx2 = createDepositTransaction(OUTPUT_TYPE_ONE, bob, AMOUNT);
 
                 const inputUtxosPos = [buildUtxoPos(BLOCK_NUMBER, 0, 0), buildUtxoPos(BLOCK_NUMBER, 1, 0)];
-                const inFlightTx = createInFlightTx([inputTx1], inputUtxosPos, carol, AMOUNT);
+                const inFlightTx = createInFlightTx([inputTx1], inputUtxosPos, OUTPUT_TYPE_ONE, carol, AMOUNT);
 
                 const {
                     args,
@@ -497,7 +526,13 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                     args,
                     inputTxsBlockRoot1,
                     inputTxsBlockRoot2,
-                } = buildValidIfeStartArgs(AMOUNT, [alice, bob, carol], BLOCK_NUMBER, DEPOSIT_BLOCK_NUMBER);
+                } = buildValidIfeStartArgs(
+                    AMOUNT,
+                    [alice, bob, carol],
+                    [OUTPUT_TYPE_ONE, OUTPUT_TYPE_ONE, OUTPUT_TYPE_ONE],
+                    BLOCK_NUMBER,
+                    DEPOSIT_BLOCK_NUMBER,
+                );
                 await registerSpendingConditionTrue(this.spendingConditionRegistry);
                 await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot1, 0);
                 await this.framework.setBlock(DEPOSIT_BLOCK_NUMBER, inputTxsBlockRoot2, 0);
@@ -514,7 +549,13 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                     args,
                     inputTxsBlockRoot1,
                     inputTxsBlockRoot2,
-                } = buildValidIfeStartArgs(AMOUNT, [alice, bob, carol], BLOCK_NUMBER, DEPOSIT_BLOCK_NUMBER);
+                } = buildValidIfeStartArgs(
+                    AMOUNT,
+                    [alice, bob, carol],
+                    [OUTPUT_TYPE_ONE, OUTPUT_TYPE_ONE, OUTPUT_TYPE_ONE],
+                    BLOCK_NUMBER,
+                    DEPOSIT_BLOCK_NUMBER,
+                );
                 await registerSpendingConditionTrue(this.spendingConditionRegistry);
                 await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot1, 0);
                 await this.framework.setBlock(DEPOSIT_BLOCK_NUMBER, inputTxsBlockRoot2, 0);
@@ -531,7 +572,13 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                     args,
                     inputTxsBlockRoot1,
                     inputTxsBlockRoot2,
-                } = buildValidIfeStartArgs(AMOUNT, [alice, bob, carol], BLOCK_NUMBER, DEPOSIT_BLOCK_NUMBER);
+                } = buildValidIfeStartArgs(
+                    AMOUNT,
+                    [alice, bob, carol],
+                    [OUTPUT_TYPE_ONE, OUTPUT_TYPE_ONE, OUTPUT_TYPE_ONE],
+                    BLOCK_NUMBER,
+                    DEPOSIT_BLOCK_NUMBER,
+                );
                 await registerSpendingConditionTrue(this.spendingConditionRegistry);
                 await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot1, 0);
                 await this.framework.setBlock(DEPOSIT_BLOCK_NUMBER, inputTxsBlockRoot2, 0);
@@ -548,7 +595,13 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                     args,
                     inputTxsBlockRoot1,
                     inputTxsBlockRoot2,
-                } = buildValidIfeStartArgs(AMOUNT, [alice, bob, carol], BLOCK_NUMBER, DEPOSIT_BLOCK_NUMBER);
+                } = buildValidIfeStartArgs(
+                    AMOUNT,
+                    [alice, bob, carol],
+                    [OUTPUT_TYPE_ONE, OUTPUT_TYPE_ONE, OUTPUT_TYPE_ONE],
+                    BLOCK_NUMBER,
+                    DEPOSIT_BLOCK_NUMBER,
+                );
                 await registerSpendingConditionTrue(this.spendingConditionRegistry);
                 await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot1, 0);
                 await this.framework.setBlock(DEPOSIT_BLOCK_NUMBER, inputTxsBlockRoot2, 0);
@@ -565,7 +618,13 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                     args,
                     inputTxsBlockRoot1,
                     inputTxsBlockRoot2,
-                } = buildValidIfeStartArgs(AMOUNT, [alice, bob, carol], BLOCK_NUMBER, DEPOSIT_BLOCK_NUMBER);
+                } = buildValidIfeStartArgs(
+                    AMOUNT,
+                    [alice, bob, carol],
+                    [OUTPUT_TYPE_ONE, OUTPUT_TYPE_ONE, OUTPUT_TYPE_ONE],
+                    BLOCK_NUMBER,
+                    DEPOSIT_BLOCK_NUMBER,
+                );
                 await registerSpendingConditionTrue(this.spendingConditionRegistry);
                 await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot1, 0);
                 await this.framework.setBlock(DEPOSIT_BLOCK_NUMBER, inputTxsBlockRoot2, 0);
@@ -582,7 +641,13 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                     args,
                     inputTxsBlockRoot1,
                     inputTxsBlockRoot2,
-                } = buildValidIfeStartArgs(AMOUNT, [alice, bob, carol], BLOCK_NUMBER, DEPOSIT_BLOCK_NUMBER);
+                } = buildValidIfeStartArgs(
+                    AMOUNT,
+                    [alice, bob, carol],
+                    [OUTPUT_TYPE_ONE, OUTPUT_TYPE_ONE, OUTPUT_TYPE_ONE],
+                    BLOCK_NUMBER,
+                    DEPOSIT_BLOCK_NUMBER,
+                );
                 await registerSpendingConditionTrue(this.spendingConditionRegistry);
                 await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot1, 0);
                 await this.framework.setBlock(DEPOSIT_BLOCK_NUMBER, inputTxsBlockRoot2, 0);
@@ -594,27 +659,10 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 );
             });
 
-            it('should fail when number of input utxos types does not match in-flight transactions number of inputs', async () => {
-                const {
-                    args,
-                    inputTxsBlockRoot1,
-                    inputTxsBlockRoot2,
-                } = buildValidIfeStartArgs(AMOUNT, [alice, bob, carol], BLOCK_NUMBER, DEPOSIT_BLOCK_NUMBER);
-                await registerSpendingConditionTrue(this.spendingConditionRegistry);
-                await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot1, 0);
-                await this.framework.setBlock(DEPOSIT_BLOCK_NUMBER, inputTxsBlockRoot2, 0);
-                args.inputUtxosTypes = [];
-
-                await expectRevert(
-                    this.exitGame.startInFlightExit(args, { from: alice, value: this.startIFEBondSize.toString() }),
-                    'Number of input utxo types does not match number of in-flight transaction inputs.',
-                );
-            });
-
             it('should fail when in-flight tx input transactions are not unique', async () => {
-                const inputTx = createInputTransaction(DUMMY_INPUT_1, alice, AMOUNT);
+                const inputTx = createInputTransaction(DUMMY_INPUT_1, OUTPUT_TYPE_ONE, alice, AMOUNT);
                 const inputUtxosPos = [buildUtxoPos(BLOCK_NUMBER, 0, 0), buildUtxoPos(BLOCK_NUMBER, 0, 0)];
-                const inFlightTx = createInFlightTx([inputTx, inputTx], inputUtxosPos, carol, AMOUNT);
+                const inFlightTx = createInFlightTx([inputTx, inputTx], inputUtxosPos, OUTPUT_TYPE_ONE, carol, AMOUNT);
 
                 const {
                     args,
@@ -637,7 +685,13 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                     args,
                     inputTxsBlockRoot1,
                     inputTxsBlockRoot2,
-                } = buildValidIfeStartArgs(AMOUNT, [alice, bob, carol], BLOCK_NUMBER, DEPOSIT_BLOCK_NUMBER);
+                } = buildValidIfeStartArgs(
+                    AMOUNT,
+                    [alice, bob, carol],
+                    [OUTPUT_TYPE_ONE, OUTPUT_TYPE_ONE, OUTPUT_TYPE_ONE],
+                    BLOCK_NUMBER,
+                    DEPOSIT_BLOCK_NUMBER,
+                );
                 await registerSpendingConditionTrue(this.spendingConditionRegistry);
                 await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot1, 0);
                 await this.framework.setBlock(DEPOSIT_BLOCK_NUMBER, inputTxsBlockRoot2, 0);
@@ -655,7 +709,13 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                     args,
                     inputTxsBlockRoot1,
                     inputTxsBlockRoot2,
-                } = buildValidIfeStartArgs(AMOUNT, [alice, bob, carol], BLOCK_NUMBER, DEPOSIT_BLOCK_NUMBER);
+                } = buildValidIfeStartArgs(
+                    AMOUNT,
+                    [alice, bob, carol],
+                    [OUTPUT_TYPE_ONE, OUTPUT_TYPE_ONE, OUTPUT_TYPE_ONE],
+                    BLOCK_NUMBER,
+                    DEPOSIT_BLOCK_NUMBER,
+                );
                 await registerSpendingConditionTrue(this.spendingConditionRegistry);
                 await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot1, 0);
                 await this.framework.setBlock(DEPOSIT_BLOCK_NUMBER, inputTxsBlockRoot2, 0);

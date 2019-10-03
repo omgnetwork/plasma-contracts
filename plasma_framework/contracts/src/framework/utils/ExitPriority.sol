@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity 0.5.11;
 
 import "../../utils/TxPosLib.sol";
 
@@ -7,9 +7,9 @@ library ExitPriority {
     /**
      * @dev Given a utxo position and a unique ID, returns an exit priority.
      * The combination of 'exitableAt' and 'txPos' is the priority for Plasma M(ore)VP protocol.
-     * 'exitableAt' only provide granularity of block, thus add 'txPos' to provide priority of transaction.
-     * @notice Full explanation on fields' lengths can be found here: https://github.com/omisego/plasma-contracts/pull/303#discussion_r328850572
-     * @param exitId Unique exit identifier.
+     * 'exitableAt' only provides granularity of block, thus add 'txPos' to provide priority for a transaction.
+     * @notice Full explanation on fields lengths can be found here: https://github.com/omisego/plasma-contracts/pull/303#discussion_r328850572
+     * @param exitId unique exit identifier.
      * @return An exit priority.
      *   Anatomy of returned value, most significant bits first
      *   42 bits  - timestamp in seconds (exitable_at); we can represent dates until year 141431
