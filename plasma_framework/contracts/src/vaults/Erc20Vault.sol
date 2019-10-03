@@ -26,7 +26,10 @@ contract Erc20Vault is Vault {
     constructor(PlasmaFramework _framework) public Vault(_framework) {}
 
     /**
-     * @notice Deposits approved amount of ERC20 token. Approve must have been called first.
+     * @notice Deposits approved amount of ERC20 token(s) into the contract.
+     * Once the deposit is recognized, the owner is able to make transactions on the OMG network.
+     * The approve function of the ERC20 token contract needs to be called before this function is called
+     * for at least the amount that is deposited into the contract.
      * @param _depositTx RLP encoded transaction to act as the deposit.
      */
     function deposit(bytes calldata _depositTx) external {
@@ -41,10 +44,10 @@ contract Erc20Vault is Vault {
     }
 
     /**
-    * @notice Withdraw plasma chain ERC20 tokens to target
-    * @param _target Place to transfer eth.
-    * @param _token Address of ERC20 token contract.
-    * @param _amount Amount to transfer.
+    * @notice Withdraw ERC20 tokens that have been exited from the OMG network successfully.
+    * @param _target address of the transferee
+    * @param _token address of ERC20 token contract.
+    * @param _amount amount to transfer.
     */
     function withdraw(address payable _target, address _token, uint256 _amount) external onlyFromNonQuarantinedExitGame {
         IERC20(_token).safeTransfer(_target, _amount);

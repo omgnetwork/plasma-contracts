@@ -21,7 +21,7 @@ library PaymentOutputModel {
     /**
      * @notice Get the 'owner' from the output with the assumption of
      *         'outputGuard' field directly holding owner's address.
-     * @dev 'outputGuard' can potentially be hash of pre-image that holds the owner info.
+     * @dev 'outputGuard' can potentially be a hash of pre-image that holds the owner info.
      *       This should not and cannot be handled here.
      */
     function owner(Output memory _output) internal pure returns (address payable) {

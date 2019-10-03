@@ -40,20 +40,21 @@ contract ExitGameRegistry is Operated {
     }
 
     /**
+     * @notice Checks whether the contract is safe to use and is not under quarantine
      * @dev Exposes information about exit games quarantine
-     * @param _contract address of exit game contract
-     * @return A boolean value denoting whether contract is safe to use, is not under quarantine
+     * @param _contract address of the exit game contract
+     * @return boolean whether the contract is safe to use and is not under quarantine.
      */
     function isExitGameSafeToUse(address _contract) public view returns (bool) {
         return _exitGameToTxType[_contract] != 0 && !_exitGameQuarantine.isQuarantined(_contract);
     }
 
     /**
-     * @notice Register the exit game to Plasma framework. This can be only called by contract admin.
+     * @notice Register an exit game within the PlasmaFramework. The function can only be called by the maintainer.
      * @dev emits ExitGameRegistered event to notify clients
      * @param _txType tx type that the exit game want to register to.
-     * @param _contract Address of the exit game contract.
-     * @param _protocol The protocol of the transaction, 1 for MVP and 2 for MoreVP.
+     * @param _contract address of the exit game contract.
+     * @param _protocol protocol of the transaction, 1 for MVP and 2 for MoreVP.
      */
     function registerExitGame(uint256 _txType, address _contract, uint8 _protocol) public onlyOperator {
         require(_txType != 0, "should not register with tx type 0");

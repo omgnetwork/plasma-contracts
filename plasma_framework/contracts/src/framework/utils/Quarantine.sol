@@ -2,7 +2,7 @@ pragma solidity 0.5.11;
 
 /**
  * @notice Provides a way to quarantine (disable) contracts for a period of time
- * @dev The immunitiesRemaining member allows us to deploy the platform with some
+ * @dev The immunitiesRemaining member allows to deploy the platform with some
  * pre-verified contracts that don't get quarantined.
  */
 library Quarantine {
@@ -13,7 +13,7 @@ library Quarantine {
     }
 
     /**
-     * @notice Checks whether a contract is still quarntined or not.
+     * @notice Checks whether a contract is still quarantined or not.
      */
     function isQuarantined(Data storage _self, address _contractAddress) internal view returns (bool) {
         return block.timestamp < _self.store[_contractAddress];

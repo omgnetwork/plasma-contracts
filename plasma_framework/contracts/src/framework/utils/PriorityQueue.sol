@@ -23,14 +23,14 @@ contract PriorityQueue is Ownable {
     }
 
     /**
-     * @notice gets num of elements in the queue
+     * @notice Gets num of elements in the queue
      */
     function currentSize() external view returns (uint256) {
         return queue.currentSize;
     }
 
     /**
-     * @notice gets all elements in the queue
+     * @notice Gets all elements in the queue
      */
     function heapList() external view returns (uint256[] memory) {
         return queue.heapList;

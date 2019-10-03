@@ -51,9 +51,9 @@ contract ExitGameController is ExitGameRegistry {
     }
 
     /**
-     * @notice Checks if queue for particular token was created.
-     * @param _token Address of the token.
-     * @return bool represents whether the queue for a token was created.
+     * @notice Checks if the queue for a particular token was created.
+     * @param _token address of the token.
+     * @return bool whether the queue for a token was created.
      */
     function hasToken(address _token) public view returns (bool) {
         return address(exitsQueues[_token]) != address(0);
@@ -90,9 +90,9 @@ contract ExitGameController is ExitGameRegistry {
     /**
      * @notice Processes any exits that have completed the challenge period.
      * @dev emits ProcessedExitsNum event.
-     * @param _token Token type to process.
-     * @param _topExitId Unique priority of the first exit that should be processed. Set to zero to skip the check.
-     * @param _maxExitsToProcess Maximal number of exits to process.
+     * @param _token token type to process.
+     * @param _topExitId unique priority of the first exit that should be processed. Set to zero to skip the check.
+     * @param _maxExitsToProcess maximal number of exits to process.
      * @return total number of processed exits
      */
     function processExits(address _token, uint160 _topExitId, uint256 _maxExitsToProcess) external {
@@ -142,7 +142,7 @@ contract ExitGameController is ExitGameRegistry {
     }
 
     /**
-     * @notice Batch flags outputs that is spent
+     * @notice Batch flags outputs that are spent
      * @param _outputIds Output ids to be flagged
      */
     function batchFlagOutputsSpent(bytes32[] calldata _outputIds) external onlyFromNonQuarantinedExitGame {
@@ -153,7 +153,7 @@ contract ExitGameController is ExitGameRegistry {
     }
 
     /**
-     * @notice Flags a single outputs as spent
+     * @notice Flags a single output as spent
      * @param _outputId The output id to be flagged as spent
      */
     function flagOutputSpent(bytes32 _outputId) external onlyFromNonQuarantinedExitGame {

@@ -1,14 +1,14 @@
 pragma solidity 0.5.11;
 
 /**
- * @dev An interface to allow custom logic on processing exit for different needs.
- *      It would be used to dispatch to each custom processor when 'processExits' is called on PlasmaFramework.
+ * @dev An interface to allow custom logic for processing exits for different needs.
+ *      It is used to dispatch to each custom processor when 'processExits' is called on PlasmaFramework.
  */
 interface IExitProcessor {
     /**
-     * @dev Custom function to process exit. Would do nothing if not able to exit (eg. successfully challenged)
+     * @dev function interface to process exits.
      * @param exitId unique id for exit per tx type.
-     * @param token The address of the contract for the token.
+     * @param token address of the token contract.
      */
     function processExit(uint160 exitId, address token) external;
 }

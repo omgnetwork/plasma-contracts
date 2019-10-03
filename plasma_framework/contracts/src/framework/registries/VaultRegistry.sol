@@ -36,7 +36,7 @@ contract VaultRegistry is Operated {
     }
 
     /**
-     * @notice Register the vault to Plasma framework. This can be only called by contract admin.
+     * @notice Register a vault within the PlasmaFramework. This can only be called by the maintainer.
      * @dev emits VaultRegistered event to notify clients
      * @param _vaultId the id for the vault contract to register.
      * @param _vaultAddress address of the vault contract.
