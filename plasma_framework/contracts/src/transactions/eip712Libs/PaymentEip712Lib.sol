@@ -26,11 +26,11 @@ library PaymentEip712Lib {
     );
 
     bytes32 constant internal TX_TYPE_HASH = keccak256(
-        "Transaction(uint256 txType,Input input0,Input input1,Input input2,Input input3,Output output0,Output output1,Output output2,Output output3,bytes32 metadata)Input(uint256 blknum,uint256 txindex,uint256 oindex)Output(uint256 outputType, bytes20 outputGuard,address currency,uint256 amount)"
+        "Transaction(uint256 txType,Input input0,Input input1,Input input2,Input input3,Output output0,Output output1,Output output2,Output output3,bytes32 metadata)Input(uint256 blknum,uint256 txindex,uint256 oindex)Output(uint256 outputType,bytes20 outputGuard,address currency,uint256 amount)"
     );
 
     bytes32 constant internal INPUT_TYPE_HASH = keccak256("Input(uint256 blknum,uint256 txindex,uint256 oindex)");
-    bytes32 constant internal OUTPUT_TYPE_HASH = keccak256("Output(uint256 outputType, bytes20 outputGuard,address currency,uint256 amount)");
+    bytes32 constant internal OUTPUT_TYPE_HASH = keccak256("Output(uint256 outputType,bytes20 outputGuard,address currency,uint256 amount)");
     bytes32 constant internal SALT = 0xfad5c7f626d80f9256ef01929f3beb96e058b8b4b0e3fe52d84f054c0e2a7a83;
 
     bytes32 constant internal EMPTY_INPUT_HASH = keccak256(abi.encode(INPUT_TYPE_HASH, 0, 0, 0));

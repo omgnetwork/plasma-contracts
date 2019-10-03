@@ -2,6 +2,11 @@ from eip712_structs import EIP712Struct, Address, Uint, Bytes, make_domain
 from eth_utils.crypto import keccak
 from plasma_core.constants import NULL_HASH, NULL_ADDRESS
 
+# TODO: if this is still required to be maintained it is missing a couple of items:
+# - outputGuard probably not output_guard in the Output type struct
+# - outputType missing in type and struct
+# - txType missing in type and struct
+
 
 def hash_struct(tx, domain=None, verifyingContract=None):
     if domain and verifyingContract:
