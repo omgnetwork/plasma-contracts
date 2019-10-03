@@ -167,4 +167,8 @@ contract ExitGameController is ExitGameRegistry {
         require(_outputId != bytes32(""), "Should not flag with empty outputId");
         isOutputSpent[_outputId] = true;
     }
+
+    function getNextExit(address _token) external view returns (uint256) {
+        return exitsQueues[_token].getMin();
+    }
 }

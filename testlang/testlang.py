@@ -16,19 +16,23 @@ class StandardExit:
 
     Attributes:
         owner (str): Address of the exit's owner.
-        token (str): Address of the token being exited.
         amount (int): How much value is being exited.
-        position (int): UTXO position.
+        position (int): UTXO position
+        exitable (boolean): whether will exit at processing
+        output_id (str): output exit identifier (not exit id)
+        bond_size (int): value of paid bond
     """
 
-    def __init__(self, owner, token, amount, position=0):
-        self.owner = owner
-        self.token = token
+    def __init__(self, exitable, utxo_pos, output_id, exit_target, amount, bond_size):
+        self.owner = exit_target
         self.amount = amount
-        self.position = position
+        self.position = utxo_pos
+        self.exitable = exitable
+        self.output_id = output_id
+        self.bond_size = bond_size
 
     def to_list(self):
-        return [self.owner, self.token, self.amount, self.position]
+        return [self.owner, self.amount, self.position, self.exitable, self.output_id, self.bond_size]
 
     def __str__(self):
         return self.to_list().__str__()
@@ -39,7 +43,7 @@ class StandardExit:
     def __eq__(self, other):
         if hasattr(other, "to_list"):
             return self.to_list() == other.to_list()
-        return (self.to_list() == other) or (self.to_list()[:3] == other)
+        return (self.to_list() == other) or (self.to_list()[:4] == other)
 
 
 class PlasmaBlock:
@@ -110,24 +114,25 @@ class TestingLanguage:
         child_chain (ChildChain): Child chain instance.
     """
 
-    def __init__(self, root_chain, w3, accounts):
-        self.root_chain = root_chain
+    def __init__(self, plasma_framework, w3, accounts):
+        self.root_chain = plasma_framework  # TODO: change root_chain -> plasma_framework
         self.w3 = w3
         self.accounts = accounts
         self.operator = self.accounts[0]
         self.child_chain = ChildChain(operator=self.operator)
-        self.events_filter = w3.eth.filter({'address': root_chain.address, 'fromBlock': 'latest'})
+        self.events_filters: dict = plasma_framework.event_filters(w3)
 
     def flush_events(self):
-        logs = self.events_filter.get_new_entries()
+        logs = [(contract, event_filter.get_new_entries()) for contract, event_filter in self.events_filters.values()]
         events = []
-        contract_events = self.root_chain.get_contract_events()
-        for contract_event in contract_events:
-            for log in logs:
-                try:
-                    events.append(contract_event().processLog(log))
-                except MismatchedABI:
-                    pass
+        for contract, contract_logs in logs:
+            contract_events = contract.get_contract_events()
+            for contract_event in contract_events:
+                for log in contract_logs:
+                    try:
+                        events.append((contract.address, contract_event().processLog(log)))
+                    except MismatchedABI:
+                        pass
         return events
 
     def submit_block(self, transactions, signer=None, force_invalid=False):
@@ -172,11 +177,11 @@ class TestingLanguage:
 
         deposit_tx = Transaction(outputs=[(owner.address, token.address, amount)])
         token.mint(owner.address, amount)
-        token.approve(self.root_chain.address, amount, **{'from': owner.address})
+        token.approve(self.root_chain.erc20_vault.address, amount, **{'from': owner.address})
         blknum = self.root_chain.getDepositBlockNumber()
-        pre_balance = self.get_balance(self.root_chain, token)
+        pre_balance = self.get_balance(self.root_chain.erc20_vault, token)
         self.root_chain.depositFrom(deposit_tx.encoded, **{'from': owner.address})
-        balance = self.get_balance(self.root_chain, token)
+        balance = self.get_balance(self.root_chain.erc20_vault, token)
         assert balance == pre_balance + amount
         block = Block(transactions=[deposit_tx], number=blknum)
         self.child_chain.add_block(block)
@@ -188,20 +193,26 @@ class TestingLanguage:
         inputs = [decode_utxo_id(input_id) for input_id in input_ids]
         spend_tx = Transaction(inputs=inputs, outputs=outputs, metadata=metadata)
         for i in range(0, len(inputs)):
-            spend_tx.sign(i, accounts[i], verifyingContract=self.root_chain)
+            spend_tx.sign(i, accounts[i], verifyingContract=self.root_chain.plasma_framework)
         blknum = self.submit_block([spend_tx], force_invalid=force_invalid)
         spend_id = encode_utxo_id(blknum, 0, 0)
         return spend_id
 
     def start_standard_exit(self, output_id, account, bond=None):
-        output_tx = self.child_chain.get_transaction(output_id)
-        self.start_standard_exit_with_tx_body(output_id, output_tx, account, bond)
+        blknum, tx_index, _ = decode_utxo_id(output_id)
+        block = self.child_chain.get_block(blknum)
+        output_tx = block.transactions[tx_index]
+        return self.start_standard_exit_with_tx_body(output_id, output_tx, account, bond, block)
 
-    def start_standard_exit_with_tx_body(self, output_id, output_tx, account, bond=None):
-        merkle = FixedMerkle(16, [output_tx.encoded])
+    def start_standard_exit_with_tx_body(self, output_id, output_tx, account, bond=None, block=None):
+        transactions = [output_tx]
+        if block:
+            transactions = block.transactions
+        merkle = FixedMerkle(16, list(map(lambda tx: tx.encoded, transactions)))
         proof = merkle.create_membership_proof(output_tx.encoded)
         bond = bond if bond is not None else self.root_chain.standardExitBond()
-        self.root_chain.startStandardExit(output_id, output_tx.encoded, proof, **{'value': bond, 'from': account.address})
+        self.root_chain.startStandardExit(output_id, output_tx.encoded, proof,
+                                          **{'value': bond, 'from': account.address})
 
     def challenge_standard_exit(self, output_id, spend_id, input_index=None):
         spend_tx = self.child_chain.get_transaction(spend_id)
@@ -259,7 +270,8 @@ class TestingLanguage:
 
         fee_exit_id = self.root_chain.getFeeExitId(self.root_chain.nextFeeExit())
         bond = bond if bond is not None else self.root_chain.standardExitBond()
-        tx_hash = self.root_chain.startFeeExit(token, amount, **{'value': bond, 'from': operator.address, 'gas': 1_000_000})
+        tx_hash = self.root_chain.startFeeExit(token, amount,
+                                               **{'value': bond, 'from': operator.address, 'gas': 1_000_000})
         return fee_exit_id, tx_hash
 
     def process_exits(self, token, exit_id, count, **kwargs):
@@ -317,7 +329,7 @@ class TestingLanguage:
             utxo_pos (int): position of utxo being exited
 
         Returns:
-            tuple: (owner (address), token (address), amount (int))
+            tuple: (owner (address), amount (int))
         """
 
         exit_id = self.get_standard_exit_id(utxo_pos)
@@ -421,7 +433,8 @@ class TestingLanguage:
         signature = competing_tx.signatures[competing_tx_input_index]
         self.root_chain.challengeInFlightExitNotCanonical(in_flight_tx.encoded, in_flight_tx_input_index,
                                                           competing_tx.encoded, competing_tx_input_index,
-                                                          competing_tx_id, proof, signature, **{'from': account.address})
+                                                          competing_tx_id, proof, signature,
+                                                          **{'from': account.address})
 
     def respond_to_non_canonical_challenge(self, in_flight_tx_id, key):
         in_flight_tx = self.child_chain.get_transaction(in_flight_tx_id)

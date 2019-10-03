@@ -33,7 +33,7 @@ class AutominingEth(eth.Eth):
             if expect_error:
                 return
 
-            if error.args[0]['message'] == "VM Exception while processing transaction: revert":
+            if error.args[0]['message'].startswith("VM Exception while processing transaction: revert"):
                 raise TransactionFailed
             raise error
 

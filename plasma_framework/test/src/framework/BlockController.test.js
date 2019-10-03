@@ -50,8 +50,8 @@ contract('BlockController', ([operator, other]) => {
                 .to.be.bignumber.equal(new BN(this.childBlockInterval));
         });
 
-        it('nextDepositBlock set to 1', async () => {
-            expect(await this.blockController.nextDepositBlock()).to.be.bignumber.equal(new BN(1));
+        it('nextDeposit set to 1', async () => {
+            expect(await this.blockController.nextDeposit()).to.be.bignumber.equal(new BN(1));
         });
 
         it('childBlockInterval is set as the inserted value', async () => {
@@ -90,13 +90,13 @@ contract('BlockController', ([operator, other]) => {
                 .to.be.bignumber.equal(nextChildBlockBeforeSubmission.add(new BN(this.childBlockInterval)));
         });
 
-        it('resets "nextDepositBlock" back to 1', async () => {
-            // increase nextDepositBlock via deposit
+        it('resets "nextDeposit" back to 1', async () => {
+            // increase nextDeposit via deposit
             await this.dummyVault.submitDepositBlock(this.dummyBlockHash);
 
             await this.blockController.submitBlock(this.dummyBlockHash);
 
-            expect(await this.blockController.nextDepositBlock()).to.be.bignumber.equal(new BN(1));
+            expect(await this.blockController.nextDeposit()).to.be.bignumber.equal(new BN(1));
         });
 
         it('emits "BlockSubmitted" event', async () => {
@@ -132,13 +132,13 @@ contract('BlockController', ([operator, other]) => {
             expect(block.root).to.equal(this.dummyBlockHash);
         });
 
-        it('adds 1 to nextDepositBlock', async () => {
-            const nextDepositBlockBeforeSubmission = await this.blockController.nextDepositBlock();
+        it('adds 1 to nextDeposit', async () => {
+            const nextDepositBeforeSubmission = await this.blockController.nextDeposit();
 
             await this.dummyVault.submitDepositBlock(this.dummyBlockHash);
 
-            expect(await this.blockController.nextDepositBlock())
-                .to.be.bignumber.equal(nextDepositBlockBeforeSubmission.add(new BN(1)));
+            expect(await this.blockController.nextDeposit())
+                .to.be.bignumber.equal(nextDepositBeforeSubmission.add(new BN(1)));
         });
 
         it('does not change nextChildBlock', async () => {

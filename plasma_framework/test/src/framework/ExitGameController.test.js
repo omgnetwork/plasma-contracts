@@ -206,6 +206,20 @@ contract('ExitGameController', () => {
                 const foundInQueue = heapList.find(e => e.eq(uniquePriority));
                 expect(foundInQueue).not.null;
             });
+
+            it('should provide convenience method to show top exit priority', async () => {
+                // Search for and ExitQueued event with the exitId
+                const events = await this.controller.getPastEvents('ExitQueued', {
+                    filter: { exitId: this.dummyExit.exitId },
+                });
+
+                // Get the exit's uniquePriority from the ExitQueued event
+                const { uniquePriority } = events[0].args;
+
+                // Find the exit's uniquePriority in the priority queue
+                const nextExitPriority = await this.controller.getNextExit(this.dummyToken);
+                expect(nextExitPriority).to.be.bignumber.equal(uniquePriority);
+            });
         });
     });
 
