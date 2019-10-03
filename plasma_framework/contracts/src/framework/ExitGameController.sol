@@ -9,10 +9,16 @@ import "../utils/TxPosLib.sol";
 
 /**
  * @notice Controls the logic and functions for ExitGame to interact with PlasmaFramework.
+ *         Plasma M(ore)VP relies on exit priority to secure the user from invalid transactions.
+ *         As a result, priority queue is used here to promise the exit would be processed with the exit priority.
+ *         For details, see the Plasma MVP spec: https://ethresear.ch/t/minimal-viable-plasma/426
  */
 contract ExitGameController is ExitGameRegistry {
+    // exit priority => IExitProcessor
     mapping (uint256 => IExitProcessor) public delegations;
+    // token => PriorityQueue
     mapping (address => PriorityQueue) public exitsQueues;
+    // outputId => bool
     mapping (bytes32 => bool) public isOutputSpent;
 
     event TokenAdded(
@@ -60,7 +66,8 @@ contract ExitGameController is ExitGameRegistry {
     }
 
     /**
-     * @notice Enqueue exits from exit game contracts
+     * @notice Enqueue exits from exit game contracts. This 'enqueue' function puts the exit into the
+     *         priority queue to enforce the priority of exit during 'processExits'.
      * @dev emits ExitQueued event. The event can be used to back trace the priority inside the queue.
      * @dev Caller of this function should add "pragma experimental ABIEncoderV2;" on top of file
      * @param _token Token for the exit
@@ -88,7 +95,7 @@ contract ExitGameController is ExitGameRegistry {
     }
 
     /**
-     * @notice Processes any exits that have completed the challenge period.
+     * @notice Processes any exits that have completed the challenge period. Exits would be processed according to the exit priority.
      * @dev emits ProcessedExitsNum event.
      * @param _token token type to process.
      * @param _topExitId unique priority of the first exit that should be processed. Set to zero to skip the check.
