@@ -1,9 +1,12 @@
 pragma solidity 0.5.11;
 
+/**
+ * @notice protocols for the PlasmaFramework
+ */
 library Protocol {
     uint8 constant internal MVP_VALUE = 1;
     uint8 constant internal MORE_VP_VALUE = 2;
-    
+
     // solhint-disable-next-line func-name-mixedcase
     function MVP() internal pure returns (uint8) {
         return MVP_VALUE;

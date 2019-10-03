@@ -22,10 +22,16 @@ contract PriorityQueue is Ownable {
         queue.currentSize = 0;
     }
 
+    /**
+     * @notice Gets num of elements in the queue
+     */
     function currentSize() external view returns (uint256) {
         return queue.currentSize;
     }
 
+    /**
+     * @notice Gets all elements in the queue
+     */
     function heapList() external view returns (uint256[] memory) {
         return queue.heapList;
     }
@@ -63,9 +69,6 @@ contract PriorityQueue is Ownable {
         return queue.heapList[1];
     }
 
-    /*
-     *  Private functions
-     */
     function percUp(Queue storage self, uint256 pointer) private {
         uint256 i = pointer;
         uint256 j = i;

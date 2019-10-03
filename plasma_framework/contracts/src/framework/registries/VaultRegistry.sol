@@ -6,8 +6,8 @@ import "../utils/Quarantine.sol";
 contract VaultRegistry is Operated {
     using Quarantine for Quarantine.Data;
 
-    mapping(uint256 => address) private _vaults;
-    mapping(address => uint256) private _vaultToId;
+    mapping(uint256 => address) private _vaults; // vault id => vault address
+    mapping(address => uint256) private _vaultToId; // vault address => vault id
     Quarantine.Data private _vaultQuarantine;
 
     event VaultRegistered(
@@ -15,6 +15,10 @@ contract VaultRegistry is Operated {
         address vaultAddress
     );
 
+    /**
+     * @dev For each new vault contract, it should take at least 1 minExitPeriod to be able to start take effect to protect deposit transaction in mempool.
+     *      see: https://github.com/omisego/plasma-contracts/issues/173
+     */
     constructor (uint256 _minExitPeriod, uint256 _initialImmuneVaults)
         public
     {
@@ -22,6 +26,9 @@ contract VaultRegistry is Operated {
         _vaultQuarantine.immunitiesRemaining = _initialImmuneVaults;
     }
 
+    /**
+     * @notice modifier to check the call is from a non-quarantined vault.
+     */
     modifier onlyFromNonQuarantinedVault() {
         require(_vaultToId[msg.sender] > 0, "Not being called by registered vaults");
         require(!_vaultQuarantine.isQuarantined(msg.sender), "Vault is quarantined.");
@@ -29,7 +36,8 @@ contract VaultRegistry is Operated {
     }
 
     /**
-     * @notice Register the vault to Plasma framework. This can be only called by contract admin.
+     * @notice Register a vault within the PlasmaFramework. This can only be called by the maintainer.
+     * @dev emits VaultRegistered event to notify clients
      * @param _vaultId the id for the vault contract to register.
      * @param _vaultAddress address of the vault contract.
      */
@@ -46,10 +54,16 @@ contract VaultRegistry is Operated {
         emit VaultRegistered(_vaultId, _vaultAddress);
     }
 
+    /**
+     * @notice public getter for getting vault address with vault id
+     */
     function vaults(uint256 _vaultId) public view returns (address) {
         return _vaults[_vaultId];
     }
 
+    /**
+     * @notice public getter for getting vault id with vault address
+     */
     function vaultToId(address _vaultAddress) public view returns (uint256) {
         return _vaultToId[_vaultAddress];
     }

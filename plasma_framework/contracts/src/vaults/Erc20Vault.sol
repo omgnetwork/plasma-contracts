@@ -11,7 +11,7 @@ contract Erc20Vault is Vault {
     using SafeERC20 for IERC20;
 
     event Erc20Withdrawn(
-        address payable indexed target,
+        address payable indexed receiver,
         address indexed token,
         uint256 amount
     );
@@ -26,28 +26,31 @@ contract Erc20Vault is Vault {
     constructor(PlasmaFramework _framework) public Vault(_framework) {}
 
     /**
-     * @notice Deposits approved amount of ERC20 token. Approve must have been called first.
-     * @param _depositTx RLP encoded transaction to act as the deposit.
+     * @notice Deposits approved amount of ERC20 token(s) into the contract.
+     * Once the deposit is recognized, the owner (depositor) is able to make transactions on the OMG network.
+     * The approve function of the ERC20 token contract needs to be called before this function is called
+     * for at least the amount that is deposited into the contract.
+     * @param depositTx RLP encoded transaction to act as the deposit.
      */
-    function deposit(bytes calldata _depositTx) external {
-        (address owner, address token, uint256 amount) = IErc20DepositVerifier(getEffectiveDepositVerifier())
-            .verify(_depositTx, msg.sender, address(this));
+    function deposit(bytes calldata depositTx) external {
+        (address depositor, address token, uint256 amount) = IErc20DepositVerifier(getEffectiveDepositVerifier())
+            .verify(depositTx, msg.sender, address(this));
 
-        IERC20(token).safeTransferFrom(owner, address(this), amount);
+        IERC20(token).safeTransferFrom(depositor, address(this), amount);
 
-        uint256 blknum = super._submitDepositBlock(_depositTx);
+        uint256 blknum = super._submitDepositBlock(depositTx);
 
         emit DepositCreated(msg.sender, blknum, token, amount);
     }
 
     /**
-    * @notice Withdraw plasma chain ERC20 tokens to target
-    * @param _target Place to transfer eth.
-    * @param _token Address of ERC20 token contract.
-    * @param _amount Amount to transfer.
+    * @notice Withdraw ERC20 tokens that have been exited from the OMG network successfully.
+    * @param receiver address of the receiver
+    * @param token address of ERC20 token contract.
+    * @param amount amount to transfer.
     */
-    function withdraw(address payable _target, address _token, uint256 _amount) external onlyFromNonQuarantinedExitGame {
-        IERC20(_token).safeTransfer(_target, _amount);
-        emit Erc20Withdrawn(_target, _token, _amount);
+    function withdraw(address payable receiver, address token, uint256 amount) external onlyFromNonQuarantinedExitGame {
+        IERC20(token).safeTransfer(receiver, amount);
+        emit Erc20Withdrawn(receiver, token, amount);
     }
 }

@@ -7,9 +7,9 @@ import "../utils/Quarantine.sol";
 contract ExitGameRegistry is Operated {
     using Quarantine for Quarantine.Data;
 
-    mapping(uint256 => address) private _exitGames;
-    mapping(address => uint256) private _exitGameToTxType;
-    mapping(uint256 => uint8) private _protocols;
+    mapping(uint256 => address) private _exitGames; // txType => exit game contract address
+    mapping(address => uint256) private _exitGameToTxType; // exit game contract address => tx type
+    mapping(uint256 => uint8) private _protocols; // tx type => protocol (MVP/MORE_VP)
     Quarantine.Data private _exitGameQuarantine;
 
     event ExitGameRegistered(
@@ -18,6 +18,11 @@ contract ExitGameRegistry is Operated {
         uint8 protocol
     );
 
+    /**
+     * @dev For each new exit game contract, it should take at least 3 * minExitPeriod to start take effect to protect existing transactions.
+     *      see: https://github.com/omisego/plasma-contracts/issues/172
+     *           https://github.com/omisego/plasma-contracts/issues/197
+     */
     constructor (uint256 _minExitPeriod, uint256 _initialImmuneExitGames)
         public
     {
@@ -25,6 +30,9 @@ contract ExitGameRegistry is Operated {
         _exitGameQuarantine.immunitiesRemaining = _initialImmuneExitGames;
     }
 
+    /**
+     * @notice modifier to check the call is from a non-quarantined exit game
+     */
     modifier onlyFromNonQuarantinedExitGame() {
         require(_exitGameToTxType[msg.sender] != 0, "Not being called by registered exit game contract");
         require(!_exitGameQuarantine.isQuarantined(msg.sender), "ExitGame is quarantined.");
@@ -32,19 +40,21 @@ contract ExitGameRegistry is Operated {
     }
 
     /**
+     * @notice Checks whether the contract is safe to use and is not under quarantine
      * @dev Exposes information about exit games quarantine
-     * @param _contract address of exit game contract
-     * @return A boolean value denoting whether contract is safe to use, is not under quarantine
+     * @param _contract address of the exit game contract
+     * @return boolean whether the contract is safe to use and is not under quarantine.
      */
     function isExitGameSafeToUse(address _contract) public view returns (bool) {
         return _exitGameToTxType[_contract] != 0 && !_exitGameQuarantine.isQuarantined(_contract);
     }
 
     /**
-     * @notice Register the exit game to Plasma framework. This can be only called by contract admin.
+     * @notice Register an exit game within the PlasmaFramework. The function can only be called by the maintainer.
+     * @dev emits ExitGameRegistered event to notify clients
      * @param _txType tx type that the exit game want to register to.
-     * @param _contract Address of the exit game contract.
-     * @param _protocol The protocol of the transaction, 1 for MVP and 2 for MoreVP.
+     * @param _contract address of the exit game contract.
+     * @param _protocol protocol of the transaction, 1 for MVP and 2 for MoreVP.
      */
     function registerExitGame(uint256 _txType, address _contract, uint8 _protocol) public onlyOperator {
         require(_txType != 0, "should not register with tx type 0");
@@ -61,14 +71,23 @@ contract ExitGameRegistry is Operated {
         emit ExitGameRegistered(_txType, _contract, _protocol);
     }
 
+    /**
+     * @notice public getter for getting protocol with tx type
+     */
     function protocols(uint256 _txType) public view returns (uint8) {
         return _protocols[_txType];
     }
 
+    /**
+     * @notice public getter for getting exit game address with tx type
+     */
     function exitGames(uint256 _txType) public view returns (address) {
         return _exitGames[_txType];
     }
 
+    /**
+     * @notice public getter for getting tx type with exit game address
+     */
     function exitGameToTxType(address _exitGame) public view returns (uint256) {
         return _exitGameToTxType[_exitGame];
     }

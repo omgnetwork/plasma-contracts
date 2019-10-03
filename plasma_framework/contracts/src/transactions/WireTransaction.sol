@@ -4,7 +4,9 @@ import "../utils/RLP.sol";
 
 /**
  * @title WireTransaction
- * @dev Utility functions for working with transactions in wire format.
+ * @dev Utility functions for working with transactions in wire format. This assumes our transaction would be under certain data structure limitation.
+ *      Current transaction structure should be able to support Payment and DEX related transactions.
+ *      If the assumption breaks, we can still upgrade to a new ExitGame with either another transaction data structure or replace this with interfaces.
  */
 library WireTransaction {
 
