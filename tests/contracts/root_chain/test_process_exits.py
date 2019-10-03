@@ -41,7 +41,7 @@ def test_process_exits_standard_exit_should_succeed(testlang, num_outputs, plasm
     testlang.process_exits(NULL_ADDRESS, 0, 100)
 
     assert_events(testlang.flush_events(),
-                  [('EthWithdrawn', {'amount': amount, 'target': output_owner.address}),
+                  [('EthWithdrawn', {'amount': amount, 'receiver': output_owner.address}),
                    ('ExitFinalized', {"exitId": exit_id}),
                    ('ProcessedExitsNum', {'processedNum': 1, 'token': NULL_ADDRESS_HEX})])
 
