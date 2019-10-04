@@ -25,12 +25,8 @@ contract TxFinalizationVerifier is ITxFinalizationVerifier {
         if (data.protocol == Protocol.MORE_VP()) {
             return checkInclusionProof(data);
         } else if (data.protocol == Protocol.MVP()) {
-            // TODO: solhint disabled for now due to bug, https://github.com/protofire/solhint/issues/157
-            // solhint-disable-next-line reason-string
             revert("not supporting MVP yet");
         } else {
-            // TODO: solhint disabled for now due to bug, https://github.com/protofire/solhint/issues/157
-            // solhint-disable-next-line reason-string
             revert("invalid protocol value");
         }
     }
@@ -44,12 +40,8 @@ contract TxFinalizationVerifier is ITxFinalizationVerifier {
         if (data.protocol == Protocol.MORE_VP()) {
             return data.txBytes.length > 0;
         } else if (data.protocol == Protocol.MVP()) {
-            // TODO: solhint disabled for now due to bug, https://github.com/protofire/solhint/issues/157
-            // solhint-disable-next-line reason-string
             revert("not supporting MVP yet");
         } else {
-            // TODO: solhint disabled for now due to bug, https://github.com/protofire/solhint/issues/157
-            // solhint-disable-next-line reason-string
             revert("invalid protocol value");
         }
     }
