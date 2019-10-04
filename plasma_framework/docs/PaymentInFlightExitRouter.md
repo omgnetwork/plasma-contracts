@@ -39,7 +39,7 @@ event PiggybackBondUpdated(uint128  bondSize);
 
 ## Functions
 
-- [(PlasmaFramework framework, EthVault ethVault, Erc20Vault erc20Vault, OutputGuardHandlerRegistry outputGuardHandlerRegistry, SpendingConditionRegistry spendingConditionRegistry, IStateTransitionVerifier stateTransitionVerifier, ITxFinalizationVerifier txFinalizationVerifier, uint256 supportedTxType)](#)
+- [(PlasmaFramework framework, uint256 ethVaultId, uint256 erc20VaultId, OutputGuardHandlerRegistry outputGuardHandlerRegistry, SpendingConditionRegistry spendingConditionRegistry, IStateTransitionVerifier stateTransitionVerifier, ITxFinalizationVerifier txFinalizationVerifier, uint256 supportedTxType)](#)
 - [inFlightExits(uint160 exitId)](#inflightexits)
 - [startInFlightExit(struct PaymentInFlightExitRouterArgs.StartExitArgs args)](#startinflightexit)
 - [piggybackInFlightExitOnInput(struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnInputArgs args)](#piggybackinflightexitoninput)
@@ -57,7 +57,7 @@ event PiggybackBondUpdated(uint128  bondSize);
 ### 
 
 ```js
-function (PlasmaFramework framework, EthVault ethVault, Erc20Vault erc20Vault, OutputGuardHandlerRegistry outputGuardHandlerRegistry, SpendingConditionRegistry spendingConditionRegistry, IStateTransitionVerifier stateTransitionVerifier, ITxFinalizationVerifier txFinalizationVerifier, uint256 supportedTxType) public nonpayable
+function (PlasmaFramework framework, uint256 ethVaultId, uint256 erc20VaultId, OutputGuardHandlerRegistry outputGuardHandlerRegistry, SpendingConditionRegistry spendingConditionRegistry, IStateTransitionVerifier stateTransitionVerifier, ITxFinalizationVerifier txFinalizationVerifier, uint256 supportedTxType) public nonpayable
 ```
 
 **Arguments**
@@ -65,8 +65,8 @@ function (PlasmaFramework framework, EthVault ethVault, Erc20Vault erc20Vault, O
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
 | framework | PlasmaFramework |  | 
-| ethVault | EthVault |  | 
-| erc20Vault | Erc20Vault |  | 
+| ethVaultId | uint256 |  | 
+| erc20VaultId | uint256 |  | 
 | outputGuardHandlerRegistry | OutputGuardHandlerRegistry |  | 
 | spendingConditionRegistry | SpendingConditionRegistry |  | 
 | stateTransitionVerifier | IStateTransitionVerifier |  | 
