@@ -14,12 +14,12 @@ import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../interfaces/IStateTransitionVerifier.sol";
 import "../../interfaces/ITxFinalizationVerifier.sol";
 import "../../utils/BondSize.sol";
+import "../../../utils/OnlyFromAddress.sol";
 import "../../../utils/OnlyWithValue.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../framework/interfaces/IExitProcessor.sol";
-import "../../../framework/utils/Operated.sol";
 
-contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue {
+contract PaymentInFlightExitRouter is IExitProcessor, OnlyFromAddress, OnlyWithValue {
     using PaymentStartInFlightExit for PaymentStartInFlightExit.Controller;
     using PaymentPiggybackInFlightExit for PaymentPiggybackInFlightExit.Controller;
     using PaymentChallengeIFENotCanonical for PaymentChallengeIFENotCanonical.Controller;
@@ -47,6 +47,8 @@ contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue {
     PaymentChallengeIFEOutputSpent.Controller internal challengeOutputSpentController;
     BondSize.Params internal startIFEBond;
     BondSize.Params internal piggybackBond;
+
+    address private maintainer;
 
     event IFEBondUpdated(uint128 bondSize);
     event PiggybackBondUpdated(uint128 bondSize);
@@ -119,6 +121,8 @@ contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue {
     )
         public
     {
+        maintainer = framework.maintainer();
+
         startInFlightExitController = PaymentStartInFlightExit.buildController(
             framework,
             outputGuardHandlerRegistry,
@@ -290,7 +294,7 @@ contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue {
      * @notice Updates the in-flight exit bond size. Will take 2 days to come into effect.
      * @param newBondSize The new bond size.
      */
-    function updateStartIFEBondSize(uint128 newBondSize) public onlyOperator {
+    function updateStartIFEBondSize(uint128 newBondSize) public onlyFrom(maintainer) {
         startIFEBond.updateBondSize(newBondSize);
         emit IFEBondUpdated(newBondSize);
     }
@@ -306,7 +310,7 @@ contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue {
      * @notice Updates the piggyback bond size. Will take 2 days to come into effect.
      * @param newBondSize The new bond size.
      */
-    function updatePiggybackBondSize(uint128 newBondSize) public onlyOperator {
+    function updatePiggybackBondSize(uint128 newBondSize) public onlyFrom(maintainer) {
         piggybackBond.updateBondSize(newBondSize);
         emit PiggybackBondUpdated(newBondSize);
     }

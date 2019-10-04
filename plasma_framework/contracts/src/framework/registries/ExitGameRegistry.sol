@@ -1,16 +1,17 @@
 pragma solidity 0.5.11;
 
 import "../Protocol.sol";
-import "../utils/Operated.sol";
 import "../utils/Quarantine.sol";
+import "../../utils/OnlyFromAddress.sol";
 
-contract ExitGameRegistry is Operated {
+contract ExitGameRegistry is OnlyFromAddress {
     using Quarantine for Quarantine.Data;
 
     mapping(uint256 => address) private _exitGames; // txType => exit game contract address
     mapping(address => uint256) private _exitGameToTxType; // exit game contract address => tx type
     mapping(uint256 => uint8) private _protocols; // tx type => protocol (MVP/MORE_VP)
     Quarantine.Data private _exitGameQuarantine;
+    address private maintainer;
 
     event ExitGameRegistered(
         uint256 txType,
@@ -23,11 +24,12 @@ contract ExitGameRegistry is Operated {
      *      see: https://github.com/omisego/plasma-contracts/issues/172
      *           https://github.com/omisego/plasma-contracts/issues/197
      */
-    constructor (uint256 _minExitPeriod, uint256 _initialImmuneExitGames)
+    constructor (uint256 _minExitPeriod, uint256 _initialImmuneExitGames, address _maintainer)
         public
     {
         _exitGameQuarantine.quarantinePeriod = 3 * _minExitPeriod;
         _exitGameQuarantine.immunitiesRemaining = _initialImmuneExitGames;
+        maintainer = _maintainer;
     }
 
     /**
@@ -56,7 +58,7 @@ contract ExitGameRegistry is Operated {
      * @param _contract address of the exit game contract.
      * @param _protocol protocol of the transaction, 1 for MVP and 2 for MoreVP.
      */
-    function registerExitGame(uint256 _txType, address _contract, uint8 _protocol) public onlyOperator {
+    function registerExitGame(uint256 _txType, address _contract, uint8 _protocol) public onlyFrom(maintainer) {
         require(_txType != 0, "should not register with tx type 0");
         require(_contract != address(0), "should not register with an empty exit game address");
         require(_exitGames[_txType] == address(0), "The tx type is already registered");

@@ -2,7 +2,7 @@ pragma solidity 0.5.11;
 
 import "./models/BlockModel.sol";
 import "./registries/VaultRegistry.sol";
-import "./utils/Operated.sol";
+import "../utils/OnlyFromAddress.sol";
 
 /**
 * @notice Controls the logic and functions for block submissions in PlasmaFramework
@@ -14,7 +14,7 @@ import "./utils/Operated.sol";
 *      Meanwhile, block submission can only be done by the authority address.
 *      There is some limitation on the authority address, see: https://github.com/omisego/elixir-omg#managing-the-operator-address
 */
-contract BlockController is Operated, VaultRegistry {
+contract BlockController is OnlyFromAddress, VaultRegistry {
     address public authority;
     uint256 public childBlockInterval;
     uint256 public nextChildBlock;
@@ -26,24 +26,14 @@ contract BlockController is Operated, VaultRegistry {
         uint256 blockNumber
     );
 
-    constructor(uint256 _interval, uint256 _minExitPeriod, uint256 _initialImmuneVaults)
+    constructor(uint256 _interval, uint256 _minExitPeriod, uint256 _initialImmuneVaults, address _authority, address _maintainer)
         public
-        VaultRegistry(_minExitPeriod, _initialImmuneVaults)
+        VaultRegistry(_minExitPeriod, _initialImmuneVaults, _maintainer)
     {
+        authority = _authority;
         childBlockInterval = _interval;
         nextChildBlock = childBlockInterval;
         nextDeposit = 1;
-    }
-
-    /**
-     * @notice Sets the operator's authority address and unlocks block submission.
-     * @dev Can be called only once, before any call to `submitBlock`.
-     * @dev All block submission then needs to be send from msg.sender address.
-     * @dev see discussion in https://github.com/omisego/plasma-contracts/issues/233
-     */
-    function initAuthority() external {
-        require(authority == address(0), "Authority address has been already set.");
-        authority = msg.sender;
     }
 
     /**
@@ -51,7 +41,7 @@ contract BlockController is Operated, VaultRegistry {
      * re-org protection mechanism, explained in https://github.com/omisego/plasma-contracts/issues/118
      * @param newAuthority address of new authority, cannot be blank.
      */
-    function setAuthority(address newAuthority) external onlyOperator {
+    function setAuthority(address newAuthority) external onlyFrom(authority) {
         require(newAuthority != address(0), "Authority cannot be zero-address.");
         authority = newAuthority;
     }
@@ -63,8 +53,7 @@ contract BlockController is Operated, VaultRegistry {
      * @dev see discussion in https://github.com/omisego/plasma-contracts/issues/233
      * @param _blockRoot Merkle root of the plasma block.
      */
-    function submitBlock(bytes32 _blockRoot) external {
-        require(msg.sender == authority, "Can be called only by the Authority.");
+    function submitBlock(bytes32 _blockRoot) external onlyFrom(authority) {
         uint256 submittedBlockNumber = nextChildBlock;
 
         blocks[submittedBlockNumber] = BlockModel.Block({

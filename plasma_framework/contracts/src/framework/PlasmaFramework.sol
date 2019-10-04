@@ -5,9 +5,8 @@ import "./BlockController.sol";
 import "./ExitGameController.sol";
 import "./registries/VaultRegistry.sol";
 import "./registries/ExitGameRegistry.sol";
-import "./utils/Operated.sol";
 
-contract PlasmaFramework is Operated, VaultRegistry, ExitGameRegistry, ExitGameController, BlockController {
+contract PlasmaFramework is VaultRegistry, ExitGameRegistry, ExitGameController, BlockController {
     uint256 public constant CHILD_BLOCK_INTERVAL = 1000;
 
     /**
@@ -24,12 +23,22 @@ contract PlasmaFramework is Operated, VaultRegistry, ExitGameRegistry, ExitGameC
      * Special period for deposit: https://git.io/JecCV
      */
     uint256 public minExitPeriod;
+    address public authority;
+    address public maintainer;
 
-    constructor(uint256 _minExitPeriod, uint256 _initialImmuneVaults, uint256 _initialImmuneExitGames)
+    constructor(
+        uint256 _minExitPeriod,
+        uint256 _initialImmuneVaults,
+        uint256 _initialImmuneExitGames,
+        address _authority,
+        address _maintainer
+    )
         public
-        BlockController(CHILD_BLOCK_INTERVAL, _minExitPeriod, _initialImmuneVaults)
-        ExitGameController(_minExitPeriod, _initialImmuneExitGames)
+        BlockController(CHILD_BLOCK_INTERVAL, _minExitPeriod, _initialImmuneVaults, _authority, _maintainer)
+        ExitGameController(_minExitPeriod, _initialImmuneExitGames, _maintainer)
     {
         minExitPeriod = _minExitPeriod;
+        authority = _authority;
+        maintainer = _maintainer;
     }
 }

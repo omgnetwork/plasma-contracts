@@ -8,9 +8,11 @@ module.exports = async (deployer) => {
         config.frameworks.minExitPeriod,
         config.frameworks.initialImmuneVaults,
         config.frameworks.initialImmuneExitGames,
-        { from: global.maintainerAddress },
+        global.authorityAddress,
+        global.maintainerAddress,
     );
 
-    const plasmaFramework = await PlasmaFramework.deployed();
-    await plasmaFramework.initAuthority({ from: global.authorityAddress });
+    // TODO: depends on https://github.com/omisego/plasma-contracts/issues/304#issuecomment-537422072
+    // const plasmaFramework = await PlasmaFramework.deployed();
+    // await plasmaFramework.initAuthority({ from: global.authorityAddress });
 };
