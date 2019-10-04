@@ -105,6 +105,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob, maintainer,
             authority,
             maintainer,
         );
+        await this.framework.activateChildChain({ from: authority });
 
         const ethDepositVerifier = await EthDepositVerifier.new();
         this.ethVault = await EthVault.new(this.framework.address);

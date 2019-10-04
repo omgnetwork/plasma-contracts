@@ -27,6 +27,7 @@ contract('EthVault', ([_, authority, maintainer, alice]) => {
             authority,
             maintainer,
         );
+        await this.framework.activateChildChain({ from: authority });
         this.ethVault = await EthVault.new(this.framework.address);
         const depositVerifier = await EthDepositVerifier.new();
         await this.ethVault.setDepositVerifier(depositVerifier.address, { from: maintainer });

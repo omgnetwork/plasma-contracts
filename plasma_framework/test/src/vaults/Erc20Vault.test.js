@@ -30,6 +30,7 @@ contract('Erc20Vault', ([_, erc20Minter, authority, maintainer, alice]) => {
             authority,
             maintainer,
         );
+        await this.framework.activateChildChain({ from: authority });
         this.erc20Vault = await Erc20Vault.new(this.framework.address);
         const depositVerifier = await Erc20DepositVerifier.new();
         await this.erc20Vault.setDepositVerifier(depositVerifier.address, { from: maintainer });

@@ -19,6 +19,7 @@ contract BlockController is OnlyFromAddress, VaultRegistry {
     uint256 public childBlockInterval;
     uint256 public nextChildBlock;
     uint256 public nextDeposit;
+    bool public isChildChainActivated;
 
     mapping (uint256 => BlockModel.Block) public blocks; // block number => Block data
 
@@ -26,7 +27,17 @@ contract BlockController is OnlyFromAddress, VaultRegistry {
         uint256 blockNumber
     );
 
-    constructor(uint256 _interval, uint256 _minExitPeriod, uint256 _initialImmuneVaults, address _authority, address _maintainer)
+    event ChildChainActivated(
+        address authority
+    );
+
+    constructor(
+        uint256 _interval,
+        uint256 _minExitPeriod,
+        uint256 _initialImmuneVaults,
+        address _authority,
+        address _maintainer
+    )
         public
         VaultRegistry(_minExitPeriod, _initialImmuneVaults, _maintainer)
     {
@@ -34,6 +45,21 @@ contract BlockController is OnlyFromAddress, VaultRegistry {
         childBlockInterval = _interval;
         nextChildBlock = childBlockInterval;
         nextDeposit = 1;
+        isChildChainActivated = false;
+    }
+
+    /**
+     * @notice Activates the child chain so that child chain can start to submit child blocks to root chain
+     * @notice Can only be called once by the authority.
+     * @notice Sets isChildChainActivated to true and emits the ChildChainActivated event.
+     * @dev This is a preserved action for authority account to start its nonce with 1.
+     *      Child chain rely ethereum nonce to protect re-org: https://git.io/JecDG
+     *      see discussion: https://git.io/JenaT, https://git.io/JecDO
+     */
+    function activateChildChain() external onlyFrom(authority) {
+        require(isChildChainActivated == false, "Child chain can only be activated once");
+        isChildChainActivated = true;
+        emit ChildChainActivated(authority);
     }
 
     /**
@@ -54,6 +80,7 @@ contract BlockController is OnlyFromAddress, VaultRegistry {
      * @param _blockRoot Merkle root of the plasma block.
      */
     function submitBlock(bytes32 _blockRoot) external onlyFrom(authority) {
+        require(isChildChainActivated == true, "Child chain has not been activate by authority address yet");
         uint256 submittedBlockNumber = nextChildBlock;
 
         blocks[submittedBlockNumber] = BlockModel.Block({
@@ -74,6 +101,7 @@ contract BlockController is OnlyFromAddress, VaultRegistry {
      * @return the deposit block number
      */
     function submitDepositBlock(bytes32 _blockRoot) public onlyFromNonQuarantinedVault returns (uint256) {
+        require(isChildChainActivated == true, "Child chain has not been activate by authority address yet");
         require(nextDeposit < childBlockInterval, "Exceeded limit of deposits per child block interval");
 
         uint256 blknum = nextDepositBlock();

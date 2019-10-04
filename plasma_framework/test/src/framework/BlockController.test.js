@@ -10,7 +10,7 @@ contract('BlockController', ([maintainer, authority, other]) => {
     const MIN_EXIT_PERIOD = 10;
     const INITIAL_IMMUNE_VAULTS = 1;
 
-    beforeEach(async () => {
+    const setup = async () => {
         this.childBlockInterval = 5;
         this.blockController = await BlockController.new(
             this.childBlockInterval,
@@ -19,15 +19,19 @@ contract('BlockController', ([maintainer, authority, other]) => {
             authority,
             maintainer,
         );
+        this.blockController.activateChildChain({ from: authority });
+
         this.dummyBlockHash = web3.utils.keccak256('dummy block');
 
         this.dummyVault = await DummyVault.new();
         this.dummyVault.setBlockController(this.blockController.address);
         this.dummyVaultId = 1;
         this.blockController.registerVault(this.dummyVaultId, this.dummyVault.address);
-    });
+    };
 
     describe('constructor', () => {
+        beforeEach(setup);
+
         it('should set the authority correctly', async () => {
             expect(await this.blockController.authority()).to.equal(authority);
         });
@@ -61,7 +65,75 @@ contract('BlockController', ([maintainer, authority, other]) => {
         });
     });
 
+    describe('activateChildChain', () => {
+        describe('before activate', () => {
+            beforeEach(async () => {
+                const childBlockInterval = 5;
+                this.blockController = await BlockController.new(
+                    childBlockInterval,
+                    MIN_EXIT_PERIOD,
+                    INITIAL_IMMUNE_VAULTS,
+                    authority,
+                    maintainer,
+                );
+                this.dummyBlockHash = web3.utils.keccak256('dummy block');
+                this.dummyVault = await DummyVault.new();
+                this.dummyVault.setBlockController(this.blockController.address);
+                this.dummyVaultId = 1;
+                this.blockController.registerVault(this.dummyVaultId, this.dummyVault.address);
+            });
+
+            it('should not be able to submit child chain block', async () => {
+                await expectRevert(
+                    this.blockController.submitBlock(this.dummyBlockHash, { from: authority }),
+                    'Child chain has not been activate by authority address yet',
+                );
+            });
+
+            it('should not be able to submit deposit block', async () => {
+                await expectRevert(
+                    this.dummyVault.submitDepositBlock(this.dummyBlockHash),
+                    'Child chain has not been activate by authority address yet',
+                );
+            });
+
+            it('should not be ablt to be activated by non authority', async () => {
+                await expectRevert(
+                    this.blockController.activateChildChain({ from: maintainer }),
+                    'Not being called by expected caller',
+                );
+            });
+
+            describe('after activated by authority', () => {
+                beforeEach(async () => {
+                    this.tx = await this.blockController.activateChildChain({ from: authority });
+                });
+
+                it('should change isChildChainActivated flag to true', async () => {
+                    expect(await this.blockController.isChildChainActivated()).to.be.true;
+                });
+
+                it('should emit ChildChainActivated event', async () => {
+                    await expectEvent.inLogs(
+                        this.tx.logs,
+                        'ChildChainActivated',
+                        { authority },
+                    );
+                });
+
+                it('should not be able to activate again', async () => {
+                    await expectRevert(
+                        this.blockController.activateChildChain({ from: authority }),
+                        'Child chain can only be activated once',
+                    );
+                });
+            });
+        });
+    });
+
     describe('submitBlock', () => {
+        beforeEach(setup);
+
         it('saves the child chain block root to contract', async () => {
             await this.blockController.submitBlock(this.dummyBlockHash, { from: authority });
 
@@ -111,6 +183,8 @@ contract('BlockController', ([maintainer, authority, other]) => {
     });
 
     describe('submitDepositBlock', () => {
+        beforeEach(setup);
+
         it('saves the deposit block root to contract', async () => {
             await this.dummyVault.submitDepositBlock(this.dummyBlockHash);
 
