@@ -23,7 +23,7 @@ const { expect } = require('chai');
 const { calculateNormalExitable } = require('../../../helpers/exitable.js');
 const { buildUtxoPos, utxoPosToTxPos } = require('../../../helpers/positions.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
-const { ETH_VAULT_ID, ERC20_VAULT_ID } = require('../../../helpers/constants.js');
+const { VAULT_ID } = require('../../../helpers/constants.js');
 
 contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, outputOwner]) => {
     const ETH = constants.ZERO_ADDRESS;
@@ -70,16 +70,16 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
         const ethVault = await SpyEthVault.new(this.framework.address);
         const erc20Vault = await SpyErc20Vault.new(this.framework.address);
 
-        await this.framework.registerVault(ETH_VAULT_ID, ethVault.address);
-        await this.framework.registerVault(ERC20_VAULT_ID, erc20Vault.address);
+        await this.framework.registerVault(VAULT_ID.ETH, ethVault.address);
+        await this.framework.registerVault(VAULT_ID.ERC20, erc20Vault.address);
 
         this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
         const spendingConditionRegistry = await SpendingConditionRegistry.new();
 
         this.exitGame = await PaymentInFlightExitRouter.new(
             this.framework.address,
-            ETH_VAULT_ID,
-            ERC20_VAULT_ID,
+            VAULT_ID.ETH,
+            VAULT_ID.ERC20,
             this.outputGuardHandlerRegistry.address,
             spendingConditionRegistry.address,
             this.stateTransitionVerifier.address,
@@ -249,7 +249,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
                     YOUNGEST_POSITION_BLOCK, web3.utils.sha3('dummy root'), this.youngestPositionTimestamp,
                 );
                 await this.exitGame.setInFlightExit(this.testData.exitId, this.testData.inFlightExitData);
-                await this.framework.addExitQueue(ETH_VAULT_ID, ETH);
+                await this.framework.addExitQueue(VAULT_ID.ETH, ETH);
 
                 this.piggybackTx = await this.exitGame.piggybackInFlightExitOnInput(
                     this.testData.argsInputOne, { from: inputOwner, value: this.piggybackBondSize.toString() },
@@ -266,7 +266,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
                     SpyPlasmaFramework,
                     'EnqueueTriggered',
                     {
-                        vaultId: new BN(ETH_VAULT_ID),
+                        vaultId: new BN(VAULT_ID.ETH),
                         token: ETH,
                         exitableAt: new BN(exitableAt),
                         txPos: new BN(utxoPosToTxPos(INFLIGHT_EXIT_YOUNGEST_INPUT_POSITION)),
@@ -329,7 +329,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
                     YOUNGEST_POSITION_BLOCK, web3.utils.sha3('dummy root'), this.youngestPositionTimestamp,
                 );
                 await this.exitGame.setInFlightExit(this.testData.exitId, this.testData.inFlightExitData);
-                await this.framework.addExitQueue(ERC20_VAULT_ID, ERC20_TOKEN);
+                await this.framework.addExitQueue(VAULT_ID.ERC20, ERC20_TOKEN);
 
                 this.piggybackTx = await this.exitGame.piggybackInFlightExitOnInput(
                     this.testData.argsInputOne, { from: inputOwner, value: this.piggybackBondSize.toString() },
@@ -346,7 +346,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
                     SpyPlasmaFramework,
                     'EnqueueTriggered',
                     {
-                        vaultId: new BN(ERC20_VAULT_ID),
+                        vaultId: new BN(VAULT_ID.ERC20),
                         token: ERC20_TOKEN,
                         exitableAt: new BN(exitableAt),
                         txPos: new BN(utxoPosToTxPos(INFLIGHT_EXIT_YOUNGEST_INPUT_POSITION)),

@@ -9,7 +9,7 @@ import "../../src/vaults/EthVault.sol";
 import "../../src/utils/TxPosLib.sol";
 
 contract DummyExitGame is IExitProcessor {
-    uint256 public uniquePriorityFromEnqueue;
+    uint256 public priorityFromEnqueue;
 
     ExitGameRegistryMock public exitGameRegistry;
     ExitGameController public exitGameController;
@@ -43,7 +43,7 @@ contract DummyExitGame is IExitProcessor {
     function enqueue(uint256 _vaultId, address _token, uint64 _exitableAt, uint256 _txPos, uint160 _exitId, IExitProcessor _exitProcessor)
         public
     {
-        uniquePriorityFromEnqueue = exitGameController.enqueue(_vaultId, _token, _exitableAt, TxPosLib.TxPos(_txPos), _exitId, _exitProcessor);
+        priorityFromEnqueue = exitGameController.enqueue(_vaultId, _token, _exitableAt, TxPosLib.TxPos(_txPos), _exitId, _exitProcessor);
     }
 
     function proxyBatchFlagOutputsSpent(bytes32[] memory _outputIds) public {

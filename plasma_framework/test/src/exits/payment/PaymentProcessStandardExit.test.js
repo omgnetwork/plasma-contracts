@@ -16,7 +16,7 @@ const {
 const { expect } = require('chai');
 
 const { buildUtxoPos } = require('../../../helpers/positions.js');
-const { PROTOCOL, ETH_VAULT_ID, ERC20_VAULT_ID } = require('../../../helpers/constants.js');
+const { PROTOCOL, VAULT_ID } = require('../../../helpers/constants.js');
 
 contract('PaymentStandardExitRouter', ([_, alice]) => {
     const ETH = constants.ZERO_ADDRESS;
@@ -44,8 +44,8 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
             const ethVault = await SpyEthVault.new(this.framework.address);
             const erc20Vault = await SpyErc20Vault.new(this.framework.address);
 
-            await this.framework.registerVault(ETH_VAULT_ID, ethVault.address);
-            await this.framework.registerVault(ERC20_VAULT_ID, erc20Vault.address);
+            await this.framework.registerVault(VAULT_ID.ETH, ethVault.address);
+            await this.framework.registerVault(VAULT_ID.ERC20, erc20Vault.address);
 
             const outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
             const spendingConditionRegistry = await SpendingConditionRegistry.new();
@@ -53,8 +53,8 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
 
             this.exitGame = await PaymentStandardExitRouter.new(
                 this.framework.address,
-                ETH_VAULT_ID,
-                ERC20_VAULT_ID,
+                VAULT_ID.ETH,
+                VAULT_ID.ERC20,
                 outputGuardHandlerRegistry.address,
                 spendingConditionRegistry.address,
                 txFinalizationVerifier.address,

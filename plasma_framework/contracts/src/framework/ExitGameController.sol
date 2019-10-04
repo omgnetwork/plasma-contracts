@@ -16,7 +16,7 @@ import "../utils/TxPosLib.sol";
 contract ExitGameController is ExitGameRegistry {
     // exit priority => IExitProcessor
     mapping (uint256 => IExitProcessor) public delegations;
-    // token => PriorityQueue
+    // hashed (vault id, token) => PriorityQueue
     mapping (bytes32 => PriorityQueue) public exitsQueues;
     // outputId => bool
     mapping (bytes32 => bool) public isOutputSpent;
@@ -34,7 +34,7 @@ contract ExitGameController is ExitGameRegistry {
 
     event ExitQueued(
         uint160 indexed exitId,
-        uint256 uniquePriority
+        uint256 priority
     );
 
     constructor(uint256 _minExitPeriod, uint256 _initialImmuneExitGames)
@@ -51,11 +51,7 @@ contract ExitGameController is ExitGameRegistry {
      */
     function hasExitQueue(uint256 vaultId, address token) public view returns (bool) {
         bytes32 key = exitQueueKey(vaultId, token);
-        return address(exitsQueues[key]) != address(0);
-    }
-
-    function hasExitQueue(bytes32 queueKey) private view returns (bool) {
-        return address(exitsQueues[queueKey]) != address(0);
+        return hasExitQueue(key);
     }
 
     /**
@@ -65,7 +61,7 @@ contract ExitGameController is ExitGameRegistry {
      * @param token Address of the token.
      */
     function addExitQueue(uint256 vaultId, address token) external {
-        require(vaultId != 0, "Invalid vault id");
+        require(vaultId != 0, "Vault id must not be 0");
         bytes32 key = exitQueueKey(vaultId, token);
         require(!hasExitQueue(key), "Exit queue exists");
         exitsQueues[key] = new PriorityQueue();
@@ -85,13 +81,20 @@ contract ExitGameController is ExitGameRegistry {
      * @param exitProcessor The exit processor contract that would be called during "processExits"
      * @return a unique priority number computed for the exit
      */
-    function enqueue(uint256 vaultId, address token, uint64 exitableAt, TxPosLib.TxPos calldata txPos, uint160 exitId, IExitProcessor exitProcessor)
+    function enqueue(
+        uint256 vaultId,
+        address token,
+        uint64 exitableAt,
+        TxPosLib.TxPos calldata txPos,
+        uint160 exitId,
+        IExitProcessor exitProcessor
+    )
         external
         onlyFromNonQuarantinedExitGame
         returns (uint256)
     {
         bytes32 key = exitQueueKey(vaultId, token);
-        require(hasExitQueue(key), "Such token has not been added to the plasma framework yet");
+        require(hasExitQueue(key), "The queue for the (vaultId, token) pair has not been added to the plasma framework yet");
         PriorityQueue queue = exitsQueues[key];
 
         uint256 uniquePriority = ExitPriority.computePriority(exitableAt, txPos, exitId);
@@ -180,6 +183,10 @@ contract ExitGameController is ExitGameRegistry {
 
     function exitQueueKey(uint256 vaultId, address token) private pure returns (bytes32) {
         return keccak256(abi.encodePacked(vaultId, token));
+    }
+
+    function hasExitQueue(bytes32 queueKey) private view returns (bool) {
+        return address(exitsQueues[queueKey]) != address(0);
     }
 
     function getNextExit(uint256 vaultId, address token) external view returns (uint256) {

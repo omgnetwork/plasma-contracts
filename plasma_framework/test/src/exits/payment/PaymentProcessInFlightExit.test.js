@@ -22,7 +22,7 @@ const {
 const { expect } = require('chai');
 
 const {
-    TX_TYPE, PROTOCOL, ETH_VAULT_ID, ERC20_VAULT_ID,
+    TX_TYPE, PROTOCOL, VAULT_ID,
 } = require('../../../helpers/constants.js');
 const { buildUtxoPos } = require('../../../helpers/positions.js');
 
@@ -142,16 +142,16 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
             this.ethVault = await SpyEthVault.new(this.framework.address);
             this.erc20Vault = await SpyErc20Vault.new(this.framework.address);
 
-            await this.framework.registerVault(ETH_VAULT_ID, this.ethVault.address);
-            await this.framework.registerVault(ERC20_VAULT_ID, this.erc20Vault.address);
+            await this.framework.registerVault(VAULT_ID.ETH, this.ethVault.address);
+            await this.framework.registerVault(VAULT_ID.ERC20, this.erc20Vault.address);
 
             this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
             const spendingConditionRegistry = await SpendingConditionRegistry.new();
 
             this.exitGame = await PaymentInFlightExitRouter.new(
                 this.framework.address,
-                ETH_VAULT_ID,
-                ERC20_VAULT_ID,
+                VAULT_ID.ETH,
+                VAULT_ID.ERC20,
                 this.outputGuardHandlerRegistry.address,
                 spendingConditionRegistry.address,
                 this.stateTransitionVerifier.address,

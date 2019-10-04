@@ -54,7 +54,7 @@ contract('ExitGameController', () => {
         it('reverts when adding queue with vault id 0', async () => {
             await expectRevert(
                 this.controller.addExitQueue(0, this.dummyToken),
-                'Invalid vault id',
+                'Vault id must not be 0.',
             );
         });
     });
@@ -108,7 +108,7 @@ contract('ExitGameController', () => {
                     this.dummyExit.exitId,
                     this.dummyExit.exitProcessor,
                 ),
-                'Such token has not been added to the plasma framework yet',
+                'The queue for the (vaultId, token) pair has not been added to the plasma framework yet',
             );
         });
 
@@ -167,32 +167,32 @@ contract('ExitGameController', () => {
                 );
             });
 
-            it('inserts the new unique priority to the queue', async () => {
+            it('inserts the new priority to the queue', async () => {
                 const key = exitQueueKey(VAULT_ID, this.dummyToken);
                 const priorityQueueAddress = await this.controller.exitsQueues(key);
                 const priorityQueue = await PriorityQueue.at(priorityQueueAddress);
                 const queueMin = await priorityQueue.getMin();
 
-                const uniquePriority = await this.dummyExitGame.uniquePriorityFromEnqueue();
+                const priority = await this.dummyExitGame.priorityFromEnqueue();
 
-                expect(queueMin).to.be.bignumber.equal(uniquePriority);
+                expect(queueMin).to.be.bignumber.equal(priority);
             });
 
             it('saves the exit data to map', async () => {
-                const uniquePriority = await this.dummyExitGame.uniquePriorityFromEnqueue();
-                const exitProcessor = await this.controller.delegations(uniquePriority);
+                const priority = await this.dummyExitGame.priorityFromEnqueue();
+                const exitProcessor = await this.controller.delegations(priority);
 
                 expect(exitProcessor).to.equal(this.dummyExit.exitProcessor);
             });
 
             it('emits an ExitEnqueued event', async () => {
-                const uniquePriority = await this.dummyExitGame.uniquePriorityFromEnqueue();
+                const priority = await this.dummyExitGame.priorityFromEnqueue();
 
                 await expectEvent.inTransaction(
                     this.enqueueTx.receipt.transactionHash,
                     ExitGameController,
                     'ExitQueued', {
-                        uniquePriority,
+                        priority,
                         exitId: new BN(this.dummyExit.exitId),
                     },
                 );
@@ -207,15 +207,15 @@ contract('ExitGameController', () => {
                 // There should be only one ExitQueued event
                 expect(events.length).to.equal(1);
 
-                // Get the exit's uniquePriority from the ExitQueued event
-                const { uniquePriority } = events[0].args;
+                // Get the exit's priority from the ExitQueued event
+                const { priority } = events[0].args;
 
-                // Find the exit's uniquePriority in the priority queue
+                // Find the exit's priority in the priority queue
                 const key = exitQueueKey(VAULT_ID, this.dummyToken);
                 const priorityQueueAddress = await this.controller.exitsQueues(key);
                 const priorityQueue = await PriorityQueue.at(priorityQueueAddress);
                 const heapList = await priorityQueue.heapList();
-                const foundInQueue = heapList.find(e => e.eq(uniquePriority));
+                const foundInQueue = heapList.find(e => e.eq(priority));
                 expect(foundInQueue).not.null;
             });
 
@@ -225,12 +225,12 @@ contract('ExitGameController', () => {
                     filter: { exitId: this.dummyExit.exitId },
                 });
 
-                // Get the exit's uniquePriority from the ExitQueued event
-                const { uniquePriority } = events[0].args;
+                // Get the exit's priority from the ExitQueued event
+                const { priority } = events[0].args;
 
-                // Find the exit's uniquePriority in the priority queue
+                // Find the exit's priority in the priority queue
                 const nextExitPriority = await this.controller.getNextExit(VAULT_ID, this.dummyToken);
-                expect(nextExitPriority).to.be.bignumber.equal(uniquePriority);
+                expect(nextExitPriority).to.be.bignumber.equal(priority);
             });
         });
     });
@@ -316,7 +316,7 @@ contract('ExitGameController', () => {
                 );
             });
 
-            it('should be able to process when the "top unique priority" is set to 0', async () => {
+            it('should be able to process when the "top priority" is set to 0', async () => {
                 const tx = await this.controller.processExits(VAULT_ID, this.dummyToken, 0, 1);
                 await expectEvent.inLogs(tx.logs, 'ProcessedExitsNum', {
                     processedNum: new BN(1),
@@ -324,10 +324,10 @@ contract('ExitGameController', () => {
                 });
             });
 
-            it('should be able to process when the "top unique priority" is set to the exact top of the queue', async () => {
-                const uniquePriority = await this.dummyExitGame.uniquePriorityFromEnqueue();
+            it('should be able to process when the "top priority" is set to the exact top of the queue', async () => {
+                const priority = await this.dummyExitGame.priorityFromEnqueue();
 
-                const tx = await this.controller.processExits(VAULT_ID, this.dummyToken, uniquePriority, 1);
+                const tx = await this.controller.processExits(VAULT_ID, this.dummyToken, priority, 1);
                 await expectEvent.inLogs(tx.logs, 'ProcessedExitsNum', {
                     processedNum: new BN(1),
                     token: this.dummyToken,
@@ -346,11 +346,11 @@ contract('ExitGameController', () => {
             });
 
             it('should delete the exit data after processed', async () => {
-                const uniquePriority = await this.dummyExitGame.uniquePriorityFromEnqueue();
+                const priority = await this.dummyExitGame.priorityFromEnqueue();
 
                 await this.controller.processExits(VAULT_ID, this.dummyToken, 0, 1);
 
-                const exitProcessor = await this.controller.delegations(uniquePriority);
+                const exitProcessor = await this.controller.delegations(priority);
                 expect(exitProcessor).to.equal(constants.ZERO_ADDRESS);
             });
 
@@ -394,7 +394,7 @@ contract('ExitGameController', () => {
                 );
 
                 this.originalQueueSize = 2;
-                this.lowerPriority = await this.dummyExitGame.uniquePriorityFromEnqueue();
+                this.lowerPriority = await this.dummyExitGame.priorityFromEnqueue();
             });
 
             it('should process with the order of priority and delete the processed exit from queue', async () => {
@@ -422,7 +422,7 @@ contract('ExitGameController', () => {
             beforeEach(async () => {
                 this.reentryMaxExitToProcess = 1;
                 const reentrancyExitGame = await ReentrancyExitGame.new(
-                    this.controller.address, this.dummyToken, this.reentryMaxExitToProcess,
+                    this.controller.address, VAULT_ID, this.dummyToken, this.reentryMaxExitToProcess,
                 );
                 const txType = 999;
                 await this.controller.registerExitGame(

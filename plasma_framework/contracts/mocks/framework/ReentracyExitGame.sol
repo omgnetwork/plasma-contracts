@@ -14,11 +14,13 @@ contract ReentrancyExitGame is IExitProcessor {
     uint256 constant public EXIT_FUNDING_VAULT_ID = 1;
 
     ExitGameController public exitGameController;
+    uint256 public vaultId;
     address public testToken;
     uint256 public reentryMaxExitToProcess;
 
-    constructor(ExitGameController _controller, address _token, uint256 _reentryMaxExitToProcess) public {
+    constructor(ExitGameController _controller, uint256 _vaultId, address _token, uint256 _reentryMaxExitToProcess) public {
         exitGameController = _controller;
+        vaultId = _vaultId;
         testToken = _token;
         reentryMaxExitToProcess = _reentryMaxExitToProcess;
     }
@@ -26,7 +28,7 @@ contract ReentrancyExitGame is IExitProcessor {
     // override ExitProcessor interface
     // This would call the processExits back to mimic reentracy attack
     function processExit(uint160, address) public {
-        exitGameController.processExits(EXIT_FUNDING_VAULT_ID, testToken, 0, reentryMaxExitToProcess);
+        exitGameController.processExits(vaultId, testToken, 0, reentryMaxExitToProcess);
     }
 
     function enqueue(uint256 _vaultId, address _token, uint64 _exitableAt, uint256 _txPos, uint160 _exitId, IExitProcessor _exitProcessor)

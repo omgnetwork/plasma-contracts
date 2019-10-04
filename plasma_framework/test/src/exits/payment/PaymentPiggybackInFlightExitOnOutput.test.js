@@ -24,7 +24,7 @@ const { calculateNormalExitable } = require('../../../helpers/exitable.js');
 const { buildUtxoPos, utxoPosToTxPos } = require('../../../helpers/positions.js');
 const { buildOutputGuard } = require('../../../helpers/utils.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
-const { ETH_VAULT_ID, ERC20_VAULT_ID } = require('../../../helpers/constants.js');
+const { VAULT_ID } = require('../../../helpers/constants.js');
 
 contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, outputOwner, nonOutputOwner]) => {
     const ETH = constants.ZERO_ADDRESS;
@@ -74,16 +74,16 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, outputOwner, nonOu
         const ethVault = await SpyEthVault.new(this.framework.address);
         const erc20Vault = await SpyErc20Vault.new(this.framework.address);
 
-        await this.framework.registerVault(ETH_VAULT_ID, ethVault.address);
-        await this.framework.registerVault(ERC20_VAULT_ID, erc20Vault.address);
+        await this.framework.registerVault(VAULT_ID.ETH, ethVault.address);
+        await this.framework.registerVault(VAULT_ID.ERC20, erc20Vault.address);
 
         this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
         const spendingConditionRegistry = await SpendingConditionRegistry.new();
 
         this.exitGame = await PaymentInFlightExitRouter.new(
             this.framework.address,
-            ETH_VAULT_ID,
-            ERC20_VAULT_ID,
+            VAULT_ID.ETH,
+            VAULT_ID.ERC20,
             this.outputGuardHandlerRegistry.address,
             spendingConditionRegistry.address,
             this.stateTransitionVerifier.address,
@@ -349,7 +349,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, outputOwner, nonOu
                     SpyPlasmaFramework,
                     'EnqueueTriggered',
                     {
-                        vaultId: new BN(ETH_VAULT_ID),
+                        vaultId: new BN(VAULT_ID.ETH),
                         token: ETH,
                         exitableAt: new BN(exitableAt),
                         txPos: new BN(utxoPosToTxPos(INFLIGHT_EXIT_YOUNGEST_INPUT_POSITION)),
