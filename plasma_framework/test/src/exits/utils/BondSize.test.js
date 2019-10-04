@@ -6,7 +6,7 @@ contract('BondSize', () => {
     const WAITING_PERIOD = time.duration.days(2);
     const HALF_WAITING_PERIOD = WAITING_PERIOD.divn(2);
 
-    describe('in general...', () => {
+    describe('with normal cases', () => {
         beforeEach(async () => {
             this.initialBondSize = new BN(20000000000);
             this.lowerBoundDivisor = 2;
@@ -116,9 +116,9 @@ contract('BondSize', () => {
 
     describe('with boundary size of numbers', () => {
         it('should able to update to max number of uint128 without having overflow issue', async () => {
-            const maxSizeOfUint256 = (new BN(2)).pow(new BN(128)).sub(new BN(1)); // 2^128 - 1
+            const maxSizeOfUint128 = (new BN(2)).pow(new BN(128)).sub(new BN(1)); // 2^128 - 1
 
-            const initialBondSize = maxSizeOfUint256.sub(new BN(10000));
+            const initialBondSize = maxSizeOfUint128.sub(new BN(10000));
             const lowerBoundDivisor = 2;
             const upperBoundMultiplier = 3;
             const contract = await BondSizeMock.new(
@@ -127,10 +127,10 @@ contract('BondSize', () => {
                 upperBoundMultiplier,
             );
 
-            await contract.updateBondSize(maxSizeOfUint256);
+            await contract.updateBondSize(maxSizeOfUint128);
             await time.increase(WAITING_PERIOD);
             const bondSize = await contract.bondSize();
-            expect(bondSize).to.be.bignumber.equal(maxSizeOfUint256);
+            expect(bondSize).to.be.bignumber.equal(maxSizeOfUint128);
         });
 
         it('should be able to update to 1', async () => {
