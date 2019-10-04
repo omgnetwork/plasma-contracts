@@ -24,7 +24,9 @@ const {
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
-const { PROTOCOL, OUTPUT_TYPE } = require('../../../helpers/constants.js');
+const {
+    PROTOCOL, OUTPUT_TYPE, VAULT_ID,
+} = require('../../../helpers/constants.js');
 const { buildOutputGuard } = require('../../../helpers/utils.js');
 const { buildUtxoPos, UtxoPos } = require('../../../helpers/positions.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
@@ -190,12 +192,16 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
         );
         const ethVault = await SpyEthVault.new(this.framework.address);
         const erc20Vault = await SpyErc20Vault.new(this.framework.address);
+
+        await this.framework.registerVault(VAULT_ID.ETH, ethVault.address);
+        await this.framework.registerVault(VAULT_ID.ERC20, erc20Vault.address);
+
         this.spendingConditionRegistry = await SpendingConditionRegistry.new();
         this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
         this.exitGame = await PaymentInFlightExitRouter.new(
             this.framework.address,
-            ethVault.address,
-            erc20Vault.address,
+            VAULT_ID.ETH,
+            VAULT_ID.ERC20,
             this.outputGuardHandlerRegistry.address,
             this.spendingConditionRegistry.address,
             this.stateTransitionVerifier.address,

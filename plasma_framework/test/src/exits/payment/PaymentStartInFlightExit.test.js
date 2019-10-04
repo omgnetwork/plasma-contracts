@@ -25,7 +25,7 @@ const { expect } = require('chai');
 
 const { buildUtxoPos, UtxoPos } = require('../../../helpers/positions.js');
 const { computeNormalOutputId, spentOnGas } = require('../../../helpers/utils.js');
-const { PROTOCOL } = require('../../../helpers/constants.js');
+const { PROTOCOL, VAULT_ID } = require('../../../helpers/constants.js');
 const {
     buildValidIfeStartArgs, buildIfeStartArgs, createInputTransaction, createDepositTransaction, createInFlightTx,
 } = require('../../../helpers/ife.js');
@@ -127,6 +127,9 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 const ethVault = await SpyEthVault.new(this.framework.address);
                 const erc20Vault = await SpyErc20Vault.new(this.framework.address);
 
+                await this.framework.registerVault(VAULT_ID.ETH, ethVault.address);
+                await this.framework.registerVault(VAULT_ID.ERC20, erc20Vault.address);
+
                 this.spendingConditionRegistry = await SpendingConditionRegistry.new();
                 const { condition1, condition2 } = registerSpendingConditionTrue(this.spendingConditionRegistry);
                 this.condition1 = condition1;
@@ -148,8 +151,8 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
 
                 this.exitGame = await PaymentInFlightExitRouter.new(
                     this.framework.address,
-                    ethVault.address,
-                    erc20Vault.address,
+                    VAULT_ID.ETH,
+                    VAULT_ID.ERC20,
                     this.outputGuardHandlerRegistry.address,
                     this.spendingConditionRegistry.address,
                     this.stateTransitionVerifier.address,
@@ -288,6 +291,9 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 this.ethVault = await SpyEthVault.new(this.framework.address);
                 this.erc20Vault = await SpyErc20Vault.new(this.framework.address);
 
+                await this.framework.registerVault(VAULT_ID.ETH, this.ethVault.address);
+                await this.framework.registerVault(VAULT_ID.ERC20, this.erc20Vault.address);
+
                 this.spendingConditionRegistry = await SpendingConditionRegistry.new();
 
                 // setup outputGuardHandler
@@ -307,8 +313,8 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
 
                 this.exitGame = await PaymentInFlightExitRouter.new(
                     this.framework.address,
-                    this.ethVault.address,
-                    this.erc20Vault.address,
+                    VAULT_ID.ETH,
+                    VAULT_ID.ERC20,
                     this.outputGuardHandlerRegistry.address,
                     this.spendingConditionRegistry.address,
                     this.stateTransitionVerifier.address,

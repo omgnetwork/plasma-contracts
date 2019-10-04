@@ -14,7 +14,9 @@ struct Controller {
  struct IsDeposit.Predicate isDeposit,
  struct ExitableTimestamp.Calculator exitableTimestampCalculator,
  contract OutputGuardHandlerRegistry outputGuardHandlerRegistry,
- contract ITxFinalizationVerifier txFinalizationVerifier
+ contract ITxFinalizationVerifier txFinalizationVerifier,
+ uint256 ethVaultId,
+ uint256 erc20VaultId
 }
 ```
 
@@ -32,6 +34,7 @@ struct StartStandardExitData {
  uint160 exitId,
  bool isTxDeposit,
  uint256 txBlockTimeStamp,
+ bytes32 outputId,
  struct TxFinalizationModel.Data finalizationData
 }
 ```
@@ -44,10 +47,10 @@ event ExitStarted(address indexed owner, uint160  exitId);
 
 ## Functions
 
-- [buildController(IExitProcessor exitProcessor, PlasmaFramework framework, OutputGuardHandlerRegistry outputGuardHandlerRegistry, ITxFinalizationVerifier txFinalizationVerifier)](#buildcontroller)
+- [buildController(IExitProcessor exitProcessor, PlasmaFramework framework, OutputGuardHandlerRegistry outputGuardHandlerRegistry, ITxFinalizationVerifier txFinalizationVerifier, uint256 ethVaultId, uint256 erc20VaultId)](#buildcontroller)
 - [run(struct PaymentStartStandardExit.Controller self, struct PaymentExitDataModel.StandardExitMap exitMap, struct PaymentStandardExitRouterArgs.StartStandardExitArgs args)](#run)
 - [setupStartStandardExitData(struct PaymentStartStandardExit.Controller controller, struct PaymentStandardExitRouterArgs.StartStandardExitArgs args)](#setupstartstandardexitdata)
-- [verifyStartStandardExitData(struct PaymentStartStandardExit.StartStandardExitData data, struct PaymentExitDataModel.StandardExitMap exitMap)](#verifystartstandardexitdata)
+- [verifyStartStandardExitData(struct PaymentStartStandardExit.Controller self, struct PaymentStartStandardExit.StartStandardExitData data, struct PaymentExitDataModel.StandardExitMap exitMap)](#verifystartstandardexitdata)
 - [saveStandardExitData(struct PaymentStartStandardExit.StartStandardExitData data, struct PaymentExitDataModel.StandardExitMap exitMap)](#savestandardexitdata)
 - [enqueueStandardExit(struct PaymentStartStandardExit.StartStandardExitData data)](#enqueuestandardexit)
 
@@ -56,7 +59,7 @@ event ExitStarted(address indexed owner, uint160  exitId);
 Function that builds the controller struct
 
 ```js
-function buildController(IExitProcessor exitProcessor, PlasmaFramework framework, OutputGuardHandlerRegistry outputGuardHandlerRegistry, ITxFinalizationVerifier txFinalizationVerifier) public view
+function buildController(IExitProcessor exitProcessor, PlasmaFramework framework, OutputGuardHandlerRegistry outputGuardHandlerRegistry, ITxFinalizationVerifier txFinalizationVerifier, uint256 ethVaultId, uint256 erc20VaultId) public view
 returns(struct PaymentStartStandardExit.Controller)
 ```
 
@@ -72,6 +75,8 @@ Controller struct of PaymentStartStandardExit
 | framework | PlasmaFramework |  | 
 | outputGuardHandlerRegistry | OutputGuardHandlerRegistry |  | 
 | txFinalizationVerifier | ITxFinalizationVerifier |  | 
+| ethVaultId | uint256 |  | 
+| erc20VaultId | uint256 |  | 
 
 ### run
 
@@ -106,13 +111,14 @@ returns(struct PaymentStartStandardExit.StartStandardExitData)
 ### verifyStartStandardExitData
 
 ```js
-function verifyStartStandardExitData(struct PaymentStartStandardExit.StartStandardExitData data, struct PaymentExitDataModel.StandardExitMap exitMap) private view
+function verifyStartStandardExitData(struct PaymentStartStandardExit.Controller self, struct PaymentStartStandardExit.StartStandardExitData data, struct PaymentExitDataModel.StandardExitMap exitMap) private view
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
+| self | struct PaymentStartStandardExit.Controller |  | 
 | data | struct PaymentStartStandardExit.StartStandardExitData |  | 
 | exitMap | struct PaymentExitDataModel.StandardExitMap |  | 
 

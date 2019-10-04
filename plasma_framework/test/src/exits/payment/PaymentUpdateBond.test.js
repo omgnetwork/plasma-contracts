@@ -20,7 +20,7 @@ const TxFinalizationVerifier = artifacts.require('TxFinalizationVerifier');
 
 const { expect } = require('chai');
 const { expectEvent, time } = require('openzeppelin-test-helpers');
-const { TX_TYPE } = require('../../../helpers/constants.js');
+const { TX_TYPE, VAULT_ID } = require('../../../helpers/constants.js');
 
 contract('PaymentStandardExitRouter', ([_, outputOwner]) => {
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
@@ -61,6 +61,10 @@ contract('PaymentStandardExitRouter', ([_, outputOwner]) => {
 
         this.ethVault = await SpyEthVault.new(this.framework.address);
         this.erc20Vault = await SpyErc20Vault.new(this.framework.address);
+
+        await this.framework.registerVault(VAULT_ID.ETH, this.ethVault.address);
+        await this.framework.registerVault(VAULT_ID.ERC20, this.erc20Vault.address);
+
         this.spendingConditionRegistry = await SpendingConditionRegistry.new();
         this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
 
@@ -77,8 +81,8 @@ contract('PaymentStandardExitRouter', ([_, outputOwner]) => {
         beforeEach(async () => {
             this.exitGame = await PaymentStandardExitRouter.new(
                 this.framework.address,
-                this.ethVault.address,
-                this.erc20Vault.address,
+                VAULT_ID.ETH,
+                VAULT_ID.ERC20,
                 this.outputGuardHandlerRegistry.address,
                 this.spendingConditionRegistry.address,
                 this.txFinalizationVerifier.address,
@@ -112,8 +116,8 @@ contract('PaymentStandardExitRouter', ([_, outputOwner]) => {
         beforeEach(async () => {
             this.exitGame = await PaymentInFlightExitRouter.new(
                 this.framework.address,
-                this.ethVault.address,
-                this.erc20Vault.address,
+                VAULT_ID.ETH,
+                VAULT_ID.ERC20,
                 this.outputGuardHandlerRegistry.address,
                 this.spendingConditionRegistry.address,
                 this.stateTransitionVerifier.address,
@@ -149,8 +153,8 @@ contract('PaymentStandardExitRouter', ([_, outputOwner]) => {
         beforeEach(async () => {
             this.exitGame = await PaymentInFlightExitRouter.new(
                 this.framework.address,
-                this.ethVault.address,
-                this.erc20Vault.address,
+                VAULT_ID.ETH,
+                VAULT_ID.ERC20,
                 this.outputGuardHandlerRegistry.address,
                 this.spendingConditionRegistry.address,
                 this.stateTransitionVerifier.address,

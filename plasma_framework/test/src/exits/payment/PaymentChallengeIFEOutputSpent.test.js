@@ -25,6 +25,7 @@ const { buildUtxoPos } = require('../../../helpers/positions.js');
 const { computeNormalOutputId, spentOnGas } = require('../../../helpers/utils.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
 const { MerkleTree } = require('../../../helpers/merkle.js');
+const { VAULT_ID } = require('../../../helpers/constants.js');
 
 contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
     const DUMMY_IFE_BOND_SIZE = 31415926535; // wei
@@ -157,10 +158,13 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
             const ethVault = await SpyEthVault.new(this.framework.address);
             const erc20Vault = await SpyErc20Vault.new(this.framework.address);
 
+            await this.framework.registerVault(VAULT_ID.ETH, ethVault.address);
+            await this.framework.registerVault(VAULT_ID.ERC20, erc20Vault.address);
+
             this.exitGame = await PaymentInFlightExitRouter.new(
                 this.framework.address,
-                ethVault.address,
-                erc20Vault.address,
+                VAULT_ID.ETH,
+                VAULT_ID.ERC20,
                 this.outputGuardHandlerRegistry.address,
                 this.spendingConditionRegistry.address,
                 this.stateTransitionVerifier.address,

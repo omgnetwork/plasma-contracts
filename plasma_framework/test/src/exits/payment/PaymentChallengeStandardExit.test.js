@@ -17,7 +17,7 @@ const {
 const { expect } = require('chai');
 
 const {
-    TX_TYPE, OUTPUT_TYPE, PROTOCOL, EMPTY_BYTES, EMPTY_BYTES_32,
+    TX_TYPE, OUTPUT_TYPE, PROTOCOL, EMPTY_BYTES_32, VAULT_ID,
 } = require('../../../helpers/constants.js');
 const { buildUtxoPos, UtxoPos } = require('../../../helpers/positions.js');
 const {
@@ -86,6 +86,10 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
 
             this.ethVault = await SpyEthVault.new(this.framework.address);
             this.erc20Vault = await SpyErc20Vault.new(this.framework.address);
+
+            await this.framework.registerVault(VAULT_ID.ETH, this.ethVault.address);
+            await this.framework.registerVault(VAULT_ID.ERC20, this.erc20Vault.address);
+
             this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
             this.outputGuardHandler = await ExpectedOutputGuardHandler.new();
             await this.outputGuardHandler.mockIsValid(true);
@@ -100,8 +104,8 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
 
             this.exitGame = await PaymentStandardExitRouter.new(
                 this.framework.address,
-                this.ethVault.address,
-                this.erc20Vault.address,
+                VAULT_ID.ETH,
+                VAULT_ID.ERC20,
                 this.outputGuardHandlerRegistry.address,
                 this.spendingConditionRegistry.address,
                 this.txFinalizationVerifier.address,
@@ -185,8 +189,8 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
             it('should fail when TxFinalizationVerifier reverts while checking whether challenge tx is protocol finalized', async () => {
                 const dummyExitGame = await PaymentStandardExitRouter.new(
                     this.framework.address,
-                    this.ethVault.address,
-                    this.erc20Vault.address,
+                    VAULT_ID.ETH,
+                    VAULT_ID.ERC20,
                     this.outputGuardHandlerRegistry.address,
                     this.spendingConditionRegistry.address,
                     this.txFinalizationVerifier.address,

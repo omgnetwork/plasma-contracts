@@ -21,7 +21,7 @@ const {
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 const {
-    TX_TYPE, OUTPUT_TYPE, EMPTY_BYTES, EMPTY_BYTES_32, CHILD_BLOCK_INTERVAL,
+    TX_TYPE, OUTPUT_TYPE, EMPTY_BYTES, CHILD_BLOCK_INTERVAL, VAULT_ID,
 } = require('../../../helpers/constants.js');
 const { buildUtxoPos } = require('../../../helpers/positions.js');
 const { createInputTransaction, createInFlightTx } = require('../../../helpers/ife.js');
@@ -166,6 +166,9 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
             const ethVault = await SpyEthVault.new(this.framework.address);
             const erc20Vault = await SpyErc20Vault.new(this.framework.address);
 
+            await this.framework.registerVault(VAULT_ID.ETH, ethVault.address);
+            await this.framework.registerVault(VAULT_ID.ERC20, erc20Vault.address);
+
             this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
             const expectedOutputGuardHandler = await OutputGuardHandler.new();
             await expectedOutputGuardHandler.mockIsValid(true);
@@ -184,8 +187,8 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
 
             this.exitGame = await PaymentInFlightExitRouter.new(
                 this.framework.address,
-                ethVault.address,
-                erc20Vault.address,
+                VAULT_ID.ETH,
+                VAULT_ID.ERC20,
                 this.outputGuardHandlerRegistry.address,
                 this.spendingConditionRegistry.address,
                 this.stateTransitionVerifier.address,

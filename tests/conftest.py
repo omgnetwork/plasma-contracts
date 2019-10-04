@@ -10,6 +10,7 @@ from web3.main import get_default_modules
 from xprocess import ProcessStarter
 
 from plasma_core.account import EthereumAccount
+from plasma_core.constants import NULL_ADDRESS
 from testlang.testlang import TestingLanguage
 from tests.tests_utils.constants import (
     HUNDRED_ETH,
@@ -129,8 +130,11 @@ def get_contract(w3, accounts):
 
 
 @pytest.fixture
-def plasma_framework(get_contract, accounts):
-    return PlasmaFramework(get_contract, maintainer=accounts[-1])
+def plasma_framework(get_contract, accounts, token):
+    framework = PlasmaFramework(get_contract, maintainer=accounts[-1])
+    framework.addExitQueue(framework.erc20_vault_id, token.address)
+    framework.addExitQueue(framework.eth_vault_id, NULL_ADDRESS)
+    return framework
 
 
 def initialized_contract(get_contract, exit_period, immune_vaults, immune_exit_games):
@@ -145,6 +149,11 @@ def testlang(plasma_framework, w3, accounts):
 
 @pytest.fixture(params=["ERC20Mintable"])
 def token(get_contract, request):
+    return get_contract(request.param)
+
+
+@pytest.fixture(params=["ERC20Mintable"])
+def no_exit_queue_token(get_contract, request):
     return get_contract(request.param)
 
 

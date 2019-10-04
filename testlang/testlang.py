@@ -274,16 +274,17 @@ class TestingLanguage:
                                                **{'value': bond, 'from': operator.address, 'gas': 1_000_000})
         return fee_exit_id, tx_hash
 
-    def process_exits(self, token, exit_id, count, **kwargs):
+    def process_exits(self, vault_id, token, exit_id, count, **kwargs):
         """Finalizes exits that have completed the exit period.
 
         Args:
+            vault_id (int): Id of the vault that funds the exit
             token (address): Address of the token to be processed.
             exit_id (int): Identifier of an exit (optional, pass 0 to ignore the check)
             count (int): Maximum number of exits to be processed.
         """
 
-        return self.root_chain.processExits(token, exit_id, count, **kwargs)
+        return self.root_chain.processExits(vault_id, token, exit_id, count, **kwargs)
 
     def get_challenge_proof(self, utxo_id, spend_id):
         """Returns information required to submit a challenge.

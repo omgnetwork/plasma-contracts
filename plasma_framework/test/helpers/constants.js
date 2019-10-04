@@ -14,6 +14,11 @@ const OUTPUT_TYPE = {
 const EMPTY_BYTES = '0x';
 const EMPTY_BYTES_32 = '0x0000000000000000000000000000000000000000000000000000000000000000';
 
+const VAULT_ID = {
+    ETH: 1,
+    ERC20: 2,
+};
+
 const CHILD_BLOCK_INTERVAL = 1000;
 
 module.exports = {
@@ -23,4 +28,5 @@ module.exports = {
     TX_TYPE,
     OUTPUT_TYPE,
     CHILD_BLOCK_INTERVAL,
+    VAULT_ID,
 };

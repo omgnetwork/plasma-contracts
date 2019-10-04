@@ -16,7 +16,7 @@ Controls the logic and functions for block submissions in PlasmaFramework
 address public authority;
 uint256 public childBlockInterval;
 uint256 public nextChildBlock;
-uint256 public nextDepositBlock;
+uint256 public nextDeposit;
 mapping(uint256 => struct BlockModel.Block) public blocks;
 
 ```
@@ -34,6 +34,7 @@ event BlockSubmitted(uint256  blockNumber);
 - [setAuthority(address newAuthority)](#setauthority)
 - [submitBlock(bytes32 _blockRoot)](#submitblock)
 - [submitDepositBlock(bytes32 _blockRoot)](#submitdepositblock)
+- [nextDepositBlock()](#nextdepositblock)
 
 ### 
 
@@ -109,6 +110,18 @@ the deposit block number
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
 | _blockRoot | bytes32 | Merkle root of the plasma block. | 
+
+### nextDepositBlock
+
+```js
+function nextDepositBlock() public view
+returns(uint256)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
 
 ## Contracts
 

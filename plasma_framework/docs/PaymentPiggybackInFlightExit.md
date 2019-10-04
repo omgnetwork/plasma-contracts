@@ -14,7 +14,9 @@ struct Controller {
  struct ExitableTimestamp.Calculator exitableTimestampCalculator,
  contract IExitProcessor exitProcessor,
  contract OutputGuardHandlerRegistry outputGuardHandlerRegistry,
- uint256 minExitPeriod
+ uint256 minExitPeriod,
+ uint256 ethVaultId,
+ uint256 erc20VaultId
 }
 ```
 
@@ -36,7 +38,7 @@ event InFlightExitOutputPiggybacked(address indexed exitTarget, bytes32  txHash,
 
 ## Functions
 
-- [buildController(PlasmaFramework framework, IExitProcessor exitProcessor, OutputGuardHandlerRegistry outputGuardHandlerRegistry)](#buildcontroller)
+- [buildController(PlasmaFramework framework, IExitProcessor exitProcessor, OutputGuardHandlerRegistry outputGuardHandlerRegistry, uint256 ethVaultId, uint256 erc20VaultId)](#buildcontroller)
 - [piggybackInput(struct PaymentPiggybackInFlightExit.Controller self, struct PaymentExitDataModel.InFlightExitMap inFlightExitMap, struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnInputArgs args)](#piggybackinput)
 - [piggybackOutput(struct PaymentPiggybackInFlightExit.Controller self, struct PaymentExitDataModel.InFlightExitMap inFlightExitMap, struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnOutputArgs args)](#piggybackoutput)
 - [enqueue(struct PaymentPiggybackInFlightExit.Controller controller, address token, struct UtxoPosLib.UtxoPos utxoPos, uint160 exitId)](#enqueue)
@@ -47,7 +49,7 @@ event InFlightExitOutputPiggybacked(address indexed exitTarget, bytes32  txHash,
 Function that builds the controller struct
 
 ```js
-function buildController(PlasmaFramework framework, IExitProcessor exitProcessor, OutputGuardHandlerRegistry outputGuardHandlerRegistry) public view
+function buildController(PlasmaFramework framework, IExitProcessor exitProcessor, OutputGuardHandlerRegistry outputGuardHandlerRegistry, uint256 ethVaultId, uint256 erc20VaultId) public view
 returns(struct PaymentPiggybackInFlightExit.Controller)
 ```
 
@@ -62,6 +64,8 @@ Controller struct of PaymentPiggybackInFlightExit
 | framework | PlasmaFramework |  | 
 | exitProcessor | IExitProcessor |  | 
 | outputGuardHandlerRegistry | OutputGuardHandlerRegistry |  | 
+| ethVaultId | uint256 |  | 
+| erc20VaultId | uint256 |  | 
 
 ### piggybackInput
 

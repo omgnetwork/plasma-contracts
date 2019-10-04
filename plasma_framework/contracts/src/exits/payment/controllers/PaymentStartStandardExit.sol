@@ -30,6 +30,8 @@ library PaymentStartStandardExit {
         ExitableTimestamp.Calculator exitableTimestampCalculator;
         OutputGuardHandlerRegistry outputGuardHandlerRegistry;
         ITxFinalizationVerifier txFinalizationVerifier;
+        uint256 ethVaultId;
+        uint256 erc20VaultId;
     }
 
     /**
@@ -63,7 +65,9 @@ library PaymentStartStandardExit {
         IExitProcessor exitProcessor,
         PlasmaFramework framework,
         OutputGuardHandlerRegistry outputGuardHandlerRegistry,
-        ITxFinalizationVerifier txFinalizationVerifier
+        ITxFinalizationVerifier txFinalizationVerifier,
+        uint256 ethVaultId,
+        uint256 erc20VaultId
     )
         public
         view
@@ -75,7 +79,9 @@ library PaymentStartStandardExit {
             isDeposit: IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL()),
             exitableTimestampCalculator: ExitableTimestamp.Calculator(framework.minExitPeriod()),
             outputGuardHandlerRegistry: outputGuardHandlerRegistry,
-            txFinalizationVerifier: txFinalizationVerifier
+            txFinalizationVerifier: txFinalizationVerifier,
+            ethVaultId: ethVaultId,
+            erc20VaultId: erc20VaultId
         });
     }
 
@@ -191,8 +197,15 @@ library PaymentStartStandardExit {
             block.timestamp, data.txBlockTimeStamp, data.isTxDeposit
         );
 
+        uint256 vaultId;
+        if (data.output.token == address(0)) {
+            vaultId = data.controller.ethVaultId;
+        } else {
+            vaultId = data.controller.erc20VaultId;
+        }
+
         data.controller.framework.enqueue(
-            data.output.token, exitableAt, data.utxoPos.txPos(),
+            vaultId, data.output.token, exitableAt, data.utxoPos.txPos(),
             data.exitId, data.controller.exitProcessor
         );
     }

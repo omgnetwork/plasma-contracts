@@ -49,12 +49,10 @@ module.exports = async (_) => {
     const stateVerifier = await PaymentTransactionStateTransitionVerifier.new();
     const txFinalizationVerifier = await TxFinalizationVerifier.new();
     const plasmaFramework = await PlasmaFramework.deployed();
-    const ethVaultAddress = await plasmaFramework.vaults(config.registerKeys.vaultId.eth);
-    const erc20VaultAddress = await plasmaFramework.vaults(config.registerKeys.vaultId.erc20);
     const paymentExitGame = await PaymentExitGame.new(
         plasmaFramework.address,
-        ethVaultAddress,
-        erc20VaultAddress,
+        config.registerKeys.vaultId.eth,
+        config.registerKeys.vaultId.erc20,
         outputGuardHandlerRegistry.address,
         spendingConditionRegistry.address,
         stateVerifier.address,

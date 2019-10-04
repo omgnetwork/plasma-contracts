@@ -18,15 +18,15 @@ contract PlasmaFramework private plasmaFramework;
 
 ## Functions
 
-- [(PlasmaFramework framework, EthVault ethVault, Erc20Vault erc20Vault, OutputGuardHandlerRegistry outputGuardHandlerRegistry, SpendingConditionRegistry spendingConditionRegistry, IStateTransitionVerifier stateTransitionVerifier, ITxFinalizationVerifier txFinalizationVerifier, uint256 supportTxType)](#)
-- [processExit(uint160 exitId, address token)](#processexit)
+- [(PlasmaFramework framework, uint256 ethVaultId, uint256 erc20VaultId, OutputGuardHandlerRegistry outputGuardHandlerRegistry, SpendingConditionRegistry spendingConditionRegistry, IStateTransitionVerifier stateTransitionVerifier, ITxFinalizationVerifier txFinalizationVerifier, uint256 supportTxType)](#)
+- [processExit(uint160 exitId, uint256 , address token)](#processexit)
 - [getStandardExitId(bool _isDeposit, bytes _txBytes, uint256 _utxoPos)](#getstandardexitid)
 - [getInFlightExitId(bytes _txBytes)](#getinflightexitid)
 
 ### 
 
 ```js
-function (PlasmaFramework framework, EthVault ethVault, Erc20Vault erc20Vault, OutputGuardHandlerRegistry outputGuardHandlerRegistry, SpendingConditionRegistry spendingConditionRegistry, IStateTransitionVerifier stateTransitionVerifier, ITxFinalizationVerifier txFinalizationVerifier, uint256 supportTxType) public nonpayable PaymentStandardExitRouter PaymentInFlightExitRouter 
+function (PlasmaFramework framework, uint256 ethVaultId, uint256 erc20VaultId, OutputGuardHandlerRegistry outputGuardHandlerRegistry, SpendingConditionRegistry spendingConditionRegistry, IStateTransitionVerifier stateTransitionVerifier, ITxFinalizationVerifier txFinalizationVerifier, uint256 supportTxType) public nonpayable PaymentStandardExitRouter PaymentInFlightExitRouter 
 ```
 
 **Arguments**
@@ -34,8 +34,8 @@ function (PlasmaFramework framework, EthVault ethVault, Erc20Vault erc20Vault, O
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
 | framework | PlasmaFramework |  | 
-| ethVault | EthVault |  | 
-| erc20Vault | Erc20Vault |  | 
+| ethVaultId | uint256 |  | 
+| erc20VaultId | uint256 |  | 
 | outputGuardHandlerRegistry | OutputGuardHandlerRegistry |  | 
 | spendingConditionRegistry | SpendingConditionRegistry |  | 
 | stateTransitionVerifier | IStateTransitionVerifier |  | 
@@ -49,15 +49,16 @@ function (PlasmaFramework framework, EthVault ethVault, Erc20Vault erc20Vault, O
 Callback processes exit function for the PlasmaFramework to call.
 
 ```js
-function processExit(uint160 exitId, address token) external nonpayable onlyFrom 
+function processExit(uint160 exitId, uint256 , address token) external nonpayable onlyFrom 
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| exitId | uint160 | The exit id. | 
-| token | address | The token (ERC20 address or address(0) for ETH) of the exiting output. | 
+| exitId | uint160 | exit id. | 
+|  | uint256 | exitId exit id. | 
+| token | address | token (ERC20 address or address(0) for ETH) of the exiting output. | 
 
 ### getStandardExitId
 

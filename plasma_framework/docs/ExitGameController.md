@@ -17,7 +17,7 @@ Controls the logic and functions for ExitGame to interact with PlasmaFramework.
 
 ```js
 mapping(uint256 => contract IExitProcessor) public delegations;
-mapping(address => contract PriorityQueue) public exitsQueues;
+mapping(bytes32 => contract PriorityQueue) public exitsQueues;
 mapping(bytes32 => bool) public isOutputSpent;
 
 ```
@@ -25,21 +25,24 @@ mapping(bytes32 => bool) public isOutputSpent;
 **Events**
 
 ```js
-event TokenAdded(address  token);
-event ProcessedExitsNum(uint256  processedNum, address  token);
-event ExitQueued(uint160 indexed exitId, uint256  uniquePriority);
+event ExitQueueAdded(uint256  vaultId, address  token);
+event ProcessedExitsNum(uint256  processedNum, uint256  vaultId, address  token);
+event ExitQueued(uint160 indexed exitId, uint256  priority);
 ```
 
 ## Functions
 
 - [(uint256 _minExitPeriod, uint256 _initialImmuneExitGames)](#)
-- [addToken(address _token)](#addtoken)
-- [hasToken(address _token)](#hastoken)
-- [enqueue(address _token, uint64 _exitableAt, struct TxPosLib.TxPos _txPos, uint160 _exitId, IExitProcessor _exitProcessor)](#enqueue)
-- [processExits(address _token, uint160 _topExitId, uint256 _maxExitsToProcess)](#processexits)
+- [hasExitQueue(uint256 vaultId, address token)](#hasexitqueue)
+- [addExitQueue(uint256 vaultId, address token)](#addexitqueue)
+- [enqueue(uint256 vaultId, address token, uint64 exitableAt, struct TxPosLib.TxPos txPos, uint160 exitId, IExitProcessor exitProcessor)](#enqueue)
+- [processExits(uint256 vaultId, address token, uint160 topExitId, uint256 maxExitsToProcess)](#processexits)
 - [isAnyOutputsSpent(bytes32[] _outputIds)](#isanyoutputsspent)
 - [batchFlagOutputsSpent(bytes32[] _outputIds)](#batchflagoutputsspent)
 - [flagOutputSpent(bytes32 _outputId)](#flagoutputspent)
+- [getNextExit(uint256 vaultId, address token)](#getnextexit)
+- [exitQueueKey(uint256 vaultId, address token)](#exitqueuekey)
+- [hasExitQueue(bytes32 queueKey)](#hasexitqueue)
 
 ### 
 
@@ -54,38 +57,40 @@ function (uint256 _minExitPeriod, uint256 _initialImmuneExitGames) public nonpay
 | _minExitPeriod | uint256 |  | 
 | _initialImmuneExitGames | uint256 |  | 
 
-### addToken
+### hasExitQueue
 
-Add token to the plasma framework and initiate the priority queue.
-
-```js
-function addToken(address _token) external nonpayable
-```
-
-**Arguments**
-
-| Name        | Type           | Description  |
-| ------------- |------------- | -----|
-| _token | address | Address of the token. | 
-
-### hasToken
-
-Checks if the queue for a particular token was created.
+Checks if queue for particular token was created.
 
 ```js
-function hasToken(address _token) public view
+function hasExitQueue(uint256 vaultId, address token) public view
 returns(bool)
 ```
 
 **Returns**
 
-bool whether the queue for a token was created.
+bool represents whether the queue for a token was created.
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| _token | address | address of the token. | 
+| vaultId | uint256 | Id of the vault that handles the token | 
+| token | address | Address of the token. | 
+
+### addExitQueue
+
+Adds queue to the plasma framework.
+
+```js
+function addExitQueue(uint256 vaultId, address token) external nonpayable
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| vaultId | uint256 | Id of the vault | 
+| token | address | Address of the token. | 
 
 ### enqueue
 
@@ -93,7 +98,7 @@ Enqueue exits from exit game contracts. This 'enqueue' function puts the exit in
         priority queue to enforce the priority of exit during 'processExits'.
 
 ```js
-function enqueue(address _token, uint64 _exitableAt, struct TxPosLib.TxPos _txPos, uint160 _exitId, IExitProcessor _exitProcessor) external nonpayable onlyFromNonQuarantinedExitGame 
+function enqueue(uint256 vaultId, address token, uint64 exitableAt, struct TxPosLib.TxPos txPos, uint160 exitId, IExitProcessor exitProcessor) external nonpayable onlyFromNonQuarantinedExitGame 
 returns(uint256)
 ```
 
@@ -105,18 +110,19 @@ a unique priority number computed for the exit
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| _token | address | Token for the exit | 
-| _exitableAt | uint64 | The earliest time that such exit can be processed | 
-| _txPos | struct TxPosLib.TxPos | Transaction position for the exit priority. For SE it should be the exit tx, for IFE it should be the youngest input tx position. | 
-| _exitId | uint160 | Id for the exit processor contract to understand how to process such exit | 
-| _exitProcessor | IExitProcessor | The exit processor contract that would be called during "processExits" | 
+| vaultId | uint256 | Vault id of the vault that stores exiting funds | 
+| token | address | Token for the exit | 
+| exitableAt | uint64 | The earliest time that such exit can be processed | 
+| txPos | struct TxPosLib.TxPos | Transaction position for the exit priority. For SE it should be the exit tx, for IFE it should be the youngest input tx position. | 
+| exitId | uint160 | Id for the exit processor contract to understand how to process such exit | 
+| exitProcessor | IExitProcessor | The exit processor contract that would be called during "processExits" | 
 
 ### processExits
 
 Processes any exits that have completed the challenge period. Exits would be processed according to the exit priority.
 
 ```js
-function processExits(address _token, uint160 _topExitId, uint256 _maxExitsToProcess) external nonpayable
+function processExits(uint256 vaultId, address token, uint160 topExitId, uint256 maxExitsToProcess) external nonpayable
 ```
 
 **Returns**
@@ -127,9 +133,10 @@ total number of processed exits
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| _token | address | token type to process. | 
-| _topExitId | uint160 | unique priority of the first exit that should be processed. Set to zero to skip the check. | 
-| _maxExitsToProcess | uint256 | maximal number of exits to process. | 
+| vaultId | uint256 | vault id of the vault that stores exiting funds. | 
+| token | address | token type to process. | 
+| topExitId | uint160 | unique priority of the first exit that should be processed. Set to zero to skip the check. | 
+| maxExitsToProcess | uint256 | maximal number of exits to process. | 
 
 ### isAnyOutputsSpent
 
@@ -173,6 +180,47 @@ function flagOutputSpent(bytes32 _outputId) external nonpayable onlyFromNonQuara
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
 | _outputId | bytes32 | The output id to be flagged as spent | 
+
+### getNextExit
+
+```js
+function getNextExit(uint256 vaultId, address token) external view
+returns(uint256)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| vaultId | uint256 |  | 
+| token | address |  | 
+
+### exitQueueKey
+
+```js
+function exitQueueKey(uint256 vaultId, address token) private pure
+returns(bytes32)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| vaultId | uint256 |  | 
+| token | address |  | 
+
+### hasExitQueue
+
+```js
+function hasExitQueue(bytes32 queueKey) private view
+returns(bool)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| queueKey | bytes32 |  | 
 
 ## Contracts
 

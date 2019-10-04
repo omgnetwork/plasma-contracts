@@ -23,6 +23,7 @@ const { expect } = require('chai');
 const { calculateNormalExitable } = require('../../../helpers/exitable.js');
 const { buildUtxoPos, utxoPosToTxPos } = require('../../../helpers/positions.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
+const { VAULT_ID } = require('../../../helpers/constants.js');
 
 contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, outputOwner]) => {
     const ETH = constants.ZERO_ADDRESS;
@@ -37,6 +38,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
     };
     const MAX_INPUT_SIZE = 4;
     const PAYMENT_TX_TYPE = 1;
+    const ERC20_TOKEN = '0x0000000000000000000000000000000000000001';
 
     before('deploy and link with controller lib', async () => {
         const startInFlightExit = await PaymentStartInFlightExit.new();
@@ -68,13 +70,16 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
         const ethVault = await SpyEthVault.new(this.framework.address);
         const erc20Vault = await SpyErc20Vault.new(this.framework.address);
 
+        await this.framework.registerVault(VAULT_ID.ETH, ethVault.address);
+        await this.framework.registerVault(VAULT_ID.ERC20, erc20Vault.address);
+
         this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
         const spendingConditionRegistry = await SpendingConditionRegistry.new();
 
         this.exitGame = await PaymentInFlightExitRouter.new(
             this.framework.address,
-            ethVault.address,
-            erc20Vault.address,
+            VAULT_ID.ETH,
+            VAULT_ID.ERC20,
             this.outputGuardHandlerRegistry.address,
             spendingConditionRegistry.address,
             this.stateTransitionVerifier.address,
@@ -90,7 +95,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
          *  First input uses output type 1, this uses the default outputguard handler in tests.
          *  Second input uses output type 2, so we can register custom outputguard handler for tests.
          */
-        const buildPiggybackInputData = async () => {
+        const buildPiggybackInputData = async (firstInputToken = ETH) => {
             const outputAmount = 997;
             const outputGuard = outputOwner;
             const output = new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, outputAmount, outputGuard, ETH);
@@ -117,7 +122,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
                 inputs: [{
                     outputId: web3.utils.sha3('dummy output id'),
                     exitTarget: inputOwner,
-                    token: ETH,
+                    token: firstInputToken,
                     amount: 999,
                     piggybackBondSize: 0,
                 }, {
@@ -244,6 +249,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
                     YOUNGEST_POSITION_BLOCK, web3.utils.sha3('dummy root'), this.youngestPositionTimestamp,
                 );
                 await this.exitGame.setInFlightExit(this.testData.exitId, this.testData.inFlightExitData);
+                await this.framework.addExitQueue(VAULT_ID.ETH, ETH);
 
                 this.piggybackTx = await this.exitGame.piggybackInFlightExitOnInput(
                     this.testData.argsInputOne, { from: inputOwner, value: this.piggybackBondSize.toString() },
@@ -260,6 +266,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
                     SpyPlasmaFramework,
                     'EnqueueTriggered',
                     {
+                        vaultId: new BN(VAULT_ID.ETH),
                         token: ETH,
                         exitableAt: new BN(exitableAt),
                         txPos: new BN(utxoPosToTxPos(INFLIGHT_EXIT_YOUNGEST_INPUT_POSITION)),
@@ -307,6 +314,44 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
                         exitTarget: inputOwner,
                         txHash: web3.utils.sha3(this.testData.argsInputOne.inFlightTx),
                         inputIndex: new BN(this.testData.argsInputOne.index),
+                    },
+                );
+            });
+        });
+
+        describe('When piggyback successfully on ERC20 input', () => {
+            beforeEach(async () => {
+                this.testData = await buildPiggybackInputData(ERC20_TOKEN);
+
+                // set some different timestamp then "now" to the youngest position.
+                this.youngestPositionTimestamp = (await time.latest()).sub(new BN(100)).toNumber();
+                await this.framework.setBlock(
+                    YOUNGEST_POSITION_BLOCK, web3.utils.sha3('dummy root'), this.youngestPositionTimestamp,
+                );
+                await this.exitGame.setInFlightExit(this.testData.exitId, this.testData.inFlightExitData);
+                await this.framework.addExitQueue(VAULT_ID.ERC20, ERC20_TOKEN);
+
+                this.piggybackTx = await this.exitGame.piggybackInFlightExitOnInput(
+                    this.testData.argsInputOne, { from: inputOwner, value: this.piggybackBondSize.toString() },
+                );
+            });
+
+            it('should enqueue with correct data when it is the first piggyback of the exit on the token', async () => {
+                const exitableAt = calculateNormalExitable(
+                    MIN_EXIT_PERIOD, (await time.latest()).toNumber(), this.youngestPositionTimestamp,
+                );
+
+                await expectEvent.inTransaction(
+                    this.piggybackTx.receipt.transactionHash,
+                    SpyPlasmaFramework,
+                    'EnqueueTriggered',
+                    {
+                        vaultId: new BN(VAULT_ID.ERC20),
+                        token: ERC20_TOKEN,
+                        exitableAt: new BN(exitableAt),
+                        txPos: new BN(utxoPosToTxPos(INFLIGHT_EXIT_YOUNGEST_INPUT_POSITION)),
+                        exitProcessor: this.exitGame.address,
+                        exitId: this.testData.exitId,
                     },
                 );
             });

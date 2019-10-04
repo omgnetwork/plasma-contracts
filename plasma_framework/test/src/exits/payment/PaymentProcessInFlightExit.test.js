@@ -21,7 +21,9 @@ const {
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
-const { TX_TYPE, PROTOCOL } = require('../../../helpers/constants.js');
+const {
+    TX_TYPE, PROTOCOL, VAULT_ID,
+} = require('../../../helpers/constants.js');
 const { buildUtxoPos } = require('../../../helpers/positions.js');
 
 contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner2, inputOwner3, outputOwner1, outputOwner2, outputOwner3]) => {
@@ -140,13 +142,16 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
             this.ethVault = await SpyEthVault.new(this.framework.address);
             this.erc20Vault = await SpyErc20Vault.new(this.framework.address);
 
+            await this.framework.registerVault(VAULT_ID.ETH, this.ethVault.address);
+            await this.framework.registerVault(VAULT_ID.ERC20, this.erc20Vault.address);
+
             this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
             const spendingConditionRegistry = await SpendingConditionRegistry.new();
 
             this.exitGame = await PaymentInFlightExitRouter.new(
                 this.framework.address,
-                this.ethVault.address,
-                this.erc20Vault.address,
+                VAULT_ID.ETH,
+                VAULT_ID.ERC20,
                 this.outputGuardHandlerRegistry.address,
                 spendingConditionRegistry.address,
                 this.stateTransitionVerifier.address,
@@ -165,7 +170,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
         it('should omit the exit if the exit does not exist', async () => {
             const nonExistingExitId = 666;
 
-            const { receipt } = await this.exitGame.processExit(nonExistingExitId, ETH);
+            const { receipt } = await this.exitGame.processExit(nonExistingExitId, VAULT_ID.ETH, ETH);
             await expectEvent.inTransaction(
                 receipt.transactionHash,
                 PaymentProcessInFlightExit,
@@ -181,7 +186,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
 
             await this.exitGame.proxyFlagOutputSpent(TEST_OUTPUT_ID_FOR_INPUT_1);
 
-            const { receipt } = await this.exitGame.processExit(dummyExitId, ETH);
+            const { receipt } = await this.exitGame.processExit(dummyExitId, VAULT_ID.ETH, ETH);
             await expectEvent.inTransaction(
                 receipt.transactionHash,
                 PaymentProcessInFlightExit,
@@ -199,7 +204,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
             exit.exitMap = 2 ** MAX_INPUT_NUM | 2 ** (MAX_INPUT_NUM + 1) | 2 ** (MAX_INPUT_NUM + 1);
 
             await this.exitGame.setInFlightExit(dummyExitId, exit);
-            await this.exitGame.processExit(dummyExitId, ETH);
+            await this.exitGame.processExit(dummyExitId, VAULT_ID.ETH, ETH);
 
             const options = { fromBlock: 0, toBlock: 'latest' };
             const events = await this.ethVault.getPastEvents('EthWithdrawCalled', options);
@@ -213,7 +218,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
             exit.exitMap = 2 ** 0 | 2 ** 1 | 2 ** 2; // only piggyback on inputs
 
             await this.exitGame.setInFlightExit(dummyExitId, exit);
-            await this.exitGame.processExit(dummyExitId, ETH);
+            await this.exitGame.processExit(dummyExitId, VAULT_ID.ETH, ETH);
 
             const options = { fromBlock: 0, toBlock: 'latest' };
             const events = await this.ethVault.getPastEvents('EthWithdrawCalled', options);
@@ -230,7 +235,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
             await this.exitGame.proxyFlagOutputSpent(TEST_OUTPUT_ID_FOR_OUTPUT_1);
 
             await this.exitGame.setInFlightExit(dummyExitId, exit);
-            await this.exitGame.processExit(dummyExitId, ETH);
+            await this.exitGame.processExit(dummyExitId, VAULT_ID.ETH, ETH);
 
             const options = { fromBlock: 0, toBlock: 'latest' };
             const events = await this.ethVault.getPastEvents('EthWithdrawCalled', options);
@@ -251,11 +256,11 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
                 this.exit.exitMap = (2 ** firstOutputIndexInExitMap) | (2 ** thirdOutputIndexInExitMap);
 
                 await this.exitGame.setInFlightExit(this.dummyExitId, this.exit);
-                await this.exitGame.processExit(this.dummyExitId, ETH);
+                await this.exitGame.processExit(this.dummyExitId, VAULT_ID.ETH, ETH);
             });
 
             it('should transfer exit bond to the IFE bond owner if all piggybacked inputs/outputs are cleaned up', async () => {
-                await this.exitGame.processExit(this.dummyExitId, erc20);
+                await this.exitGame.processExit(this.dummyExitId, VAULT_ID.ERC20, erc20);
 
                 const postBalance = new BN(await web3.eth.getBalance(ifeBondOwner));
                 const expectedBalance = this.ifeBondOwnerPreBalance.add(this.startIFEBondSize);
@@ -301,7 +306,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
 
             describe('When all piggybacks are resolved', () => {
                 beforeEach(async () => {
-                    await this.exitGame.processExit(this.dummyExitId, erc20);
+                    await this.exitGame.processExit(this.dummyExitId, VAULT_ID.ERC20, erc20);
                 });
 
                 it('should transfer exit bond to the IFE bond owner', async () => {
@@ -333,7 +338,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
             });
 
             it('should withdraw ETH from vault for the input', async () => {
-                const { receipt } = await this.exitGame.processExit(this.dummyExitId, ETH);
+                const { receipt } = await this.exitGame.processExit(this.dummyExitId, VAULT_ID.ETH, ETH);
                 await expectEvent.inTransaction(
                     receipt.transactionHash,
                     SpyEthVault,
@@ -356,7 +361,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
             });
 
             it('should withdraw ERC20 from vault for the input', async () => {
-                const { receipt } = await this.exitGame.processExit(this.dummyExitId, erc20);
+                const { receipt } = await this.exitGame.processExit(this.dummyExitId, VAULT_ID.ERC20, erc20);
                 await expectEvent.inTransaction(
                     receipt.transactionHash,
                     SpyErc20Vault,
@@ -370,7 +375,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
             });
 
             it('should return piggyback bond to the input owner', async () => {
-                await this.exitGame.processExit(this.dummyExitId, erc20);
+                await this.exitGame.processExit(this.dummyExitId, VAULT_ID.ERC20, erc20);
                 const postBalance = new BN(await web3.eth.getBalance(inputOwner3));
                 const expectedBalance = this.inputOwner3PreBalance.add(this.piggybackBondSize);
 
@@ -378,7 +383,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
             });
 
             it('should emit InFlightExitInputWithdrawn event', async () => {
-                const { receipt } = await this.exitGame.processExit(this.dummyExitId, erc20);
+                const { receipt } = await this.exitGame.processExit(this.dummyExitId, VAULT_ID.ERC20, erc20);
                 const inputIndexForThirdInput = 2;
                 await expectEvent.inTransaction(
                     receipt.transactionHash,
@@ -404,7 +409,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
             });
 
             it('should withdraw ETH from vault for the output', async () => {
-                const { receipt } = await this.exitGame.processExit(this.dummyExitId, ETH);
+                const { receipt } = await this.exitGame.processExit(this.dummyExitId, VAULT_ID.ETH, ETH);
                 await expectEvent.inTransaction(
                     receipt.transactionHash,
                     SpyEthVault,
@@ -427,7 +432,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
             });
 
             it('should withdraw ERC20 from vault for the output', async () => {
-                const { receipt } = await this.exitGame.processExit(this.dummyExitId, erc20);
+                const { receipt } = await this.exitGame.processExit(this.dummyExitId, VAULT_ID.ERC20, erc20);
                 await expectEvent.inTransaction(
                     receipt.transactionHash,
                     SpyErc20Vault,
@@ -441,7 +446,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
             });
 
             it('should return piggyback bond to the output owner', async () => {
-                await this.exitGame.processExit(this.dummyExitId, erc20);
+                await this.exitGame.processExit(this.dummyExitId, VAULT_ID.ERC20, erc20);
                 const postBalance = new BN(await web3.eth.getBalance(outputOwner3));
                 const expectedBalance = this.outputOwner3PreBalance.add(this.piggybackBondSize);
 
@@ -449,7 +454,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
             });
 
             it('should emit InFlightExitOutputWithdrawn event', async () => {
-                const { receipt } = await this.exitGame.processExit(this.dummyExitId, erc20);
+                const { receipt } = await this.exitGame.processExit(this.dummyExitId, VAULT_ID.ERC20, erc20);
                 const outputIndexForThirdOutput = 2;
                 await expectEvent.inTransaction(
                     receipt.transactionHash,

@@ -33,6 +33,8 @@ library PaymentPiggybackInFlightExit {
         IExitProcessor exitProcessor;
         OutputGuardHandlerRegistry outputGuardHandlerRegistry;
         uint256 minExitPeriod;
+        uint256 ethVaultId;
+        uint256 erc20VaultId;
     }
 
     event InFlightExitInputPiggybacked(
@@ -54,7 +56,9 @@ library PaymentPiggybackInFlightExit {
     function buildController(
         PlasmaFramework framework,
         IExitProcessor exitProcessor,
-        OutputGuardHandlerRegistry outputGuardHandlerRegistry
+        OutputGuardHandlerRegistry outputGuardHandlerRegistry,
+        uint256 ethVaultId,
+        uint256 erc20VaultId
     )
         public
         view
@@ -66,7 +70,9 @@ library PaymentPiggybackInFlightExit {
             exitableTimestampCalculator: ExitableTimestamp.Calculator(framework.minExitPeriod()),
             exitProcessor: exitProcessor,
             outputGuardHandlerRegistry: outputGuardHandlerRegistry,
-            minExitPeriod: framework.minExitPeriod()
+            minExitPeriod: framework.minExitPeriod(),
+            ethVaultId: ethVaultId,
+            erc20VaultId: erc20VaultId
         });
     }
 
@@ -168,7 +174,14 @@ library PaymentPiggybackInFlightExit {
         bool isPositionDeposit = false;
         uint64 exitableAt = controller.exitableTimestampCalculator.calculate(now, blockTimestamp, isPositionDeposit);
 
-        controller.framework.enqueue(token, exitableAt, utxoPos.txPos(), exitId, controller.exitProcessor);
+        uint256 vaultId;
+        if (token == address(0)) {
+            vaultId = controller.ethVaultId;
+        } else {
+            vaultId = controller.erc20VaultId;
+        }
+
+        controller.framework.enqueue(vaultId, token, exitableAt, utxoPos.txPos(), exitId, controller.exitProcessor);
     }
 
     function getExitTargetOfOutput(

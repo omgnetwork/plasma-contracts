@@ -41,6 +41,13 @@ function isDeposit(blockNum) {
     return blockNum % CHILD_BLOCK_INTERVAL !== 0;
 }
 
+function exitQueueKey(vaultId, token) {
+    return web3.utils.soliditySha3(
+        { t: 'uint256', v: vaultId },
+        { t: 'address', v: token },
+    );
+}
+
 module.exports = {
     spentOnGas,
     buildOutputGuard,
@@ -48,4 +55,5 @@ module.exports = {
     computeNormalOutputId,
     getOutputId,
     isDeposit,
+    exitQueueKey,
 };

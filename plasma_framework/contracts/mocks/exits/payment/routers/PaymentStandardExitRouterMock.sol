@@ -3,16 +3,14 @@ pragma experimental ABIEncoderV2;
 
 import "../../../../src/exits/payment/routers/PaymentStandardExitRouter.sol";
 import "../../../../src/framework/PlasmaFramework.sol";
-import "../../../../src/vaults/EthVault.sol";
-import "../../../../src/vaults/Erc20Vault.sol";
 
 contract PaymentStandardExitRouterMock is PaymentStandardExitRouter {
     PlasmaFramework private framework;
 
     constructor(
         PlasmaFramework plasmaFramework,
-        EthVault ethVault,
-        Erc20Vault erc20Vault,
+        uint256 ethVaultId,
+        uint256 erc20VaultId,
         OutputGuardHandlerRegistry outputGuardHandlerRegistry,
         SpendingConditionRegistry spendingConditionRegistry,
         ITxFinalizationVerifier txFinalizationVerifier
@@ -20,8 +18,8 @@ contract PaymentStandardExitRouterMock is PaymentStandardExitRouter {
         public
         PaymentStandardExitRouter(
             plasmaFramework,
-            ethVault,
-            erc20Vault,
+            ethVaultId,
+            erc20VaultId,
             outputGuardHandlerRegistry,
             spendingConditionRegistry,
             txFinalizationVerifier
@@ -31,7 +29,7 @@ contract PaymentStandardExitRouterMock is PaymentStandardExitRouter {
     }
 
     /** override and calls processStandardExit for test */
-    function processExit(uint160 exitId, address ercContract) external {
+    function processExit(uint160 exitId, uint256, address ercContract) external {
         PaymentStandardExitRouter.processStandardExit(exitId, ercContract);
     }
 

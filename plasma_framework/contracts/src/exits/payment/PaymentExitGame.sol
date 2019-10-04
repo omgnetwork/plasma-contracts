@@ -8,8 +8,6 @@ import "../interfaces/ITxFinalizationVerifier.sol";
 import "../utils/ExitId.sol";
 import "../../framework/interfaces/IExitProcessor.sol";
 import "../../framework/PlasmaFramework.sol";
-import "../../vaults/EthVault.sol";
-import "../../vaults/Erc20Vault.sol";
 import "../../utils/OnlyFromAddress.sol";
 
 /**
@@ -21,8 +19,8 @@ contract PaymentExitGame is IExitProcessor, PaymentStandardExitRouter, PaymentIn
 
     constructor(
         PlasmaFramework framework,
-        EthVault ethVault,
-        Erc20Vault erc20Vault,
+        uint256 ethVaultId,
+        uint256 erc20VaultId,
         OutputGuardHandlerRegistry outputGuardHandlerRegistry,
         SpendingConditionRegistry spendingConditionRegistry,
         IStateTransitionVerifier stateTransitionVerifier,
@@ -32,16 +30,16 @@ contract PaymentExitGame is IExitProcessor, PaymentStandardExitRouter, PaymentIn
         public
         PaymentStandardExitRouter(
             framework,
-            ethVault,
-            erc20Vault,
+            ethVaultId,
+            erc20VaultId,
             outputGuardHandlerRegistry,
             spendingConditionRegistry,
             txFinalizationVerifier
         )
         PaymentInFlightExitRouter(
             framework,
-            ethVault,
-            erc20Vault,
+            ethVaultId,
+            erc20VaultId,
             outputGuardHandlerRegistry,
             spendingConditionRegistry,
             stateTransitionVerifier,
@@ -54,10 +52,10 @@ contract PaymentExitGame is IExitProcessor, PaymentStandardExitRouter, PaymentIn
 
     /**
      * @notice Callback processes exit function for the PlasmaFramework to call.
-     * @param exitId The exit id.
-     * @param token The token (ERC20 address or address(0) for ETH) of the exiting output.
+     * @param exitId exit id.
+     * @param token token (ERC20 address or address(0) for ETH) of the exiting output.
      */
-    function processExit(uint160 exitId, address token) external onlyFrom(address(plasmaFramework)) {
+    function processExit(uint160 exitId, uint256, address token) external onlyFrom(address(plasmaFramework)) {
         if (ExitId.isStandardExit(exitId)) {
             PaymentStandardExitRouter.processStandardExit(exitId, token);
         } else {

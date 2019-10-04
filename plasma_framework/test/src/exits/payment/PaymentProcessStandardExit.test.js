@@ -16,7 +16,7 @@ const {
 const { expect } = require('chai');
 
 const { buildUtxoPos } = require('../../../helpers/positions.js');
-const { PROTOCOL } = require('../../../helpers/constants.js');
+const { PROTOCOL, VAULT_ID } = require('../../../helpers/constants.js');
 
 contract('PaymentStandardExitRouter', ([_, alice]) => {
     const ETH = constants.ZERO_ADDRESS;
@@ -43,14 +43,18 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
 
             const ethVault = await SpyEthVault.new(this.framework.address);
             const erc20Vault = await SpyErc20Vault.new(this.framework.address);
+
+            await this.framework.registerVault(VAULT_ID.ETH, ethVault.address);
+            await this.framework.registerVault(VAULT_ID.ERC20, erc20Vault.address);
+
             const outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
             const spendingConditionRegistry = await SpendingConditionRegistry.new();
             const txFinalizationVerifier = await TxFinalizationVerifier.new();
 
             this.exitGame = await PaymentStandardExitRouter.new(
                 this.framework.address,
-                ethVault.address,
-                erc20Vault.address,
+                VAULT_ID.ETH,
+                VAULT_ID.ERC20,
                 outputGuardHandlerRegistry.address,
                 spendingConditionRegistry.address,
                 txFinalizationVerifier.address,
@@ -78,7 +82,7 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
             const testExitData = getTestExitData(exitable, ETH);
             await this.exitGame.setExit(exitId, testExitData);
 
-            const { receipt } = await this.exitGame.processExit(exitId, ETH);
+            const { receipt } = await this.exitGame.processExit(exitId, VAULT_ID.ETH, ETH);
 
             await expectEvent.inTransaction(
                 receipt.transactionHash,
@@ -94,7 +98,7 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
             await this.exitGame.setExit(exitId, testExitData);
             await this.exitGame.proxyFlagOutputSpent(testExitData.outputId);
 
-            const { receipt } = await this.exitGame.processExit(exitId, ETH);
+            const { receipt } = await this.exitGame.processExit(exitId, VAULT_ID.ETH, ETH);
 
             await expectEvent.inTransaction(
                 receipt.transactionHash,
@@ -109,7 +113,7 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
             const testExitData = getTestExitData(true, ETH);
             await this.exitGame.setExit(exitId, testExitData);
 
-            await this.exitGame.processExit(exitId, ETH);
+            await this.exitGame.processExit(exitId, VAULT_ID.ETH, ETH);
 
             expect(await this.framework.isOutputSpent(testExitData.outputId)).to.be.true;
         });
@@ -120,7 +124,7 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
             await this.exitGame.setExit(exitId, testExitData);
 
             const preBalance = new BN(await web3.eth.getBalance(testExitData.exitTarget));
-            await this.exitGame.processExit(exitId, ETH);
+            await this.exitGame.processExit(exitId, VAULT_ID.ETH, ETH);
             const postBalance = new BN(await web3.eth.getBalance(testExitData.exitTarget));
             const expectBalance = preBalance.add(this.startStandardExitBondSize);
 
@@ -134,7 +138,7 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
             await this.exitGame.setExit(exitId, testExitData);
 
             const preBalance = new BN(await web3.eth.getBalance(testExitData.exitTarget));
-            await this.exitGame.processExit(exitId, ETH);
+            await this.exitGame.processExit(exitId, VAULT_ID.ETH, ETH);
             const postBalance = new BN(await web3.eth.getBalance(testExitData.exitTarget));
             const expectBalance = preBalance.add(this.startStandardExitBondSize);
 
@@ -146,7 +150,7 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
             const testExitData = getTestExitData(true, ETH);
             await this.exitGame.setExit(exitId, testExitData);
 
-            const { receipt } = await this.exitGame.processExit(exitId, ETH);
+            const { receipt } = await this.exitGame.processExit(exitId, VAULT_ID.ETH, ETH);
             await expectEvent.inTransaction(
                 receipt.transactionHash,
                 SpyEthVault,
@@ -164,7 +168,7 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
             const testExitData = getTestExitData(true, erc20Token);
             await this.exitGame.setExit(exitId, testExitData);
 
-            const { receipt } = await this.exitGame.processExit(exitId, erc20Token);
+            const { receipt } = await this.exitGame.processExit(exitId, VAULT_ID.ERC20, erc20Token);
 
             await expectEvent.inTransaction(
                 receipt.transactionHash,
@@ -183,7 +187,7 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
             const testExitData = getTestExitData(true, ETH);
             await this.exitGame.setExit(exitId, testExitData);
 
-            await this.exitGame.processExit(exitId, ETH);
+            await this.exitGame.processExit(exitId, VAULT_ID.ETH, ETH);
 
             const exitData = await this.exitGame.standardExits(exitId);
 
@@ -197,7 +201,7 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
             const testExitData = getTestExitData(true, ETH);
             await this.exitGame.setExit(exitId, testExitData);
 
-            const { receipt } = await this.exitGame.processExit(exitId, ETH);
+            const { receipt } = await this.exitGame.processExit(exitId, VAULT_ID.ETH, ETH);
 
             await expectEvent.inTransaction(
                 receipt.transactionHash,

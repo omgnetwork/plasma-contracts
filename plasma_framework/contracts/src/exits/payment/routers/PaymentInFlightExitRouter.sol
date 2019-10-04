@@ -53,8 +53,8 @@ contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue {
 
     constructor(
         PlasmaFramework framework,
-        EthVault ethVault,
-        Erc20Vault erc20Vault,
+        uint256 ethVaultId,
+        uint256 erc20VaultId,
         OutputGuardHandlerRegistry outputGuardHandlerRegistry,
         SpendingConditionRegistry spendingConditionRegistry,
         IStateTransitionVerifier stateTransitionVerifier,
@@ -72,10 +72,20 @@ contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue {
             supportedTxType
         );
 
+        address ethVaultAddress = framework.vaults(ethVaultId);
+        require(ethVaultAddress != address(0), "Invalid ETH vault");
+        EthVault ethVault = EthVault(ethVaultAddress);
+
+        address erc20VaultAddress = framework.vaults(erc20VaultId);
+        require(erc20VaultAddress != address(0), "Invalid ERC20 vault");
+        Erc20Vault erc20Vault = Erc20Vault(erc20VaultAddress);
+
         piggybackInFlightExitController = PaymentPiggybackInFlightExit.buildController(
             framework,
             this,
-            outputGuardHandlerRegistry
+            outputGuardHandlerRegistry,
+            ethVaultId,
+            erc20VaultId
         );
 
         challengeCanonicityController = PaymentChallengeIFENotCanonical.buildController(
