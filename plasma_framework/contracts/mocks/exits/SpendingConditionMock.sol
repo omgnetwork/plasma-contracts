@@ -50,8 +50,6 @@ contract SpendingConditionMock is ISpendingCondition {
         returns (bool)
     {
         if (shouldRevert) {
-            // TODO: solhint disabled for now due to bug, https://github.com/protofire/solhint/issues/157
-            // solhint-disable-next-line reason-string
             revert(REVERT_MESSAGE);
         }
 

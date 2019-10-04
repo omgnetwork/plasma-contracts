@@ -26,7 +26,7 @@ library BondSize {
         uint16 upperBoundMultiplier;
     }
 
-    function buildParams(uint128 _initialBondSize, uint16 _lowerBoundDivisor, uint16 _upperBoundMultiplier)
+    function buildParams(uint128 initialBondSize, uint16 lowerBoundDivisor, uint16 upperBoundMultiplier)
         internal
         pure
         returns (Params memory)
@@ -34,44 +34,44 @@ library BondSize {
         // Set the initial value to far in the future
         uint128 initialEffectiveUpdateTime = 2 ** 63;
         return Params({
-            previousBondSize: _initialBondSize,
+            previousBondSize: initialBondSize,
             updatedBondSize: 0,
             effectiveUpdateTime: initialEffectiveUpdateTime,
-            lowerBoundDivisor: _lowerBoundDivisor,
-            upperBoundMultiplier: _upperBoundMultiplier
+            lowerBoundDivisor: lowerBoundDivisor,
+            upperBoundMultiplier: upperBoundMultiplier
         });
     }
 
     /**
     * @notice Updates the bond size.
-    * @notice The new value is bounded by 0.5 and 2x of current bond size.
-    * @notice There is a waiting period of 2 days before the new value goes into effect.
+    * @dev There is a waiting period of 2 days before the new value goes into effect.
     * @param newBondSize the new bond size.
     */
-    function updateBondSize(Params storage _self, uint128 newBondSize) internal {
-        validateBondSize(_self, newBondSize);
+    function updateBondSize(Params storage self, uint128 newBondSize) internal {
+        validateBondSize(self, newBondSize);
 
-        if (_self.updatedBondSize != 0 && now > _self.effectiveUpdateTime) {
-            _self.previousBondSize = _self.updatedBondSize;
+        if (self.updatedBondSize != 0 && now >= self.effectiveUpdateTime) {
+            self.previousBondSize = self.updatedBondSize;
         }
-        _self.updatedBondSize = newBondSize;
-        _self.effectiveUpdateTime = uint64(now) + WAITING_PERIOD;
+        self.updatedBondSize = newBondSize;
+        self.effectiveUpdateTime = uint64(now) + WAITING_PERIOD;
     }
 
     /**
     * @notice Returns the current bond size.
     */
-    function bondSize(Params memory _self) internal view returns (uint128) {
-        if (now < _self.effectiveUpdateTime) {
-            return _self.previousBondSize;
+    function bondSize(Params memory self) internal view returns (uint128) {
+        if (now < self.effectiveUpdateTime) {
+            return self.previousBondSize;
         } else {
-            return _self.updatedBondSize;
+            return self.updatedBondSize;
         }
     }
 
-    function validateBondSize(Params memory _self, uint128 newBondSize) private view {
-        uint128 currentBondSize = bondSize(_self);
-        require(newBondSize >= currentBondSize / _self.lowerBoundDivisor, "Bond size is too low");
-        require(uint256(newBondSize) <= uint256(currentBondSize) * _self.upperBoundMultiplier, "Bond size is too high");
+    function validateBondSize(Params memory self, uint128 newBondSize) private view {
+        uint128 currentBondSize = bondSize(self);
+        require(newBondSize > 0, "Bond size cannot be zero");
+        require(newBondSize >= currentBondSize / self.lowerBoundDivisor, "Bond size is too low");
+        require(uint256(newBondSize) <= uint256(currentBondSize) * self.upperBoundMultiplier, "Bond size is too high");
     }
 }
