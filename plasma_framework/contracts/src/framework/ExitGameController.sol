@@ -97,13 +97,13 @@ contract ExitGameController is ExitGameRegistry {
         require(hasExitQueue(key), "The queue for the (vaultId, token) pair has not been added to the plasma framework yet");
         PriorityQueue queue = exitsQueues[key];
 
-        uint256 uniquePriority = ExitPriority.computePriority(exitableAt, txPos, exitId);
+        uint256 priority = ExitPriority.computePriority(exitableAt, txPos, exitId);
 
-        queue.insert(uniquePriority);
-        delegations[uniquePriority] = exitProcessor;
+        queue.insert(priority);
+        delegations[priority] = exitProcessor;
 
-        emit ExitQueued(exitId, uniquePriority);
-        return uniquePriority;
+        emit ExitQueued(exitId, priority);
+        return priority;
     }
 
     /**
@@ -181,16 +181,16 @@ contract ExitGameController is ExitGameRegistry {
         isOutputSpent[_outputId] = true;
     }
 
+    function getNextExit(uint256 vaultId, address token) external view returns (uint256) {
+        bytes32 key = exitQueueKey(vaultId, token);
+        return exitsQueues[key].getMin();
+    }
+
     function exitQueueKey(uint256 vaultId, address token) private pure returns (bytes32) {
         return keccak256(abi.encodePacked(vaultId, token));
     }
 
     function hasExitQueue(bytes32 queueKey) private view returns (bool) {
         return address(exitsQueues[queueKey]) != address(0);
-    }
-
-    function getNextExit(uint256 vaultId, address token) external view returns (uint256) {
-        bytes32 key = exitQueueKey(vaultId, token);
-        return exitsQueues[key].getMin();
     }
 }

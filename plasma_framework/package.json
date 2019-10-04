@@ -31,7 +31,7 @@
   "scripts": {
     "test": "truffle test",
     "coverage": "truffle run coverage",
-    "docgen": "bash docgen.sh",
+    "docgen": "./scripts/docgen.sh",
     "linter": "node_modules/eslint/bin/eslint.js . --fix",
     "linter-sol": "node_modules/.bin/solhint --max-warnings 0 \"contracts/**/*.sol\""
   },

@@ -40,9 +40,9 @@ event ExitQueued(uint160 indexed exitId, uint256  priority);
 - [isAnyOutputsSpent(bytes32[] _outputIds)](#isanyoutputsspent)
 - [batchFlagOutputsSpent(bytes32[] _outputIds)](#batchflagoutputsspent)
 - [flagOutputSpent(bytes32 _outputId)](#flagoutputspent)
+- [getNextExit(uint256 vaultId, address token)](#getnextexit)
 - [exitQueueKey(uint256 vaultId, address token)](#exitqueuekey)
 - [hasExitQueue(bytes32 queueKey)](#hasexitqueue)
-- [getNextExit(uint256 vaultId, address token)](#getnextexit)
 
 ### 
 
@@ -181,6 +181,20 @@ function flagOutputSpent(bytes32 _outputId) external nonpayable onlyFromNonQuara
 | ------------- |------------- | -----|
 | _outputId | bytes32 | The output id to be flagged as spent | 
 
+### getNextExit
+
+```js
+function getNextExit(uint256 vaultId, address token) external view
+returns(uint256)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| vaultId | uint256 |  | 
+| token | address |  | 
+
 ### exitQueueKey
 
 ```js
@@ -207,20 +221,6 @@ returns(bool)
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
 | queueKey | bytes32 |  | 
-
-### getNextExit
-
-```js
-function getNextExit(uint256 vaultId, address token) external view
-returns(uint256)
-```
-
-**Arguments**
-
-| Name        | Type           | Description  |
-| ------------- |------------- | -----|
-| vaultId | uint256 |  | 
-| token | address |  | 
 
 ## Contracts
 

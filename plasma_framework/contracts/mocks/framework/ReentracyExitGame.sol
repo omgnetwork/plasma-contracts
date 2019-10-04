@@ -9,10 +9,6 @@ import "../../src/vaults/EthVault.sol";
 import "../../src/utils/TxPosLib.sol";
 
 contract ReentrancyExitGame is IExitProcessor {
-
-    // we use a single exit processing queue
-    uint256 constant public EXIT_FUNDING_VAULT_ID = 1;
-
     ExitGameController public exitGameController;
     uint256 public vaultId;
     address public testToken;
