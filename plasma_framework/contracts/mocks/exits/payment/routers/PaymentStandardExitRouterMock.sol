@@ -29,7 +29,7 @@ contract PaymentStandardExitRouterMock is PaymentStandardExitRouter {
     }
 
     /** override and calls processStandardExit for test */
-    function processExit(uint160 exitId, address ercContract) external {
+    function processExit(uint160 exitId, uint256, address ercContract) external {
         PaymentStandardExitRouter.processStandardExit(exitId, ercContract);
     }
 

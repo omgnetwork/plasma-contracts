@@ -39,7 +39,7 @@ contract PaymentInFlightExitRouterMock is PaymentInFlightExitRouter {
     }
 
     /** override and calls processInFlightExit for test */
-    function processExit(uint160 exitId, address ercContract) external {
+    function processExit(uint160 exitId, uint256, address ercContract) external {
         PaymentInFlightExitRouter.processInFlightExit(exitId, ercContract);
     }
 

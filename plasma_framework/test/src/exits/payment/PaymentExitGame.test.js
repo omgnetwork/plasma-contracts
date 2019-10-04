@@ -186,7 +186,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
 
         it('should not allow to call processExit from outside of exit game controller contract', async () => {
             await expectRevert(
-                this.exitGame.processExit(0, constants.ZERO_ADDRESS),
+                this.exitGame.processExit(0, VAULT_ID.ETH, constants.ZERO_ADDRESS),
                 'Not being called by expected caller.',
             );
         });
