@@ -131,7 +131,7 @@ def get_contract(w3, accounts):
 
 @pytest.fixture
 def plasma_framework(get_contract, accounts, token):
-    framework = PlasmaFramework(get_contract, maintainer=accounts[-1])
+    framework = PlasmaFramework(get_contract, maintainer=accounts[-1], authority=accounts[0])
     framework.addExitQueue(framework.erc20_vault_id, token.address)
     framework.addExitQueue(framework.eth_vault_id, NULL_ADDRESS)
     return framework

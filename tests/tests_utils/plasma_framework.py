@@ -14,12 +14,20 @@ class Protocols(enum.Enum):
 
 
 class PlasmaFramework:
-    def __init__(self, get_contract, maintainer):
-        self.plasma_framework = get_contract('PlasmaFramework',
-                                             args=(EXIT_PERIOD, INITIAL_IMMUNE_VAULTS, INITIAL_IMMUNE_EXIT_GAMES),
-                                             sender=maintainer)
+    def __init__(self, get_contract, maintainer, authority):
+        self.plasma_framework = get_contract(
+            'PlasmaFramework',
+            args=(
+                EXIT_PERIOD,
+                INITIAL_IMMUNE_VAULTS,
+                INITIAL_IMMUNE_EXIT_GAMES,
+                authority.address,
+                maintainer.address,
+            ),
+            sender=maintainer
+        )
 
-        self.plasma_framework.initAuthority()  # initialised by default web3 account
+        self.plasma_framework.activateChildChain(**{"from": authority.address})
 
         self._setup_deposit_verifiers(get_contract, maintainer)
         self._setup_vaults(get_contract, maintainer)
