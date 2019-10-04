@@ -7,19 +7,28 @@ const {
 const { expect } = require('chai');
 const { PROTOCOL } = require('../../../helpers/constants.js');
 
-contract('ExitGameRegistry', ([_, other]) => {
+contract('ExitGameRegistry', ([_, maintainer, other]) => {
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
     const INITIAL_IMMUNE_EXIT_GAMES_NUM = 0;
 
     beforeEach(async () => {
-        this.registry = await ExitGameRegistry.new(MIN_EXIT_PERIOD, INITIAL_IMMUNE_EXIT_GAMES_NUM);
+        this.registry = await ExitGameRegistry.new(
+            MIN_EXIT_PERIOD,
+            INITIAL_IMMUNE_EXIT_GAMES_NUM,
+            maintainer,
+        );
         this.dummyExitGame = (await DummyExitGame.new());
     });
 
     describe('onlyFromNonQuarantinedExitGame', () => {
         beforeEach(async () => {
             this.dummyTxType = 1;
-            await this.registry.registerExitGame(this.dummyTxType, this.dummyExitGame.address, PROTOCOL.MORE_VP);
+            await this.registry.registerExitGame(
+                this.dummyTxType,
+                this.dummyExitGame.address,
+                PROTOCOL.MORE_VP,
+                { from: maintainer },
+            );
             await this.dummyExitGame.setExitGameRegistry(this.registry.address);
         });
 
@@ -48,7 +57,7 @@ contract('ExitGameRegistry', ([_, other]) => {
             beforeEach(async () => {
                 this.txType = 1;
                 this.registerTx = await this.registry.registerExitGame(
-                    this.txType, this.dummyExitGame.address, PROTOCOL.MVP,
+                    this.txType, this.dummyExitGame.address, PROTOCOL.MVP, { from: maintainer },
                 );
             });
 
@@ -86,7 +95,7 @@ contract('ExitGameRegistry', ([_, other]) => {
                     const txType = index + 1;
                     const contract = (await DummyExitGame.new());
                     await this.registry.registerExitGame(
-                        txType, contract.address, protocol,
+                        txType, contract.address, protocol, { from: maintainer },
                     );
                     expect(await this.registry.protocols(txType))
                         .to.be.bignumber.equal(new BN(protocol));
@@ -94,25 +103,25 @@ contract('ExitGameRegistry', ([_, other]) => {
             ));
         });
 
-        it('rejects when not registered by operator', async () => {
+        it('rejects when not registered by maintainer', async () => {
             await expectRevert(
                 this.registry.registerExitGame(
                     1, this.dummyExitGame.address, PROTOCOL.MORE_VP, { from: other },
                 ),
-                'Not being called by operator',
+                'Not being called by expected caller',
             );
         });
 
         it('rejects when trying to register with tx type 0', async () => {
             await expectRevert(
-                this.registry.registerExitGame(0, this.dummyExitGame.address, PROTOCOL.MORE_VP),
+                this.registry.registerExitGame(0, this.dummyExitGame.address, PROTOCOL.MORE_VP, { from: maintainer }),
                 'should not register with tx type 0',
             );
         });
 
         it('rejects when trying to register with empty address', async () => {
             await expectRevert(
-                this.registry.registerExitGame(1, constants.ZERO_ADDRESS, PROTOCOL.MORE_VP),
+                this.registry.registerExitGame(1, constants.ZERO_ADDRESS, PROTOCOL.MORE_VP, { from: maintainer }),
                 'should not register with an empty exit game address',
             );
         });
@@ -124,7 +133,7 @@ contract('ExitGameRegistry', ([_, other]) => {
                 const txType = index + 1;
                 const contract = (await DummyExitGame.new());
                 await expectRevert(
-                    this.registry.registerExitGame(txType, contract.address, protocol),
+                    this.registry.registerExitGame(txType, contract.address, protocol, { from: maintainer }),
                     'Invalid protocol value',
                 );
             }));
@@ -133,17 +142,21 @@ contract('ExitGameRegistry', ([_, other]) => {
         it('rejects when the tx type is already registered', async () => {
             const txType = 1;
             const secondDummyExitGameAddress = (await DummyExitGame.new()).address;
-            await this.registry.registerExitGame(txType, this.dummyExitGame.address, PROTOCOL.MORE_VP);
+            await this.registry.registerExitGame(
+                txType, this.dummyExitGame.address, PROTOCOL.MORE_VP, { from: maintainer },
+            );
             await expectRevert(
-                this.registry.registerExitGame(txType, secondDummyExitGameAddress, PROTOCOL.MORE_VP),
+                this.registry.registerExitGame(
+                    txType, secondDummyExitGameAddress, PROTOCOL.MORE_VP, { from: maintainer },
+                ),
                 'The tx type is already registered',
             );
         });
 
         it('rejects when the the exit game address is already registered', async () => {
-            await this.registry.registerExitGame(1, this.dummyExitGame.address, PROTOCOL.MORE_VP);
+            await this.registry.registerExitGame(1, this.dummyExitGame.address, PROTOCOL.MORE_VP, { from: maintainer });
             await expectRevert(
-                this.registry.registerExitGame(2, this.dummyExitGame.address, PROTOCOL.MORE_VP),
+                this.registry.registerExitGame(2, this.dummyExitGame.address, PROTOCOL.MORE_VP, { from: maintainer }),
                 'The exit game contract is already registered',
             );
         });

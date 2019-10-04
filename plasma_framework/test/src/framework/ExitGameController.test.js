@@ -12,13 +12,13 @@ const { buildTxPos } = require('../../helpers/positions.js');
 const { PROTOCOL, EMPTY_BYTES_32 } = require('../../helpers/constants.js');
 const { exitQueueKey } = require('../../helpers/utils.js');
 
-contract('ExitGameController', () => {
+contract('ExitGameController', ([maintainer]) => {
     const MIN_EXIT_PERIOD = 10;
     const INITIAL_IMMUNE_EXIT_GAMES = 1;
     const VAULT_ID = 1;
 
     beforeEach(async () => {
-        this.controller = await ExitGameController.new(MIN_EXIT_PERIOD, INITIAL_IMMUNE_EXIT_GAMES);
+        this.controller = await ExitGameController.new(MIN_EXIT_PERIOD, INITIAL_IMMUNE_EXIT_GAMES, maintainer);
         this.dummyExitGame = await DummyExitGame.new();
         await this.dummyExitGame.setExitGameController(this.controller.address);
 
