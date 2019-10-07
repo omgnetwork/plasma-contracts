@@ -5,6 +5,17 @@ This document attempts to collate all of the information necessary to interact w
 - [Tesuji Plasma Blockchain Design](https://github.com/omisego/elixir-omg/blob/master/docs/tesuji_blockchain_design.md)
 - [Solidity contract documentation](https://github.com/omisego/plasma-contracts/blob/master/plasma_framework/docs/PlasmaFramework.md)
 
+# PlasmaFramework
+The PlasmaFramework contract can be seen as the top-level contract that contains many of the other components described below:
+- BlockController
+- ExitGameController
+- ExitGameRegistry
+- VaultRegistry
+
+It provides access to the various components in the system. For example, to get the Payment ExitGame you should call `PlasmaFramework.exitGames(PaymentType)`.
+
+The PlasmaFramework also provides the means for the `maintainer` to upgrade the components in the system. This has important security considerations and the PlasmaFramework will emit events whenever a component is added. Watcher must monitor these events and inform users. See later for details.
+
 # Block submission
 Only the operator can submit blocks. The data submitted is the root of the merkle tree containing all the transactions in the block. To submit a block, call
 ```
@@ -16,7 +27,7 @@ event BlockSubmitted(
     uint256 blockNumber
 );  
 ``` 
-[See contract docs](../BlockController.md#submitblock)
+[See contract docs](../contracts/BlockController.md#submitblock)
 
 # Transactions
 Transactions are composed of inputs and outputs. An input is simply a pointer to the output of another transaction. 
@@ -30,27 +41,32 @@ The position of the outputs of a transaction can be obtained by including the in
 The Abstract Layer Design introduces the concept of Transaction Type and Transcation Output Type. Each Transaction Type and Transcation Output Type can define different rules about how to spend funds.
 
 ## Transaction format
-Even though there are different types of transaction and transaction outputs, all transactions have the same basic format:
+Transactions follow the [Wire Transaction format](https://docs.google.com/document/d/1ETAO5ZUO7S_A8sXUK5cyAN6yMMotRDbJphAa2hPJIyU/edit).
+
+Briefly, this is:
 
 ```
-transaction ::= transactionType inputs outputs metadata witness
-transactionType ::= uint256
-inputs ::= input*
-input ::= outputPosition
-outputPosition ::= bytes32
-outputs ::= output+
+transaction::= transactionType [input] [output] metadata [witness]
+```
+
+Where 
+```
+transactionType::= uint256
+input ::= outputId | outputPosition
+outputId ::= hash of the transaction that produced the output concatenated with the outputIndex
+outputPosition ::= 32 byte string that is (blockNumber * BLOCK_OFFSET + txIndex * TX_OFFSET + outputIndex)
 output ::= outputType outputGuard token amount
 outputType ::= uint256
-amount ::= uint256
 outputGuard ::= bytes20
 token ::= address
+amount ::= uint256
 witness ::= bytes
 ```
 
-Note that `outputPosition` is actually a 32 byte string that represents `(blockNumer * BLOCK_OFFSET + txIndex * TX_OFFSET + outputIndex)`, where `BLOCK_OFFSET=1000000000` and `TX_OFFSET=10000`. 
+Note that currently we don't fully follow the proposed Wire Transaction format - our implementation of output type is `outputType outputGuard token amount` instead of `outputType outputGuard token vaultId standardSpecificData confirmAddress`.
 
-For example, the output position `(5000, 3, 1)` is `5000000030001`
-
+The current implementation only supports `Payment` and `DEX` transaction types.
+We will need to change this when we introduce new transaction types, e.g. ERC721
 
 ## Deposit transactions
 Deposit transactions are special transactions that have no inputs. Note that this should be encoded as an empty array. Deposit transactions are created by the Vault contracts and do not need to be explicitly submitted.
@@ -108,8 +124,28 @@ The EIP-712 typed data structure is as follows:
 # Vaults
 Vaults are used to deposit funds and indirectly to withdraw funds via the Exit Game.
 
-**TODO:** Depositing funds
+## Depositing funds
+To deposit funds from the root chain (Ethereum) into the child chain, you must use the approriate Vault. For example to deposit ETH you use the EthVault contract. The address of this contract can be retrieved by calling `PlasmaFramework.vaults(1)`
 
+### Depositing ETH
+1. The user creates the RLP encoded deposit transaction, `depositTx`
+2. The user calls `EthVault.deposit(depositTx)`. The user must send with the transaction the amount of ETH specified in the deposit transaction.
+3. The ETHVault creates a Deposit Block and submits it to the PlasmaFramework
+4. The ETHVault emits the `DepositCreated` event
+5. The child chain receives the `DepositCreated` and creates the corresponding utxo
+6. After a certain amount of blocks (`deposit_finality_margin`) the utxo is spendable by the user.
+
+### Depositing ERC20 tokens
+1. The user approves the ERC20Vault contract to transfer the amount of tokens to be deposited.
+2. The user creates the RLP encoded deposit transaction, `depositTx`
+3. The user calls `ERC20Vault.deposit(depositTx)`.
+4. The ERCVault calls `ERC20.transferFrom()` to transfer the tokens to itself.
+5. The ERC20Vault creates a Deposit Block and submits it to the PlasmaFramework
+6. The ERC20Vault emits the `DepositCreated` event
+7. The child chain receives the `DepositCreated` and creates the corresponding utxo
+8. After a certain amount of blocks (`deposit_finality_margin`) the utxo is spendable.
+
+## Vault events
 Vaults emit events on deposit:
 ```
     event DepositCreated(
@@ -119,7 +155,7 @@ Vaults emit events on deposit:
         uint256 amount
     );
 ```
-and on withdraw
+and on withdrawal:
 ```
     event Erc20Withdrawn(
         address payable indexed receiver,
@@ -262,22 +298,36 @@ When listening for Exit Game related events, it's important to remember that the
 - When a piggybacked input on an In-flight Exit has been successfully withdrawn (i.e. funds sent back to owner)
 ```
     event InFlightExitInputWithdrawn(
-        uint192 indexed exitId,
+        uint160 indexed exitId,
         uint16 inputIndex
     );
 ```
 - When a piggybacked output on an In-flight Exit has been successfully withdrawn (i.e. funds sent back to owner)
 ```
     event InFlightExitOutputWithdrawn(
-        uint192 indexed exitId,
+        uint160 indexed exitId,
         uint16 outputIndex
     );
 ```
 - When an exit was in the exit queue but was not processed (e.g. because it was already processed).
 ```
     event InFlightExitOmitted(
-        uint192 indexed exitId,
+        uint160 indexed exitId,
         address token
     );
 ```
 
+# Upgrading the Framework
+The framework is designed to be upgraded, either to fix bugs or add new functionality. Upgrades are done by adding new contracts to the framework. Any upgrade will take a certain period of time to come into effect. This is to keep the framework trustless - if a new contract is added that is malicious or vulnerable, then users will have a chance to exit before it is activated.
+
+**TODO: Upgrades and security**
+
+
+# Ensuring the correctness of the Plasma network
+Plasma is designed to be somewhat optimistic - it assumes everything is correct unless proven otherwise. Users play their part in ensuring the correctness of the system by means of the Exit Games, as described in the previous section. However, it there needs to be a way to let the users know when they need to engage in the Exit Games. This is where the Watchers come in.
+
+
+## Watchers
+It is the role of the Watchers to monitor the network and alert users as to when they need to react to events.
+
+**TODO: Description of all events that a Watcher should listen for, and how the user should react**
