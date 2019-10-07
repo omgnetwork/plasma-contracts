@@ -306,9 +306,8 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
             });
 
             it('should emit InFlightExitInputPiggybacked event', async () => {
-                await expectEvent.inTransaction(
-                    this.piggybackTx.receipt.transactionHash,
-                    PaymentPiggybackInFlightExit,
+                await expectEvent.inLogs(
+                    this.piggybackTx.logs,
                     'InFlightExitInputPiggybacked',
                     {
                         exitTarget: inputOwner,

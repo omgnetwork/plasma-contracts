@@ -386,16 +386,14 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
                         };
 
                         this.bobBalanceBeforeChallenge = new BN(await web3.eth.getBalance(bob));
-                        const { receipt } = await this.exitGame.challengeStandardExit(
+                        this.challengeTx = await this.exitGame.challengeStandardExit(
                             args, { from: bob },
                         );
-                        this.challengeTxReciept = receipt;
                     });
 
                     it('should challenge it successfully', async () => {
-                        await expectEvent.inTransaction(
-                            this.challengeTxReciept.transactionHash,
-                            PaymentChallengeStandardExit,
+                        await expectEvent.inLogs(
+                            this.challengeTx.logs,
                             'ExitChallenged',
                             { utxoPos: new BN(this.depositUtxoPos) },
                         );
@@ -405,7 +403,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
                         const actualBobBalanceAfterChallenge = new BN(await web3.eth.getBalance(bob));
                         const expectedBobBalanceAfterChallenge = this.bobBalanceBeforeChallenge
                             .add(this.startStandardExitBondSize)
-                            .sub(await spentOnGas(this.challengeTxReciept));
+                            .sub(await spentOnGas(this.challengeTx.receipt));
 
                         expect(actualBobBalanceAfterChallenge).to.be.bignumber.equal(expectedBobBalanceAfterChallenge);
                     });
