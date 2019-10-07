@@ -14,12 +14,15 @@ import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../interfaces/IStateTransitionVerifier.sol";
 import "../../interfaces/ITxFinalizationVerifier.sol";
 import "../../utils/BondSize.sol";
+import "../../../utils/GracefulReentrancyGuard.sol";
 import "../../../utils/OnlyWithValue.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../framework/interfaces/IExitProcessor.sol";
 import "../../../framework/utils/Operated.sol";
 
-contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue {
+import "openzeppelin-solidity/contracts/utils/ReentrancyGuard.sol";
+
+contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue, ReentrancyGuard, GracefulReentrancyGuard {
     using PaymentStartInFlightExit for PaymentStartInFlightExit.Controller;
     using PaymentPiggybackInFlightExit for PaymentPiggybackInFlightExit.Controller;
     using PaymentChallengeIFENotCanonical for PaymentChallengeIFENotCanonical.Controller;
@@ -199,6 +202,7 @@ contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue {
      */
     function challengeInFlightExitInputSpent(PaymentInFlightExitRouterArgs.ChallengeInputSpentArgs memory args)
         public
+        nonReentrant
     {
         challengeInputSpentController.run(inFlightExitMap, args);
     }
@@ -209,6 +213,7 @@ contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue {
      */
     function challengeInFlightExitOutputSpent(PaymentInFlightExitRouterArgs.ChallengeOutputSpent memory args)
         public
+        nonReentrant
     {
         challengeOutputSpentController.run(inFlightExitMap, args);
     }
@@ -219,7 +224,7 @@ contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue {
      * @param exitId The in-flight exit id.
      * @param token The token (in erc20 address or address(0) for ETH) of the exiting output.
      */
-    function processInFlightExit(uint160 exitId, address token) internal {
+    function processInFlightExit(uint160 exitId, address token) internal gracefullyNonReentrant {
         processInflightExitController.run(inFlightExitMap, exitId, token);
     }
 

@@ -3,10 +3,18 @@ pragma solidity 0.5.11;
 import "./Vault.sol";
 import "./verifiers/IEthDepositVerifier.sol";
 import "../framework/PlasmaFramework.sol";
+import "../utils/GracefulReentrancyGuard.sol";
 
-contract EthVault is Vault {
+contract EthVault is Vault, GracefulReentrancyGuard {
+    uint256 private withdrawEntryCounter = 0;
+
     event EthWithdrawn(
-        address payable indexed receiver,
+        address indexed receiver,
+        uint256 amount
+    );
+
+    event WithdrawFailed(
+        address indexed receiver,
         uint256 amount
     );
 
@@ -36,8 +44,14 @@ contract EthVault is Vault {
     * @param receiver address of the transferee
     * @param amount amount of eth to transfer.
     */
-    function withdraw(address payable receiver, uint256 amount) external onlyFromNonQuarantinedExitGame {
-        receiver.transfer(amount);
-        emit EthWithdrawn(receiver, amount);
+    function withdraw(address payable receiver, uint256 amount) external onlyFromNonQuarantinedExitGame gracefullyNonReentrant {
+        // we do not want to block exit queue if transfer is unucessful
+        // solhint-disable-next-line avoid-call-value
+        (bool success, ) = receiver.call.value(amount)("");
+        if (success) {
+            emit EthWithdrawn(receiver, amount);
+        } else {
+            emit WithdrawFailed(receiver, amount);
+        }
     }
 }

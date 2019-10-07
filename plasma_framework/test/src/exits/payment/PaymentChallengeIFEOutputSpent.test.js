@@ -15,6 +15,7 @@ const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
 const StateTransitionVerifierMock = artifacts.require('StateTransitionVerifierMock');
 const TxFinalizationVerifier = artifacts.require('TxFinalizationVerifier');
+const ReentrancyAttacker = artifacts.require('PaymentIFEOutputChallengeAttacker');
 
 const {
     BN, constants, expectEvent, expectRevert, time,
@@ -191,6 +192,16 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
                 challengingTxWitness: web3.utils.sha3('sig'),
                 spendingConditionOptionalArgs: web3.utils.bytesToHex(''),
             };
+        });
+
+        it('should fail when paying out piggyback bond fails', async () => {
+            const attacker = await ReentrancyAttacker.new(this.exitGame.address, this.challengeArgs);
+            await web3.eth.sendTransaction({ to: attacker.address, from: alice, value: web3.utils.toWei('1', 'ether') });
+
+            await expectRevert(
+                this.exitGame.challengeInFlightExitOutputSpent(this.challengeArgs, { from: attacker.address }),
+                'Paying out piggyback bond failed.',
+            );
         });
 
         it('should emit event when challenge is successful', async () => {

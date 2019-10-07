@@ -22,6 +22,11 @@ library PaymentProcessStandardExit {
         uint160 indexed exitId
     );
 
+    event BondReturnFailed(
+        address indexed receiver,
+        uint256 amount
+    );
+
     /**
      * @notice Main logic function to process standard exit
      * @dev emits ExitOmitted event if the exit is omitted
@@ -48,7 +53,13 @@ library PaymentProcessStandardExit {
 
         self.framework.flagOutputSpent(exit.outputId);
 
-        exit.exitTarget.transfer(exit.bondSize);
+        // we do not want to block a queue if bond return is unsuccessful
+        // solhint-disable-next-line avoid-call-value
+        (bool success, ) = exit.exitTarget.call.value(exit.bondSize)("");
+        if (!success) {
+            emit BondReturnFailed(exit.exitTarget, exit.bondSize);
+        }
+
         if (token == address(0)) {
             self.ethVault.withdraw(exit.exitTarget, exit.amount);
         } else {

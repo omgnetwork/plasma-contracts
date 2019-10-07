@@ -66,7 +66,9 @@ library PaymentChallengeIFEOutputSpent {
         ife.clearOutputPiggybacked(outputIndex);
 
         //pay bond to challenger
-        msg.sender.transfer(ife.outputs[outputIndex].piggybackBondSize);
+        // solhint-disable-next-line avoid-call-value
+        (bool success, ) = msg.sender.call.value(ife.outputs[outputIndex].piggybackBondSize)("");
+        require(success, "Paying out piggyback bond failed");
         emit InFlightExitOutputBlocked(msg.sender, keccak256(args.inFlightTx), outputIndex);
     }
 

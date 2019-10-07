@@ -10,6 +10,7 @@ const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
 const TxFinalizationVerifier = artifacts.require('TxFinalizationVerifier');
+const Attacker = artifacts.require('PaymentStandardExitChallengeAttacker');
 
 const {
     BN, constants, expectEvent, expectRevert,
@@ -162,6 +163,22 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
 
                 await this.outputGuardHandlerRegistry.registerOutputGuardHandler(
                     OUTPUT_TYPE.PAYMENT, this.outputGuardHandler.address,
+                );
+            });
+
+            it('should fail when malicious user tries reentrancy attack', async () => {
+                await this.exitGame.depositFundForTest({ value: this.startStandardExitBondSize });
+
+                this.args = getTestInputArgs(OUTPUT_TYPE.PAYMENT, alice);
+                this.exitData = getTestExitData(this.args, alice, this.startStandardExitBondSize);
+                await this.exitGame.setExit(this.args.exitId, this.exitData);
+
+                const attacker = await Attacker.new(this.exitGame.address, this.args);
+                web3.eth.sendTransaction({ to: attacker.address, from: alice, value: web3.utils.toWei('1', 'ether') });
+
+                await expectRevert(
+                    this.exitGame.challengeStandardExit(this.args, { from: attacker.address }),
+                    'Paying out bond failed',
                 );
             });
 

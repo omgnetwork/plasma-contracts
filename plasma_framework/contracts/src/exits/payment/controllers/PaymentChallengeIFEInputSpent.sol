@@ -110,7 +110,9 @@ library PaymentChallengeIFEInputSpent {
         ife.clearInputPiggybacked(args.inFlightTxInputIndex);
 
         // Pay out the bond.
-        msg.sender.transfer(ife.inputs[args.inFlightTxInputIndex].piggybackBondSize);
+        // solhint-disable-next-line avoid-call-value
+        (bool success, ) = msg.sender.call.value(ife.inputs[args.inFlightTxInputIndex].piggybackBondSize)("");
+        require(success, "Paying out piggyback bond failed");
 
         emit InFlightExitInputBlocked(msg.sender, keccak256(args.inFlightTx), args.inFlightTxInputIndex);
     }
