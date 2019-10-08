@@ -256,9 +256,8 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
 
             it('should emit InFlightExitChallenged event', async () => {
                 const rlpInFlightTxBytes = web3.utils.bytesToHex(this.inFlightTx.rlpEncoded());
-                await expectEvent.inTransaction(
-                    this.challengeIFETx.receipt.transactionHash,
-                    PaymentChallengeIFENotCanonical,
+                await expectEvent.inLogs(
+                    this.challengeIFETx.logs,
                     'InFlightExitChallenged',
                     {
                         challenger,
@@ -407,14 +406,13 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
                 // it seems to be solidity `~uint256(0)` - what is important here: it's HUGE
                 const expectedCompetitorPos = new BN(2).pow(new BN(256)).sub(new BN(1));
 
-                const { receipt } = await this.exitGame.challengeInFlightExitNotCanonical(
+                const { logs } = await this.exitGame.challengeInFlightExitNotCanonical(
                     this.challengeArgs, { from: challenger },
                 );
 
                 const rlpInFlightTxBytes = web3.utils.bytesToHex(this.inFlightTx.rlpEncoded());
-                await expectEvent.inTransaction(
-                    receipt.transactionHash,
-                    PaymentChallengeIFENotCanonical,
+                await expectEvent.inLogs(
+                    logs,
                     'InFlightExitChallenged',
                     {
                         challenger,
@@ -456,16 +454,15 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
             });
 
             it('should emit InFlightExitChallengeResponded event', async () => {
-                const { receipt } = await this.exitGame.respondToNonCanonicalChallenge(
+                const { logs } = await this.exitGame.respondToNonCanonicalChallenge(
                     this.challengeArgs.inFlightTx,
                     this.inFlightTxPos,
                     this.inFlightTxInclusionProof,
                     { from: ifeOwner },
                 );
 
-                await expectEvent.inTransaction(
-                    receipt.transactionHash,
-                    PaymentChallengeIFENotCanonical,
+                await expectEvent.inLogs(
+                    logs,
                     'InFlightExitChallengeResponded',
                     {
                         challenger: ifeOwner,

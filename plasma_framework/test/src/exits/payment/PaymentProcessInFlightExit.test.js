@@ -170,10 +170,9 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
         it('should omit the exit if the exit does not exist', async () => {
             const nonExistingExitId = 666;
 
-            const { receipt } = await this.exitGame.processExit(nonExistingExitId, VAULT_ID.ETH, ETH);
-            await expectEvent.inTransaction(
-                receipt.transactionHash,
-                PaymentProcessInFlightExit,
+            const { logs } = await this.exitGame.processExit(nonExistingExitId, VAULT_ID.ETH, ETH);
+            await expectEvent.inLogs(
+                logs,
                 'InFlightExitOmitted',
                 { exitId: new BN(nonExistingExitId), token: ETH },
             );
@@ -186,10 +185,9 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
 
             await this.exitGame.proxyFlagOutputSpent(TEST_OUTPUT_ID_FOR_INPUT_1);
 
-            const { receipt } = await this.exitGame.processExit(dummyExitId, VAULT_ID.ETH, ETH);
-            await expectEvent.inTransaction(
-                receipt.transactionHash,
-                PaymentProcessInFlightExit,
+            const { logs } = await this.exitGame.processExit(dummyExitId, VAULT_ID.ETH, ETH);
+            await expectEvent.inLogs(
+                logs,
                 'InFlightExitOmitted',
                 { exitId: new BN(dummyExitId), token: ETH },
             );
@@ -383,11 +381,10 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
             });
 
             it('should emit InFlightExitInputWithdrawn event', async () => {
-                const { receipt } = await this.exitGame.processExit(this.dummyExitId, VAULT_ID.ERC20, erc20);
+                const { logs } = await this.exitGame.processExit(this.dummyExitId, VAULT_ID.ERC20, erc20);
                 const inputIndexForThirdInput = 2;
-                await expectEvent.inTransaction(
-                    receipt.transactionHash,
-                    PaymentProcessInFlightExit,
+                await expectEvent.inLogs(
+                    logs,
                     'InFlightExitInputWithdrawn',
                     { exitId: new BN(this.dummyExitId), inputIndex: new BN(inputIndexForThirdInput) },
                 );
@@ -454,11 +451,10 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
             });
 
             it('should emit InFlightExitOutputWithdrawn event', async () => {
-                const { receipt } = await this.exitGame.processExit(this.dummyExitId, VAULT_ID.ERC20, erc20);
+                const { logs } = await this.exitGame.processExit(this.dummyExitId, VAULT_ID.ERC20, erc20);
                 const outputIndexForThirdOutput = 2;
-                await expectEvent.inTransaction(
-                    receipt.transactionHash,
-                    PaymentProcessInFlightExit,
+                await expectEvent.inLogs(
+                    logs,
                     'InFlightExitOutputWithdrawn',
                     { exitId: new BN(this.dummyExitId), outputIndex: new BN(outputIndexForThirdOutput) },
                 );

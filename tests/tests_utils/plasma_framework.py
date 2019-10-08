@@ -1,7 +1,5 @@
 import enum
 
-from web3.exceptions import MismatchedABI
-
 from plasma_core.constants import CHILD_BLOCK_INTERVAL
 from plasma_core.transaction import TxOutputTypes, TxTypes
 from plasma_core.utils.transactions import decode_utxo_id
@@ -100,18 +98,6 @@ class PlasmaFramework:
                                                ),
                                          libraries=libs_map)
 
-        # collect events emitted by libraries
-        for lib in libs:
-            lib_events = lib.get_contract_events()
-            for event in lib_events:
-                try:
-                    if hasattr(payment_exit_game.events, event.event_name):
-                        raise AttributeError(event.event_name)
-                except MismatchedABI:
-                    pass
-                finally:
-                    setattr(payment_exit_game.events, event.event_name, event)
-            payment_exit_game.events._events += lib.events._events
         return payment_exit_game
 
     @staticmethod

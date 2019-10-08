@@ -342,13 +342,12 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
 
             const isTxDeposit = await this.isDeposit.test(this.dummyBlockNum);
             const exitId = await this.exitIdHelper.getStandardExitId(isTxDeposit, args.rlpOutputTx, args.utxoPos);
-            const { receipt } = await this.exitGame.startStandardExit(
+            const { logs } = await this.exitGame.startStandardExit(
                 args, { from: outputOwner, value: this.startStandardExitBondSize },
             );
 
-            await expectEvent.inTransaction(
-                receipt.transactionHash,
-                PaymentStartStandardExit,
+            await expectEvent.inLogs(
+                logs,
                 'ExitStarted',
                 { owner: outputOwner, exitId },
             );

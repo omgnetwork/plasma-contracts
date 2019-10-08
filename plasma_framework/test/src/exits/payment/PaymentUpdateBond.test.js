@@ -90,14 +90,12 @@ contract('PaymentStandardExitRouter', ([_, outputOwner]) => {
 
             this.startStandardExitBondSize = await this.exitGame.startStandardExitBondSize();
             this.newBondSize = this.startStandardExitBondSize.addn(20);
-            const { receipt } = await this.exitGame.updateStartStandardExitBondSize(this.newBondSize);
-            this.updateTxReceipt = receipt;
+            this.updateTx = await this.exitGame.updateStartStandardExitBondSize(this.newBondSize);
         });
 
         it('should emit an event when the standard exit bond size is updated', async () => {
-            await expectEvent.inTransaction(
-                this.updateTxReceipt.transactionHash,
-                PaymentStandardExitRouter,
+            await expectEvent.inLogs(
+                this.updateTx.logs,
                 'StandardExitBondUpdated',
                 {
                     bondSize: this.newBondSize,
@@ -127,14 +125,12 @@ contract('PaymentStandardExitRouter', ([_, outputOwner]) => {
 
             this.startIFEBondSize = await this.exitGame.startIFEBondSize();
             this.newBondSize = this.startIFEBondSize.addn(20);
-            const { receipt } = await this.exitGame.updateStartIFEBondSize(this.newBondSize);
-            this.updateIFEBondTxReceipt = receipt;
+            this.updateIFEBondTx = await this.exitGame.updateStartIFEBondSize(this.newBondSize);
         });
 
         it('should emit an event when the in-flight exit bond size is updated', async () => {
-            await expectEvent.inTransaction(
-                this.updateIFEBondTxReceipt.transactionHash,
-                PaymentInFlightExitRouter,
+            await expectEvent.inLogs(
+                this.updateIFEBondTx.logs,
                 'IFEBondUpdated',
                 {
                     bondSize: this.newBondSize,
@@ -164,14 +160,12 @@ contract('PaymentStandardExitRouter', ([_, outputOwner]) => {
 
             this.piggybackBondSize = await this.exitGame.piggybackBondSize();
             this.newBondSize = this.piggybackBondSize.addn(20);
-            const { receipt } = await this.exitGame.updatePiggybackBondSize(this.newBondSize);
-            this.updatePiggybackBondTxReceipt = receipt;
+            this.updatePiggybackBondTx = await this.exitGame.updatePiggybackBondSize(this.newBondSize);
         });
 
         it('should emit an event when the in-flight exit bond size is updated', async () => {
-            await expectEvent.inTransaction(
-                this.updatePiggybackBondTxReceipt.transactionHash,
-                PaymentInFlightExitRouter,
+            await expectEvent.inLogs(
+                this.updatePiggybackBondTx.logs,
                 'PiggybackBondUpdated',
                 {
                     bondSize: this.newBondSize,
