@@ -7,11 +7,11 @@ library PaymentInFlightExitRouterArgs {
     * @param inputTxs Transactions that created the inputs to the in-flight transaction. In the same order as in-flight transaction inputs.
     * @param inputTxTypes Transaction type of the input transactions.
     * @param inputUtxosPos Utxos that represent in-flight transaction inputs. In the same order as input transactions.
-    * @param outputGuardPreimagesForInputs Output guard pre-images for in-flight transaction inputs.
+    * @param outputGuardPreimagesForInputs (Optional) Output guard pre-images for in-flight transaction inputs. Length must always match that of the inputTxs
     * @param inputTxsInclusionProofs Merkle proofs that show the input-creating transactions are valid. In the same order as input transactions.
-    * @param inputTxsConfirmSigs Confirm signatures for the input txs. Should be empty bytes if the input tx is MoreVP.
+    * @param inputTxsConfirmSigs (Optional) Confirm signatures for the input txs. Should be empty bytes if the input tx is MoreVP. Length must always match that of the inputTxs
     * @param inFlightTxWitnesses Witnesses for in-flight transaction. In the same order as input transactions.
-    * @param inputSpendingConditionOptionalArgs Optional args for the spending condition for checking inputs. Should provide empty bytes if nothing is required.
+    * @param inputSpendingConditionOptionalArgs (Optional) Additional args for the spending condition for checking inputs. Should provide empty bytes if nothing is required. Length must always match that of the inputTxs
     */
     struct StartExitArgs {
         bytes inFlightTx;
@@ -39,7 +39,7 @@ library PaymentInFlightExitRouterArgs {
     * @notice Wraps arguments for piggybackInFlightExit.
     * @param inFlightTx RLP encoded in-flight transaction.
     * @param outputIndex Index of the output to piggyback on.
-    * @param outputGuardPreimage The original data (pre-image) for the outputguard.
+    * @param outputGuardPreimage (Optional) The original data (pre-image) for the outputguard.
     */
     struct PiggybackInFlightExitOnOutputArgs {
         bytes inFlightTx;
@@ -53,12 +53,12 @@ library PaymentInFlightExitRouterArgs {
      * @param inFlightTxInputIndex Index of shared input in transaction in flight.
      * @param competingTx RLP encoded competing transaction.
      * @param competingTxInputIndex Index of shared input in competing transaction.
-     * @param outputGuardPreimage Output guard preimage of the shared input.
-     * @param competingTxPos (optional) Position of competing transaction in chain if included.
-     * @param competingTxInclusionProof (optional) Merkle proofs that show the competing transaction was contained in chain.
+     * @param outputGuardPreimage (Optional) Output guard preimage of the shared input.
+     * @param competingTxPos (Optional) Position of competing transaction in chain if included.
+     * @param competingTxInclusionProof (Optional) Merkle proofs that show the competing transaction was contained in chain.
      * @param competingTxWitness Witness for competing transaction.
-     * @param competingTxConfirmSig (optional) Confirm signature if the competing tx is of MVP protocol.
-     * @param competingTxSpendingConditionOptionalArgs (optional) Optional arguments for the spending condition
+     * @param competingTxConfirmSig (Optional) Confirm signature if the competing tx is of MVP protocol.
+     * @param competingTxSpendingConditionOptionalArgs (Optional) Additional arguments for the spending condition
      */
     struct ChallengeCanonicityArgs {
         bytes inputTx;
@@ -84,7 +84,7 @@ library PaymentInFlightExitRouterArgs {
      * @param challengingTxWitness Witness for challenging transaction.
      * @param inputTx RLP encoded input transaction.
      * @param inputUtxoPos Utxo position of input transaction's output.
-     * @param spendingConditionOptionalArgs Optional arguments for spending condition of the input transaction.
+     * @param spendingConditionOptionalArgs (Optional) Additional arguments for spending condition of the input transaction.
      */
     struct ChallengeInputSpentArgs {
         bytes inFlightTx;
@@ -105,7 +105,7 @@ library PaymentInFlightExitRouterArgs {
      * @param challengingTx RLP encoded challenging transaction.
      * @param challengingTxInputIndex input index of challenged output in challenging transaction.
      * @param challengingTxWitness Witness for challenging transaction.
-     * @param spendingConditionOptionalArgs optional extra data for the spending condition.
+     * @param spendingConditionOptionalArgs (Optional) Additional data for the spending condition.
      */
     struct ChallengeOutputSpent {
         bytes inFlightTx;
