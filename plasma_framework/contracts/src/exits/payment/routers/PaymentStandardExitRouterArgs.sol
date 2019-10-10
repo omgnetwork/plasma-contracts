@@ -5,7 +5,7 @@ library PaymentStandardExitRouterArgs {
      * @notice Wraps arguments for startStandardExit.
      * @param utxoPos Position of the exiting output.
      * @param rlpOutputTx RLP encoded transaction that created the exiting output.
-     * @param outputGuardPreimage Output guard preimage data.
+     * @param outputGuardPreimage (Optional) Output guard preimage data.
      * @param outputTxInclusionProof A Merkle proof showing that the transaction was included.
     */
     struct StartStandardExitArgs {
