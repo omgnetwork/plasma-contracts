@@ -4,7 +4,24 @@ View Source: [openzeppelin-solidity/contracts/utils/Address.sol](../openzeppelin
 
 **Address**
 
-Collection of functions related to the address type,
+Collection of functions related to the address type.
+
+<!---Questions for the first edit, please: 
+1. is a description required in Arguments table?
+2. In this line: "its address will be reported"
+Should it be 'will be reported' or 'may be reported'?
+3. In this line: 
+It is unsafe to assume that an address for which this function returns false is an externally-owned account (EOA) and not a contract.
+Note to dev: I've reworded, but not sure it makes sense. I mean, if dev/user should not assume its an EOA, and may be a contract, how will they know? 
+3. Possible to change header levels? 
+H1:  Contract name (Address?) rather than Address.sol? Or is that the full contract file name?  
+Body: Description: Collection of functions ... (in this case only one function so not a collection. Can I reword? 
+Body: Source file
+H2: Functions (the list of all functions in the 'collection'
+H3: Function name
+Body: Description, code / output, Arguments? 
+H1: Contracts (followed by the links to other contracts)
+---> 
 
 ## Functions
 
@@ -13,11 +30,10 @@ Collection of functions related to the address type,
 ### isContract
 
 Returns true if `account` is a contract.
-     * This test is non-exhaustive, and there may be false-negatives: during the
-execution of a contract's constructor, its address will be reported as
-not containing a contract.
-     * > It is unsafe to assume that an address for which this function returns
-false is an externally-owned account (EOA) and not a contract.
+
+ * This test is non-exhaustive, and may return false-negatives: when executing a contract's constructor, its address will be reported as not containing a contract.
+ 
+ > **Important**! *Do not assume that an address for which this function returns false is an externally-owned account (EOA). It may be a contract.*
 
 ```js
 function isContract(address account) internal view
