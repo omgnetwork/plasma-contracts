@@ -20,6 +20,7 @@ struct Controller {
 ```js
 event ExitOmitted(uint160 indexed exitId);
 event ExitFinalized(uint160 indexed exitId);
+event BondReturnFailed(address indexed receiver, uint256  amount);
 ```
 
 ## Functions
@@ -61,6 +62,7 @@ function run(struct PaymentProcessStandardExit.Controller self, struct PaymentEx
 * [ExitGameRegistry](ExitGameRegistry.md)
 * [ExitId](ExitId.md)
 * [ExitPriority](ExitPriority.md)
+* [GracefulReentrancyGuard](GracefulReentrancyGuard.md)
 * [IERC20](IERC20.md)
 * [IErc20DepositVerifier](IErc20DepositVerifier.md)
 * [IEthDepositVerifier](IEthDepositVerifier.md)
@@ -106,6 +108,7 @@ function run(struct PaymentProcessStandardExit.Controller self, struct PaymentEx
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
+* [ReentrancyGuard](ReentrancyGuard.md)
 * [RLP](RLP.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)

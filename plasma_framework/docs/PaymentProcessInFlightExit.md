@@ -30,6 +30,7 @@ uint8 public constant MAX_OUTPUT_NUM;
 event InFlightExitOmitted(uint160 indexed exitId, address  token);
 event InFlightExitOutputWithdrawn(uint160 indexed exitId, uint16  outputIndex);
 event InFlightExitInputWithdrawn(uint160 indexed exitId, uint16  inputIndex);
+event InFlightBondReturnFailed(address indexed receiver, uint256  amount);
 ```
 
 ## Functions
@@ -193,6 +194,7 @@ returns(bool)
 * [ExitGameRegistry](ExitGameRegistry.md)
 * [ExitId](ExitId.md)
 * [ExitPriority](ExitPriority.md)
+* [GracefulReentrancyGuard](GracefulReentrancyGuard.md)
 * [IERC20](IERC20.md)
 * [IErc20DepositVerifier](IErc20DepositVerifier.md)
 * [IEthDepositVerifier](IEthDepositVerifier.md)
@@ -238,6 +240,7 @@ returns(bool)
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
+* [ReentrancyGuard](ReentrancyGuard.md)
 * [RLP](RLP.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)

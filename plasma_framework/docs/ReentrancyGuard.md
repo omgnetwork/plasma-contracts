@@ -1,37 +1,63 @@
-# PlasmaFramework.sol
+# ReentrancyGuard.sol
 
-View Source: [contracts/src/framework/PlasmaFramework.sol](../contracts/src/framework/PlasmaFramework.sol)
+View Source: [openzeppelin-solidity/contracts/utils/ReentrancyGuard.sol](../openzeppelin-solidity/contracts/utils/ReentrancyGuard.sol)
 
-**↗ Extends: [Operated](Operated.md), [VaultRegistry](VaultRegistry.md), [ExitGameRegistry](ExitGameRegistry.md), [ExitGameController](ExitGameController.md), [BlockController](BlockController.md)**
+**↘ Derived Contracts: [PaymentInFlightExitRouter](PaymentInFlightExitRouter.md), [PaymentStandardExitRouter](PaymentStandardExitRouter.md)**
 
-**PlasmaFramework**
+**ReentrancyGuard**
+
+Contract module that helps prevent reentrant calls to a function.
+ * Inheriting from `ReentrancyGuard` will make the `nonReentrant` modifier
+available, which can be aplied to functions to make sure there are no nested
+(reentrant) calls to them.
+ * Note that because there is a single `nonReentrant` guard, functions marked as
+`nonReentrant` may not call one another. This can be worked around by making
+those functions `private`, and then adding `external` `nonReentrant` entry
+points to them.
 
 ## Contract Members
 **Constants & Variables**
 
 ```js
-uint256 public constant CHILD_BLOCK_INTERVAL;
-uint256 public minExitPeriod;
+uint256 private _guardCounter;
 
 ```
 
-## Functions
+## Modifiers
 
-- [(uint256 _minExitPeriod, uint256 _initialImmuneVaults, uint256 _initialImmuneExitGames)](#)
+- [nonReentrant](#nonreentrant)
 
-### 
+### nonReentrant
+
+Prevents a contract from calling itself, directly or indirectly.
+Calling a `nonReentrant` function from another `nonReentrant`
+function is not supported. It is possible to prevent this from happening
+by making the `nonReentrant` function external, and make it call a
+`private` function that does the actual work.
 
 ```js
-function (uint256 _minExitPeriod, uint256 _initialImmuneVaults, uint256 _initialImmuneExitGames) public nonpayable BlockController ExitGameController 
+modifier nonReentrant() internal
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| _minExitPeriod | uint256 |  | 
-| _initialImmuneVaults | uint256 |  | 
-| _initialImmuneExitGames | uint256 |  | 
+
+## Functions
+
+- [()](#)
+
+### 
+
+```js
+function () internal nonpayable
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
 
 ## Contracts
 

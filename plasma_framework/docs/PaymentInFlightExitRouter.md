@@ -2,7 +2,7 @@
 
 View Source: [contracts/src/exits/payment/routers/PaymentInFlightExitRouter.sol](../contracts/src/exits/payment/routers/PaymentInFlightExitRouter.sol)
 
-**↗ Extends: [IExitProcessor](IExitProcessor.md), [Operated](Operated.md), [OnlyWithValue](OnlyWithValue.md)**
+**↗ Extends: [IExitProcessor](IExitProcessor.md), [Operated](Operated.md), [OnlyWithValue](OnlyWithValue.md), [ReentrancyGuard](ReentrancyGuard.md), [GracefulReentrancyGuard](GracefulReentrancyGuard.md)**
 **↘ Derived Contracts: [PaymentExitGame](PaymentExitGame.md)**
 
 **PaymentInFlightExitRouter**
@@ -35,6 +35,16 @@ struct BondSize.Params internal piggybackBond;
 ```js
 event IFEBondUpdated(uint128  bondSize);
 event PiggybackBondUpdated(uint128  bondSize);
+event InFlightExitStarted(address indexed initiator, bytes32  txHash);
+event InFlightExitInputPiggybacked(address indexed exitTarget, bytes32  txHash, uint16  inputIndex);
+event InFlightExitOmitted(uint160 indexed exitId, address  token);
+event InFlightExitOutputWithdrawn(uint160 indexed exitId, uint16  outputIndex);
+event InFlightExitInputWithdrawn(uint160 indexed exitId, uint16  inputIndex);
+event InFlightExitOutputPiggybacked(address indexed exitTarget, bytes32  txHash, uint16  outputIndex);
+event InFlightExitChallenged(address indexed challenger, bytes32  txHash, uint256  challengeTxPosition);
+event InFlightExitChallengeResponded(address  challenger, bytes32  txHash, uint256  challengeTxPosition);
+event InFlightExitInputBlocked(address indexed challenger, bytes32  txHash, uint16  inputIndex);
+event InFlightExitOutputBlocked(address indexed challenger, bytes32  ifeTxHash, uint16  outputIndex);
 ```
 
 ## Functions
@@ -165,7 +175,7 @@ function respondToNonCanonicalChallenge(bytes inFlightTx, uint256 inFlightTxPos,
 Challenges an exit from in-flight transaction input.
 
 ```js
-function challengeInFlightExitInputSpent(struct PaymentInFlightExitRouterArgs.ChallengeInputSpentArgs args) public nonpayable
+function challengeInFlightExitInputSpent(struct PaymentInFlightExitRouterArgs.ChallengeInputSpentArgs args) public nonpayable nonReentrant 
 ```
 
 **Arguments**
@@ -179,7 +189,7 @@ function challengeInFlightExitInputSpent(struct PaymentInFlightExitRouterArgs.Ch
 Challenges an exit from in-flight transaction output.
 
 ```js
-function challengeInFlightExitOutputSpent(struct PaymentInFlightExitRouterArgs.ChallengeOutputSpent args) public nonpayable
+function challengeInFlightExitOutputSpent(struct PaymentInFlightExitRouterArgs.ChallengeOutputSpent args) public nonpayable nonReentrant 
 ```
 
 **Arguments**
@@ -193,7 +203,7 @@ function challengeInFlightExitOutputSpent(struct PaymentInFlightExitRouterArgs.C
 Process in-flight exit.
 
 ```js
-function processInFlightExit(uint160 exitId, address token) internal nonpayable
+function processInFlightExit(uint160 exitId, address token) internal nonpayable gracefullyNonReentrant 
 ```
 
 **Arguments**
@@ -277,6 +287,7 @@ function updatePiggybackBondSize(uint128 newBondSize) public nonpayable onlyOper
 * [ExitGameRegistry](ExitGameRegistry.md)
 * [ExitId](ExitId.md)
 * [ExitPriority](ExitPriority.md)
+* [GracefulReentrancyGuard](GracefulReentrancyGuard.md)
 * [IERC20](IERC20.md)
 * [IErc20DepositVerifier](IErc20DepositVerifier.md)
 * [IEthDepositVerifier](IEthDepositVerifier.md)
@@ -322,6 +333,7 @@ function updatePiggybackBondSize(uint128 newBondSize) public nonpayable onlyOper
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
+* [ReentrancyGuard](ReentrancyGuard.md)
 * [RLP](RLP.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)

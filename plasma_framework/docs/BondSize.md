@@ -29,15 +29,15 @@ uint64 public constant WAITING_PERIOD;
 
 ## Functions
 
-- [buildParams(uint128 _initialBondSize, uint16 _lowerBoundDivisor, uint16 _upperBoundMultiplier)](#buildparams)
-- [updateBondSize(struct BondSize.Params _self, uint128 newBondSize)](#updatebondsize)
-- [bondSize(struct BondSize.Params _self)](#bondsize)
-- [validateBondSize(struct BondSize.Params _self, uint128 newBondSize)](#validatebondsize)
+- [buildParams(uint128 initialBondSize, uint16 lowerBoundDivisor, uint16 upperBoundMultiplier)](#buildparams)
+- [updateBondSize(struct BondSize.Params self, uint128 newBondSize)](#updatebondsize)
+- [bondSize(struct BondSize.Params self)](#bondsize)
+- [validateBondSize(struct BondSize.Params self, uint128 newBondSize)](#validatebondsize)
 
 ### buildParams
 
 ```js
-function buildParams(uint128 _initialBondSize, uint16 _lowerBoundDivisor, uint16 _upperBoundMultiplier) internal pure
+function buildParams(uint128 initialBondSize, uint16 lowerBoundDivisor, uint16 upperBoundMultiplier) internal pure
 returns(struct BondSize.Params)
 ```
 
@@ -45,23 +45,23 @@ returns(struct BondSize.Params)
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| _initialBondSize | uint128 |  | 
-| _lowerBoundDivisor | uint16 |  | 
-| _upperBoundMultiplier | uint16 |  | 
+| initialBondSize | uint128 |  | 
+| lowerBoundDivisor | uint16 |  | 
+| upperBoundMultiplier | uint16 |  | 
 
 ### updateBondSize
 
 Updates the bond size.
 
 ```js
-function updateBondSize(struct BondSize.Params _self, uint128 newBondSize) internal nonpayable
+function updateBondSize(struct BondSize.Params self, uint128 newBondSize) internal nonpayable
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| _self | struct BondSize.Params |  | 
+| self | struct BondSize.Params |  | 
 | newBondSize | uint128 | the new bond size. | 
 
 ### bondSize
@@ -69,7 +69,7 @@ function updateBondSize(struct BondSize.Params _self, uint128 newBondSize) inter
 Returns the current bond size.
 
 ```js
-function bondSize(struct BondSize.Params _self) internal view
+function bondSize(struct BondSize.Params self) internal view
 returns(uint128)
 ```
 
@@ -77,19 +77,19 @@ returns(uint128)
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| _self | struct BondSize.Params |  | 
+| self | struct BondSize.Params |  | 
 
 ### validateBondSize
 
 ```js
-function validateBondSize(struct BondSize.Params _self, uint128 newBondSize) private view
+function validateBondSize(struct BondSize.Params self, uint128 newBondSize) private view
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| _self | struct BondSize.Params |  | 
+| self | struct BondSize.Params |  | 
 | newBondSize | uint128 |  | 
 
 ## Contracts
@@ -110,6 +110,7 @@ function validateBondSize(struct BondSize.Params _self, uint128 newBondSize) pri
 * [ExitGameRegistry](ExitGameRegistry.md)
 * [ExitId](ExitId.md)
 * [ExitPriority](ExitPriority.md)
+* [GracefulReentrancyGuard](GracefulReentrancyGuard.md)
 * [IERC20](IERC20.md)
 * [IErc20DepositVerifier](IErc20DepositVerifier.md)
 * [IEthDepositVerifier](IEthDepositVerifier.md)
@@ -155,6 +156,7 @@ function validateBondSize(struct BondSize.Params _self, uint128 newBondSize) pri
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
+* [ReentrancyGuard](ReentrancyGuard.md)
 * [RLP](RLP.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)

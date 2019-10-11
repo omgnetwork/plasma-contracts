@@ -2,7 +2,7 @@
 
 View Source: [contracts/src/exits/payment/routers/PaymentStandardExitRouter.sol](../contracts/src/exits/payment/routers/PaymentStandardExitRouter.sol)
 
-**↗ Extends: [IExitProcessor](IExitProcessor.md), [Operated](Operated.md), [OnlyWithValue](OnlyWithValue.md)**
+**↗ Extends: [IExitProcessor](IExitProcessor.md), [Operated](Operated.md), [OnlyWithValue](OnlyWithValue.md), [ReentrancyGuard](ReentrancyGuard.md), [GracefulReentrancyGuard](GracefulReentrancyGuard.md)**
 **↘ Derived Contracts: [PaymentExitGame](PaymentExitGame.md)**
 
 **PaymentStandardExitRouter**
@@ -29,6 +29,10 @@ struct BondSize.Params internal startStandardExitBond;
 
 ```js
 event StandardExitBondUpdated(uint128  bondSize);
+event ExitStarted(address indexed owner, uint160  exitId);
+event ExitChallenged(uint256 indexed utxoPos);
+event ExitOmitted(uint160 indexed exitId);
+event ExitFinalized(uint160 indexed exitId);
 ```
 
 ## Functions
@@ -120,7 +124,7 @@ function startStandardExit(struct PaymentStandardExitRouterArgs.StartStandardExi
 Challenge a standard exit by showing the exiting output was spent.
 
 ```js
-function challengeStandardExit(struct PaymentStandardExitRouterArgs.ChallengeStandardExitArgs args) public payable
+function challengeStandardExit(struct PaymentStandardExitRouterArgs.ChallengeStandardExitArgs args) public payable nonReentrant 
 ```
 
 **Arguments**
@@ -134,7 +138,7 @@ function challengeStandardExit(struct PaymentStandardExitRouterArgs.ChallengeSta
 Process standard exit.
 
 ```js
-function processStandardExit(uint160 exitId, address token) internal nonpayable
+function processStandardExit(uint160 exitId, address token) internal nonpayable gracefullyNonReentrant 
 ```
 
 **Arguments**
@@ -162,6 +166,7 @@ function processStandardExit(uint160 exitId, address token) internal nonpayable
 * [ExitGameRegistry](ExitGameRegistry.md)
 * [ExitId](ExitId.md)
 * [ExitPriority](ExitPriority.md)
+* [GracefulReentrancyGuard](GracefulReentrancyGuard.md)
 * [IERC20](IERC20.md)
 * [IErc20DepositVerifier](IErc20DepositVerifier.md)
 * [IEthDepositVerifier](IEthDepositVerifier.md)
@@ -207,6 +212,7 @@ function processStandardExit(uint160 exitId, address token) internal nonpayable
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
+* [ReentrancyGuard](ReentrancyGuard.md)
 * [RLP](RLP.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)

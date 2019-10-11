@@ -1,37 +1,44 @@
-# PlasmaFramework.sol
+# GracefulReentrancyGuard.sol
 
-View Source: [contracts/src/framework/PlasmaFramework.sol](../contracts/src/framework/PlasmaFramework.sol)
+View Source: [contracts/src/utils/GracefulReentrancyGuard.sol](../contracts/src/utils/GracefulReentrancyGuard.sol)
 
-**↗ Extends: [Operated](Operated.md), [VaultRegistry](VaultRegistry.md), [ExitGameRegistry](ExitGameRegistry.md), [ExitGameController](ExitGameController.md), [BlockController](BlockController.md)**
+**↘ Derived Contracts: [Erc20Vault](Erc20Vault.md), [EthVault](EthVault.md), [PaymentInFlightExitRouter](PaymentInFlightExitRouter.md), [PaymentStandardExitRouter](PaymentStandardExitRouter.md)**
 
-**PlasmaFramework**
+**GracefulReentrancyGuard**
+
+Helps prevent reentrant calls.
+ * To be used when we need reentrant call to fail.
+Introduced because open-zeppelin ReentrancyGuard aggressively reverts the "top caller",
+which we do not want to happen when processing exits, as a permanent failure blocks exit queue.
+To be used in scenario where we want to protect from reentrant calls made somewhere in execution stack above 'call()()'
+but we do not want to fail the function that makes the 'call()()'
 
 ## Contract Members
 **Constants & Variables**
 
 ```js
-uint256 public constant CHILD_BLOCK_INTERVAL;
-uint256 public minExitPeriod;
+bool private locked;
 
 ```
 
-## Functions
+## Modifiers
 
-- [(uint256 _minExitPeriod, uint256 _initialImmuneVaults, uint256 _initialImmuneExitGames)](#)
+- [gracefullyNonReentrant](#gracefullynonreentrant)
 
-### 
+### gracefullyNonReentrant
+
+Prevents reentrant calls by using a mutex.
 
 ```js
-function (uint256 _minExitPeriod, uint256 _initialImmuneVaults, uint256 _initialImmuneExitGames) public nonpayable BlockController ExitGameController 
+modifier gracefullyNonReentrant() internal
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| _minExitPeriod | uint256 |  | 
-| _initialImmuneVaults | uint256 |  | 
-| _initialImmuneExitGames | uint256 |  | 
+
+## Functions
 
 ## Contracts
 
