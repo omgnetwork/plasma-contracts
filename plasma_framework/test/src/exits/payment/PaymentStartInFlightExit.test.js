@@ -249,16 +249,15 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
             });
 
             it('should emit InFlightExitStarted event', async () => {
-                const { receipt } = await this.exitGame.startInFlightExit(
+                const { logs } = await this.exitGame.startInFlightExit(
                     this.args,
                     { from: alice, value: this.startIFEBondSize.toString() },
                 );
 
                 const expectedIfeHash = web3.utils.sha3(this.args.inFlightTx);
 
-                await expectEvent.inTransaction(
-                    receipt.transactionHash,
-                    PaymentStartInFlightExit,
+                await expectEvent.inLogs(
+                    logs,
                     'InFlightExitStarted',
                     {
                         initiator: alice,

@@ -47,6 +47,23 @@ contract PaymentStandardExitRouter is
 
     event StandardExitBondUpdated(uint128 bondSize);
 
+    event ExitStarted(
+        address indexed owner,
+        uint160 exitId
+    );
+
+    event ExitChallenged(
+        uint256 indexed utxoPos
+    );
+
+    event ExitOmitted(
+        uint160 indexed exitId
+    );
+
+    event ExitFinalized(
+        uint160 indexed exitId
+    );
+
     constructor(
         PlasmaFramework framework,
         uint256 ethVaultId,

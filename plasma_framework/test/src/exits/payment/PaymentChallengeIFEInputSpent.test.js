@@ -252,16 +252,14 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
         describe('after successfully challenged IFE input spent', () => {
             beforeEach(async () => {
                 this.challengerPreBalance = new BN(await web3.eth.getBalance(challenger));
-                const { receipt } = await this.exitGame.challengeInFlightExitInputSpent(
+                this.challengeTx = await this.exitGame.challengeInFlightExitInputSpent(
                     this.challengeArgs, { from: challenger },
                 );
-                this.challengeTxReceipt = receipt;
             });
 
             it('should emit InFlightExitInputBlocked event', async () => {
-                await expectEvent.inTransaction(
-                    this.challengeTxReceipt.transactionHash,
-                    PaymentChallengeIFEInputSpent,
+                await expectEvent.inLogs(
+                    this.challengeTx.logs,
                     'InFlightExitInputBlocked',
                     {
                         challenger,
@@ -280,7 +278,7 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                 const actualPostBalance = new BN(await web3.eth.getBalance(challenger));
                 const expectedPostBalance = this.challengerPreBalance
                     .add(new BN(PIGGYBACK_BOND))
-                    .sub(await spentOnGas(this.challengeTxReceipt));
+                    .sub(await spentOnGas(this.challengeTx.receipt));
 
                 expect(actualPostBalance).to.be.bignumber.equal(expectedPostBalance);
             });

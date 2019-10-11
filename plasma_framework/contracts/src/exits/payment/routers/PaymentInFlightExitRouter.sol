@@ -54,6 +54,62 @@ contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue, R
     event IFEBondUpdated(uint128 bondSize);
     event PiggybackBondUpdated(uint128 bondSize);
 
+    event InFlightExitStarted(
+        address indexed initiator,
+        bytes32 txHash
+    );
+
+    event InFlightExitInputPiggybacked(
+        address indexed exitTarget,
+        bytes32 txHash,
+        uint16 inputIndex
+    );
+
+    event InFlightExitOmitted(
+        uint160 indexed exitId,
+        address token
+    );
+
+    event InFlightExitOutputWithdrawn(
+        uint160 indexed exitId,
+        uint16 outputIndex
+    );
+
+    event InFlightExitInputWithdrawn(
+        uint160 indexed exitId,
+        uint16 inputIndex
+    );
+
+    event InFlightExitOutputPiggybacked(
+        address indexed exitTarget,
+        bytes32 txHash,
+        uint16 outputIndex
+    );
+
+    event InFlightExitChallenged(
+        address indexed challenger,
+        bytes32 txHash,
+        uint256 challengeTxPosition
+    );
+
+    event InFlightExitChallengeResponded(
+        address challenger,
+        bytes32 txHash,
+        uint256 challengeTxPosition
+    );
+
+    event InFlightExitInputBlocked(
+        address indexed challenger,
+        bytes32 txHash,
+        uint16 inputIndex
+    );
+
+    event InFlightExitOutputBlocked(
+        address indexed challenger,
+        bytes32 ifeTxHash,
+        uint16 outputIndex
+    );
+
     constructor(
         PlasmaFramework framework,
         uint256 ethVaultId,

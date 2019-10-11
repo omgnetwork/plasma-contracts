@@ -115,11 +115,10 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
             const testExitData = getTestExitData(exitable, ETH);
             await this.exitGame.setExit(exitId, testExitData);
 
-            const { receipt } = await this.exitGame.processExit(exitId, VAULT_ID.ETH, ETH);
+            const { logs } = await this.exitGame.processExit(exitId, VAULT_ID.ETH, ETH);
 
-            await expectEvent.inTransaction(
-                receipt.transactionHash,
-                PaymentProcessStandardExit,
+            await expectEvent.inLogs(
+                logs,
                 'ExitOmitted',
                 { exitId: new BN(exitId) },
             );
@@ -131,11 +130,10 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
             await this.exitGame.setExit(exitId, testExitData);
             await this.exitGame.proxyFlagOutputSpent(testExitData.outputId);
 
-            const { receipt } = await this.exitGame.processExit(exitId, VAULT_ID.ETH, ETH);
+            const { logs } = await this.exitGame.processExit(exitId, VAULT_ID.ETH, ETH);
 
-            await expectEvent.inTransaction(
-                receipt.transactionHash,
-                PaymentProcessStandardExit,
+            await expectEvent.inLogs(
+                logs,
                 'ExitOmitted',
                 { exitId: new BN(exitId) },
             );
@@ -234,11 +232,10 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
             const testExitData = getTestExitData(true, ETH);
             await this.exitGame.setExit(exitId, testExitData);
 
-            const { receipt } = await this.exitGame.processExit(exitId, VAULT_ID.ETH, ETH);
+            const { logs } = await this.exitGame.processExit(exitId, VAULT_ID.ETH, ETH);
 
-            await expectEvent.inTransaction(
-                receipt.transactionHash,
-                PaymentProcessStandardExit,
+            await expectEvent.inLogs(
+                logs,
                 'ExitFinalized',
                 { exitId: new BN(exitId) },
             );

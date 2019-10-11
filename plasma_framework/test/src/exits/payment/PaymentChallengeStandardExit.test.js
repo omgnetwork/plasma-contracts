@@ -327,9 +327,8 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
                 });
 
                 it('should emit ExitChallenged event when successfully challenged', async () => {
-                    await expectEvent.inTransaction(
-                        this.tx.receipt.transactionHash,
-                        PaymentChallengeStandardExit,
+                    await expectEvent.inLogs(
+                        this.tx.logs,
                         'ExitChallenged',
                         { utxoPos: new BN(this.exitData.utxoPos) },
                     );

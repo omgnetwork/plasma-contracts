@@ -205,12 +205,11 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
         });
 
         it('should emit event when challenge is successful', async () => {
-            const { receipt } = await this.exitGame.challengeInFlightExitOutputSpent(
+            const { logs } = await this.exitGame.challengeInFlightExitOutputSpent(
                 this.challengeArgs, { from: bob },
             );
-            await expectEvent.inTransaction(
-                receipt.transactionHash,
-                PaymentChallengeIFEOutputSpent,
+            await expectEvent.inLogs(
+                logs,
                 'InFlightExitOutputBlocked',
                 {
                     challenger: bob,
