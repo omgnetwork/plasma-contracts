@@ -40,10 +40,15 @@ contract PaymentTransactionStateTransitionVerifier {
             inputs[i] = output;
         }
 
-        WireTransaction.Output[] memory outputs = new WireTransaction.Output[](inputTxs.length);
         PaymentTransactionModel.Transaction memory transaction = PaymentTransactionModel.decode(txBytes);
+        WireTransaction.Output[] memory outputs = new WireTransaction.Output[](transaction.outputs.length);
         for (uint i = 0; i < transaction.outputs.length; i++) {
-            outputs[i] = WireTransaction.Output(transaction.outputs[i].outputType, transaction.outputs[i].amount, transaction.outputs[i].outputGuard, transaction.outputs[i].token);
+            outputs[i] = WireTransaction.Output(
+                    transaction.outputs[i].outputType,
+                    transaction.outputs[i].amount,
+                    transaction.outputs[i].outputGuard,
+                    transaction.outputs[i].token
+                );
         }
 
         return _isCorrectStateTransition(inputs, outputs);
