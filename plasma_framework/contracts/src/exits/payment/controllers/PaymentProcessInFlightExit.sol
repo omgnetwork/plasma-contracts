@@ -173,12 +173,12 @@ library PaymentProcessInFlightExit {
         private
     {
         // we flag _all_ inputs no matter it is piggybacked or not
-        // if exiting from output, all inputs are consider spent and can only exit from output furthre on.
-        // if exiting from input, for simplicity, we force all users to piggyback the input together at once
-        // instead of re-start the IFE and re-piggyback their input.
+        // if exiting from output, all inputs are consider spent and can only exit from output further on.
+        // if exiting from input, for simplicity, we force users to piggyback inputs together
+        // instead of restarting the IFE and then piggybacking their input.
         uint256 inputNumOfTheToken;
         for (uint16 i = 0; i < MAX_INPUT_NUM; i++) {
-            if (exit.inputs[i].token == token) {
+            if (exit.inputs[i].token == token && exit.inputs[i].amount > 0) {
                 inputNumOfTheToken++;
             }
         }
@@ -194,7 +194,7 @@ library PaymentProcessInFlightExit {
         bytes32[] memory outputIdsToFlag = new bytes32[](inputNumOfTheToken + piggybackedOutputNumOfTheToken);
         uint indexForOutputIds = 0;
         for (uint16 i = 0; i < MAX_INPUT_NUM; i++) {
-            if (exit.inputs[i].token == token) {
+            if (exit.inputs[i].token == token && exit.inputs[i].amount > 0) {
                 outputIdsToFlag[indexForOutputIds] = exit.inputs[i].outputId;
                 indexForOutputIds++;
             }

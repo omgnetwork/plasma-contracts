@@ -35,7 +35,9 @@ const {
 } = require('../../../helpers/constants.js');
 const { MerkleTree } = require('../../../helpers/merkle.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
-const { computeDepositOutputId, spentOnGas, exitQueueKey } = require('../../../helpers/utils.js');
+const {
+    computeDepositOutputId, computeNormalOutputId, spentOnGas, exitQueueKey,
+} = require('../../../helpers/utils.js');
 const { sign } = require('../../../helpers/sign.js');
 const { hashTx } = require('../../../helpers/paymentEip712.js');
 const { buildUtxoPos, utxoPosToTxPos } = require('../../../helpers/positions.js');
@@ -134,6 +136,8 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
         );
 
         this.startStandardExitBondSize = await this.exitGame.startStandardExitBondSize();
+        this.startIFEBondSize = await this.exitGame.startIFEBondSize();
+        this.piggybackBondSize = await this.exitGame.piggybackBondSize();
 
         this.toPaymentCondition = await PaymentOutputToPaymentTxCondition.new(
             this.framework.address, OUTPUT_TYPE.PAYMENT, TX_TYPE.PAYMENT,
@@ -509,6 +513,95 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
 
                             expect(actualAliceErc20BalanceAfterProcessExit)
                                 .to.be.bignumber.equal(expectedAliceErc20Balance);
+                        });
+                    });
+                });
+            });
+        });
+
+        describe('Given Alice deposited ETH', () => {
+            beforeEach(async () => {
+                await aliceDepositsETH();
+            });
+
+            describe('Given she started an in-flight exit from transaction that is not mined', () => {
+                beforeEach(async () => {
+                    await aliceDepositsETH();
+                    const amount = DEPOSIT_VALUE / 2;
+                    const output = new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, amount, alice, ETH);
+                    this.inFlightTx = new PaymentTransaction(TX_TYPE.PAYMENT, [this.depositUtxoPos], [output]);
+
+                    this.inFlightTxRaw = web3.utils.bytesToHex(this.inFlightTx.rlpEncoded());
+                    const inputTxs = [this.depositTx];
+                    const inputTxTypes = [TX_TYPE.PAYMENT];
+                    const inputUtxosPos = [this.depositUtxoPos];
+                    const outputGuardPreimagesForInputs = [EMPTY_BYTES];
+                    const inputTxsInclusionProofs = [this.merkleProofForDepositTx];
+                    const inputTxsConfirmSigs = [EMPTY_BYTES];
+
+                    const txHash = hashTx(this.inFlightTx, this.framework.address);
+                    const signature = sign(txHash, alicePrivateKey);
+
+                    const args = {
+                        inFlightTx: this.inFlightTxRaw,
+                        inputTxs,
+                        inputTxTypes,
+                        inputUtxosPos,
+                        outputGuardPreimagesForInputs,
+                        inputTxsInclusionProofs,
+                        inputTxsConfirmSigs,
+                        inFlightTxWitnesses: [signature],
+                        inputSpendingConditionOptionalArgs: [EMPTY_BYTES],
+                    };
+
+                    await this.exitGame.startInFlightExit(
+                        args,
+                        { from: alice, value: this.startIFEBondSize },
+                    );
+
+                    this.exitId = await this.exitIdHelper.getInFlightExitId(this.inFlightTxRaw);
+                });
+
+                describe('And owner of the output piggybacks', () => {
+                    beforeEach(async () => {
+                        this.exitingOutputIndex = 0;
+                        const args = {
+                            inFlightTx: this.inFlightTxRaw,
+                            outputIndex: this.exitingOutputIndex,
+                            outputGuardPreimage: EMPTY_BYTES,
+                        };
+
+                        await this.exitGame.piggybackInFlightExitOnOutput(
+                            args,
+                            { from: alice, value: this.piggybackBondSize },
+                        );
+                    });
+
+                    describe('And someone processes exits for ETH after two weeks', () => {
+                        beforeEach(async () => {
+                            await time.increase(time.duration.weeks(2).add(time.duration.seconds(1)));
+                            this.exitsToProcess = 1;
+
+                            this.processTx = await this.framework.processExits(
+                                VAULT_ID.ETH, ETH, 0, this.exitsToProcess,
+                            );
+                        });
+
+                        it('should publish an event', async () => {
+                            await expectEvent.inLogs(
+                                this.processTx.logs,
+                                'ProcessedExitsNum',
+                                {
+                                    processedNum: new BN(this.exitsToProcess),
+                                    vaultId: new BN(VAULT_ID.ETH),
+                                    token: ETH,
+                                },
+                            );
+                        });
+
+                        it('should mark output as spent', async () => {
+                            const outputId = computeNormalOutputId(this.inFlightTxRaw, this.exitingOutputIndex);
+                            expect(await this.framework.isOutputSpent(outputId)).to.be.true;
                         });
                     });
                 });
