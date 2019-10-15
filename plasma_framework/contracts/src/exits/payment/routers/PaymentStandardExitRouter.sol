@@ -40,7 +40,7 @@ contract PaymentStandardExitRouter is
     PaymentChallengeStandardExit.Controller internal challengeStandardExitController;
     BondSize.Params internal startStandardExitBond;
 
-    address private maintainer;
+    PlasmaFramework private framework;
 
     event StandardExitBondUpdated(uint128 bondSize);
 
@@ -62,7 +62,7 @@ contract PaymentStandardExitRouter is
     );
 
     constructor(
-        PlasmaFramework framework,
+        PlasmaFramework plasmaFramework,
         uint256 ethVaultId,
         uint256 erc20VaultId,
         OutputGuardHandlerRegistry outputGuardHandlerRegistry,
@@ -71,26 +71,26 @@ contract PaymentStandardExitRouter is
     )
         public
     {
-        address ethVaultAddress = framework.vaults(ethVaultId);
+        framework = plasmaFramework;
+
+        address ethVaultAddress = plasmaFramework.vaults(ethVaultId);
         require(ethVaultAddress != address(0), "Invalid ETH vault");
         EthVault ethVault = EthVault(ethVaultAddress);
 
-        address erc20VaultAddress = framework.vaults(erc20VaultId);
+        address erc20VaultAddress = plasmaFramework.vaults(erc20VaultId);
         require(erc20VaultAddress != address(0), "Invalid ERC20 vault");
         Erc20Vault erc20Vault = Erc20Vault(erc20VaultAddress);
 
-        maintainer = framework.getMaintainer();
-
         startStandardExitController = PaymentStartStandardExit.buildController(
-            this, framework, outputGuardHandlerRegistry, txFinalizationVerifier, ethVaultId, erc20VaultId
+            this, plasmaFramework, outputGuardHandlerRegistry, txFinalizationVerifier, ethVaultId, erc20VaultId
         );
 
         challengeStandardExitController = PaymentChallengeStandardExit.buildController(
-            framework, spendingConditionRegistry, outputGuardHandlerRegistry, txFinalizationVerifier
+            plasmaFramework, spendingConditionRegistry, outputGuardHandlerRegistry, txFinalizationVerifier
         );
 
         processStandardExitController = PaymentProcessStandardExit.Controller(
-            framework, ethVault, erc20Vault
+            plasmaFramework, ethVault, erc20Vault
         );
 
         startStandardExitBond = BondSize.buildParams(INITIAL_BOND_SIZE, BOND_LOWER_BOUND_DIVISOR, BOND_UPPER_BOUND_MULTIPLIER);
@@ -115,7 +115,7 @@ contract PaymentStandardExitRouter is
      * @notice Updates the standard exit bond size. Will take 2 days to come into effect.
      * @param newBondSize The new bond size.
      */
-    function updateStartStandardExitBondSize(uint128 newBondSize) public onlyFrom(maintainer) {
+    function updateStartStandardExitBondSize(uint128 newBondSize) public onlyFrom(framework.getMaintainer()) {
         startStandardExitBond.updateBondSize(newBondSize);
         emit StandardExitBondUpdated(newBondSize);
     }
