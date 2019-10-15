@@ -2,7 +2,7 @@
 
 View Source: [contracts/src/framework/registries/VaultRegistry.sol](../../contracts/src/framework/registries/VaultRegistry.sol)
 
-**↗ Extends: [Operated](Operated.md)**
+**↗ Extends: [OnlyFromAddress](OnlyFromAddress.md)**
 **↘ Derived Contracts: [BlockController](BlockController.md), [PlasmaFramework](PlasmaFramework.md)**
 
 **VaultRegistry**
@@ -43,6 +43,7 @@ modifier onlyFromNonQuarantinedVault() internal
 ## Functions
 
 - [(uint256 _minExitPeriod, uint256 _initialImmuneVaults)](#)
+- [getMaintainer()](#getmaintainer)
 - [registerVault(uint256 _vaultId, address _vaultAddress)](#registervault)
 - [vaults(uint256 _vaultId)](#vaults)
 - [vaultToId(address _vaultAddress)](#vaulttoid)
@@ -63,12 +64,28 @@ function (uint256 _minExitPeriod, uint256 _initialImmuneVaults) public nonpayabl
 | _minExitPeriod | uint256 |  | 
 | _initialImmuneVaults | uint256 |  | 
 
+### getMaintainer
+
+⤿ Overridden Implementation(s): [ExitGameRegistry.getMaintainer](ExitGameRegistry.md#getmaintainer),[PlasmaFramework.getMaintainer](PlasmaFramework.md#getmaintainer)
+
+interface to get the 'maintainer' address.
+
+```js
+function getMaintainer() public view
+returns(address)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+
 ### registerVault
 
 Register a vault within the PlasmaFramework. This can only be called by the maintainer.
 
 ```js
-function registerVault(uint256 _vaultId, address _vaultAddress) public nonpayable onlyOperator 
+function registerVault(uint256 _vaultId, address _vaultAddress) public nonpayable onlyFrom 
 ```
 
 **Arguments**
@@ -140,7 +157,6 @@ returns(uint256)
 * [Migrations](Migrations.md)
 * [OnlyFromAddress](OnlyFromAddress.md)
 * [OnlyWithValue](OnlyWithValue.md)
-* [Operated](Operated.md)
 * [OutputGuardHandlerRegistry](OutputGuardHandlerRegistry.md)
 * [OutputGuardModel](OutputGuardModel.md)
 * [OutputId](OutputId.md)

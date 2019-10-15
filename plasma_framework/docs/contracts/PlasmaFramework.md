@@ -2,7 +2,7 @@
 
 View Source: [contracts/src/framework/PlasmaFramework.sol](../../contracts/src/framework/PlasmaFramework.sol)
 
-**↗ Extends: [Operated](Operated.md), [VaultRegistry](VaultRegistry.md), [ExitGameRegistry](ExitGameRegistry.md), [ExitGameController](ExitGameController.md), [BlockController](BlockController.md)**
+**↗ Extends: [VaultRegistry](VaultRegistry.md), [ExitGameRegistry](ExitGameRegistry.md), [ExitGameController](ExitGameController.md), [BlockController](BlockController.md)**
 
 **PlasmaFramework**
 
@@ -10,19 +10,24 @@ View Source: [contracts/src/framework/PlasmaFramework.sol](../../contracts/src/f
 **Constants & Variables**
 
 ```js
+//public members
 uint256 public constant CHILD_BLOCK_INTERVAL;
 uint256 public minExitPeriod;
+
+//private members
+address private maintainer;
 
 ```
 
 ## Functions
 
-- [(uint256 _minExitPeriod, uint256 _initialImmuneVaults, uint256 _initialImmuneExitGames)](#)
+- [(uint256 _minExitPeriod, uint256 _initialImmuneVaults, uint256 _initialImmuneExitGames, address _authority, address _maintainer)](#)
+- [getMaintainer()](#getmaintainer)
 
 ### 
 
 ```js
-function (uint256 _minExitPeriod, uint256 _initialImmuneVaults, uint256 _initialImmuneExitGames) public nonpayable BlockController ExitGameController 
+function (uint256 _minExitPeriod, uint256 _initialImmuneVaults, uint256 _initialImmuneExitGames, address _authority, address _maintainer) public nonpayable BlockController ExitGameController 
 ```
 
 **Arguments**
@@ -32,6 +37,22 @@ function (uint256 _minExitPeriod, uint256 _initialImmuneVaults, uint256 _initial
 | _minExitPeriod | uint256 |  | 
 | _initialImmuneVaults | uint256 |  | 
 | _initialImmuneExitGames | uint256 |  | 
+| _authority | address |  | 
+| _maintainer | address |  | 
+
+### getMaintainer
+
+⤾ overrides [ExitGameRegistry.getMaintainer](ExitGameRegistry.md#getmaintainer)
+
+```js
+function getMaintainer() public view
+returns(address)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
 
 ## Contracts
 
@@ -65,7 +86,6 @@ function (uint256 _minExitPeriod, uint256 _initialImmuneVaults, uint256 _initial
 * [Migrations](Migrations.md)
 * [OnlyFromAddress](OnlyFromAddress.md)
 * [OnlyWithValue](OnlyWithValue.md)
-* [Operated](Operated.md)
 * [OutputGuardHandlerRegistry](OutputGuardHandlerRegistry.md)
 * [OutputGuardModel](OutputGuardModel.md)
 * [OutputId](OutputId.md)

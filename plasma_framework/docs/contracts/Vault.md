@@ -2,7 +2,7 @@
 
 View Source: [contracts/src/vaults/Vault.sol](../../contracts/src/vaults/Vault.sol)
 
-**↗ Extends: [Operated](Operated.md)**
+**↗ Extends: [OnlyFromAddress](OnlyFromAddress.md)**
 **↘ Derived Contracts: [Erc20Vault](Erc20Vault.md), [EthVault](EthVault.md)**
 
 **Vault**
@@ -15,6 +15,7 @@ Base contract for vault implementation
 ```js
 //internal members
 contract PlasmaFramework internal framework;
+address internal maintainer;
 bytes32[16] internal zeroHashes;
 
 //public members
@@ -70,7 +71,7 @@ function (PlasmaFramework _framework) public nonpayable
 Sets the deposit verifier contract. This can be only called by the operator.
 
 ```js
-function setDepositVerifier(address _verifier) public nonpayable onlyOperator 
+function setDepositVerifier(address _verifier) public nonpayable onlyFrom 
 ```
 
 **Arguments**
@@ -144,7 +145,6 @@ returns(uint256)
 * [Migrations](Migrations.md)
 * [OnlyFromAddress](OnlyFromAddress.md)
 * [OnlyWithValue](OnlyWithValue.md)
-* [Operated](Operated.md)
 * [OutputGuardHandlerRegistry](OutputGuardHandlerRegistry.md)
 * [OutputGuardModel](OutputGuardModel.md)
 * [OutputId](OutputId.md)

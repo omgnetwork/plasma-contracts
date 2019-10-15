@@ -124,7 +124,6 @@ function validateBondSize(struct BondSize.Params self, uint128 newBondSize) priv
 * [Migrations](Migrations.md)
 * [OnlyFromAddress](OnlyFromAddress.md)
 * [OnlyWithValue](OnlyWithValue.md)
-* [Operated](Operated.md)
 * [OutputGuardHandlerRegistry](OutputGuardHandlerRegistry.md)
 * [OutputGuardModel](OutputGuardModel.md)
 * [OutputId](OutputId.md)

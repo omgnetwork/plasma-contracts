@@ -2,7 +2,7 @@
 
 View Source: [contracts/src/exits/payment/routers/PaymentInFlightExitRouter.sol](../../contracts/src/exits/payment/routers/PaymentInFlightExitRouter.sol)
 
-**↗ Extends: [IExitProcessor](IExitProcessor.md), [Operated](Operated.md), [OnlyWithValue](OnlyWithValue.md)**
+**↗ Extends: [IExitProcessor](IExitProcessor.md), [OnlyFromAddress](OnlyFromAddress.md), [OnlyWithValue](OnlyWithValue.md)**
 **↘ Derived Contracts: [PaymentExitGame](PaymentExitGame.md)**
 
 **PaymentInFlightExitRouter**
@@ -28,6 +28,9 @@ struct PaymentChallengeIFEOutputSpent.Controller internal challengeOutputSpentCo
 struct BondSize.Params internal startIFEBond;
 struct BondSize.Params internal piggybackBond;
 
+//private members
+address private maintainer;
+
 ```
 
 **Events**
@@ -35,6 +38,16 @@ struct BondSize.Params internal piggybackBond;
 ```js
 event IFEBondUpdated(uint128  bondSize);
 event PiggybackBondUpdated(uint128  bondSize);
+event InFlightExitStarted(address indexed initiator, bytes32  txHash);
+event InFlightExitInputPiggybacked(address indexed exitTarget, bytes32  txHash, uint16  inputIndex);
+event InFlightExitOmitted(uint160 indexed exitId, address  token);
+event InFlightExitOutputWithdrawn(uint160 indexed exitId, uint16  outputIndex);
+event InFlightExitInputWithdrawn(uint160 indexed exitId, uint16  inputIndex);
+event InFlightExitOutputPiggybacked(address indexed exitTarget, bytes32  txHash, uint16  outputIndex);
+event InFlightExitChallenged(address indexed challenger, bytes32  txHash, uint256  challengeTxPosition);
+event InFlightExitChallengeResponded(address  challenger, bytes32  txHash, uint256  challengeTxPosition);
+event InFlightExitInputBlocked(address indexed challenger, bytes32  txHash, uint16  inputIndex);
+event InFlightExitOutputBlocked(address indexed challenger, bytes32  ifeTxHash, uint16  outputIndex);
 ```
 
 ## Functions
@@ -222,7 +235,7 @@ returns(uint128)
 Updates the in-flight exit bond size. Will take 2 days to come into effect.
 
 ```js
-function updateStartIFEBondSize(uint128 newBondSize) public nonpayable onlyOperator 
+function updateStartIFEBondSize(uint128 newBondSize) public nonpayable onlyFrom 
 ```
 
 **Arguments**
@@ -250,7 +263,7 @@ returns(uint128)
 Updates the piggyback bond size. Will take 2 days to come into effect.
 
 ```js
-function updatePiggybackBondSize(uint128 newBondSize) public nonpayable onlyOperator 
+function updatePiggybackBondSize(uint128 newBondSize) public nonpayable onlyFrom 
 ```
 
 **Arguments**
@@ -291,7 +304,6 @@ function updatePiggybackBondSize(uint128 newBondSize) public nonpayable onlyOper
 * [Migrations](Migrations.md)
 * [OnlyFromAddress](OnlyFromAddress.md)
 * [OnlyWithValue](OnlyWithValue.md)
-* [Operated](Operated.md)
 * [OutputGuardHandlerRegistry](OutputGuardHandlerRegistry.md)
 * [OutputGuardModel](OutputGuardModel.md)
 * [OutputId](OutputId.md)

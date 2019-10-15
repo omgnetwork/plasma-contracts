@@ -2,7 +2,7 @@
 
 View Source: [contracts/src/exits/payment/routers/PaymentStandardExitRouter.sol](../../contracts/src/exits/payment/routers/PaymentStandardExitRouter.sol)
 
-**↗ Extends: [IExitProcessor](IExitProcessor.md), [Operated](Operated.md), [OnlyWithValue](OnlyWithValue.md)**
+**↗ Extends: [IExitProcessor](IExitProcessor.md), [OnlyFromAddress](OnlyFromAddress.md), [OnlyWithValue](OnlyWithValue.md)**
 **↘ Derived Contracts: [PaymentExitGame](PaymentExitGame.md)**
 
 **PaymentStandardExitRouter**
@@ -23,12 +23,19 @@ struct PaymentProcessStandardExit.Controller internal processStandardExitControl
 struct PaymentChallengeStandardExit.Controller internal challengeStandardExitController;
 struct BondSize.Params internal startStandardExitBond;
 
+//private members
+address private maintainer;
+
 ```
 
 **Events**
 
 ```js
 event StandardExitBondUpdated(uint128  bondSize);
+event ExitStarted(address indexed owner, uint160  exitId);
+event ExitChallenged(uint256 indexed utxoPos);
+event ExitOmitted(uint160 indexed exitId);
+event ExitFinalized(uint160 indexed exitId);
 ```
 
 ## Functions
@@ -92,7 +99,7 @@ returns(uint128)
 Updates the standard exit bond size. Will take 2 days to come into effect.
 
 ```js
-function updateStartStandardExitBondSize(uint128 newBondSize) public nonpayable onlyOperator 
+function updateStartStandardExitBondSize(uint128 newBondSize) public nonpayable onlyFrom 
 ```
 
 **Arguments**
@@ -176,7 +183,6 @@ function processStandardExit(uint160 exitId, address token) internal nonpayable
 * [Migrations](Migrations.md)
 * [OnlyFromAddress](OnlyFromAddress.md)
 * [OnlyWithValue](OnlyWithValue.md)
-* [Operated](Operated.md)
 * [OutputGuardHandlerRegistry](OutputGuardHandlerRegistry.md)
 * [OutputGuardModel](OutputGuardModel.md)
 * [OutputId](OutputId.md)
