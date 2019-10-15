@@ -29,7 +29,7 @@ struct BondSize.Params internal startIFEBond;
 struct BondSize.Params internal piggybackBond;
 
 //private members
-address private maintainer;
+contract PlasmaFramework private framework;
 
 ```
 
@@ -52,7 +52,7 @@ event InFlightExitOutputBlocked(address indexed challenger, bytes32  ifeTxHash, 
 
 ## Functions
 
-- [(PlasmaFramework framework, uint256 ethVaultId, uint256 erc20VaultId, OutputGuardHandlerRegistry outputGuardHandlerRegistry, SpendingConditionRegistry spendingConditionRegistry, IStateTransitionVerifier stateTransitionVerifier, ITxFinalizationVerifier txFinalizationVerifier, uint256 supportedTxType)](#)
+- [(PlasmaFramework plasmaFramework, uint256 ethVaultId, uint256 erc20VaultId, OutputGuardHandlerRegistry outputGuardHandlerRegistry, SpendingConditionRegistry spendingConditionRegistry, IStateTransitionVerifier stateTransitionVerifier, ITxFinalizationVerifier txFinalizationVerifier, uint256 supportedTxType)](#)
 - [inFlightExits(uint160 exitId)](#inflightexits)
 - [startInFlightExit(struct PaymentInFlightExitRouterArgs.StartExitArgs args)](#startinflightexit)
 - [piggybackInFlightExitOnInput(struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnInputArgs args)](#piggybackinflightexitoninput)
@@ -70,14 +70,14 @@ event InFlightExitOutputBlocked(address indexed challenger, bytes32  ifeTxHash, 
 ### 
 
 ```js
-function (PlasmaFramework framework, uint256 ethVaultId, uint256 erc20VaultId, OutputGuardHandlerRegistry outputGuardHandlerRegistry, SpendingConditionRegistry spendingConditionRegistry, IStateTransitionVerifier stateTransitionVerifier, ITxFinalizationVerifier txFinalizationVerifier, uint256 supportedTxType) public nonpayable
+function (PlasmaFramework plasmaFramework, uint256 ethVaultId, uint256 erc20VaultId, OutputGuardHandlerRegistry outputGuardHandlerRegistry, SpendingConditionRegistry spendingConditionRegistry, IStateTransitionVerifier stateTransitionVerifier, ITxFinalizationVerifier txFinalizationVerifier, uint256 supportedTxType) public nonpayable
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| framework | PlasmaFramework |  | 
+| plasmaFramework | PlasmaFramework |  | 
 | ethVaultId | uint256 |  | 
 | erc20VaultId | uint256 |  | 
 | outputGuardHandlerRegistry | OutputGuardHandlerRegistry |  | 

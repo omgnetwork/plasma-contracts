@@ -24,7 +24,7 @@ struct PaymentChallengeStandardExit.Controller internal challengeStandardExitCon
 struct BondSize.Params internal startStandardExitBond;
 
 //private members
-address private maintainer;
+contract PlasmaFramework private framework;
 
 ```
 
@@ -40,7 +40,7 @@ event ExitFinalized(uint160 indexed exitId);
 
 ## Functions
 
-- [(PlasmaFramework framework, uint256 ethVaultId, uint256 erc20VaultId, OutputGuardHandlerRegistry outputGuardHandlerRegistry, SpendingConditionRegistry spendingConditionRegistry, ITxFinalizationVerifier txFinalizationVerifier)](#)
+- [(PlasmaFramework plasmaFramework, uint256 ethVaultId, uint256 erc20VaultId, OutputGuardHandlerRegistry outputGuardHandlerRegistry, SpendingConditionRegistry spendingConditionRegistry, ITxFinalizationVerifier txFinalizationVerifier)](#)
 - [standardExits(uint160 exitId)](#standardexits)
 - [startStandardExitBondSize()](#startstandardexitbondsize)
 - [updateStartStandardExitBondSize(uint128 newBondSize)](#updatestartstandardexitbondsize)
@@ -51,14 +51,14 @@ event ExitFinalized(uint160 indexed exitId);
 ### 
 
 ```js
-function (PlasmaFramework framework, uint256 ethVaultId, uint256 erc20VaultId, OutputGuardHandlerRegistry outputGuardHandlerRegistry, SpendingConditionRegistry spendingConditionRegistry, ITxFinalizationVerifier txFinalizationVerifier) public nonpayable
+function (PlasmaFramework plasmaFramework, uint256 ethVaultId, uint256 erc20VaultId, OutputGuardHandlerRegistry outputGuardHandlerRegistry, SpendingConditionRegistry spendingConditionRegistry, ITxFinalizationVerifier txFinalizationVerifier) public nonpayable
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| framework | PlasmaFramework |  | 
+| plasmaFramework | PlasmaFramework |  | 
 | ethVaultId | uint256 |  | 
 | erc20VaultId | uint256 |  | 
 | outputGuardHandlerRegistry | OutputGuardHandlerRegistry |  | 
