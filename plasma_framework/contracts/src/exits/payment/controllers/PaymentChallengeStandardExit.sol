@@ -37,7 +37,7 @@ library PaymentChallengeStandardExit {
     );
 
     /**
-     * @dev data to be passed around helper functions
+     * @dev Data to be passed around helper functions.
      */
     struct ChallengeStandardExitData {
         Controller controller;
@@ -46,8 +46,8 @@ library PaymentChallengeStandardExit {
     }
 
     /**
-     * @notice Function that builds the controller struct
-     * @return Controller struct of PaymentChallengeStandardExit
+     * @notice Function that builds the controller struct.
+     * @return Controller struct of PaymentChallengeStandardExit.
      */
     function buildController(
         PlasmaFramework framework,
@@ -69,11 +69,11 @@ library PaymentChallengeStandardExit {
     }
 
     /**
-     * @notice Main logic function to challenge standard exit
-     * @dev emits ExitChallenged event on success
-     * @param self the controller struct
-     * @param exitMap the storage of all standard exit data
-     * @param args arguments of challenge standard exit function from client.
+     * @notice Main logic function to challenge standard exit.
+     * @dev emits ExitChallenged event on success.
+     * @param self The controller struct.
+     * @param exitMap The storage of all standard exit data.
+     * @param args Arguments of challenge standard exit function from client.
      */
     function run(
         Controller memory self,
@@ -98,7 +98,7 @@ library PaymentChallengeStandardExit {
     }
 
     function verifyChallengeExitExists(ChallengeStandardExitData memory data) private pure {
-        require(data.exitData.exitable == true, "Such exit does not exist");
+        require(data.exitData.exitable == true, "The exit does not exist.");
     }
 
     function verifyChallengeTxProtocolFinalized(ChallengeStandardExitData memory data) private view {
@@ -111,14 +111,14 @@ library PaymentChallengeStandardExit {
                                                 .outputGuardHandlerRegistry
                                                 .outputGuardHandlers(output.outputType);
 
-        require(address(outputGuardHandler) != address(0), "Failed to get the outputGuardHandler of the output type");
+        require(address(outputGuardHandler) != address(0), "Failed to get the outputGuardHandler of the output type.");
 
         OutputGuardModel.Data memory outputGuardData = OutputGuardModel.Data({
             guard: output.outputGuard,
             preimage: data.args.outputGuardPreimage
         });
         require(outputGuardHandler.isValid(outputGuardData),
-                "Output guard information is invalid");
+                "Output guard information is invalid.");
 
         uint256 challengeTxType = WireTransaction.getTransactionType(data.args.challengeTx);
         uint8 protocol = data.controller.framework.protocols(challengeTxType);
@@ -132,7 +132,7 @@ library PaymentChallengeStandardExit {
             confirmSigAddress: outputGuardHandler.getConfirmSigAddress(outputGuardData)
         });
         require(data.controller.txFinalizationVerifier.isProtocolFinalized(finalizationData),
-                "Challenge transaction is not protocol finalized");
+                "Challenge transaction is not protocol finalized.");
     }
 
     function verifySpendingCondition(ChallengeStandardExitData memory data) private view {
@@ -147,12 +147,12 @@ library PaymentChallengeStandardExit {
         ISpendingCondition condition = data.controller.spendingConditionRegistry.spendingConditions(
             output.outputType, challengeTxType
         );
-        require(address(condition) != address(0), "Spending condition contract not found");
+        require(address(condition) != address(0), "Spending condition contract not found.");
 
         bytes32 outputId = data.controller.isDeposit.test(utxoPos.blockNum())
                 ? OutputId.computeDepositOutputId(args.exitingTx, utxoPos.outputIndex(), utxoPos.value)
                 : OutputId.computeNormalOutputId(args.exitingTx, utxoPos.outputIndex());
-        require(outputId == data.exitData.outputId, "The exiting tx is not valid, thus causing outputId mismatch");
+        require(outputId == data.exitData.outputId, "Exiting tx is invalid, causing outputId mismatch.");
         bool isSpentByChallengeTx = condition.verify(
             args.exitingTx,
             utxoPos.outputIndex(),
@@ -162,6 +162,6 @@ library PaymentChallengeStandardExit {
             args.witness,
             args.spendingConditionOptionalArgs
         );
-        require(isSpentByChallengeTx, "Spending condition failed");
+        require(isSpentByChallengeTx, "Spending condition failed.");
     }
 }
