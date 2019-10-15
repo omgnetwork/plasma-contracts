@@ -2,7 +2,7 @@
 
 View Source: [contracts/src/framework/utils/PriorityQueue.sol](../../contracts/src/framework/utils/PriorityQueue.sol)
 
-**↗ Extends: [Ownable](Ownable.md)**
+**↗ Extends: [OnlyFromAddress](OnlyFromAddress.md)**
 
 **PriorityQueue**
 
@@ -22,7 +22,8 @@ struct Queue {
 **Constants & Variables**
 
 ```js
-struct PriorityQueue.Queue internal queue;
+struct PriorityQueue.Queue private queue;
+address private framework;
 
 ```
 
@@ -82,7 +83,7 @@ returns(uint256[])
 Inserts an element into the queue by the owner.
 
 ```js
-function insert(uint256 _element) external nonpayable onlyOwner 
+function insert(uint256 _element) external nonpayable onlyFrom 
 ```
 
 **Arguments**
@@ -96,7 +97,7 @@ function insert(uint256 _element) external nonpayable onlyOwner
 Deletes the smallest element from the queue.
 
 ```js
-function delMin() external nonpayable onlyOwner 
+function delMin() external nonpayable onlyFrom 
 returns(uint256)
 ```
 

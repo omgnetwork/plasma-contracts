@@ -2,7 +2,7 @@
 
 View Source: [contracts/src/utils/OnlyFromAddress.sol](../../contracts/src/utils/OnlyFromAddress.sol)
 
-**↘ Derived Contracts: [BlockController](BlockController.md), [ExitGameRegistry](ExitGameRegistry.md), [PaymentExitGame](PaymentExitGame.md), [PaymentInFlightExitRouter](PaymentInFlightExitRouter.md), [PaymentStandardExitRouter](PaymentStandardExitRouter.md), [Vault](Vault.md), [VaultRegistry](VaultRegistry.md)**
+**↘ Derived Contracts: [BlockController](BlockController.md), [ExitGameRegistry](ExitGameRegistry.md), [PaymentExitGame](PaymentExitGame.md), [PaymentInFlightExitRouter](PaymentInFlightExitRouter.md), [PaymentStandardExitRouter](PaymentStandardExitRouter.md), [PriorityQueue](PriorityQueue.md), [Vault](Vault.md), [VaultRegistry](VaultRegistry.md)**
 
 **OnlyFromAddress**
 

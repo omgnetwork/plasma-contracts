@@ -2,7 +2,7 @@
 
 View Source: [openzeppelin-solidity/contracts/ownership/Ownable.sol](../../openzeppelin-solidity/contracts/ownership/Ownable.sol)
 
-**↘ Derived Contracts: [OutputGuardHandlerRegistry](OutputGuardHandlerRegistry.md), [PriorityQueue](PriorityQueue.md), [SpendingConditionRegistry](SpendingConditionRegistry.md)**
+**↘ Derived Contracts: [OutputGuardHandlerRegistry](OutputGuardHandlerRegistry.md), [SpendingConditionRegistry](SpendingConditionRegistry.md)**
 
 **Ownable**
 
