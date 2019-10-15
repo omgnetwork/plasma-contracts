@@ -40,7 +40,7 @@ library PaymentChallengeIFEInputSpent {
     );
 
     /**
-     * @dev data to be passed around helper functions
+     * @dev Data to be passed around helper functions.
      */
     struct ChallengeIFEData {
         Controller controller;
@@ -49,7 +49,7 @@ library PaymentChallengeIFEInputSpent {
     }
 
     /**
-     * @notice Function that builds the controller struct
+     * @notice Function that builds the controller struct.
      * @return Controller struct of PaymentChallengeIFEInputSpent
      */
     function buildController(
@@ -72,11 +72,11 @@ library PaymentChallengeIFEInputSpent {
     }
 
     /**
-     * @notice Main logic implementation for 'challengeInFlightExitInputSpent'
+     * @notice Main logic implementation for 'challengeInFlightExitInputSpent'.
      * @dev emits InFlightExitInputBlocked event on success
-     * @param self the controller struct
-     * @param inFlightExitMap the storage of all in-flight exit data
-     * @param args arguments of 'challengeInFlightExitInputSpent' function from client.
+     * @param self The controller struct.
+     * @param inFlightExitMap The storage of all in-flight exit data.
+     * @param args Arguments of 'challengeInFlightExitInputSpent' function from client.
      */
     function run(
         Controller memory self,
