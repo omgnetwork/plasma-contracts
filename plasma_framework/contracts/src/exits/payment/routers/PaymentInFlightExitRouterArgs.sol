@@ -4,11 +4,11 @@ library PaymentInFlightExitRouterArgs {
     /**
     * @notice Wraps arguments for startInFlightExit
     * @param inFlightTx RLP-encoded in-flight transaction
-    * @param inputTxs Transactions that create inputs to the in-flight transaction. Occur in the same order as in-flight transaction inputs.
+    * @param inputTxs Transactions that create inputs to the in-flight transaction. Occurs in the same order as in-flight transaction inputs.
     * @param inputTxTypes Transaction type of the input transactions
-    * @param inputUtxosPos UTXOs representing in-flight transaction inputs. Occur in the same order as input transactions.
+    * @param inputUtxosPos UTXOs representing in-flight transaction inputs. Occurs in the same order as input transactions.
     * @param outputGuardPreimagesForInputs (Optional) Output guard preimages for in-flight transaction inputs. Length must always match the inputTxs.
-    * @param inputTxsInclusionProofs Merkle proofs showing that the input-creating transactions are valid. Occur in the same order as input transactions.
+    * @param inputTxsInclusionProofs Merkle proofs showing that the input-creating transactions are valid. Occurs in the same order as input transactions.
     * @param inputTxsConfirmSigs (Optional) Confirm signatures for the input txs. Should be empty bytes, if the input tx is MoreVP. Length must always match the inputTxs.
     * @param inFlightTxWitnesses Witnesses for in-flight transaction. Occur in the same order as input transactions.
     * @param inputSpendingConditionOptionalArgs (Optional) Additional args for the spending condition used for checking inputs. Should provide empty bytes if nothing is required. Length must always match the inputTxs.
@@ -48,7 +48,7 @@ library PaymentInFlightExitRouterArgs {
     }
 
     /*
-     * @notice Wraps arguments for challenging non-canonical in-flight exits.
+     * @notice Wraps arguments for challenging non-canonical in-flight exits
      * @param inFlightTx RLP-encoded in-flight transaction
      * @param inFlightTxInputIndex Index of shared input for transactions in flight
      * @param competingTx RLP-encoded competing transaction
