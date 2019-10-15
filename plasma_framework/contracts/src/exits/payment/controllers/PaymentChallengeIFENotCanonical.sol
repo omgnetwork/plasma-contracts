@@ -26,7 +26,7 @@ library PaymentChallengeIFENotCanonical {
     using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
 
     /**
-     * @dev supportedTxType is there to enable reuse of code in different Payment Tx versions
+     * @dev supportedTxType Exists to enable reuse of code in different Payment Tx versions.
      */
     struct Controller {
         PlasmaFramework framework;
@@ -50,8 +50,8 @@ library PaymentChallengeIFENotCanonical {
     );
 
     /**
-     * @notice Function that builds the controller struct
-     * @return Controller struct of PaymentChallengeIFENotCanonical
+     * @notice Function that builds the controller struct.
+     * @return Controller struct of PaymentChallengeIFENotCanonical.
      */
     function buildController(
         PlasmaFramework framework,
@@ -75,11 +75,11 @@ library PaymentChallengeIFENotCanonical {
     }
 
     /**
-     * @notice Main logic implementation for 'challengeInFlightExitNotCanonical'
-     * @dev emits InFlightExitChallenged event on success
-     * @param self the controller struct
-     * @param inFlightExitMap the storage of all in-flight exit data
-     * @param args arguments of 'challengeInFlightExitNotCanonical' function from client.
+     * @notice Main logic implementation for 'challengeInFlightExitNotCanonical'.
+     * @dev emits InFlightExitChallenged event on success.
+     * @param self The controller struct.
+     * @param inFlightExitMap The storage of all in-flight exit data.
+     * @param args Arguments of 'challengeInFlightExitNotCanonical' function from client.
      */
     function challenge(
         Controller memory self,
@@ -127,7 +127,7 @@ library PaymentChallengeIFENotCanonical {
             args.competingTxWitness,
             args.competingTxSpendingConditionOptionalArgs
         );
-        require(isSpentByCompetingTx, "Competing input spending condition does not met");
+        require(isSpentByCompetingTx, "Competing input spending condition is not met");
 
         // Determine the position of the competing transaction
         uint256 competitorPosition = verifyCompetingTxFinalized(self, args, output);
@@ -147,13 +147,13 @@ library PaymentChallengeIFENotCanonical {
     }
 
     /**
-     * @notice Main logic implementation for 'respondToNonCanonicalChallenge'
-     * @dev emits InFlightExitChallengeResponded event on success
-     * @param self the controller struct
-     * @param inFlightExitMap the storage of all in-flight exit data
-     * @param inFlightTx the in-flight tx in rlp encoded bytes
-     * @param inFlightTxPos the UTXO position of the in-flight exit. Should hardcode 0 for the outputIndex.
-     * @param inFlightTxInclusionProof inclusion proof for the in-flight tx.
+     * @notice Main logic implementation for 'respondToNonCanonicalChallenge'.
+     * @dev emits InFlightExitChallengeResponded event on success.
+     * @param self The controller struct.
+     * @param inFlightExitMap The storage of all in-flight exit data.
+     * @param inFlightTx The in-flight tx, in rlp encoded bytes.
+     * @param inFlightTxPos The UTXO position of the in-flight exit. Should hardcode 0 for the outputIndex.
+     * @param inFlightTxInclusionProof Inclusion proof for the in-flight tx.
      */
     function respond(
         Controller memory self,
@@ -166,11 +166,11 @@ library PaymentChallengeIFENotCanonical {
     {
         uint160 exitId = ExitId.getInFlightExitId(inFlightTx);
         PaymentExitDataModel.InFlightExit storage ife = inFlightExitMap.exits[exitId];
-        require(ife.exitStartTimestamp != 0, "In-flight exit doesn't exists");
+        require(ife.exitStartTimestamp != 0, "In-flight exit does not exist");
 
         require(
             ife.oldestCompetitorPosition > inFlightTxPos,
-            "In-flight transaction has to be younger than competitors to respond to non-canonical challenge.");
+            "In-flight transaction must be younger than competitors to respond to non-canonical challenge.");
 
         UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(inFlightTxPos);
         (bytes32 root, ) = self.framework.blocks(utxoPos.blockNum());
@@ -197,7 +197,7 @@ library PaymentChallengeIFENotCanonical {
         bytes32 leaf = keccak256(txbytes);
         require(
             Merkle.checkMembership(leaf, utxoPos.txIndex(), root, inclusionProof),
-            "Transaction is not included in block of plasma chain"
+            "Transaction is not included in block of Plasma chain"
         );
 
         return utxoPos.value;
