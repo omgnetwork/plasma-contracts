@@ -50,8 +50,8 @@ library PaymentPiggybackInFlightExit {
     );
 
     /**
-     * @notice Function that builds the controller struct
-     * @return Controller struct of PaymentPiggybackInFlightExit
+     * @notice Function that builds the controller struct.
+     * @return Controller struct of PaymentPiggybackInFlightExit.
      */
     function buildController(
         PlasmaFramework framework,
@@ -77,11 +77,11 @@ library PaymentPiggybackInFlightExit {
     }
 
     /**
-     * @notice The main controller logic for 'piggybackInFlightExitOnInput'
-     * @dev emits InFlightExitInputPiggybacked event on success
-     * @param self the controller struct
-     * @param inFlightExitMap the storage of all in-flight exit data
-     * @param args arguments of 'piggybackInFlightExitOnInput' function from client.
+     * @notice The main controller logic for 'piggybackInFlightExitOnInput'.
+     * @dev emits InFlightExitInputPiggybacked event on success.
+     * @param self The controller struct.
+     * @param inFlightExitMap The storage of all in-flight exit data.
+     * @param args Arguments of 'piggybackInFlightExitOnInput' function from client.
      */
     function piggybackInput(
         Controller memory self,
@@ -94,15 +94,15 @@ library PaymentPiggybackInFlightExit {
         PaymentExitDataModel.InFlightExit storage exit = inFlightExitMap.exits[exitId];
 
         require(exit.exitStartTimestamp != 0, "No in-flight exit to piggyback on");
-        require(exit.isInFirstPhase(self.minExitPeriod), "Can only piggyback in first phase of exit period");
+        require(exit.isInFirstPhase(self.minExitPeriod), "Piggyback is only possible in the first phase of the exit period.");
 
         require(args.inputIndex < MAX_INPUT_NUM, "Index exceed max size of the input");
-        require(!exit.isInputPiggybacked(args.inputIndex), "The indexed input has been piggybacked already");
+        require(!exit.isInputPiggybacked(args.inputIndex), "Indexed input already piggybacked.");
 
         PaymentExitDataModel.WithdrawData storage withdrawData = exit.inputs[args.inputIndex];
 
-        // In startInFlightExit, exitTarget for inputs would be saved as those are the neccesarry data to create the transaction
-        require(withdrawData.exitTarget == msg.sender, "Can be called by the exit target only");
+        // In startInFlightExit, exitTarget for inputs would be saved as those are required data for creating the transaction
+        require(withdrawData.exitTarget == msg.sender, "Can only be called by the exit target");
         withdrawData.piggybackBondSize = msg.value;
 
         if (exit.isFirstPiggybackOfTheToken(withdrawData.token)) {
@@ -115,11 +115,11 @@ library PaymentPiggybackInFlightExit {
     }
 
     /**
-     * @notice The main controller logic for 'piggybackInFlightExitOnOutput'
-     * @dev emits InFlightExitOutputPiggybacked event on success
-     * @param self the controller struct
-     * @param inFlightExitMap the storage of all in-flight exit data
-     * @param args arguments of 'piggybackInFlightExitOnOutput' function from client.
+     * @notice The main controller logic for 'piggybackInFlightExitOnOutput'.
+     * @dev emits InFlightExitOutputPiggybacked event on success.
+     * @param self The controller struct.
+     * @param inFlightExitMap The storage of all in-flight exit data.
+     * @param args Arguments of 'piggybackInFlightExitOnOutput' function from client.
      */
     function piggybackOutput(
         Controller memory self,
@@ -132,24 +132,24 @@ library PaymentPiggybackInFlightExit {
         PaymentExitDataModel.InFlightExit storage exit = inFlightExitMap.exits[exitId];
 
         require(exit.exitStartTimestamp != 0, "No in-flight exit to piggyback on");
-        require(exit.isInFirstPhase(self.minExitPeriod), "Can only piggyback in first phase of exit period");
+        require(exit.isInFirstPhase(self.minExitPeriod), "Piggyback is only possible in first phase of the exit period.");
 
         require(args.outputIndex < MAX_OUTPUT_NUM, "Index exceed max size of the output");
-        require(!exit.isOutputPiggybacked(args.outputIndex), "The indexed output has been piggybacked already");
+        require(!exit.isOutputPiggybacked(args.outputIndex), "The indexed output has already been piggybacked.");
 
         PaymentExitDataModel.WithdrawData storage withdrawData = exit.outputs[args.outputIndex];
 
-        // Though for inputs, exit target is set during start inFlight exit.
-        // For outputs since the output preimage data is hold by the output owners themselves, need to get those on piggyback.
+        // The exit target for inputs is set during the start of inFlight exit.
+        // The output preimage for outputs is held by product owners, so need to get those on piggyback.
         PaymentOutputModel.Output memory output = PaymentTransactionModel.decode(args.inFlightTx).outputs[args.outputIndex];
         address payable exitTarget = getExitTargetOfOutput(self, output.outputGuard, output.outputType, args.outputGuardPreimage);
-        require(exitTarget == msg.sender, "Can be called by the exit target only");
+        require(exitTarget == msg.sender, "Can only be called by the exit target.");
 
         if (exit.isFirstPiggybackOfTheToken(withdrawData.token)) {
             enqueue(self, withdrawData.token, UtxoPosLib.UtxoPos(exit.position), exitId);
         }
 
-        // Exit Target for outputs is set in piggyback instead of start in-flight exit
+        // Exit Target for outputs is set in piggyback instead of start in-flight exit.
         withdrawData.exitTarget = exitTarget;
         withdrawData.piggybackBondSize = msg.value;
 
@@ -202,10 +202,10 @@ library PaymentPiggybackInFlightExit {
                                                 .outputGuardHandlers(outputType);
 
         require(address(handler) != address(0),
-            "Does not have outputGuardHandler registered for the output type");
+            "No outputGuardHandler is registered for the output type.");
 
         require(handler.isValid(outputGuardData),
-                "Some of the output guard related information is not valid");
+                "Some information related to the output guard is invalid.");
         return handler.getExitTarget(outputGuardData);
     }
 }
