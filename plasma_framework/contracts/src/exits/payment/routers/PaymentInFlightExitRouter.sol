@@ -34,7 +34,7 @@ contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue {
     // Initial piggyback bond size = 140000 (gas cost of challenge) * 20 gwei (current fast gas price) * 10 (safety margin)
     uint128 public constant INITIAL_PB_BOND_SIZE = 28000000000000000 wei;
 
-    // each bond size upgrade can either at most increase to 200% or decrease to 50% of current bond
+    // Each bond size upgrade can either at most increase to 200% or decrease to 50% of current bond
     uint16 public constant BOND_LOWER_BOUND_DIVISOR = 2;
     uint16 public constant BOND_UPPER_BOUND_MULTIPLIER = 2;
 
@@ -176,8 +176,8 @@ contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue {
     }
 
     /**
-     * @notice Getter functions to retrieve in-flight exit data of the PaymentExitGame.
-     * @param exitId the exit id of the in-flight exit
+     * @notice Getter Functions to retrieve in-flight exit data of the PaymentExitGame
+     * @param exitId The exit ID of the in-flight exit
      */
     function inFlightExits(uint160 exitId) public view returns (PaymentExitDataModel.InFlightExit memory) {
         return inFlightExitMap.exits[exitId];
@@ -185,7 +185,7 @@ contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue {
 
     /**
      * @notice Starts withdrawal from a transaction that might be in-flight.
-     * @param args input argument data to challenge. See struct 'StartExitArgs' for detailed info.
+     * @param args Input argument data to challenge. See struct 'StartExitArgs' for more information.
      */
     function startInFlightExit(PaymentInFlightExitRouterArgs.StartExitArgs memory args)
         public
@@ -196,8 +196,8 @@ contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue {
     }
 
     /**
-     * @notice Piggyback on an input of an in-flight exiting tx. Would be processed if the in-flight exit is non-canonical.
-     * @param args input argument data to piggyback. See struct 'PiggybackInFlightExitOnInputArgs' for detailed info.
+     * @notice Piggyback on an input of an in-flight exiting tx. Processed only if the in-flight exit is non-canonical.
+     * @param args Input argument data to piggyback. See struct 'PiggybackInFlightExitOnInputArgs' for more information.
      */
     function piggybackInFlightExitOnInput(
         PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnInputArgs memory args
@@ -210,8 +210,8 @@ contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue {
     }
 
     /**
-     * @notice Piggyback on an output of an in-flight exiting tx. Would be processed if the in-flight exit is canonical.
-     * @param args input argument data to piggyback. See struct 'PiggybackInFlightExitOnOutputArgs' for detailed info.
+     * @notice Piggyback on an output of an in-flight exiting tx. Processed only if the in-flight exit is canonical.
+     * @param args Input argument data to piggyback. See struct 'PiggybackInFlightExitOnOutputArgs' for more information.
      */
     function piggybackInFlightExitOnOutput(
         PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnOutputArgs memory args
@@ -224,8 +224,8 @@ contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue {
     }
 
     /**
-     * @notice Challenges an in-flight exit to be non canonical.
-     * @param args input argument data to challenge. See struct 'ChallengeCanonicityArgs' for detailed info.
+     * @notice Challenges an in-flight exit to be non canonical
+     * @param args Input argument data to challenge. See struct 'ChallengeCanonicityArgs' for more information.
      */
     function challengeInFlightExitNotCanonical(PaymentInFlightExitRouterArgs.ChallengeCanonicityArgs memory args)
         public
@@ -234,10 +234,10 @@ contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue {
     }
 
     /**
-     * @notice Respond to a non canonical challenge by providing position and proving the correctness of it.
-     * @param inFlightTx the rlp encoded in-flight transaction.
-     * @param inFlightTxPos the UTXO position of the in-flight exit. The outputIndex should be set to 0.
-     * @param inFlightTxInclusionProof inclusion proof for the in-flight tx.
+     * @notice Respond to a non-canonical challenge by providing its position and by proving its correctness
+     * @param inFlightTx The rlp encoded in-flight transaction
+     * @param inFlightTxPos The UTXO position of the in-flight exit. The outputIndex should be set to 0.
+     * @param inFlightTxInclusionProof Inclusion proof for the in-flight tx
      */
     function respondToNonCanonicalChallenge(
         bytes memory inFlightTx,
@@ -250,8 +250,8 @@ contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue {
     }
 
     /**
-     * @notice Challenges an exit from in-flight transaction input.
-     * @param args argument data to challenge. See struct 'ChallengeInputSpentArgs' for detailed info.
+     * @notice Challenges an exit from in-flight transaction input
+     * @param args Argument data to challenge. See struct 'ChallengeInputSpentArgs' for more information.
      */
     function challengeInFlightExitInputSpent(PaymentInFlightExitRouterArgs.ChallengeInputSpentArgs memory args)
         public
@@ -260,8 +260,8 @@ contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue {
     }
 
      /**
-     * @notice Challenges an exit from in-flight transaction output.
-     * @param args argument data to challenge. See struct 'ChallengeOutputSpent' for detailed info.
+     * @notice Challenges an exit from in-flight transaction output
+     * @param args Argument data to challenge. See struct 'ChallengeOutputSpent' for more information.
      */
     function challengeInFlightExitOutputSpent(PaymentInFlightExitRouterArgs.ChallengeOutputSpent memory args)
         public
@@ -270,25 +270,25 @@ contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue {
     }
 
     /**
-     * @notice Process in-flight exit.
+     * @notice Process in-flight exit
      * @dev This function is designed to be called in the main processExit function. Thus using internal.
-     * @param exitId The in-flight exit id.
-     * @param token The token (in erc20 address or address(0) for ETH) of the exiting output.
+     * @param exitId The in-flight exit id
+     * @param token The token (in erc20 address or address(0) for ETH) of the exiting output
      */
     function processInFlightExit(uint160 exitId, address token) internal {
         processInflightExitController.run(inFlightExitMap, exitId, token);
     }
 
     /**
-     * @notice Gets the in-flight exit bond size.
+     * @notice Retrieves the in-flight exit bond size
      */
     function startIFEBondSize() public view returns (uint128) {
         return startIFEBond.bondSize();
     }
 
     /**
-     * @notice Updates the in-flight exit bond size. Will take 2 days to come into effect.
-     * @param newBondSize The new bond size.
+     * @notice Updates the in-flight exit bond size. Take two days to become effective.
+     * @param newBondSize The new bond size
      */
     function updateStartIFEBondSize(uint128 newBondSize) public onlyOperator {
         startIFEBond.updateBondSize(newBondSize);
@@ -296,15 +296,15 @@ contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue {
     }
 
     /**
-     * @notice Gets the piggyback bond size.
+     * @notice Retrieves the piggyback bond size
      */
     function piggybackBondSize() public view returns (uint128) {
         return piggybackBond.bondSize();
     }
 
     /**
-     * @notice Updates the piggyback bond size. Will take 2 days to come into effect.
-     * @param newBondSize The new bond size.
+     * @notice Updates the piggyback bond size. Takes two days to become effective.
+     * @param newBondSize The new bond size
      */
     function updatePiggybackBondSize(uint128 newBondSize) public onlyOperator {
         piggybackBond.updateBondSize(newBondSize);
