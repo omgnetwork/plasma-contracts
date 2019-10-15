@@ -12,8 +12,10 @@ contract('VaultRegistry', ([_, maintainer, other]) => {
 
     beforeEach(async () => {
         this.registry = await VaultRegistry.new(
-            MIN_EXIT_PERIOD, INITIAL_IMMUNE_VAULTS_NUM, maintainer,
+            MIN_EXIT_PERIOD, INITIAL_IMMUNE_VAULTS_NUM,
         );
+
+        await this.registry.setMaintainer(maintainer);
         this.dummyVault = await DummyVault.new();
     });
 

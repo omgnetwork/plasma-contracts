@@ -24,12 +24,8 @@ contract('PlasmaFramework', ([authority, maintainer]) => {
                 .to.be.bignumber.equal(new BN(TEST_MIN_EXIT_PERIOD));
         });
 
-        it('should set authority address', async () => {
-            expect(await this.framework.authority()).to.equal(authority);
-        });
-
         it('should set maintainer address', async () => {
-            expect(await this.framework.maintainer()).to.equal(maintainer);
+            expect(await this.framework.getMaintainer()).to.equal(maintainer);
         });
     });
 });

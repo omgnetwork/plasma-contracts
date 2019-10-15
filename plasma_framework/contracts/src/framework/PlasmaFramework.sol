@@ -23,8 +23,7 @@ contract PlasmaFramework is VaultRegistry, ExitGameRegistry, ExitGameController,
      * Special period for deposit: https://git.io/JecCV
      */
     uint256 public minExitPeriod;
-    address public authority;
-    address public maintainer;
+    address private maintainer;
 
     constructor(
         uint256 _minExitPeriod,
@@ -34,11 +33,14 @@ contract PlasmaFramework is VaultRegistry, ExitGameRegistry, ExitGameController,
         address _maintainer
     )
         public
-        BlockController(CHILD_BLOCK_INTERVAL, _minExitPeriod, _initialImmuneVaults, _authority, _maintainer)
-        ExitGameController(_minExitPeriod, _initialImmuneExitGames, _maintainer)
+        BlockController(CHILD_BLOCK_INTERVAL, _minExitPeriod, _initialImmuneVaults, _authority)
+        ExitGameController(_minExitPeriod, _initialImmuneExitGames)
     {
         minExitPeriod = _minExitPeriod;
-        authority = _authority;
         maintainer = _maintainer;
+    }
+
+    function getMaintainer() public view returns (address) {
+        return maintainer;
     }
 }

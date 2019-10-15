@@ -15,8 +15,8 @@ contract('ExitGameRegistry', ([_, maintainer, other]) => {
         this.registry = await ExitGameRegistry.new(
             MIN_EXIT_PERIOD,
             INITIAL_IMMUNE_EXIT_GAMES_NUM,
-            maintainer,
         );
+        await this.registry.setMaintainer(maintainer);
         this.dummyExitGame = (await DummyExitGame.new());
     });
 

@@ -24,7 +24,7 @@ contract Vault is OnlyFromAddress {
 
     constructor(PlasmaFramework _framework) public {
         framework = _framework;
-        maintainer = framework.maintainer();
+        maintainer = framework.getMaintainer();
         zeroHashes = ZeroHashesProvider.getZeroHashes();
     }
 

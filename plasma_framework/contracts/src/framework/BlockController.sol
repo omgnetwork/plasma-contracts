@@ -35,11 +35,10 @@ contract BlockController is OnlyFromAddress, VaultRegistry {
         uint256 _interval,
         uint256 _minExitPeriod,
         uint256 _initialImmuneVaults,
-        address _authority,
-        address _maintainer
+        address _authority
     )
         public
-        VaultRegistry(_minExitPeriod, _initialImmuneVaults, _maintainer)
+        VaultRegistry(_minExitPeriod, _initialImmuneVaults)
     {
         authority = _authority;
         childBlockInterval = _interval;

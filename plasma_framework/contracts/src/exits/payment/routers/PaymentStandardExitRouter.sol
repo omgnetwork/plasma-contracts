@@ -79,7 +79,7 @@ contract PaymentStandardExitRouter is
         require(erc20VaultAddress != address(0), "Invalid ERC20 vault");
         Erc20Vault erc20Vault = Erc20Vault(erc20VaultAddress);
 
-        maintainer = framework.maintainer();
+        maintainer = framework.getMaintainer();
 
         startStandardExitController = PaymentStartStandardExit.buildController(
             this, framework, outputGuardHandlerRegistry, txFinalizationVerifier, ethVaultId, erc20VaultId

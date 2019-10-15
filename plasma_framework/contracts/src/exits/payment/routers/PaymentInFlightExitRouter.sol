@@ -121,7 +121,7 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyFromAddress, OnlyWithV
     )
         public
     {
-        maintainer = framework.maintainer();
+        maintainer = framework.getMaintainer();
 
         startInFlightExitController = PaymentStartInFlightExit.buildController(
             framework,

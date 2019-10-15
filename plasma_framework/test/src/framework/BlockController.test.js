@@ -1,4 +1,4 @@
-const BlockController = artifacts.require('BlockController');
+const BlockController = artifacts.require('BlockControllerMock');
 const DummyVault = artifacts.require('DummyVault');
 
 const {
@@ -17,7 +17,6 @@ contract('BlockController', ([maintainer, authority, other]) => {
             MIN_EXIT_PERIOD,
             INITIAL_IMMUNE_VAULTS,
             authority,
-            maintainer,
         );
         this.blockController.activateChildChain({ from: authority });
 
@@ -74,7 +73,6 @@ contract('BlockController', ([maintainer, authority, other]) => {
                     MIN_EXIT_PERIOD,
                     INITIAL_IMMUNE_VAULTS,
                     authority,
-                    maintainer,
                 );
                 this.dummyBlockHash = web3.utils.keccak256('dummy block');
                 this.dummyVault = await DummyVault.new();

@@ -37,9 +37,9 @@ contract ExitGameController is ExitGameRegistry {
         uint256 priority
     );
 
-    constructor(uint256 _minExitPeriod, uint256 _initialImmuneExitGames, address _maintainer)
+    constructor(uint256 _minExitPeriod, uint256 _initialImmuneExitGames)
         public
-        ExitGameRegistry(_minExitPeriod, _initialImmuneExitGames, _maintainer)
+        ExitGameRegistry(_minExitPeriod, _initialImmuneExitGames)
     {
     }
 
