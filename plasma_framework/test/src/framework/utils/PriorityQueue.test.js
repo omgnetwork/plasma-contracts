@@ -77,7 +77,7 @@ contract('PriorityQueue', ([_, nonOwner]) => {
         it('should fail when not inserted by the owner', async () => {
             await expectRevert(
                 this.priorityQueue.insert(100, { from: nonOwner }),
-                'Ownable: caller is not the owner.',
+                'Not being called by expected caller',
             );
         });
     });
@@ -116,7 +116,7 @@ contract('PriorityQueue', ([_, nonOwner]) => {
         it('should fail when not deleted by the owner', async () => {
             await expectRevert(
                 this.priorityQueue.delMin({ from: nonOwner }),
-                'Ownable: caller is not the owner.',
+                'Not being called by expected caller',
             );
         });
     });
