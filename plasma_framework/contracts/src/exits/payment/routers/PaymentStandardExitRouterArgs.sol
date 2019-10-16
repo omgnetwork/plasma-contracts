@@ -2,11 +2,11 @@ pragma solidity 0.5.11;
 
 library PaymentStandardExitRouterArgs {
     /**
-     * @notice Wraps arguments for startStandardExit.
-     * @param utxoPos Position of the exiting output.
-     * @param rlpOutputTx RLP encoded transaction that created the exiting output.
-     * @param outputGuardPreimage (Optional) Output guard preimage data.
-     * @param outputTxInclusionProof A Merkle proof showing that the transaction was included.
+     * @notice Wraps arguments for startStandardExit
+     * @param utxoPos Position of the exiting output
+     * @param rlpOutputTx The RLP-encoded transaction that creates the exiting output
+     * @param outputGuardPreimage (Optional) Output guard preimage data
+     * @param outputTxInclusionProof A Merkle proof showing that the transaction was included
     */
     struct StartStandardExitArgs {
         uint192 utxoPos;
@@ -16,17 +16,17 @@ library PaymentStandardExitRouterArgs {
     }
 
     /**
-     * @notice Input args data for challengeStandardExit.
-     * @param exitId Identifier of the standard exit to challenge.
-     * @param exitingTx The transaction that is exiting.
-     * @param challengeTx RLP encoded transaction that spends the exiting output.
-     * @param inputIndex Which input of the challenging tx corresponds to the exiting output.
-     * @param witness Witness data that can prove the exiting output is spent.
-     * @param spendingConditionOptionalArgs optional extra data for the spending condition.
-     * @param outputGuardPreimage (Optional) output guard preimage for the challenge tx to use the output
-     * @param challengeTxPos (Optional) tx position of the challenge tx if it is of MVP protocol.
-     * @param challengeTxInclusionProof (Optional) if the challenge tx is of MVP protocol provide the inclusion proof of it
-     * @param challengeTxConfirmSig (Optional) if the challenge tx is of MVP protocol provide the confirm sig of it
+     * @notice Input args data for challengeStandardExit
+     * @param exitId Identifier of the standard exit to challenge
+     * @param exitingTx The exiting transaction
+     * @param challengeTx RLP-encoded transaction that spends the exiting output
+     * @param inputIndex The input of the challenging tx corresponding to the exiting output
+     * @param witness Witness data that proves the exiting output is spent
+     * @param spendingConditionOptionalArgs (Optional) Additional data for the spending condition
+     * @param outputGuardPreimage (Optional) The output guard preimage for the challenge tx to use the output
+     * @param challengeTxPos (Optional) The position of a MVP protocol challeng tx
+     * @param challengeTxInclusionProof (Optional) Provides inclusion proof for a MVP protocol challenge tx
+     * @param challengeTxConfirmSig (Optional) Provides the confirm signature of a MVP protocol challenge tx
      */
     struct ChallengeStandardExitArgs {
         uint160 exitId;
