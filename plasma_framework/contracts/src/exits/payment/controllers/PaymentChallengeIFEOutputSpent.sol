@@ -38,9 +38,9 @@ library PaymentChallengeIFEOutputSpent {
     /**
      * @notice Main logic implementation for 'challengeInFlightExitOutputSpent'
      * @dev emits InFlightExitOutputBlocked event on success
-     * @param controller the controller struct
-     * @param inFlightExitMap the storage of all in-flight exit data
-     * @param args arguments of 'challengeInFlightExitOutputSpent' function from client.
+     * @param controller The controller struct
+     * @param inFlightExitMap The storage of all in-flight exit data
+     * @param args Arguments of 'challengeInFlightExitOutputSpent' function from client
      */
     function run(
         Controller memory controller,
@@ -51,7 +51,7 @@ library PaymentChallengeIFEOutputSpent {
     {
         uint160 exitId = ExitId.getInFlightExitId(args.inFlightTx);
         PaymentExitDataModel.InFlightExit storage ife = inFlightExitMap.exits[exitId];
-        require(ife.exitStartTimestamp != 0, "In-flight exit doesn't exist");
+        require(ife.exitStartTimestamp != 0, "In-flight exit does not exist");
 
         UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(args.outputUtxoPos);
         uint16 outputIndex = UtxoPosLib.outputIndex(utxoPos);
@@ -115,6 +115,6 @@ library PaymentChallengeIFEOutputSpent {
             args.spendingConditionOptionalArgs
         );
 
-        require(isSpentBySpendingTx, "Challenging transaction does not spent the output");
+        require(isSpentBySpendingTx, "Challenging transaction does not spend the output");
     }
 }
