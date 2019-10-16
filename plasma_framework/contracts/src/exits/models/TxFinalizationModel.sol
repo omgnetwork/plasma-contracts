@@ -7,12 +7,12 @@ import "../../utils/TxPosLib.sol";
 library TxFinalizationModel {
     /**
      * @param framework Plasma framework contract
-     * @param protocol Either MVP or MoreVp. see 'Protocol.sol' for the representive value.
-     * @param txBytes Encoded transaction in bytes format that is checking the finalization.
-     * @param txPos (Optional) Tx position of the transaction.
-     * @param inclusionProof (Optional) Inclusion proof of the merkle path of the transaction
-     * @param confirmSig (Optional) Confirm signature of the transaction.
-     * @param confirmSigAddress (Optional) Confirm signature address to check with.
+     * @param protocol Either MVP or MoreVp. See 'Protocol.sol' for the representive value
+     * @param txBytes Encoded transaction, in bytes, which checks the finalization.
+     * @param txPos (Optional) Tx position of the transaction
+     * @param inclusionProof (Optional) Inclusion proof of the Merkle path of the transaction
+     * @param confirmSig (Optional) Confirm signature of the transaction
+     * @param confirmSigAddress (Optional) Confirm signature address to check with
      */
     struct Data {
         PlasmaFramework framework;
