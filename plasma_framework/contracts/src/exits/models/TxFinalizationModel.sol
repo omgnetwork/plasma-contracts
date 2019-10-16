@@ -8,7 +8,7 @@ library TxFinalizationModel {
     /**
      * @param framework Plasma framework contract
      * @param protocol Either MVP or MoreVp. See 'Protocol.sol' for the representive value
-     * @param txBytes Encoded transaction, in bytes, which checks the finalization.
+     * @param txBytes Encoded transaction, in bytes, which checks the finalization
      * @param txPos (Optional) Tx position of the transaction
      * @param inclusionProof (Optional) Inclusion proof of the Merkle path of the transaction
      * @param confirmSig (Optional) Confirm signature of the transaction
