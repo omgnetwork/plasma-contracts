@@ -15,7 +15,6 @@ Base contract for vault implementation
 ```js
 //internal members
 contract PlasmaFramework internal framework;
-address internal maintainer;
 bytes32[16] internal zeroHashes;
 
 //public members
