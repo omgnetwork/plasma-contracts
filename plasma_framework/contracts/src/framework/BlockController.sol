@@ -79,7 +79,7 @@ contract BlockController is OnlyFromAddress, VaultRegistry {
      * @param _blockRoot Merkle root of the plasma block.
      */
     function submitBlock(bytes32 _blockRoot) external onlyFrom(authority) {
-        require(isChildChainActivated == true, "Child chain has not been activate by authority address yet");
+        require(isChildChainActivated == true, "Child chain has not been activated by authority address yet");
         uint256 submittedBlockNumber = nextChildBlock;
 
         blocks[submittedBlockNumber] = BlockModel.Block({
@@ -100,7 +100,7 @@ contract BlockController is OnlyFromAddress, VaultRegistry {
      * @return the deposit block number
      */
     function submitDepositBlock(bytes32 _blockRoot) public onlyFromNonQuarantinedVault returns (uint256) {
-        require(isChildChainActivated == true, "Child chain has not been activate by authority address yet");
+        require(isChildChainActivated == true, "Child chain has not been activated by authority address yet");
         require(nextDeposit < childBlockInterval, "Exceeded limit of deposits per child block interval");
 
         uint256 blknum = nextDepositBlock();

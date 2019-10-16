@@ -84,14 +84,14 @@ contract('BlockController', ([maintainer, authority, other]) => {
             it('should not be able to submit child chain block', async () => {
                 await expectRevert(
                     this.blockController.submitBlock(this.dummyBlockHash, { from: authority }),
-                    'Child chain has not been activate by authority address yet',
+                    'Child chain has not been activated by authority address yet',
                 );
             });
 
             it('should not be able to submit deposit block', async () => {
                 await expectRevert(
                     this.dummyVault.submitDepositBlock(this.dummyBlockHash),
-                    'Child chain has not been activate by authority address yet',
+                    'Child chain has not been activated by authority address yet',
                 );
             });
 
