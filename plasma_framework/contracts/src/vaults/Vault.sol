@@ -12,7 +12,6 @@ import "../utils/OnlyFromAddress.sol";
 contract Vault is OnlyFromAddress {
     event SetDepositVerifierCalled(address nextDepositVerifier);
     PlasmaFramework internal framework;
-    address internal maintainer;
     bytes32[16] internal zeroHashes; // Pre-computes zero hashes to be used for building merkle tree for deposit block
 
     /**
@@ -24,7 +23,6 @@ contract Vault is OnlyFromAddress {
 
     constructor(PlasmaFramework _framework) public {
         framework = _framework;
-        maintainer = framework.getMaintainer();
         zeroHashes = ZeroHashesProvider.getZeroHashes();
     }
 
@@ -45,7 +43,7 @@ contract Vault is OnlyFromAddress {
      * @dev When one contract is already set next will be effective after MIN_EXIT_PERIOD.
      * @param _verifier address of the verifier contract.
      */
-    function setDepositVerifier(address _verifier) public onlyFrom(maintainer) {
+    function setDepositVerifier(address _verifier) public onlyFrom(framework.getMaintainer()) {
         require(_verifier != address(0), "Cannot set an empty address as deposit verifier");
 
         if (depositVerifiers[0] != address(0)) {
