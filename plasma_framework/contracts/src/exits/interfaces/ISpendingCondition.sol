@@ -1,21 +1,21 @@
 pragma solidity 0.5.11;
 
 /**
- * @notice interface of the spending condition.
- * @dev for the interface design and discussion, see the following GH issue
+ * @notice Interface of the spending condition
+ * @dev For the interface design and discussion, see the following GH issue
  *      https://github.com/omisego/plasma-contracts/issues/214
  */
 interface ISpendingCondition {
 
     /**
      * @notice Verifies the spending condition
-     * @param inputTx encoded input transaction in bytes
-     * @param outputIndex the output index of the input transaction
-     * @param inputTxPos the tx position of the input tx. (0 if in-flight)
-     * @param spendingTx spending transaction in bytes
-     * @param inputIndex the input index of the spending tx that points to the output
-     * @param witness the witness data of the spending condition
-     * @param optionalArgs some optional data for the spending condition's need (eg. output guard preimage)
+     * @param inputTx Encoded input transaction, in bytes
+     * @param outputIndex The output index of the input transaction
+     * @param inputTxPos The tx position of the input tx (0 if in-flight)
+     * @param spendingTx Spending transaction, in bytes
+     * @param inputIndex The input index of the spending tx that points to the output
+     * @param witness The witness data of the spending condition
+     * @param optionalArgs Optional data for the spending condition (for example, output guard preimage)
      */
     function verify(
         bytes calldata inputTx,
