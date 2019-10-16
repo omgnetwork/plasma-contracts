@@ -39,10 +39,10 @@ library PaymentProcessInFlightExit {
      * @dev emits InFlightExitOmitted event if the exit is omitted
      * @dev emits InFlightExitInputWithdrawn event if the input of IFE is withdrawn successfully
      * @dev emits InFlightExitOutputWithdrawn event if the output of IFE is withdrawn successfully
-     * @param self the controller struct
-     * @param exitMap the storage of all in-flight exit data
-     * @param exitId the exitId of the in-flight exit
-     * @param token the ERC20 token address of the exit. Uses address(0) to represent ETH.
+     * @param self The controller struct
+     * @param exitMap The storage of all in-flight exit data
+     * @param exitId The exitId of the in-flight exit
+     * @param token The ERC20 token address of the exit; uses address(0) to represent ETH
      */
     function run(
         Controller memory self,
@@ -54,9 +54,9 @@ library PaymentProcessInFlightExit {
     {
         PaymentExitDataModel.InFlightExit storage exit = exitMap.exits[exitId];
 
-        // check if any input spent already, this is required to prevent operator stealing fund.
+        // Check whether any input is already spent. Required to prevent operator stealing funds.
         // Since process exit should not revert to avoid blocking the while loop, return directly.
-        // see: https://github.com/omisego/plasma-contracts/issues/102#issuecomment-495809967
+        // See: https://github.com/omisego/plasma-contracts/issues/102#issuecomment-495809967
         if (exit.exitStartTimestamp == 0 || isAnyInputSpent(self.framework, exit, token)) {
             emit InFlightExitOmitted(exitId, token);
             return;
@@ -130,8 +130,8 @@ library PaymentProcessInFlightExit {
         pure
         returns (bool)
     {
-        // whether input is spent is already checked all together in 'isAnyInputSpent'
-        // thus do not need to re-check here.
+        // The check to seee whether input is spent is performed in 'isAnyInputSpent'
+        // For this reason, no need to check again here.
         return withdrawal.token == token &&
                 exit.isInputPiggybacked(index);
     }
@@ -172,10 +172,10 @@ library PaymentProcessInFlightExit {
     )
         private
     {
-        // we flag _all_ inputs no matter it is piggybacked or not
-        // if exiting from output, all inputs are consider spent and can only exit from output furthre on.
-        // if exiting from input, for simplicity, we force all users to piggyback the input together at once
-        // instead of re-start the IFE and re-piggyback their input.
+        // We flag _all_ inputs regardless of whether it is piggybacked
+        // If exiting from output, all inputs are considered spent and can only exit from output in future.
+        // If exiting from input, to keep things simple, all users must piggyback the input at the same time,
+        // instead of re-starting the IFE and then re-piggyback their input.
         uint256 inputNumOfTheToken;
         for (uint16 i = 0; i < MAX_INPUT_NUM; i++) {
             if (exit.inputs[i].token == token) {
@@ -183,7 +183,7 @@ library PaymentProcessInFlightExit {
             }
         }
 
-        // only the piggybacked outputs are flagged. User can still standard exit if non-piggybacked.
+        // Only piggybacked outputs are flagged. User can still perform standard exit if non-piggybacked.
         uint256 piggybackedOutputNumOfTheToken;
         for (uint16 i = 0; i < MAX_OUTPUT_NUM; i++) {
             if (exit.outputs[i].token == token && exit.isOutputPiggybacked(i)) {
