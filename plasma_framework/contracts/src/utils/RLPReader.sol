@@ -16,41 +16,12 @@ library RLPReader {
         uint memPtr;
     }
 
-    struct Iterator {
-        RLPItem item;   // Item that's being iterated over.
-        uint nextPtr;   // Position of the next item in the list.
-    }
-
-    /*
-    * @dev Returns the next element in the iteration. Reverts if it has not next element.
-    * @param self The iterator.
-    * @return The next element in the iteration.
-    */
-    function next(Iterator memory self) internal pure returns (RLPItem memory) {
-        require(hasNext(self), "Already at the last element in the iterator");
-
-        uint ptr = self.nextPtr;
-        uint itemLength = _itemLength(ptr);
-        self.nextPtr = ptr + itemLength;
-
-        return RLPItem(itemLength, ptr);
-    }
-
-    /*
-    * @dev Returns true if the iteration has more elements.
-    * @param self The iterator.
-    * @return true if the iteration has more elements.
-    */
-    function hasNext(Iterator memory self) internal pure returns (bool) {
-        RLPItem memory item = self.item;
-        return self.nextPtr < item.memPtr + item.len;
-    }
-
     /*
     * @param item RLP encoded bytes
     */
     function toRlpItem(bytes memory item) internal pure returns (RLPItem memory) {
         uint memPtr;
+
         // solhint-disable-next-line no-inline-assembly
         assembly {
             memPtr := add(item, 0x20)
@@ -60,36 +31,12 @@ library RLPReader {
     }
 
     /*
-    * @dev Create an iterator. Reverts if item is not a list.
-    * @param self The RLP item.
-    * @return An 'Iterator' over the item.
-    */
-    function iterator(RLPItem memory self) internal pure returns (Iterator memory) {
-        require(isList(self), "Item is not a list");
-
-        uint ptr = self.memPtr + _payloadOffset(self.memPtr);
-        return Iterator(self, ptr);
-    }
-
-    /*
-    * @param item RLP encoded bytes
-    */
-    function rlpLen(RLPItem memory item) internal pure returns (uint) {
-        return item.len;
-    }
-
-    /*
-    * @param item RLP encoded bytes
-    */
-    function payloadLen(RLPItem memory item) internal pure returns (uint) {
-        return item.len - _payloadOffset(item.memPtr);
-    }
-
-    /*
     * @param item RLP encoded list in bytes
     */
     function toList(RLPItem memory item) internal pure returns (RLPItem[] memory) {
         require(isList(item), "Item is not a list");
+
+        require(validateList(item), "bad");
 
         uint items = numItems(item);
         RLPItem[] memory result = new RLPItem[](items);
@@ -103,6 +50,34 @@ library RLPReader {
         }
 
         return result;
+    }
+
+    function validateList(RLPItem memory item) internal pure returns (bool) {
+        uint byte0;
+        uint memPtr = item.memPtr;
+
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            byte0 := byte(0, mload(memPtr))
+        }
+
+        uint itemLen;
+        if (byte0  >= LIST_LONG_START) {
+            // solhint-disable-next-line no-inline-assembly
+            assembly {
+                let byteLen := sub(byte0, 0xf7)
+                memPtr := add(memPtr, 1)
+
+                // TODO audit prep, check this shifting for overflow, etc
+                let dataLen := div(mload(memPtr), exp(256, sub(32, byteLen))) // right shifting to the correct length
+                itemLen := add(dataLen, add(byteLen, 1))
+
+            }
+            if (itemLen < 55) {
+                return false;
+            }
+        }
+        return true;
     }
 
     // @return indicator whether encoded payload is a list. negate this function call for isData.
@@ -137,19 +112,6 @@ library RLPReader {
         return result;
     }
 
-    // any non-zero byte is considered true
-    function toBoolean(RLPItem memory item) internal pure returns (bool) {
-        require(item.len == 1, "Item length must be == 1");
-        uint result;
-        uint memPtr = item.memPtr;
-        // solhint-disable-next-line no-inline-assembly
-        assembly {
-            result := byte(0, mload(memPtr))
-        }
-
-        return result == 0 ? false : true;
-    }
-
     function toAddress(RLPItem memory item) internal pure returns (address) {
         // 1 byte for the length prefix
         require(item.len == 21, "Item length must be == 21");
@@ -161,6 +123,8 @@ library RLPReader {
         require(item.len > 0 && item.len <= 33, "Item length must be <= 33");
 
         uint offset = _payloadOffset(item.memPtr);
+        require(offset < 2, "offset must be <= 1");
+
         uint len = item.len - offset;
 
         uint result;
@@ -170,43 +134,12 @@ library RLPReader {
             result := mload(memPtr)
 
             // shfit to the correct location if neccesary
+            // TODO audit prep, can this overflow?
             if lt(len, 32) {
                 result := div(result, exp(256, sub(32, len)))
             }
         }
 
-        return result;
-    }
-
-    // enforces 32 byte length
-    function toUintStrict(RLPItem memory item) internal pure returns (uint) {
-        // one byte prefix
-        require(item.len == 33, "Item length must be == 33");
-
-        uint result;
-        uint memPtr = item.memPtr + 1;
-        // solhint-disable-next-line no-inline-assembly
-        assembly {
-            result := mload(memPtr)
-        }
-
-        return result;
-    }
-
-    function toBytes(RLPItem memory item) internal pure returns (bytes memory) {
-        require(item.len > 0, "Item length must be > 0");
-
-        uint offset = _payloadOffset(item.memPtr);
-        uint len = item.len - offset; // data length
-        bytes memory result = new bytes(len);
-
-        uint destPtr;
-        // solhint-disable-next-line no-inline-assembly
-        assembly {
-            destPtr := add(0x20, result)
-        }
-
-        copy(item.memPtr + offset, destPtr, len);
         return result;
     }
 
@@ -248,6 +181,7 @@ library RLPReader {
                 memPtr := add(memPtr, 1) // skip over the first byte
                 
                 /* 32 byte word size */
+                // TODO audit prep, check this shifting for overflow, etc
                 let dataLen := div(mload(memPtr), exp(256, sub(32, byteLen))) // right shifting to get the len
                 itemLen := add(dataLen, add(byteLen, 1))
             }
@@ -259,6 +193,7 @@ library RLPReader {
                 let byteLen := sub(byte0, 0xf7)
                 memPtr := add(memPtr, 1)
 
+                // TODO audit prep, check this shifting for overflow, etc
                 let dataLen := div(mload(memPtr), exp(256, sub(32, byteLen))) // right shifting to the correct length
                 itemLen := add(dataLen, add(byteLen, 1))
             }

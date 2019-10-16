@@ -17,10 +17,6 @@ contract RLPMock {
         return bytes20(_data.toRlpItem().toAddress());
     }
 
-    function decodeBool(bytes memory _data) public pure returns (bool) {
-        return _data.toRlpItem().toBoolean();
-    }
-
     function decodeInt(bytes memory _data) public pure returns (int) {
         return int(_data.toRlpItem().toUint());
     }
@@ -37,13 +33,5 @@ contract RLPMock {
             result[i] = items[i].toRlpBytes();
         }
         return result;
-    }
-
-    function decodeString(bytes memory _data) public pure returns (string memory) {
-        return string(_data.toRlpItem().toBytes());
-    }
-
-    function decodeBytes(bytes memory _data) public pure returns (bytes memory) {
-        return _data.toRlpItem().toBytes();
     }
 }
