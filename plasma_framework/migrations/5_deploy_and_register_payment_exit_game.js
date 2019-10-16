@@ -18,7 +18,12 @@ const TxFinalizationVerifier = artifacts.require('TxFinalizationVerifier');
 
 const config = require('./config.js');
 
-module.exports = async (_) => {
+module.exports = async (
+    deployer,
+    _,
+    // eslint-disable-next-line no-unused-vars
+    [deployerAddress, maintainerAddress, authorityAddress],
+) => {
     const PAYMENT_OUTPUT_TYPE = config.registerKeys.outputTypes.payment;
     const PAYMENT_TX_TYPE = config.registerKeys.txTypes.payment;
     const PAYMENT_V2_TX_TYPE = config.registerKeys.txTypes.paymentV2;
@@ -87,6 +92,6 @@ module.exports = async (_) => {
         PAYMENT_TX_TYPE,
         paymentExitGame.address,
         config.frameworks.protocols.moreVp,
-        { from: global.maintainerAddress },
+        { from: maintainerAddress },
     );
 };

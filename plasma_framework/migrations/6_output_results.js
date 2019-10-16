@@ -4,7 +4,12 @@ const PlasmaFramework = artifacts.require('PlasmaFramework');
 
 const config = require('./config.js');
 
-module.exports = async (_) => {
+module.exports = async (
+    deployer,
+    _,
+    // eslint-disable-next-line no-unused-vars
+    [deployerAddress, maintainerAddress, authorityAddress],
+) => {
     const plasmaFramework = await PlasmaFramework.deployed();
     const ethVault = await plasmaFramework.vaults(config.registerKeys.vaultId.eth);
     const erc20Vault = await plasmaFramework.vaults(config.registerKeys.vaultId.erc20);
@@ -16,6 +21,6 @@ module.exports = async (_) => {
         eth_vault: `${ethVault}`.toLowerCase(),
         erc20_vault: `${erc20Vault}`.toLowerCase(),
         payment_exit_game: `${paymentExitGame}`.toLowerCase(),
-        authority_address: `${global.authorityAddress}`.toLowerCase(),
+        authority_address: `${authorityAddress}`.toLowerCase(),
     }));
 };
