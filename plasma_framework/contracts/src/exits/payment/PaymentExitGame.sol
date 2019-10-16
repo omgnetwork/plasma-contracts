@@ -51,9 +51,9 @@ contract PaymentExitGame is IExitProcessor, PaymentStandardExitRouter, PaymentIn
     }
 
     /**
-     * @notice Callback processes exit function for the PlasmaFramework to call.
-     * @param exitId exit id.
-     * @param token token (ERC20 address or address(0) for ETH) of the exiting output.
+     * @notice Callback processes exit function for the PlasmaFramework to call
+     * @param exitId The exit ID
+     * @param token Token (ERC20 address or address(0) for ETH) of the exiting output
      */
     function processExit(uint160 exitId, uint256, address token) external onlyFrom(address(plasmaFramework)) {
         if (ExitId.isStandardExit(exitId)) {
@@ -64,7 +64,7 @@ contract PaymentExitGame is IExitProcessor, PaymentStandardExitRouter, PaymentIn
     }
 
     /**
-     * @notice Helper function to compute standard exit id.
+     * @notice Helper function to compute the standard exit ID
      */
     function getStandardExitId(bool _isDeposit, bytes memory _txBytes, uint256 _utxoPos)
         public
@@ -76,7 +76,7 @@ contract PaymentExitGame is IExitProcessor, PaymentStandardExitRouter, PaymentIn
     }
 
     /**
-     * @notice Helper function to compute in-flight exit id.
+     * @notice Helper function to compute the in-flight exit ID
      */
     function getInFlightExitId(bytes memory _txBytes)
         public
