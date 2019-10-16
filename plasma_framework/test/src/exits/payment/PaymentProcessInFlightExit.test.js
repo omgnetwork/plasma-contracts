@@ -266,7 +266,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
                 expect(postBalance).to.be.bignumber.equal(expectedBalance);
             });
 
-            it('should flag all inputs with the same token as spent no matter piggybacke or not', async () => {
+            it('should flag all inputs with the same token as spent no matter piggybacked or not', async () => {
                 // piggybacked input
                 expect(await this.framework.isOutputSpent(TEST_OUTPUT_ID_FOR_INPUT_1)).to.be.true;
                 // unpiggybacked input

@@ -101,7 +101,7 @@ library PaymentPiggybackInFlightExit {
 
         PaymentExitDataModel.WithdrawData storage withdrawData = exit.inputs[args.inputIndex];
 
-        // In startInFlightExit, exitTarget for inputs would be saved as those are the neccesarry data to create the transaction
+        // In startInFlightExit, exitTarget for inputs would be saved as those are the necessary data to create the transaction
         require(withdrawData.exitTarget == msg.sender, "Can be called by the exit target only");
         withdrawData.piggybackBondSize = msg.value;
 
