@@ -2,7 +2,7 @@
 
 View Source: [openzeppelin-solidity/contracts/ownership/Ownable.sol](../../openzeppelin-solidity/contracts/ownership/Ownable.sol)
 
-**↘ Derived Contracts: [OutputGuardHandlerRegistry](OutputGuardHandlerRegistry.md), [PriorityQueue](PriorityQueue.md), [SpendingConditionRegistry](SpendingConditionRegistry.md)**
+**↘ Derived Contracts: [OutputGuardHandlerRegistry](OutputGuardHandlerRegistry.md), [SpendingConditionRegistry](SpendingConditionRegistry.md)**
 
 **Ownable**
 
@@ -171,7 +171,6 @@ function _transferOwnership(address newOwner) internal nonpayable
 * [Migrations](Migrations.md)
 * [OnlyFromAddress](OnlyFromAddress.md)
 * [OnlyWithValue](OnlyWithValue.md)
-* [Operated](Operated.md)
 * [OutputGuardHandlerRegistry](OutputGuardHandlerRegistry.md)
 * [OutputGuardModel](OutputGuardModel.md)
 * [OutputId](OutputId.md)

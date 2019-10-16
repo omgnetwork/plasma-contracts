@@ -2,7 +2,7 @@
 
 View Source: [contracts/src/exits/payment/routers/PaymentStandardExitRouter.sol](../../contracts/src/exits/payment/routers/PaymentStandardExitRouter.sol)
 
-**↗ Extends: [IExitProcessor](IExitProcessor.md), [Operated](Operated.md), [OnlyWithValue](OnlyWithValue.md)**
+**↗ Extends: [IExitProcessor](IExitProcessor.md), [OnlyFromAddress](OnlyFromAddress.md), [OnlyWithValue](OnlyWithValue.md)**
 **↘ Derived Contracts: [PaymentExitGame](PaymentExitGame.md)**
 
 **PaymentStandardExitRouter**
@@ -23,17 +23,24 @@ struct PaymentProcessStandardExit.Controller internal processStandardExitControl
 struct PaymentChallengeStandardExit.Controller internal challengeStandardExitController;
 struct BondSize.Params internal startStandardExitBond;
 
+//private members
+contract PlasmaFramework private framework;
+
 ```
 
 **Events**
 
 ```js
 event StandardExitBondUpdated(uint128  bondSize);
+event ExitStarted(address indexed owner, uint160  exitId);
+event ExitChallenged(uint256 indexed utxoPos);
+event ExitOmitted(uint160 indexed exitId);
+event ExitFinalized(uint160 indexed exitId);
 ```
 
 ## Functions
 
-- [(PlasmaFramework framework, uint256 ethVaultId, uint256 erc20VaultId, OutputGuardHandlerRegistry outputGuardHandlerRegistry, SpendingConditionRegistry spendingConditionRegistry, ITxFinalizationVerifier txFinalizationVerifier)](#)
+- [(PlasmaFramework plasmaFramework, uint256 ethVaultId, uint256 erc20VaultId, OutputGuardHandlerRegistry outputGuardHandlerRegistry, SpendingConditionRegistry spendingConditionRegistry, ITxFinalizationVerifier txFinalizationVerifier)](#)
 - [standardExits(uint160 exitId)](#standardexits)
 - [startStandardExitBondSize()](#startstandardexitbondsize)
 - [updateStartStandardExitBondSize(uint128 newBondSize)](#updatestartstandardexitbondsize)
@@ -44,14 +51,14 @@ event StandardExitBondUpdated(uint128  bondSize);
 ### 
 
 ```js
-function (PlasmaFramework framework, uint256 ethVaultId, uint256 erc20VaultId, OutputGuardHandlerRegistry outputGuardHandlerRegistry, SpendingConditionRegistry spendingConditionRegistry, ITxFinalizationVerifier txFinalizationVerifier) public nonpayable
+function (PlasmaFramework plasmaFramework, uint256 ethVaultId, uint256 erc20VaultId, OutputGuardHandlerRegistry outputGuardHandlerRegistry, SpendingConditionRegistry spendingConditionRegistry, ITxFinalizationVerifier txFinalizationVerifier) public nonpayable
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| framework | PlasmaFramework |  | 
+| plasmaFramework | PlasmaFramework |  | 
 | ethVaultId | uint256 |  | 
 | erc20VaultId | uint256 |  | 
 | outputGuardHandlerRegistry | OutputGuardHandlerRegistry |  | 
@@ -92,7 +99,7 @@ returns(uint128)
 Updates the standard exit bond size. Will take 2 days to come into effect.
 
 ```js
-function updateStartStandardExitBondSize(uint128 newBondSize) public nonpayable onlyOperator 
+function updateStartStandardExitBondSize(uint128 newBondSize) public nonpayable onlyFrom 
 ```
 
 **Arguments**
@@ -176,7 +183,6 @@ function processStandardExit(uint160 exitId, address token) internal nonpayable
 * [Migrations](Migrations.md)
 * [OnlyFromAddress](OnlyFromAddress.md)
 * [OnlyWithValue](OnlyWithValue.md)
-* [Operated](Operated.md)
 * [OutputGuardHandlerRegistry](OutputGuardHandlerRegistry.md)
 * [OutputGuardModel](OutputGuardModel.md)
 * [OutputId](OutputId.md)

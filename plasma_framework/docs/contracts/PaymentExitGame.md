@@ -2,7 +2,7 @@
 
 View Source: [contracts/src/exits/payment/PaymentExitGame.sol](../../contracts/src/exits/payment/PaymentExitGame.sol)
 
-**↗ Extends: [IExitProcessor](IExitProcessor.md), [PaymentStandardExitRouter](PaymentStandardExitRouter.md), [PaymentInFlightExitRouter](PaymentInFlightExitRouter.md), [OnlyFromAddress](OnlyFromAddress.md)**
+**↗ Extends: [IExitProcessor](IExitProcessor.md), [OnlyFromAddress](OnlyFromAddress.md), [PaymentStandardExitRouter](PaymentStandardExitRouter.md), [PaymentInFlightExitRouter](PaymentInFlightExitRouter.md)**
 
 **PaymentExitGame**
 
@@ -124,7 +124,6 @@ returns(uint192)
 * [Migrations](Migrations.md)
 * [OnlyFromAddress](OnlyFromAddress.md)
 * [OnlyWithValue](OnlyWithValue.md)
-* [Operated](Operated.md)
 * [OutputGuardHandlerRegistry](OutputGuardHandlerRegistry.md)
 * [OutputGuardModel](OutputGuardModel.md)
 * [OutputId](OutputId.md)

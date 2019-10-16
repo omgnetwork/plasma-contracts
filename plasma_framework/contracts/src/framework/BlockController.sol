@@ -2,7 +2,7 @@ pragma solidity 0.5.11;
 
 import "./models/BlockModel.sol";
 import "./registries/VaultRegistry.sol";
-import "./utils/Operated.sol";
+import "../utils/OnlyFromAddress.sol";
 
 /**
 * @notice Controls the logic and functions for block submissions in PlasmaFramework
@@ -14,11 +14,12 @@ import "./utils/Operated.sol";
 *      Meanwhile, block submission can only be done by the authority address.
 *      There is some limitation on the authority address, see: https://github.com/omisego/elixir-omg#managing-the-operator-address
 */
-contract BlockController is Operated, VaultRegistry {
+contract BlockController is OnlyFromAddress, VaultRegistry {
     address public authority;
     uint256 public childBlockInterval;
     uint256 public nextChildBlock;
     uint256 public nextDeposit;
+    bool public isChildChainActivated;
 
     mapping (uint256 => BlockModel.Block) public blocks; // block number => Block data
 
@@ -26,24 +27,38 @@ contract BlockController is Operated, VaultRegistry {
         uint256 blockNumber
     );
 
-    constructor(uint256 _interval, uint256 _minExitPeriod, uint256 _initialImmuneVaults)
+    event ChildChainActivated(
+        address authority
+    );
+
+    constructor(
+        uint256 _interval,
+        uint256 _minExitPeriod,
+        uint256 _initialImmuneVaults,
+        address _authority
+    )
         public
         VaultRegistry(_minExitPeriod, _initialImmuneVaults)
     {
+        authority = _authority;
         childBlockInterval = _interval;
         nextChildBlock = childBlockInterval;
         nextDeposit = 1;
+        isChildChainActivated = false;
     }
 
     /**
-     * @notice Sets the operator's authority address and unlocks block submission.
-     * @dev Can be called only once, before any call to `submitBlock`.
-     * @dev All block submission then needs to be send from msg.sender address.
-     * @dev see discussion in https://github.com/omisego/plasma-contracts/issues/233
+     * @notice Activates the child chain so that child chain can start to submit child blocks to root chain
+     * @notice Can only be called once by the authority.
+     * @notice Sets isChildChainActivated to true and emits the ChildChainActivated event.
+     * @dev This is a preserved action for authority account to start its nonce with 1.
+     *      Child chain rely ethereum nonce to protect re-org: https://git.io/JecDG
+     *      see discussion: https://git.io/JenaT, https://git.io/JecDO
      */
-    function initAuthority() external {
-        require(authority == address(0), "Authority address has been already set.");
-        authority = msg.sender;
+    function activateChildChain() external onlyFrom(authority) {
+        require(isChildChainActivated == false, "Child chain can only be activated once");
+        isChildChainActivated = true;
+        emit ChildChainActivated(authority);
     }
 
     /**
@@ -51,7 +66,7 @@ contract BlockController is Operated, VaultRegistry {
      * re-org protection mechanism, explained in https://github.com/omisego/plasma-contracts/issues/118
      * @param newAuthority address of new authority, cannot be blank.
      */
-    function setAuthority(address newAuthority) external onlyOperator {
+    function setAuthority(address newAuthority) external onlyFrom(authority) {
         require(newAuthority != address(0), "Authority cannot be zero-address.");
         authority = newAuthority;
     }
@@ -63,8 +78,8 @@ contract BlockController is Operated, VaultRegistry {
      * @dev see discussion in https://github.com/omisego/plasma-contracts/issues/233
      * @param _blockRoot Merkle root of the plasma block.
      */
-    function submitBlock(bytes32 _blockRoot) external {
-        require(msg.sender == authority, "Can be called only by the Authority.");
+    function submitBlock(bytes32 _blockRoot) external onlyFrom(authority) {
+        require(isChildChainActivated == true, "Child chain has not been activated by authority address yet");
         uint256 submittedBlockNumber = nextChildBlock;
 
         blocks[submittedBlockNumber] = BlockModel.Block({
@@ -85,6 +100,7 @@ contract BlockController is Operated, VaultRegistry {
      * @return the deposit block number
      */
     function submitDepositBlock(bytes32 _blockRoot) public onlyFromNonQuarantinedVault returns (uint256) {
+        require(isChildChainActivated == true, "Child chain has not been activated by authority address yet");
         require(nextDeposit < childBlockInterval, "Exceeded limit of deposits per child block interval");
 
         uint256 blknum = nextDepositBlock();

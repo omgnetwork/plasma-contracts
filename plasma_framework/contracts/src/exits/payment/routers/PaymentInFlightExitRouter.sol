@@ -14,12 +14,12 @@ import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../interfaces/IStateTransitionVerifier.sol";
 import "../../interfaces/ITxFinalizationVerifier.sol";
 import "../../utils/BondSize.sol";
+import "../../../utils/OnlyFromAddress.sol";
 import "../../../utils/OnlyWithValue.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../framework/interfaces/IExitProcessor.sol";
-import "../../../framework/utils/Operated.sol";
 
-contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue {
+contract PaymentInFlightExitRouter is IExitProcessor, OnlyFromAddress, OnlyWithValue {
     using PaymentStartInFlightExit for PaymentStartInFlightExit.Controller;
     using PaymentPiggybackInFlightExit for PaymentPiggybackInFlightExit.Controller;
     using PaymentChallengeIFENotCanonical for PaymentChallengeIFENotCanonical.Controller;
@@ -47,6 +47,8 @@ contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue {
     PaymentChallengeIFEOutputSpent.Controller internal challengeOutputSpentController;
     BondSize.Params internal startIFEBond;
     BondSize.Params internal piggybackBond;
+
+    PlasmaFramework private framework;
 
     event IFEBondUpdated(uint128 bondSize);
     event PiggybackBondUpdated(uint128 bondSize);
@@ -108,7 +110,7 @@ contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue {
     );
 
     constructor(
-        PlasmaFramework framework,
+        PlasmaFramework plasmaFramework,
         uint256 ethVaultId,
         uint256 erc20VaultId,
         OutputGuardHandlerRegistry outputGuardHandlerRegistry,
@@ -119,8 +121,10 @@ contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue {
     )
         public
     {
+        framework = plasmaFramework;
+
         startInFlightExitController = PaymentStartInFlightExit.buildController(
-            framework,
+            plasmaFramework,
             outputGuardHandlerRegistry,
             spendingConditionRegistry,
             stateTransitionVerifier,
@@ -128,16 +132,16 @@ contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue {
             supportedTxType
         );
 
-        address ethVaultAddress = framework.vaults(ethVaultId);
+        address ethVaultAddress = plasmaFramework.vaults(ethVaultId);
         require(ethVaultAddress != address(0), "Invalid ETH vault");
         EthVault ethVault = EthVault(ethVaultAddress);
 
-        address erc20VaultAddress = framework.vaults(erc20VaultId);
+        address erc20VaultAddress = plasmaFramework.vaults(erc20VaultId);
         require(erc20VaultAddress != address(0), "Invalid ERC20 vault");
         Erc20Vault erc20Vault = Erc20Vault(erc20VaultAddress);
 
         piggybackInFlightExitController = PaymentPiggybackInFlightExit.buildController(
-            framework,
+            plasmaFramework,
             this,
             outputGuardHandlerRegistry,
             ethVaultId,
@@ -145,7 +149,7 @@ contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue {
         );
 
         challengeCanonicityController = PaymentChallengeIFENotCanonical.buildController(
-            framework,
+            plasmaFramework,
             spendingConditionRegistry,
             outputGuardHandlerRegistry,
             txFinalizationVerifier,
@@ -153,21 +157,21 @@ contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue {
         );
 
         challengeInputSpentController = PaymentChallengeIFEInputSpent.buildController(
-            framework,
+            plasmaFramework,
             spendingConditionRegistry,
             outputGuardHandlerRegistry,
             txFinalizationVerifier
         );
 
         challengeOutputSpentController = PaymentChallengeIFEOutputSpent.Controller(
-            framework,
+            plasmaFramework,
             spendingConditionRegistry,
             outputGuardHandlerRegistry,
             txFinalizationVerifier
         );
 
         processInflightExitController = PaymentProcessInFlightExit.Controller({
-            framework: framework,
+            framework: plasmaFramework,
             ethVault: ethVault,
             erc20Vault: erc20Vault
         });
@@ -290,7 +294,7 @@ contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue {
      * @notice Updates the in-flight exit bond size. Will take 2 days to come into effect.
      * @param newBondSize The new bond size.
      */
-    function updateStartIFEBondSize(uint128 newBondSize) public onlyOperator {
+    function updateStartIFEBondSize(uint128 newBondSize) public onlyFrom(framework.getMaintainer()) {
         startIFEBond.updateBondSize(newBondSize);
         emit IFEBondUpdated(newBondSize);
     }
@@ -306,7 +310,7 @@ contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue {
      * @notice Updates the piggyback bond size. Will take 2 days to come into effect.
      * @param newBondSize The new bond size.
      */
-    function updatePiggybackBondSize(uint128 newBondSize) public onlyOperator {
+    function updatePiggybackBondSize(uint128 newBondSize) public onlyFrom(framework.getMaintainer()) {
         piggybackBond.updateBondSize(newBondSize);
         emit PiggybackBondUpdated(newBondSize);
     }

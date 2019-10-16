@@ -1,9 +1,9 @@
 pragma solidity 0.5.11;
 
-import "../utils/Operated.sol";
 import "../utils/Quarantine.sol";
+import "../../utils/OnlyFromAddress.sol";
 
-contract VaultRegistry is Operated {
+contract VaultRegistry is OnlyFromAddress {
     using Quarantine for Quarantine.Data;
 
     mapping(uint256 => address) private _vaults; // vault id => vault address
@@ -19,12 +19,18 @@ contract VaultRegistry is Operated {
      * @dev For each new vault contract, it should take at least 1 minExitPeriod to be able to start take effect to protect deposit transaction in mempool.
      *      see: https://github.com/omisego/plasma-contracts/issues/173
      */
-    constructor (uint256 _minExitPeriod, uint256 _initialImmuneVaults)
+    constructor(uint256 _minExitPeriod, uint256 _initialImmuneVaults)
         public
     {
         _vaultQuarantine.quarantinePeriod = _minExitPeriod;
         _vaultQuarantine.immunitiesRemaining = _initialImmuneVaults;
     }
+
+    /**
+     * @notice interface to get the 'maintainer' address.
+     * @dev see discussion here: https://git.io/Je8is
+     */
+    function getMaintainer() public view returns (address);
 
     /**
      * @notice modifier to check the call is from a non-quarantined vault.
@@ -41,7 +47,7 @@ contract VaultRegistry is Operated {
      * @param _vaultId the id for the vault contract to register.
      * @param _vaultAddress address of the vault contract.
      */
-    function registerVault(uint256 _vaultId, address _vaultAddress) public onlyOperator {
+    function registerVault(uint256 _vaultId, address _vaultAddress) public onlyFrom(getMaintainer()) {
         require(_vaultId != 0, "should not register with vault id 0");
         require(_vaultAddress != address(0), "should not register an empty vault address");
         require(_vaults[_vaultId] == address(0), "The vault id is already registered");

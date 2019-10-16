@@ -2,7 +2,7 @@
 
 View Source: [contracts/src/framework/registries/ExitGameRegistry.sol](../../contracts/src/framework/registries/ExitGameRegistry.sol)
 
-**↗ Extends: [Operated](Operated.md)**
+**↗ Extends: [OnlyFromAddress](OnlyFromAddress.md)**
 **↘ Derived Contracts: [ExitGameController](ExitGameController.md), [PlasmaFramework](PlasmaFramework.md)**
 
 **ExitGameRegistry**
@@ -44,6 +44,7 @@ modifier onlyFromNonQuarantinedExitGame() internal
 ## Functions
 
 - [(uint256 _minExitPeriod, uint256 _initialImmuneExitGames)](#)
+- [getMaintainer()](#getmaintainer)
 - [isExitGameSafeToUse(address _contract)](#isexitgamesafetouse)
 - [registerExitGame(uint256 _txType, address _contract, uint8 _protocol)](#registerexitgame)
 - [protocols(uint256 _txType)](#protocols)
@@ -66,6 +67,24 @@ function (uint256 _minExitPeriod, uint256 _initialImmuneExitGames) public nonpay
 | ------------- |------------- | -----|
 | _minExitPeriod | uint256 |  | 
 | _initialImmuneExitGames | uint256 |  | 
+
+### getMaintainer
+
+⤾ overrides [VaultRegistry.getMaintainer](VaultRegistry.md#getmaintainer)
+
+⤿ Overridden Implementation(s): [PlasmaFramework.getMaintainer](PlasmaFramework.md#getmaintainer)
+
+interface to get the 'maintainer' address.
+
+```js
+function getMaintainer() public view
+returns(address)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
 
 ### isExitGameSafeToUse
 
@@ -91,7 +110,7 @@ boolean whether the contract is safe to use and is not under quarantine.
 Register an exit game within the PlasmaFramework. The function can only be called by the maintainer.
 
 ```js
-function registerExitGame(uint256 _txType, address _contract, uint8 _protocol) public nonpayable onlyOperator 
+function registerExitGame(uint256 _txType, address _contract, uint8 _protocol) public nonpayable onlyFrom 
 ```
 
 **Arguments**
@@ -179,7 +198,6 @@ returns(uint256)
 * [Migrations](Migrations.md)
 * [OnlyFromAddress](OnlyFromAddress.md)
 * [OnlyWithValue](OnlyWithValue.md)
-* [Operated](Operated.md)
 * [OutputGuardHandlerRegistry](OutputGuardHandlerRegistry.md)
 * [OutputGuardModel](OutputGuardModel.md)
 * [OutputId](OutputId.md)
