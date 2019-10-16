@@ -37,7 +37,7 @@ library PaymentChallengeStandardExit {
     );
 
     /**
-     * @dev data to be passed around helper functions
+     * @dev Data to be passed around helper functions
      */
     struct ChallengeStandardExitData {
         Controller controller;
@@ -71,9 +71,9 @@ library PaymentChallengeStandardExit {
     /**
      * @notice Main logic function to challenge standard exit
      * @dev emits ExitChallenged event on success
-     * @param self the controller struct
-     * @param exitMap the storage of all standard exit data
-     * @param args arguments of challenge standard exit function from client.
+     * @param self The controller struct
+     * @param exitMap The storage of all standard exit data
+     * @param args Arguments of challenge standard exit function from client
      */
     function run(
         Controller memory self,
@@ -98,7 +98,7 @@ library PaymentChallengeStandardExit {
     }
 
     function verifyChallengeExitExists(ChallengeStandardExitData memory data) private pure {
-        require(data.exitData.exitable == true, "Such exit does not exist");
+        require(data.exitData.exitable == true, "The exit does not exist");
     }
 
     function verifyChallengeTxProtocolFinalized(ChallengeStandardExitData memory data) private view {
@@ -111,7 +111,7 @@ library PaymentChallengeStandardExit {
                                                 .outputGuardHandlerRegistry
                                                 .outputGuardHandlers(output.outputType);
 
-        require(address(outputGuardHandler) != address(0), "Failed to get the outputGuardHandler of the output type");
+        require(address(outputGuardHandler) != address(0), "Failed to retrieve the outputGuardHandler of the output type");
 
         OutputGuardModel.Data memory outputGuardData = OutputGuardModel.Data({
             guard: output.outputGuard,
@@ -152,7 +152,7 @@ library PaymentChallengeStandardExit {
         bytes32 outputId = data.controller.isDeposit.test(utxoPos.blockNum())
                 ? OutputId.computeDepositOutputId(args.exitingTx, utxoPos.outputIndex(), utxoPos.value)
                 : OutputId.computeNormalOutputId(args.exitingTx, utxoPos.outputIndex());
-        require(outputId == data.exitData.outputId, "The exiting tx is not valid, thus causing outputId mismatch");
+        require(outputId == data.exitData.outputId, "Invalid exiting tx causing outputId mismatch");
         bool isSpentByChallengeTx = condition.verify(
             args.exitingTx,
             utxoPos.outputIndex(),
