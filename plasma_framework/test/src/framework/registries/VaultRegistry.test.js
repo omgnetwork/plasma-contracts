@@ -6,19 +6,23 @@ const {
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
-contract('VaultRegistry', ([_, other]) => {
+contract('VaultRegistry', ([_, maintainer, other]) => {
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
     const INITIAL_IMMUNE_VAULTS_NUM = 0;
 
     beforeEach(async () => {
-        this.registry = await VaultRegistry.new(MIN_EXIT_PERIOD, INITIAL_IMMUNE_VAULTS_NUM);
+        this.registry = await VaultRegistry.new(
+            MIN_EXIT_PERIOD, INITIAL_IMMUNE_VAULTS_NUM,
+        );
+
+        await this.registry.setMaintainer(maintainer);
         this.dummyVault = await DummyVault.new();
     });
 
     describe('onlyFromNonQuarantinedVault', () => {
         beforeEach(async () => {
             this.dummyVaultId = 1;
-            await this.registry.registerVault(this.dummyVaultId, this.dummyVault.address);
+            await this.registry.registerVault(this.dummyVaultId, this.dummyVault.address, { from: maintainer });
             await this.dummyVault.setVaultRegistry(this.registry.address);
         });
 
@@ -45,7 +49,7 @@ contract('VaultRegistry', ([_, other]) => {
     describe('vaults', () => {
         beforeEach(async () => {
             this.dummyVaultId = 1;
-            await this.registry.registerVault(this.dummyVaultId, this.dummyVault.address);
+            await this.registry.registerVault(this.dummyVaultId, this.dummyVault.address, { from: maintainer });
         });
 
         it('can receive vault contract address with vault id', async () => {
@@ -56,7 +60,7 @@ contract('VaultRegistry', ([_, other]) => {
     describe('vaultToId', () => {
         beforeEach(async () => {
             this.dummyVaultId = 1;
-            await this.registry.registerVault(this.dummyVaultId, this.dummyVault.address);
+            await this.registry.registerVault(this.dummyVaultId, this.dummyVault.address, { from: maintainer });
         });
 
         it('can receive vault id with vault contract address', async () => {
@@ -68,7 +72,7 @@ contract('VaultRegistry', ([_, other]) => {
     describe('registerVault', () => {
         it('should save the vault data correctly', async () => {
             const vaultId = 1;
-            await this.registry.registerVault(vaultId, this.dummyVault.address);
+            await this.registry.registerVault(vaultId, this.dummyVault.address, { from: maintainer });
             expect(await this.registry.vaults(vaultId)).to.equal(this.dummyVault.address);
             expect(await this.registry.vaultToId(this.dummyVault.address))
                 .to.be.bignumber.equal(new BN(vaultId));
@@ -76,7 +80,9 @@ contract('VaultRegistry', ([_, other]) => {
 
         it('should emit VaultRegistered event', async () => {
             const vaultId = 1;
-            const { receipt } = await this.registry.registerVault(vaultId, this.dummyVault.address);
+            const { receipt } = await this.registry.registerVault(
+                vaultId, this.dummyVault.address, { from: maintainer },
+            );
             await expectEvent.inTransaction(
                 receipt.transactionHash,
                 VaultRegistry,
@@ -88,23 +94,23 @@ contract('VaultRegistry', ([_, other]) => {
             );
         });
 
-        it('rejects when not registered by operator', async () => {
+        it('rejects when not registered by maintainer', async () => {
             await expectRevert(
                 this.registry.registerVault(1, this.dummyVault.address, { from: other }),
-                'Not being called by operator',
+                'Not being called by expected caller',
             );
         });
 
         it('rejects when trying to register with vault id 0', async () => {
             await expectRevert(
-                this.registry.registerVault(0, this.dummyVault.address),
+                this.registry.registerVault(0, this.dummyVault.address, { from: maintainer }),
                 'should not register with vault id 0',
             );
         });
 
         it('rejects when trying to register with an empty vault address', async () => {
             await expectRevert(
-                this.registry.registerVault(1, constants.ZERO_ADDRESS),
+                this.registry.registerVault(1, constants.ZERO_ADDRESS, { from: maintainer }),
                 'should not register an empty vault address',
             );
         });
@@ -112,17 +118,17 @@ contract('VaultRegistry', ([_, other]) => {
         it('rejects when the vault id is already registered', async () => {
             const vaultId = 1;
             const secondDummyVaultAddress = (await DummyVault.new()).address;
-            await this.registry.registerVault(vaultId, this.dummyVault.address);
+            await this.registry.registerVault(vaultId, this.dummyVault.address, { from: maintainer });
             await expectRevert(
-                this.registry.registerVault(vaultId, secondDummyVaultAddress),
+                this.registry.registerVault(vaultId, secondDummyVaultAddress, { from: maintainer }),
                 'The vault id is already registered',
             );
         });
 
         it('rejects when the the vault contract address is already registered', async () => {
-            await this.registry.registerVault(1, this.dummyVault.address);
+            await this.registry.registerVault(1, this.dummyVault.address, { from: maintainer });
             await expectRevert(
-                this.registry.registerVault(2, this.dummyVault.address),
+                this.registry.registerVault(2, this.dummyVault.address, { from: maintainer }),
                 'The vault contract is already registered',
             );
         });

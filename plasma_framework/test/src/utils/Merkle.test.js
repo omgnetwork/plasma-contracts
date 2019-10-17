@@ -6,28 +6,35 @@ const { expect } = require('chai');
 const { MerkleTree } = require('../../helpers/merkle.js');
 
 contract('Merkle', () => {
+    const maxSize = 2 ** 16;
+    const leaves = [...Array(maxSize).keys()].map(index => `leaf ${index}`);
+
     before('setup merkle contract and tree value', async () => {
         this.merkleContract = await Merkle.new();
-        this.leaves = ['leaf 1', 'leaf 2', 'leaf 3'];
-        this.merkleTree = new MerkleTree(this.leaves);
+        this.merkleTree = new MerkleTree(leaves);
     });
 
     describe('checkMembership', () => {
-        it('should return true when proven included', async () => {
-            const leafIndex = 0;
-            const leafData = web3.utils.sha3(this.leaves[leafIndex]);
-            const rootHash = this.merkleTree.root;
-            const proof = this.merkleTree.getInclusionProof(this.leaves[leafIndex]);
+        describe('Prove inclusion', () => {
+            const testIndex = [0, 1, 2, 3, maxSize - 2, maxSize - 1];
 
-            const result = await this.merkleContract.checkMembership(leafData, leafIndex, rootHash, proof);
-            expect(result).to.be.true;
+            testIndex.forEach((leafIndex) => {
+                it(`should return true for index ${leafIndex}`, async () => {
+                    const leafData = web3.utils.sha3(leaves[leafIndex]);
+                    const rootHash = this.merkleTree.root;
+                    const proof = this.merkleTree.getInclusionProof(leaves[leafIndex]);
+
+                    const result = await this.merkleContract.checkMembership(leafData, leafIndex, rootHash, proof);
+                    expect(result).to.be.true;
+                });
+            });
         });
 
         it('should return false when not able to prove included', async () => {
             const leafIndex = 0;
-            const leafData = web3.utils.sha3(this.leaves[leafIndex]);
+            const leafData = web3.utils.sha3(leaves[leafIndex]);
             const fakeRootHash = web3.utils.sha3('random root hash');
-            const proof = this.merkleTree.getInclusionProof(this.leaves[leafIndex]);
+            const proof = this.merkleTree.getInclusionProof(leaves[leafIndex]);
 
             const result = await this.merkleContract.checkMembership(leafData, leafIndex, fakeRootHash, proof);
             expect(result).to.be.false;
@@ -35,9 +42,9 @@ contract('Merkle', () => {
 
         it('should reject call when proof data size is incorrect', async () => {
             const leafIndex = 0;
-            const leafData = web3.utils.sha3(this.leaves[leafIndex]);
+            const leafData = web3.utils.sha3(leaves[leafIndex]);
             const rootHash = this.merkleTree.root;
-            const proof = this.merkleTree.getInclusionProof(this.leaves[leafIndex]);
+            const proof = this.merkleTree.getInclusionProof(leaves[leafIndex]);
             const wrongSizeProof = `${proof}13212`;
 
             await expectRevert(

@@ -17,20 +17,20 @@ const fundAddressIfEmpty = async (from, to, value, receiverName) => {
     }
 };
 
-module.exports = async (deployer, network, accounts) => {
-    // TODO: take env var into consideration
-    global.deployerAddress = accounts[0];
-    global.maintainerAddress = accounts[1];
-    global.authorityAddress = accounts[2];
-
-    console.log(`Deployer address: ${global.deployerAddress}`);
-    console.log(`Maintainer address: ${global.maintainerAddress}`);
-    console.log(`Authority address: ${global.authorityAddress}`);
+module.exports = async (
+    deployer,
+    _,
+    // eslint-disable-next-line no-unused-vars
+    [deployerAddress, maintainerAddress, authorityAddress],
+) => {
+    console.log(`Deployer address: ${deployerAddress}`);
+    console.log(`Maintainer address: ${maintainerAddress}`);
+    console.log(`Authority address: ${authorityAddress}`);
 
     const initAmountForMaintainer = process.env.MAINTAINER_ADDRESS_INITIAL_AMOUNT || 1e18; // 1 ETH by default
     const initAmountForAuthority = process.env.AUTHORITY_ADDRESS_INITIAL_AMOUNT || 1e18; // 1 ETH by default
-    await fundAddressIfEmpty(global.deployerAddress, global.maintainerAddress, initAmountForMaintainer, 'maintainer');
-    await fundAddressIfEmpty(global.deployerAddress, global.authorityAddress, initAmountForAuthority, 'authority');
+    await fundAddressIfEmpty(deployerAddress, maintainerAddress, initAmountForMaintainer, 'maintainer');
+    await fundAddressIfEmpty(deployerAddress, authorityAddress, initAmountForAuthority, 'authority');
 
     // Deploy migrations
     await deployer.deploy(Migrations);

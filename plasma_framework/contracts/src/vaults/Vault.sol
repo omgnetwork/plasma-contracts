@@ -2,14 +2,14 @@ pragma solidity 0.5.11;
 
 import "./ZeroHashesProvider.sol";
 import "../framework/PlasmaFramework.sol";
-import "../framework/utils/Operated.sol";
+import "../utils/OnlyFromAddress.sol";
 
 /**
  * @notice Base contract for vault implementation
  * @dev This is the functionality to swap "deposit verifier".
  *      By setting new deposit verifier, we can upgrade to a new deposit tx type without upgrading the vault.
  */
-contract Vault is Operated {
+contract Vault is OnlyFromAddress {
     event SetDepositVerifierCalled(address nextDepositVerifier);
     PlasmaFramework internal framework;
     bytes32[16] internal zeroHashes; // Pre-computes zero hashes to be used for building merkle tree for deposit block
@@ -43,7 +43,7 @@ contract Vault is Operated {
      * @dev When one contract is already set next will be effective after MIN_EXIT_PERIOD.
      * @param _verifier address of the verifier contract.
      */
-    function setDepositVerifier(address _verifier) public onlyOperator {
+    function setDepositVerifier(address _verifier) public onlyFrom(framework.getMaintainer()) {
         require(_verifier != address(0), "Cannot set an empty address as deposit verifier");
 
         if (depositVerifiers[0] != address(0)) {

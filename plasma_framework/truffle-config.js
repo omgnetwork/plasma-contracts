@@ -38,9 +38,13 @@ module.exports = {
                 const cleanInfuraUrl = infuraUrl.replace(/([^:])(\/\/+)/g, '$1/');
 
                 return new HDWalletProvider(
-                    [process.env.DEPLOYER_PRIVATEKEY, process.env.AUTHORITY_PRIVATEKEY],
+                    [
+                        process.env.DEPLOYER_PRIVATEKEY,
+                        process.env.MAINTAINER_PRIVATEKEY,
+                        process.env.AUTHORITY_PRIVATEKEY,
+                    ],
                     cleanInfuraUrl,
-                    0, 2,
+                    0, 3,
                 );
             },
             network_id: '*',

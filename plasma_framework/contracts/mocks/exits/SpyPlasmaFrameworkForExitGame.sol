@@ -18,9 +18,10 @@ contract SpyPlasmaFrameworkForExitGame is PlasmaFramework {
         address exitProcessor
     );
 
+    /** This spy contract set the authority and maintainer both to the caller */
     constructor(uint256 _minExitPeriod, uint256 _initialImmuneVaults, uint256 _initialImmuneExitGames)
         public
-        PlasmaFramework(_minExitPeriod, _initialImmuneVaults, _initialImmuneExitGames)
+        PlasmaFramework(_minExitPeriod, _initialImmuneVaults, _initialImmuneExitGames, msg.sender, msg.sender)
     {
     }
 

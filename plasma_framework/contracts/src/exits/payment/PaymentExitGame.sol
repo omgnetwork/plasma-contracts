@@ -13,7 +13,7 @@ import "../../utils/OnlyFromAddress.sol";
 /**
  * @notice The exit game contract implementation for Payment Transaction
  */
-contract PaymentExitGame is IExitProcessor, PaymentStandardExitRouter, PaymentInFlightExitRouter, OnlyFromAddress {
+contract PaymentExitGame is IExitProcessor, OnlyFromAddress, PaymentStandardExitRouter, PaymentInFlightExitRouter {
 
     PlasmaFramework private plasmaFramework;
 

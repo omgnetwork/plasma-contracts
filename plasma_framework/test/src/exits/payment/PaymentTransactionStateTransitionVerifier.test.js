@@ -11,11 +11,22 @@ const { OUTPUT_TYPE } = require('../../../helpers/constants.js');
 contract('PaymentTransactionStateTransitionVerifier', ([alice, bob]) => {
     const ETH = constants.ZERO_ADDRESS;
     const IFE_TX_TYPE = 1;
-    const DUMMY_INPUT_1 = '0x0000000000000000000000000000000000000000000000000000000000000001';
-    const DUMMY_INPUT_2 = '0x0000000000000000000000000000000000000000000000000000000000000002';
+    const INPUTS = [
+        '0x0000000000000000000000000000000000000000000000000000000000000001',
+        '0x0000000000000000000000000000000000000000000000000000000000000002',
+        '0x0000000000000000000000000000000000000000000000000000000000000003',
+        '0x0000000000000000000000000000000000000000000000000000000000000004',
+    ];
+    const EXTRA_OUTPUT = new PaymentTransactionOutput(
+        OUTPUT_TYPE.PAYMENT,
+        0,
+        bob,
+        ETH,
+    );
     const OTHER_TOKEN = '0x0000000000000000000000000000000000000001';
     const BLOCK_NUM = 1000;
     const AMOUNT = 100;
+    const MAX_INPUTS_OUTPUTS = 4;
 
 
     describe('verifies state transition', () => {
@@ -24,8 +35,8 @@ contract('PaymentTransactionStateTransitionVerifier', ([alice, bob]) => {
         });
 
         function buildCorrectStateTransitionArgs() {
-            const inputTx1 = createInputTransaction(DUMMY_INPUT_1, alice, AMOUNT);
-            const inputTx2 = createInputTransaction(DUMMY_INPUT_2, alice, AMOUNT);
+            const inputTx1 = createInputTransaction(INPUTS[0], alice, AMOUNT);
+            const inputTx2 = createInputTransaction(INPUTS[1], alice, AMOUNT);
             const inputTxs = [inputTx1, inputTx2];
 
             const inputUtxosPos = [buildUtxoPos(BLOCK_NUM, 0, 0), buildUtxoPos(BLOCK_NUM, 1, 0)];
@@ -38,8 +49,8 @@ contract('PaymentTransactionStateTransitionVerifier', ([alice, bob]) => {
         }
 
         function buildInvalidStateTransitionArgs(invalidAmount) {
-            const inputTx1 = createInputTransaction(DUMMY_INPUT_1, alice, AMOUNT);
-            const inputTx2 = createInputTransaction(DUMMY_INPUT_2, bob, AMOUNT, OTHER_TOKEN);
+            const inputTx1 = createInputTransaction(INPUTS[0], alice, AMOUNT);
+            const inputTx2 = createInputTransaction(INPUTS[1], bob, AMOUNT, OTHER_TOKEN);
 
             const inputUtxosPos = [buildUtxoPos(BLOCK_NUM, 0, 0), buildUtxoPos(BLOCK_NUM, 1, 0)];
             const inputs = createInputsForInFlightTx([inputTx1, inputTx2], inputUtxosPos);
@@ -66,7 +77,7 @@ contract('PaymentTransactionStateTransitionVerifier', ([alice, bob]) => {
             const inFlightTxRaw = web3.utils.bytesToHex(inFlightTx.rlpEncoded());
 
             const args = {
-                inFlightTx: inFlightTxRaw,
+                inFlightTxRaw,
                 inputTxs,
                 outputIndexOfInputTxs,
             };
@@ -89,7 +100,7 @@ contract('PaymentTransactionStateTransitionVerifier', ([alice, bob]) => {
                 token,
             );
 
-            return new PaymentTransaction(1, inputs, [output]);
+            return new PaymentTransaction(IFE_TX_TYPE, inputs, [output]);
         }
 
         function createInputsForInFlightTx(inputTxs, inputUtxosPos) {
@@ -103,21 +114,62 @@ contract('PaymentTransactionStateTransitionVerifier', ([alice, bob]) => {
             return inputs;
         }
 
+        function createArgsForInputsOutputsNumberTest(numberOfInputs, numberOfOutputs) {
+            const inputTxs = [];
+            const inputUtxosPos = [];
+            for (let i = 0; i < numberOfInputs; i++) {
+                const inputTx = new PaymentTransaction(IFE_TX_TYPE, [INPUTS[i]], [EXTRA_OUTPUT]);
+                inputTxs.push(inputTx);
+                inputUtxosPos.push(buildUtxoPos(BLOCK_NUM, i, 0));
+            }
+            const outputIds = createInputsForInFlightTx(inputTxs, inputUtxosPos);
+            const outputIndexOfInputTxs = inputUtxosPos.map(utxo => new UtxoPos(utxo).outputIndex);
+
+            const outputs = [];
+            for (let i = 0; i < numberOfOutputs; i++) {
+                outputs.push(EXTRA_OUTPUT);
+            }
+
+            const encodedInputTxs = inputTxs.map(inputTx => web3.utils.bytesToHex(inputTx.rlpEncoded()));
+            const inFlightTx = new PaymentTransaction(IFE_TX_TYPE, outputIds, outputs);
+            const inFlightTxRaw = web3.utils.bytesToHex(inFlightTx.rlpEncoded());
+            return {
+                inFlightTxRaw,
+                encodedInputTxs,
+                outputIndexOfInputTxs,
+            };
+        }
+
         it('should return true for a valid state transition', async () => {
             const args = buildCorrectStateTransitionArgs();
             const verificationResult = await this.verifier.isCorrectStateTransition(
-                args.inFlightTx,
+                args.inFlightTxRaw,
                 args.inputTxs,
                 args.outputIndexOfInputTxs,
             );
             expect(verificationResult).to.be.true;
         });
 
+        it('should verify transition for any combination of inputs / outputs numbers', async () => {
+            for (let numberOfInputs = 0; numberOfInputs < MAX_INPUTS_OUTPUTS; numberOfInputs++) {
+                for (let numberOfOutputs = 0; numberOfOutputs < MAX_INPUTS_OUTPUTS; numberOfOutputs++) {
+                    const args = createArgsForInputsOutputsNumberTest(numberOfInputs, numberOfOutputs);
+                    /* eslint-disable no-await-in-loop */
+                    const verificationResult = await this.verifier.isCorrectStateTransition(
+                        args.inFlightTxRaw,
+                        args.encodedInputTxs,
+                        args.outputIndexOfInputTxs,
+                    );
+                    expect(verificationResult).to.be.true;
+                }
+            }
+        });
+
         it('should return false when in-flight transaction overspends', async () => {
             const args = buildInvalidStateTransitionArgs(AMOUNT + 1);
 
             const verificationResult = await this.verifier.isCorrectStateTransition(
-                args.inFlightTx,
+                args.inFlightTxRaw,
                 args.inputTxs,
                 args.outputIndexOfInputTxs,
             );
@@ -127,7 +179,7 @@ contract('PaymentTransactionStateTransitionVerifier', ([alice, bob]) => {
         it('should return false when input transactions list and utxos positions differ in length', async () => {
             const args = buildCorrectStateTransitionArgs();
             const verificationResult = await this.verifier.isCorrectStateTransition(
-                args.inFlightTx,
+                args.inFlightTxRaw,
                 args.inputTxs,
                 [],
             );
@@ -140,7 +192,7 @@ contract('PaymentTransactionStateTransitionVerifier', ([alice, bob]) => {
 
             await expectRevert(
                 this.verifier.isCorrectStateTransition(
-                    args.inFlightTx,
+                    args.inFlightTxRaw,
                     args.inputTxs,
                     args.outputIndexOfInputTxs,
                 ),

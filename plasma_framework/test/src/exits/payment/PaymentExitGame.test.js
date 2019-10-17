@@ -35,13 +35,15 @@ const {
 } = require('../../../helpers/constants.js');
 const { MerkleTree } = require('../../../helpers/merkle.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
-const { computeDepositOutputId, spentOnGas, exitQueueKey } = require('../../../helpers/utils.js');
+const {
+    computeDepositOutputId, computeNormalOutputId, spentOnGas, exitQueueKey,
+} = require('../../../helpers/utils.js');
 const { sign } = require('../../../helpers/sign.js');
 const { hashTx } = require('../../../helpers/paymentEip712.js');
 const { buildUtxoPos, utxoPosToTxPos } = require('../../../helpers/positions.js');
 const Testlang = require('../../../helpers/testlang.js');
 
-contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
+contract('PaymentExitGame - End to End Tests', ([_, richFather, bob, maintainer, authority]) => {
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
     const ETH = constants.ZERO_ADDRESS;
     const INITIAL_ERC20_SUPPLY = 10000000000;
@@ -96,19 +98,25 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
     });
 
     const setupContracts = async () => {
-        this.framework = await PlasmaFramework.new(MIN_EXIT_PERIOD, INITIAL_IMMUNE_VAULTS, INITIAL_IMMUNE_EXIT_GAMES);
-        await this.framework.initAuthority();
+        this.framework = await PlasmaFramework.new(
+            MIN_EXIT_PERIOD,
+            INITIAL_IMMUNE_VAULTS,
+            INITIAL_IMMUNE_EXIT_GAMES,
+            authority,
+            maintainer,
+        );
+        await this.framework.activateChildChain({ from: authority });
 
         const ethDepositVerifier = await EthDepositVerifier.new();
         this.ethVault = await EthVault.new(this.framework.address);
-        await this.ethVault.setDepositVerifier(ethDepositVerifier.address);
+        await this.ethVault.setDepositVerifier(ethDepositVerifier.address, { from: maintainer });
 
         const erc20DepositVerifier = await Erc20DepositVerifier.new();
         this.erc20Vault = await Erc20Vault.new(this.framework.address);
-        await this.erc20Vault.setDepositVerifier(erc20DepositVerifier.address);
+        await this.erc20Vault.setDepositVerifier(erc20DepositVerifier.address, { from: maintainer });
 
-        await this.framework.registerVault(VAULT_ID.ETH, this.ethVault.address);
-        await this.framework.registerVault(VAULT_ID.ERC20, this.erc20Vault.address);
+        await this.framework.registerVault(VAULT_ID.ETH, this.ethVault.address, { from: maintainer });
+        await this.framework.registerVault(VAULT_ID.ERC20, this.erc20Vault.address, { from: maintainer });
 
         await this.framework.addExitQueue(VAULT_ID.ETH, ETH);
 
@@ -134,6 +142,8 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
         );
 
         this.startStandardExitBondSize = await this.exitGame.startStandardExitBondSize();
+        this.startIFEBondSize = await this.exitGame.startIFEBondSize();
+        this.piggybackBondSize = await this.exitGame.piggybackBondSize();
 
         this.toPaymentCondition = await PaymentOutputToPaymentTxCondition.new(
             this.framework.address, OUTPUT_TYPE.PAYMENT, TX_TYPE.PAYMENT,
@@ -141,7 +151,12 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
         await spendingConditionRegistry.registerSpendingCondition(
             OUTPUT_TYPE.PAYMENT, TX_TYPE.PAYMENT, this.toPaymentCondition.address,
         );
-        await this.framework.registerExitGame(TX_TYPE.PAYMENT, this.exitGame.address, PROTOCOL.MORE_VP);
+        await this.framework.registerExitGame(
+            TX_TYPE.PAYMENT,
+            this.exitGame.address,
+            PROTOCOL.MORE_VP,
+            { from: maintainer },
+        );
     };
 
     const aliceDepositsETH = async () => {
@@ -168,7 +183,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
         this.merkleTreeForTransferTx = new MerkleTree([this.transferTx]);
         this.merkleProofForTransferTx = this.merkleTreeForTransferTx.getInclusionProof(this.transferTx);
 
-        await this.framework.submitBlock(this.merkleTreeForTransferTx.root);
+        await this.framework.submitBlock(this.merkleTreeForTransferTx.root, { from: authority });
     };
 
     const aliceDepositsErc20 = async () => {
@@ -509,6 +524,95 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob]) => {
 
                             expect(actualAliceErc20BalanceAfterProcessExit)
                                 .to.be.bignumber.equal(expectedAliceErc20Balance);
+                        });
+                    });
+                });
+            });
+        });
+
+        describe('Given Alice deposited ETH', () => {
+            beforeEach(async () => {
+                await aliceDepositsETH();
+            });
+
+            describe('Given she started an in-flight exit from transaction that is not mined', () => {
+                beforeEach(async () => {
+                    await aliceDepositsETH();
+                    const amount = DEPOSIT_VALUE / 2;
+                    const output = new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, amount, alice, ETH);
+                    this.inFlightTx = new PaymentTransaction(TX_TYPE.PAYMENT, [this.depositUtxoPos], [output]);
+
+                    this.inFlightTxRaw = web3.utils.bytesToHex(this.inFlightTx.rlpEncoded());
+                    const inputTxs = [this.depositTx];
+                    const inputTxTypes = [TX_TYPE.PAYMENT];
+                    const inputUtxosPos = [this.depositUtxoPos];
+                    const outputGuardPreimagesForInputs = [EMPTY_BYTES];
+                    const inputTxsInclusionProofs = [this.merkleProofForDepositTx];
+                    const inputTxsConfirmSigs = [EMPTY_BYTES];
+
+                    const txHash = hashTx(this.inFlightTx, this.framework.address);
+                    const signature = sign(txHash, alicePrivateKey);
+
+                    const args = {
+                        inFlightTx: this.inFlightTxRaw,
+                        inputTxs,
+                        inputTxTypes,
+                        inputUtxosPos,
+                        outputGuardPreimagesForInputs,
+                        inputTxsInclusionProofs,
+                        inputTxsConfirmSigs,
+                        inFlightTxWitnesses: [signature],
+                        inputSpendingConditionOptionalArgs: [EMPTY_BYTES],
+                    };
+
+                    await this.exitGame.startInFlightExit(
+                        args,
+                        { from: alice, value: this.startIFEBondSize },
+                    );
+
+                    this.exitId = await this.exitIdHelper.getInFlightExitId(this.inFlightTxRaw);
+                });
+
+                describe('And owner of the output piggybacks', () => {
+                    beforeEach(async () => {
+                        this.exitingOutputIndex = 0;
+                        const args = {
+                            inFlightTx: this.inFlightTxRaw,
+                            outputIndex: this.exitingOutputIndex,
+                            outputGuardPreimage: EMPTY_BYTES,
+                        };
+
+                        await this.exitGame.piggybackInFlightExitOnOutput(
+                            args,
+                            { from: alice, value: this.piggybackBondSize },
+                        );
+                    });
+
+                    describe('And someone processes exits for ETH after two weeks', () => {
+                        beforeEach(async () => {
+                            await time.increase(time.duration.weeks(2).add(time.duration.seconds(1)));
+                            this.exitsToProcess = 1;
+
+                            this.processTx = await this.framework.processExits(
+                                VAULT_ID.ETH, ETH, 0, this.exitsToProcess,
+                            );
+                        });
+
+                        it('should publish an event', async () => {
+                            await expectEvent.inLogs(
+                                this.processTx.logs,
+                                'ProcessedExitsNum',
+                                {
+                                    processedNum: new BN(this.exitsToProcess),
+                                    vaultId: new BN(VAULT_ID.ETH),
+                                    token: ETH,
+                                },
+                            );
+                        });
+
+                        it('should mark output as spent', async () => {
+                            const outputId = computeNormalOutputId(this.inFlightTxRaw, this.exitingOutputIndex);
+                            expect(await this.framework.isOutputSpent(outputId)).to.be.true;
                         });
                     });
                 });
