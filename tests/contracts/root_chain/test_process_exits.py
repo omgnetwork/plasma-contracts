@@ -114,12 +114,14 @@ def test_finalize_exits_old_utxo_is_mature_after_single_mfp(testlang):
 
     testlang.forward_timestamp(required_exit_period)
     testlang.start_standard_exit(spend_id, owner.key)
-    testlang.forward_timestamp(minimal_finalization_period)
 
+    testlang.forward_timestamp(minimal_finalization_period)
     assert testlang.get_standard_exit(spend_id).owner == owner.address
+
     testlang.process_exits(NULL_ADDRESS, 0, 100)
-    testlang.forward_timestamp(1)
     assert testlang.get_standard_exit(spend_id).owner == owner.address
+
+    testlang.forward_timestamp(1)
     testlang.process_exits(NULL_ADDRESS, 0, 100)
     assert testlang.get_standard_exit(spend_id).owner == NULL_ADDRESS_HEX
 
