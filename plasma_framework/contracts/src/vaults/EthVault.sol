@@ -20,9 +20,9 @@ contract EthVault is Vault {
     constructor(PlasmaFramework _framework) public Vault(_framework) {}
 
     /**
-     * @notice Allows a user to deposit ETH into the contract.
-     * Once the deposit is recognized, the owner is able to make transactions on the OMG network.
-     * @param _depositTx RLP encoded transaction to act as the deposit.
+     * @notice Allows a user to deposit ETH into the contract
+     * Once the deposit is recognized, the owner may transact on the OmiseGO Network
+     * @param _depositTx RLP-encoded transaction to act as the deposit
      */
     function deposit(bytes calldata _depositTx) external payable {
         IEthDepositVerifier(getEffectiveDepositVerifier()).verify(_depositTx, msg.value, msg.sender);
@@ -32,9 +32,9 @@ contract EthVault is Vault {
     }
 
     /**
-    * @notice Withdraw ETH that have been exited from the OMG network successfully.
-    * @param receiver address of the transferee
-    * @param amount amount of eth to transfer.
+    * @notice Withdraw ETH that has successfully exited from the OmiseGO Network
+    * @param receiver Address of the recipient
+    * @param amount The amount of ETH to transfer
     */
     function withdraw(address payable receiver, uint256 amount) external onlyFromNonQuarantinedExitGame {
         receiver.transfer(amount);
