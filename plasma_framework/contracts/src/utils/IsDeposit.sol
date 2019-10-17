@@ -6,7 +6,7 @@ library IsDeposit {
     }
 
     /**
-     * @notice test whether the given block number belongs to a deposit block or not
+     * @notice Tests whether the given block number belongs to a deposit block
      */
     function test(Predicate memory _predicate, uint256 _blockNum) internal pure returns (bool) {
         return _blockNum % _predicate.childBlockInterval != 0;
