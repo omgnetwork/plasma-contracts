@@ -12,7 +12,7 @@ import "./utils/Operated.sol";
 *      For instance, a child block would be in block 1000 and the next deposit would result in block 1001.
 *
 *      Only the authority address can perform a block submission.
-*      Details on limitations on the authority address can be found here: https://github.com/omisego/elixir-omg#managing-the-operator-address
+*      Details on limitations for the authority address can be found here: https://github.com/omisego/elixir-omg#managing-the-operator-address
 */
 contract BlockController is Operated, VaultRegistry {
     address public authority;
@@ -47,8 +47,8 @@ contract BlockController is Operated, VaultRegistry {
     }
 
     /**
-     * @notice Allows the operator to set a new authority address, which enables implementation of mechanical
-     * re-org protection mechanism described in https://github.com/omisego/plasma-contracts/issues/118
+     * @notice Allows the operator to set a new authority address, enabling implementation of mechanical
+     * re-org protection mechanism described here: https://github.com/omisego/plasma-contracts/issues/118
      * @param newAuthority Address of new authority, which cannot be blank
      */
     function setAuthority(address newAuthority) external onlyOperator {
