@@ -5,7 +5,7 @@ import {PaymentTransactionModel as DepositTx} from "../../transactions/PaymentTr
 import {PaymentOutputModel as DepositOutputModel} from "../../transactions/outputs/PaymentOutputModel.sol";
 
 /**
- * @notice Implementation of Eth deposit verifier using payment transaction as the deposit transaction
+ * @notice Implementation of ETH deposit verifier using payment transaction as the deposit transaction
  */
 contract EthDepositVerifier is IEthDepositVerifier {
     using DepositOutputModel for DepositOutputModel.Output;
