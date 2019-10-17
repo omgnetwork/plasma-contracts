@@ -8,7 +8,7 @@ contract Operated {
     }
 
     modifier onlyOperator() {
-        require(msg.sender == _operator, "Not being called by operator");
+        require(msg.sender == _operator, "Not called by the operator");
         _;
     }
 
