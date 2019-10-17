@@ -33,10 +33,10 @@ module.exports = {
             skipDryRun: true,
             provider: () => {
                 const infuraUrl = `${process.env.INFURA_URL}/${process.env.INFURA_API_KEY}`;
-        
+
                 // Replace double '//'
                 const cleanInfuraUrl = infuraUrl.replace(/([^:])(\/\/+)/g, '$1/');
-        
+
                 return new HDWalletProvider(
                     [
                         process.env.DEPLOYER_PRIVATEKEY,
