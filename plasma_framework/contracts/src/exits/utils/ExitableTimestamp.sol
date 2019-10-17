@@ -7,21 +7,28 @@ library ExitableTimestamp {
         uint256 minExitPeriod;
     }
 
-    function calculate(
+    function calculateDepositTxOutputExitableTimestamp(
         Calculator memory _calculator,
-        uint256 _now,
-        uint256 _blockTimestamp,
-        bool _isDeposit
+        uint256 _now
     )
         internal
         pure
         returns (uint64)
     {
-        uint256 minExitableTimestamp = _now + _calculator.minExitPeriod;
+        // Please that boosting the exitable timestamp for a deposit should be only done in case of a SE.
+        // For the explanation please refer to: https://github.com/omisego/plasma-contracts/issues/216
+        return uint64(_now + _calculator.minExitPeriod);
+    }
 
-        if (_isDeposit) {
-            return uint64(minExitableTimestamp);
-        }
-        return uint64(Math.max(_blockTimestamp + (_calculator.minExitPeriod * 2), minExitableTimestamp));
+    function calculateTxExitableTimestamp(
+        Calculator memory _calculator,
+        uint256 _now,
+        uint256 _blockTimestamp
+    )
+        internal 
+        pure
+        returns (uint64)
+    {
+        return uint64(Math.max(_blockTimestamp + (_calculator.minExitPeriod * 2), _now + _calculator.minExitPeriod));
     }
 }

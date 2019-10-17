@@ -167,12 +167,8 @@ library PaymentPiggybackInFlightExit {
         private
     {
         (, uint256 blockTimestamp) = controller.framework.blocks(utxoPos.blockNum());
-
-        // TODO: change the ExitableTimestamp interface as 'isDeposit' should be used only in SE, in IFE it doesn't matter
-        // Could update the interface to be cleaner and not forcing a "false" here.
-        // https://github.com/omisego/plasma-contracts/issues/216
-        bool isPositionDeposit = false;
-        uint64 exitableAt = controller.exitableTimestampCalculator.calculate(now, blockTimestamp, isPositionDeposit);
+        
+        uint64 exitableAt = controller.exitableTimestampCalculator.calculateTxExitableTimestamp(now, blockTimestamp);
 
         uint256 vaultId;
         if (token == address(0)) {
