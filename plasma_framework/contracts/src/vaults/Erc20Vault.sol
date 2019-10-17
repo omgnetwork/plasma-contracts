@@ -26,11 +26,11 @@ contract Erc20Vault is Vault {
     constructor(PlasmaFramework _framework) public Vault(_framework) {}
 
     /**
-     * @notice Deposits approved amount of ERC20 token(s) into the contract.
-     * Once the deposit is recognized, the owner (depositor) is able to make transactions on the OMG network.
-     * The approve function of the ERC20 token contract needs to be called before this function is called
-     * for at least the amount that is deposited into the contract.
-     * @param depositTx RLP encoded transaction to act as the deposit.
+     * @notice Deposits approved amount of ERC20 token(s) into the contract
+     * Once the deposit is recognized, the owner (depositor) can transact on the OmiseGO Network
+     * The approve function of the ERC20 token contract must be called before calling this function
+     * for at least the amount that is deposited into the contract
+     * @param depositTx RLP-encoded transaction to act as the deposit
      */
     function deposit(bytes calldata depositTx) external {
         (address depositor, address token, uint256 amount) = IErc20DepositVerifier(getEffectiveDepositVerifier())
@@ -44,10 +44,10 @@ contract Erc20Vault is Vault {
     }
 
     /**
-    * @notice Withdraw ERC20 tokens that have been exited from the OMG network successfully.
-    * @param receiver address of the receiver
-    * @param token address of ERC20 token contract.
-    * @param amount amount to transfer.
+    * @notice Withdraw ERC20 tokens that have successfully exited from the OmiseGO Network
+    * @param receiver Address of the receiver
+    * @param token Address of ERC20 token contract
+    * @param amount Amount to transfer
     */
     function withdraw(address payable receiver, address token, uint256 amount) external onlyFromNonQuarantinedExitGame {
         IERC20(token).safeTransfer(receiver, amount);
