@@ -6,6 +6,6 @@ import "../../src/exits/payment/routers/PaymentInFlightExitRouterArgs.sol";
 
 contract FallbackFunctionFailAttacker {
     function () external payable {
-        revert('fail on fallback function');
+        revert("fail on fallback function");
     }
 }

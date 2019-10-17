@@ -103,7 +103,7 @@ contract PaymentInFlightExitRouterMock is FailFastReentrancyGuard, PaymentInFlig
         } else if (stringEquals(testTarget, "challengeInFlightExitNotCanonical")) {
             PaymentInFlightExitRouter.challengeInFlightExitNotCanonical(challengeCanonicityArgs);
         } else if (stringEquals(testTarget, "respondToNonCanonicalChallenge")) {
-            PaymentInFlightExitRouter.respondToNonCanonicalChallenge(bytes(''), 0, bytes(''));
+            PaymentInFlightExitRouter.respondToNonCanonicalChallenge(bytes(""), 0, bytes(""));
         } else if (stringEquals(testTarget, "challengeInFlightExitInputSpent")) {
             PaymentInFlightExitRouter.challengeInFlightExitInputSpent(challengeInputSpentArgs);
         } else if (stringEquals(testTarget, "challengeInFlightExitOutputSpent")) {
