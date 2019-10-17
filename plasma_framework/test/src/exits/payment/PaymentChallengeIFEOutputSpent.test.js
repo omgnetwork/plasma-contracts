@@ -15,7 +15,7 @@ const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
 const StateTransitionVerifierMock = artifacts.require('StateTransitionVerifierMock');
 const TxFinalizationVerifier = artifacts.require('TxFinalizationVerifier');
-const ReentrancyAttacker = artifacts.require('PaymentIFEOutputChallengeAttacker');
+const Attacker = artifacts.require('FallbackFunctionFailAttacker');
 
 const {
     BN, constants, expectEvent, expectRevert, time,
@@ -195,8 +195,7 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
         });
 
         it('should fail when paying out piggyback bond fails', async () => {
-            const attacker = await ReentrancyAttacker.new(this.exitGame.address, this.challengeArgs);
-            await web3.eth.sendTransaction({ to: attacker.address, from: alice, value: web3.utils.toWei('1', 'ether') });
+            const attacker = await Attacker.new();
 
             await expectRevert(
                 this.exitGame.challengeInFlightExitOutputSpent(this.challengeArgs, { from: attacker.address }),

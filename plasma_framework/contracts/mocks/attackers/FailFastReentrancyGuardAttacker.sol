@@ -1,17 +1,17 @@
 pragma solidity 0.5.11;
 pragma experimental ABIEncoderV2;
 
-import "../../src/utils/GracefulReentrancyGuard.sol";
+import "../../src/utils/FailFastReentrancyGuard.sol";
 
-contract GracefulReentrancyGuardAttacker is GracefulReentrancyGuard {
+contract FailFastReentrancyGuardAttacker is FailFastReentrancyGuard {
 
     event RemoteCallFailed();
 
-    function guardedLocal() public gracefullyNonReentrant {
+    function guardedLocal() public nonReentrant {
         guardedLocal();
     }
 
-    function guardedRemote() external gracefullyNonReentrant {
+    function guardedRemote() external nonReentrant {
         // solhint-disable-next-line avoid-low-level-calls
         (bool success, ) = address(this).call(abi.encodeWithSignature("guardedRemote()"));
         if (!success) {

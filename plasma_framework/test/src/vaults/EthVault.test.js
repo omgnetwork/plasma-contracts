@@ -2,7 +2,6 @@ const PlasmaFramework = artifacts.require('PlasmaFramework');
 const EthVault = artifacts.require('EthVault');
 const EthDepositVerifier = artifacts.require('EthDepositVerifier');
 const DummyExitGame = artifacts.require('DummyExitGame');
-const ReentrancyAttacker = artifacts.require('EthWithdrawAttacker');
 
 const {
     BN, constants, expectEvent, expectRevert, time,
@@ -192,28 +191,6 @@ contract('EthVault', ([_, alice]) => {
                 {
                     receiver: alice,
                     amount: new BN(DEPOSIT_VALUE),
-                },
-            );
-        });
-
-        it('should be protected against reentrancy attack', async () => {
-            const amount = 1;
-            this.preBalance = new BN(await web3.eth.getBalance(this.ethVault.address));
-            this.attacker = await ReentrancyAttacker.new(this.ethVault.address, amount);
-            await this.framework.registerExitGame(2, this.attacker.address, PROTOCOL.MORE_VP);
-
-            await time.increase(3 * MIN_EXIT_PERIOD + 1);
-
-            await web3.eth.sendTransaction({ to: this.attacker.address, from: alice, value: web3.utils.toWei('1', 'ether') });
-
-            const { receipt } = await this.attacker.proxyEthWithdraw();
-            await expectEvent.inTransaction(
-                receipt.transactionHash,
-                EthVault,
-                'WithdrawFailed',
-                {
-                    receiver: this.attacker.address,
-                    amount: new BN(amount),
                 },
             );
         });

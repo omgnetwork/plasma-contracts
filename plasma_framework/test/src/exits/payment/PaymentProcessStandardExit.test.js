@@ -9,7 +9,7 @@ const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
 const TxFinalizationVerifier = artifacts.require('TxFinalizationVerifier');
-const ReentrancyAttacker = artifacts.require('PaymentProcessStandardExitAttacker');
+const Attacker = artifacts.require('FallbackFunctionFailAttacker');
 
 const {
     BN, constants, expectEvent,
@@ -77,18 +77,17 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
             bondSize: this.startStandardExitBondSize.toString(),
         });
 
-        describe('when reentrancy attack during paying out bond happens', () => {
+        describe('when paying out bond fails', () => {
             beforeEach(async () => {
                 const exitId = 1;
-                this.attacker = await ReentrancyAttacker.new(this.exitGame.address, exitId, ETH);
+                this.attacker = await Attacker.new();
 
                 const testExitData = getTestExitData(true, ETH, this.attacker.address);
                 await this.exitGame.setExit(exitId, testExitData);
-                await web3.eth.sendTransaction({ to: this.attacker.address, from: alice, value: web3.utils.toWei('1', 'ether') });
 
                 this.preBalance = new BN(await web3.eth.getBalance(this.exitGame.address));
                 const { receipt } = await this.exitGame.processExit(exitId, VAULT_ID.ETH, ETH);
-                this.reentrancyAttackReceipt = receipt;
+                this.receiptAfterAttack = receipt;
             });
 
             it('should not pay out bond', async () => {
@@ -98,7 +97,7 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
 
             it('should publish an event informing that bond pay out failed', async () => {
                 await expectEvent.inTransaction(
-                    this.reentrancyAttackReceipt.transactionHash,
+                    this.receiptAfterAttack.transactionHash,
                     PaymentProcessStandardExit,
                     'BondReturnFailed',
                     {

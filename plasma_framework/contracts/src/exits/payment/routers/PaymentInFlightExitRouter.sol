@@ -14,15 +14,14 @@ import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../interfaces/IStateTransitionVerifier.sol";
 import "../../interfaces/ITxFinalizationVerifier.sol";
 import "../../utils/BondSize.sol";
-import "../../../utils/GracefulReentrancyGuard.sol";
+import "../../../utils/FailFastReentrancyGuard.sol";
 import "../../../utils/OnlyWithValue.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../framework/interfaces/IExitProcessor.sol";
 import "../../../framework/utils/Operated.sol";
 
-import "openzeppelin-solidity/contracts/utils/ReentrancyGuard.sol";
 
-contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue, ReentrancyGuard, GracefulReentrancyGuard {
+contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue, FailFastReentrancyGuard {
     using PaymentStartInFlightExit for PaymentStartInFlightExit.Controller;
     using PaymentPiggybackInFlightExit for PaymentPiggybackInFlightExit.Controller;
     using PaymentChallengeIFENotCanonical for PaymentChallengeIFENotCanonical.Controller;
@@ -193,6 +192,7 @@ contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue, R
     function startInFlightExit(PaymentInFlightExitRouterArgs.StartExitArgs memory args)
         public
         payable
+        nonReentrant
         onlyWithValue(startIFEBondSize())
     {
         startInFlightExitController.run(inFlightExitMap, args);
@@ -207,6 +207,7 @@ contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue, R
     )
         public
         payable
+        nonReentrant
         onlyWithValue(piggybackBondSize())
     {
         piggybackInFlightExitController.piggybackInput(inFlightExitMap, args);
@@ -221,6 +222,7 @@ contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue, R
     )
         public
         payable
+        nonReentrant
         onlyWithValue(piggybackBondSize())
     {
         piggybackInFlightExitController.piggybackOutput(inFlightExitMap, args);
@@ -232,6 +234,7 @@ contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue, R
      */
     function challengeInFlightExitNotCanonical(PaymentInFlightExitRouterArgs.ChallengeCanonicityArgs memory args)
         public
+        nonReentrant
     {
         challengeCanonicityController.challenge(inFlightExitMap, args);
     }
@@ -248,6 +251,7 @@ contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue, R
         bytes memory inFlightTxInclusionProof
     )
         public
+        nonReentrant
     {
         challengeCanonicityController.respond(inFlightExitMap, inFlightTx, inFlightTxPos, inFlightTxInclusionProof);
     }
@@ -280,7 +284,7 @@ contract PaymentInFlightExitRouter is IExitProcessor, Operated, OnlyWithValue, R
      * @param exitId The in-flight exit id.
      * @param token The token (in erc20 address or address(0) for ETH) of the exiting output.
      */
-    function processInFlightExit(uint160 exitId, address token) internal gracefullyNonReentrant {
+    function processInFlightExit(uint160 exitId, address token) internal {
         processInflightExitController.run(inFlightExitMap, exitId, token);
     }
 

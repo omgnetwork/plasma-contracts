@@ -1,6 +1,6 @@
 /* eslint no-bitwise: ["error", { "allow": ["|"] }] */
 
-const Attacker = artifacts.require('PaymentProcessInFlightExitAttacker');
+const Attacker = artifacts.require('FallbackFunctionFailAttacker');
 const ERC20Mintable = artifacts.require('ERC20Mintable');
 const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry');
 const PaymentChallengeIFENotCanonical = artifacts.require('PaymentChallengeIFENotCanonical');
@@ -245,11 +245,10 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
             expect(events.length).to.equal(0);
         });
 
-        describe('When reentrancy attack happens on bond return', () => {
+        describe('When bond return call failed', () => {
             beforeEach(async () => {
                 this.dummyExitId = 666;
-                this.attacker = await Attacker.new(this.exitGame.address, this.dummyExitId, ETH);
-                await web3.eth.sendTransaction({ to: this.attacker.address, from: ifeBondOwner, value: web3.utils.toWei('1', 'ether') });
+                this.attacker = await Attacker.new();
 
                 this.preAttackBalance = new BN(await web3.eth.getBalance(this.exitGame.address));
             });

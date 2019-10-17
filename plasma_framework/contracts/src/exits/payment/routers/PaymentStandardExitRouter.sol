@@ -15,17 +15,14 @@ import "../../../vaults/Erc20Vault.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../framework/interfaces/IExitProcessor.sol";
 import "../../../framework/utils/Operated.sol";
-import "../../../utils/GracefulReentrancyGuard.sol";
 import "../../../utils/OnlyWithValue.sol";
-
-import "openzeppelin-solidity/contracts/utils/ReentrancyGuard.sol";
+import "../../../utils/FailFastReentrancyGuard.sol";
 
 contract PaymentStandardExitRouter is
     IExitProcessor,
     Operated,
     OnlyWithValue,
-    ReentrancyGuard,
-    GracefulReentrancyGuard
+    FailFastReentrancyGuard
 {
     using PaymentStartStandardExit for PaymentStartStandardExit.Controller;
     using PaymentChallengeStandardExit for PaymentChallengeStandardExit.Controller;
@@ -129,6 +126,7 @@ contract PaymentStandardExitRouter is
     )
         public
         payable
+        nonReentrant
         onlyWithValue(startStandardExitBondSize())
     {
         startStandardExitController.run(standardExitMap, args);
@@ -151,7 +149,7 @@ contract PaymentStandardExitRouter is
      * @param exitId The standard exit id.
      * @param token The token (in erc20 address or address(0) for ETH) of the exiting output.
      */
-    function processStandardExit(uint160 exitId, address token) internal gracefullyNonReentrant {
+    function processStandardExit(uint160 exitId, address token) internal {
         processStandardExitController.run(standardExitMap, exitId, token);
     }
 }

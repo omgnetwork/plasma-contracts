@@ -3,12 +3,11 @@ pragma solidity 0.5.11;
 import "./Vault.sol";
 import "./verifiers/IErc20DepositVerifier.sol";
 import "../framework/PlasmaFramework.sol";
-import "../utils/GracefulReentrancyGuard.sol";
 
 import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/SafeERC20.sol";
 
-contract Erc20Vault is Vault, GracefulReentrancyGuard {
+contract Erc20Vault is Vault {
     using SafeERC20 for IERC20;
 
     event Erc20Withdrawn(
@@ -50,7 +49,7 @@ contract Erc20Vault is Vault, GracefulReentrancyGuard {
     * @param token address of ERC20 token contract.
     * @param amount amount to transfer.
     */
-    function withdraw(address payable receiver, address token, uint256 amount) external onlyFromNonQuarantinedExitGame gracefullyNonReentrant {
+    function withdraw(address payable receiver, address token, uint256 amount) external onlyFromNonQuarantinedExitGame {
         IERC20(token).safeTransfer(receiver, amount);
         emit Erc20Withdrawn(receiver, token, amount);
     }

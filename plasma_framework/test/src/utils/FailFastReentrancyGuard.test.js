@@ -1,8 +1,8 @@
 const { expectEvent, expectRevert } = require('openzeppelin-test-helpers');
 
-const Attacker = artifacts.require('GracefulReentrancyGuardAttacker');
+const Attacker = artifacts.require('FailFastReentrancyGuardAttacker');
 
-contract('GracefulReentrancyGuard', () => {
+contract('FailFastReentrancyGuard', () => {
     beforeEach(async () => {
         this.attacker = await Attacker.new();
     });
