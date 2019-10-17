@@ -16,7 +16,7 @@ contract VaultRegistry is Operated {
     );
 
     /**
-     * @dev For each new vault contract, it should take at least 1 minExitPeriod to be able to start take effect to protect deposit transaction in mempool.
+     * @dev It takes at least 1 minExitPeriod for each new vault contract to start protecting deposit transaction in mempool
      *      see: https://github.com/omisego/plasma-contracts/issues/173
      */
     constructor (uint256 _minExitPeriod, uint256 _initialImmuneVaults)
@@ -27,24 +27,24 @@ contract VaultRegistry is Operated {
     }
 
     /**
-     * @notice modifier to check the call is from a non-quarantined vault.
+     * @notice A modifier to check that the call is from a non-quarantined vault
      */
     modifier onlyFromNonQuarantinedVault() {
-        require(_vaultToId[msg.sender] > 0, "Not being called by registered vaults");
-        require(!_vaultQuarantine.isQuarantined(msg.sender), "Vault is quarantined.");
+        require(_vaultToId[msg.sender] > 0, "The call is not from a registered vault");
+        require(!_vaultQuarantine.isQuarantined(msg.sender), "Vault is quarantined");
         _;
     }
 
     /**
-     * @notice Register a vault within the PlasmaFramework. This can only be called by the maintainer.
+     * @notice Register a vault within the PlasmaFramework. Only a maintainer can make the call.
      * @dev emits VaultRegistered event to notify clients
-     * @param _vaultId the id for the vault contract to register.
-     * @param _vaultAddress address of the vault contract.
+     * @param _vaultId The ID for the vault contract to register
+     * @param _vaultAddress Address of the vault contract
      */
     function registerVault(uint256 _vaultId, address _vaultAddress) public onlyOperator {
-        require(_vaultId != 0, "should not register with vault id 0");
-        require(_vaultAddress != address(0), "should not register an empty vault address");
-        require(_vaults[_vaultId] == address(0), "The vault id is already registered");
+        require(_vaultId != 0, "Should not register with vault ID 0");
+        require(_vaultAddress != address(0), "Should not register an empty vault address");
+        require(_vaults[_vaultId] == address(0), "The vault ID is already registered");
         require(_vaultToId[_vaultAddress] == 0, "The vault contract is already registered");
 
         _vaults[_vaultId] = _vaultAddress;
@@ -55,14 +55,14 @@ contract VaultRegistry is Operated {
     }
 
     /**
-     * @notice public getter for getting vault address with vault id
+     * @notice Public getter for retrieving vault address with vault ID
      */
     function vaults(uint256 _vaultId) public view returns (address) {
         return _vaults[_vaultId];
     }
 
     /**
-     * @notice public getter for getting vault id with vault address
+     * @notice Public getter for retrieving vault ID with vault address
      */
     function vaultToId(address _vaultAddress) public view returns (uint256) {
         return _vaultToId[_vaultAddress];
