@@ -2,7 +2,7 @@
 
 View Source: [contracts/src/exits/payment/routers/PaymentStandardExitRouter.sol](../../contracts/src/exits/payment/routers/PaymentStandardExitRouter.sol)
 
-**↗ Extends: [IExitProcessor](IExitProcessor.md), [Operated](Operated.md), [OnlyWithValue](OnlyWithValue.md), [ReentrancyGuard](ReentrancyGuard.md), [GracefulReentrancyGuard](GracefulReentrancyGuard.md)**
+**↗ Extends: [IExitProcessor](IExitProcessor.md), [OnlyFromAddress](OnlyFromAddress.md), [OnlyWithValue](OnlyWithValue.md), [FailFastReentrancyGuard](FailFastReentrancyGuard.md)**
 **↘ Derived Contracts: [PaymentExitGame](PaymentExitGame.md)**
 
 **PaymentStandardExitRouter**
@@ -40,17 +40,13 @@ event ExitFinalized(uint160 indexed exitId);
 
 ## Functions
 
-- [PaymentStandardExitRouter.sol](#paymentstandardexitroutersol)
-  - [Contract Members](#contract-members)
-  - [Functions](#functions)
-    - [](#)
-    - [standardExits](#standardexits)
-    - [startStandardExitBondSize](#startstandardexitbondsize)
-    - [updateStartStandardExitBondSize](#updatestartstandardexitbondsize)
-    - [startStandardExit](#startstandardexit)
-    - [challengeStandardExit](#challengestandardexit)
-    - [processStandardExit](#processstandardexit)
-  - [Contracts](#contracts)
+- [(PlasmaFramework plasmaFramework, uint256 ethVaultId, uint256 erc20VaultId, OutputGuardHandlerRegistry outputGuardHandlerRegistry, SpendingConditionRegistry spendingConditionRegistry, ITxFinalizationVerifier txFinalizationVerifier)](#)
+- [standardExits(uint160 exitId)](#standardexits)
+- [startStandardExitBondSize()](#startstandardexitbondsize)
+- [updateStartStandardExitBondSize(uint128 newBondSize)](#updatestartstandardexitbondsize)
+- [startStandardExit(struct PaymentStandardExitRouterArgs.StartStandardExitArgs args)](#startstandardexit)
+- [challengeStandardExit(struct PaymentStandardExitRouterArgs.ChallengeStandardExitArgs args)](#challengestandardexit)
+- [processStandardExit(uint160 exitId, address token)](#processstandardexit)
 
 ### 
 
@@ -117,7 +113,7 @@ function updateStartStandardExitBondSize(uint128 newBondSize) public nonpayable 
 Starts a standard exit of a given output. Uses output-age priority.
 
 ```js
-function startStandardExit(struct PaymentStandardExitRouterArgs.StartStandardExitArgs args) public payable onlyWithValue 
+function startStandardExit(struct PaymentStandardExitRouterArgs.StartStandardExitArgs args) public payable nonReentrant onlyWithValue 
 ```
 
 **Arguments**
@@ -145,7 +141,7 @@ function challengeStandardExit(struct PaymentStandardExitRouterArgs.ChallengeSta
 Process standard exit.
 
 ```js
-function processStandardExit(uint160 exitId, address token) internal nonpayable gracefullyNonReentrant 
+function processStandardExit(uint160 exitId, address token) internal nonpayable
 ```
 
 **Arguments**
@@ -173,7 +169,7 @@ function processStandardExit(uint160 exitId, address token) internal nonpayable 
 * [ExitGameRegistry](ExitGameRegistry.md)
 * [ExitId](ExitId.md)
 * [ExitPriority](ExitPriority.md)
-* [GracefulReentrancyGuard](GracefulReentrancyGuard.md)
+* [FailFastReentrancyGuard](FailFastReentrancyGuard.md)
 * [IERC20](IERC20.md)
 * [IErc20DepositVerifier](IErc20DepositVerifier.md)
 * [IEthDepositVerifier](IEthDepositVerifier.md)
@@ -218,7 +214,6 @@ function processStandardExit(uint160 exitId, address token) internal nonpayable 
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [ReentrancyGuard](ReentrancyGuard.md)
 * [RLP](RLP.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)

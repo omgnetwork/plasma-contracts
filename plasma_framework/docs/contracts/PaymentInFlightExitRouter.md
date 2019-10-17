@@ -2,11 +2,7 @@
 
 View Source: [contracts/src/exits/payment/routers/PaymentInFlightExitRouter.sol](../../contracts/src/exits/payment/routers/PaymentInFlightExitRouter.sol)
 
-<<<<<<< HEAD:plasma_framework/docs/PaymentInFlightExitRouter.md
-**↗ Extends: [IExitProcessor](IExitProcessor.md), [Operated](Operated.md), [OnlyWithValue](OnlyWithValue.md), [ReentrancyGuard](ReentrancyGuard.md), [GracefulReentrancyGuard](GracefulReentrancyGuard.md)**
-=======
-**↗ Extends: [IExitProcessor](IExitProcessor.md), [OnlyFromAddress](OnlyFromAddress.md), [OnlyWithValue](OnlyWithValue.md)**
->>>>>>> master:plasma_framework/docs/contracts/PaymentInFlightExitRouter.md
+**↗ Extends: [IExitProcessor](IExitProcessor.md), [OnlyFromAddress](OnlyFromAddress.md), [OnlyWithValue](OnlyWithValue.md), [FailFastReentrancyGuard](FailFastReentrancyGuard.md)**
 **↘ Derived Contracts: [PaymentExitGame](PaymentExitGame.md)**
 
 **PaymentInFlightExitRouter**
@@ -110,7 +106,7 @@ returns(struct PaymentExitDataModel.InFlightExit)
 Starts withdrawal from a transaction that might be in-flight.
 
 ```js
-function startInFlightExit(struct PaymentInFlightExitRouterArgs.StartExitArgs args) public payable onlyWithValue 
+function startInFlightExit(struct PaymentInFlightExitRouterArgs.StartExitArgs args) public payable nonReentrant onlyWithValue 
 ```
 
 **Arguments**
@@ -124,7 +120,7 @@ function startInFlightExit(struct PaymentInFlightExitRouterArgs.StartExitArgs ar
 Piggyback on an input of an in-flight exiting tx. Would be processed if the in-flight exit is non-canonical.
 
 ```js
-function piggybackInFlightExitOnInput(struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnInputArgs args) public payable onlyWithValue 
+function piggybackInFlightExitOnInput(struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnInputArgs args) public payable nonReentrant onlyWithValue 
 ```
 
 **Arguments**
@@ -138,7 +134,7 @@ function piggybackInFlightExitOnInput(struct PaymentInFlightExitRouterArgs.Piggy
 Piggyback on an output of an in-flight exiting tx. Would be processed if the in-flight exit is canonical.
 
 ```js
-function piggybackInFlightExitOnOutput(struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnOutputArgs args) public payable onlyWithValue 
+function piggybackInFlightExitOnOutput(struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnOutputArgs args) public payable nonReentrant onlyWithValue 
 ```
 
 **Arguments**
@@ -152,7 +148,7 @@ function piggybackInFlightExitOnOutput(struct PaymentInFlightExitRouterArgs.Pigg
 Challenges an in-flight exit to be non canonical.
 
 ```js
-function challengeInFlightExitNotCanonical(struct PaymentInFlightExitRouterArgs.ChallengeCanonicityArgs args) public nonpayable
+function challengeInFlightExitNotCanonical(struct PaymentInFlightExitRouterArgs.ChallengeCanonicityArgs args) public nonpayable nonReentrant 
 ```
 
 **Arguments**
@@ -166,7 +162,7 @@ function challengeInFlightExitNotCanonical(struct PaymentInFlightExitRouterArgs.
 Respond to a non canonical challenge by providing position and proving the correctness of it.
 
 ```js
-function respondToNonCanonicalChallenge(bytes inFlightTx, uint256 inFlightTxPos, bytes inFlightTxInclusionProof) public nonpayable
+function respondToNonCanonicalChallenge(bytes inFlightTx, uint256 inFlightTxPos, bytes inFlightTxInclusionProof) public nonpayable nonReentrant 
 ```
 
 **Arguments**
@@ -210,7 +206,7 @@ function challengeInFlightExitOutputSpent(struct PaymentInFlightExitRouterArgs.C
 Process in-flight exit.
 
 ```js
-function processInFlightExit(uint160 exitId, address token) internal nonpayable gracefullyNonReentrant 
+function processInFlightExit(uint160 exitId, address token) internal nonpayable
 ```
 
 **Arguments**
@@ -294,7 +290,7 @@ function updatePiggybackBondSize(uint128 newBondSize) public nonpayable onlyFrom
 * [ExitGameRegistry](ExitGameRegistry.md)
 * [ExitId](ExitId.md)
 * [ExitPriority](ExitPriority.md)
-* [GracefulReentrancyGuard](GracefulReentrancyGuard.md)
+* [FailFastReentrancyGuard](FailFastReentrancyGuard.md)
 * [IERC20](IERC20.md)
 * [IErc20DepositVerifier](IErc20DepositVerifier.md)
 * [IEthDepositVerifier](IEthDepositVerifier.md)
@@ -339,7 +335,6 @@ function updatePiggybackBondSize(uint128 newBondSize) public nonpayable onlyFrom
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [ReentrancyGuard](ReentrancyGuard.md)
 * [RLP](RLP.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)

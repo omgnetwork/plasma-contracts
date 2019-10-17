@@ -2,7 +2,7 @@
 
 View Source: [contracts/src/vaults/Erc20Vault.sol](../../contracts/src/vaults/Erc20Vault.sol)
 
-**↗ Extends: [Vault](Vault.md), [GracefulReentrancyGuard](GracefulReentrancyGuard.md)**
+**↗ Extends: [Vault](Vault.md)**
 
 **Erc20Vault**
 
@@ -53,7 +53,7 @@ function deposit(bytes depositTx) external nonpayable
 Withdraw ERC20 tokens that have been exited from the OMG network successfully.
 
 ```js
-function withdraw(address payable receiver, address token, uint256 amount) external nonpayable onlyFromNonQuarantinedExitGame gracefullyNonReentrant 
+function withdraw(address payable receiver, address token, uint256 amount) external nonpayable onlyFromNonQuarantinedExitGame 
 ```
 
 **Arguments**
@@ -82,7 +82,7 @@ function withdraw(address payable receiver, address token, uint256 amount) exter
 * [ExitGameRegistry](ExitGameRegistry.md)
 * [ExitId](ExitId.md)
 * [ExitPriority](ExitPriority.md)
-* [GracefulReentrancyGuard](GracefulReentrancyGuard.md)
+* [FailFastReentrancyGuard](FailFastReentrancyGuard.md)
 * [IERC20](IERC20.md)
 * [IErc20DepositVerifier](IErc20DepositVerifier.md)
 * [IEthDepositVerifier](IEthDepositVerifier.md)
@@ -127,7 +127,6 @@ function withdraw(address payable receiver, address token, uint256 amount) exter
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [ReentrancyGuard](ReentrancyGuard.md)
 * [RLP](RLP.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)
