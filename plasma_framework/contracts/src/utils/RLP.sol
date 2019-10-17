@@ -3,8 +3,8 @@ pragma solidity 0.5.11;
 
 /**
  * @title RLP
- * @dev Library for RLP decoding.
- * Based off of https://github.com/androlo/standard-contracts/blob/master/contracts/src/codec/RLP.sol.
+ * @dev Library for RLP decoding
+ * Based on https://github.com/androlo/standard-contracts/blob/master/contracts/src/codec/RLP.sol
  */
 library RLP {
     /*
@@ -20,22 +20,22 @@ library RLP {
     uint internal constant LIST_LONG_OFFSET = 0xF7;
 
     struct RLPItem {
-        uint _unsafeMemPtr;    // Pointer to the RLP-encoded bytes.
-        uint _unsafeLength;    // Number of bytes. This is the full length of the string.
+        uint _unsafeMemPtr;    // Pointer to the RLP-encoded bytes
+        uint _unsafeLength;    // Number of bytes, which is the full length of the string
     }
 
     struct Iterator {
-        RLPItem _unsafeItem;   // Item that's being iterated over.
-        uint _unsafeNextPtr;   // Position of the next item in the list.
+        RLPItem _unsafeItem;   // Iterated item
+        uint _unsafeNextPtr;   // Position of the next item in the list
     }
 
     /*
      * Internal functions
      */
     /**
-     * @dev Creates an RLPItem from an array of RLP encoded bytes.
-     * @param self The RLP encoded bytes.
-     * @return An RLPItem.
+     * @dev Creates an RLPItem from an array of RLP-encoded bytes
+     * @param self The RLP-encoded bytes
+     * @return An RLPItem
      */
     function toRLPItem(bytes memory self)
         internal
@@ -55,9 +55,9 @@ library RLP {
     }
 
     /**
-     * @dev Creates an RLPItem from an array of RLP encoded bytes.
-     * @param self The RLP encoded bytes.
-     * @param strict Will throw if the data is not RLP encoded.
+     * @dev Creates an RLPItem from an array of RLP-encoded bytes
+     * @param self The RLP-encoded bytes
+     * @param strict Triggered when data is not RLP-encoded
      * @return An RLPItem
      */
     function toRLPItem(bytes memory self, bool strict)
@@ -68,17 +68,17 @@ library RLP {
         RLPItem memory item = toRLPItem(self);
         if (strict) {
             uint len = self.length;
-            require(_payloadOffset(item) <= len, "Invalid RLP encoding - Payload offset to big");
-            require(_itemLength(item._unsafeMemPtr) == len, "Invalid RLP encoding - Implied item length does not match encoded length");
-            require(_validate(item), "Invalid RLP encoding");
+            require(_payloadOffset(item) <= len, "Invalid RLP-encoding; exceeds payload offset max size");
+            require(_itemLength(item._unsafeMemPtr) == len, "Invalid RLP-encoding; implied item length must match encoded length");
+            require(_validate(item), "Invalid RLP-encoding");
         }
         return item;
     }
 
     /**
-     * @dev Check if the RLP item is null.
-     * @param self The RLP item.
-     * @return 'true' if the item is null.
+     * @dev Checks whether the RLP item is null
+     * @param self The RLP item
+     * @return True, if the item is null
      */
     function isNull(RLPItem memory self)
         internal
@@ -89,9 +89,9 @@ library RLP {
     }
 
     /**
-     * @dev Check if the RLP item is a list.
-     * @param self The RLP item.
-     * @return 'true' if the item is a list.
+     * @dev Checks whether the RLP item is a list
+     * @param self The RLP item
+     * @return True, if the item is a list
      */
     function isList(RLPItem memory self)
         internal
@@ -109,9 +109,9 @@ library RLP {
     }
 
     /**
-     * @dev Check if the RLP item is data.
-     * @param self The RLP item.
-     * @return 'true' if the item is data.
+     * @dev Checks whether the RLP item is data
+     * @param self The RLP item
+     * @return True, if the item is data
      */
     function isData(RLPItem memory self)
         internal
@@ -129,9 +129,9 @@ library RLP {
     }
 
     /**
-     * @dev Check if the RLP item is empty (string or list).
-     * @param self The RLP item.
-     * @return 'true' if the item is null.
+     * @dev Checks whether the RLP item is empty (string or list)
+     * @param self The RLP item
+     * @return True, if the item is null
      */
     function isEmpty(RLPItem memory self)
         internal
@@ -151,9 +151,9 @@ library RLP {
     }
 
     /**
-     * @dev Get the number of items in an RLP encoded list.
-     * @param self The RLP item.
-     * @return The number of items.
+     * @dev Retrieves the number of items in an RLP-encoded list
+     * @param self The RLP item
+     * @return The number of items
      */
     function items(RLPItem memory self)
         internal
@@ -180,32 +180,32 @@ library RLP {
     }
 
     /**
-     * @dev Create an iterator.
-     * @param self The RLP item.
-     * @return An 'Iterator' over the item.
+     * @dev Create an iterator
+     * @param self The RLP item
+     * @return An 'Iterator' over the item
      */
     function iterator(RLPItem memory self)
         internal
         pure
         returns (Iterator memory it)
     {
-        require(isList(self), "Item is not a list");
+        require(isList(self), "Item must be a list");
         uint ptr = self._unsafeMemPtr + _payloadOffset(self);
         it._unsafeItem = self;
         it._unsafeNextPtr = ptr;
     }
 
     /**
-     * @dev Decode an RLPItem into bytes. This will not work if the RLPItem is a list.
-     * @param self The RLPItem.
-     * @return The decoded string.
+     * @dev Decode an RLPItem into bytes. Works only if the RLPItem is not a list.
+     * @param self The RLPItem
+     * @return The decoded string
      */
     function toData(RLPItem memory self)
         internal
         pure
         returns (bytes memory bts)
     {
-        require(isData(self), "Item is not data");
+        require(isData(self), "Item must be data");
         uint rStartPos;
         uint len;
         (rStartPos, len) = _decode(self);
@@ -214,17 +214,17 @@ library RLP {
     }
 
     /**
-     * @dev Get the list of sub-items from an RLP encoded list.
-     * Warning: This is inefficient, as it requires that the list is read twice.
-     * @param self The RLP item.
-     * @return Array of RLPItems.
+     * @dev Retrieves the list of sub-items from an RLP-encoded list
+     * Warning: This is inefficient because it requires that the list is read twice
+     * @param self The RLP item
+     * @return Array of RLPItems
      */
     function toList(RLPItem memory self)
         internal
         pure
         returns (RLPItem[] memory list)
     {
-        require(isList(self), "Item is not a list");
+        require(isList(self), "Item must be a list");
         uint numItems = items(self);
         list = new RLPItem[](numItems);
         Iterator memory it = iterator(self);
@@ -236,16 +236,16 @@ library RLP {
     }
 
     /**
-     * @dev Decode an RLPItem into an ascii string. This will not work if the RLPItem is a list.
-     * @param self The RLPItem.
-     * @return The decoded string.
+     * @dev Decode an RLPItem into an ascii string. Works only when the RLPItem is not a list.
+     * @param self The RLPItem
+     * @return The decoded string
      */
     function toAscii(RLPItem memory self)
         internal
         pure
         returns (string memory str)
     {
-        require(isData(self), "These are not RLP encoded bytes");
+        require(isData(self), "Must be RLP-encoded bytes");
         uint rStartPos;
         uint len;
         (rStartPos, len) = _decode(self);
@@ -255,20 +255,20 @@ library RLP {
     }
 
     /**
-     * @dev Decode an RLPItem into a uint. This will not work if the RLPItem is a list.
-     * @param self The RLPItem.
-     * @return The decoded string.
+     * @dev Decode an RLPItem into a uint. Works only if the RLPItem is not a list.
+     * @param self The RLPItem
+     * @return The decoded string
      */
     function toUint(RLPItem memory self)
         internal
         pure
         returns (uint data)
     {
-        require(isData(self), "These are not RLP encoded bytes");
+        require(isData(self), "Must be RLP-encoded bytes");
         uint rStartPos;
         uint len;
         (rStartPos, len) = _decode(self);
-        require(len <= 32, "These are not RLP encoded bytes32");
+        require(len <= 32, "Must be RLP-encoded bytes32");
         // solhint-disable-next-line no-inline-assembly
         assembly {
             data := div(mload(rStartPos), exp(256, sub(32, len)))
@@ -276,44 +276,44 @@ library RLP {
     }
 
     /**
-     * @dev Decode an RLPItem into a boolean. This will not work if the RLPItem is a list.
-     * @param self The RLPItem.
-     * @return The decoded string.
+     * @dev Decode an RLPItem into a boolean. Works only if the RLPItem is not a list.
+     * @param self The RLPItem
+     * @return The decoded string
      */
     function toBool(RLPItem memory self)
         internal
         pure
         returns (bool data)
     {
-        require(isData(self), "These are not RLP encoded bytes");
+        require(isData(self), "Must be RLP-encoded bytes");
         uint rStartPos;
         uint len;
         (rStartPos, len) = _decode(self);
-        require(len == 1, "These are not RLP encoded bytes");
+        require(len == 1, "Must be RLP-encoded bytes");
         uint temp;
         // solhint-disable-next-line no-inline-assembly
         assembly {
             temp := byte(0, mload(rStartPos))
         }
-        require(temp <= 1, "These are not RLP encoded bytes");
+        require(temp <= 1, "Must be RLP-encoded bytes");
         return temp == 1 ? true : false;
     }
 
     /**
-     * @dev Decode an RLPItem into a byte. This will not work if the RLPItem is a list.
-     * @param self The RLPItem.
-     * @return The decoded string.
+     * @dev Decode an RLPItem into a byte. Works only if the RLPItem is not a list.
+     * @param self The RLPItem
+     * @return The decoded string
      */
     function toByte(RLPItem memory self)
         internal
         pure
         returns (byte data)
     {
-        require(isData(self), "These are not RLP encoded bytes");
+        require(isData(self), "Must be RLP-encoded bytes");
         uint rStartPos;
         uint len;
         (rStartPos, len) = _decode(self);
-        require(len == 1, "These are not RLP encoded bytes");
+        require(len == 1, "Must be RLP-encoded bytes");
         uint temp;
         // solhint-disable-next-line no-inline-assembly
         assembly {
@@ -323,9 +323,9 @@ library RLP {
     }
 
     /**
-     * @dev Decode an RLPItem into an int. This will not work if the RLPItem is a list.
-     * @param self The RLPItem.
-     * @return The decoded string.
+     * @dev Decode an RLPItem into an int. Works only if the RLPItem is not a list.
+     * @param self The RLPItem
+     * @return The decoded string
      */
     function toInt(RLPItem memory self)
         internal
@@ -336,9 +336,9 @@ library RLP {
     }
 
     /**
-     * @dev Decode an RLPItem into a bytes32. This will not work if the RLPItem is a list.
-     * @param self The RLPItem.
-     * @return The decoded string.
+     * @dev Decode an RLPItem into a bytes32. Works only if the RLPItem is not a list.
+     * @param self The RLPItem
+     * @return The decoded string
      */
     function toBytes32(RLPItem memory self)
         internal
@@ -349,20 +349,20 @@ library RLP {
     }
 
     /**
-     * @dev Decode an RLPItem into an address. This will not work if the RLPItem is a list.
-     * @param self The RLPItem.
-     * @return The decoded string.
+     * @dev Decode an RLPItem into an address. Works only if the RLPItem is not a list.
+     * @param self The RLPItem
+     * @return The decoded string
      */
     function toAddress(RLPItem memory self)
         internal
         pure
         returns (address data)
     {
-        require(isData(self), "These are not RLP encoded bytes");
+        require(isData(self), "Must be RLP-encoded bytes");
         uint rStartPos;
         uint len;
         (rStartPos, len) = _decode(self);
-        require(len == 20, "These are not RLP encoded bytes");
+        require(len == 20, "Must be RLP-encoded bytes");
         // solhint-disable-next-line no-inline-assembly
         assembly {
             data := div(mload(rStartPos), exp(256, 12))
@@ -370,9 +370,9 @@ library RLP {
     }
 
     /**
-     * @dev Decode an RLPItem into a bytes20. This will not work if the RLPItem is a list.
-     * @param self The RLPItem.
-     * @return The decoded string.
+     * @dev Decode an RLPItem into a bytes20. Works only if the RLPItem is not a list.
+     * @param self The RLPItem
+     * @return The decoded string
      */
     function toBytes20(RLPItem memory self)
         internal
@@ -386,16 +386,16 @@ library RLP {
      * Private functions
      */
     /**
-     * @dev Returns the next RLP item for some iterator.
-     * @param self The iterator.
-     * @return The next RLP item.
+     * @dev Returns the next RLP item for an iterator
+     * @param self The iterator
+     * @return The next RLP item
      */
     function _next(Iterator memory self)
         private
         pure
         returns (RLPItem memory subItem)
     {
-        require(_hasNext(self), "These are not RLP encoded bytes");
+        require(_hasNext(self), "Must be RLP-encoded bytes");
         uint ptr = self._unsafeNextPtr;
         uint itemLength = _itemLength(ptr);
         subItem._unsafeMemPtr = ptr;
@@ -404,9 +404,9 @@ library RLP {
     }
 
     /**
-     * @dev Returns the next RLP item for some iterator and validates it.
-     * @param self The iterator.
-     * @return The next RLP item.
+     * @dev Returns the next RLP item for an iterator, and validates it.
+     * @param self The iterator
+     * @return The next RLP item
      */
     function _next(Iterator memory self, bool strict)
         private
@@ -414,14 +414,14 @@ library RLP {
         returns (RLPItem memory subItem)
     {
         subItem = _next(self);
-        require(!strict || _validate(subItem), "These are not RLP encoded bytes");
+        require(!strict || _validate(subItem), "Must be RLP-encoded bytes");
         return subItem;
     }
 
     /**
-     * @dev Checks if an iterator has a next RLP item.
-     * @param self The iterator.
-     * @return True if the iterator has an RLP item. False otherwise.
+     * @dev Checks whether an iterator has a next RLP item
+     * @param self The iterator
+     * @return True, if the iterator has an RLP item; otherwise, False
      */
     function _hasNext(Iterator memory self)
         private
@@ -433,9 +433,9 @@ library RLP {
     }
 
     /**
-     * @dev Determines the payload offset of some RLP item.
-     * @param self RLP item to query.
-     * @return The payload offset for that item.
+     * @dev Determines the payload offset of a specified RLP item
+     * @param self The RLP item to query
+     * @return The payload offset for the RLP item
      */
     function _payloadOffset(RLPItem memory self)
         private
@@ -464,9 +464,9 @@ library RLP {
     }
 
     /**
-     * @dev Determines the length of an RLP item.
-     * @param memPtr Pointer to the start of the item.
-     * @return Length of the item.
+     * @dev Determines the length of a specified RLP item
+     * @param memPtr Pointer to the start of the RLP item
+     * @return Length of the RLP item
      */
     function _itemLength(uint memPtr)
         private
@@ -502,16 +502,16 @@ library RLP {
     }
 
     /**
-     * @dev Determines the start position and length of some RLP item.
-     * @param self RLP item to query.
-     * @return A pointer to the beginning of the item and the length of that item.
+     * @dev Determines the start position and length of a specified RLP item
+     * @param self The RLP item to query
+     * @return A pointer to the beginning of the RLP item, and its length
      */
     function _decode(RLPItem memory self)
         private
         pure
         returns (uint memPtr, uint len)
     {
-        require(isData(self), "These are not RLP encoded bytes");
+        require(isData(self), "These are not RLP-encoded bytes");
         uint b0;
         uint start = self._unsafeMemPtr;
         // solhint-disable-next-line no-inline-assembly
@@ -537,17 +537,17 @@ library RLP {
     }
 
     /**
-     * @dev Copies some data to a certain target.
-     * @param btsPtr Pointer to the data to copy.
-     * @param tgt Place to copy.
-     * @param btsLen How many bytes to copy.
+     * @dev Copies a subset of data to a specified target
+     * @param btsPtr Pointer to the data to copy
+     * @param tgt Target destination for copied data
+     * @param btsLen Number of bytes to copy
      */
     function _copyToBytes(uint btsPtr, bytes memory tgt, uint btsLen)
         private
         pure
     {
         // Exploiting the fact that 'tgt' was the last thing to be allocated,
-        // we can write entire words, and just overwrite any excess.
+        // we can write entire words, and overwrite any excess.
         // solhint-disable-next-line no-inline-assembly
         assembly {
             {
@@ -566,16 +566,16 @@ library RLP {
     }
 
     /**
-     * @dev Checks that an RLP item is valid.
-     * @param self RLP item to validate.
-     * @return True if the RLP item is well-formed. False otherwise.
+     * @dev Checks the validity of a specified RLP item
+     * @param self The RLP item to validate
+     * @return True, if the RLP item is well-formed; otherwise, False
      */
     function _validate(RLPItem memory self)
         private
         pure
         returns (bool ret)
     {
-        // Check that RLP is well-formed.
+        // Checks that a specified RLP is well-formed
         uint b0;
         uint b1;
         uint memPtr = self._unsafeMemPtr;
