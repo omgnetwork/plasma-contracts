@@ -19,8 +19,8 @@ contract PaymentOutputToPaymentTxCondition is ISpendingCondition {
     PaymentEip712Lib.Constants internal eip712;
 
     /**
-     * @dev This is designed to be re-useable for all versions of Payment transaction.
-     *      As a result, inputTxType and spendingTxType of the Payment output is injected instead.
+     * @dev This is designed to be re-useable for all versions of payment transaction, so that 
+     *      inputTxType and spendingTxType of the payment output is injected instead
      */
     constructor(address framework, uint256 inputTxType, uint256 spendingTxType) public {
         eip712 = PaymentEip712Lib.initConstants(framework);
@@ -51,7 +51,7 @@ contract PaymentOutputToPaymentTxCondition is ISpendingCondition {
         returns (bool)
     {
         PaymentTransactionModel.Transaction memory inputTx = PaymentTransactionModel.decode(inputTxBytes);
-        require(inputTx.txType == supportInputTxType, "The input tx is an unsupported payment tx type");
+        require(inputTx.txType == supportInputTxType, "Input tx is an unsupported payment tx type");
 
         PaymentTransactionModel.Transaction memory spendingTx = PaymentTransactionModel.decode(spendingTxBytes);
         require(spendingTx.txType == supportSpendingTxType, "The spending tx is an unsupported payment tx type");
@@ -59,7 +59,7 @@ contract PaymentOutputToPaymentTxCondition is ISpendingCondition {
         UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.build(TxPosLib.TxPos(inputTxPos), outputIndex);
         require(
             spendingTx.inputs[inputIndex] == bytes32(utxoPos.value),
-            "The spending tx is pointing to the incorrect output UTXO position"
+            "Spending tx points to the incorrect output UTXO position"
         );
 
         address payable owner = inputTx.outputs[outputIndex].owner();
