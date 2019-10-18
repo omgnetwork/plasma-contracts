@@ -29,5 +29,9 @@ module.exports = async (
     console.log(data);
 
     // Save to `output.json`
-    fs.writeFileSync(path.resolve(__dirname, '../build/outputs.json'), data);
+    const buildDir = path.resolve(__dirname, '../build');
+    if (!fs.existsSync(buildDir)) {
+        fs.mkdirSync(buildDir);
+    }
+    fs.writeFileSync(path.resolve(buildDir, 'outputs.json'), data);
 };
