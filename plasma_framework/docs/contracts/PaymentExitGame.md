@@ -66,7 +66,7 @@ Helper function to compute standard exit id.
 
 ```js
 function getStandardExitId(bool _isDeposit, bytes _txBytes, uint256 _utxoPos) public pure
-returns(uint192)
+returns(uint160)
 ```
 
 **Arguments**
@@ -83,7 +83,7 @@ Helper function to compute in-flight exit id.
 
 ```js
 function getInFlightExitId(bytes _txBytes) public pure
-returns(uint192)
+returns(uint160)
 ```
 
 **Arguments**
