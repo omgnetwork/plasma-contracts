@@ -196,7 +196,7 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyFromAddress, OnlyWithV
     function startInFlightExit(PaymentInFlightExitRouterArgs.StartExitArgs memory args)
         public
         payable
-        nonReentrant
+        nonReentrant(framework)
         onlyWithValue(startIFEBondSize())
     {
         startInFlightExitController.run(inFlightExitMap, args);
@@ -211,7 +211,7 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyFromAddress, OnlyWithV
     )
         public
         payable
-        nonReentrant
+        nonReentrant(framework)
         onlyWithValue(piggybackBondSize())
     {
         piggybackInFlightExitController.piggybackInput(inFlightExitMap, args);
@@ -226,7 +226,7 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyFromAddress, OnlyWithV
     )
         public
         payable
-        nonReentrant
+        nonReentrant(framework)
         onlyWithValue(piggybackBondSize())
     {
         piggybackInFlightExitController.piggybackOutput(inFlightExitMap, args);
@@ -238,7 +238,7 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyFromAddress, OnlyWithV
      */
     function challengeInFlightExitNotCanonical(PaymentInFlightExitRouterArgs.ChallengeCanonicityArgs memory args)
         public
-        nonReentrant
+        nonReentrant(framework)
     {
         challengeCanonicityController.challenge(inFlightExitMap, args);
     }
@@ -255,7 +255,7 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyFromAddress, OnlyWithV
         bytes memory inFlightTxInclusionProof
     )
         public
-        nonReentrant
+        nonReentrant(framework)
     {
         challengeCanonicityController.respond(inFlightExitMap, inFlightTx, inFlightTxPos, inFlightTxInclusionProof);
     }
@@ -266,7 +266,7 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyFromAddress, OnlyWithV
      */
     function challengeInFlightExitInputSpent(PaymentInFlightExitRouterArgs.ChallengeInputSpentArgs memory args)
         public
-        nonReentrant
+        nonReentrant(framework)
     {
         challengeInputSpentController.run(inFlightExitMap, args);
     }
@@ -277,7 +277,7 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyFromAddress, OnlyWithV
      */
     function challengeInFlightExitOutputSpent(PaymentInFlightExitRouterArgs.ChallengeOutputSpent memory args)
         public
-        nonReentrant
+        nonReentrant(framework)
     {
         challengeOutputSpentController.run(inFlightExitMap, args);
     }

@@ -130,7 +130,7 @@ contract PaymentStandardExitRouter is
     )
         public
         payable
-        nonReentrant
+        nonReentrant(framework)
         onlyWithValue(startStandardExitBondSize())
     {
         startStandardExitController.run(standardExitMap, args);
@@ -142,7 +142,7 @@ contract PaymentStandardExitRouter is
     function challengeStandardExit(PaymentStandardExitRouterArgs.ChallengeStandardExitArgs memory args)
         public
         payable
-        nonReentrant
+        nonReentrant(framework)
     {
         challengeStandardExitController.run(standardExitMap, args);
     }

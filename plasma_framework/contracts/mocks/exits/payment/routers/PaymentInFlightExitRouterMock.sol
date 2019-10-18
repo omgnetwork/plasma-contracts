@@ -93,7 +93,7 @@ contract PaymentInFlightExitRouterMock is FailFastReentrancyGuard, PaymentInFlig
      * This function helps test reentrant by making this function itself the first call with 'nonReentrant' protection
      * So all other PaymentExitGame functions that is protected by 'nonReentrant' too would fail as it would be considered as re-entrancy
      */
-    function testNonReentrant(string memory testTarget) public nonReentrant {
+    function testNonReentrant(string memory testTarget) public nonReentrant(framework) {
         if (stringEquals(testTarget, "startInFlightExit")) {
             PaymentInFlightExitRouter.startInFlightExit(startIfeArgs);
         } else if (stringEquals(testTarget, "piggybackInFlightExitOnInput")) {

@@ -1,5 +1,7 @@
 pragma solidity 0.5.11;
 
+import "../framework/PlasmaFramework.sol";
+
 /**
  * @notice Reentrancy guard that fails immediately when a reentrace occurs
  * @dev Instead of using the one from openzepplin for the following reasons:
@@ -7,15 +9,13 @@ pragma solidity 0.5.11;
  *      2. Fail fast when reentracy occurs make testing easier
  */
 contract FailFastReentrancyGuard {
-    bool private locked = false;
 
     /**
      * @dev Prevents reentrant calls by using a mutex.
      */
-    modifier nonReentrant() {
-        require(!locked, "Reentrant call");
-        locked = true;
+    modifier nonReentrant(PlasmaFramework framework) {
+        framework.lock();
         _;
-        locked = false;
+        framework.unlock();
     }
 }

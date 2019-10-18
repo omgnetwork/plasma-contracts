@@ -20,6 +20,7 @@ contract ExitGameController is ExitGameRegistry {
     mapping (bytes32 => PriorityQueue) public exitsQueues;
     // outputId => bool
     mapping (bytes32 => bool) public isOutputSpent;
+    bool private mutex = false;
 
     event ExitQueueAdded(
         uint256 vaultId,
@@ -41,6 +42,25 @@ contract ExitGameController is ExitGameRegistry {
         public
         ExitGameRegistry(_minExitPeriod, _initialImmuneExitGames)
     {
+    }
+
+    function lock() external onlyFromNonQuarantinedExitGame() {
+        require(!mutex, "Reentrant call");
+        mutex = true;
+    }
+
+    function unlock() external onlyFromNonQuarantinedExitGame() {
+        mutex = false;
+    }
+
+    /**
+     * @dev Prevents reentrant calls by using a mutex.
+     */
+    modifier nonReentrant() {
+        require(!mutex, "Reentrant call");
+        mutex = true;
+        _;
+        mutex = false;
     }
 
     /**
@@ -115,7 +135,7 @@ contract ExitGameController is ExitGameRegistry {
      * @param maxExitsToProcess maximal number of exits to process.
      * @return total number of processed exits
      */
-    function processExits(uint256 vaultId, address token, uint160 topExitId, uint256 maxExitsToProcess) external {
+    function processExits(uint256 vaultId, address token, uint160 topExitId, uint256 maxExitsToProcess) external nonReentrant {
         bytes32 key = exitQueueKey(vaultId, token);
         require(hasExitQueue(key), "Such token has not been added to the plasma framework yet");
         PriorityQueue queue = exitsQueues[key];
