@@ -45,7 +45,7 @@ contract Erc20Vault is Vault {
 
     /**
     * @notice Withdraw ERC20 tokens that have successfully exited from the OmiseGO Network
-    * @param receiver Address of the receiver
+    * @param receiver Address of the recipient
     * @param token Address of ERC20 token contract
     * @param amount Amount to transfer
     */
