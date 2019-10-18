@@ -6,7 +6,7 @@ import "../interfaces/ISpendingCondition.sol";
 /**
  * @title SpendingConditionRegistry
  * @notice The registry contracts of the spending condition
- * @dev This is designed to renounce the ownership before injecting the registry contract to ExitGame contracts
+ * @dev This is designed to renounce ownership before injecting the registry contract to ExitGame contracts
  *      After registering all the essential condition contracts, the owner should renounce its ownership to
  *      ensure no further conditions are registered for an ExitGame contract.
  *      https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/ownership/Ownable.sol#L55
@@ -35,7 +35,7 @@ contract SpendingConditionRegistry is Ownable {
         require(address(condition) != address(0), "Registration not possible with an empty address");
 
         bytes32 key = keccak256(abi.encode(outputType, spendingTxType));
-        require(address(_spendingConditions[key]) == address(0), "The (output type, spending tx type) pair is already been registered");
+        require(address(_spendingConditions[key]) == address(0), "The (output type, spending tx type) pair is already registered");
 
         _spendingConditions[key] = condition;
     }
