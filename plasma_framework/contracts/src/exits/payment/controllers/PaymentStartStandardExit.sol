@@ -36,7 +36,7 @@ library PaymentStartStandardExit {
     }
 
     /**
-     * @dev data to be passed around startStandardExit helper functions
+     * @dev Data to be passed around startStandardExit helper functions
      */
     struct StartStandardExitData {
         Controller controller;
@@ -89,9 +89,9 @@ library PaymentStartStandardExit {
     /**
      * @notice Main logic function to start standard exit
      * @dev emits ExitStarted event on success
-     * @param self the controller struct
-     * @param exitMap the storage of all standard exit data
-     * @param args arguments of start standard exit function from client.
+     * @param self The controller struct
+     * @param exitMap The storage of all standard exit data
+     * @param args Arguments of start standard exit function from client
      */
     function run(
         Controller memory self,
@@ -168,13 +168,13 @@ library PaymentStartStandardExit {
         require(data.output.amount > 0, "Should not exit with amount 0");
 
         require(address(data.outputGuardHandler) != address(0), "Failed to get the output guard handler for the output type");
-        require(data.outputGuardHandler.isValid(data.outputGuardData), "Some of the output guard related information is not valid");
+        require(data.outputGuardHandler.isValid(data.outputGuardData), "Some information related to output guard is invalid");
         require(data.outputGuardHandler.getExitTarget(data.outputGuardData) == msg.sender, "Only exit target can start an exit");
 
         require(data.controller.txFinalizationVerifier.isStandardFinalized(data.finalizationData), "The transaction must be standard finalized");
-        require(exitMap.exits[data.exitId].exitable == false, "Exit already started");
+        require(exitMap.exits[data.exitId].exitable == false, "Exit has already started");
 
-        require(self.framework.isOutputSpent(data.outputId) == false, "Output already spent");
+        require(self.framework.isOutputSpent(data.outputId) == false, "Output is already spent");
     }
 
     function saveStandardExitData(

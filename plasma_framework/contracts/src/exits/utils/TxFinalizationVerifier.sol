@@ -10,16 +10,16 @@ import {TxFinalizationModel as Model} from "../models/TxFinalizationModel.sol";
 
 /**
  * @notice Contract that checks the tx finalization, currently only MoreVp functionality is implemented
- * @dev We only implement MoreVP function for now. We would add the MVP functionality in the future when we need it.
- *      The new ExitGame can dependency inject a different implementation that adds the MVP functionality in the future.
+ * @dev Only the MoreVP function is currently implemented. MVP functionality is reserved for future development. 
+ *      The new ExitGame can dependency inject a different implementation that adds the MVP functionality in future.
  */
 contract TxFinalizationVerifier is ITxFinalizationVerifier {
     using TxPosLib for TxPosLib.TxPos;
 
     /**
-    * @notice Checks a transaction is "standard finalized" or not
-    * @dev MVP: need both inclusion proof and confirm signature checked.
-    * @dev MoreVp: checks inclusion proof.
+    * @notice Checks whether a transaction is "standard finalized"
+    * @dev MVP: requires that both inclusion proof and confirm signature is checked
+    * @dev MoreVp: checks inclusion proof only
     */
     function isStandardFinalized(Model.Data memory data) public view returns (bool) {
         if (data.protocol == Protocol.MORE_VP()) {
@@ -27,22 +27,22 @@ contract TxFinalizationVerifier is ITxFinalizationVerifier {
         } else if (data.protocol == Protocol.MVP()) {
             revert("not supporting MVP yet");
         } else {
-            revert("invalid protocol value");
+            revert("Invalid protocol value");
         }
     }
 
     /**
-    * @notice Checks a transaction is "protocol finalized" or not
-    * @dev MVP: need to be standard finalized.
-    * @dev MoreVp: it allows in-flight tx, so only checks existence of the transaction.
+    * @notice Checks whether a transaction is "protocol finalized"
+    * @dev MVP: must be standard finalized
+    * @dev MoreVp: allows in-flight tx, so only checks for the existence of the transaction
     */
     function isProtocolFinalized(Model.Data memory data) public view returns (bool) {
         if (data.protocol == Protocol.MORE_VP()) {
             return data.txBytes.length > 0;
         } else if (data.protocol == Protocol.MVP()) {
-            revert("not supporting MVP yet");
+            revert("MVP is not yet supported");
         } else {
-            revert("invalid protocol value");
+            revert("Invalid protocol value");
         }
     }
 

@@ -6,7 +6,7 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 /**
  * @title PriorityQueue
- * @dev Min-heap priority queue implementation.
+ * @dev Min-heap priority queue implementation
  */
 contract PriorityQueue is OnlyFromAddress {
     using SafeMath for uint256;
@@ -43,8 +43,8 @@ contract PriorityQueue is OnlyFromAddress {
     }
 
     /**
-     * @notice Inserts an element into the queue by the owner.
-     * @dev Does not perform deduplication.
+     * @notice Inserts an element into the queue by the owner
+     * @dev Does not perform deduplication
      */
     function insert(uint256 _element) external onlyFrom(framework) {
         queue.heapList.push(_element);
@@ -53,8 +53,8 @@ contract PriorityQueue is OnlyFromAddress {
     }
 
     /**
-     * @notice Deletes the smallest element from the queue.
-     * @return The smallest element in the priority queue.
+     * @notice Deletes the smallest element from the queue
+     * @return The smallest element in the priority queue
      */
     function delMin() external onlyFrom(framework) returns (uint256) {
         uint256 retVal = queue.heapList[1];
@@ -67,9 +67,9 @@ contract PriorityQueue is OnlyFromAddress {
     }
 
     /**
-     * @notice Returns the smallest element from the queue.
-     * @dev Fails when queue is empty.
-     * @return The smallest element in the priority queue.
+     * @notice Returns the smallest element from the queue
+     * @dev Fails when queue is empty
+     * @return The smallest element in the priority queue
      */
     function getMin() external view returns (uint256) {
         return queue.heapList[1];

@@ -9,12 +9,12 @@ library PaymentExitDataModel {
 
     /**
      * @dev Exit model for a standard exit
-     * @param exitable a boolean that represents whether the exit is able to exit or not. The challenge game uses this to flag the result.
-     * @param utxoPos the utxo position of the exiting output of the transaction
-     * @param outputId the output identifier in OutputId format
-     * @param exitTarget the address that the exit will withdraw funds to
-     * @param amount the amount of funds to be withdrawn with this exit
-     * @param bondSize the size of the bond put up for this exit to start. The bond is used to cover the cost of challenges.
+     * @param exitable Boolean that defines whether exit is possible. Used by the challenge game to flag the result.
+     * @param utxoPos The UTXO position of the transaction's exiting output
+     * @param outputId The output identifier, in OutputId format
+     * @param exitTarget The address to which the exit withdraws funds
+     * @param amount The amount of funds to withdraw with this exit
+     * @param bondSize The size of the bond put up for this exit to start, and which is used to cover the cost of challenges
      */
     struct StandardExit {
         bool exitable;
@@ -26,7 +26,7 @@ library PaymentExitDataModel {
     }
 
     /**
-     * @dev mapping of (exitId => StandardExit) that stores all standard exit data
+     * @dev Mapping of (exitId => StandardExit) that stores all standard exit data
      */
     struct StandardExitMap {
         mapping (uint192 => PaymentExitDataModel.StandardExit) exits;
@@ -45,26 +45,26 @@ library PaymentExitDataModel {
 
     /**
      * @dev Exit model for an in-flight exit
-     * @param isCanonical a boolean that represents whether the exit is canonical or not.
-     *                    A canonical exit withdraws the outputs while a non-canonical exit withdraws the  inputs.
-     * @param exitStartTimestamp the timestamp when the exit starts.
-     * @param exitMap a bitmap that stores piggyback flags.
-     * @param position the position of the youngest input of the in-flight exit transaction.
-     * @param inputs fix sized array of data necessary for withdrawing inputs. would be with empty default value if not set.
-     * @param outputs fix sized array of data necessary for withdrawing outputs. would be with empty default value if not set.
-     * @param bondOwner receiver of the bond when the in-flight exit is processed.
-     * @param bondSize the size of the bond put up for this exit to start. The bond is used to cover the cost of challenges.
-     * @param oldestCompetitorPosition the position of oldest competing transaction.
-     *                                 The exiting transaction is only canonical if all competing transactions are younger than it.
+     * @param isCanonical A boolean that defines whether the exit is canonical
+     *                    A canonical exit withdraws the outputs while a non-canonical exit withdraws the  inputs
+     * @param exitStartTimestamp Timestamp for the start of the exit
+     * @param exitMap A bitmap that stores piggyback flags
+     * @param position The position of the youngest input of the in-flight exit transaction
+     * @param inputs Fixed-size array of data required to withdraw inputs (if undefined, the default value is empty)
+     * @param outputs Fixed-size array of data required to withdraw outputs (if undefined, the default value is empty)
+     * @param bondOwner Recipient of the bond, when the in-flight exit is processed
+     * @param bondSize The size of the bond put up for this exit to start. Used to cover the cost of challenges.
+     * @param oldestCompetitorPosition The position of the oldest competing transaction
+     *                                 The exiting transaction is only canonical if all competing transactions are younger.
      */
     struct InFlightExit {
-        // Canonicity is assumed at start, then can be challenged and is set to `false`.
-        // Response to non-canonical challenge can set it back to `true`.
+        // Canonicity is assumed at start, and can be challenged and set to `false` after start
+        // Response to non-canonical challenge can set it back to `true`
         bool isCanonical;
         uint64 exitStartTimestamp;
 
         /**
-         * exit map stores piggybacks and finalized exits
+         * exit map Stores piggybacks and finalized exits
          * right most 0 ~ MAX_INPUT bits is flagged when input is piggybacked
          * right most MAX_INPUT ~ MAX_INPUT + MAX_OUTPUT bits is flagged when output is piggybacked
          */
@@ -78,7 +78,7 @@ library PaymentExitDataModel {
     }
 
     /**
-     * @dev mapping of (exitId => InFlightExit) that stores all in-flight exit data
+     * @dev Mapping of (exitId => InFlightExit) that stores all in-flight exit data
      */
     struct InFlightExitMap {
         mapping (uint160 => PaymentExitDataModel.InFlightExit) exits;

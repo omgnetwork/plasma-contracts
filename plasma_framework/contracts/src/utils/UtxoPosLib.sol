@@ -18,10 +18,10 @@ library UtxoPosLib {
     uint256 constant internal TX_OFFSET = 10000;
 
     /**
-     * @notice Given txPos and outputIndex, returns the Utxo struct.
-     * @param txPos tx position
-     * @param outputIndex the output's transaction index.
-     * @return UtxoPos of the according value
+     * @notice Returns the UTXO struct for a given txPos and outputIndex
+     * @param txPos Transaction position
+     * @param outputIndex Transaction index of the output
+     * @return UtxoPos of the relevant value
      */
     function build(TxPosLib.TxPos memory txPos, uint16 outputIndex)
         internal
@@ -32,9 +32,9 @@ library UtxoPosLib {
     }
 
     /**
-     * @notice Given an UTXO position, returns the block number.
-     * @param _utxoPos Output identifier in form of utxo position.
-     * @return The output's block number.
+     * @notice Returns the block number of a given UTXO position
+     * @param _utxoPos UTXO position identifier for the output
+     * @return The block number of the output
      */
     function blockNum(UtxoPos memory _utxoPos)
         internal
@@ -45,9 +45,9 @@ library UtxoPosLib {
     }
 
     /**
-     * @notice Given an UTXO position, returns the transaction index.
-     * @param _utxoPos Output identifier in form of utxo position.
-     * @return The output's transaction index.
+     * @notice Returns the transaction index of a given UTXO position
+     * @param _utxoPos UTXO position identifier for the output
+     * @return Transaction index of the output
      */
     function txIndex(UtxoPos memory _utxoPos)
         internal
@@ -58,9 +58,9 @@ library UtxoPosLib {
     }
 
     /**
-     * @notice Given an UTXO position, returns the output index.
-     * @param _utxoPos Output identifier in form of utxo position.
-     * @return The output's index.
+     * @notice Returns the output index of a given UTXO position
+     * @param _utxoPos UTXO position identifier for the output
+     * @return Index of the output
      */
     function outputIndex(UtxoPos memory _utxoPos)
         internal
@@ -71,9 +71,9 @@ library UtxoPosLib {
     }
 
     /**
-     * @notice Given an UTXO position, returns transaction position.
-     * @param _utxoPos Output identifier in form of utxo position.
-     * @return The transaction position.
+     * @notice Returns the transaction position of a given UTXO position
+     * @param _utxoPos UTXO position identifier for the output
+     * @return Position of the transaction
      */
     function txPos(UtxoPos memory _utxoPos)
         internal

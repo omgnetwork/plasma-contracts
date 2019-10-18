@@ -6,8 +6,8 @@ import "../utils/OnlyFromAddress.sol";
 
 /**
  * @notice Base contract for vault implementation
- * @dev This is the functionality to swap "deposit verifier".
- *      By setting new deposit verifier, we can upgrade to a new deposit tx type without upgrading the vault.
+ * @dev This is the functionality to swap "deposit verifier"
+ *      Setting a new deposit verifier allows an upgrade to a new deposit tx type without upgrading the vault
  */
 contract Vault is OnlyFromAddress {
     event SetDepositVerifierCalled(address nextDepositVerifier);
@@ -15,8 +15,8 @@ contract Vault is OnlyFromAddress {
     bytes32[16] internal zeroHashes; // Pre-computes zero hashes to be used for building merkle tree for deposit block
 
     /**
-     * @notice Stores deposit verifier contracts addresses where first was effective upto
-     *  `newDepositVerifierMaturityTimestamp` point of time and second become effective after
+     * @notice Stores deposit verifier contract addresses, where the first contract address is effective until the 
+     *  `newDepositVerifierMaturityTimestamp`, after which the second contract address becomes effective
     */
     address[2] public depositVerifiers;
     uint256 public newDepositVerifierMaturityTimestamp = 2 ** 255; // point far in the future
@@ -27,21 +27,21 @@ contract Vault is OnlyFromAddress {
     }
 
     /**
-     * @notice Checks it is called by a non quarantined exit game contract
+     * @notice Checks whether the call originates from a non-quarantined exit game contract
     */
     modifier onlyFromNonQuarantinedExitGame() {
         require(
             ExitGameRegistry(framework).isExitGameSafeToUse(msg.sender),
-            "Called from a nonregistered or quarantined Exit Game contract"
+            "Called from a non-registered or quarantined exit game contract"
         );
         _;
     }
 
     /**
-     * @notice Sets the deposit verifier contract. This can be only called by the operator.
+     * @notice Sets the deposit verifier contract, which may be called only by the operator
      * @dev emit SetDepositVerifierCalled
-     * @dev When one contract is already set next will be effective after MIN_EXIT_PERIOD.
-     * @param _verifier address of the verifier contract.
+     * @dev When one contract is already set, the next one is effective after MIN_EXIT_PERIOD
+     * @param _verifier Address of the verifier contract
      */
     function setDepositVerifier(address _verifier) public onlyFrom(framework.getMaintainer()) {
         require(_verifier != address(0), "Cannot set an empty address as deposit verifier");
@@ -58,8 +58,8 @@ contract Vault is OnlyFromAddress {
     }
 
     /**
-     * @notice Gets currently effective deposit verifier contract address.
-     * @return contract address of deposit verifier.
+     * @notice Retrieves the currently effective deposit verifier contract address
+     * @return Contract address of the deposit verifier
      */
     function getEffectiveDepositVerifier() public view returns (address) {
         if (now < newDepositVerifierMaturityTimestamp) {
@@ -71,7 +71,7 @@ contract Vault is OnlyFromAddress {
 
     /**
      * @notice Generate and submit a deposit block root to the PlasmaFramework
-     * @dev designed to be called by the contract that inherits Vault
+     * @dev Designed to be called by the contract that inherits Vault
      */
     function _submitDepositBlock(bytes memory _depositTx) internal returns (uint256) {
         bytes32 root = keccak256(_depositTx);

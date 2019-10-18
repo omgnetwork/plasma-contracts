@@ -4,10 +4,10 @@ pragma experimental ABIEncoderV2;
 interface IStateTransitionVerifier {
 
     /**
-    * @notice Verifies state transition logic.
-    * @param txBytes the targeting transaction that is doing the state transition verification
-    * @param inputTxs input transactions of the targeting transaction checking state transition
-    * @param outputIndexOfInputTxs the output index of the input txs that the transaction input is pointing to
+    * @notice Verifies state transition logic
+    * @param txBytes The targeting transaction that verifies the state transition
+    * @param inputTxs Input transactions of the targeting transaction that verifies the state transition
+    * @param outputIndexOfInputTxs Output index of the input txs that the transaction input points to
     */
     function isCorrectStateTransition(
         bytes calldata txBytes,

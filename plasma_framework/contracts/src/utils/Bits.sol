@@ -2,7 +2,7 @@ pragma solidity 0.5.11;
 
 /**
  * @title Bits
- * @dev Operations on individual bits of a word.
+ * @dev Operations on individual bits of a word
  */
 library Bits {
     /*
@@ -15,10 +15,10 @@ library Bits {
      * Internal functions
      */
     /**
-     * @dev Sets the bit at the given '_index' in '_self' to '1'.
-     * @param _self Uint to modify.
-     * @param _index Index of the bit to set.
-     * @return The modified value.
+     * @dev Sets the bit at the given '_index' in '_self' to '1'
+     * @param _self Uint to modify
+     * @param _index Index of the bit to set
+     * @return The modified value
      */
     function setBit(uint _self, uint8 _index)
         internal
@@ -29,10 +29,10 @@ library Bits {
     }
 
     /**
-     * @dev Sets the bit at the given '_index' in '_self' to '0'.
-     * @param _self Uint to modify.
-     * @param _index Index of the bit to set.
-     * @return The modified value.
+     * @dev Sets the bit at the given '_index' in '_self' to '0'
+     * @param _self Uint to modify
+     * @param _index Index of the bit to set
+     * @return The modified value
      */
     function clearBit(uint _self, uint8 _index)
         internal
@@ -43,10 +43,10 @@ library Bits {
     }
 
     /**
-     * @dev Returns the bit at the given '_index' in '_self'.
-     * @param _self Uint to check.
-     * @param _index Index of the bit to get.
-     * @return The value of the bit at '_index'.
+     * @dev Returns the bit at the given '_index' in '_self'
+     * @param _self Uint to check
+     * @param _index Index of the bit to retrieve
+     * @return The value of the bit at '_index'
      */
     function getBit(uint _self, uint8 _index)
         internal
@@ -57,10 +57,10 @@ library Bits {
     }
 
     /**
-     * @dev Checks if the bit at the given '_index' in '_self' is '1'.
-     * @param _self Uint to check.
-     * @param _index Index of the bit to check.
-     * @return True if the bit is '0'. False otherwise.
+     * @dev Checks if the bit at the given '_index' in '_self' is '1'
+     * @param _self Uint to check
+     * @param _index Index of the bit to check
+     * @return True, if the bit is '0'; otherwise, False
      */
     function bitSet(uint _self, uint8 _index)
         internal
