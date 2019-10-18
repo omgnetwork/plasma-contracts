@@ -20,11 +20,11 @@ library PaymentStandardExitRouterArgs {
      * @param exitId Identifier of the standard exit to challenge
      * @param exitingTx The exiting transaction
      * @param challengeTx RLP-encoded transaction that spends the exiting output
-     * @param inputIndex The input of the challenging tx corresponding to the exiting output
+     * @param inputIndex Input of the challenging tx, corresponding to the exiting output
      * @param witness Witness data that proves the exiting output is spent
      * @param spendingConditionOptionalArgs (Optional) Additional data for the spending condition
      * @param outputGuardPreimage (Optional) The output guard preimage for the challenge tx to use the output
-     * @param challengeTxPos (Optional) The position of a MVP protocol challeng tx
+     * @param challengeTxPos (Optional) The position of a MVP protocol challenge tx
      * @param challengeTxInclusionProof (Optional) Provides inclusion proof for a MVP protocol challenge tx
      * @param challengeTxConfirmSig (Optional) Provides the confirm signature of a MVP protocol challenge tx
      */
