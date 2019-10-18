@@ -39,7 +39,7 @@ commands:
       - run:
           name: Install dependencies
           command: |
-            make init dev
+            pip install -r requirements.txt 
             python -m solcx.install v0.5.11
 
 jobs:
