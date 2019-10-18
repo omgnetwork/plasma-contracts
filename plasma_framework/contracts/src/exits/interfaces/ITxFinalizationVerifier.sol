@@ -30,7 +30,7 @@ interface ITxFinalizationVerifier {
 
     /**
     * @notice Checks whether a transaction is "protocol finalized"
-    * @dev MVP: Must be standard finalzied
+    * @dev MVP: Must be standard finalized
     * @dev MoreVp: Allows in-flight tx, so only checks that the transaction exists
     */
     function isProtocolFinalized(Model.Data calldata self) external view returns (bool);
