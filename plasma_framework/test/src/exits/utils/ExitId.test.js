@@ -1,10 +1,12 @@
 const ExitId = artifacts.require('ExitIdWrapper');
 
-const { BN, constants, expectRevert } = require('openzeppelin-test-helpers');
+const { constants } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
 const { PaymentTransaction, PaymentTransactionOutput } = require('../../../helpers/transaction.js');
 const { OUTPUT_TYPE } = require('../../../helpers/constants.js');
+const { getStandardExitId, getInFlightExitId } = require('../../../helpers/utils.js');
+const { buildUtxoPos } = require('../../../helpers/positions.js');
 
 contract('ExitId', () => {
     const OUTPUT_GUARD = `0x${Array(64).fill(1).join('')}`;
@@ -48,10 +50,11 @@ contract('ExitId', () => {
             const dummyTxBytes = web3.utils.bytesToHex(transaction.rlpEncoded());
 
             const isDeposit = true;
-            const dummyUtxoPos = 1000000000;
+            const dummyUtxoPos = buildUtxoPos(101, 0, 1);
 
+            const expectedExitId = getStandardExitId(dummyTxBytes, dummyUtxoPos);
             expect(await this.contract.getStandardExitId(isDeposit, dummyTxBytes, dummyUtxoPos))
-                .to.be.bignumber.equal(new BN('1430055828788806804866763614278647402415835786'));
+                .to.be.bignumber.equal(expectedExitId);
         });
 
         it('should return distinct exit ids for deposits that differ only in utxo pos', async () => {
@@ -75,27 +78,10 @@ contract('ExitId', () => {
 
             const isDeposit = false;
             const dummyUtxoPos = 123;
+
+            const expectedExitId = getStandardExitId(dummyTxBytes, dummyUtxoPos);
             expect(await this.contract.getStandardExitId(isDeposit, dummyTxBytes, dummyUtxoPos))
-                .to.be.bignumber.equal(new BN('703443512390364917023199489483417852888669222572'));
-        });
-        it('should overflow when created a tx with more than 255 outputs', async () => {
-            const output = new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, 100, OUTPUT_GUARD, constants.ZERO_ADDRESS);
-            const isDeposit = false;
-
-            const notOverflowingTx = new PaymentTransaction(1, [DUMMY_INPUT], Array(255).fill(output), EMPTY_BYTES32);
-            const notOverflowingUtxoPos = 255;
-            const notOverflowingTxBytes = web3.utils.bytesToHex(notOverflowingTx.rlpEncoded());
-
-            await this.contract.getStandardExitId(isDeposit, notOverflowingTxBytes, notOverflowingUtxoPos);
-
-            const overflowingTx = new PaymentTransaction(1, [DUMMY_INPUT], Array(256).fill(output), EMPTY_BYTES32);
-            const overflowingUtxoPos = 256;
-            const overflowingTxBytes = web3.utils.bytesToHex(overflowingTx.rlpEncoded());
-
-            await expectRevert(
-                this.contract.getStandardExitId(isDeposit, overflowingTxBytes, overflowingUtxoPos),
-                'ExitId overflows',
-            );
+                .to.be.bignumber.equal(expectedExitId);
         });
     });
 
@@ -105,8 +91,9 @@ contract('ExitId', () => {
             const transaction = new PaymentTransaction(1, [DUMMY_INPUT], [output], EMPTY_BYTES32);
             const transactionBytes = web3.utils.bytesToHex(transaction.rlpEncoded());
 
+            const expectedExitId = getInFlightExitId(transactionBytes);
             expect(await this.contract.getInFlightExitId(transactionBytes))
-                .to.be.bignumber.equal(new BN('4092142964444575304639364453165236061123376812'));
+                .to.be.bignumber.equal(expectedExitId);
         });
     });
 });

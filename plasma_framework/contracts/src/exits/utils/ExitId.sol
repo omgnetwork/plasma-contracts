@@ -1,5 +1,6 @@
 pragma solidity 0.5.11;
 
+import "./OutputId.sol";
 import "../../utils/Bits.sol";
 import "../../utils/UtxoPosLib.sol";
 
@@ -12,7 +13,7 @@ library ExitId {
      * @notice Checks whether exitId is a standard exit id or not.
      */
     function isStandardExit(uint160 _exitId) internal pure returns (bool) {
-        return _exitId.getBit(151) == 0;
+        return _exitId.getBit(159) == 0;
     }
 
     /**
@@ -24,9 +25,8 @@ library ExitId {
      * @param _utxoPos UTXO position of the exiting output.
      * @return _standardExitId Unique standard exit id.
      *     Anatomy of returned value, most significant bits first:
-     *     8-bits - output index
      *     1-bit - in-flight flag (0 for standard exit)
-     *     151-bits - hash(tx) or hash(tx|utxo) for deposit
+     *     159-bits - left most 159 bits of the outputId of the exiting output
      */
     function getStandardExitId(
         bool _isDeposit,
@@ -37,33 +37,25 @@ library ExitId {
         pure
         returns (uint160)
     {
+        bytes32 outputId;
         if (_isDeposit) {
-            bytes32 hashData = keccak256(abi.encodePacked(_txBytes, _utxoPos.value));
-            return _computeStandardExitId(hashData, _utxoPos.outputIndex());
+            outputId = OutputId.computeDepositOutputId(_txBytes, _utxoPos.outputIndex(), _utxoPos.value);
+        } else {
+            outputId = OutputId.computeNormalOutputId(_txBytes, _utxoPos.outputIndex());
         }
 
-        return _computeStandardExitId(keccak256(_txBytes), _utxoPos.outputIndex());
+        return uint160(uint256(outputId) >> (256 - 159));
     }
 
     /**
     * @notice Given transaction bytes returns in-flight exit ID.
     * @param _txBytes Transaction bytes.
     * @return Unique in-flight exit id.
+    *     Anatomy of returned value, most significant bits first:
+    *     1-bit - in-flight flag (0 for standard exit)
+    *     159-bits - left most 159 bits of the tx hash of exiting tx
     */
     function getInFlightExitId(bytes memory _txBytes) internal pure returns (uint160) {
-        return uint160((uint256(keccak256(_txBytes)) >> 105).setBit(151));
-    }
-
-    function _computeStandardExitId(bytes32 _txhash, uint16 _outputIndex)
-        private
-        pure
-        returns (uint160)
-    {
-        uint256 exitId = (uint256(_txhash) >> 105) | (uint256(_outputIndex) << 152);
-        uint160 croppedExitId = uint160(exitId);
-
-        require(uint256(croppedExitId) == exitId, "ExitId overflows");
-
-        return croppedExitId;
+        return uint160((uint256(keccak256(_txBytes)) >> (256 - 159)).setBit(159));
     }
 }

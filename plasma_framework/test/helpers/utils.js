@@ -1,3 +1,5 @@
+const { BN } = require('openzeppelin-test-helpers');
+
 const { UtxoPos } = require('./positions.js');
 const { CHILD_BLOCK_INTERVAL } = require('./constants.js');
 
@@ -37,6 +39,18 @@ function getOutputId(txBytes, utxoPos) {
     return outputId;
 }
 
+function getStandardExitId(txBytes, utxoPos) {
+    // remove '0x' prefix
+    const outputId = getOutputId(txBytes, utxoPos).substring(2);
+    return (new BN(outputId, 16)).shrn(256 - 159);
+}
+
+function getInFlightExitId(txBytes) {
+    const txHash = web3.utils.soliditySha3({ t: 'bytes', v: txBytes });
+    const txHashWithoutPrefix = txHash.substring(2); // remove '0x' prefix
+    return (new BN(txHashWithoutPrefix, 16)).shrn(256 - 159).or((new BN(1)).shln(159));
+}
+
 function isDeposit(blockNum) {
     return blockNum % CHILD_BLOCK_INTERVAL !== 0;
 }
@@ -53,6 +67,8 @@ module.exports = {
     buildOutputGuard,
     computeDepositOutputId,
     computeNormalOutputId,
+    getStandardExitId,
+    getInFlightExitId,
     getOutputId,
     isDeposit,
     exitQueueKey,
