@@ -90,7 +90,7 @@ library PaymentStartStandardExit {
      * @dev emits ExitStarted event on success
      * @param self The controller struct
      * @param exitMap The storage of all standard exit data
-     * @param args Arguments of start standard exit function from client.
+     * @param args Arguments of start standard exit function from client
      */
     function run(
         Controller memory self,
