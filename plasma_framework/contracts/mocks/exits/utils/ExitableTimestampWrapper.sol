@@ -13,8 +13,8 @@ contract ExitableTimestampWrapper {
     function calculateDepositTxOutputExitableTimestamp(
         uint256 _now
     )
-        public 
-        view 
+        public
+        view
         returns (uint64)
     {
         return calculator.calculateDepositTxOutputExitableTimestamp(_now);
@@ -24,7 +24,7 @@ contract ExitableTimestampWrapper {
         uint256 _now,
         uint256 _blockTimestamp
     )
-        public 
+        public
         view
         returns (uint64)
     {
