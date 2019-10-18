@@ -69,7 +69,7 @@ contract PaymentExitGame is IExitProcessor, OnlyFromAddress, PaymentStandardExit
     function getStandardExitId(bool _isDeposit, bytes memory _txBytes, uint256 _utxoPos)
         public
         pure
-        returns (uint192)
+        returns (uint160)
     {
         UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(_utxoPos);
         return ExitId.getStandardExitId(_isDeposit, _txBytes, utxoPos);
@@ -81,7 +81,7 @@ contract PaymentExitGame is IExitProcessor, OnlyFromAddress, PaymentStandardExit
     function getInFlightExitId(bytes memory _txBytes)
         public
         pure
-        returns (uint192)
+        returns (uint160)
     {
         return ExitId.getInFlightExitId(_txBytes);
     }
