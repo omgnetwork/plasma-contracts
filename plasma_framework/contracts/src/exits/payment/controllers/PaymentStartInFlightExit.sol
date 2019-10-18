@@ -53,12 +53,12 @@ library PaymentStartInFlightExit {
 
      /**
      * @dev data to be passed around start in-flight exit helper functions
+     * @param controller the Controller struct of this library
      * @param exitId ID of the exit.
      * @param inFlightTxRaw In-flight transaction as bytes.
      * @param inFlightTx Decoded in-flight transaction.
      * @param inFlightTxHash Hash of in-flight transaction.
      * @param inputTxs Input transactions as bytes.
-     * @param inputUtxosPos Postions of input utxos.
      * @param inputUtxosPos Postions of input utxos coded as integers.
      * @param outputGuardPreimagesForInputs Output guard pre-images for in-flight transaction inputs.
      * @param inputTxsInclusionProofs Merkle proofs for input transactions.
@@ -75,7 +75,6 @@ library PaymentStartInFlightExit {
         bytes32 inFlightTxHash;
         bytes[] inputTxs;
         UtxoPosLib.UtxoPos[] inputUtxosPos;
-        uint256[] inputTxTypes;
         bytes[] outputGuardPreimagesForInputs;
         bytes[] inputTxsInclusionProofs;
         bytes[] inputTxsConfirmSigs;
@@ -147,7 +146,6 @@ library PaymentStartInFlightExit {
         exitData.inFlightTx = PaymentTransactionModel.decode(args.inFlightTx);
         exitData.inFlightTxHash = keccak256(args.inFlightTx);
         exitData.inputTxs = args.inputTxs;
-        exitData.inputTxTypes = args.inputTxTypes;
         exitData.inputUtxosPos = decodeInputTxsPositions(args.inputUtxosPos);
         exitData.inputTxsInclusionProofs = args.inputTxsInclusionProofs;
         exitData.inputTxsConfirmSigs = args.inputTxsConfirmSigs;
@@ -216,10 +214,6 @@ library PaymentStartInFlightExit {
             "Number of input transactions does not match number of in-flight transaction inputs"
         );
         require(
-            exitData.inputTxTypes.length == exitData.inFlightTx.inputs.length,
-            "Number of input tx types does not match number of in-flight transaction inputs"
-        );
-        require(
             exitData.inputUtxosPos.length == exitData.inFlightTx.inputs.length,
             "Number of input transactions positions does not match number of in-flight transaction inputs"
         );
@@ -272,7 +266,7 @@ library PaymentStartInFlightExit {
             require(outputGuardHandler.isValid(outputGuardData),
                     "Output guard information is invalid for the input tx");
 
-            uint8 protocol = exitData.controller.framework.protocols(exitData.inputTxTypes[i]);
+            uint8 protocol = exitData.controller.framework.protocols(WireTransaction.getTransactionType(exitData.inputTxs[i]));
 
             TxFinalizationModel.Data memory finalizationData = TxFinalizationModel.Data({
                 framework: exitData.controller.framework,

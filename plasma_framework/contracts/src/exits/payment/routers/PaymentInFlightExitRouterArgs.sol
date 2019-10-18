@@ -5,7 +5,6 @@ library PaymentInFlightExitRouterArgs {
     * @notice Wraps arguments for startInFlightExit.
     * @param inFlightTx RLP encoded in-flight transaction.
     * @param inputTxs Transactions that created the inputs to the in-flight transaction. In the same order as in-flight transaction inputs.
-    * @param inputTxTypes Transaction type of the input transactions.
     * @param inputUtxosPos Utxos that represent in-flight transaction inputs. In the same order as input transactions.
     * @param outputGuardPreimagesForInputs (Optional) Output guard pre-images for in-flight transaction inputs. Length must always match that of the inputTxs
     * @param inputTxsInclusionProofs Merkle proofs that show the input-creating transactions are valid. In the same order as input transactions.
@@ -16,7 +15,6 @@ library PaymentInFlightExitRouterArgs {
     struct StartExitArgs {
         bytes inFlightTx;
         bytes[] inputTxs;
-        uint256[] inputTxTypes;
         uint256[] inputUtxosPos;
         bytes[] outputGuardPreimagesForInputs;
         bytes[] inputTxsInclusionProofs;
