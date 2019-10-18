@@ -130,7 +130,7 @@ library PaymentProcessInFlightExit {
         pure
         returns (bool)
     {
-        // The check to seee whether input is spent is performed in 'isAnyInputSpent'
+        // The check to determine whether input is spent, performed in 'isAnyInputSpent'
         // For this reason, no need to check again here.
         return withdrawal.token == token &&
                 exit.isInputPiggybacked(index);
