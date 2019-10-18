@@ -34,4 +34,12 @@ contract RLPMock {
         }
         return result;
     }
+
+    function decodeString(bytes memory _data) public pure returns (string memory) {
+        return string(_data.toRlpItem().toBytes());
+    }
+
+    function decodeBytes(bytes memory _data) public pure returns (bytes memory) {
+        return _data.toRlpItem().toBytes();
+    }
 }
