@@ -15,8 +15,8 @@ contract Vault is OnlyFromAddress {
     bytes32[16] internal zeroHashes; // Pre-computes zero hashes to be used for building merkle tree for deposit block
 
     /**
-     * @notice Stores deposit verifier contract addresses, where the first contract address is effective until the 
-     *  `newDepositVerifierMaturityTimestamp`, after which the second contract address becomes effective
+     * @notice Stores deposit verifier contract addresses; first contract address is effective until the
+     *  `newDepositVerifierMaturityTimestamp`; second contract address becomes effective after that timestamp
     */
     address[2] public depositVerifiers;
     uint256 public newDepositVerifierMaturityTimestamp = 2 ** 255; // point far in the future

@@ -5,8 +5,8 @@ interface IStateTransitionVerifier {
 
     /**
     * @notice Verifies state transition logic
-    * @param txBytes The targeting transaction that verifies the state transition
-    * @param inputTxs Input transactions of the targeting transaction that verifies the state transition
+    * @param txBytes The transaction that does the state transition to verify
+    * @param inputTxs Input transaction to the transaction to verify
     * @param outputIndexOfInputTxs Output index of the input txs that the transaction input points to
     */
     function isCorrectStateTransition(

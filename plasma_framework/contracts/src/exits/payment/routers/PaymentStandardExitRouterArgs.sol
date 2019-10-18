@@ -18,7 +18,7 @@ library PaymentStandardExitRouterArgs {
     /**
      * @notice Input args data for challengeStandardExit
      * @param exitId Identifier of the standard exit to challenge
-     * @param exitingTx The exiting transaction
+     * @param exitingTx RLP-encoded transaction that creates the exiting output
      * @param challengeTx RLP-encoded transaction that spends the exiting output
      * @param inputIndex Input of the challenging tx, corresponding to the exiting output
      * @param witness Witness data that proves the exiting output is spent

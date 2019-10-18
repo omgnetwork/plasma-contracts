@@ -9,15 +9,15 @@ import {TxFinalizationModel as Model} from "../models/TxFinalizationModel.sol";
  *      1. Protocol Finalization: A transaction is considered finalized for the protocol to spend its input transaction.
  *      2. Standard Finalization: A protocol finalized transaction has a clear position (being mined) in the Plasma block
  *      > For MVP:
- *         a. Protocol finalized: Confirm signature must be signed. Since confirm signature requires the transaction to be mined in a block,
+ *         a. Protocol finalized: Confirm signature must be present. Since confirm signature requires the transaction to be mined in a block,
  *            it will also have a clear position. Thus, protocol finalization would be same as standard finalization for MVP protocol.
- *         b. Standard finalized: Confirm signature must be signed, and the transaction is mined in a Plasma block
+ *         b. Standard finalized: Confirm signature must be present, and the transaction is mined in a Plasma block
  *      > For MoreVp:
- *         a. Protocol finalized: Since MoreVP allows in-flight transactions, any existing transaction may be finalized
+ *         a. Protocol finalized: Since MoreVP allows in-flight transactions, any existing transaction
  *         b. Standard finalized: The transaction is mined in a Plasma block
  *
- * @dev We've chosen to use an interface in our first deployment cycle since there will be no MVP protocol transactions. This means we can remain open to how we will handle MVP in future. For example, we can check the confirm sig by block root hash, or (block root hash, block number) pair, or even with EIP712 format. Keeping this upgradeable provides flexibility and allows us to test with our real MVP transactions in future. 
- 
+ * @dev We've chosen to use an interface in our first deployment cycle since there will be no MVP protocol transactions. This means we can remain open to how we will handle MVP in future. For example, we can check the confirm sig by block root hash, or (block root hash, block number) pair, or even with EIP712 format. Keeping this upgradeable provides flexibility and allows us to test with our real MVP transactions in future.
+
  *      See: https://github.com/omisego/plasma-contracts/issues/301#issuecomment-535430135
  */
 interface ITxFinalizationVerifier {

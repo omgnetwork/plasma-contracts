@@ -18,7 +18,7 @@ contract Erc20DepositVerifier is IErc20DepositVerifier {
     /**
      * @notice Overrides the function of IErc20DepositVerifier and implements the verification logic
      *         for payment transaction
-     * @dev ERC20 token requires pre-approval to the vault address
+     * @dev Vault address must be approved to transfer from the sender address before doing the deposit
      * @return Verified (owner, token, amount) of the deposit ERC20 token data
      */
     function verify(bytes calldata depositTx, address sender, address vault)
