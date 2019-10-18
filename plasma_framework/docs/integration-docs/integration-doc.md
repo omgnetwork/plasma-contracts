@@ -199,6 +199,12 @@ You then need to get the Exit Game contract address from the PlasmaFramework con
 address = PlasmaFramework.exitGames(1)
 ```
 
+In order to start a standard exit, you need to send the appropriate amount of ETH to cover the bond. The actual amount can be retrieved by calling the following function:
+
+```
+PaymentExitGame.startStandardExitBondSize()
+```
+
 ```
 PaymentExitGame.startStandardExit({
   utxoPos,
