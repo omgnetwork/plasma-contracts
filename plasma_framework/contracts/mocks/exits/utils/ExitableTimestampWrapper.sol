@@ -10,11 +10,24 @@ contract ExitableTimestampWrapper {
         calculator = ExitableTimestamp.Calculator(_minExitPeriod);
     }
 
-    function calculate(uint256 _now, uint256 _blockTimestamp, bool _isDeposit)
+    function calculateDepositTxOutputExitableTimestamp(
+        uint256 _now
+    )
         public
         view
-        returns (uint256)
+        returns (uint64)
     {
-        return calculator.calculate(_now, _blockTimestamp, _isDeposit);
+        return calculator.calculateDepositTxOutputExitableTimestamp(_now);
+    }
+
+    function calculateTxExitableTimestamp(
+        uint256 _now,
+        uint256 _blockTimestamp
+    )
+        public
+        view
+        returns (uint64)
+    {
+        return calculator.calculateTxExitableTimestamp(_now, _blockTimestamp);
     }
 }

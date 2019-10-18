@@ -263,11 +263,8 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob, maintainer,
                     const uniquePriority = await priorityQueue.getMin();
 
                     const currentTimestamp = await time.latest();
-                    const isTxDeposit = true;
-                    const timestamp = currentTimestamp.sub(new BN(15));
-                    const exitableAt = await this.exitableHelper.calculate(
-                        currentTimestamp, timestamp, isTxDeposit,
-                    );
+                    const exitableAt = await this.exitableHelper
+                        .calculateDepositTxOutputExitableTimestamp(currentTimestamp);
 
                     const exitIdExpected = await this.exitIdHelper.getStandardExitId(
                         true, this.depositTx, this.depositUtxoPos,

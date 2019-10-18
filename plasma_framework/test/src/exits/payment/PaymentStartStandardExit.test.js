@@ -316,10 +316,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
             const exitId = await this.exitIdHelper.getStandardExitId(isTxDeposit, args.rlpOutputTx, args.utxoPos);
 
             const currentTimestamp = await time.latest();
-            const dummyTimestampNoImpactOnExitableAt = currentTimestamp.sub(new BN(15));
-            const exitableAt = await this.exitableHelper.calculate(
-                currentTimestamp, dummyTimestampNoImpactOnExitableAt, isTxDeposit,
-            );
+            const exitableAt = await this.exitableHelper.calculateDepositTxOutputExitableTimestamp(currentTimestamp);
 
             await expectEvent.inTransaction(
                 receipt.transactionHash,
