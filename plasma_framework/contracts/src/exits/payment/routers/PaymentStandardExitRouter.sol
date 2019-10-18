@@ -93,7 +93,7 @@ contract PaymentStandardExitRouter is
     }
 
     /**
-     * @notice Getter Retrieves standard exit data of the PaymentExitGame
+     * @notice Getter retrieves standard exit data of the PaymentExitGame
      * @param exitId Exit ID of the standard exit
      */
     function standardExits(uint160 exitId) public view returns (PaymentExitDataModel.StandardExit memory) {
@@ -108,7 +108,7 @@ contract PaymentStandardExitRouter is
     }
 
     /**
-     * @notice Updates the standard exit bond size. Takes two days to take effect.
+     * @notice Updates the standard exit bond size, taking two days to become effective
      * @param newBondSize The new bond size
      */
     function updateStartStandardExitBondSize(uint128 newBondSize) public onlyOperator {
@@ -141,7 +141,7 @@ contract PaymentStandardExitRouter is
 
     /**
      * @notice Process standard exit
-     * @dev This function is designed to be called in the main processExit function; thus, using  internal
+     * @dev This function is designed to be called in the main processExit function, using internal
      * @param exitId The standard exit ID
      * @param token The token (in erc20 address or address(0) for ETH) of the exiting output
      */
