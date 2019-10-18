@@ -236,7 +236,7 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
             this.challengeArgs.inFlightTx = this.challengeArgs.challengingTx;
             await expectRevert(
                 this.exitGame.challengeInFlightExitOutputSpent(this.challengeArgs, { from: bob }),
-                "In-flight exit doesn't exist",
+                'In-flight exit does not exist',
             );
         });
 
@@ -283,7 +283,7 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
 
             await expectRevert(
                 this.exitGame.challengeInFlightExitOutputSpent(this.challengeArgs, { from: bob }),
-                'Challenging transaction does not spent the output',
+                'Challenging transaction does not spend the output',
             );
         });
     });

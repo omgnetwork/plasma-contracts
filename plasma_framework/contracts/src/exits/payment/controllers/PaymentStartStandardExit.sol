@@ -168,7 +168,7 @@ library PaymentStartStandardExit {
         require(data.output.amount > 0, "Should not exit with amount 0");
 
         require(address(data.outputGuardHandler) != address(0), "Failed to get the output guard handler for the output type");
-        require(data.outputGuardHandler.isValid(data.outputGuardData), "Some information related to output guard is invalid");
+        require(data.outputGuardHandler.isValid(data.outputGuardData), "Some output guard information is invalid");
         require(data.outputGuardHandler.getExitTarget(data.outputGuardData) == msg.sender, "Only exit target can start an exit");
 
         require(data.controller.txFinalizationVerifier.isStandardFinalized(data.finalizationData), "The transaction must be standard finalized");

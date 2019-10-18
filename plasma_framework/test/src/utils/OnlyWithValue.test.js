@@ -22,7 +22,7 @@ contract('OnlyWithValue', () => {
         it('should reject call when value mismatches', async () => {
             await expectRevert(
                 this.contract.checkOnlyWithValue(100, { value: 200 }),
-                'Input value mismatches with msg.value',
+                'Input value must match msg.value',
             );
         });
     });

@@ -88,7 +88,7 @@ library PaymentChallengeIFEInputSpent {
         uint160 exitId = ExitId.getInFlightExitId(args.inFlightTx);
         PaymentExitDataModel.InFlightExit storage ife = inFlightExitMap.exits[exitId];
 
-        require(ife.exitStartTimestamp != 0, "In-flight exit doesn't exist");
+        require(ife.exitStartTimestamp != 0, "In-flight exit does not exist");
         require(ife.isInputPiggybacked(args.inFlightTxInputIndex), "The indexed input has not been piggybacked");
 
         require(

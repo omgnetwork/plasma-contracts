@@ -261,7 +261,7 @@ library PaymentStartInFlightExit {
                                                     .outputGuardHandlerRegistry
                                                     .outputGuardHandlers(output.outputType);
 
-            require(address(outputGuardHandler) != address(0), "Failed to get the outputGuardHandler of the output type");
+            require(address(outputGuardHandler) != address(0), "Failed to retrieve the outputGuardHandler of the output type");
 
             require(outputGuardHandler.isValid(outputGuardData),
                     "Output guard information is invalid for the input tx");
@@ -294,7 +294,7 @@ library PaymentStartInFlightExit {
             IOutputGuardHandler outputGuardHandler = exitData.controller
                                                     .outputGuardHandlerRegistry
                                                     .outputGuardHandlers(output.outputType);
-            require(address(outputGuardHandler) != address(0), "Failed to get the outputGuardHandler of the output type");
+            require(address(outputGuardHandler) != address(0), "Failed to retrieve the outputGuardHandler of the output type");
             require(outputGuardHandler.isValid(outputGuardData),
                     "Output guard information is invalid for the input tx");
 

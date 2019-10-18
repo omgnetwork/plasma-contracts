@@ -85,12 +85,12 @@ contract('EthVault', ([_, authority, maintainer, alice]) => {
 
             await expectRevert(
                 this.ethVault.deposit(deposit, { from: alice, value: DEPOSIT_VALUE + 1 }),
-                'Deposited value does not match sent amount.',
+                'Deposited value must match sent amount.',
             );
 
             await expectRevert(
                 this.ethVault.deposit(deposit, { from: alice, value: DEPOSIT_VALUE - 1 }),
-                'Deposited value does not match sent amount.',
+                'Deposited value must match sent amount.',
             );
         });
 
@@ -99,7 +99,7 @@ contract('EthVault', ([_, authority, maintainer, alice]) => {
 
             await expectRevert(
                 this.ethVault.deposit(deposit, { value: DEPOSIT_VALUE }),
-                "Depositor's address does not match sender's address.",
+                "Depositor's address must match sender's address",
             );
         });
 
@@ -109,7 +109,7 @@ contract('EthVault', ([_, authority, maintainer, alice]) => {
 
             await expectRevert(
                 this.ethVault.deposit(deposit, { from: alice, value: DEPOSIT_VALUE }),
-                'Output does not have correct currency (ETH).',
+                'Output requires correct currency (ETH).',
             );
         });
 
@@ -173,7 +173,7 @@ contract('EthVault', ([_, authority, maintainer, alice]) => {
         it('should fail when not called by a registered exit game contract', async () => {
             await expectRevert(
                 this.ethVault.withdraw(constants.ZERO_ADDRESS, 0),
-                'Called from a nonregistered or quarantined Exit Game contract',
+                'Called from a non-registered or quarantined exit game contract',
             );
         });
 
@@ -214,7 +214,7 @@ contract('EthVault', ([_, authority, maintainer, alice]) => {
             it('should fail when called under quarantine', async () => {
                 await expectRevert(
                     this.newExitGame.proxyEthWithdraw(alice, DEPOSIT_VALUE),
-                    'Called from a nonregistered or quarantined Exit Game contract',
+                    'Called from a non-registered or quarantined exit game contract',
                 );
             });
 

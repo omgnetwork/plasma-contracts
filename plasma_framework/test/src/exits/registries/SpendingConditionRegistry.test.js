@@ -59,7 +59,7 @@ contract('SpendingConditionRegistry', ([_, other]) => {
                 this.registry.registerSpendingCondition(
                     outputType, txType, this.dummyCondition.address,
                 ),
-                'Should not register with output type 0',
+                'Registration not possible with output type 0',
             );
         });
 
@@ -70,14 +70,14 @@ contract('SpendingConditionRegistry', ([_, other]) => {
                 this.registry.registerSpendingCondition(
                     outputType, txType, this.dummyCondition.address,
                 ),
-                'Should not register with spending tx type 0',
+                'Registration not possible with spending tx type 0',
             );
         });
 
         it('should reject when trying to register with an empty address', async () => {
             await expectRevert(
                 this.registry.registerSpendingCondition(1, 1, constants.ZERO_ADDRESS),
-                'Should not register an empty address',
+                'Registration not possible with an empty address',
             );
         });
 
@@ -88,7 +88,7 @@ contract('SpendingConditionRegistry', ([_, other]) => {
             await this.registry.registerSpendingCondition(outputType, txType, this.dummyCondition.address);
             await expectRevert(
                 this.registry.registerSpendingCondition(outputType, txType, secondDummyCondition.address),
-                'The (output type, spending tx type) pair has already been registered',
+                'The (output type, spending tx type) pair is already registered',
             );
         });
     });

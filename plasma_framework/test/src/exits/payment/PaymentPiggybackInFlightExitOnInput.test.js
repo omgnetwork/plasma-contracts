@@ -166,7 +166,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
             const { argsInputOne } = await buildPiggybackInputData();
             await expectRevert(
                 this.exitGame.piggybackInFlightExitOnInput(argsInputOne),
-                'Input value mismatches with msg.value',
+                'Input value must match msg.value',
             );
         });
 
@@ -194,7 +194,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
                 this.exitGame.piggybackInFlightExitOnInput(
                     data.argsInputOne, { from: inputOwner, value: this.piggybackBondSize.toString() },
                 ),
-                'Can only piggyback in first phase of exit period',
+                'Piggyback is possible only in the first phase of the exit period',
             );
         });
 
@@ -224,7 +224,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
                 this.exitGame.piggybackInFlightExitOnInput(
                     data.argsInputOne, { from: inputOwner, value: this.piggybackBondSize.toString() },
                 ),
-                'The indexed input has been piggybacked already',
+                'Indexed input already piggybacked',
             );
         });
 
@@ -235,7 +235,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
                 this.exitGame.piggybackInFlightExitOnInput(
                     data.argsInputOne, { from: nonInputOwner, value: this.piggybackBondSize.toString() },
                 ),
-                'Can be called by the exit target only',
+                'Can be called only by the exit target',
             );
         });
 

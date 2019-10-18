@@ -90,7 +90,7 @@ library PaymentChallengeIFENotCanonical {
     {
         uint160 exitId = ExitId.getInFlightExitId(args.inFlightTx);
         PaymentExitDataModel.InFlightExit storage ife = inFlightExitMap.exits[exitId];
-        require(ife.exitStartTimestamp != 0, "In-flight exit doesn't exist");
+        require(ife.exitStartTimestamp != 0, "In-flight exit does not exist");
 
         require(ife.isInFirstPhase(self.framework.minExitPeriod()),
                 "Canonicity challege phase for this exit has ended");
@@ -224,7 +224,7 @@ library PaymentChallengeIFENotCanonical {
             require(protocol == Protocol.MORE_VP(), "Competing tx without position must be a MoreVP tx");
         } else {
             IOutputGuardHandler outputGuardHandler = self.outputGuardHandlerRegistry.outputGuardHandlers(output.outputType);
-            require(address(outputGuardHandler) != address(0), "Failed to get the outputGuardHandler of the output type");
+            require(address(outputGuardHandler) != address(0), "Failed to retrieve the outputGuardHandler of the output type");
 
             OutputGuardModel.Data memory outputGuardData = OutputGuardModel.Data({
                 guard: output.outputGuard,

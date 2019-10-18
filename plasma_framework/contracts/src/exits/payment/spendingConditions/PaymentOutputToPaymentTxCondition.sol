@@ -63,7 +63,7 @@ contract PaymentOutputToPaymentTxCondition is ISpendingCondition {
         );
 
         address payable owner = inputTx.outputs[outputIndex].owner();
-        require(owner == ECDSA.recover(eip712.hashTx(spendingTx), signature), "Tx is incorrectly signed");
+        require(owner == ECDSA.recover(eip712.hashTx(spendingTx), signature), "Tx in not signed correctly");
 
         return true;
     }

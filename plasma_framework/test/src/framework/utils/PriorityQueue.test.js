@@ -77,7 +77,7 @@ contract('PriorityQueue', ([_, nonOwner]) => {
         it('should fail when not inserted by the owner', async () => {
             await expectRevert(
                 this.priorityQueue.insert(100, { from: nonOwner }),
-                'Not being called by expected caller',
+                'Caller address is unauthorized',
             );
         });
     });
@@ -116,7 +116,7 @@ contract('PriorityQueue', ([_, nonOwner]) => {
         it('should fail when not deleted by the owner', async () => {
             await expectRevert(
                 this.priorityQueue.delMin({ from: nonOwner }),
-                'Not being called by expected caller',
+                'Caller address is unauthorized',
             );
         });
     });

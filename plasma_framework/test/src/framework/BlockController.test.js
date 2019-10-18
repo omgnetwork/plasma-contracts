@@ -52,14 +52,14 @@ contract('BlockController', ([maintainer, authority, other]) => {
         it('setAuthority rejects zero-address as new authority', async () => {
             await expectRevert(
                 this.blockController.setAuthority(constants.ZERO_ADDRESS, { from: authority }),
-                'Authority cannot be zero-address',
+                'Authority address cannot be zero',
             );
         });
 
         it('setAuthority can be called only by the authority', async () => {
             await expectRevert(
                 this.blockController.setAuthority(other, { from: other }),
-                'Not being called by expected caller',
+                'Caller address is unauthorized',
             );
         });
     });
@@ -98,7 +98,7 @@ contract('BlockController', ([maintainer, authority, other]) => {
             it('should not be ablt to be activated by non authority', async () => {
                 await expectRevert(
                     this.blockController.activateChildChain({ from: maintainer }),
-                    'Not being called by expected caller',
+                    'Caller address is unauthorized',
                 );
             });
 
@@ -122,7 +122,7 @@ contract('BlockController', ([maintainer, authority, other]) => {
                 it('should not be able to activate again', async () => {
                     await expectRevert(
                         this.blockController.activateChildChain({ from: authority }),
-                        'Child chain can only be activated once',
+                        'Child chain already activated',
                     );
                 });
             });
@@ -164,14 +164,14 @@ contract('BlockController', ([maintainer, authority, other]) => {
         it('reverts when not called by authority', async () => {
             await expectRevert(
                 this.blockController.submitBlock(this.dummyBlockHash, { from: other }),
-                'Not being called by expected caller',
+                'Caller address is unauthorized',
             );
         });
 
         it('allows authority address to be changed', async () => {
             await expectRevert(
                 this.blockController.submitBlock(this.dummyBlockHash, { from: other }),
-                'Not being called by expected caller',
+                'Caller address is unauthorized',
             );
 
             await this.blockController.setAuthority(other, { from: authority });
@@ -227,14 +227,14 @@ contract('BlockController', ([maintainer, authority, other]) => {
             await this.blockController.registerVault(newDummyVaultId, newDummyVault.address);
             await expectRevert(
                 newDummyVault.submitDepositBlock(this.dummyBlockHash),
-                'Vault is quarantined.',
+                'Vault is quarantined',
             );
         });
 
         it('reverts when not called by registered vault', async () => {
             await expectRevert(
                 this.blockController.submitDepositBlock(this.dummyBlockHash),
-                'Not being called by registered vaults',
+                'The call is not from a registered vault',
             );
         });
     });

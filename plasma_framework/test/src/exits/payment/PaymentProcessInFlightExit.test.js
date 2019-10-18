@@ -223,7 +223,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
             expect(events.length).to.equal(0);
         });
 
-        it('should not withdraw fund if the output already spent', async () => {
+        it('should not withdraw fund if the Output is already spent', async () => {
             const dummyExitId = 666;
             const exit = await buildInFlightExitData();
             exit.isCanonical = true;

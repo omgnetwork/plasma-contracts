@@ -10,7 +10,7 @@ import {TxFinalizationModel as Model} from "../models/TxFinalizationModel.sol";
 
 /**
  * @notice Contract that checks the tx finalization, currently only MoreVp functionality is implemented
- * @dev Only the MoreVP function is currently implemented. MVP functionality is reserved for future development. 
+ * @dev Only the MoreVP function is currently implemented. MVP functionality is reserved for future development.
  *      The new ExitGame can dependency inject a different implementation that adds the MVP functionality in future.
  */
 contract TxFinalizationVerifier is ITxFinalizationVerifier {
@@ -25,7 +25,7 @@ contract TxFinalizationVerifier is ITxFinalizationVerifier {
         if (data.protocol == Protocol.MORE_VP()) {
             return checkInclusionProof(data);
         } else if (data.protocol == Protocol.MVP()) {
-            revert("not supporting MVP yet");
+            revert("MVP is not yet supported");
         } else {
             revert("Invalid protocol value");
         }
