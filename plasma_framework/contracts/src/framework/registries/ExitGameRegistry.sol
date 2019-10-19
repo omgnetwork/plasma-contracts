@@ -1,10 +1,10 @@
 pragma solidity 0.5.11;
 
 import "../Protocol.sol";
-import "../utils/Operated.sol";
 import "../utils/Quarantine.sol";
+import "../../utils/OnlyFromAddress.sol";
 
-contract ExitGameRegistry is Operated {
+contract ExitGameRegistry is OnlyFromAddress {
     using Quarantine for Quarantine.Data;
 
     mapping(uint256 => address) private _exitGames; // txType => exit game contract address
@@ -40,6 +40,12 @@ contract ExitGameRegistry is Operated {
     }
 
     /**
+     * @notice interface to get the 'maintainer' address.
+     * @dev see discussion here: https://git.io/Je8is
+     */
+    function getMaintainer() public view returns (address);
+
+    /**
      * @notice Checks whether the contract is safe to use and is not under quarantine
      * @dev Exposes information about exit games quarantine
      * @param _contract address of the exit game contract
@@ -56,7 +62,7 @@ contract ExitGameRegistry is Operated {
      * @param _contract address of the exit game contract.
      * @param _protocol protocol of the transaction, 1 for MVP and 2 for MoreVP.
      */
-    function registerExitGame(uint256 _txType, address _contract, uint8 _protocol) public onlyOperator {
+    function registerExitGame(uint256 _txType, address _contract, uint8 _protocol) public onlyFrom(getMaintainer()) {
         require(_txType != 0, "should not register with tx type 0");
         require(_contract != address(0), "should not register with an empty exit game address");
         require(_exitGames[_txType] == address(0), "The tx type is already registered");

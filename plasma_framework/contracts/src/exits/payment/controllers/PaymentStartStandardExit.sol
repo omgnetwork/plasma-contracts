@@ -16,6 +16,7 @@ import "../../../transactions/outputs/PaymentOutputModel.sol";
 import "../../../utils/IsDeposit.sol";
 import "../../../utils/UtxoPosLib.sol";
 import "../../../framework/PlasmaFramework.sol";
+import "../../utils/ExitableTimestamp.sol";
 
 library PaymentStartStandardExit {
     using ExitableTimestamp for ExitableTimestamp.Calculator;
@@ -193,9 +194,15 @@ library PaymentStartStandardExit {
     }
 
     function enqueueStandardExit(StartStandardExitData memory data) private {
-        uint64 exitableAt = data.controller.exitableTimestampCalculator.calculate(
-            block.timestamp, data.txBlockTimeStamp, data.isTxDeposit
-        );
+
+        uint64 exitableAt;
+        ExitableTimestamp.Calculator memory exitableTimestampCalculator = data.controller.exitableTimestampCalculator;
+
+        if (data.isTxDeposit){
+            exitableAt = exitableTimestampCalculator.calculateDepositTxOutputExitableTimestamp(block.timestamp);
+        } else {
+            exitableAt = exitableTimestampCalculator.calculateTxExitableTimestamp(block.timestamp, data.txBlockTimeStamp);
+        }
 
         uint256 vaultId;
         if (data.output.token == address(0)) {

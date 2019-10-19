@@ -13,23 +13,30 @@ const { spentOnGas } = require('../../helpers/utils.js');
 const { PROTOCOL, OUTPUT_TYPE } = require('../../helpers/constants.js');
 const Testlang = require('../../helpers/testlang.js');
 
-contract('EthVault', ([_, alice]) => {
+contract('EthVault', ([_, authority, maintainer, alice]) => {
     const DEPOSIT_VALUE = 1000000;
     const INITIAL_IMMUNE_VAULTS = 1;
     const INITIAL_IMMUNE_EXIT_GAMES = 1;
     const MIN_EXIT_PERIOD = 10;
 
     beforeEach('setup contracts', async () => {
-        this.framework = await PlasmaFramework.new(MIN_EXIT_PERIOD, INITIAL_IMMUNE_VAULTS, INITIAL_IMMUNE_EXIT_GAMES);
+        this.framework = await PlasmaFramework.new(
+            MIN_EXIT_PERIOD,
+            INITIAL_IMMUNE_VAULTS,
+            INITIAL_IMMUNE_EXIT_GAMES,
+            authority,
+            maintainer,
+        );
+        await this.framework.activateChildChain({ from: authority });
         this.ethVault = await EthVault.new(this.framework.address);
         const depositVerifier = await EthDepositVerifier.new();
-        await this.ethVault.setDepositVerifier(depositVerifier.address);
-        await this.framework.registerVault(1, this.ethVault.address);
+        await this.ethVault.setDepositVerifier(depositVerifier.address, { from: maintainer });
+        await this.framework.registerVault(1, this.ethVault.address, { from: maintainer });
         this.currentDepositVerifier = depositVerifier.address;
 
         this.exitGame = await DummyExitGame.new();
         await this.exitGame.setEthVault(this.ethVault.address);
-        await this.framework.registerExitGame(1, this.exitGame.address, PROTOCOL.MORE_VP);
+        await this.framework.registerExitGame(1, this.exitGame.address, PROTOCOL.MORE_VP, { from: maintainer });
     });
 
     describe('deposit', () => {
@@ -148,7 +155,7 @@ contract('EthVault', ([_, alice]) => {
 
             expect(await this.ethVault.getEffectiveDepositVerifier()).to.equal(this.currentDepositVerifier);
 
-            const tx = await this.ethVault.setDepositVerifier(newDepositVerifier.address);
+            const tx = await this.ethVault.setDepositVerifier(newDepositVerifier.address, { from: maintainer });
             expect(await this.ethVault.getEffectiveDepositVerifier()).to.equal(this.currentDepositVerifier);
             await expectEvent.inLogs(tx.logs, 'SetDepositVerifierCalled', { nextDepositVerifier: newDepositVerifier.address });
 
@@ -199,7 +206,9 @@ contract('EthVault', ([_, alice]) => {
             beforeEach(async () => {
                 this.newExitGame = await DummyExitGame.new();
                 await this.newExitGame.setEthVault(this.ethVault.address);
-                await this.framework.registerExitGame(2, this.newExitGame.address, PROTOCOL.MORE_VP);
+                await this.framework.registerExitGame(
+                    2, this.newExitGame.address, PROTOCOL.MORE_VP, { from: maintainer },
+                );
             });
 
             it('should fail when called under quarantine', async () => {

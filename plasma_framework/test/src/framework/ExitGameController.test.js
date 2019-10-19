@@ -1,5 +1,5 @@
 const PriorityQueue = artifacts.require('PriorityQueue');
-const ExitGameController = artifacts.require('ExitGameController');
+const ExitGameController = artifacts.require('ExitGameControllerMock');
 const DummyExitGame = artifacts.require('DummyExitGame');
 const ReentrancyExitGame = artifacts.require('ReentrancyExitGame');
 

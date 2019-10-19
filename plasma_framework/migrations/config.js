@@ -4,7 +4,7 @@ const env = process.env.NODE_ENV || 'development';
 
 const development = {
     frameworks: {
-        minExitPeriod: 60, // 1 min in seconds
+        minExitPeriod: 60 * 10, // 10 min in seconds
         initialImmuneVaults: 2, // Preserved 2 for ETH and ERC20 vault
         initialImmuneExitGames: 1, // Preserved 1 for PaymentExitGame
         protocols: {

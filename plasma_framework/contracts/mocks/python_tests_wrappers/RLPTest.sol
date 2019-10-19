@@ -10,7 +10,7 @@ import "../../src/utils/RLPReader.sol";
 contract RLPTest {
     function eight(bytes memory tx_bytes)
         public
-        view
+        pure
         returns (uint256, address, address)
     {
         RLPReader.RLPItem[] memory txList = RLPReader.toList(RLPReader.toRlpItem(tx_bytes));
@@ -23,7 +23,7 @@ contract RLPTest {
 
     function eleven(bytes memory tx_bytes)
         public
-        view
+        pure
         returns (uint256, address, address, address)
     {
         RLPReader.RLPItem[] memory  txList = RLPReader.toList(RLPReader.toRlpItem(tx_bytes));
