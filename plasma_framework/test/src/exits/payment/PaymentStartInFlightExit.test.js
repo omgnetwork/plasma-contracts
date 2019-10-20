@@ -520,29 +520,6 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                 );
             });
 
-            it('should fail when number of input tx types does not match in-flight transactions number of inputs', async () => {
-                const {
-                    args,
-                    inputTxsBlockRoot1,
-                    inputTxsBlockRoot2,
-                } = buildValidIfeStartArgs(
-                    AMOUNT,
-                    [alice, bob, carol],
-                    [OUTPUT_TYPE_ONE, OUTPUT_TYPE_ONE, OUTPUT_TYPE_ONE],
-                    BLOCK_NUMBER,
-                    DEPOSIT_BLOCK_NUMBER,
-                );
-                await registerSpendingConditionTrue(this.spendingConditionRegistry);
-                await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot1, 0);
-                await this.framework.setBlock(DEPOSIT_BLOCK_NUMBER, inputTxsBlockRoot2, 0);
-                args.inputTxTypes = [];
-
-                await expectRevert(
-                    this.exitGame.startInFlightExit(args, { from: alice, value: this.startIFEBondSize.toString() }),
-                    'Number of input tx types does not match number of in-flight transaction inputs',
-                );
-            });
-
             it('should fail when number of output gauard preimage of input txs does not match in-flight transactions number of inputs', async () => {
                 const {
                     args,
