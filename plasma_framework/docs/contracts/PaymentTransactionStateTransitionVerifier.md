@@ -16,7 +16,7 @@ Verifies state transitions for payment transaction
 
 ### isCorrectStateTransition
 
-For Payment transaction to be valid, the state transition should check that the sum of the inputs is larger than the sum of the outputs
+For payment transaction to be valid, the state transition should check that the sum of the inputs is larger than the sum of the outputs
 
 ```js
 function isCorrectStateTransition(bytes txBytes, bytes[] inputTxs, uint16[] outputIndexOfInputTxs) external pure
@@ -148,7 +148,7 @@ returns(uint256)
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [RLP](RLP.md)
+* [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)

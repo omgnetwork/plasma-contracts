@@ -7,11 +7,11 @@ import "../../utils/UtxoPosLib.sol";
 
 /**
  * @title PaymentEip712Lib
- * @notice Utilities for hashing structural data for PaymentTransaction, see EIP-712.
+ * @notice Utilities for hashing structural data for PaymentTransaction (see EIP-712)
  *
  * @dev EIP712: https://github.com/ethereum/EIPs/blob/master/EIPS/eip-712.md
- *      Also, we rely on the contract address to protect against replay attacks instead of using chain id.
- *      see discussion here: https://github.com/omisego/plasma-contracts/issues/98#issuecomment-490792098
+ *      We rely on the contract address to protect against replay attacks instead of using chain ID
+ *      For more information, see https://github.com/omisego/plasma-contracts/issues/98#issuecomment-490792098
  */
 library PaymentEip712Lib {
     using UtxoPosLib for UtxoPosLib.UtxoPos;
@@ -56,8 +56,8 @@ library PaymentEip712Lib {
         });
     }
 
-    // the 'encode(domainSeparator, message)' of the EIP712 specification
-    // see: https://github.com/ethereum/EIPs/blob/master/EIPS/eip-712.md#specification
+    // The 'encode(domainSeparator, message)' of the EIP712 specification
+    // See https://github.com/ethereum/EIPs/blob/master/EIPS/eip-712.md#specification
     function hashTx(Constants memory _eip712, PaymentTransactionModel.Transaction memory _tx)
         internal
         pure
@@ -70,20 +70,20 @@ library PaymentEip712Lib {
         ));
     }
 
-    // the 'hashStruct(message)' function of transaction
-    // see https://github.com/ethereum/EIPs/blob/master/EIPS/eip-712.md#definition-of-hashstruct
+    // The 'hashStruct(message)' function of transaction
+    // See https://github.com/ethereum/EIPs/blob/master/EIPS/eip-712.md#definition-of-hashstruct
     function _hashTx(PaymentTransactionModel.Transaction memory _tx)
         private
         pure
         returns (bytes32)
     {
-        // pad empty value to input array
+        // Pad empty value to input array
         bytes32[] memory inputs = new bytes32[](MAX_INPUT_NUM);
         for (uint i = 0; i < _tx.inputs.length; i++) {
             inputs[i] = _tx.inputs[i];
         }
 
-        // pad empty value to output array
+        // Pad empty value to output array
         PaymentOutputModel.Output[] memory outputs = new PaymentOutputModel.Output[](MAX_OUTPUT_NUM);
         for (uint i = 0; i < _tx.outputs.length; i++) {
             outputs[i] = _tx.outputs[i];

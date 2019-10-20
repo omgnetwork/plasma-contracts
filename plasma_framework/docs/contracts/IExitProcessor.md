@@ -6,8 +6,8 @@ View Source: [contracts/src/framework/interfaces/IExitProcessor.sol](../../contr
 
 **IExitProcessor**
 
-An interface to allow custom logic for processing exits for different needs.
-     It is used to dispatch to each custom processor when 'processExits' is called on PlasmaFramework.
+An interface that allows custom logic to process exits for different requirements.
+     This interface is used to dispatch to each custom processor when 'processExits' is called on PlasmaFramework.
 
 ## Functions
 
@@ -17,7 +17,7 @@ An interface to allow custom logic for processing exits for different needs.
 
 ⤿ Overridden Implementation(s): [PaymentExitGame.processExit](PaymentExitGame.md#processexit)
 
-function interface to process exits.
+Function interface for processing exits.
 
 ```js
 function processExit(uint160 exitId, uint256 vaultId, address token) external nonpayable
@@ -27,9 +27,9 @@ function processExit(uint160 exitId, uint256 vaultId, address token) external no
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| exitId | uint160 | unique id for exit per tx type. | 
-| vaultId | uint256 | id of the vault that funds the exit. | 
-| token | address | address of the token contract. | 
+| exitId | uint160 | Unique ID for exit per tx type | 
+| vaultId | uint256 | ID of the vault that funds the exit | 
+| token | address | Address of the token contract | 
 
 ## Contracts
 
@@ -93,7 +93,7 @@ function processExit(uint160 exitId, uint256 vaultId, address token) external no
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [RLP](RLP.md)
+* [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)

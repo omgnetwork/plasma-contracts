@@ -6,7 +6,7 @@ View Source: [contracts/src/framework/utils/PriorityQueue.sol](../../contracts/s
 
 **PriorityQueue**
 
-Min-heap priority queue implementation.
+Min-heap priority queue implementation
 
 ## Structs
 ### Queue
@@ -80,7 +80,7 @@ returns(uint256[])
 
 ### insert
 
-Inserts an element into the queue by the owner.
+Inserts an element into the queue by the owner
 
 ```js
 function insert(uint256 _element) external nonpayable onlyFrom 
@@ -94,7 +94,7 @@ function insert(uint256 _element) external nonpayable onlyFrom
 
 ### delMin
 
-Deletes the smallest element from the queue.
+Deletes the smallest element from the queue
 
 ```js
 function delMin() external nonpayable onlyFrom 
@@ -103,7 +103,7 @@ returns(uint256)
 
 **Returns**
 
-The smallest element in the priority queue.
+The smallest element in the priority queue
 
 **Arguments**
 
@@ -112,7 +112,7 @@ The smallest element in the priority queue.
 
 ### getMin
 
-Returns the smallest element from the queue.
+Returns the smallest element from the queue
 
 ```js
 function getMin() external view
@@ -121,7 +121,7 @@ returns(uint256)
 
 **Returns**
 
-The smallest element in the priority queue.
+The smallest element in the priority queue
 
 **Arguments**
 
@@ -230,7 +230,7 @@ returns(uint256)
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [RLP](RLP.md)
+* [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)

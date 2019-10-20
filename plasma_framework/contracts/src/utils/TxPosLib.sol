@@ -1,7 +1,7 @@
 pragma solidity 0.5.11;
 
 /**
- * @dev transaction position = (blockNumber * BLOCK_OFFSET_FOR_TX_POS + txIndex).
+ * @dev Transaction position = (blockNumber * BLOCK_OFFSET_FOR_TX_POS + txIndex)
  */
 library TxPosLib {
     struct TxPos {
@@ -11,9 +11,9 @@ library TxPosLib {
     uint256 constant internal BLOCK_OFFSET_FOR_TX_POS = 1000000000 / 10000;
 
     /**
-     * @notice Given a TX position, returns the block number.
-     * @param _txPos position of transaction.
-     * @return The output's block number.
+     * @notice Returns the block number for a given a tx position
+     * @param _txPos Position of the transaction
+     * @return Block number of the output
      */
     function blockNum(TxPos memory _txPos)
         internal
@@ -24,9 +24,9 @@ library TxPosLib {
     }
 
     /**
-     * @notice Given a Tx position, returns the transaction index.
-     * @param _txPos position of transaction.
-     * @return The output's transaction index.
+     * @notice Returns the transaction index for a given tx position
+     * @param _txPos Position of the transaction
+     * @return Transaction index of the output
      */
     function txIndex(TxPos memory _txPos)
         internal

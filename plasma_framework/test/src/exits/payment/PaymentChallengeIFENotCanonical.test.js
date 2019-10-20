@@ -320,7 +320,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
 
                 await expectRevert(
                     this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: challenger }),
-                    "In-flight exit doesn't exist",
+                    'In-flight exit does not exist',
                 );
             });
 
@@ -329,7 +329,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
 
                 await expectRevert(
                     this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: challenger }),
-                    'Competing input spending condition does not met',
+                    'Competing input spending condition is not met',
                 );
             });
 
@@ -524,7 +524,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
                         this.challengeArgs.competingTxInclusionProof,
                         { from: ifeOwner },
                     ),
-                    "In-flight exit doesn't exists",
+                    'In-flight exit does not exist',
                 );
             });
 
@@ -536,7 +536,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
                         this.challengeArgs.competingTxInclusionProof,
                         { from: ifeOwner },
                     ),
-                    'In-flight transaction has to be younger than competitors to respond to non-canonical challenge.',
+                    'In-flight transaction must be younger than competitors to respond to non-canonical challenge',
                 );
             });
 
@@ -551,7 +551,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
                         this.challengeArgs.competingTxInclusionProof,
                         { from: ifeOwner },
                     ),
-                    'Transaction is not included in block of plasma chain.',
+                    'Transaction is not included in block of Plasma chain.',
                 );
             });
         });

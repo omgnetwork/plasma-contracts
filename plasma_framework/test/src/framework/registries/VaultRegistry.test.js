@@ -34,7 +34,7 @@ contract('VaultRegistry', ([_, maintainer, other]) => {
         it('should revert when not called by registered vault contract', async () => {
             await expectRevert(
                 this.registry.checkOnlyFromNonQuarantinedVault(),
-                'Not being called by registered vaults',
+                'The call is not from a registered vault',
             );
         });
 
@@ -97,31 +97,31 @@ contract('VaultRegistry', ([_, maintainer, other]) => {
         it('rejects when not registered by maintainer', async () => {
             await expectRevert(
                 this.registry.registerVault(1, this.dummyVault.address, { from: other }),
-                'Not being called by expected caller',
+                'Caller address is unauthorized',
             );
         });
 
         it('rejects when trying to register with vault id 0', async () => {
             await expectRevert(
                 this.registry.registerVault(0, this.dummyVault.address, { from: maintainer }),
-                'should not register with vault id 0',
+                'Should not register with vault ID 0',
             );
         });
 
         it('rejects when trying to register with an empty vault address', async () => {
             await expectRevert(
                 this.registry.registerVault(1, constants.ZERO_ADDRESS, { from: maintainer }),
-                'should not register an empty vault address',
+                'Should not register an empty vault address',
             );
         });
 
-        it('rejects when the vault id is already registered', async () => {
+        it('rejects when The vault ID is already registered', async () => {
             const vaultId = 1;
             const secondDummyVaultAddress = (await DummyVault.new()).address;
             await this.registry.registerVault(vaultId, this.dummyVault.address, { from: maintainer });
             await expectRevert(
                 this.registry.registerVault(vaultId, secondDummyVaultAddress, { from: maintainer }),
-                'The vault id is already registered',
+                'The vault ID is already registered',
             );
         });
 

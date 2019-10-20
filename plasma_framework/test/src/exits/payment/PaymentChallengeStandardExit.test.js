@@ -149,7 +149,7 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
 
                 await expectRevert(
                     this.exitGame.challengeStandardExit(args),
-                    'Failed to get the outputGuardHandler of the output type',
+                    'Failed to retrieve the outputGuardHandler of the output type',
                 );
             });
         });
@@ -169,7 +169,7 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
                 const args = getTestInputArgs(OUTPUT_TYPE.PAYMENT, alice);
                 await expectRevert(
                     this.exitGame.challengeStandardExit(args),
-                    'Such exit does not exist',
+                    'The exit does not exist',
                 );
             });
 
@@ -212,7 +212,7 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
 
                 await expectRevert(
                     this.exitGame.challengeStandardExit(args),
-                    'not supporting MVP yet',
+                    'MVP is not yet supported',
                 );
             });
 

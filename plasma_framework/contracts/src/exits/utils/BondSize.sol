@@ -1,22 +1,22 @@
 pragma solidity 0.5.11;
 
 /**
- * @notice Stores an updateable bond size.
- * @dev Design of the bond: https://github.com/omisego/research/issues/107#issuecomment-525267486
- * @dev Security relies on the min/max value that can be updated to compare to current bond size plus the waiting period.
- *      The min/max value of the next bond size prevent the possibility to update to an insane high/low bond that breaks the system.
- *      The waiting period ensures that a user does not get an unexpected bond without notice.
+ * @notice Stores an updateable bond size
+ * @dev Bond design details at https://github.com/omisego/research/issues/107#issuecomment-525267486
+ * @dev Security depends on the min/max value, which can be updated to compare to the current bond size, plus the waiting period
+ *      Min/max value of the next bond size prevents the possibility to set bond size too low or too high, which risks breaking the system
+ *      Waiting period ensures that a user does not get an unexpected bond without notice.
  */
 library BondSize {
     uint64 constant public WAITING_PERIOD = 2 days;
 
     /**
      * @dev Struct is designed to be packed into two 32-bytes storage slots
-     * @param previousBondSize the bond size before upgrade. Should be kept before the waiting period has passed
-     * @param updatedBondSize the bond size that should be used after the waiting period has passed
-     * @param effectiveUpdateTime the timestamp when the waiting period has passwd and the updated bond size takes effect
-     * @param lowerBoundDivisor the divisor used to check the lower bound for an update. Each update cannot be lower than (current bond / lowerBoundDivisor)
-     * @param upperBoundMultiplier the multiplier used to check the upper bound for an update. Each update cannot be larger than (current bond * upperBoundMultiplier)
+     * @param previousBondSize The bond size prior to upgrade, which should remain the same until the waiting period completes
+     * @param updatedBondSize The bond size to use once the waiting period completes
+     * @param effectiveUpdateTime A timestamp for the end of the waiting period, when the updated bond size is implemented
+     * @param lowerBoundDivisor The divisor that checks the lower bound for an update. Each update cannot be lower than (current bond / lowerBoundDivisor)
+     * @param upperBoundMultiplier The multiplier that checks the upper bound for an update. Each update cannot be larger than (current bond * upperBoundMultiplier)
      */
     struct Params {
         uint128 previousBondSize;
@@ -31,7 +31,7 @@ library BondSize {
         pure
         returns (Params memory)
     {
-        // Set the initial value to far in the future
+        // Set the initial value far into the future
         uint128 initialEffectiveUpdateTime = 2 ** 63;
         return Params({
             previousBondSize: initialBondSize,
@@ -43,9 +43,9 @@ library BondSize {
     }
 
     /**
-    * @notice Updates the bond size.
-    * @dev There is a waiting period of 2 days before the new value goes into effect.
-    * @param newBondSize the new bond size.
+    * @notice Updates the bond size
+    * @dev The new bond size value updates once the two day waiting period completes
+    * @param newBondSize The new bond size
     */
     function updateBondSize(Params storage self, uint128 newBondSize) internal {
         validateBondSize(self, newBondSize);
@@ -58,7 +58,7 @@ library BondSize {
     }
 
     /**
-    * @notice Returns the current bond size.
+    * @notice Returns the current bond size
     */
     function bondSize(Params memory self) internal view returns (uint128) {
         if (now < self.effectiveUpdateTime) {

@@ -34,7 +34,7 @@ uint256 internal constant TX_OFFSET;
 
 ### build
 
-Given txPos and outputIndex, returns the Utxo struct.
+Returns the UTXO struct for a given txPos and outputIndex
 
 ```js
 function build(struct TxPosLib.TxPos txPos, uint16 outputIndex) internal pure
@@ -43,18 +43,18 @@ returns(struct UtxoPosLib.UtxoPos)
 
 **Returns**
 
-UtxoPos of the according value
+UtxoPos of the relevant value
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| txPos | struct TxPosLib.TxPos | tx position | 
-| outputIndex | uint16 | the output's transaction index. | 
+| txPos | struct TxPosLib.TxPos | Transaction position | 
+| outputIndex | uint16 | Transaction index of the output | 
 
 ### blockNum
 
-Given an UTXO position, returns the block number.
+Returns the block number of a given UTXO position
 
 ```js
 function blockNum(struct UtxoPosLib.UtxoPos _utxoPos) internal pure
@@ -63,17 +63,17 @@ returns(uint256)
 
 **Returns**
 
-The output's block number.
+The block number of the output
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| _utxoPos | struct UtxoPosLib.UtxoPos | Output identifier in form of utxo position. | 
+| _utxoPos | struct UtxoPosLib.UtxoPos | UTXO position identifier for the output | 
 
 ### txIndex
 
-Given an UTXO position, returns the transaction index.
+Returns the transaction index of a given UTXO position
 
 ```js
 function txIndex(struct UtxoPosLib.UtxoPos _utxoPos) internal pure
@@ -82,17 +82,17 @@ returns(uint256)
 
 **Returns**
 
-The output's transaction index.
+Transaction index of the output
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| _utxoPos | struct UtxoPosLib.UtxoPos | Output identifier in form of utxo position. | 
+| _utxoPos | struct UtxoPosLib.UtxoPos | UTXO position identifier for the output | 
 
 ### outputIndex
 
-Given an UTXO position, returns the output index.
+Returns the output index of a given UTXO position
 
 ```js
 function outputIndex(struct UtxoPosLib.UtxoPos _utxoPos) internal pure
@@ -101,17 +101,17 @@ returns(uint16)
 
 **Returns**
 
-The output's index.
+Index of the output
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| _utxoPos | struct UtxoPosLib.UtxoPos | Output identifier in form of utxo position. | 
+| _utxoPos | struct UtxoPosLib.UtxoPos | UTXO position identifier for the output | 
 
 ### txPos
 
-Given an UTXO position, returns transaction position.
+Returns the transaction position of a given UTXO position
 
 ```js
 function txPos(struct UtxoPosLib.UtxoPos _utxoPos) internal pure
@@ -120,13 +120,13 @@ returns(struct TxPosLib.TxPos)
 
 **Returns**
 
-The transaction position.
+Position of the transaction
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| _utxoPos | struct UtxoPosLib.UtxoPos | Output identifier in form of utxo position. | 
+| _utxoPos | struct UtxoPosLib.UtxoPos | UTXO position identifier for the output | 
 
 ## Contracts
 
@@ -190,7 +190,7 @@ The transaction position.
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [RLP](RLP.md)
+* [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)

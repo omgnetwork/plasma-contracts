@@ -103,7 +103,7 @@ contract('Erc20Vault', ([_, erc20Minter, authority, maintainer, alice]) => {
 
             await expectRevert(
                 this.erc20Vault.deposit(deposit),
-                "Depositor's address does not match sender's address.",
+                "Depositor's address must match sender's address",
             );
         });
 
@@ -186,7 +186,7 @@ contract('Erc20Vault', ([_, erc20Minter, authority, maintainer, alice]) => {
         it('should fail when not called by a registered exit game contract', async () => {
             await expectRevert(
                 this.erc20Vault.withdraw(constants.ZERO_ADDRESS, constants.ZERO_ADDRESS, 0),
-                'Called from a nonregistered or quarantined Exit Game contract',
+                'Called from a non-registered or quarantined exit game contract',
             );
         });
 
@@ -230,7 +230,7 @@ contract('Erc20Vault', ([_, erc20Minter, authority, maintainer, alice]) => {
             it('should fail when called under quarantine', async () => {
                 await expectRevert(
                     this.newExitGame.proxyErc20Withdraw(alice, this.erc20.address, this.testFundAmount),
-                    'Called from a nonregistered or quarantined Exit Game contract',
+                    'Called from a non-registered or quarantined exit game contract',
                 );
             });
 

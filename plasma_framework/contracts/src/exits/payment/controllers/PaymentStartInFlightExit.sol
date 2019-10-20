@@ -33,7 +33,7 @@ library PaymentStartInFlightExit {
     uint256 constant public MAX_INPUT_NUM = 4;
 
     /**
-     * @dev supportedTxType is there to enable reuse of code in different Payment Tx versions
+     * @dev supportedTxType enables code reuse in different Payment Tx versions
      */
     struct Controller {
         PlasmaFramework framework;
@@ -54,18 +54,18 @@ library PaymentStartInFlightExit {
      /**
      * @dev data to be passed around start in-flight exit helper functions
      * @param controller the Controller struct of this library
-     * @param exitId ID of the exit.
-     * @param inFlightTxRaw In-flight transaction as bytes.
-     * @param inFlightTx Decoded in-flight transaction.
-     * @param inFlightTxHash Hash of in-flight transaction.
-     * @param inputTxs Input transactions as bytes.
-     * @param inputUtxosPos Postions of input utxos coded as integers.
-     * @param outputGuardPreimagesForInputs Output guard pre-images for in-flight transaction inputs.
-     * @param inputTxsInclusionProofs Merkle proofs for input transactions.
-     * @param inputTxsConfirmSigs Confirm signatures for the input txs.
-     * @param inFlightTxWitnesses Witnesses for in-flight transactions.
-     * @param inputSpendingConditionOptionalArgs Optional args for the spending condition for checking inputs.
-     * @param outputIds Output ids for input transactions.
+     * @param exitId ID of the exit
+     * @param inFlightTxRaw In-flight transaction as bytes
+     * @param inFlightTx Decoded in-flight transaction
+     * @param inFlightTxHash Hash of in-flight transaction
+     * @param inputTxs Input transactions as bytes
+     * @param inputUtxosPos Postions of input utxos coded as integers
+     * @param outputGuardPreimagesForInputs Output guard pre-images for in-flight transaction inputs
+     * @param inputTxsInclusionProofs Merkle proofs for input transactions
+     * @param inputTxsConfirmSigs Confirm signatures for the input txs
+     * @param inFlightTxWitnesses Witnesses for in-flight transactions
+     * @param inputSpendingConditionOptionalArgs Optional args for the spending condition, used for checking inputs
+     * @param outputIds Output IDs for input transactions.
      */
     struct StartExitData {
         Controller controller;
@@ -114,9 +114,9 @@ library PaymentStartInFlightExit {
     /**
      * @notice Main logic function to start in-flight exit
      * @dev emits InFlightExitStarted event on success
-     * @param self the controller struct
-     * @param inFlightExitMap the storage of all in-flight exit data
-     * @param args arguments of start in-flight exit function from client.
+     * @param self The controller struct
+     * @param inFlightExitMap The storage of all in-flight exit data
+     * @param args Arguments of start in-flight exit function from client
      */
     function run(
         Controller memory self,
@@ -215,27 +215,27 @@ library PaymentStartInFlightExit {
         );
         require(
             exitData.inputUtxosPos.length == exitData.inFlightTx.inputs.length,
-            "Number of input transactions positions does not match number of in-flight transaction inputs"
+            "Number of input transaction positions does not match the number of in-flight transaction inputs"
         );
         require(
             exitData.outputGuardPreimagesForInputs.length == exitData.inFlightTx.inputs.length,
-            "Number of output guard preimages for inputs does not match number of in-flight transaction inputs"
+            "Number of output guard preimages for inputs does not match the number of in-flight transaction inputs"
         );
         require(
             exitData.inputTxsInclusionProofs.length == exitData.inFlightTx.inputs.length,
-            "Number of input transactions inclusion proofs does not match number of in-flight transaction inputs"
+            "Number of input transactions inclusion proofs does not match the number of in-flight transaction inputs"
         );
         require(
             exitData.inFlightTxWitnesses.length == exitData.inFlightTx.inputs.length,
-            "Number of input transactions witnesses does not match number of in-flight transaction inputs"
+            "Number of input transaction witnesses does not match the number of in-flight transaction inputs"
         );
         require(
             exitData.inputTxsConfirmSigs.length == exitData.inFlightTx.inputs.length,
-            "Number of input transactions confirm sigs does not match number of in-flight transaction inputs"
+            "Number of input transactions confirm sigs does not match the number of in-flight transaction inputs"
         );
         require(
             exitData.inputSpendingConditionOptionalArgs.length == exitData.inFlightTx.inputs.length,
-            "Number of input spending condition optional args does not match number of in-flight transaction inputs"
+            "Number of input spending condition optional args does not match the number of in-flight transaction inputs"
         );
     }
 
@@ -261,7 +261,7 @@ library PaymentStartInFlightExit {
                                                     .outputGuardHandlerRegistry
                                                     .outputGuardHandlers(output.outputType);
 
-            require(address(outputGuardHandler) != address(0), "Failed to get the outputGuardHandler of the output type");
+            require(address(outputGuardHandler) != address(0), "Failed to retrieve the outputGuardHandler of the output type");
 
             require(outputGuardHandler.isValid(outputGuardData),
                     "Output guard information is invalid for the input tx");
@@ -294,7 +294,7 @@ library PaymentStartInFlightExit {
             IOutputGuardHandler outputGuardHandler = exitData.controller
                                                     .outputGuardHandlerRegistry
                                                     .outputGuardHandlers(output.outputType);
-            require(address(outputGuardHandler) != address(0), "Failed to get the outputGuardHandler of the output type");
+            require(address(outputGuardHandler) != address(0), "Failed to retrieve the outputGuardHandler of the output type");
             require(outputGuardHandler.isValid(outputGuardData),
                     "Output guard information is invalid for the input tx");
 
@@ -392,7 +392,7 @@ library PaymentStartInFlightExit {
             PaymentOutputModel.Output memory output = exitData.inFlightTx.outputs[i];
 
             ife.outputs[i].outputId = outputId;
-            // exit target is not set as output guard preimage many not be available for caller
+            // Exit target is not set as output guard preimage may not be available for caller
             ife.outputs[i].token = output.token;
             ife.outputs[i].amount = output.amount;
         }

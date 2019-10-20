@@ -45,14 +45,14 @@ contract('OutputGuardHandlerRegistry', ([_, other]) => {
         it('should reject when trying to register with output type 0', async () => {
             await expectRevert(
                 this.registry.registerOutputGuardHandler(0, this.dummyOutputGuardHandler.address),
-                'Should not register with output type 0',
+                'Registration not possible with output type 0',
             );
         });
 
         it('should reject when trying to register with an empty address', async () => {
             await expectRevert(
                 this.registry.registerOutputGuardHandler(1, constants.ZERO_ADDRESS),
-                'Should not register an empty address',
+                'Registration not possible with an empty address',
             );
         });
 
@@ -62,7 +62,7 @@ contract('OutputGuardHandlerRegistry', ([_, other]) => {
             await this.registry.registerOutputGuardHandler(outputType, this.dummyOutputGuardHandler.address);
             await expectRevert(
                 this.registry.registerOutputGuardHandler(outputType, secondDummyHandler.address),
-                'The output type has already been registered',
+                'Output type already registered',
             );
         });
     });

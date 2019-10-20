@@ -92,7 +92,7 @@ contract('PaymentOutputToPaymentTxCondition', ([richFather, bob]) => {
                     args.signature,
                     args.optionalArgs,
                 ),
-                'The input tx is not of the supported payment tx type',
+                'Input tx is an unsupported payment tx type',
             );
         });
 
@@ -113,7 +113,7 @@ contract('PaymentOutputToPaymentTxCondition', ([richFather, bob]) => {
                     args.signature,
                     args.optionalArgs,
                 ),
-                'The spending tx is not of the supported payment tx type',
+                'The spending tx is an unsupported payment tx type',
             );
         });
 
@@ -132,7 +132,7 @@ contract('PaymentOutputToPaymentTxCondition', ([richFather, bob]) => {
                     args.signature,
                     args.optionalArgs,
                 ),
-                'The spending tx does not point to the correct utxo position of the output',
+                'Spending tx points to the incorrect output UTXO position',
             );
         });
 
@@ -153,7 +153,7 @@ contract('PaymentOutputToPaymentTxCondition', ([richFather, bob]) => {
                     wrongSignature,
                     args.optionalArgs,
                 ),
-                'Tx not correctly signed',
+                'Tx in not signed correctly',
             );
         });
 

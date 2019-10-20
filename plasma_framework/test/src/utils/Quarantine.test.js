@@ -37,7 +37,7 @@ contract('Quarantine', () => {
         it('should revert when attempting to quarantine an empty address', async () => {
             await expectRevert(
                 this.quarantineMock.quarantineContract(constants.ZERO_ADDRESS),
-                'Can not quarantine an empty address',
+                'An empty address cannot be quarantined',
             );
         });
 

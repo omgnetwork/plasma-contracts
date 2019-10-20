@@ -35,7 +35,7 @@ event SetDepositVerifierCalled(address  nextDepositVerifier);
 
 ### onlyFromNonQuarantinedExitGame
 
-Checks it is called by a non quarantined exit game contract
+Checks whether the call originates from a non-quarantined exit game contract
 
 ```js
 modifier onlyFromNonQuarantinedExitGame() internal
@@ -67,7 +67,7 @@ function (PlasmaFramework _framework) public nonpayable
 
 ### setDepositVerifier
 
-Sets the deposit verifier contract. This can be only called by the operator.
+Sets the deposit verifier contract, which may be called only by the operator
 
 ```js
 function setDepositVerifier(address _verifier) public nonpayable onlyFrom 
@@ -77,11 +77,11 @@ function setDepositVerifier(address _verifier) public nonpayable onlyFrom
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| _verifier | address | address of the verifier contract. | 
+| _verifier | address | Address of the verifier contract | 
 
 ### getEffectiveDepositVerifier
 
-Gets currently effective deposit verifier contract address.
+Retrieves the currently effective deposit verifier contract address
 
 ```js
 function getEffectiveDepositVerifier() public view
@@ -90,7 +90,7 @@ returns(address)
 
 **Returns**
 
-contract address of deposit verifier.
+Contract address of the deposit verifier
 
 **Arguments**
 
@@ -174,7 +174,7 @@ returns(uint256)
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [RLP](RLP.md)
+* [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)
