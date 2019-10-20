@@ -43,9 +43,9 @@ commands:
             sudo apt update && sudo apt install nodejs npm
             sudo npm install -g n && sudo n stable
             sudo npm install -g ganache-cli
-      - restore_cache:
-          keys:
-            - dependencies_v1_{{ checksum "requirements.txt" }}
+      # - restore_cache:
+          # keys:
+            # - dependencies_v1_{{ checksum "requirements.txt" }}
       - run:
           name: Install dependencies
           command: |
