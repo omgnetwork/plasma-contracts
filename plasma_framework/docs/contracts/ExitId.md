@@ -13,7 +13,7 @@ View Source: [contracts/src/exits/utils/ExitId.sol](../../contracts/src/exits/ut
 
 ### isStandardExit
 
-Checks whether exitId is a standard exit id or not.
+Checks whether exitId is a standard exit ID
 
 ```js
 function isStandardExit(uint160 _exitId) internal pure
@@ -28,7 +28,7 @@ returns(bool)
 
 ### getStandardExitId
 
-Given transaction bytes and UTXO position, returns its exit ID.
+Given transaction bytes and UTXO position, returns its exit ID
 
 ```js
 function getStandardExitId(bool _isDeposit, bytes _txBytes, struct UtxoPosLib.UtxoPos _utxoPos) internal pure
@@ -37,7 +37,7 @@ returns(uint160)
 
 **Returns**
 
-_standardExitId Unique standard exit id.
+_standardExitId Unique ID of the standard exit
     Anatomy of returned value, most significant bits first:
     8-bits - output index
     1-bit - in-flight flag (0 for standard exit)
@@ -47,13 +47,13 @@ _standardExitId Unique standard exit id.
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| _isDeposit | bool | whether the tx for the exitId is an deposit tx or not | 
-| _txBytes | bytes | Transaction bytes. | 
-| _utxoPos | struct UtxoPosLib.UtxoPos | UTXO position of the exiting output. | 
+| _isDeposit | bool | Defines whether the tx for the exitId is a deposit tx | 
+| _txBytes | bytes | Transaction bytes | 
+| _utxoPos | struct UtxoPosLib.UtxoPos | UTXO position of the exiting output | 
 
 ### getInFlightExitId
 
-Given transaction bytes returns in-flight exit ID.
+Given transaction bytes, returns in-flight exit ID
 
 ```js
 function getInFlightExitId(bytes _txBytes) internal pure
@@ -62,13 +62,13 @@ returns(uint160)
 
 **Returns**
 
-Unique in-flight exit id.
+Unique in-flight exit ID
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| _txBytes | bytes | Transaction bytes. | 
+| _txBytes | bytes | Transaction bytes | 
 
 ### _computeStandardExitId
 
@@ -146,7 +146,7 @@ returns(uint160)
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [RLP](RLP.md)
+* [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)

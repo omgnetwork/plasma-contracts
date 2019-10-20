@@ -18,7 +18,7 @@ Contract that checks the tx finalization, currently only MoreVp functionality is
 
 ⤾ overrides [ITxFinalizationVerifier.isStandardFinalized](ITxFinalizationVerifier.md#isstandardfinalized)
 
-Checks a transaction is "standard finalized" or not
+Checks whether a transaction is "standard finalized"
 
 ```js
 function isStandardFinalized(struct TxFinalizationModel.Data data) public view
@@ -35,7 +35,7 @@ returns(bool)
 
 ⤾ overrides [ITxFinalizationVerifier.isProtocolFinalized](ITxFinalizationVerifier.md#isprotocolfinalized)
 
-Checks a transaction is "protocol finalized" or not
+Checks whether a transaction is "protocol finalized"
 
 ```js
 function isProtocolFinalized(struct TxFinalizationModel.Data data) public view
@@ -123,7 +123,7 @@ returns(bool)
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [RLP](RLP.md)
+* [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)

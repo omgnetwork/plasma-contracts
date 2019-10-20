@@ -68,8 +68,8 @@ function activateChildChain() external nonpayable onlyFrom
 
 ### setAuthority
 
-Allows the operator to set a new authority address. This allows to implement mechanical
-re-org protection mechanism, explained in https://github.com/omisego/plasma-contracts/issues/118
+Allows the operator to set a new authority address, enabling implementation of mechanical
+re-org protection mechanism described here: https://github.com/omisego/plasma-contracts/issues/118
 
 ```js
 function setAuthority(address newAuthority) external nonpayable onlyFrom 
@@ -79,11 +79,11 @@ function setAuthority(address newAuthority) external nonpayable onlyFrom
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| newAuthority | address | address of new authority, cannot be blank. | 
+| newAuthority | address | Address of new authority, which cannot be blank | 
 
 ### submitBlock
 
-Allows the authority to submit the Merkle root of a plasma block.
+Allows the authority to submit the Merkle root of a Plasma block
 
 ```js
 function submitBlock(bytes32 _blockRoot) external nonpayable onlyFrom 
@@ -93,11 +93,11 @@ function submitBlock(bytes32 _blockRoot) external nonpayable onlyFrom
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| _blockRoot | bytes32 | Merkle root of the plasma block. | 
+| _blockRoot | bytes32 | Merkle root of the Plasma block | 
 
 ### submitDepositBlock
 
-Submits a block for deposit.
+Submits a block for deposit
 
 ```js
 function submitDepositBlock(bytes32 _blockRoot) public nonpayable onlyFromNonQuarantinedVault 
@@ -106,13 +106,13 @@ returns(uint256)
 
 **Returns**
 
-the deposit block number
+The deposit block number
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| _blockRoot | bytes32 | Merkle root of the plasma block. | 
+| _blockRoot | bytes32 | Merkle root of the Plasma block | 
 
 ### nextDepositBlock
 
@@ -188,7 +188,7 @@ returns(uint256)
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [RLP](RLP.md)
+* [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)

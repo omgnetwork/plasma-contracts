@@ -6,7 +6,7 @@ View Source: [contracts/src/exits/interfaces/ITxFinalizationVerifier.sol](../../
 
 **ITxFinalizationVerifier**
 
-Interface for the code that checks finalization status of a transaction
+Interface for the code that checks the finalization status of a transaction
 
 ## Functions
 
@@ -17,7 +17,7 @@ Interface for the code that checks finalization status of a transaction
 
 ⤿ Overridden Implementation(s): [TxFinalizationVerifier.isStandardFinalized](TxFinalizationVerifier.md#isstandardfinalized)
 
-Checks a transaction is "standard finalized" or not
+Checks whether a transaction is "standard finalized"
 
 ```js
 function isStandardFinalized(struct TxFinalizationModel.Data self) external view
@@ -34,7 +34,7 @@ returns(bool)
 
 ⤿ Overridden Implementation(s): [TxFinalizationVerifier.isProtocolFinalized](TxFinalizationVerifier.md#isprotocolfinalized)
 
-Checks a transaction is "protocol finalized" or not
+Checks whether a transaction is "protocol finalized"
 
 ```js
 function isProtocolFinalized(struct TxFinalizationModel.Data self) external view
@@ -109,7 +109,7 @@ returns(bool)
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [RLP](RLP.md)
+* [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)

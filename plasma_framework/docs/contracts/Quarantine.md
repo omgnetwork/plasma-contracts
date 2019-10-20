@@ -4,7 +4,7 @@ View Source: [contracts/src/framework/utils/Quarantine.sol](../../contracts/src/
 
 **Quarantine**
 
-Provides a way to quarantine (disable) contracts for a period of time
+Provides a way to quarantine (disable) contracts for a specified period of time
 
 ## Structs
 ### Data
@@ -24,7 +24,7 @@ struct Data {
 
 ### isQuarantined
 
-Checks whether a contract is still quarantined or not.
+Checks whether a contract is quarantined
 
 ```js
 function isQuarantined(struct Quarantine.Data _self, address _contractAddress) internal view
@@ -40,7 +40,7 @@ returns(bool)
 
 ### quarantine
 
-Put a contract into quarantine.
+Places a contract into quarantine
 
 ```js
 function quarantine(struct Quarantine.Data _self, address _contractAddress) internal nonpayable
@@ -51,7 +51,7 @@ function quarantine(struct Quarantine.Data _self, address _contractAddress) inte
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
 | _self | struct Quarantine.Data |  | 
-| _contractAddress | address | the address of the contract. | 
+| _contractAddress | address | The address of the contract | 
 
 ## Contracts
 
@@ -115,7 +115,7 @@ function quarantine(struct Quarantine.Data _self, address _contractAddress) inte
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [RLP](RLP.md)
+* [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)

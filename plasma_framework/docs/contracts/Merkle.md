@@ -4,7 +4,7 @@ View Source: [contracts/src/utils/Merkle.sol](../../contracts/src/utils/Merkle.s
 
 **Merkle**
 
-Library for working with Merkle trees.
+Library for working with Merkle trees
 
 ## Functions
 
@@ -12,7 +12,7 @@ Library for working with Merkle trees.
 
 ### checkMembership
 
-Checks that a leaf hash is contained in a root hash.
+Checks that a leaf hash is contained in a root hash
 
 ```js
 function checkMembership(bytes32 leaf, uint256 index, bytes32 rootHash, bytes proof) internal pure
@@ -21,16 +21,16 @@ returns(bool)
 
 **Returns**
 
-True of the leaf hash is in the Merkle tree. False otherwise.
+True, if the leaf hash is in the Merkle tree; otherwise, False
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| leaf | bytes32 | Leaf hash to verify. | 
-| index | uint256 | Position of the leaf hash in the Merkle tree. | 
-| rootHash | bytes32 | Root of the Merkle tree. | 
-| proof | bytes | A Merkle proof demonstrating membership of the leaf hash. | 
+| leaf | bytes32 | Leaf hash to verify | 
+| index | uint256 | Position of the leaf hash in the Merkle tree | 
+| rootHash | bytes32 | Root of the Merkle tree | 
+| proof | bytes | A Merkle proof demonstrating membership of the leaf hash | 
 
 ## Contracts
 
@@ -94,7 +94,7 @@ True of the leaf hash is in the Merkle tree. False otherwise.
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [RLP](RLP.md)
+* [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)

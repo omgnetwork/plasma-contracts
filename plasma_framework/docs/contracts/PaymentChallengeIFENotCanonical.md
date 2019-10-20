@@ -68,9 +68,9 @@ function challenge(struct PaymentChallengeIFENotCanonical.Controller self, struc
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| self | struct PaymentChallengeIFENotCanonical.Controller | the controller struct | 
-| inFlightExitMap | struct PaymentExitDataModel.InFlightExitMap | the storage of all in-flight exit data | 
-| args | struct PaymentInFlightExitRouterArgs.ChallengeCanonicityArgs | arguments of 'challengeInFlightExitNotCanonical' function from client. | 
+| self | struct PaymentChallengeIFENotCanonical.Controller | The controller struct | 
+| inFlightExitMap | struct PaymentExitDataModel.InFlightExitMap | The storage of all in-flight exit data | 
+| args | struct PaymentInFlightExitRouterArgs.ChallengeCanonicityArgs | Arguments of 'challengeInFlightExitNotCanonical' function from client | 
 
 ### respond
 
@@ -84,11 +84,11 @@ function respond(struct PaymentChallengeIFENotCanonical.Controller self, struct 
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| self | struct PaymentChallengeIFENotCanonical.Controller | the controller struct | 
-| inFlightExitMap | struct PaymentExitDataModel.InFlightExitMap | the storage of all in-flight exit data | 
-| inFlightTx | bytes | the in-flight tx in rlp encoded bytes | 
-| inFlightTxPos | uint256 | the UTXO position of the in-flight exit. Should hardcode 0 for the outputIndex. | 
-| inFlightTxInclusionProof | bytes | inclusion proof for the in-flight tx. | 
+| self | struct PaymentChallengeIFENotCanonical.Controller | The controller struct | 
+| inFlightExitMap | struct PaymentExitDataModel.InFlightExitMap | The storage of all in-flight exit data | 
+| inFlightTx | bytes | The in-flight tx, in RLP-encoded bytes | 
+| inFlightTxPos | uint256 | The UTXO position of the in-flight exit. Should hardcode 0 for the outputIndex. | 
+| inFlightTxInclusionProof | bytes | Inclusion proof for the in-flight tx | 
 
 ### verifyAndDeterminePositionOfTransactionIncludedInBlock
 
@@ -183,7 +183,7 @@ returns(uint256)
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [RLP](RLP.md)
+* [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)

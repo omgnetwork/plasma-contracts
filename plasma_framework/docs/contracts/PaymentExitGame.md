@@ -46,7 +46,7 @@ function (PlasmaFramework framework, uint256 ethVaultId, uint256 erc20VaultId, O
 
 ⤾ overrides [IExitProcessor.processExit](IExitProcessor.md#processexit)
 
-Callback processes exit function for the PlasmaFramework to call.
+Callback processes exit function for the PlasmaFramework to call
 
 ```js
 function processExit(uint160 exitId, uint256 , address token) external nonpayable onlyFrom 
@@ -56,13 +56,13 @@ function processExit(uint160 exitId, uint256 , address token) external nonpayabl
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| exitId | uint160 | exit id. | 
-|  | uint256 | exitId exit id. | 
-| token | address | token (ERC20 address or address(0) for ETH) of the exiting output. | 
+| exitId | uint160 | The exit ID | 
+|  | uint256 | exitId The exit ID | 
+| token | address | Token (ERC20 address or address(0) for ETH) of the exiting output | 
 
 ### getStandardExitId
 
-Helper function to compute standard exit id.
+Helper function to compute the standard exit ID
 
 ```js
 function getStandardExitId(bool _isDeposit, bytes _txBytes, uint256 _utxoPos) public pure
@@ -79,7 +79,7 @@ returns(uint160)
 
 ### getInFlightExitId
 
-Helper function to compute in-flight exit id.
+Helper function to compute the in-flight exit ID
 
 ```js
 function getInFlightExitId(bytes _txBytes) public pure
@@ -154,7 +154,7 @@ returns(uint160)
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [RLP](RLP.md)
+* [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)

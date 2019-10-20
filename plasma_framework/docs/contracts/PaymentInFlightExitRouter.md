@@ -88,7 +88,7 @@ function (PlasmaFramework plasmaFramework, uint256 ethVaultId, uint256 erc20Vaul
 
 ### inFlightExits
 
-Getter functions to retrieve in-flight exit data of the PaymentExitGame.
+Getter functions to retrieve in-flight exit data of the PaymentExitGame
 
 ```js
 function inFlightExits(uint160 exitId) public view
@@ -99,11 +99,11 @@ returns(struct PaymentExitDataModel.InFlightExit)
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| exitId | uint160 | the exit id of the in-flight exit | 
+| exitId | uint160 | The exit ID of the in-flight exit | 
 
 ### startInFlightExit
 
-Starts withdrawal from a transaction that might be in-flight.
+Starts withdrawal from a transaction that may be in-flight
 
 ```js
 function startInFlightExit(struct PaymentInFlightExitRouterArgs.StartExitArgs args) public payable onlyWithValue 
@@ -113,11 +113,11 @@ function startInFlightExit(struct PaymentInFlightExitRouterArgs.StartExitArgs ar
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| args | struct PaymentInFlightExitRouterArgs.StartExitArgs | input argument data to challenge. See struct 'StartExitArgs' for detailed info. | 
+| args | struct PaymentInFlightExitRouterArgs.StartExitArgs | Input argument data to challenge (see also struct 'StartExitArgs') | 
 
 ### piggybackInFlightExitOnInput
 
-Piggyback on an input of an in-flight exiting tx. Would be processed if the in-flight exit is non-canonical.
+Piggyback on an input of an in-flight exiting tx. Processed only if the in-flight exit is non-canonical.
 
 ```js
 function piggybackInFlightExitOnInput(struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnInputArgs args) public payable onlyWithValue 
@@ -127,11 +127,11 @@ function piggybackInFlightExitOnInput(struct PaymentInFlightExitRouterArgs.Piggy
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| args | struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnInputArgs | input argument data to piggyback. See struct 'PiggybackInFlightExitOnInputArgs' for detailed info. | 
+| args | struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnInputArgs | Input argument data to piggyback (see also struct 'PiggybackInFlightExitOnInputArgs') | 
 
 ### piggybackInFlightExitOnOutput
 
-Piggyback on an output of an in-flight exiting tx. Would be processed if the in-flight exit is canonical.
+Piggyback on an output of an in-flight exiting tx. Processed only if the in-flight exit is canonical.
 
 ```js
 function piggybackInFlightExitOnOutput(struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnOutputArgs args) public payable onlyWithValue 
@@ -141,11 +141,11 @@ function piggybackInFlightExitOnOutput(struct PaymentInFlightExitRouterArgs.Pigg
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| args | struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnOutputArgs | input argument data to piggyback. See struct 'PiggybackInFlightExitOnOutputArgs' for detailed info. | 
+| args | struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnOutputArgs | Input argument data to piggyback (see also struct 'PiggybackInFlightExitOnOutputArgs') | 
 
 ### challengeInFlightExitNotCanonical
 
-Challenges an in-flight exit to be non canonical.
+Challenges an in-flight exit to be non-canonical
 
 ```js
 function challengeInFlightExitNotCanonical(struct PaymentInFlightExitRouterArgs.ChallengeCanonicityArgs args) public nonpayable
@@ -155,11 +155,11 @@ function challengeInFlightExitNotCanonical(struct PaymentInFlightExitRouterArgs.
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| args | struct PaymentInFlightExitRouterArgs.ChallengeCanonicityArgs | input argument data to challenge. See struct 'ChallengeCanonicityArgs' for detailed info. | 
+| args | struct PaymentInFlightExitRouterArgs.ChallengeCanonicityArgs | Input argument data to challenge (see also struct 'ChallengeCanonicityArgs') | 
 
 ### respondToNonCanonicalChallenge
 
-Respond to a non canonical challenge by providing position and proving the correctness of it.
+Respond to a non-canonical challenge by providing its position and by proving its correctness
 
 ```js
 function respondToNonCanonicalChallenge(bytes inFlightTx, uint256 inFlightTxPos, bytes inFlightTxInclusionProof) public nonpayable
@@ -169,13 +169,13 @@ function respondToNonCanonicalChallenge(bytes inFlightTx, uint256 inFlightTxPos,
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| inFlightTx | bytes | the rlp encoded in-flight transaction. | 
-| inFlightTxPos | uint256 | the UTXO position of the in-flight exit. The outputIndex should be set to 0. | 
-| inFlightTxInclusionProof | bytes | inclusion proof for the in-flight tx. | 
+| inFlightTx | bytes | The RLP-encoded in-flight transaction | 
+| inFlightTxPos | uint256 | The UTXO position of the in-flight exit. The outputIndex should be set to 0. | 
+| inFlightTxInclusionProof | bytes | Inclusion proof for the in-flight tx | 
 
 ### challengeInFlightExitInputSpent
 
-Challenges an exit from in-flight transaction input.
+Challenges an exit from in-flight transaction input
 
 ```js
 function challengeInFlightExitInputSpent(struct PaymentInFlightExitRouterArgs.ChallengeInputSpentArgs args) public nonpayable
@@ -185,11 +185,11 @@ function challengeInFlightExitInputSpent(struct PaymentInFlightExitRouterArgs.Ch
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| args | struct PaymentInFlightExitRouterArgs.ChallengeInputSpentArgs | argument data to challenge. See struct 'ChallengeInputSpentArgs' for detailed info. | 
+| args | struct PaymentInFlightExitRouterArgs.ChallengeInputSpentArgs | Argument data to challenge (see also struct 'ChallengeInputSpentArgs') | 
 
 ### challengeInFlightExitOutputSpent
 
-Challenges an exit from in-flight transaction output.
+Challenges an exit from in-flight transaction output
 
 ```js
 function challengeInFlightExitOutputSpent(struct PaymentInFlightExitRouterArgs.ChallengeOutputSpent args) public nonpayable
@@ -199,11 +199,11 @@ function challengeInFlightExitOutputSpent(struct PaymentInFlightExitRouterArgs.C
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| args | struct PaymentInFlightExitRouterArgs.ChallengeOutputSpent | argument data to challenge. See struct 'ChallengeOutputSpent' for detailed info. | 
+| args | struct PaymentInFlightExitRouterArgs.ChallengeOutputSpent | Argument data to challenge (see also struct 'ChallengeOutputSpent') | 
 
 ### processInFlightExit
 
-Process in-flight exit.
+Process in-flight exit
 
 ```js
 function processInFlightExit(uint160 exitId, address token) internal nonpayable
@@ -213,12 +213,12 @@ function processInFlightExit(uint160 exitId, address token) internal nonpayable
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| exitId | uint160 | The in-flight exit id. | 
-| token | address | The token (in erc20 address or address(0) for ETH) of the exiting output. | 
+| exitId | uint160 | The in-flight exit ID | 
+| token | address | The token (in erc20 address or address(0) for ETH) of the exiting output | 
 
 ### startIFEBondSize
 
-Gets the in-flight exit bond size.
+Retrieves the in-flight exit bond size
 
 ```js
 function startIFEBondSize() public view
@@ -232,7 +232,7 @@ returns(uint128)
 
 ### updateStartIFEBondSize
 
-Updates the in-flight exit bond size. Will take 2 days to come into effect.
+Updates the in-flight exit bond size, taking two days to become effective.
 
 ```js
 function updateStartIFEBondSize(uint128 newBondSize) public nonpayable onlyFrom 
@@ -242,11 +242,11 @@ function updateStartIFEBondSize(uint128 newBondSize) public nonpayable onlyFrom
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| newBondSize | uint128 | The new bond size. | 
+| newBondSize | uint128 | The new bond size | 
 
 ### piggybackBondSize
 
-Gets the piggyback bond size.
+Retrieves the piggyback bond size
 
 ```js
 function piggybackBondSize() public view
@@ -260,7 +260,7 @@ returns(uint128)
 
 ### updatePiggybackBondSize
 
-Updates the piggyback bond size. Will take 2 days to come into effect.
+Updates the piggyback bond size, taking two days to become effective
 
 ```js
 function updatePiggybackBondSize(uint128 newBondSize) public nonpayable onlyFrom 
@@ -270,7 +270,7 @@ function updatePiggybackBondSize(uint128 newBondSize) public nonpayable onlyFrom
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| newBondSize | uint128 | The new bond size. | 
+| newBondSize | uint128 | The new bond size | 
 
 ## Contracts
 
@@ -334,7 +334,7 @@ function updatePiggybackBondSize(uint128 newBondSize) public nonpayable onlyFrom
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [RLP](RLP.md)
+* [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)

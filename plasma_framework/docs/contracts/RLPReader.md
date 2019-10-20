@@ -1,54 +1,76 @@
-# Protocol.sol
+# RLPReader.sol
 
-View Source: [contracts/src/framework/Protocol.sol](../../contracts/src/framework/Protocol.sol)
+View Source: [contracts/src/utils/RLPReader.sol](../../contracts/src/utils/RLPReader.sol)
 
-**Protocol**
+**RLPReader**
 
-Protocols for the PlasmaFramework
+## Structs
+### RLPItem
+
+```js
+struct RLPItem {
+ uint256 len,
+ uint256 memPtr
+}
+```
 
 ## Contract Members
 **Constants & Variables**
 
 ```js
-uint8 internal constant MVP_VALUE;
-uint8 internal constant MORE_VP_VALUE;
+uint8 internal constant STRING_SHORT_START;
+uint8 internal constant STRING_LONG_START;
+uint8 internal constant LIST_SHORT_START;
+uint8 internal constant LIST_LONG_START;
+uint8 internal constant MAX_SHORT_LEN;
+uint8 internal constant WORD_SIZE;
 
 ```
 
 ## Functions
 
-- [MVP()](#mvp)
-- [MORE_VP()](#more_vp)
-- [isValidProtocol(uint8 protocol)](#isvalidprotocol)
+- [toRlpItem(bytes item)](#torlpitem)
+- [toList(struct RLPReader.RLPItem item)](#tolist)
+- [isList(struct RLPReader.RLPItem item)](#islist)
+- [toRlpBytes(struct RLPReader.RLPItem item)](#torlpbytes)
+- [toAddress(struct RLPReader.RLPItem item)](#toaddress)
+- [toUint(struct RLPReader.RLPItem item)](#touint)
+- [numItems(struct RLPReader.RLPItem item)](#numitems)
+- [_itemLength(uint256 memPtr)](#_itemlength)
+- [_payloadOffset(uint256 memPtr)](#_payloadoffset)
+- [copy(uint256 src, uint256 dest, uint256 len)](#copy)
+- [toBytes(struct RLPReader.RLPItem item)](#tobytes)
 
-### MVP
+### toRlpItem
 
 ```js
-function MVP() internal pure
-returns(uint8)
+function toRlpItem(bytes item) internal pure
+returns(struct RLPReader.RLPItem)
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
+| item | bytes |  | 
 
-### MORE_VP
+### toList
 
 ```js
-function MORE_VP() internal pure
-returns(uint8)
+function toList(struct RLPReader.RLPItem item) internal pure
+returns(struct RLPReader.RLPItem[])
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
+| item | struct RLPReader.RLPItem |  | 
 
-### isValidProtocol
+### isList
 
 ```js
-function isValidProtocol(uint8 protocol) internal pure
+function isList(struct RLPReader.RLPItem item) internal pure
 returns(bool)
 ```
 
@@ -56,7 +78,112 @@ returns(bool)
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| protocol | uint8 |  | 
+| item | struct RLPReader.RLPItem |  | 
+
+### toRlpBytes
+
+```js
+function toRlpBytes(struct RLPReader.RLPItem item) internal pure
+returns(bytes)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| item | struct RLPReader.RLPItem |  | 
+
+### toAddress
+
+```js
+function toAddress(struct RLPReader.RLPItem item) internal pure
+returns(address)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| item | struct RLPReader.RLPItem |  | 
+
+### toUint
+
+```js
+function toUint(struct RLPReader.RLPItem item) internal pure
+returns(uint256)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| item | struct RLPReader.RLPItem |  | 
+
+### numItems
+
+```js
+function numItems(struct RLPReader.RLPItem item) private pure
+returns(uint256)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| item | struct RLPReader.RLPItem |  | 
+
+### _itemLength
+
+```js
+function _itemLength(uint256 memPtr) private pure
+returns(uint256)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| memPtr | uint256 |  | 
+
+### _payloadOffset
+
+```js
+function _payloadOffset(uint256 memPtr) private pure
+returns(uint256)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| memPtr | uint256 |  | 
+
+### copy
+
+```js
+function copy(uint256 src, uint256 dest, uint256 len) private pure
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| src | uint256 |  | 
+| dest | uint256 |  | 
+| len | uint256 |  | 
+
+### toBytes
+
+```js
+function toBytes(struct RLPReader.RLPItem item) internal pure
+returns(bytes)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| item | struct RLPReader.RLPItem |  | 
 
 ## Contracts
 

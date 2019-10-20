@@ -10,7 +10,7 @@ View Source: [contracts/src/utils/AddressPayable.sol](../../contracts/src/utils/
 
 ### convert
 
-Converts an `address` into `address payable`.
+Converts an `address` into `address payable`
 
 ```js
 function convert(address account) internal pure
@@ -85,7 +85,7 @@ returns(address payable)
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [RLP](RLP.md)
+* [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)

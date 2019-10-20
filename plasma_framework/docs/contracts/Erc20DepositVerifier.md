@@ -6,7 +6,7 @@ View Source: [contracts/src/vaults/verifiers/Erc20DepositVerifier.sol](../../con
 
 **Erc20DepositVerifier**
 
-implementation of Erc20 deposit verifier using Payment transaction as the deposit tx
+Implementation of Erc20 deposit verifier using payment transaction as the deposit tx
 
 ## Contract Members
 **Constants & Variables**
@@ -25,7 +25,7 @@ uint8 private constant DEPOSIT_TX_TYPE;
 ⤾ overrides [IErc20DepositVerifier.verify](IErc20DepositVerifier.md#verify)
 
 Overrides the function of IErc20DepositVerifier and implements the verification logic
-        for Payment transaction
+        for payment transaction
 
 ```js
 function verify(bytes depositTx, address sender, address vault) external view
@@ -34,7 +34,7 @@ returns(owner address, token address, amount uint256)
 
 **Returns**
 
-verified (owner, token, amount) of the deposit ERC20 token data
+Verified (owner, token, amount) of the deposit ERC20 token data
 
 **Arguments**
 
@@ -106,7 +106,7 @@ verified (owner, token, amount) of the deposit ERC20 token data
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [RLP](RLP.md)
+* [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)

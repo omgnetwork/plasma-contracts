@@ -19,7 +19,7 @@ struct Predicate {
 
 ### test
 
-test whether the given block number belongs to a deposit block or not
+Tests whether the given block number belongs to a deposit block
 
 ```js
 function test(struct IsDeposit.Predicate _predicate, uint256 _blockNum) internal pure
@@ -95,7 +95,7 @@ returns(bool)
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [RLP](RLP.md)
+* [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)

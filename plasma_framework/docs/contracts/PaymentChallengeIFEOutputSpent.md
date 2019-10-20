@@ -40,9 +40,9 @@ function run(struct PaymentChallengeIFEOutputSpent.Controller controller, struct
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| controller | struct PaymentChallengeIFEOutputSpent.Controller | the controller struct | 
-| inFlightExitMap | struct PaymentExitDataModel.InFlightExitMap | the storage of all in-flight exit data | 
-| args | struct PaymentInFlightExitRouterArgs.ChallengeOutputSpent | arguments of 'challengeInFlightExitOutputSpent' function from client. | 
+| controller | struct PaymentChallengeIFEOutputSpent.Controller | The controller struct | 
+| inFlightExitMap | struct PaymentExitDataModel.InFlightExitMap | The storage of all in-flight exit data | 
+| args | struct PaymentInFlightExitRouterArgs.ChallengeOutputSpent | Arguments of 'challengeInFlightExitOutputSpent' function from client | 
 
 ### verifyInFlightTransactionStandardFinalized
 
@@ -132,7 +132,7 @@ function verifyChallengingTransactionSpendsOutput(struct PaymentChallengeIFEOutp
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [RLP](RLP.md)
+* [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)

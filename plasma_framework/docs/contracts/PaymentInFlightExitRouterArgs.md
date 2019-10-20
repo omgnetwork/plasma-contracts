@@ -11,7 +11,6 @@ View Source: [contracts/src/exits/payment/routers/PaymentInFlightExitRouterArgs.
 struct StartExitArgs {
  bytes inFlightTx,
  bytes[] inputTxs,
- uint256[] inputTxTypes,
  uint256[] inputUtxosPos,
  bytes[] outputGuardPreimagesForInputs,
  bytes[] inputTxsInclusionProofs,
@@ -152,7 +151,7 @@ struct ChallengeOutputSpent {
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [RLP](RLP.md)
+* [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)

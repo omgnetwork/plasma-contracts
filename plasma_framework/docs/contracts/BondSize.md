@@ -4,7 +4,7 @@ View Source: [contracts/src/exits/utils/BondSize.sol](../../contracts/src/exits/
 
 **BondSize**
 
-Stores an updateable bond size.
+Stores an updateable bond size
 
 ## Structs
 ### Params
@@ -51,7 +51,7 @@ returns(struct BondSize.Params)
 
 ### updateBondSize
 
-Updates the bond size.
+Updates the bond size
 
 ```js
 function updateBondSize(struct BondSize.Params self, uint128 newBondSize) internal nonpayable
@@ -62,11 +62,11 @@ function updateBondSize(struct BondSize.Params self, uint128 newBondSize) intern
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
 | self | struct BondSize.Params |  | 
-| newBondSize | uint128 | the new bond size. | 
+| newBondSize | uint128 | The new bond size | 
 
 ### bondSize
 
-Returns the current bond size.
+Returns the current bond size
 
 ```js
 function bondSize(struct BondSize.Params self) internal view
@@ -154,7 +154,7 @@ function validateBondSize(struct BondSize.Params self, uint128 newBondSize) priv
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [RLP](RLP.md)
+* [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)

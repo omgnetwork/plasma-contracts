@@ -56,10 +56,10 @@ function run(struct PaymentProcessInFlightExit.Controller self, struct PaymentEx
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| self | struct PaymentProcessInFlightExit.Controller | the controller struct | 
-| exitMap | struct PaymentExitDataModel.InFlightExitMap | the storage of all in-flight exit data | 
-| exitId | uint160 | the exitId of the in-flight exit | 
-| token | address | the ERC20 token address of the exit. Uses address(0) to represent ETH. | 
+| self | struct PaymentProcessInFlightExit.Controller | The controller struct | 
+| exitMap | struct PaymentExitDataModel.InFlightExitMap | The storage of all in-flight exit data | 
+| exitId | uint160 | The exitId of the in-flight exit | 
+| token | address | The ERC20 token address of the exit; uses address(0) to represent ETH | 
 
 ### isAnyInputSpent
 
@@ -237,7 +237,7 @@ returns(bool)
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [RLP](RLP.md)
+* [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)
