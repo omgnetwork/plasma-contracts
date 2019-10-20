@@ -1,7 +1,7 @@
 pragma solidity 0.5.11;
 pragma experimental ABIEncoderV2;
 
-import "../../utils/RLP.sol";
+import "../../utils/RLPReader.sol";
 import "../../utils/AddressPayable.sol";
 
 /**
@@ -9,7 +9,7 @@ import "../../utils/AddressPayable.sol";
  */
 library PaymentOutputModel {
 
-    using RLP for RLP.RLPItem;
+    using RLPReader for RLPReader.RLPItem;
 
     struct Output {
         uint256 outputType;
@@ -28,13 +28,13 @@ library PaymentOutputModel {
         return AddressPayable.convert(address(uint160(_output.outputGuard)));
     }
 
-    function decode(RLP.RLPItem memory encoded) internal pure returns (Output memory) {
-        RLP.RLPItem[] memory rlpEncoded = encoded.toList();
+    function decode(RLPReader.RLPItem memory encoded) internal pure returns (Output memory) {
+        RLPReader.RLPItem[] memory rlpEncoded = encoded.toList();
         require(rlpEncoded.length == 4, "Invalid output encoding");
 
         Output memory output = Output({
             outputType: rlpEncoded[0].toUint(),
-            outputGuard: rlpEncoded[1].toBytes20(),
+            outputGuard: bytes20(rlpEncoded[1].toAddress()),
             token: rlpEncoded[2].toAddress(),
             amount: rlpEncoded[3].toUint()
         });

@@ -1,6 +1,6 @@
 pragma solidity 0.5.11;
 
-import "../utils/RLP.sol";
+import "../utils/RLPReader.sol";
 
 /**
  * @title WireTransaction
@@ -10,8 +10,8 @@ import "../utils/RLP.sol";
  */
 library WireTransaction {
 
-    using RLP for bytes;
-    using RLP for RLP.RLPItem;
+    using RLPReader for bytes;
+    using RLPReader for RLPReader.RLPItem;
 
     struct Output {
         uint256 outputType;
@@ -25,11 +25,11 @@ library WireTransaction {
     * Outputs is a field on the second index and should be a list where first three elements are: amount, output guard, token.
     */
     function getOutput(bytes memory transaction, uint16 outputIndex) internal pure returns (Output memory) {
-        RLP.RLPItem[] memory rlpTx = transaction.toRLPItem().toList();
-        RLP.RLPItem[] memory outputs = rlpTx[2].toList();
+        RLPReader.RLPItem[] memory rlpTx = transaction.toRlpItem().toList();
+        RLPReader.RLPItem[] memory outputs = rlpTx[2].toList();
         require(outputIndex < outputs.length, "Invalid wire transaction format");
 
-        RLP.RLPItem[] memory output = outputs[outputIndex].toList();
+        RLPReader.RLPItem[] memory output = outputs[outputIndex].toList();
         uint256 outputType = output[0].toUint();
         bytes20 outputGuard = bytes20(output[1].toAddress());
         address token = output[2].toAddress();
@@ -43,7 +43,7 @@ library WireTransaction {
     * Transaction type is the value of first field in rlp encoded list.
     */
     function getTransactionType(bytes memory transaction) internal pure returns (uint256) {
-        RLP.RLPItem[] memory rlpTx = transaction.toRLPItem().toList();
+        RLPReader.RLPItem[] memory rlpTx = transaction.toRlpItem().toList();
         return rlpTx[0].toUint();
     }
 }
