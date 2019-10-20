@@ -1,9 +1,10 @@
 const PriorityQueue = artifacts.require('PriorityQueue');
 const ExitGameController = artifacts.require('ExitGameControllerMock');
 const DummyExitGame = artifacts.require('DummyExitGame');
+const ReentrancyExitGame = artifacts.require('ReentrancyExitGame');
 
 const {
-    BN, constants, expectEvent, expectRevert,
+    BN, constants, expectEvent, expectRevert, time,
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
@@ -492,6 +493,34 @@ contract('ExitGameController', () => {
             await expectRevert(
                 newDummyExitGame.proxyBatchFlagOutputsSpent([dummyOutputId1, dummyOutputId2]),
                 'ExitGame is quarantined.',
+            );
+        });
+
+        it('should fail when reentrancy attack on processExits happens', async () => {
+            this.controller.addExitQueue(VAULT_ID, this.dummyExit.token);
+            const reentrancyExitGame = await ReentrancyExitGame.new(
+                this.controller.address, VAULT_ID, this.dummyExit.token, 1,
+            );
+            const txType = 999;
+            await this.controller.registerExitGame(
+                txType, reentrancyExitGame.address, PROTOCOL.MORE_VP,
+            );
+
+            // bypass quarantined period
+            await time.increase(3 * MIN_EXIT_PERIOD + 1);
+
+            await reentrancyExitGame.enqueue(
+                VAULT_ID,
+                this.dummyExit.token,
+                this.dummyExit.exitableAt,
+                this.dummyExit.txPos,
+                this.dummyExit.exitId,
+                reentrancyExitGame.address,
+            );
+
+            await expectRevert(
+                this.controller.processExits(VAULT_ID, this.dummyExit.token, 0, 1),
+                'Reentrant call',
             );
         });
     });

@@ -44,15 +44,6 @@ contract ExitGameController is ExitGameRegistry {
     {
     }
 
-    function lock() external onlyFromNonQuarantinedExitGame() {
-        require(!mutex, "Reentrant call");
-        mutex = true;
-    }
-
-    function unlock() external onlyFromNonQuarantinedExitGame() {
-        mutex = false;
-    }
-
     /**
      * @dev Prevents reentrant calls by using a mutex.
      */
@@ -60,6 +51,26 @@ contract ExitGameController is ExitGameRegistry {
         require(!mutex, "Reentrant call");
         mutex = true;
         _;
+        require(mutex, "Not locked");
+        mutex = false;
+    }
+
+    /**
+     * @notice Activates non reentrancy mode
+     *         Guards against reentering into publicly accessible code that modifies state related to exits
+     * @dev Accessible only from non quarantined exit games, uses a mutex
+     */
+    function activateNonReentrant() external onlyFromNonQuarantinedExitGame() {
+        require(!mutex, "Reentrant call");
+        mutex = true;
+    }
+
+    /**
+     * @notice Deactivates non reentrancy mode
+     * @dev Accessible only from non quarantined exit games, uses a mutex
+     */
+    function deactivateNonReentrant() external onlyFromNonQuarantinedExitGame() {
+        require(mutex, "Not locked");
         mutex = false;
     }
 

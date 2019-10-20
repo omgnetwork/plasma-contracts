@@ -4,9 +4,7 @@ import "../framework/PlasmaFramework.sol";
 
 /**
  * @notice Reentrancy guard that fails immediately when a reentrace occurs
- * @dev Instead of using the one from openzepplin for the following reasons:
- *      1. Easier to understand
- *      2. Fail fast when reentracy occurs make testing easier
+ *         Works on multi-contracts level by activating and deactivating a reentrancy guard kept in plasma framework's state
  */
 contract FailFastReentrancyGuard {
 
@@ -14,8 +12,8 @@ contract FailFastReentrancyGuard {
      * @dev Prevents reentrant calls by using a mutex.
      */
     modifier nonReentrant(PlasmaFramework framework) {
-        framework.lock();
+        framework.activateNonReentrant();
         _;
-        framework.unlock();
+        framework.deactivateNonReentrant();
     }
 }
