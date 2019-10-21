@@ -32,7 +32,7 @@ from tests.tests_utils.plasma_framework import PlasmaFramework
 # Compile contracts before testing
 
 OWN_DIR = os.path.dirname(os.path.realpath(__file__))
-CONTRACTS_DIR = os.path.abspath(os.path.realpath(os.path.join(OWN_DIR, '../plasma_framework/contracts')))
+CONTRACTS_DIR = os.path.abspath(os.path.realpath(os.path.join(OWN_DIR, '../../contracts')))
 OUTPUT_DIR = os.path.abspath(os.path.realpath(os.path.join(OWN_DIR, '../build')))
 OPENZEPPELIN_DIR = os.path.abspath(os.path.realpath(os.path.join(OWN_DIR, '../openzeppelin-solidity')))
 builder = Builder(CONTRACTS_DIR, OUTPUT_DIR)
