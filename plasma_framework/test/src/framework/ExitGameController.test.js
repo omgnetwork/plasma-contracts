@@ -417,53 +417,6 @@ contract('ExitGameController', () => {
                 });
             });
         });
-
-        describe('When reentrancy happens', () => {
-            beforeEach(async () => {
-                this.reentryMaxExitToProcess = 1;
-                const reentrancyExitGame = await ReentrancyExitGame.new(
-                    this.controller.address, VAULT_ID, this.dummyToken, this.reentryMaxExitToProcess,
-                );
-                const txType = 999;
-                await this.controller.registerExitGame(
-                    txType, reentrancyExitGame.address, PROTOCOL.MORE_VP,
-                );
-
-                // bypass quarantined period
-                await time.increase(3 * MIN_EXIT_PERIOD + 1);
-
-                // put two items in the queue, the first one would trigger reentry
-                await reentrancyExitGame.enqueue(
-                    VAULT_ID,
-                    this.dummyExit.token,
-                    this.dummyExit.exitableAt,
-                    this.dummyExit.txPos,
-                    this.dummyExit.exitId,
-                    reentrancyExitGame.address,
-                );
-                await reentrancyExitGame.enqueue(
-                    VAULT_ID,
-                    this.dummyExit.token,
-                    this.dummyExit.exitableAt,
-                    this.dummyExit.txPos,
-                    this.dummyExit.exitId + 1,
-                    this.dummyExit.exitProcessor,
-                );
-            });
-
-            it('should process the next item during reentry', async () => {
-                const maxExitToProcess = 2;
-                // The reentry would processed out some items from queue
-                // Leaving the original call continue the loop with the queue status after processed.
-                const expectedProcessedExit = maxExitToProcess - this.reentryMaxExitToProcess;
-
-                const tx = await this.controller.processExits(VAULT_ID, this.dummyToken, 0, 2);
-                await expectEvent.inLogs(tx.logs, 'ProcessedExitsNum', {
-                    processedNum: new BN(expectedProcessedExit),
-                    token: this.dummyToken,
-                });
-            });
-        });
     });
 
     describe('isAnyOutputsSpent', () => {
@@ -540,6 +493,34 @@ contract('ExitGameController', () => {
             await expectRevert(
                 newDummyExitGame.proxyBatchFlagOutputsSpent([dummyOutputId1, dummyOutputId2]),
                 'ExitGame is quarantined',
+            );
+        });
+
+        it('should fail when reentrancy attack on processExits happens', async () => {
+            this.controller.addExitQueue(VAULT_ID, this.dummyExit.token);
+            const reentrancyExitGame = await ReentrancyExitGame.new(
+                this.controller.address, VAULT_ID, this.dummyExit.token, 1,
+            );
+            const txType = 999;
+            await this.controller.registerExitGame(
+                txType, reentrancyExitGame.address, PROTOCOL.MORE_VP,
+            );
+
+            // bypass quarantined period
+            await time.increase(3 * MIN_EXIT_PERIOD + 1);
+
+            await reentrancyExitGame.enqueue(
+                VAULT_ID,
+                this.dummyExit.token,
+                this.dummyExit.exitableAt,
+                this.dummyExit.txPos,
+                this.dummyExit.exitId,
+                reentrancyExitGame.address,
+            );
+
+            await expectRevert(
+                this.controller.processExits(VAULT_ID, this.dummyExit.token, 0, 1),
+                'Reentrant call',
             );
         });
     });

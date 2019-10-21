@@ -20,6 +20,7 @@ contract ExitGameController is ExitGameRegistry {
     mapping (bytes32 => PriorityQueue) public exitsQueues;
     // outputId => bool
     mapping (bytes32 => bool) public isOutputSpent;
+    bool private mutex = false;
 
     event ExitQueueAdded(
         uint256 vaultId,
@@ -41,6 +42,36 @@ contract ExitGameController is ExitGameRegistry {
         public
         ExitGameRegistry(_minExitPeriod, _initialImmuneExitGames)
     {
+    }
+
+    /**
+     * @dev Prevents reentrant calls by using a mutex.
+     */
+    modifier nonReentrant() {
+        require(!mutex, "Reentrant call");
+        mutex = true;
+        _;
+        require(mutex, "Not locked");
+        mutex = false;
+    }
+
+    /**
+     * @notice Activates non reentrancy mode
+     *         Guards against reentering into publicly accessible code that modifies state related to exits
+     * @dev Accessible only from non quarantined exit games, uses a mutex
+     */
+    function activateNonReentrant() external onlyFromNonQuarantinedExitGame() {
+        require(!mutex, "Reentrant call");
+        mutex = true;
+    }
+
+    /**
+     * @notice Deactivates non reentrancy mode
+     * @dev Accessible only from non quarantined exit games, uses a mutex
+     */
+    function deactivateNonReentrant() external onlyFromNonQuarantinedExitGame() {
+        require(mutex, "Not locked");
+        mutex = false;
     }
 
     /**
@@ -115,7 +146,7 @@ contract ExitGameController is ExitGameRegistry {
      * @param maxExitsToProcess Maximum number of exits to process
      * @return Total number of processed exits
      */
-    function processExits(uint256 vaultId, address token, uint160 topExitId, uint256 maxExitsToProcess) external {
+    function processExits(uint256 vaultId, address token, uint160 topExitId, uint256 maxExitsToProcess) external nonReentrant {
         bytes32 key = exitQueueKey(vaultId, token);
         require(hasExitQueue(key), "The token is not yet added to the Plasma framework");
         PriorityQueue queue = exitsQueues[key];

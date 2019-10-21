@@ -15,13 +15,14 @@ const ExitId = artifacts.require('ExitIdWrapper');
 const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
 const TxFinalizationVerifier = artifacts.require('TxFinalizationVerifier');
+const Attacker = artifacts.require('FallbackFunctionFailAttacker');
 
 const {
     BN, constants, expectEvent, expectRevert, time,
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 const {
-    TX_TYPE, OUTPUT_TYPE, EMPTY_BYTES, CHILD_BLOCK_INTERVAL, VAULT_ID,
+    TX_TYPE, OUTPUT_TYPE, EMPTY_BYTES, CHILD_BLOCK_INTERVAL, VAULT_ID, PROTOCOL,
 } = require('../../../helpers/constants.js');
 const { buildUtxoPos } = require('../../../helpers/positions.js');
 const { createInputTransaction, createInFlightTx } = require('../../../helpers/ife.js');
@@ -196,6 +197,8 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                 TX_TYPE.PAYMENT,
             );
 
+            await this.framework.registerExitGame(TX_TYPE.PAYMENT, this.exitGame.address, PROTOCOL.MORE_VP);
+
             // Create the input tx
             this.inputTx = buildInputTx();
 
@@ -236,6 +239,15 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                 inputUtxoPos: this.inputTx.utxoPos,
                 spendingConditionOptionalArgs: EMPTY_BYTES,
             };
+        });
+
+        it('should fail when paying out piggyback bond fails', async () => {
+            const attacker = await Attacker.new();
+
+            await expectRevert(
+                this.exitGame.challengeInFlightExitInputSpent(this.challengeArgs, { from: attacker.address }),
+                'Paying out piggyback bond failed.',
+            );
         });
 
         describe('after successfully challenged IFE input spent', () => {

@@ -1,12 +1,8 @@
 pragma solidity 0.5.11;
 pragma experimental ABIEncoderV2;
 
-import "./registries/ExitGameRegistryMock.sol";
 import "../../src/framework/ExitGameController.sol";
 import "../../src/framework/interfaces/IExitProcessor.sol";
-import "../../src/vaults/Erc20Vault.sol";
-import "../../src/vaults/EthVault.sol";
-import "../../src/utils/TxPosLib.sol";
 
 contract ReentrancyExitGame is IExitProcessor {
     ExitGameController public exitGameController;

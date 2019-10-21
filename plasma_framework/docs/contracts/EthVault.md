@@ -6,10 +6,19 @@ View Source: [contracts/src/vaults/EthVault.sol](../../contracts/src/vaults/EthV
 
 **EthVault**
 
+## Contract Members
+**Constants & Variables**
+
+```js
+uint256 private withdrawEntryCounter;
+
+```
+
 **Events**
 
 ```js
-event EthWithdrawn(address payable indexed receiver, uint256  amount);
+event EthWithdrawn(address indexed receiver, uint256  amount);
+event WithdrawFailed(address indexed receiver, uint256  amount);
 event DepositCreated(address indexed depositor, uint256 indexed blknum, address indexed token, uint256  amount);
 ```
 
@@ -79,6 +88,7 @@ function withdraw(address payable receiver, uint256 amount) external nonpayable 
 * [ExitGameRegistry](ExitGameRegistry.md)
 * [ExitId](ExitId.md)
 * [ExitPriority](ExitPriority.md)
+* [FailFastReentrancyGuard](FailFastReentrancyGuard.md)
 * [IERC20](IERC20.md)
 * [IErc20DepositVerifier](IErc20DepositVerifier.md)
 * [IEthDepositVerifier](IEthDepositVerifier.md)

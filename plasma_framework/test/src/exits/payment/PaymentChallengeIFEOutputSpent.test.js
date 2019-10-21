@@ -15,6 +15,7 @@ const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
 const StateTransitionVerifierMock = artifacts.require('StateTransitionVerifierMock');
 const TxFinalizationVerifier = artifacts.require('TxFinalizationVerifier');
+const Attacker = artifacts.require('FallbackFunctionFailAttacker');
 
 const {
     BN, constants, expectEvent, expectRevert, time,
@@ -25,7 +26,7 @@ const { buildUtxoPos } = require('../../../helpers/positions.js');
 const { computeNormalOutputId, spentOnGas } = require('../../../helpers/utils.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
 const { MerkleTree } = require('../../../helpers/merkle.js');
-const { VAULT_ID } = require('../../../helpers/constants.js');
+const { PROTOCOL, TX_TYPE, VAULT_ID } = require('../../../helpers/constants.js');
 
 contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
     const DUMMY_IFE_BOND_SIZE = 31415926535; // wei
@@ -172,6 +173,8 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
                 IFE_TX_TYPE,
             );
 
+            await this.framework.registerExitGame(TX_TYPE.PAYMENT, this.exitGame.address, PROTOCOL.MORE_VP);
+
             this.piggybackBondSize = await this.exitGame.piggybackBondSize();
             this.exitGame.depositFundForTest({ from: alice, value: this.piggybackBondSize.toString() });
 
@@ -191,6 +194,15 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
                 challengingTxWitness: web3.utils.sha3('sig'),
                 spendingConditionOptionalArgs: web3.utils.bytesToHex(''),
             };
+        });
+
+        it('should fail when paying out piggyback bond fails', async () => {
+            const attacker = await Attacker.new();
+
+            await expectRevert(
+                this.exitGame.challengeInFlightExitOutputSpent(this.challengeArgs, { from: attacker.address }),
+                'Paying out piggyback bond failed.',
+            );
         });
 
         it('should emit event when challenge is successful', async () => {

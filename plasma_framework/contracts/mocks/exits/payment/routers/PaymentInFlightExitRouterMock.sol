@@ -3,15 +3,25 @@ pragma experimental ABIEncoderV2;
 
 import "../../../../src/exits/payment/PaymentExitDataModel.sol";
 import "../../../../src/exits/payment/routers/PaymentInFlightExitRouter.sol";
+import "../../../../src/exits/payment/routers/PaymentInFlightExitRouterArgs.sol";
 import "../../../../src/framework/PlasmaFramework.sol";
 import "../../../../src/exits/interfaces/IStateTransitionVerifier.sol";
 import "../../../../src/exits/registries/OutputGuardHandlerRegistry.sol";
 import "../../../../src/exits/payment/PaymentInFlightExitModelUtils.sol";
 
-contract PaymentInFlightExitRouterMock is PaymentInFlightExitRouter {
+import "../../../../src/utils/FailFastReentrancyGuard.sol";
+
+contract PaymentInFlightExitRouterMock is FailFastReentrancyGuard, PaymentInFlightExitRouter {
     using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
 
     PlasmaFramework public framework;
+
+    PaymentInFlightExitRouterArgs.StartExitArgs private startIfeArgs;
+    PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnInputArgs private piggybackInputArgs;
+    PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnOutputArgs private piggybackOutputArgs;
+    PaymentInFlightExitRouterArgs.ChallengeCanonicityArgs private challengeCanonicityArgs;
+    PaymentInFlightExitRouterArgs.ChallengeInputSpentArgs private challengeInputSpentArgs;
+    PaymentInFlightExitRouterArgs.ChallengeOutputSpent private challengeOutputSpentArgs;
 
     constructor(
         PlasmaFramework plasmaFramework,
@@ -79,6 +89,32 @@ contract PaymentInFlightExitRouterMock is PaymentInFlightExitRouter {
         framework.flagOutputSpent(_outputId);
     }
 
+    /**
+     * This function helps test reentrant by making this function itself the first call with 'nonReentrant' protection
+     * So all other PaymentExitGame functions that is protected by 'nonReentrant' too would fail as it would be considered as re-entrancy
+     */
+    function testNonReentrant(string memory testTarget) public nonReentrant(framework) {
+        if (stringEquals(testTarget, "startInFlightExit")) {
+            PaymentInFlightExitRouter.startInFlightExit(startIfeArgs);
+        } else if (stringEquals(testTarget, "piggybackInFlightExitOnInput")) {
+            PaymentInFlightExitRouter.piggybackInFlightExitOnInput(piggybackInputArgs);
+        } else if (stringEquals(testTarget, "piggybackInFlightExitOnOutput")) {
+            PaymentInFlightExitRouter.piggybackInFlightExitOnOutput(piggybackOutputArgs);
+        } else if (stringEquals(testTarget, "challengeInFlightExitNotCanonical")) {
+            PaymentInFlightExitRouter.challengeInFlightExitNotCanonical(challengeCanonicityArgs);
+        } else if (stringEquals(testTarget, "respondToNonCanonicalChallenge")) {
+            PaymentInFlightExitRouter.respondToNonCanonicalChallenge(bytes(""), 0, bytes(""));
+        } else if (stringEquals(testTarget, "challengeInFlightExitInputSpent")) {
+            PaymentInFlightExitRouter.challengeInFlightExitInputSpent(challengeInputSpentArgs);
+        } else if (stringEquals(testTarget, "challengeInFlightExitOutputSpent")) {
+            PaymentInFlightExitRouter.challengeInFlightExitOutputSpent(challengeOutputSpentArgs);
+        }
+    }
+
     /** empty function that accepts ETH to fund the contract as test setup */
     function depositFundForTest() public payable {}
+
+    function stringEquals(string memory a, string memory b) private returns (bool) {
+        return keccak256(abi.encodePacked(a)) == keccak256(abi.encodePacked(b));
+    }
 }

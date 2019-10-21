@@ -18,7 +18,9 @@ const {
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
-const { OUTPUT_TYPE, VAULT_ID } = require('../../../helpers/constants.js');
+const {
+    OUTPUT_TYPE, PROTOCOL, TX_TYPE, VAULT_ID,
+} = require('../../../helpers/constants.js');
 const { MerkleTree } = require('../../../helpers/merkle.js');
 const { buildUtxoPos, utxoPosToTxPos } = require('../../../helpers/positions.js');
 const {
@@ -111,6 +113,8 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
                 spendingConditionRegistry.address,
                 txFinalizationVerifier.address,
             );
+
+            await this.framework.registerExitGame(TX_TYPE.PAYMENT, this.exitGame.address, PROTOCOL.MORE_VP);
 
             this.startStandardExitBondSize = await this.exitGame.startStandardExitBondSize();
         });

@@ -11,7 +11,7 @@ contract Erc20Vault is Vault {
     using SafeERC20 for IERC20;
 
     event Erc20Withdrawn(
-        address payable indexed receiver,
+        address indexed receiver,
         address indexed token,
         uint256 amount
     );

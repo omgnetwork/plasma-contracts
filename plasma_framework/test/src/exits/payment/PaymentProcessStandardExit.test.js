@@ -9,6 +9,7 @@ const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
 const TxFinalizationVerifier = artifacts.require('TxFinalizationVerifier');
+const Attacker = artifacts.require('FallbackFunctionFailAttacker');
 
 const {
     BN, constants, expectEvent,
@@ -66,14 +67,45 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
             await this.exitGame.depositFundForTest({ value: this.startStandardExitBondSize });
         });
 
-        const getTestExitData = (exitable, token) => ({
+        const getTestExitData = (exitable, token, exitTarget = alice) => ({
             exitable,
             utxoPos: buildUtxoPos(1, 0, 0),
             outputId: web3.utils.sha3('output id'),
             token,
-            exitTarget: alice,
+            exitTarget,
             amount: web3.utils.toWei('3', 'ether'),
             bondSize: this.startStandardExitBondSize.toString(),
+        });
+
+        describe('when paying out bond fails', () => {
+            beforeEach(async () => {
+                const exitId = 1;
+                this.attacker = await Attacker.new();
+
+                const testExitData = getTestExitData(true, ETH, this.attacker.address);
+                await this.exitGame.setExit(exitId, testExitData);
+
+                this.preBalance = new BN(await web3.eth.getBalance(this.exitGame.address));
+                const { receipt } = await this.exitGame.processExit(exitId, VAULT_ID.ETH, ETH);
+                this.receiptAfterAttack = receipt;
+            });
+
+            it('should not pay out bond', async () => {
+                const postBalance = new BN(await web3.eth.getBalance(this.exitGame.address));
+                expect(postBalance).to.be.bignumber.equal(this.preBalance);
+            });
+
+            it('should publish an event informing that bond pay out failed', async () => {
+                await expectEvent.inTransaction(
+                    this.receiptAfterAttack.transactionHash,
+                    PaymentProcessStandardExit,
+                    'BondReturnFailed',
+                    {
+                        receiver: this.attacker.address,
+                        amount: new BN(this.startStandardExitBondSize),
+                    },
+                );
+            });
         });
 
         it('should not process the exit when such exit is not exitable', async () => {

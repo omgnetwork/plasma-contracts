@@ -1,96 +1,33 @@
-# BondSize.sol
+# FailFastReentrancyGuard.sol
 
-View Source: [contracts/src/exits/utils/BondSize.sol](../../contracts/src/exits/utils/BondSize.sol)
+View Source: [contracts/src/utils/FailFastReentrancyGuard.sol](../../contracts/src/utils/FailFastReentrancyGuard.sol)
 
-**BondSize**
+**↘ Derived Contracts: [PaymentInFlightExitRouter](PaymentInFlightExitRouter.md), [PaymentStandardExitRouter](PaymentStandardExitRouter.md)**
 
-Stores an updateable bond size
+**FailFastReentrancyGuard**
 
-## Structs
-### Params
+Reentrancy guard that fails immediately when a reentrace occurs
+        Works on multi-contracts level by activating and deactivating a reentrancy guard kept in plasma framework's state
 
-```js
-struct Params {
- uint128 previousBondSize,
- uint128 updatedBondSize,
- uint128 effectiveUpdateTime,
- uint16 lowerBoundDivisor,
- uint16 upperBoundMultiplier
-}
-```
+## Modifiers
 
-## Contract Members
-**Constants & Variables**
+- [nonReentrant](#nonreentrant)
+
+### nonReentrant
+
+Prevents reentrant calls by using a mutex.
 
 ```js
-uint64 public constant WAITING_PERIOD;
-
+modifier nonReentrant(PlasmaFramework framework) internal
 ```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| framework | PlasmaFramework |  | 
 
 ## Functions
-
-- [buildParams(uint128 initialBondSize, uint16 lowerBoundDivisor, uint16 upperBoundMultiplier)](#buildparams)
-- [updateBondSize(struct BondSize.Params self, uint128 newBondSize)](#updatebondsize)
-- [bondSize(struct BondSize.Params self)](#bondsize)
-- [validateBondSize(struct BondSize.Params self, uint128 newBondSize)](#validatebondsize)
-
-### buildParams
-
-```js
-function buildParams(uint128 initialBondSize, uint16 lowerBoundDivisor, uint16 upperBoundMultiplier) internal pure
-returns(struct BondSize.Params)
-```
-
-**Arguments**
-
-| Name        | Type           | Description  |
-| ------------- |------------- | -----|
-| initialBondSize | uint128 |  | 
-| lowerBoundDivisor | uint16 |  | 
-| upperBoundMultiplier | uint16 |  | 
-
-### updateBondSize
-
-Updates the bond size
-
-```js
-function updateBondSize(struct BondSize.Params self, uint128 newBondSize) internal nonpayable
-```
-
-**Arguments**
-
-| Name        | Type           | Description  |
-| ------------- |------------- | -----|
-| self | struct BondSize.Params |  | 
-| newBondSize | uint128 | The new bond size | 
-
-### bondSize
-
-Returns the current bond size
-
-```js
-function bondSize(struct BondSize.Params self) internal view
-returns(uint128)
-```
-
-**Arguments**
-
-| Name        | Type           | Description  |
-| ------------- |------------- | -----|
-| self | struct BondSize.Params |  | 
-
-### validateBondSize
-
-```js
-function validateBondSize(struct BondSize.Params self, uint128 newBondSize) private view
-```
-
-**Arguments**
-
-| Name        | Type           | Description  |
-| ------------- |------------- | -----|
-| self | struct BondSize.Params |  | 
-| newBondSize | uint128 |  | 
 
 ## Contracts
 

@@ -2,7 +2,7 @@
 
 View Source: [contracts/src/exits/payment/routers/PaymentStandardExitRouter.sol](../../contracts/src/exits/payment/routers/PaymentStandardExitRouter.sol)
 
-**↗ Extends: [IExitProcessor](IExitProcessor.md), [OnlyFromAddress](OnlyFromAddress.md), [OnlyWithValue](OnlyWithValue.md)**
+**↗ Extends: [IExitProcessor](IExitProcessor.md), [OnlyFromAddress](OnlyFromAddress.md), [OnlyWithValue](OnlyWithValue.md), [FailFastReentrancyGuard](FailFastReentrancyGuard.md)**
 **↘ Derived Contracts: [PaymentExitGame](PaymentExitGame.md)**
 
 **PaymentStandardExitRouter**
@@ -113,7 +113,7 @@ function updateStartStandardExitBondSize(uint128 newBondSize) public nonpayable 
 Starts a standard exit of a given output, using output-age priority
 
 ```js
-function startStandardExit(struct PaymentStandardExitRouterArgs.StartStandardExitArgs args) public payable onlyWithValue 
+function startStandardExit(struct PaymentStandardExitRouterArgs.StartStandardExitArgs args) public payable nonReentrant onlyWithValue 
 ```
 
 **Arguments**
@@ -127,7 +127,7 @@ function startStandardExit(struct PaymentStandardExitRouterArgs.StartStandardExi
 Challenge a standard exit by showing the exiting output was spent
 
 ```js
-function challengeStandardExit(struct PaymentStandardExitRouterArgs.ChallengeStandardExitArgs args) public payable
+function challengeStandardExit(struct PaymentStandardExitRouterArgs.ChallengeStandardExitArgs args) public payable nonReentrant 
 ```
 
 **Arguments**
@@ -169,6 +169,7 @@ function processStandardExit(uint160 exitId, address token) internal nonpayable
 * [ExitGameRegistry](ExitGameRegistry.md)
 * [ExitId](ExitId.md)
 * [ExitPriority](ExitPriority.md)
+* [FailFastReentrancyGuard](FailFastReentrancyGuard.md)
 * [IERC20](IERC20.md)
 * [IErc20DepositVerifier](IErc20DepositVerifier.md)
 * [IEthDepositVerifier](IEthDepositVerifier.md)

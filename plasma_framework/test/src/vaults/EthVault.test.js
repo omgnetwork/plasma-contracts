@@ -202,6 +202,32 @@ contract('EthVault', ([_, authority, maintainer, alice]) => {
             );
         });
 
+        describe('when fund transfer fails', () => {
+            beforeEach(async () => {
+                this.amount = 2 * DEPOSIT_VALUE;
+                this.preBalance = new BN(await web3.eth.getBalance(this.ethVault.address));
+                const { receipt } = await this.exitGame.proxyEthWithdraw(alice, this.amount);
+                this.withdrawReceipt = receipt;
+            });
+
+            it('should emit WithdrawFailed event', async () => {
+                await expectEvent.inTransaction(
+                    this.withdrawReceipt.transactionHash,
+                    EthVault,
+                    'WithdrawFailed',
+                    {
+                        receiver: alice,
+                        amount: new BN(this.amount),
+                    },
+                );
+            });
+
+            it('should not transfer ETH', async () => {
+                const postBalance = new BN(await web3.eth.getBalance(this.ethVault.address));
+                expect(postBalance).to.be.bignumber.equal(this.preBalance);
+            });
+        });
+
         describe('given quarantined exit game', () => {
             beforeEach(async () => {
                 this.newExitGame = await DummyExitGame.new();

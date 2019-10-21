@@ -92,7 +92,9 @@ library PaymentChallengeStandardExit {
         verifySpendingCondition(data);
 
         delete exitMap.exits[args.exitId];
-        msg.sender.transfer(data.exitData.bondSize);
+        // solhint-disable-next-line avoid-call-value
+        (bool success, ) = msg.sender.call.value(data.exitData.bondSize)("");
+        require(success, "Paying out bond failed");
 
         emit ExitChallenged(data.exitData.utxoPos);
     }

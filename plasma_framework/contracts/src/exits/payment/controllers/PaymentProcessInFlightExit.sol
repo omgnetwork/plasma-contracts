@@ -34,6 +34,11 @@ library PaymentProcessInFlightExit {
         uint16 inputIndex
     );
 
+    event InFlightBondReturnFailed(
+        address indexed receiver,
+        uint256 amount
+    );
+
     /**
      * @notice Main logic function to process in-flight exit
      * @dev emits InFlightExitOmitted event if the exit is omitted
@@ -68,7 +73,12 @@ library PaymentProcessInFlightExit {
 
                 if (shouldWithdrawInput(exit, withdrawal, token, i)) {
                     withdrawFromVault(self, withdrawal);
-                    withdrawal.exitTarget.transfer(withdrawal.piggybackBondSize);
+                    // solhint-disable-next-line avoid-call-value
+                    (bool success, ) = withdrawal.exitTarget.call.value(withdrawal.piggybackBondSize)("");
+                    // we do not want to block a queue if bond return is unsuccessful
+                    if (!success) {
+                        emit InFlightBondReturnFailed(withdrawal.exitTarget, withdrawal.piggybackBondSize);
+                    }
                     emit InFlightExitInputWithdrawn(exitId, i);
                 }
             }
@@ -78,7 +88,12 @@ library PaymentProcessInFlightExit {
 
                 if (shouldWithdrawOutput(self, exit, withdrawal, token, i)) {
                     withdrawFromVault(self, withdrawal);
-                    withdrawal.exitTarget.transfer(withdrawal.piggybackBondSize);
+                    // solhint-disable-next-line avoid-call-value
+                    (bool success, ) = withdrawal.exitTarget.call.value(withdrawal.piggybackBondSize)("");
+                    // we do not want to block a queue if bond return is unsuccessful
+                    if (!success) {
+                        emit InFlightBondReturnFailed(withdrawal.exitTarget, withdrawal.piggybackBondSize);
+                    }
                     emit InFlightExitOutputWithdrawn(exitId, i);
                 }
             }
@@ -89,7 +104,12 @@ library PaymentProcessInFlightExit {
         clearPiggybackOutputFlag(exit, token);
 
         if (allPiggybacksCleared(exit)) {
-            exit.bondOwner.transfer(exit.bondSize);
+            // solhint-disable-next-line avoid-call-value
+            (bool success, ) = exit.bondOwner.call.value(exit.bondSize)("");
+            // we do not want to block a queue if bond return is unsuccessful
+            if (!success) {
+                emit InFlightBondReturnFailed(exit.bondOwner, exit.bondSize);
+            }
             delete exitMap.exits[exitId];
         }
     }

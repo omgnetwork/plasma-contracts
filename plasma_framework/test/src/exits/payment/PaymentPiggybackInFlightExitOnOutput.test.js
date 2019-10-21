@@ -24,7 +24,7 @@ const { calculateNormalExitable } = require('../../../helpers/exitable.js');
 const { buildUtxoPos, utxoPosToTxPos } = require('../../../helpers/positions.js');
 const { buildOutputGuard } = require('../../../helpers/utils.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
-const { VAULT_ID } = require('../../../helpers/constants.js');
+const { PROTOCOL, TX_TYPE, VAULT_ID } = require('../../../helpers/constants.js');
 
 contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, outputOwner, nonOutputOwner]) => {
     const ETH = constants.ZERO_ADDRESS;
@@ -90,6 +90,9 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, outputOwner, nonOu
             this.txFinalizationVerifier.address,
             PAYMENT_TX_TYPE,
         );
+
+        await this.framework.registerExitGame(TX_TYPE.PAYMENT, this.exitGame.address, PROTOCOL.MORE_VP);
+
         this.startIFEBondSize = await this.exitGame.startIFEBondSize();
         this.piggybackBondSize = await this.exitGame.piggybackBondSize();
     });

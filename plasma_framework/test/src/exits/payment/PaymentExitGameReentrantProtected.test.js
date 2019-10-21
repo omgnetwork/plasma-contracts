@@ -18,16 +18,14 @@ const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
 const TxFinalizationVerifier = artifacts.require('TxFinalizationVerifier');
 
-const { expect } = require('chai');
-const { expectEvent, time } = require('openzeppelin-test-helpers');
-const { TX_TYPE, VAULT_ID } = require('../../../helpers/constants.js');
+const { expectRevert } = require('openzeppelin-test-helpers');
+const { PROTOCOL, TX_TYPE, VAULT_ID } = require('../../../helpers/constants.js');
 
-contract('PaymentExitGame - Update Bond', ([_, outputOwner]) => {
+contract('PaymentExitGame - Reentrant Protected', ([_, outputOwner]) => {
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
     const INITIAL_IMMUNE_EXIT_GAME_NUM = 1;
     const PAYMENT_OUTPUT_TYPE = 1;
-    const UPDATE_BOND_WAITING_PERIOD = time.duration.days(2);
 
     before('deploy and link with controller lib', async () => {
         const startStandardExit = await PaymentStartStandardExit.new();
@@ -53,18 +51,7 @@ contract('PaymentExitGame - Update Bond', ([_, outputOwner]) => {
         await PaymentInFlightExitRouter.link('PaymentProcessInFlightExit', processInFlightExit.address);
     });
 
-
-    before('setup framework', async () => {
-        this.framework = await SpyPlasmaFramework.new(
-            MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
-        );
-
-        this.ethVault = await SpyEthVault.new(this.framework.address);
-        this.erc20Vault = await SpyErc20Vault.new(this.framework.address);
-
-        await this.framework.registerVault(VAULT_ID.ETH, this.ethVault.address);
-        await this.framework.registerVault(VAULT_ID.ERC20, this.erc20Vault.address);
-
+    before('setup outpug guard handler and condition registries', async () => {
         this.spendingConditionRegistry = await SpendingConditionRegistry.new();
         this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
 
@@ -77,7 +64,19 @@ contract('PaymentExitGame - Update Bond', ([_, outputOwner]) => {
         this.txFinalizationVerifier = await TxFinalizationVerifier.new();
     });
 
-    describe('updateStartStandardExitBondSize', () => {
+    beforeEach('setup framework', async () => {
+        this.framework = await SpyPlasmaFramework.new(
+            MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
+        );
+
+        this.ethVault = await SpyEthVault.new(this.framework.address);
+        this.erc20Vault = await SpyErc20Vault.new(this.framework.address);
+
+        await this.framework.registerVault(VAULT_ID.ETH, this.ethVault.address);
+        await this.framework.registerVault(VAULT_ID.ERC20, this.erc20Vault.address);
+    });
+
+    describe('standard exit functions are protected', () => {
         beforeEach(async () => {
             this.exitGame = await PaymentStandardExitRouter.new(
                 this.framework.address,
@@ -88,29 +87,25 @@ contract('PaymentExitGame - Update Bond', ([_, outputOwner]) => {
                 this.txFinalizationVerifier.address,
             );
 
-            this.startStandardExitBondSize = await this.exitGame.startStandardExitBondSize();
-            this.newBondSize = this.startStandardExitBondSize.addn(20);
-            this.updateTx = await this.exitGame.updateStartStandardExitBondSize(this.newBondSize);
+            await this.framework.registerExitGame(TX_TYPE.PAYMENT, this.exitGame.address, PROTOCOL.MORE_VP);
         });
 
-        it('should emit an event when the standard exit bond size is updated', async () => {
-            await expectEvent.inLogs(
-                this.updateTx.logs,
-                'StandardExitBondUpdated',
-                {
-                    bondSize: this.newBondSize,
-                },
+        it('should not be able to re-enter startStandardExit', async () => {
+            await expectRevert(
+                this.exitGame.testNonReentrant('startStandardExit'),
+                'Reentrant call',
             );
         });
 
-        it('should update the bond value after the waiting period has passed', async () => {
-            await time.increase(UPDATE_BOND_WAITING_PERIOD);
-            const bondSize = await this.exitGame.startStandardExitBondSize();
-            expect(bondSize).to.be.bignumber.equal(this.newBondSize);
+        it('should not be able to re-enter challengeStandardExit', async () => {
+            await expectRevert(
+                this.exitGame.testNonReentrant('challengeStandardExit'),
+                'Reentrant call',
+            );
         });
     });
 
-    describe('updateStartIFEBondSize', () => {
+    describe('in-flight exit functions are protected', () => {
         beforeEach(async () => {
             this.exitGame = await PaymentInFlightExitRouter.new(
                 this.framework.address,
@@ -123,60 +118,56 @@ contract('PaymentExitGame - Update Bond', ([_, outputOwner]) => {
                 TX_TYPE.PAYMENT,
             );
 
-            this.startIFEBondSize = await this.exitGame.startIFEBondSize();
-            this.newBondSize = this.startIFEBondSize.addn(20);
-            this.updateIFEBondTx = await this.exitGame.updateStartIFEBondSize(this.newBondSize);
+            await this.framework.registerExitGame(TX_TYPE.PAYMENT, this.exitGame.address, PROTOCOL.MORE_VP);
         });
 
-        it('should emit an event when the in-flight exit bond size is updated', async () => {
-            await expectEvent.inLogs(
-                this.updateIFEBondTx.logs,
-                'IFEBondUpdated',
-                {
-                    bondSize: this.newBondSize,
-                },
+        it('should not be able to re-enter startInFlightExit', async () => {
+            await expectRevert(
+                this.exitGame.testNonReentrant('startInFlightExit'),
+                'Reentrant call',
             );
         });
 
-        it('should update the bond value after the waiting period has passed', async () => {
-            await time.increase(UPDATE_BOND_WAITING_PERIOD);
-            const bondSize = await this.exitGame.startIFEBondSize();
-            expect(bondSize).to.be.bignumber.equal(this.newBondSize);
-        });
-    });
-
-    describe('updatePiggybackBondSize', () => {
-        beforeEach(async () => {
-            this.exitGame = await PaymentInFlightExitRouter.new(
-                this.framework.address,
-                VAULT_ID.ETH,
-                VAULT_ID.ERC20,
-                this.outputGuardHandlerRegistry.address,
-                this.spendingConditionRegistry.address,
-                this.stateTransitionVerifier.address,
-                this.txFinalizationVerifier.address,
-                TX_TYPE.PAYMENT,
-            );
-
-            this.piggybackBondSize = await this.exitGame.piggybackBondSize();
-            this.newBondSize = this.piggybackBondSize.addn(20);
-            this.updatePiggybackBondTx = await this.exitGame.updatePiggybackBondSize(this.newBondSize);
-        });
-
-        it('should emit an event when the in-flight exit bond size is updated', async () => {
-            await expectEvent.inLogs(
-                this.updatePiggybackBondTx.logs,
-                'PiggybackBondUpdated',
-                {
-                    bondSize: this.newBondSize,
-                },
+        it('should not be able to re-enter piggybackInFlightExitOnInput', async () => {
+            await expectRevert(
+                this.exitGame.testNonReentrant('piggybackInFlightExitOnInput'),
+                'Reentrant call',
             );
         });
 
-        it('should update the bond value after the waiting period has passed', async () => {
-            await time.increase(UPDATE_BOND_WAITING_PERIOD);
-            const bondSize = await this.exitGame.piggybackBondSize();
-            expect(bondSize).to.be.bignumber.equal(this.newBondSize);
+        it('should not be able to re-enter piggybackInFlightExitOnOutput', async () => {
+            await expectRevert(
+                this.exitGame.testNonReentrant('piggybackInFlightExitOnOutput'),
+                'Reentrant call',
+            );
+        });
+
+        it('should not be able to re-enter challengeInFlightExitNotCanonical', async () => {
+            await expectRevert(
+                this.exitGame.testNonReentrant('challengeInFlightExitNotCanonical'),
+                'Reentrant call',
+            );
+        });
+
+        it('should not be able to re-enter respondToNonCanonicalChallenge', async () => {
+            await expectRevert(
+                this.exitGame.testNonReentrant('respondToNonCanonicalChallenge'),
+                'Reentrant call',
+            );
+        });
+
+        it('should not be able to re-enter challengeInFlightExitInputSpent', async () => {
+            await expectRevert(
+                this.exitGame.testNonReentrant('challengeInFlightExitInputSpent'),
+                'Reentrant call',
+            );
+        });
+
+        it('should not be able to re-enter challengeInFlightExitOutputSpent', async () => {
+            await expectRevert(
+                this.exitGame.testNonReentrant('challengeInFlightExitOutputSpent'),
+                'Reentrant call',
+            );
         });
     });
 });

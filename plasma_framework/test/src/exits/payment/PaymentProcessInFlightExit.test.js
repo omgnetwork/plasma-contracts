@@ -1,5 +1,6 @@
 /* eslint no-bitwise: ["error", { "allow": ["|"] }] */
 
+const Attacker = artifacts.require('FallbackFunctionFailAttacker');
 const ERC20Mintable = artifacts.require('ERC20Mintable');
 const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry');
 const PaymentChallengeIFENotCanonical = artifacts.require('PaymentChallengeIFENotCanonical');
@@ -74,7 +75,11 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
      * First two inputs and outputs would be of ETH.
      * The third input and output would be of ERC20.
      */
-    const buildInFlightExitData = async () => {
+    const buildInFlightExitData = async (
+        exitTargetInput1 = inputOwner1,
+        exitTargetOutput1 = outputOwner1,
+        bondOwner = ifeBondOwner,
+    ) => {
         const emptyWithdrawData = {
             outputId: web3.utils.sha3('dummy output id'),
             exitTarget: constants.ZERO_ADDRESS,
@@ -87,12 +92,12 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
             exitStartTimestamp: (await time.latest()).toNumber(),
             exitMap: 0,
             position: INFLIGHT_EXIT_YOUNGEST_INPUT_POSITION,
-            bondOwner: ifeBondOwner,
+            bondOwner,
             bondSize: this.startIFEBondSize.toString(),
             oldestCompetitorPosition: 0,
             inputs: [{
                 outputId: TEST_OUTPUT_ID_FOR_INPUT_1,
-                exitTarget: inputOwner1,
+                exitTarget: exitTargetInput1,
                 token: ETH,
                 amount: TEST_INPUT_AMOUNT,
                 piggybackBondSize: this.piggybackBondSize.toString(),
@@ -111,7 +116,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
             }, emptyWithdrawData],
             outputs: [{
                 outputId: TEST_OUTPUT_ID_FOR_OUTPUT_1,
-                exitTarget: outputOwner1,
+                exitTarget: exitTargetOutput1,
                 token: ETH,
                 amount: TEST_OUTPUT_AMOUNT,
                 piggybackBondSize: this.piggybackBondSize.toString(),
@@ -240,6 +245,106 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
             expect(events.length).to.equal(0);
         });
 
+        describe('When bond return call failed', () => {
+            beforeEach(async () => {
+                this.dummyExitId = 666;
+                this.attacker = await Attacker.new();
+
+                this.preAttackBalance = new BN(await web3.eth.getBalance(this.exitGame.address));
+            });
+
+            describe('on start ife bond return', () => {
+                beforeEach(async () => {
+                    this.exit = await buildInFlightExitData(inputOwner1, outputOwner1, this.attacker.address);
+
+                    await this.exitGame.setInFlightExit(this.dummyExitId, this.exit);
+                    const { receipt } = await this.exitGame.processExit(this.dummyExitId, VAULT_ID.ETH, ETH);
+                    this.receipt = receipt;
+                });
+
+                it('should not return bond', async () => {
+                    const postAttackBalance = new BN(await web3.eth.getBalance(this.exitGame.address));
+                    expect(postAttackBalance).to.be.bignumber.equal(this.preAttackBalance);
+                });
+
+                it('should publish an event that bond return failed', async () => {
+                    await expectEvent.inTransaction(
+                        this.receipt.transactionHash,
+                        PaymentProcessInFlightExit,
+                        'InFlightBondReturnFailed',
+                        {
+                            receiver: this.attacker.address,
+                            amount: new BN(this.startIFEBondSize),
+                        },
+                    );
+                });
+            });
+
+            describe('on piggyback bond return', () => {
+                beforeEach(async () => {
+                    this.exit = await buildInFlightExitData(this.attacker.address, this.attacker.address);
+                });
+
+                const setExitAndStartProcessing = async (exitMap, isCanonical) => {
+                    this.exit.exitMap = exitMap;
+                    this.exit.isCanonical = isCanonical;
+                    await this.exitGame.setInFlightExit(this.dummyExitId, this.exit);
+                    const { receipt } = await this.exitGame.processExit(this.dummyExitId, VAULT_ID.ETH, ETH);
+                    return receipt;
+                };
+
+                describe('when transaction is non-canonical', () => {
+                    beforeEach(async () => {
+                        this.receipt = await setExitAndStartProcessing(2 ** 0, false);
+                    });
+
+                    it('should not return piggyback bond', async () => {
+                        const postAttackBalance = new BN(await web3.eth.getBalance(this.exitGame.address));
+                        // only start ife bond was returned
+                        const expectedBalance = this.preAttackBalance.sub(new BN(this.startIFEBondSize));
+                        expect(postAttackBalance).to.be.bignumber.equal(expectedBalance);
+                    });
+
+                    it('should publish an event that input bond return failed', async () => {
+                        await expectEvent.inTransaction(
+                            this.receipt.transactionHash,
+                            PaymentProcessInFlightExit,
+                            'InFlightBondReturnFailed',
+                            {
+                                receiver: this.attacker.address,
+                                amount: new BN(this.piggybackBondSize),
+                            },
+                        );
+                    });
+                });
+
+                describe('when transaction is canonical', () => {
+                    beforeEach(async () => {
+                        this.receipt = await setExitAndStartProcessing(2 ** MAX_INPUT_NUM, true);
+                    });
+
+                    it('should not return piggyback bond', async () => {
+                        const postAttackBalance = new BN(await web3.eth.getBalance(this.exitGame.address));
+                        // only start ife bond was returned
+                        const expectedBalance = this.preAttackBalance.sub(new BN(this.startIFEBondSize));
+                        expect(postAttackBalance).to.be.bignumber.equal(expectedBalance);
+                    });
+
+                    it('should publish an event that input bond return failed', async () => {
+                        await expectEvent.inTransaction(
+                            this.receipt.transactionHash,
+                            PaymentProcessInFlightExit,
+                            'InFlightBondReturnFailed',
+                            {
+                                receiver: this.attacker.address,
+                                amount: new BN(this.piggybackBondSize),
+                            },
+                        );
+                    });
+                });
+            });
+        });
+
         describe('When any in-flight exit is processed successfully', () => {
             beforeEach(async () => {
                 this.ifeBondOwnerPreBalance = new BN(await web3.eth.getBalance(ifeBondOwner));
@@ -327,7 +432,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
                 this.exit = await buildInFlightExitData();
                 this.exit.isCanonical = false;
 
-                // piggybackes all three inputs
+                // piggybacks all three inputs
                 this.exit.exitMap = (2 ** 0) | (2 ** 1) | (2 ** 2);
 
                 await this.exitGame.setInFlightExit(this.dummyExitId, this.exit);
@@ -397,7 +502,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
                 this.exit = await buildInFlightExitData();
                 this.exit.isCanonical = true;
 
-                // piggybackes all three outputs
+                // piggybacks all three outputs
                 this.exit.exitMap = (2 ** MAX_INPUT_NUM) | (2 ** (MAX_INPUT_NUM + 1)) | (2 ** (MAX_INPUT_NUM + 2));
 
                 await this.exitGame.setInFlightExit(this.dummyExitId, this.exit);

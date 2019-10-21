@@ -16,11 +16,13 @@ import "../../../framework/PlasmaFramework.sol";
 import "../../../framework/interfaces/IExitProcessor.sol";
 import "../../../utils/OnlyWithValue.sol";
 import "../../../utils/OnlyFromAddress.sol";
+import "../../../utils/FailFastReentrancyGuard.sol";
 
 contract PaymentStandardExitRouter is
     IExitProcessor,
     OnlyFromAddress,
-    OnlyWithValue
+    OnlyWithValue,
+    FailFastReentrancyGuard
 {
     using PaymentStartStandardExit for PaymentStartStandardExit.Controller;
     using PaymentChallengeStandardExit for PaymentChallengeStandardExit.Controller;
@@ -128,6 +130,7 @@ contract PaymentStandardExitRouter is
     )
         public
         payable
+        nonReentrant(framework)
         onlyWithValue(startStandardExitBondSize())
     {
         startStandardExitController.run(standardExitMap, args);
@@ -139,6 +142,7 @@ contract PaymentStandardExitRouter is
     function challengeStandardExit(PaymentStandardExitRouterArgs.ChallengeStandardExitArgs memory args)
         public
         payable
+        nonReentrant(framework)
     {
         challengeStandardExitController.run(standardExitMap, args);
     }
