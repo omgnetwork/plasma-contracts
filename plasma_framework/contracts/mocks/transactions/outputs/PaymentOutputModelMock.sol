@@ -2,15 +2,15 @@ pragma solidity 0.5.11;
 pragma experimental ABIEncoderV2;
 
 import "../../../src/transactions/outputs/PaymentOutputModel.sol";
-import "../../../src/utils/RLP.sol";
+import "../../../src/utils/RLPReader.sol";
 
 contract PaymentOutputModelMock {
     using PaymentOutputModel for PaymentOutputModel.Output;
 
-    using RLP for bytes;
+    using RLPReader for bytes;
 
     function decode(bytes memory _output) public pure returns (PaymentOutputModel.Output memory) {
-        PaymentOutputModel.Output memory output = PaymentOutputModel.decode(_output.toRLPItem());
+        PaymentOutputModel.Output memory output = PaymentOutputModel.decode(_output.toRlpItem());
         return output;
     }
 

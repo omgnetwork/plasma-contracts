@@ -40,7 +40,7 @@ library PaymentChallengeIFEInputSpent {
     );
 
     /**
-     * @dev data to be passed around helper functions
+     * @dev Data to be passed around helper functions
      */
     struct ChallengeIFEData {
         Controller controller;
@@ -74,9 +74,9 @@ library PaymentChallengeIFEInputSpent {
     /**
      * @notice Main logic implementation for 'challengeInFlightExitInputSpent'
      * @dev emits InFlightExitInputBlocked event on success
-     * @param self the controller struct
-     * @param inFlightExitMap the storage of all in-flight exit data
-     * @param args arguments of 'challengeInFlightExitInputSpent' function from client.
+     * @param self The controller struct
+     * @param inFlightExitMap The storage of all in-flight exit data
+     * @param args Arguments of 'challengeInFlightExitInputSpent' function from client
      */
     function run(
         Controller memory self,
@@ -88,7 +88,7 @@ library PaymentChallengeIFEInputSpent {
         uint160 exitId = ExitId.getInFlightExitId(args.inFlightTx);
         PaymentExitDataModel.InFlightExit storage ife = inFlightExitMap.exits[exitId];
 
-        require(ife.exitStartTimestamp != 0, "In-flight exit doesn't exist");
+        require(ife.exitStartTimestamp != 0, "In-flight exit does not exist");
         require(ife.isInputPiggybacked(args.inFlightTxInputIndex), "The indexed input has not been piggybacked");
 
         require(

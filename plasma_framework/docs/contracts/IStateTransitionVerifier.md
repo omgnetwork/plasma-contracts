@@ -10,7 +10,7 @@ View Source: [contracts/src/exits/interfaces/IStateTransitionVerifier.sol](../..
 
 ### isCorrectStateTransition
 
-Verifies state transition logic.
+Verifies state transition logic
 
 ```js
 function isCorrectStateTransition(bytes txBytes, bytes[] inputTxs, uint16[] outputIndexOfInputTxs) external view
@@ -21,9 +21,9 @@ returns(bool)
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| txBytes | bytes | the targeting transaction that is doing the state transition verification | 
-| inputTxs | bytes[] | input transactions of the targeting transaction checking state transition | 
-| outputIndexOfInputTxs | uint16[] | the output index of the input txs that the transaction input is pointing to | 
+| txBytes | bytes | The transaction that does the state transition to verify | 
+| inputTxs | bytes[] | Input transaction to the transaction to verify | 
+| outputIndexOfInputTxs | uint16[] | Output index of the input txs that the transaction input points to | 
 
 ## Contracts
 
@@ -88,7 +88,7 @@ returns(bool)
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [RLP](RLP.md)
+* [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)

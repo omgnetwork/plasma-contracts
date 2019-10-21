@@ -49,7 +49,7 @@ contract('Merkle', () => {
 
             await expectRevert(
                 this.merkleContract.checkMembership(leafData, leafIndex, rootHash, wrongSizeProof),
-                'Length of merkle proof must be a multiple of of 32.',
+                'Length of Merkle proof must be a multiple of 32',
             );
         });
     });

@@ -31,7 +31,6 @@ struct StartExitData {
  bytes32 inFlightTxHash,
  bytes[] inputTxs,
  struct UtxoPosLib.UtxoPos[] inputUtxosPos,
- uint256[] inputTxTypes,
  bytes[] outputGuardPreimagesForInputs,
  bytes[] inputTxsInclusionProofs,
  bytes[] inputTxsConfirmSigs,
@@ -110,9 +109,9 @@ function run(struct PaymentStartInFlightExit.Controller self, struct PaymentExit
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| self | struct PaymentStartInFlightExit.Controller | the controller struct | 
-| inFlightExitMap | struct PaymentExitDataModel.InFlightExitMap | the storage of all in-flight exit data | 
-| args | struct PaymentInFlightExitRouterArgs.StartExitArgs | arguments of start in-flight exit function from client. | 
+| self | struct PaymentStartInFlightExit.Controller | The controller struct | 
+| inFlightExitMap | struct PaymentExitDataModel.InFlightExitMap | The storage of all in-flight exit data | 
+| args | struct PaymentInFlightExitRouterArgs.StartExitArgs | Arguments of start in-flight exit function from client | 
 
 ### createStartExitData
 
@@ -357,7 +356,7 @@ function setInFlightExitOutputs(struct PaymentExitDataModel.InFlightExit ife, st
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [RLP](RLP.md)
+* [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)

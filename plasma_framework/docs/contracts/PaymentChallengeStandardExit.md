@@ -75,9 +75,9 @@ function run(struct PaymentChallengeStandardExit.Controller self, struct Payment
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| self | struct PaymentChallengeStandardExit.Controller | the controller struct | 
-| exitMap | struct PaymentExitDataModel.StandardExitMap | the storage of all standard exit data | 
-| args | struct PaymentStandardExitRouterArgs.ChallengeStandardExitArgs | arguments of challenge standard exit function from client. | 
+| self | struct PaymentChallengeStandardExit.Controller | The controller struct | 
+| exitMap | struct PaymentExitDataModel.StandardExitMap | The storage of all standard exit data | 
+| args | struct PaymentStandardExitRouterArgs.ChallengeStandardExitArgs | Arguments of challenge standard exit function from client | 
 
 ### verifyChallengeExitExists
 
@@ -178,7 +178,7 @@ function verifySpendingCondition(struct PaymentChallengeStandardExit.ChallengeSt
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [RLP](RLP.md)
+* [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)

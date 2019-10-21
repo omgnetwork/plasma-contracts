@@ -67,7 +67,7 @@ function (PlasmaFramework plasmaFramework, uint256 ethVaultId, uint256 erc20Vaul
 
 ### standardExits
 
-Getter functions to retrieve standard exit data of the PaymentExitGame.
+Getter retrieves standard exit data of the PaymentExitGame
 
 ```js
 function standardExits(uint160 exitId) public view
@@ -78,11 +78,11 @@ returns(struct PaymentExitDataModel.StandardExit)
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| exitId | uint160 | the exit id of such standard exit. | 
+| exitId | uint160 | Exit ID of the standard exit | 
 
 ### startStandardExitBondSize
 
-Gets the standard exit bond size.
+Retrieves the standard exit bond size
 
 ```js
 function startStandardExitBondSize() public view
@@ -96,7 +96,7 @@ returns(uint128)
 
 ### updateStartStandardExitBondSize
 
-Updates the standard exit bond size. Will take 2 days to come into effect.
+Updates the standard exit bond size, taking two days to become effective
 
 ```js
 function updateStartStandardExitBondSize(uint128 newBondSize) public nonpayable onlyFrom 
@@ -106,11 +106,11 @@ function updateStartStandardExitBondSize(uint128 newBondSize) public nonpayable 
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| newBondSize | uint128 | The new bond size. | 
+| newBondSize | uint128 | The new bond size | 
 
 ### startStandardExit
 
-Starts a standard exit of a given output. Uses output-age priority.
+Starts a standard exit of a given output, using output-age priority
 
 ```js
 function startStandardExit(struct PaymentStandardExitRouterArgs.StartStandardExitArgs args) public payable nonReentrant onlyWithValue 
@@ -124,7 +124,7 @@ function startStandardExit(struct PaymentStandardExitRouterArgs.StartStandardExi
 
 ### challengeStandardExit
 
-Challenge a standard exit by showing the exiting output was spent.
+Challenge a standard exit by showing the exiting output was spent
 
 ```js
 function challengeStandardExit(struct PaymentStandardExitRouterArgs.ChallengeStandardExitArgs args) public payable nonReentrant 
@@ -138,7 +138,7 @@ function challengeStandardExit(struct PaymentStandardExitRouterArgs.ChallengeSta
 
 ### processStandardExit
 
-Process standard exit.
+Process standard exit
 
 ```js
 function processStandardExit(uint160 exitId, address token) internal nonpayable
@@ -148,8 +148,8 @@ function processStandardExit(uint160 exitId, address token) internal nonpayable
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| exitId | uint160 | The standard exit id. | 
-| token | address | The token (in erc20 address or address(0) for ETH) of the exiting output. | 
+| exitId | uint160 | The standard exit ID | 
+| token | address | The token (in erc20 address or address(0) for ETH) of the exiting output | 
 
 ## Contracts
 
@@ -214,7 +214,7 @@ function processStandardExit(uint160 exitId, address token) internal nonpayable
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [RLP](RLP.md)
+* [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)

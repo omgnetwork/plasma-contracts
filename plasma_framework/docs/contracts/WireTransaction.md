@@ -4,9 +4,9 @@ View Source: [contracts/src/transactions/WireTransaction.sol](../../contracts/sr
 
 **WireTransaction**
 
-Utility functions for working with transactions in wire format. This assumes our transaction would be under certain data structure limitation.
-     Current transaction structure should be able to support Payment and DEX related transactions.
-     If the assumption breaks, we can still upgrade to a new ExitGame with either another transaction data structure or replace this with interfaces.
+Utility functions for working with transactions in wire format, assuming our transactions have specified data structure limitations
+     We assume that the current transaction structure supports transactions related to payment and DEX.
+     Alternatively, it's possible to upgrade to a new ExitGame, using either an alternative transaction data structure, or interfaces
 
 ## Structs
 ### Output
@@ -27,8 +27,8 @@ struct Output {
 
 ### getOutput
 
-Returns output for transaction in wire format.
-Outputs is a field on the second index and should be a list where first three elements are: amount, output guard, token.
+Returns output for transaction in wire format
+Outputs is a field on the second index that should be a list with the following first three elements: amount, output guard, token
 
 ```js
 function getOutput(bytes transaction, uint16 outputIndex) internal pure
@@ -44,8 +44,8 @@ returns(struct WireTransaction.Output)
 
 ### getTransactionType
 
-Returns transaction type for transaction in wire format.
-Transaction type is the value of first field in rlp encoded list.
+Returns a transaction type for transaction, in wire format
+Transaction type is the value of the first field in RLP-encoded list
 
 ```js
 function getTransactionType(bytes transaction) internal pure
@@ -121,7 +121,7 @@ returns(uint256)
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [RLP](RLP.md)
+* [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)

@@ -3,7 +3,7 @@ pragma solidity 0.5.11;
 library ZeroHashesProvider {
 
     /**
-     * @dev Pre-computes zero hashes to be used for building merkle tree for deposit block
+     * @dev Pre-computes zero hashes to be used for building Merkle tree for deposit block
      */
     function getZeroHashes() internal pure returns (bytes32[16] memory) {
         bytes32[16] memory zeroHashes;

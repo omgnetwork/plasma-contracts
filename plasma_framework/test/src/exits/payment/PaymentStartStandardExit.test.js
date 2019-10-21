@@ -157,7 +157,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
                 this.exitGame.startStandardExit(
                     args, { from: outputOwner, value: invalidBond },
                 ),
-                'Input value mismatches with msg.value',
+                'Input value must match msg.value',
             );
         });
 
@@ -195,7 +195,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
                 this.exitGame.startStandardExit(
                     args, { from: outputOwner, value: this.startStandardExitBondSize },
                 ),
-                'Some of the output guard related information is not valid',
+                'Some output guard information is invalid',
             );
         });
 
@@ -212,7 +212,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
             );
         });
 
-        it('should fail when same exit already started', async () => {
+        it('should fail when same Exit has already started', async () => {
             const { args, merkleTree } = buildTestData(this.dummyAmount, outputOwner, this.dummyBlockNum);
 
             await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, 0);
@@ -225,7 +225,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
                 this.exitGame.startStandardExit(
                     args, { from: outputOwner, value: this.startStandardExitBondSize },
                 ),
-                'Exit already started',
+                'Exit has already started',
             );
         });
 
@@ -240,7 +240,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
                 this.exitGame.startStandardExit(
                     args, { from: outputOwner, value: this.startStandardExitBondSize },
                 ),
-                'Output already spent',
+                'Output is already spent',
             );
         });
 
@@ -320,10 +320,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
             const exitId = await this.exitIdHelper.getStandardExitId(isTxDeposit, args.rlpOutputTx, args.utxoPos);
 
             const currentTimestamp = await time.latest();
-            const dummyTimestampNoImpactOnExitableAt = currentTimestamp.sub(new BN(15));
-            const exitableAt = await this.exitableHelper.calculate(
-                currentTimestamp, dummyTimestampNoImpactOnExitableAt, isTxDeposit,
-            );
+            const exitableAt = await this.exitableHelper.calculateDepositTxOutputExitableTimestamp(currentTimestamp);
 
             await expectEvent.inTransaction(
                 receipt.transactionHash,

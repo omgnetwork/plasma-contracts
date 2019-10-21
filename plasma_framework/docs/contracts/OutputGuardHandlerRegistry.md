@@ -22,7 +22,7 @@ mapping(uint256 => contract IOutputGuardHandler) public outputGuardHandlers;
 
 ### registerOutputGuardHandler
 
-Register the output guard handler.
+Register the output guard handler
 
 ```js
 function registerOutputGuardHandler(uint256 outputType, IOutputGuardHandler handler) public nonpayable onlyOwner 
@@ -32,8 +32,8 @@ function registerOutputGuardHandler(uint256 outputType, IOutputGuardHandler hand
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| outputType | uint256 | output type that the parser is registered with. | 
-| handler | IOutputGuardHandler | The output guard handler contract. | 
+| outputType | uint256 | The output type registered with the parser | 
+| handler | IOutputGuardHandler | The output guard handler contract | 
 
 ## Contracts
 
@@ -98,7 +98,7 @@ function registerOutputGuardHandler(uint256 outputType, IOutputGuardHandler hand
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [RLP](RLP.md)
+* [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)

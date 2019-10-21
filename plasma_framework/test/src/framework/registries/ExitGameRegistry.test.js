@@ -47,7 +47,7 @@ contract('ExitGameRegistry', ([_, maintainer, other]) => {
         it('reverts when not called by registered exit game contract', async () => {
             await expectRevert(
                 this.registry.checkOnlyFromNonQuarantinedExitGame(),
-                'Not being called by registered exit game contract',
+                'The call is not from a registered exit game contract',
             );
         });
     });
@@ -108,21 +108,21 @@ contract('ExitGameRegistry', ([_, maintainer, other]) => {
                 this.registry.registerExitGame(
                     1, this.dummyExitGame.address, PROTOCOL.MORE_VP, { from: other },
                 ),
-                'Not being called by expected caller',
+                'Caller address is unauthorized',
             );
         });
 
         it('rejects when trying to register with tx type 0', async () => {
             await expectRevert(
                 this.registry.registerExitGame(0, this.dummyExitGame.address, PROTOCOL.MORE_VP, { from: maintainer }),
-                'should not register with tx type 0',
+                'Should not register with tx type 0',
             );
         });
 
         it('rejects when trying to register with empty address', async () => {
             await expectRevert(
                 this.registry.registerExitGame(1, constants.ZERO_ADDRESS, PROTOCOL.MORE_VP, { from: maintainer }),
-                'should not register with an empty exit game address',
+                'Should not register with an empty exit game address',
             );
         });
 

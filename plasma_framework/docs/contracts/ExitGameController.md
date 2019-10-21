@@ -7,9 +7,9 @@ View Source: [contracts/src/framework/ExitGameController.sol](../../contracts/sr
 
 **ExitGameController**
 
-Controls the logic and functions for ExitGame to interact with PlasmaFramework.
-        Plasma M(ore)VP relies on exit priority to secure the user from invalid transactions.
-        As a result, priority queue is used here to promise the exit would be processed with the exit priority.
+Controls the logic and functions for ExitGame to interact with the PlasmaFramework
+        Plasma M(ore)VP relies on exit priority to secure the user from invalid transactions
+        The priority queue ensures the exit is processed with the exit priority
         For details, see the Plasma MVP spec: https://ethresear.ch/t/minimal-viable-plasma/426
 
 ## Contract Members
@@ -59,7 +59,7 @@ function (uint256 _minExitPeriod, uint256 _initialImmuneExitGames) public nonpay
 
 ### hasExitQueue
 
-Checks if queue for particular token was created.
+Checks if the queue for a specified token was created
 
 ```js
 function hasExitQueue(uint256 vaultId, address token) public view
@@ -68,18 +68,18 @@ returns(bool)
 
 **Returns**
 
-bool represents whether the queue for a token was created.
+bool Defines whether the queue for a token was created
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| vaultId | uint256 | Id of the vault that handles the token | 
-| token | address | Address of the token. | 
+| vaultId | uint256 | ID of the vault that handles the token | 
+| token | address | Address of the token | 
 
 ### addExitQueue
 
-Adds queue to the plasma framework.
+Adds queue to the Plasma framework
 
 ```js
 function addExitQueue(uint256 vaultId, address token) external nonpayable
@@ -89,13 +89,13 @@ function addExitQueue(uint256 vaultId, address token) external nonpayable
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| vaultId | uint256 | Id of the vault | 
-| token | address | Address of the token. | 
+| vaultId | uint256 | ID of the vault | 
+| token | address | Address of the token | 
 
 ### enqueue
 
-Enqueue exits from exit game contracts. This 'enqueue' function puts the exit into the
-        priority queue to enforce the priority of exit during 'processExits'.
+Enqueue exits from exit game contracts is a function that places the exit into the
+        priority queue to enforce the priority of exit during 'processExits'
 
 ```js
 function enqueue(uint256 vaultId, address token, uint64 exitableAt, struct TxPosLib.TxPos txPos, uint160 exitId, IExitProcessor exitProcessor) external nonpayable onlyFromNonQuarantinedExitGame 
@@ -104,22 +104,22 @@ returns(uint256)
 
 **Returns**
 
-a unique priority number computed for the exit
+A unique priority number computed for the exit
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| vaultId | uint256 | Vault id of the vault that stores exiting funds | 
+| vaultId | uint256 | Vault ID of the vault that stores exiting funds | 
 | token | address | Token for the exit | 
-| exitableAt | uint64 | The earliest time that such exit can be processed | 
+| exitableAt | uint64 | The earliest time a specified exit can be processed | 
 | txPos | struct TxPosLib.TxPos | Transaction position for the exit priority. For SE it should be the exit tx, for IFE it should be the youngest input tx position. | 
-| exitId | uint160 | Id for the exit processor contract to understand how to process such exit | 
-| exitProcessor | IExitProcessor | The exit processor contract that would be called during "processExits" | 
+| exitId | uint160 | ID used by the exit processor contract to determine how to process the exit | 
+| exitProcessor | IExitProcessor | The exit processor contract, called during "processExits" | 
 
 ### processExits
 
-Processes any exits that have completed the challenge period. Exits would be processed according to the exit priority.
+Processes any exits that have completed the challenge period. Exits are processed according to the exit priority.
 
 ```js
 function processExits(uint256 vaultId, address token, uint160 topExitId, uint256 maxExitsToProcess) external nonpayable
@@ -127,20 +127,20 @@ function processExits(uint256 vaultId, address token, uint160 topExitId, uint256
 
 **Returns**
 
-total number of processed exits
+Total number of processed exits
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| vaultId | uint256 | vault id of the vault that stores exiting funds. | 
-| token | address | token type to process. | 
-| topExitId | uint160 | unique priority of the first exit that should be processed. Set to zero to skip the check. | 
-| maxExitsToProcess | uint256 | maximal number of exits to process. | 
+| vaultId | uint256 | Vault ID of the vault that stores exiting funds | 
+| token | address | The token type to process | 
+| topExitId | uint160 | Unique identifier for prioritizing the first exit to process. Set to zero to skip this check. | 
+| maxExitsToProcess | uint256 | Maximum number of exits to process | 
 
 ### isAnyOutputsSpent
 
-Checks if any of the output with the given outputIds is spent already.
+Checks whether any of the output with the given outputIds is already spent
 
 ```js
 function isAnyOutputsSpent(bytes32[] _outputIds) external view
@@ -151,11 +151,11 @@ returns(bool)
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| _outputIds | bytes32[] | Output ids to be checked. | 
+| _outputIds | bytes32[] | Output IDs to check | 
 
 ### batchFlagOutputsSpent
 
-Batch flags outputs that are spent
+Batch flags already spent outputs
 
 ```js
 function batchFlagOutputsSpent(bytes32[] _outputIds) external nonpayable onlyFromNonQuarantinedExitGame 
@@ -165,7 +165,7 @@ function batchFlagOutputsSpent(bytes32[] _outputIds) external nonpayable onlyFro
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| _outputIds | bytes32[] | Output ids to be flagged | 
+| _outputIds | bytes32[] | Output IDs to flag | 
 
 ### flagOutputSpent
 
@@ -179,7 +179,7 @@ function flagOutputSpent(bytes32 _outputId) external nonpayable onlyFromNonQuara
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| _outputId | bytes32 | The output id to be flagged as spent | 
+| _outputId | bytes32 | The output ID to flag as spent | 
 
 ### getNextExit
 
@@ -285,7 +285,7 @@ returns(bool)
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [RLP](RLP.md)
+* [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)

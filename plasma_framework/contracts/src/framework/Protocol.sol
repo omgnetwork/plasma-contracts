@@ -1,7 +1,7 @@
 pragma solidity 0.5.11;
 
 /**
- * @notice protocols for the PlasmaFramework
+ * @notice Protocols for the PlasmaFramework
  */
 library Protocol {
     uint8 constant internal MVP_VALUE = 1;

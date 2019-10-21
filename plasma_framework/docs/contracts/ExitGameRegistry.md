@@ -30,7 +30,7 @@ event ExitGameRegistered(uint256  txType, address  exitGameAddress, uint8  proto
 
 ### onlyFromNonQuarantinedExitGame
 
-modifier to check the call is from a non-quarantined exit game
+A modifier to verify that the call is from a non-quarantined exit game
 
 ```js
 modifier onlyFromNonQuarantinedExitGame() internal
@@ -53,7 +53,7 @@ modifier onlyFromNonQuarantinedExitGame() internal
 
 ### 
 
-For each new exit game contract, it should take at least 3 * minExitPeriod to start take effect to protect existing transactions.
+It takes at least 3 * minExitPeriod before each new exit game contract is able to start protecting existing transactions
      see: https://github.com/omisego/plasma-contracts/issues/172
           https://github.com/omisego/plasma-contracts/issues/197
 
@@ -97,17 +97,17 @@ returns(bool)
 
 **Returns**
 
-boolean whether the contract is safe to use and is not under quarantine.
+boolean Whether the contract is safe to use and is not under quarantine
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| _contract | address | address of the exit game contract | 
+| _contract | address | Address of the exit game contract | 
 
 ### registerExitGame
 
-Register an exit game within the PlasmaFramework. The function can only be called by the maintainer.
+Registers an exit game within the PlasmaFramework. Only the maintainer can call the function.
 
 ```js
 function registerExitGame(uint256 _txType, address _contract, uint8 _protocol) public nonpayable onlyFrom 
@@ -117,13 +117,13 @@ function registerExitGame(uint256 _txType, address _contract, uint8 _protocol) p
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| _txType | uint256 | tx type that the exit game want to register to. | 
-| _contract | address | address of the exit game contract. | 
-| _protocol | uint8 | protocol of the transaction, 1 for MVP and 2 for MoreVP. | 
+| _txType | uint256 | The tx type where the exit game wants to register | 
+| _contract | address | Address of the exit game contract | 
+| _protocol | uint8 | The transaction protocol, either 1 for MVP or 2 for MoreVP | 
 
 ### protocols
 
-public getter for getting protocol with tx type
+Public getter for retrieving protocol with tx type
 
 ```js
 function protocols(uint256 _txType) public view
@@ -138,7 +138,7 @@ returns(uint8)
 
 ### exitGames
 
-public getter for getting exit game address with tx type
+Public getter for retrieving exit game address with tx type
 
 ```js
 function exitGames(uint256 _txType) public view
@@ -153,7 +153,7 @@ returns(address)
 
 ### exitGameToTxType
 
-public getter for getting tx type with exit game address
+Public getter for retrieving tx type with exit game address
 
 ```js
 function exitGameToTxType(address _exitGame) public view
@@ -229,7 +229,7 @@ returns(uint256)
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [RLP](RLP.md)
+* [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)

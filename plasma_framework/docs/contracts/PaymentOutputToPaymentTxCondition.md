@@ -23,8 +23,8 @@ struct PaymentEip712Lib.Constants internal eip712;
 
 ### 
 
-This is designed to be re-useable for all versions of Payment transaction.
-     As a result, inputTxType and spendingTxType of the Payment output is injected instead.
+This is designed to be re-useable for all versions of payment transaction, so that 
+     inputTxType and spendingTxType of the payment output is injected instead
 
 ```js
 function (address framework, uint256 inputTxType, uint256 spendingTxType) public nonpayable
@@ -53,13 +53,13 @@ returns(bool)
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| inputTxBytes | bytes | encoded input transaction in bytes | 
-| outputIndex | uint16 | the output index of the input transaction | 
-| inputTxPos | uint256 | the tx position of the input tx. (0 if in-flight) | 
-| spendingTxBytes | bytes | spending transaction in bytes | 
-| inputIndex | uint16 | the input index of the spending tx that points to the output | 
-| signature | bytes | signature of the output owner | 
-|  | bytes | inputTxBytes encoded input transaction in bytes | 
+| inputTxBytes | bytes | Encoded input transaction, in bytes | 
+| outputIndex | uint16 | Output index of the input transaction | 
+| inputTxPos | uint256 | The tx position of the input tx (0 if in-flight) | 
+| spendingTxBytes | bytes | Spending transaction, in bytes | 
+| inputIndex | uint16 | Input index of the spending tx that points to the output | 
+| signature | bytes | Signature of the output owner | 
+|  | bytes | inputTxBytes Encoded input transaction, in bytes | 
 
 ## Contracts
 
@@ -124,7 +124,7 @@ returns(bool)
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [RLP](RLP.md)
+* [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)

@@ -50,7 +50,7 @@ contract('TxFinalizationVerifier', ([richFather]) => {
 
             await expectRevert(
                 this.test.isStandardFinalized(data),
-                'invalid protocol value',
+                'Invalid protocol value',
             );
         });
 
@@ -75,7 +75,7 @@ contract('TxFinalizationVerifier', ([richFather]) => {
                 await this.framework.setBlock(TEST_BLOCK_NUM, this.merkle.root, 0);
                 await expectRevert(
                     this.test.isStandardFinalized(this.data),
-                    'not supporting MVP yet',
+                    'MVP is not yet supported',
                 );
             });
         });
@@ -138,7 +138,7 @@ contract('TxFinalizationVerifier', ([richFather]) => {
 
             await expectRevert(
                 this.test.isProtocolFinalized(data),
-                'invalid protocol value',
+                'Invalid protocol value',
             );
         });
 
@@ -163,7 +163,7 @@ contract('TxFinalizationVerifier', ([richFather]) => {
                 await this.framework.setBlock(TEST_BLOCK_NUM, this.merkle.root, 0);
                 await expectRevert(
                     this.test.isProtocolFinalized(this.data),
-                    'not supporting MVP yet',
+                    'MVP is not yet supported',
                 );
             });
         });

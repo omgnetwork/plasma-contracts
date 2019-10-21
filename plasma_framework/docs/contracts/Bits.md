@@ -4,7 +4,7 @@ View Source: [contracts/src/utils/Bits.sol](../../contracts/src/utils/Bits.sol)
 
 **Bits**
 
-Operations on individual bits of a word.
+Operations on individual bits of a word
 
 ## Contract Members
 **Constants & Variables**
@@ -23,7 +23,7 @@ uint256 internal constant ONE;
 
 ### setBit
 
-Sets the bit at the given '_index' in '_self' to '1'.
+Sets the bit at the given '_index' in '_self' to '1'
 
 ```js
 function setBit(uint256 _self, uint8 _index) internal pure
@@ -32,18 +32,18 @@ returns(uint256)
 
 **Returns**
 
-The modified value.
+The modified value
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| _self | uint256 | Uint to modify. | 
-| _index | uint8 | Index of the bit to set. | 
+| _self | uint256 | Uint to modify | 
+| _index | uint8 | Index of the bit to set | 
 
 ### clearBit
 
-Sets the bit at the given '_index' in '_self' to '0'.
+Sets the bit at the given '_index' in '_self' to '0'
 
 ```js
 function clearBit(uint256 _self, uint8 _index) internal pure
@@ -52,18 +52,18 @@ returns(uint256)
 
 **Returns**
 
-The modified value.
+The modified value
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| _self | uint256 | Uint to modify. | 
-| _index | uint8 | Index of the bit to set. | 
+| _self | uint256 | Uint to modify | 
+| _index | uint8 | Index of the bit to set | 
 
 ### getBit
 
-Returns the bit at the given '_index' in '_self'.
+Returns the bit at the given '_index' in '_self'
 
 ```js
 function getBit(uint256 _self, uint8 _index) internal pure
@@ -72,18 +72,18 @@ returns(uint8)
 
 **Returns**
 
-The value of the bit at '_index'.
+The value of the bit at '_index'
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| _self | uint256 | Uint to check. | 
-| _index | uint8 | Index of the bit to get. | 
+| _self | uint256 | Uint to check | 
+| _index | uint8 | Index of the bit to retrieve | 
 
 ### bitSet
 
-Checks if the bit at the given '_index' in '_self' is '1'.
+Checks if the bit at the given '_index' in '_self' is '1'
 
 ```js
 function bitSet(uint256 _self, uint8 _index) internal pure
@@ -92,14 +92,14 @@ returns(bool)
 
 **Returns**
 
-True if the bit is '0'. False otherwise.
+True, if the bit is '0'; otherwise, False
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| _self | uint256 | Uint to check. | 
-| _index | uint8 | Index of the bit to check. | 
+| _self | uint256 | Uint to check | 
+| _index | uint8 | Index of the bit to check | 
 
 ## Contracts
 
@@ -164,7 +164,7 @@ True if the bit is '0'. False otherwise.
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [RLP](RLP.md)
+* [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)

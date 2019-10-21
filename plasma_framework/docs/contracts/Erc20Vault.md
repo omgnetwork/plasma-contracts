@@ -33,10 +33,10 @@ function (PlasmaFramework _framework) public nonpayable Vault
 
 ### deposit
 
-Deposits approved amount of ERC20 token(s) into the contract.
-Once the deposit is recognized, the owner (depositor) is able to make transactions on the OMG network.
-The approve function of the ERC20 token contract needs to be called before this function is called
-for at least the amount that is deposited into the contract.
+Deposits approved amount of ERC20 token(s) into the contract
+Once the deposit is recognized, the owner (depositor) can transact on the OmiseGO Network
+The approve function of the ERC20 token contract must be called before calling this function
+for at least the amount that is deposited into the contract
 
 ```js
 function deposit(bytes depositTx) external nonpayable
@@ -46,11 +46,11 @@ function deposit(bytes depositTx) external nonpayable
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| depositTx | bytes | RLP encoded transaction to act as the deposit. | 
+| depositTx | bytes | RLP-encoded transaction to act as the deposit | 
 
 ### withdraw
 
-Withdraw ERC20 tokens that have been exited from the OMG network successfully.
+Withdraw ERC20 tokens that have successfully exited from the OmiseGO Network
 
 ```js
 function withdraw(address payable receiver, address token, uint256 amount) external nonpayable onlyFromNonQuarantinedExitGame 
@@ -60,9 +60,9 @@ function withdraw(address payable receiver, address token, uint256 amount) exter
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| receiver | address payable | address of the receiver | 
-| token | address | address of ERC20 token contract. | 
-| amount | uint256 | amount to transfer. | 
+| receiver | address payable | Address of the recipient | 
+| token | address | Address of ERC20 token contract | 
+| amount | uint256 | Amount to transfer | 
 
 ## Contracts
 
@@ -127,7 +127,7 @@ function withdraw(address payable receiver, address token, uint256 amount) exter
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [RLP](RLP.md)
+* [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)

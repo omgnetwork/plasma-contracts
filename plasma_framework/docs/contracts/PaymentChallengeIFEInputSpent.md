@@ -75,9 +75,9 @@ function run(struct PaymentChallengeIFEInputSpent.Controller self, struct Paymen
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| self | struct PaymentChallengeIFEInputSpent.Controller | the controller struct | 
-| inFlightExitMap | struct PaymentExitDataModel.InFlightExitMap | the storage of all in-flight exit data | 
-| args | struct PaymentInFlightExitRouterArgs.ChallengeInputSpentArgs | arguments of 'challengeInFlightExitInputSpent' function from client. | 
+| self | struct PaymentChallengeIFEInputSpent.Controller | The controller struct | 
+| inFlightExitMap | struct PaymentExitDataModel.InFlightExitMap | The storage of all in-flight exit data | 
+| args | struct PaymentInFlightExitRouterArgs.ChallengeInputSpentArgs | Arguments of 'challengeInFlightExitInputSpent' function from client | 
 
 ### verifySpentInputEqualsIFEInput
 
@@ -178,7 +178,7 @@ function verifySpendingCondition(struct PaymentChallengeIFEInputSpent.ChallengeI
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [RLP](RLP.md)
+* [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)

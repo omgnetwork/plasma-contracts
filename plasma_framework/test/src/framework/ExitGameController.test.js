@@ -54,7 +54,7 @@ contract('ExitGameController', () => {
         it('reverts when adding queue with vault id 0', async () => {
             await expectRevert(
                 this.controller.addExitQueue(0, this.dummyToken),
-                'Vault id must not be 0.',
+                'Vault ID must not be 0.',
             );
         });
     });
@@ -93,7 +93,7 @@ contract('ExitGameController', () => {
                     this.dummyExit.exitId,
                     this.dummyExit.exitProcessor,
                 ),
-                'Not being called by registered exit game contract',
+                'The call is not from a registered exit game contract',
             );
         });
 
@@ -108,7 +108,7 @@ contract('ExitGameController', () => {
                     this.dummyExit.exitId,
                     this.dummyExit.exitProcessor,
                 ),
-                'The queue for the (vaultId, token) pair has not been added to the plasma framework yet',
+                'The queue for the (vaultId, token) pair is not yet added to the Plasma framework',
             );
         });
 
@@ -126,7 +126,7 @@ contract('ExitGameController', () => {
                     this.dummyExit.exitId,
                     this.dummyExit.exitProcessor,
                 ),
-                'ExitGame is quarantined.',
+                'ExitGame is quarantined',
             );
         });
 
@@ -251,7 +251,7 @@ contract('ExitGameController', () => {
             const fakeNonAddedTokenAddress = (await DummyExitGame.new()).address;
             await expectRevert(
                 this.controller.processExits(VAULT_ID, fakeNonAddedTokenAddress, 0, 1),
-                'Such token has not been added to the plasma framework yet',
+                'The token is not yet added to the Plasma framework',
             );
         });
 
@@ -275,7 +275,7 @@ contract('ExitGameController', () => {
             const nonExistingExitId = this.dummyExit.exitId - 1;
             await expectRevert(
                 this.controller.processExits(VAULT_ID, this.dummyToken, nonExistingExitId, 1),
-                'Top exit id of the queue is not the same as the specified one',
+                'Top exit ID of the queue is different to the one specified',
             );
         });
 
@@ -479,7 +479,7 @@ contract('ExitGameController', () => {
             const dummyOutputId = web3.utils.sha3('output id');
             await expectRevert(
                 this.controller.batchFlagOutputsSpent([dummyOutputId]),
-                'Not being called by registered exit game contract',
+                'The call is not from a registered exit game contract',
             );
         });
 
@@ -492,7 +492,7 @@ contract('ExitGameController', () => {
             await this.controller.registerExitGame(newDummyExitGameId, newDummyExitGame.address, PROTOCOL.MORE_VP);
             await expectRevert(
                 newDummyExitGame.proxyBatchFlagOutputsSpent([dummyOutputId1, dummyOutputId2]),
-                'ExitGame is quarantined.',
+                'ExitGame is quarantined',
             );
         });
 
@@ -543,7 +543,7 @@ contract('ExitGameController', () => {
             const dummyOutputId = web3.utils.sha3('output id');
             await expectRevert(
                 this.controller.flagOutputSpent(dummyOutputId),
-                'Not being called by registered exit game contract',
+                'The call is not from a registered exit game contract',
             );
         });
 
@@ -555,7 +555,7 @@ contract('ExitGameController', () => {
             await this.controller.registerExitGame(newDummyExitGameId, newDummyExitGame.address, PROTOCOL.MORE_VP);
             await expectRevert(
                 newDummyExitGame.proxyFlagOutputSpent(dummyOutputId),
-                'ExitGame is quarantined.',
+                'ExitGame is quarantined',
             );
         });
     });

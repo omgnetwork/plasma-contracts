@@ -79,9 +79,9 @@ function piggybackInput(struct PaymentPiggybackInFlightExit.Controller self, str
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| self | struct PaymentPiggybackInFlightExit.Controller | the controller struct | 
-| inFlightExitMap | struct PaymentExitDataModel.InFlightExitMap | the storage of all in-flight exit data | 
-| args | struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnInputArgs | arguments of 'piggybackInFlightExitOnInput' function from client. | 
+| self | struct PaymentPiggybackInFlightExit.Controller | The controller struct | 
+| inFlightExitMap | struct PaymentExitDataModel.InFlightExitMap | The storage of all in-flight exit data | 
+| args | struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnInputArgs | Arguments of 'piggybackInFlightExitOnInput' function from client | 
 
 ### piggybackOutput
 
@@ -95,9 +95,9 @@ function piggybackOutput(struct PaymentPiggybackInFlightExit.Controller self, st
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| self | struct PaymentPiggybackInFlightExit.Controller | the controller struct | 
-| inFlightExitMap | struct PaymentExitDataModel.InFlightExitMap | the storage of all in-flight exit data | 
-| args | struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnOutputArgs | arguments of 'piggybackInFlightExitOnOutput' function from client. | 
+| self | struct PaymentPiggybackInFlightExit.Controller | The controller struct | 
+| inFlightExitMap | struct PaymentExitDataModel.InFlightExitMap | The storage of all in-flight exit data | 
+| args | struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnOutputArgs | Arguments of 'piggybackInFlightExitOnOutput' function from client | 
 
 ### enqueue
 
@@ -193,7 +193,7 @@ returns(address payable)
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [RLP](RLP.md)
+* [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)

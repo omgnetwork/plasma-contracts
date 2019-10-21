@@ -90,9 +90,9 @@ function run(struct PaymentStartStandardExit.Controller self, struct PaymentExit
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| self | struct PaymentStartStandardExit.Controller | the controller struct | 
-| exitMap | struct PaymentExitDataModel.StandardExitMap | the storage of all standard exit data | 
-| args | struct PaymentStandardExitRouterArgs.StartStandardExitArgs | arguments of start standard exit function from client. | 
+| self | struct PaymentStartStandardExit.Controller | The controller struct | 
+| exitMap | struct PaymentExitDataModel.StandardExitMap | The storage of all standard exit data | 
+| args | struct PaymentStandardExitRouterArgs.StartStandardExitArgs | Arguments of start standard exit function from client | 
 
 ### setupStartStandardExitData
 
@@ -210,7 +210,7 @@ function enqueueStandardExit(struct PaymentStartStandardExit.StartStandardExitDa
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [RLP](RLP.md)
+* [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)

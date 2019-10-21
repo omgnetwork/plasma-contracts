@@ -14,7 +14,7 @@ View Source: [contracts/src/vaults/verifiers/IEthDepositVerifier.sol](../../cont
 
 ⤿ Overridden Implementation(s): [EthDepositVerifier.verify](EthDepositVerifier.md#verify)
 
-Verifies a deposit transaction.
+Verifies a deposit transaction
 
 ```js
 function verify(bytes depositTx, uint256 amount, address sender) external view
@@ -24,9 +24,9 @@ function verify(bytes depositTx, uint256 amount, address sender) external view
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| depositTx | bytes | The deposit transaction. | 
-| amount | uint256 | The amount being of the deposited. | 
-| sender | address | The owner of the deposit transaction. | 
+| depositTx | bytes | The deposit transaction | 
+| amount | uint256 | The amount deposited | 
+| sender | address | The owner of the deposit transaction | 
 
 ## Contracts
 
@@ -91,7 +91,7 @@ function verify(bytes depositTx, uint256 amount, address sender) external view
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [RLP](RLP.md)
+* [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)

@@ -11,7 +11,7 @@ View Source: [contracts/src/exits/utils/OutputId.sol](../../contracts/src/exits/
 
 ### computeDepositOutputId
 
-Computes the output id for deposit tx
+Computes the output ID for a deposit tx
 
 ```js
 function computeDepositOutputId(bytes _txBytes, uint256 _outputIndex, uint256 _utxoPosValue) internal pure
@@ -22,13 +22,13 @@ returns(bytes32)
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| _txBytes | bytes | Transaction bytes. | 
-| _outputIndex | uint256 | output index of the output. | 
-| _utxoPosValue | uint256 | (optinal) UTXO position of the deposit output. | 
+| _txBytes | bytes | Transaction bytes | 
+| _outputIndex | uint256 | Output index of the output | 
+| _utxoPosValue | uint256 | (Optional) UTXO position of the deposit output | 
 
 ### computeNormalOutputId
 
-Computes the output id for normal (non deposit) tx
+Computes the output ID for normal (non-deposit) tx
 
 ```js
 function computeNormalOutputId(bytes _txBytes, uint256 _outputIndex) internal pure
@@ -39,8 +39,8 @@ returns(bytes32)
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| _txBytes | bytes | Transaction bytes. | 
-| _outputIndex | uint256 | output index of the output. | 
+| _txBytes | bytes | Transaction bytes | 
+| _outputIndex | uint256 | Output index of the output | 
 
 ## Contracts
 
@@ -105,7 +105,7 @@ returns(bytes32)
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [RLP](RLP.md)
+* [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)

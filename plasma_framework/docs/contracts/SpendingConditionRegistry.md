@@ -6,7 +6,7 @@ View Source: [contracts/src/exits/registries/SpendingConditionRegistry.sol](../.
 
 **SpendingConditionRegistry**
 
-The registry contracts of spending condition
+The registry contracts of the spending condition
 
 ## Contract Members
 **Constants & Variables**
@@ -37,7 +37,7 @@ returns(contract ISpendingCondition)
 
 ### registerSpendingCondition
 
-Register the spending condition contract.
+Register the spending condition contract
 
 ```js
 function registerSpendingCondition(uint256 outputType, uint256 spendingTxType, ISpendingCondition condition) public nonpayable onlyOwner 
@@ -47,9 +47,9 @@ function registerSpendingCondition(uint256 outputType, uint256 spendingTxType, I
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| outputType | uint256 | output type of the spending condition. | 
-| spendingTxType | uint256 | spending tx type of the spending condition. | 
-| condition | ISpendingCondition | The spending condition contract. | 
+| outputType | uint256 | The output type of the spending condition | 
+| spendingTxType | uint256 | Spending tx type of the spending condition | 
+| condition | ISpendingCondition | The spending condition contract | 
 
 ## Contracts
 
@@ -114,7 +114,7 @@ function registerSpendingCondition(uint256 outputType, uint256 spendingTxType, I
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [RLP](RLP.md)
+* [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)

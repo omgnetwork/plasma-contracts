@@ -316,7 +316,7 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
 
                 await expectRevert(
                     this.exitGame.challengeInFlightExitInputSpent(this.challengeArgs, { from: challenger }),
-                    "In-flight exit doesn't exist",
+                    'In-flight exit does not exist',
                 );
             });
 

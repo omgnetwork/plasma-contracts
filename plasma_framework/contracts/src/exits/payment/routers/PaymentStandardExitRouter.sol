@@ -32,7 +32,7 @@ contract PaymentStandardExitRouter is
     // Initial bond size = 70000 (gas cost of challenge) * 20 gwei (current fast gas price) * 10 (safety margin)
     uint128 public constant INITIAL_BOND_SIZE = 14000000000000000 wei;
 
-    // each bond size upgrade can either at most increase to 200% or decrease to 50% of current bond
+    // Each bond size upgrade can either at most increase to 200% or decrease to 50% of current bond
     uint16 public constant BOND_LOWER_BOUND_DIVISOR = 2;
     uint16 public constant BOND_UPPER_BOUND_MULTIPLIER = 2;
 
@@ -99,23 +99,23 @@ contract PaymentStandardExitRouter is
     }
 
     /**
-     * @notice Getter functions to retrieve standard exit data of the PaymentExitGame.
-     * @param exitId the exit id of such standard exit.
+     * @notice Getter retrieves standard exit data of the PaymentExitGame
+     * @param exitId Exit ID of the standard exit
      */
     function standardExits(uint160 exitId) public view returns (PaymentExitDataModel.StandardExit memory) {
         return standardExitMap.exits[exitId];
     }
 
     /**
-     * @notice Gets the standard exit bond size.
+     * @notice Retrieves the standard exit bond size
      */
     function startStandardExitBondSize() public view returns (uint128) {
         return startStandardExitBond.bondSize();
     }
 
     /**
-     * @notice Updates the standard exit bond size. Will take 2 days to come into effect.
-     * @param newBondSize The new bond size.
+     * @notice Updates the standard exit bond size, taking two days to become effective
+     * @param newBondSize The new bond size
      */
     function updateStartStandardExitBondSize(uint128 newBondSize) public onlyFrom(framework.getMaintainer()) {
         startStandardExitBond.updateBondSize(newBondSize);
@@ -123,7 +123,7 @@ contract PaymentStandardExitRouter is
     }
 
     /**
-     * @notice Starts a standard exit of a given output. Uses output-age priority.
+     * @notice Starts a standard exit of a given output, using output-age priority
      */
     function startStandardExit(
         PaymentStandardExitRouterArgs.StartStandardExitArgs memory args
@@ -137,7 +137,7 @@ contract PaymentStandardExitRouter is
     }
 
     /**
-     * @notice Challenge a standard exit by showing the exiting output was spent.
+     * @notice Challenge a standard exit by showing the exiting output was spent
      */
     function challengeStandardExit(PaymentStandardExitRouterArgs.ChallengeStandardExitArgs memory args)
         public
@@ -148,10 +148,10 @@ contract PaymentStandardExitRouter is
     }
 
     /**
-     * @notice Process standard exit.
-     * @dev This function is designed to be called in the main processExit function. Thus using internal.
-     * @param exitId The standard exit id.
-     * @param token The token (in erc20 address or address(0) for ETH) of the exiting output.
+     * @notice Process standard exit
+     * @dev This function is designed to be called in the main processExit function, using internal
+     * @param exitId The standard exit ID
+     * @param token The token (in erc20 address or address(0) for ETH) of the exiting output
      */
     function processStandardExit(uint160 exitId, address token) internal {
         processStandardExitController.run(standardExitMap, exitId, token);

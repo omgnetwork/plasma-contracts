@@ -4,7 +4,7 @@ View Source: [contracts/src/framework/Protocol.sol](../../contracts/src/framewor
 
 **Protocol**
 
-protocols for the PlasmaFramework
+Protocols for the PlasmaFramework
 
 ## Contract Members
 **Constants & Variables**
@@ -121,7 +121,7 @@ returns(bool)
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [RLP](RLP.md)
+* [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)

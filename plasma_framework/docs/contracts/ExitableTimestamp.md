@@ -15,12 +15,15 @@ struct Calculator {
 
 ## Functions
 
-- [calculate(struct ExitableTimestamp.Calculator _calculator, uint256 _now, uint256 _blockTimestamp, bool _isDeposit)](#calculate)
+- [calculateTxExitableTimestamp(struct ExitableTimestamp.Calculator _calculator, uint256 _now, uint256 _blockTimestamp)](#calculatetxexitabletimestamp)
+- [calculateDepositTxOutputExitableTimestamp(struct ExitableTimestamp.Calculator _calculator, uint256 _now)](#calculatedeposittxoutputexitabletimestamp)
 
-### calculate
+### calculateTxExitableTimestamp
+
+Calculates the exitable timestamp for a mined transaction
 
 ```js
-function calculate(struct ExitableTimestamp.Calculator _calculator, uint256 _now, uint256 _blockTimestamp, bool _isDeposit) internal pure
+function calculateTxExitableTimestamp(struct ExitableTimestamp.Calculator _calculator, uint256 _now, uint256 _blockTimestamp) internal pure
 returns(uint64)
 ```
 
@@ -31,7 +34,22 @@ returns(uint64)
 | _calculator | struct ExitableTimestamp.Calculator |  | 
 | _now | uint256 |  | 
 | _blockTimestamp | uint256 |  | 
-| _isDeposit | bool |  | 
+
+### calculateDepositTxOutputExitableTimestamp
+
+Calculates the exitable timestamp for deposit transaction output for standard exit
+
+```js
+function calculateDepositTxOutputExitableTimestamp(struct ExitableTimestamp.Calculator _calculator, uint256 _now) internal pure
+returns(uint64)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| _calculator | struct ExitableTimestamp.Calculator |  | 
+| _now | uint256 |  | 
 
 ## Contracts
 
@@ -96,7 +114,7 @@ returns(uint64)
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [RLP](RLP.md)
+* [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)

@@ -14,7 +14,7 @@ View Source: [contracts/src/vaults/verifiers/IErc20DepositVerifier.sol](../../co
 
 ⤿ Overridden Implementation(s): [Erc20DepositVerifier.verify](Erc20DepositVerifier.md#verify)
 
-Verifies a deposit transaction.
+Verifies a deposit transaction
 
 ```js
 function verify(bytes depositTx, address sender, address vault) external view
@@ -23,15 +23,15 @@ returns(owner address, token address, amount uint256)
 
 **Returns**
 
-verified (owner, token, amount) of the deposit ERC20 token data
+Verified (owner, token, amount) of the deposit ERC20 token data
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| depositTx | bytes | The deposit transaction. | 
-| sender | address | The owner of the deposit transaction. | 
-| vault | address | The address of the Erc20Vault contract. | 
+| depositTx | bytes | The deposit transaction | 
+| sender | address | The owner of the deposit transaction | 
+| vault | address | The address of the Erc20Vault contract | 
 
 ## Contracts
 
@@ -96,7 +96,7 @@ verified (owner, token, amount) of the deposit ERC20 token data
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [RLP](RLP.md)
+* [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)

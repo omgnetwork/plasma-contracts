@@ -12,7 +12,7 @@ View Source: [contracts/src/framework/utils/ExitPriority.sol](../../contracts/sr
 
 ### computePriority
 
-Full explanation on fields lengths can be found here: https://github.com/omisego/plasma-contracts/pull/303#discussion_r328850572
+Detailed explanation on field lengths can be found at https://github.com/omisego/plasma-contracts/pull/303#discussion_r328850572
 
 ```js
 function computePriority(uint64 exitableAt, struct TxPosLib.TxPos txPos, uint160 exitId) internal pure
@@ -21,7 +21,7 @@ returns(uint256)
 
 **Returns**
 
-An exit priority.
+An exit priority
   Anatomy of returned value, most significant bits first
   42 bits  - timestamp in seconds (exitable_at); we can represent dates until year 141431
   54 bits  - blknum * CHILD_BLOCK_INTERVAL * 10^5 + txindex; 54 bits represent all transactions for 85 years. We are assuming CHILD_BLOCK_INTERVAL = 1000.
@@ -33,7 +33,7 @@ An exit priority.
 | ------------- |------------- | -----|
 | exitableAt | uint64 |  | 
 | txPos | struct TxPosLib.TxPos |  | 
-| exitId | uint160 | unique exit identifier. | 
+| exitId | uint160 | Unique exit identifier | 
 
 ### parseExitableAt
 
@@ -124,7 +124,7 @@ returns(uint160)
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [RLP](RLP.md)
+* [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)

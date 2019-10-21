@@ -228,7 +228,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
             expect(events.length).to.equal(0);
         });
 
-        it('should not withdraw fund if the output already spent', async () => {
+        it('should not withdraw fund if the Output is already spent', async () => {
             const dummyExitId = 666;
             const exit = await buildInFlightExitData();
             exit.isCanonical = true;
@@ -337,7 +337,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
                 expect(postBalance).to.be.bignumber.equal(expectedBalance);
             });
 
-            it('should flag all inputs with the same token as spent no matter piggybacke or not', async () => {
+            it('should flag all inputs with the same token as spent no matter piggybacked or not', async () => {
                 // piggybacked input
                 expect(await this.framework.isOutputSpent(TEST_OUTPUT_ID_FOR_INPUT_1)).to.be.true;
                 // unpiggybacked input

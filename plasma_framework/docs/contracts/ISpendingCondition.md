@@ -6,7 +6,7 @@ View Source: [contracts/src/exits/interfaces/ISpendingCondition.sol](../../contr
 
 **ISpendingCondition**
 
-interface of the spending condition.
+Interface of the spending condition
 
 ## Functions
 
@@ -27,13 +27,13 @@ returns(bool)
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| inputTx | bytes | encoded input transaction in bytes | 
-| outputIndex | uint16 | the output index of the input transaction | 
-| inputTxPos | uint256 | the tx position of the input tx. (0 if in-flight) | 
-| spendingTx | bytes | spending transaction in bytes | 
-| inputIndex | uint16 | the input index of the spending tx that points to the output | 
-| witness | bytes | the witness data of the spending condition | 
-| optionalArgs | bytes | some optional data for the spending condition's need (eg. output guard preimage) | 
+| inputTx | bytes | Encoded input transaction, in bytes | 
+| outputIndex | uint16 | The output index of the input transaction | 
+| inputTxPos | uint256 | The tx position of the input tx (0 if in-flight) | 
+| spendingTx | bytes | Spending transaction, in bytes | 
+| inputIndex | uint16 | The input index of the spending tx that points to the output | 
+| witness | bytes | The witness data of the spending condition | 
+| optionalArgs | bytes | Optional data for the spending condition (for example, output guard preimage) | 
 
 ## Contracts
 
@@ -98,7 +98,7 @@ returns(bool)
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [RLP](RLP.md)
+* [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)

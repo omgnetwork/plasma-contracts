@@ -189,11 +189,168 @@ There are various bonds involved with Exit Games. These values of these bonds ma
 
 ## Playing the Exit Game
 
-**TODO:** Starting a Standard Exit
+### Starting a Standard Exit
+
+In order to exit a UTXO, you need to get the corresponding transaction type. We currently only support Payment transactions, for which the id is 1.
+
+You then need to get the Exit Game contract address from the PlasmaFramework contract:
+
+```
+address = PlasmaFramework.exitGames(1)
+```
+
+In order to start a standard exit, you need to send the appropriate amount of ETH to cover the bond. The actual amount can be retrieved by calling the following function:
+
+```
+PaymentExitGame.startStandardExitBondSize()
+```
+
+```
+PaymentExitGame.startStandardExit({
+  utxoPos,
+  rlpOutputTx,
+  outputGuardPreimage
+  outputTxInclusionProof,
+})
+```
+
+If it fails with an error mentioning a missing queue, you can check that the exit queue is registered for the given vault id and token by using:
+
+```
+PlasmaFramework.hasExitQueue(vaultId, tokenAddress)
+```
+
+If no exit queue registered, you can register it with:
+
+```
+PlasmaFramework.addExitQueue(vaultId, tokenAddress)
+```
+
+#### Parameters
+
+- utxoPos (uint192): Position of the exiting output.
+
+Formula:
+
+```
+block number * the block offset (defaults: `1000000000`) + transaction position * transaction offset (defaults to `10000`) + the index of the UTXO in the list of outputs of the transaction
+```
+
+For example, if we have a deposit transaction in block 160000 at index 0, and we want the utxoPos of the output at index 0 (deposit transactions only have one output, and no inputs):
+
+```
+160000 * 10000 + 0 * 10000 + 0 = 1600000000
+```
+
+- rlpOutputTx (bytes): RLP encoded transaction that created the exiting output.
+
+Here's an example of a deposit transaction sent from address `0xa013debd703e28af78c2ffd0264ef70f978c5465` of 1,000,000,000,000,000 Wei to the `EthVault` contract:
+
+```
+[
+  1, # Transaction type, 1 for Payment
+  [], # inputs, empty for deposit transactions
+  [ # list of outputs, only one for deposit transactions
+    [
+      1, # transaction output type, 1 for payment transaction output
+      # owner of the output, for deposit txs, owner = sender
+      "0xa013debd703e28af78c2ffd0264ef70f978c5465",
+
+      # The currency, 0x0000000000000000000000000000000000000000 = ether
+      "0x0000000000000000000000000000000000000000", 
+
+      # The amount to deposit
+      1000000000000000
+    ]
+  ],
+  # metadata, in this case, no metadata are sent
+  "0x0000000000000000000000000000000000000000000000000000000000000000"
+]
+```
+
+This transaction then needs to be RLP-encoded using a library of your choice. Be sure to decode the owner address, currency and metadata from hexadecimal to bytes before RLP-encoding.
+
+Once RLP-encoded, encode the result to hexadecimal.
+
+- outputGuardPreimage (bytes): (Optional) Output guard preimage data
+
+The `outputGuardPreimage` is currently unused. Send an empty bytes value. Example with Remix: `[]`
+
+- outputTxInclusionProof (bytes): A Merkle proof showing that the transaction was included.
+
+Requirement: [Basic Merkle Tree understanding](https://en.wikipedia.org/wiki/Merkle_tree)
+[Implementation example](https://github.com/omisego/plasma-contracts/blob/master/plasma_framework/test/helpers/merkle.js)
+
+This proof is used to prove the inclusion of a specific hash in a Merkle Tree. It is a string containing each sibling hash for each level of the Merkle tree, concatenated together. 
+
+#### Example:
+
+```
+PaymentExitGame.startStandardExit([
+  1600000000,
+  0xf85801c0f4f3019441777dc7bdcc6b58be1c25eb3df7df52d1bfecbd94000000000000000000000000000000000000000087038d7ea4c68000a00000000000000000000000000000000000000000000000000000000000000000,
+  [],
+  0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563633dc4d7da7256660a892f8f1604a44b5432649cc8ec5cb3ced4c4e6ac94dd1d890740a8eb06ce9be422cb8da5cdafc2b58c0a5e24036c578de2a433c828ff7d3b8ec09e026fdc305365dfc94e189a81b38c7597b3d941c279f042e8206e0bd8ecd50eee38e386bd62be9bedb990706951b65fe053bd9d8a521af753d139e2dadefff6d330bb5403f63b14f33b578274160de3a50df4efecf0e0db73bcdd3da5617bdd11f7c0a11f49db22f629387a12da7596f9d1704d7465177c63d88ec7d7292c23a9aa1d8bea7e2435e555a4a60e379a5a35f3f452bae60121073fb6eeade1cea92ed99acdcb045a6726b2f87107e8a61620a232cf4d7d5b5766b3952e107ad66c0a68c72cb89e4fb4303841966e4062a76ab97451e3b9fb526a5ceb7f82e026cc5a4aed3c22a58cbd3d2ac754c9352c5436f638042dca99034e836365163d04cffd8b46a874edf5cfae63077de85f849a660426697b06a829c70dd1409cad676aa337a485e4728a0b240d92b3ef7b3c372d06d189322bfd5f61f1e7203ea2fca4a49658f9fab7aa63289c91b7c7b6c832a6d0e69334ff5b0a3483d09dab4ebfd9cd7bca2505f7bef59cc1c12ecc708fff26ae4af19abe852afe9e20c8622def10d13dd169f550f578bda343d9717a138562e0093b380a1120789d53cf10,
+])
+```
 
 **TODO:** Challenging a Standard Exit
 
-**TODO:** Processing Exits
+## Processing Exits
+
+Once the exit period is over for a standard exit, it can be processed to release the funds on the rootchain. An end user can perform this action, or the operator can do it for everyone.
+
+First, get your `exitId` if you don't have it:
+
+```
+PaymentExitGame.getStandardExitId(
+  true, # true if deposit, false else
+  "0xf85801c0f4f3019441777dc7bdcc6b58be1c25eb3df7df52d1bfecbd94000000000000000000000000000000000000000087038d7ea4c68000a00000000000000000000000000000000000000000000000000000000000000000", # RLP-encoded transaction sent when startStandardExit was called
+  1600000000, # utxoPos
+)
+```
+
+Then process your exit. See parameters below for more information.
+
+```
+PlasmaFramework.processExits({
+  uint256 vaultId, 
+  address token, 
+  uint160 topExitId, 
+  uint256 maxExitsToProcess
+})
+```
+
+### Parameters
+
+- vaultId (uint256): vault id of the vault that stores exiting funds.
+
+Use `1` for Ether, `2` for ERC-20.
+
+- token (address): token type to process.
+
+ETH: `0x0000000000000000000000000000000000000000` 
+
+The contract address for ERC-20 tokens.
+
+- topExitId (uint160): unique priority of the first exit that should be processed. Set to zero to skip the check.
+
+If you're trying to process only your own exit, set your exitId here.
+
+- maxExitsToProcess (uint256): maximal number of exits to process.
+
+How many exits you wish to process, should be set to `1` if you only want to process yours.
+
+### Example
+
+```
+PlasmaFramework.processExits([
+  1, # vaultId 
+  "0x0000000000000000000000000000000000000000", # token, ETH
+  "707372774235521271159305957085057710072500938", # topExitId
+  1 # maxExitsToProcess
+])
+```
 
 **TODO:** Starting an In-flight Exit
 

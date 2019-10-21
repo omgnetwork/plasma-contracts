@@ -202,7 +202,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob, maintainer,
         it('should not allow to call processExit from outside of exit game controller contract', async () => {
             await expectRevert(
                 this.exitGame.processExit(0, VAULT_ID.ETH, constants.ZERO_ADDRESS),
-                'Not being called by expected caller.',
+                'Caller address is unauthorized.',
             );
         });
 
@@ -263,11 +263,8 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob, maintainer,
                     const uniquePriority = await priorityQueue.getMin();
 
                     const currentTimestamp = await time.latest();
-                    const isTxDeposit = true;
-                    const timestamp = currentTimestamp.sub(new BN(15));
-                    const exitableAt = await this.exitableHelper.calculate(
-                        currentTimestamp, timestamp, isTxDeposit,
-                    );
+                    const exitableAt = await this.exitableHelper
+                        .calculateDepositTxOutputExitableTimestamp(currentTimestamp);
 
                     const exitIdExpected = await this.exitIdHelper.getStandardExitId(
                         true, this.depositTx, this.depositUtxoPos,

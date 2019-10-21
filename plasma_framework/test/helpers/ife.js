@@ -82,8 +82,6 @@ function buildIfeStartArgs([inputTx1, inputTx2], [inputOwner1, inputOwner2], inp
 
     const inputSpendingConditionOptionalArgs = [EMPTY_BYTES, EMPTY_BYTES];
 
-    const inputTxTypes = [IFE_TX_TYPE, IFE_TX_TYPE];
-
     const outputGuardPreimagesForInputs = [
         web3.utils.toHex(inputOwner1),
         web3.utils.toHex(inputOwner2),
@@ -92,7 +90,6 @@ function buildIfeStartArgs([inputTx1, inputTx2], [inputOwner1, inputOwner2], inp
     const args = {
         inFlightTx: inFlightTxRaw,
         inputTxs,
-        inputTxTypes,
         inputUtxosPos,
         outputGuardPreimagesForInputs,
         inputTxsInclusionProofs,
