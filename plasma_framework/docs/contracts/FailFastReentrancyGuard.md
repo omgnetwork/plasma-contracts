@@ -7,14 +7,7 @@ View Source: [contracts/src/utils/FailFastReentrancyGuard.sol](../../contracts/s
 **FailFastReentrancyGuard**
 
 Reentrancy guard that fails immediately when a reentrace occurs
-
-## Contract Members
-**Constants & Variables**
-
-```js
-bool private locked;
-
-```
+        Works on multi-contracts level by activating and deactivating a reentrancy guard kept in plasma framework's state
 
 ## Modifiers
 
@@ -25,13 +18,14 @@ bool private locked;
 Prevents reentrant calls by using a mutex.
 
 ```js
-modifier nonReentrant() internal
+modifier nonReentrant(PlasmaFramework framework) internal
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
+| framework | PlasmaFramework |  | 
 
 ## Functions
 
@@ -98,7 +92,7 @@ modifier nonReentrant() internal
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
-* [RLP](RLP.md)
+* [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)

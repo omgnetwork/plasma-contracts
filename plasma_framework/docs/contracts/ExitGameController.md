@@ -16,9 +16,13 @@ Controls the logic and functions for ExitGame to interact with the PlasmaFramewo
 **Constants & Variables**
 
 ```js
+//public members
 mapping(uint256 => contract IExitProcessor) public delegations;
 mapping(bytes32 => contract PriorityQueue) public exitsQueues;
 mapping(bytes32 => bool) public isOutputSpent;
+
+//private members
+bool private mutex;
 
 ```
 
@@ -30,9 +34,28 @@ event ProcessedExitsNum(uint256  processedNum, uint256  vaultId, address  token)
 event ExitQueued(uint160 indexed exitId, uint256  priority);
 ```
 
+## Modifiers
+
+- [nonReentrant](#nonreentrant)
+
+### nonReentrant
+
+Prevents reentrant calls by using a mutex.
+
+```js
+modifier nonReentrant() internal
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+
 ## Functions
 
 - [(uint256 _minExitPeriod, uint256 _initialImmuneExitGames)](#)
+- [activateNonReentrant()](#activatenonreentrant)
+- [deactivateNonReentrant()](#deactivatenonreentrant)
 - [hasExitQueue(uint256 vaultId, address token)](#hasexitqueue)
 - [addExitQueue(uint256 vaultId, address token)](#addexitqueue)
 - [enqueue(uint256 vaultId, address token, uint64 exitableAt, struct TxPosLib.TxPos txPos, uint160 exitId, IExitProcessor exitProcessor)](#enqueue)
@@ -56,6 +79,33 @@ function (uint256 _minExitPeriod, uint256 _initialImmuneExitGames) public nonpay
 | ------------- |------------- | -----|
 | _minExitPeriod | uint256 |  | 
 | _initialImmuneExitGames | uint256 |  | 
+
+### activateNonReentrant
+
+Activates non reentrancy mode
+        Guards against reentering into publicly accessible code that modifies state related to exits
+
+```js
+function activateNonReentrant() external nonpayable onlyFromNonQuarantinedExitGame 
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+
+### deactivateNonReentrant
+
+Deactivates non reentrancy mode
+
+```js
+function deactivateNonReentrant() external nonpayable onlyFromNonQuarantinedExitGame 
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
 
 ### hasExitQueue
 
@@ -122,7 +172,7 @@ A unique priority number computed for the exit
 Processes any exits that have completed the challenge period. Exits are processed according to the exit priority.
 
 ```js
-function processExits(uint256 vaultId, address token, uint160 topExitId, uint256 maxExitsToProcess) external nonpayable
+function processExits(uint256 vaultId, address token, uint160 topExitId, uint256 maxExitsToProcess) external nonpayable nonReentrant 
 ```
 
 **Returns**
