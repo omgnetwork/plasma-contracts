@@ -1,33 +1,30 @@
-# Plasma Contracts
+# OmiseGO Plasma Framework Contracts
 
-Root chain contracts for Plasma M(ore)VP, work in progress.
+Root chain contracts for The OmiseGO Plasma Framework, a layer 2 scaling solution for Ethereum.
 
 [![Build Status](https://circleci.com/gh/omisego/plasma-contracts.svg?style=svg)](https://circleci.com/gh/omisego/plasma-contracts)
 
 ## Contents
-This version of the contract implements [MoreVP](https://ethresear.ch/t/more-viable-plasma/2160) (Fichter, Jones). This implementation is a PoA scheme with one operator and multiple watchers (users). Detailed description of our child chain design is in [Tesuji document](https://github.com/omisego/elixir-omg/blob/master/docs/tesuji_blockchain_design.md).
-Implementation differs from MVP in few regards:
 
-* Added protection against chain re-orgs (https://github.com/omisego/plasma-mvp/pull/51).  
-* Added collected fee exiting for PoA operator.  
-* Added ERC20 handling.  
-* Merkle tree used is of variable depth.  
-* Transaction fee is implicit, not explicit.
+These contracts comprise the root chain component of an extensible plasma framework that can support many [Minimal Viable Plasma (MVP)](https://ethresear.ch/t/minimal-viable-plasma/426) (Buterin) style plasma constructions. The framework features the ability to extend:
 
+  - _transaction types_, influenced by Plasma Group's [Generalized Plasma Architecture](https://medium.com/plasma-group/plapps-and-predicates-understanding-the-generalized-plasma-architecture-fc171b25741)
+  - _exit games_, which can support any MVP-compatible exit game
+  - _token vaults_, such as ETH and ERC-20
 
-### Plasma MVP, confirmations, and MoreVP
-While this implementation contains confirmations, this is a temporary state as we are going to replace confirmations with the exit game defined in [MoreVP](https://ethresear.ch/t/more-viable-plasma/2160) (Fichter, Jones) in the future. Reasons include:
+The framework includes a basic payment _transaction type_ for UTXO transfers, with 4 inputs and 4 outputs. These transactions are secured under [More Viable Plasma (MoreVP)](https://ethresear.ch/t/more-viable-plasma/2160) (Fichter, Jones) exits.
 
-* Bad UX, need to propagate confirm sigs somehow.  
-* Receiver can lie about receiving money; to prove sending, sender needs to publish confirmation to Ethereum.  
-* Additional signature check per tx is needed.  
-* No good way of doing partially signed transactions / atomic swaps.
+The framework includes two _token vaults_, supporting ETH, ERC-20, and [non-compliant ERC-20](plasma_framework/contracts/mocks/vaults/NonCompliantERC20.sol) tokens.
 
-### Re-org protection
-See [here](https://github.com/omisego/elixir-omg/blob/develop/docs/tesuji_blockchain_design.md#reorgs).
+## Child chain and Watchers
 
-### Protection of deposits against malicious operator, pending
-Normally funds are protected by M(ore)VP mechanisms. There is an attack vector where operator spots large deposit in Ethereum mempool and produces a block to steal. If malicious block is mined before the deposit, deposit can be stolen. We are intending to use elevated exit priority for deposits so they always wait at most [Minimal Finalization Period](https://github.com/omisego/elixir-omg/blob/develop/docs/tesuji_blockchain_design.md#finalization-of-exits), while exit from fraudulent block will have to wait for Minimal Finalization Period + Required Exit Period.
+The child chain component of our plasma construction runs under Proof of Authority, with a single operator. The watcher component support many watchers. Detailed description of our child chain design is in [Tesuji document](https://github.com/omisego/elixir-omg/blob/master/docs/tesuji_blockchain_design.md).
+
+The OmiseGO implementation of the child chain and watcher can be found in our [elxir-omg](https://github.com/omisego/elixir-omg) GitHub repository.
+
+## Learn more
+
+You can learn more about [OmiseGO](https://omisego.co) and get started developing with our plasma framework at [developer.omisego.co](https://developer.omisego.co).
 
 
 # Building and running tests
