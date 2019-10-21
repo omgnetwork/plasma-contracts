@@ -1,12 +1,12 @@
 const clonedeep = require('lodash.clonedeep');
 
-const env = process.env.NODE_ENV || 'development';
+const env = process.env.DEPLOYMENT_ENV || 'development';
 
 const development = {
     frameworks: {
-        minExitPeriod: 60 * 10, // 10 min in seconds
-        initialImmuneVaults: 2, // Preserved 2 for ETH and ERC20 vault
-        initialImmuneExitGames: 1, // Preserved 1 for PaymentExitGame
+        minExitPeriod: 60 * 10, // The minimum exit period for testing is 10 seconds.
+        initialImmuneVaults: 2, //  Allow 2 vaults (ETH and ERC20) to be used without going through quarantine.
+        initialImmuneExitGames: 1, // Allow 1 exit game (PaymentExitGame) to be used without going through quarantine.
         protocols: {
             mvp: 1,
             moreVp: 2,
@@ -28,7 +28,7 @@ const development = {
 };
 
 const production = clonedeep(development);
-production.frameworks.minExitPeriod = 60 * 60 * 24 * 7; // 1 week in seconds
+production.frameworks.minExitPeriod = 60 * 60 * 24 * 7; // The minimum exit period in production is 1 week.
 
 const config = {
     development,
