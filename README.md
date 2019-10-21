@@ -5,8 +5,7 @@ Root chain contracts for Plasma M(ore)VP, work in progress.
 [![Build Status](https://circleci.com/gh/omisego/plasma-contracts.svg?style=svg)](https://circleci.com/gh/omisego/plasma-contracts)
 
 ## Contents
-This version of the contract implements [Plasma MVP](https://ethresear.ch/t/minimal-viable-plasma/426) (Buterin, Poon, Knott). This implementation is a PoA scheme with one operator and multiple watchers (users). Detailed description of our child chain design is in [Tesuji document](https://github.com/omisego/elixir-omg/blob/master/docs/tesuji_blockchain_design.md).
-
+This version of the contract implements [MoreVP](https://ethresear.ch/t/more-viable-plasma/2160) (Fichter, Jones). This implementation is a PoA scheme with one operator and multiple watchers (users). Detailed description of our child chain design is in [Tesuji document](https://github.com/omisego/elixir-omg/blob/master/docs/tesuji_blockchain_design.md).
 Implementation differs from MVP in few regards:
 
 * Added protection against chain re-orgs (https://github.com/omisego/plasma-mvp/pull/51).  
