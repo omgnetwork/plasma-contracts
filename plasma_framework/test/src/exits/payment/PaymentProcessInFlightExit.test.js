@@ -283,30 +283,64 @@ contract('PaymentInFlightExitRouter', ([_, ifeBondOwner, inputOwner1, inputOwner
             describe('on piggyback bond return', () => {
                 beforeEach(async () => {
                     this.exit = await buildInFlightExitData(this.attacker.address, this.attacker.address);
+                });
 
-                    this.exit.exitMap = (2 ** 0) + (2 ** MAX_INPUT_NUM);
+                const setExitAndStartProcessing = async (exitMap, isCanonical) => {
+                    this.exit.exitMap = exitMap;
+                    this.exit.isCanonical = isCanonical;
                     await this.exitGame.setInFlightExit(this.dummyExitId, this.exit);
                     const { receipt } = await this.exitGame.processExit(this.dummyExitId, VAULT_ID.ETH, ETH);
-                    this.receipt = receipt;
+                    return receipt;
+                };
+
+                describe('when transaction is non-canonical', () => {
+                    beforeEach(async () => {
+                        this.receipt = await setExitAndStartProcessing(2 ** 0, false);
+                    });
+
+                    it('should not return piggyback bond', async () => {
+                        const postAttackBalance = new BN(await web3.eth.getBalance(this.exitGame.address));
+                        // only start ife bond was returned
+                        const expectedBalance = this.preAttackBalance.sub(new BN(this.startIFEBondSize));
+                        expect(postAttackBalance).to.be.bignumber.equal(expectedBalance);
+                    });
+
+                    it('should publish an event that input bond return failed', async () => {
+                        await expectEvent.inTransaction(
+                            this.receipt.transactionHash,
+                            PaymentProcessInFlightExit,
+                            'InFlightBondReturnFailed',
+                            {
+                                receiver: this.attacker.address,
+                                amount: new BN(this.piggybackBondSize),
+                            },
+                        );
+                    });
                 });
 
-                it('should not return piggyback bond', async () => {
-                    const postAttackBalance = new BN(await web3.eth.getBalance(this.exitGame.address));
-                    // only start ife bond was returned
-                    const expectedBalance = this.preAttackBalance.sub(new BN(this.startIFEBondSize));
-                    expect(postAttackBalance).to.be.bignumber.equal(expectedBalance);
-                });
+                describe('when transaction is canonical', () => {
+                    beforeEach(async () => {
+                        this.receipt = await setExitAndStartProcessing(2 ** MAX_INPUT_NUM, true);
+                    });
 
-                it('should publish an event that input bond return failed', async () => {
-                    await expectEvent.inTransaction(
-                        this.receipt.transactionHash,
-                        PaymentProcessInFlightExit,
-                        'InFlightBondReturnFailed',
-                        {
-                            receiver: this.attacker.address,
-                            amount: new BN(this.piggybackBondSize),
-                        },
-                    );
+                    it('should not return piggyback bond', async () => {
+                        const postAttackBalance = new BN(await web3.eth.getBalance(this.exitGame.address));
+                        // only start ife bond was returned
+                        const expectedBalance = this.preAttackBalance.sub(new BN(this.startIFEBondSize));
+                        expect(postAttackBalance).to.be.bignumber.equal(expectedBalance);
+                    });
+
+                    it('should publish an event that input bond return failed', async () => {
+                        await expectEvent.inTransaction(
+                            this.receipt.transactionHash,
+                            PaymentProcessInFlightExit,
+                            'InFlightBondReturnFailed',
+                            {
+                                receiver: this.attacker.address,
+                                amount: new BN(this.piggybackBondSize),
+                            },
+                        );
+                    });
                 });
             });
         });
