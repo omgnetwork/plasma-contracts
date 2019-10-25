@@ -5,8 +5,6 @@ import "./verifiers/IEthDepositVerifier.sol";
 import "../framework/PlasmaFramework.sol";
 
 contract EthVault is Vault {
-    uint256 private withdrawEntryCounter = 0;
-
     event EthWithdrawn(
         address indexed receiver,
         uint256 amount
