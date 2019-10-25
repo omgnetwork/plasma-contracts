@@ -29,7 +29,9 @@ const {
 } = require('../../../helpers/constants.js');
 const { buildOutputGuard } = require('../../../helpers/utils.js');
 const { buildUtxoPos, UtxoPos } = require('../../../helpers/positions.js');
-const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
+const {
+    PaymentTransactionOutput, PaymentTransaction, PlasmaDepositTransaction,
+} = require('../../../helpers/transaction.js');
 const { createInclusionProof } = require('../../../helpers/ife.js');
 
 contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, competitorOwner, challenger]) => {
@@ -49,6 +51,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
     const TEST_COMPETING_TX_OUTPUT_AMOUNT = 990;
     const INPUT_TX_BLOCK_NUM = 1000;
     const INPUT_UTXO_POS = new UtxoPos(buildUtxoPos(INPUT_TX_BLOCK_NUM, 0, 0));
+    const INPUT_DEPOSIT_UTXO_POS = new UtxoPos(buildUtxoPos(INPUT_TX_BLOCK_NUM + 1, 0, 0));
     const COMPETING_TX_BLOCK_NUM = 2000;
     const DUMMY_OUTPUT_GUARD = web3.utils.utf8ToHex('dummy output guard for shared input');
     const DUMMY_CONFIRM_SIG = web3.utils.utf8ToHex('dummy confirm sig for shared input');
@@ -60,17 +63,23 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
             IFE_TX_TYPE, [buildUtxoPos(0, 0, 0)], [output],
         );
 
-        return {
-            inputTx: web3.utils.bytesToHex(inputTx.rlpEncoded()),
-            decodedInputTx: inputTx,
-        };
+        return web3.utils.bytesToHex(inputTx.rlpEncoded());
     };
 
-    const createCompetitorTransaction = (outputType) => {
+    const createDepositInputTransaction = (outputType) => {
         const output = new PaymentTransactionOutput(
             outputType, TEST_COMPETING_TX_OUTPUT_AMOUNT, buildOutputGuard(competitorOwner), ETH,
         );
-        const competingTx = new PaymentTransaction(IFE_TX_TYPE, [INPUT_UTXO_POS.utxoPos], [output]);
+        const deposit = new PlasmaDepositTransaction(output);
+
+        return web3.utils.bytesToHex(deposit.rlpEncoded());
+    };
+
+    const createCompetitorTransaction = (outputType, competingTxType) => {
+        const output = new PaymentTransactionOutput(
+            outputType, TEST_COMPETING_TX_OUTPUT_AMOUNT, buildOutputGuard(competitorOwner), ETH,
+        );
+        const competingTx = new PaymentTransaction(competingTxType, [INPUT_UTXO_POS.utxoPos], [output]);
         const competingTxPos = new UtxoPos(buildUtxoPos(COMPETING_TX_BLOCK_NUM, 0, 0));
 
         return {
@@ -80,10 +89,26 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
         };
     };
 
-    const buildValidNoncanonicalChallengeArgs = (decodedIfeTx, outputType) => {
-        const { inputTx } = createInputTransaction(outputType);
+    const buildValidNoncanonicalChallengeArgs = (
+        decodedIfeTx,
+        outputType,
+        nonDepositInputTx = true,
+        competingTxType = IFE_TX_TYPE,
+    ) => {
+        let inputTx;
+        let inputUtxoPos;
+        if (nonDepositInputTx) {
+            inputTx = createInputTransaction(outputType);
+            inputUtxoPos = INPUT_UTXO_POS.utxoPos;
+        } else {
+            inputTx = createDepositInputTransaction(outputType);
+            inputUtxoPos = INPUT_DEPOSIT_UTXO_POS.utxoPos;
+        }
 
-        const { competingTx, decodedCompetingTx, competingTxPos } = createCompetitorTransaction(outputType);
+        const { competingTx, decodedCompetingTx, competingTxPos } = createCompetitorTransaction(
+            outputType,
+            competingTxType,
+        );
 
         const {
             inclusionProof, blockHash, blockNum, blockTimestamp,
@@ -96,7 +121,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
         return {
             args: {
                 inputTx,
-                inputUtxoPos: INPUT_UTXO_POS.utxoPos,
+                inputUtxoPos,
                 inFlightTx: web3.utils.bytesToHex(decodedIfeTx.rlpEncoded()),
                 inFlightTxInputIndex: 0,
                 competingTx,
@@ -115,7 +140,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
         };
     };
 
-    const buildInFlightExitData = async (exitIdHelper, outputIdHelper, outputType) => {
+    const buildInFlightExitData = async (exitIdHelper, outputIdHelper, outputType, nonDepositInputTx = true) => {
         const emptyWithdrawData = {
             outputId: web3.utils.sha3('dummy output id'),
             exitTarget: constants.ZERO_ADDRESS,
@@ -129,8 +154,18 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
             IFE_TX_TYPE, [INPUT_UTXO_POS.utxoPos], [output],
         );
 
-        const { inputTx } = createInputTransaction(outputType);
-        const outputIdOfInput = await outputIdHelper.computeNormalOutputId(inputTx, INPUT_UTXO_POS.outputIndex);
+        let outputIdOfInput;
+        if (nonDepositInputTx) {
+            const inputTx = createInputTransaction(outputType);
+            outputIdOfInput = await outputIdHelper.computeNormalOutputId(inputTx, INPUT_UTXO_POS.outputIndex);
+        } else {
+            const deposit = createDepositInputTransaction(outputType);
+            outputIdOfInput = await outputIdHelper.computeDepositOutputId(
+                deposit,
+                INPUT_DEPOSIT_UTXO_POS.outputIndex,
+                INPUT_DEPOSIT_UTXO_POS.utxoPos,
+            );
+        }
 
         const inFlightExitData = {
             exitStartTimestamp: (await time.latest()).toNumber(),
@@ -186,7 +221,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
         this.txFinalizationVerifier = await TxFinalizationVerifier.new();
     });
 
-    beforeEach(async () => {
+    beforeEach('deploy framework', async () => {
         this.framework = await SpyPlasmaFramework.new(
             MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
         );
@@ -223,9 +258,11 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
         await this.spendingConditionRegistry.registerSpendingCondition(
             OUTPUT_TYPE.PAYMENT, IFE_TX_TYPE, this.condition.address,
         );
+    });
 
+    const setInFlightExit = async (outputType, nonDepositInputTx, competingTxType = IFE_TX_TYPE) => {
         const { exitId, inFlightTx, inFlightExitData } = await buildInFlightExitData(
-            this.exitIdHelper, this.outputIdHelper, OUTPUT_TYPE.PAYMENT,
+            this.exitIdHelper, this.outputIdHelper, outputType, nonDepositInputTx,
         );
         await this.exitGame.setInFlightExit(exitId, inFlightExitData);
         this.inFlightTx = inFlightTx;
@@ -233,11 +270,44 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
 
         const {
             args: cArgs, block, decodedCompetingTx,
-        } = buildValidNoncanonicalChallengeArgs(inFlightTx, OUTPUT_TYPE.PAYMENT);
+        } = buildValidNoncanonicalChallengeArgs(inFlightTx, outputType, nonDepositInputTx, competingTxType);
 
         this.challengeArgs = cArgs;
         this.competingTx = decodedCompetingTx;
         this.competingTxBlock = block;
+    };
+
+    beforeEach('set in-flight exit', async () => {
+        await setInFlightExit(OUTPUT_TYPE.PAYMENT, true);
+    });
+
+    describe('challenge in-flight exit non-canonical', () => {
+        beforeEach('set in-flight exit', async () => {
+            await setInFlightExit(OUTPUT_TYPE.PAYMENT, false);
+        });
+
+        it('should successfuly challenge when transaction that created input tx is a deposit', async () => {
+            await this.framework.setBlock(
+                this.competingTxBlock.blockNum,
+                this.competingTxBlock.blockHash,
+                this.competingTxBlock.blockTimestamp,
+            );
+
+            const challengeIFETx = await this.exitGame.challengeInFlightExitNotCanonical(
+                this.challengeArgs, { from: challenger },
+            );
+
+            const rlpInFlightTxBytes = web3.utils.bytesToHex(this.inFlightTx.rlpEncoded());
+            await expectEvent.inLogs(
+                challengeIFETx.logs,
+                'InFlightExitChallenged',
+                {
+                    challenger,
+                    txHash: web3.utils.sha3(rlpInFlightTxBytes),
+                    challengeTxPosition: new BN(this.challengeArgs.competingTxPos),
+                },
+            );
+        });
     });
 
     describe('challenge in-flight exit non-canonical', () => {
@@ -296,6 +366,15 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
                 await expectRevert(
                     this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: challenger }),
                     'The competitor transaction is the same as transaction in-flight',
+                );
+            });
+
+            it('fails when provided input tx does not match input tx stored in in-flight exit data', async () => {
+                this.challengeArgs.inputTx = this.challengeArgs.inFlightTx;
+
+                await expectRevert(
+                    this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: challenger }),
+                    'Provided inputs data does not point to the same outputId from the in-flight exit',
                 );
             });
 
@@ -421,6 +500,51 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
                     },
                 );
             });
+        });
+    });
+
+    describe('challenge in-flight exit non-canonical', () => {
+        beforeEach('set in-flight exit', async () => {
+            const unregisteredOutputType = 2;
+            await setInFlightExit(unregisteredOutputType, false);
+
+            await this.spendingConditionRegistry.registerSpendingCondition(
+                unregisteredOutputType, IFE_TX_TYPE, this.condition.address,
+            );
+        });
+
+        it('fails when there is no output guard handler matching output type', async () => {
+            await this.framework.setBlock(
+                this.competingTxBlock.blockNum,
+                this.competingTxBlock.blockHash,
+                this.competingTxBlock.blockTimestamp,
+            );
+
+            await expectRevert(
+                this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: challenger }),
+                'Failed to retrieve the outputGuardHandler of the output type',
+            );
+        });
+    });
+
+    describe('challenge in-flight exit non-canonical', () => {
+        beforeEach('set in-flight exit', async () => {
+            const otherTxType = 3;
+            await setInFlightExit(OUTPUT_TYPE.PAYMENT, false, otherTxType);
+        });
+
+        it('fails when competing tx without position is not a MoreVP transaction', async () => {
+            await this.framework.setBlock(
+                this.competingTxBlock.blockNum,
+                this.competingTxBlock.blockHash,
+                this.competingTxBlock.blockTimestamp,
+            );
+
+            this.challengeArgs.competingTxPos = 0;
+            await expectRevert(
+                this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: challenger }),
+                'Competing tx without position must be a MoreVP tx',
+            );
         });
     });
 
