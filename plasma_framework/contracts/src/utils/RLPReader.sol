@@ -232,7 +232,18 @@ library RLPReader {
 
         if (byte0 < STRING_SHORT_START) {
             payloadOffsetLength = 0;
-        } else if (byte0 < STRING_LONG_START || (byte0 >= LIST_SHORT_START && byte0 < LIST_LONG_START)) {
+        } else if (byte0 < STRING_LONG_START) {
+            if (item.len == 2){
+                uint byte1;
+                // solhint-disable-next-line no-inline-assembly
+                assembly {
+                    byte1 := byte(0, mload(add(memPtr,1)))
+                }
+                require(byte1 >= STRING_SHORT_START, "Invalid RLP encoding");
+            }
+            payloadOffsetLength = 1;
+        }
+        else if (byte0 >= LIST_SHORT_START && byte0 < LIST_LONG_START){
             payloadOffsetLength = 1;
         } else if (byte0 < LIST_SHORT_START) {
             payloadOffsetLength = byte0 - (STRING_LONG_START - 1) + 1;
@@ -240,7 +251,7 @@ library RLPReader {
             payloadOffsetLength = byte0 - (LIST_LONG_START - 1) + 1;
         }
 
-        require (payloadOffsetLength < item.len, "Encoded RLPItem payload length is invalid");
+        require (payloadOffsetLength <= item.len, "Encoded RLPItem payload length is invalid");
 
         return payloadOffsetLength;
     }
