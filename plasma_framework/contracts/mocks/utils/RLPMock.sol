@@ -21,6 +21,10 @@ contract RLPMock {
         return _data.toRlpItem().toUint();
     }
 
+    function decodeInt(bytes memory _data) public pure returns (int) {
+         return int(_data.toRlpItem().toUint());
+    }
+
     function decodeList(bytes memory _data) public pure returns (bytes[] memory) {
         RLPReader.RLPItem[] memory items = _data.toRlpItem().toList();
 
