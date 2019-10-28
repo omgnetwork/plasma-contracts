@@ -46,7 +46,7 @@ library RLPReader {
         require(isList(item), "Item is not a list");
 
         uint listLength = decodeItemLengthUnsafe(item.memPtr);
-        require(listLength == item.len, "Decoded RLP length is invalid");
+        require(listLength == item.len, "Decoded RLP length for list is invalid");
 
         uint items = countEncodedItems(item);
         RLPItem[] memory result = new RLPItem[](items);
@@ -57,7 +57,7 @@ library RLPReader {
         for (uint i = 0; i < items; i++) {
             dataLen = decodeItemLengthUnsafe(memPtr);
             lengthSum += dataLen;
-            require(lengthSum < item.len, "Decoded RLP length is invalid");
+            require(lengthSum < item.len, "Decoded length of RLP item in list is invalid");
             result[i] = RLPItem(dataLen, memPtr);
             memPtr = memPtr + dataLen;
         }
@@ -102,7 +102,7 @@ library RLPReader {
 
     function toAddress(RLPItem memory item) internal pure returns (address) {
         // 1 byte for the length prefix
-        require(item.len == 21, "Item length must be == 21");
+        require(item.len == 21, "Item length must be 21");
 
         return address(toUint(item));
     }
@@ -112,9 +112,9 @@ library RLPReader {
      * @param item RLPItem
      */
     function toUint(RLPItem memory item) internal pure returns (uint) {
-        require(item.len > 0 && item.len <= 33, "Item length must be <= 33");
+        require(item.len > 0 && item.len <= 33, "Item length must be between 1 and 33 bytes");
         uint itemLen = decodeItemLengthUnsafe(item.memPtr);
-        require(itemLen <= item.len, "Length is larger than input data");
+        require(itemLen <= item.len, "Decoded length is greater than input data");
 
         uint offset = decodePayloadOffset(item);
         uint len = itemLen - offset;
@@ -145,8 +145,8 @@ library RLPReader {
         uint currPtr = item.memPtr + decodePayloadOffset(item);
         uint endPtr = item.memPtr + item.len;
         while (currPtr < endPtr) {
-            currPtr = currPtr + decodeItemLengthUnsafe(currPtr); // skip over an item
-            require(currPtr <= endPtr, "Decoded RLP length is invalid");
+            currPtr = currPtr + decodeItemLengthUnsafe(currPtr); 
+            require(currPtr <= endPtr, "Invalid decoded length of RLP item found during counting items in a list");
             count++;
         }
 
@@ -291,8 +291,6 @@ library RLPReader {
         require(item.len > 0, "Item length must be > 0");
 
         uint itemLen = decodeItemLengthUnsafe(item.memPtr);
-        require(itemLen <= item.len, "Decoded RLP length is invalid");
-
         uint offset = decodePayloadOffset(item);
         uint len = itemLen - offset;
         bytes memory result = new bytes(len);

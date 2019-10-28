@@ -32,8 +32,16 @@ contract('RLP invalid tests', () => {
         it(`should revert on invalid test ${testName}`, async () => {
             const encoded = tests[testName].out;
 
-            if (testName.includes('InvalidEncodedLength')) {
-                await expectRevert(decode(encoded), 'Decoded RLP length is invalid');
+            if (testName.includes('stringListInvalidEncodedLength')) {
+                await expectRevert(this.rlp.decodeList(encoded), 'Decoded RLP length for list is invalid');
+            } else if (testName.includes('stringListInvalidEncodedItemLength')) {
+                await expectRevert(this.rlp.decodeList(encoded), 'Invalid decoded length of RLP item found during counting items in a list');
+            } else if (testName.includes('shortStringInvalidEncodedLength')) {
+                await expectRevert(this.rlp.decodeUint(encoded), 'Decoded length is greater than input data');
+            } else if (testName.includes('wrongEmptyString')) {
+                await expectRevert(this.rlp.decodeUint(encoded), 'Item length must be between 1 and 33 bytes');
+            } else if (testName.includes('invalidAddress')) {
+                await expectRevert(this.rlp.decodeBytes20(encoded), 'Item length must be 21');
             } else {
                 await expectRevert(decode(encoded), 'Invalid RLP encoding');
             }

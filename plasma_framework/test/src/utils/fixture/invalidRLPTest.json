@@ -1,4 +1,9 @@
 {
+	"wrongEmptyString": {
+		"in": "INVALID",
+		"out": "0x"
+	},
+
 	"wrongSizeList": {
 		"in": "INVALID",
 		"out": "0xf80180"
@@ -76,7 +81,7 @@
 
     "shortStringInvalidEncodedLength1": {
 		"in": "INVALID",
-		"out": "0x84646f67"
+		"out": "0x84000001"
 	},
 
 	"stringListInvalidEncodedLength1": {
@@ -84,13 +89,18 @@
 		"out": "0xcf83646f6783676f6483636174"
 	},
 	
-	"stringListInvalidEncodedLength2": {
+	"stringListInvalidEncodedItemLength1": {
 		"in": "INVALID",
 		"out": "0xcc89646f6783676f6483638374"
 	},
 
-	"stringListInvalidEncodedLength3": {
+	"stringListInvalidEncodedItemLength2": {
 		"in": "INVALID",
 		"out": "0xcc83646f6783676f6486636174"
+	},
+
+	"invalidAddress": {
+		"in": "INVALID",
+		"out": "0xa100627306090abaB3A6e1400e9345bC60c78a8BEf57"
 	}
 }

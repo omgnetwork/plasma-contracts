@@ -17,10 +17,6 @@ contract RLPMock {
         return bytes20(_data.toRlpItem().toAddress());
     }
 
-    function decodeInt(bytes memory _data) public pure returns (int) {
-        return int(_data.toRlpItem().toUint());
-    }
-
     function decodeUint(bytes memory _data) public pure returns (uint) {
         return _data.toRlpItem().toUint();
     }
