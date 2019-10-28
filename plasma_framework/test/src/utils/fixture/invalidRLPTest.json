@@ -78,8 +78,19 @@
 		"in": "INVALID",
 		"out": "0x84646f67"
 	},
+
 	"stringListInvalidEncodedLength1": {
-		"in": ["dog", "god", "cat"],
+		"in": "INVALID",
 		"out": "0xcf83646f6783676f6483636174"
-	  }
+	},
+	
+	"stringListInvalidEncodedLength2": {
+		"in": "INVALID",
+		"out": "0xcc89646f6783676f6483638374"
+	},
+
+	"stringListInvalidEncodedLength3": {
+		"in": "INVALID",
+		"out": "0xcc83646f6783676f6486636174"
+	}
 }

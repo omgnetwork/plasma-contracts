@@ -146,7 +146,7 @@ library RLPReader {
         uint endPtr = item.memPtr + item.len;
         while (currPtr < endPtr) {
             currPtr = currPtr + decodeItemLengthUnsafe(currPtr); // skip over an item
-            require(currPtr <= endPtr, "Invalid RLP item length");
+            require(currPtr <= endPtr, "Decoded RLP length is invalid");
             count++;
         }
 
