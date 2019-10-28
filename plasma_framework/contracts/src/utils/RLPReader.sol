@@ -276,13 +276,16 @@ library RLPReader {
         }
     }
 
+    /**
+     * @notice Convert RLPItem in a dynamic bytes array
+     */
     function toBytes(RLPItem memory item) internal pure returns (bytes memory) {
         require(item.len > 0, "Item length must be > 0");
 
         uint itemLen = decodeItemLengthUnsafe(item.memPtr);
         require(itemLen <= item.len, "Length is larger than data");
 
-        uint offset = decodePayloadOffset(item);(item.memPtr);
+        uint offset = decodePayloadOffset(item);
         uint len = itemLen - offset;
         bytes memory result = new bytes(len);
 
