@@ -22,7 +22,7 @@ contract RLPMock {
     }
 
     function decodeInt(bytes memory _data) public pure returns (int) {
-         return int(_data.toRlpItem().toUint());
+        return int(_data.toRlpItem().toUint());
     }
 
     function decodeList(bytes memory _data) public pure returns (bytes[] memory) {
