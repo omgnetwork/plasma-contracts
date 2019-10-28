@@ -31,7 +31,12 @@ contract('RLP invalid tests', () => {
     Object.keys(tests).forEach((testName) => {
         it(`should revert on invalid test ${testName}`, async () => {
             const encoded = tests[testName].out;
-            await expectRevert(decode(encoded), 'Invalid RLP encoding');
+
+            if (testName.includes('InvalidEncodedLength')) {
+                await expectRevert(decode(encoded), 'Decoded RLP length is invalid');
+            } else {
+                await expectRevert(decode(encoded), 'Invalid RLP encoding');
+            }
         });
     });
 });

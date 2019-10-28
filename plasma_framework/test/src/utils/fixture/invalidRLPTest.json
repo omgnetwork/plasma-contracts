@@ -78,9 +78,8 @@
 		"in": "INVALID",
 		"out": "0x84646f67"
 	},
-	"shortStringInvalidEncodedLength2": {
-		"in": "INVALID",
-		"out": "0x82646f67"
-	}
-
+	"stringListInvalidEncodedLength1": {
+		"in": ["dog", "god", "cat"],
+		"out": "0xcf83646f6783676f6483636174"
+	  }
 }
