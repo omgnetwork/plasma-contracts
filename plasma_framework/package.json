@@ -24,6 +24,7 @@
     "ethereumjs-util": "^6.1.0",
     "openzeppelin-test-helpers": "^0.4.3",
     "rlp": "^2.2.3",
+    "seedrandom": "^3.0.5",
     "solhint": "^2.2.0",
     "solidity-coverage": "^0.7.0-beta.2",
     "truffle": "^5.0.37"
