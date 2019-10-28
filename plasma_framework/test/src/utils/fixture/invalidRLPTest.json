@@ -72,6 +72,15 @@
 	"nonOptimalLongLengthList2": {
 		"in": "INVALID",
 		"out": "0xf803112233"
+	}, 
+
+    "shortStringInvalidEncodedLength1": {
+		"in": "INVALID",
+		"out": "0x84646f67"
+	},
+	"shortStringInvalidEncodedLength2": {
+		"in": "INVALID",
+		"out": "0x82646f67"
 	}
 
 }
