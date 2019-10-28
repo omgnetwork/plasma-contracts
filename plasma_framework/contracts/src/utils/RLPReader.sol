@@ -86,7 +86,6 @@ library RLPReader {
      * @param item RLPItem
      * @return Raw rlp encoding in bytes
      */
-
     function toRlpBytes(RLPItem memory item) internal pure returns (bytes memory) {
         bytes memory result = new bytes(item.len);
         if (result.length == 0) return result;
@@ -114,7 +113,6 @@ library RLPReader {
      */
     function toUint(RLPItem memory item) internal pure returns (uint) {
         require(item.len > 0 && item.len <= 33, "Item length must be <= 33");
-        
         uint itemLen = decodeItemLengthUnsafe(item.memPtr);
         require(itemLen <= item.len, "Length is larger than input data");
 
@@ -237,13 +235,12 @@ library RLPReader {
                 uint byte1;
                 // solhint-disable-next-line no-inline-assembly
                 assembly {
-                    byte1 := byte(0, mload(add(memPtr,1)))
+                    byte1 := byte(0, mload(add(memPtr, 1)))
                 }
                 require(byte1 >= STRING_SHORT_START, "Invalid RLP encoding");
             }
             payloadOffsetLength = 1;
-        }
-        else if (byte0 >= LIST_SHORT_START && byte0 < LIST_LONG_START){
+        } else if (byte0 >= LIST_SHORT_START && byte0 < LIST_LONG_START){
             payloadOffsetLength = 1;
         } else if (byte0 < LIST_SHORT_START) {
             payloadOffsetLength = byte0 - (STRING_LONG_START - 1) + 1;
@@ -251,7 +248,7 @@ library RLPReader {
             payloadOffsetLength = byte0 - (LIST_LONG_START - 1) + 1;
         }
 
-        require (payloadOffsetLength <= item.len, "Encoded RLPItem payload length is invalid");
+        require(payloadOffsetLength <= item.len, "Encoded RLPItem payload length is invalid");
 
         return payloadOffsetLength;
     }
