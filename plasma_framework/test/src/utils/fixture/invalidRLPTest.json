@@ -98,9 +98,12 @@
 		"in": "INVALID",
 		"out": "0xcc83646f6783676f6486636174"
 	},
-
 	"invalidAddress": {
 		"in": "INVALID",
 		"out": "0x9a00627306090abaB3A6e1400e9345bC60c78a8BEf57"
+	},
+	"invalidList": {
+		"in": "INVALID",
+		"out": "0x1234567890"
 	}
 }

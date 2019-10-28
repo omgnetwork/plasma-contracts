@@ -40,8 +40,11 @@ contract('RLP invalid tests', () => {
                 await expectRevert(this.rlp.decodeUint(encoded), 'Decoded length is greater than input data');
             } else if (testName.includes('wrongEmptyString')) {
                 await expectRevert(this.rlp.decodeUint(encoded), 'Item length must be between 1 and 33 bytes');
+                await expectRevert(this.rlp.decodeList(encoded), 'Item is not a list');
             } else if (testName.includes('invalidAddress')) {
                 await expectRevert(this.rlp.decodeBytes20(encoded), 'Item length must be 21');
+            } else if (testName.includes('invalidList')) {
+                await expectRevert(this.rlp.decodeList(encoded), 'Item is not a list');
             } else {
                 await expectRevert(decode(encoded), 'Invalid RLP encoding');
             }
