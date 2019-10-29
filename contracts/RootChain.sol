@@ -1123,8 +1123,7 @@ contract RootChain {
         uint256 exitableTimestamp;
         if (_isDeposit(_utxoPos.getBlknum())) {
             exitableTimestamp = getDepositTxExitableTimestamp(_utxoPos);
-        }
-        else {
+        } else {
             exitableTimestamp = getTxExitableTimestamp(_utxoPos);
         }
         return _getExitPriority(exitableTimestamp, _exitId, _utxoPos);
