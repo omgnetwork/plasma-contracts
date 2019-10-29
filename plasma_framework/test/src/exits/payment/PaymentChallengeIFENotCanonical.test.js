@@ -68,7 +68,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
 
     const createDepositInputTransaction = (outputType) => {
         const output = new PaymentTransactionOutput(
-            outputType, TEST_COMPETING_TX_OUTPUT_AMOUNT, buildOutputGuard(competitorOwner), ETH,
+            outputType, TEST_IFE_INPUT_AMOUNT, buildOutputGuard(inputOwner), ETH,
         );
         const deposit = new PlasmaDepositTransaction(output);
 
@@ -92,17 +92,17 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
     const buildValidNoncanonicalChallengeArgs = (
         decodedIfeTx,
         outputType,
-        nonDepositInputTx = true,
+        isInputTxDeposit = false,
         competingTxType = IFE_TX_TYPE,
     ) => {
         let inputTx;
         let inputUtxoPos;
-        if (nonDepositInputTx) {
-            inputTx = createInputTransaction(outputType);
-            inputUtxoPos = INPUT_UTXO_POS.utxoPos;
-        } else {
+        if (isInputTxDeposit) {
             inputTx = createDepositInputTransaction(outputType);
             inputUtxoPos = INPUT_DEPOSIT_UTXO_POS.utxoPos;
+        } else {
+            inputTx = createInputTransaction(outputType);
+            inputUtxoPos = INPUT_UTXO_POS.utxoPos;
         }
 
         const { competingTx, decodedCompetingTx, competingTxPos } = createCompetitorTransaction(
@@ -140,7 +140,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
         };
     };
 
-    const buildInFlightExitData = async (exitIdHelper, outputIdHelper, outputType, nonDepositInputTx = true) => {
+    const buildInFlightExitData = async (exitIdHelper, outputIdHelper, outputType, isInputTxDeposit = false) => {
         const emptyWithdrawData = {
             outputId: web3.utils.sha3('dummy output id'),
             exitTarget: constants.ZERO_ADDRESS,
@@ -155,16 +155,16 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
         );
 
         let outputIdOfInput;
-        if (nonDepositInputTx) {
-            const inputTx = createInputTransaction(outputType);
-            outputIdOfInput = await outputIdHelper.computeNormalOutputId(inputTx, INPUT_UTXO_POS.outputIndex);
-        } else {
+        if (isInputTxDeposit) {
             const deposit = createDepositInputTransaction(outputType);
             outputIdOfInput = await outputIdHelper.computeDepositOutputId(
                 deposit,
                 INPUT_DEPOSIT_UTXO_POS.outputIndex,
                 INPUT_DEPOSIT_UTXO_POS.utxoPos,
             );
+        } else {
+            const inputTx = createInputTransaction(outputType);
+            outputIdOfInput = await outputIdHelper.computeNormalOutputId(inputTx, INPUT_UTXO_POS.outputIndex);
         }
 
         const inFlightExitData = {
@@ -278,12 +278,12 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
     };
 
     beforeEach('set in-flight exit', async () => {
-        await setInFlightExit(OUTPUT_TYPE.PAYMENT, true);
+        await setInFlightExit(OUTPUT_TYPE.PAYMENT, false);
     });
 
     describe('challenge in-flight exit non-canonical', () => {
         beforeEach('set in-flight exit', async () => {
-            await setInFlightExit(OUTPUT_TYPE.PAYMENT, false);
+            await setInFlightExit(OUTPUT_TYPE.PAYMENT, true);
         });
 
         it('should successfuly challenge when transaction that created input tx is a deposit', async () => {
@@ -506,7 +506,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
     describe('challenge in-flight exit non-canonical', () => {
         beforeEach('set in-flight exit', async () => {
             const unregisteredOutputType = 2;
-            await setInFlightExit(unregisteredOutputType, false);
+            await setInFlightExit(unregisteredOutputType, true);
 
             await this.spendingConditionRegistry.registerSpendingCondition(
                 unregisteredOutputType, IFE_TX_TYPE, this.condition.address,
@@ -530,7 +530,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
     describe('challenge in-flight exit non-canonical', () => {
         beforeEach('set in-flight exit', async () => {
             const otherTxType = 3;
-            await setInFlightExit(OUTPUT_TYPE.PAYMENT, false, otherTxType);
+            await setInFlightExit(OUTPUT_TYPE.PAYMENT, true, otherTxType);
         });
 
         it('fails when competing tx without position is not a MoreVP transaction', async () => {
