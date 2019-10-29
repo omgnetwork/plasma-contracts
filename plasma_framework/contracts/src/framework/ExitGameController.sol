@@ -51,7 +51,7 @@ contract ExitGameController is ExitGameRegistry {
         require(!mutex, "Reentrant call");
         mutex = true;
         _;
-        require(mutex, "Not locked");
+        assert(mutex);
         mutex = false;
     }
 
@@ -70,7 +70,7 @@ contract ExitGameController is ExitGameRegistry {
      * @dev Accessible only from non quarantined exit games, uses a mutex
      */
     function deactivateNonReentrant() external onlyFromNonQuarantinedExitGame() {
-        require(mutex, "Not locked");
+        assert(mutex);
         mutex = false;
     }
 
