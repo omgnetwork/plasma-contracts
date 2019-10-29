@@ -1066,19 +1066,27 @@ contract RootChain {
      * @param _utxoPos Output identifier.
      * @return uint256 Timestamp after which this output is exitable.
      */
-    function getExitableTimestamp(uint256 _utxoPos)
+    function getTxExitableTimestamp(uint256 _utxoPos)
         public
         view
         returns (uint256)
     {
         uint256 blknum = _utxoPos.getBlknum();
-        if (_isDeposit(blknum)) {
-            // High priority exit for the deposit.
-            return block.timestamp + minExitPeriod;
-        }
-        else {
-            return Math.max(blocks[blknum].timestamp + (minExitPeriod * 2), block.timestamp + minExitPeriod);
-        }
+        return Math.max(blocks[blknum].timestamp + (minExitPeriod * 2), block.timestamp + minExitPeriod);
+    }
+
+    /**
+     * @dev Given an utxo position of a deposit, determines when it's exitable, if it were to be exited now.
+     * @notice Should only be used to boost priority of the SE from a deposit.
+     * @param _utxoPos Output identifier.
+     * @return uint256 Timestamp after which this output is exitable.
+     */
+    function getDepositTxExitableTimestamp(uint256 _utxoPos)
+        public
+        view
+        returns (uint256)
+    {
+        return block.timestamp + minExitPeriod;
     }
 
     /**
@@ -1112,8 +1120,13 @@ contract RootChain {
         view
         returns (uint256)
     {
-        uint256 tx_pos = _utxoPos.getTxPos();
-        return ((getExitableTimestamp(_utxoPos) << 214) | (tx_pos << 160)) | _exitId;
+        uint256 exitableTimestamp;
+        if (_isDeposit(_utxoPos.getBlknum())) {
+            exitableTimestamp = getDepositTxExitableTimestamp(_utxoPos);
+        } else {
+            exitableTimestamp = getTxExitableTimestamp(_utxoPos);
+        }
+        return _getExitPriority(exitableTimestamp, _exitId, _utxoPos);
     }
 
     /**
@@ -1126,7 +1139,17 @@ contract RootChain {
         view
         returns (uint256)
     {
-        return getStandardExitPriority(getInFlightExitId(_tx), _txoPos);
+      uint256 exitableTimestamp = getTxExitableTimestamp(_txoPos);
+      return _getExitPriority(exitableTimestamp, getInFlightExitId(_tx), _txoPos);
+    }
+
+    function _getExitPriority(uint256 _exitableTimestamp, uint192 _exitId, uint256 _utxoPos)
+        private
+        pure
+        returns (uint256)
+    {
+        uint256 tx_pos = _utxoPos.getTxPos();
+        return ((_exitableTimestamp << 214) | (tx_pos << 160)) | _exitId;
     }
 
     /**

@@ -84,6 +84,26 @@ def test_finalize_exits_for_erc20_should_succeed(testlang, root_chain, token):
     assert token.balanceOf(owner.address) == pre_balance + amount
 
 
+def test_finalize_in_flight_exit_with_deposit_is_mature_after_mfp_plus_rep(testlang):
+    owner, amount = testlang.accounts[0], 100
+    deposit_id = testlang.deposit(owner, amount)
+    spend_id = testlang.spend_utxo([deposit_id], [owner.key], [(owner.address, NULL_ADDRESS, 100)])
+    testlang.start_in_flight_exit(spend_id)
+    testlang.piggyback_in_flight_exit_output(spend_id, 0, owner.key)
+
+    testlang.forward_timestamp(MIN_EXIT_PERIOD + 1)
+    testlang.process_exits(NULL_ADDRESS, 0, 100)
+    in_flight_exit = testlang.get_in_flight_exit(spend_id)
+    assert in_flight_exit.exit_start_timestamp != 0
+
+    testlang.forward_timestamp(MIN_EXIT_PERIOD)
+    testlang.process_exits(NULL_ADDRESS, 0, 100)
+    in_flight_exit = testlang.get_in_flight_exit(spend_id)
+    assert in_flight_exit.exit_start_timestamp == 0
+    assert in_flight_exit.bond_owner == NULL_ADDRESS_HEX
+    assert in_flight_exit.oldest_competitor == 0
+
+
 def test_finalize_exits_old_utxo_is_mature_after_single_mfp(testlang):
     minimal_finalization_period = MIN_EXIT_PERIOD  # aka MFP - see tesuji blockchain design
     required_exit_period = MIN_EXIT_PERIOD  # aka REP - see tesuji blockchain design
@@ -94,12 +114,14 @@ def test_finalize_exits_old_utxo_is_mature_after_single_mfp(testlang):
 
     testlang.forward_timestamp(required_exit_period)
     testlang.start_standard_exit(spend_id, owner.key)
-    testlang.forward_timestamp(minimal_finalization_period)
 
+    testlang.forward_timestamp(minimal_finalization_period)
     assert testlang.get_standard_exit(spend_id).owner == owner.address
+
     testlang.process_exits(NULL_ADDRESS, 0, 100)
-    testlang.forward_timestamp(1)
     assert testlang.get_standard_exit(spend_id).owner == owner.address
+
+    testlang.forward_timestamp(1)
     testlang.process_exits(NULL_ADDRESS, 0, 100)
     assert testlang.get_standard_exit(spend_id).owner == NULL_ADDRESS_HEX
 
