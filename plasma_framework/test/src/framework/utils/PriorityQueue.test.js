@@ -17,9 +17,10 @@ contract('PriorityQueue', ([_, nonOwner]) => {
         });
 
         it('fails when empty', async () => {
-            const errorMsg = 'Returned error: VM Exception while processing transaction: invalid opcode';
-            await this.priorityQueue.getMin()
-                .catch(err => expect(err.message).to.equal(errorMsg));
+            await expectRevert(
+                this.priorityQueue.getMin(),
+                'Queue is empty',
+            );
         });
     });
 
@@ -126,6 +127,13 @@ contract('PriorityQueue', ([_, nonOwner]) => {
             await expectRevert(
                 this.priorityQueue.delMin({ from: nonOwner }),
                 'Caller address is unauthorized',
+            );
+        });
+
+        it('should fail when queue is empty', async () => {
+            await expectRevert(
+                this.priorityQueue.delMin(),
+                'Queue is empty',
             );
         });
     });
