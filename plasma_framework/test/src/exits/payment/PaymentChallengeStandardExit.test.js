@@ -257,6 +257,21 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
                 );
             });
 
+            it('should fail when provided exiting transaction does not match stored exiting transaction', async () => {
+                const args = getTestInputArgs(OUTPUT_TYPE.PAYMENT, alice);
+                await this.exitGame.setExit(args.exitId, getTestExitData(args, alice, this.startStandardExitBondSize));
+
+                const output = new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, TEST_AMOUNT, alice, ETH);
+                const exitingTxObj = new PaymentTransaction(2, [0], [output]);
+                const exitingTx = web3.utils.bytesToHex(exitingTxObj.rlpEncoded());
+                args.exitingTx = exitingTx;
+
+                await expectRevert(
+                    this.exitGame.challengeStandardExit(args, { from: bob }),
+                    'Invalid exiting tx causing outputId mismatch',
+                );
+            });
+
             it('should call the OutputGuardHandler contract with expected params', async () => {
                 await this.exitGame.depositFundForTest({ value: this.startStandardExitBondSize });
 
