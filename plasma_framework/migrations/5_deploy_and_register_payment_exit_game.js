@@ -29,15 +29,34 @@ module.exports = async (
     const PAYMENT_V2_TX_TYPE = config.registerKeys.txTypes.paymentV2;
 
     // deploy and link exit game controllers
-    const startStandardExit = await PaymentStartStandardExit.new();
-    const challengeStandardExit = await PaymentChallengeStandardExit.new();
-    const processStandardExit = await PaymentProcessStandardExit.new();
-    const startInFlightExit = await PaymentStartInFlightExit.new();
-    const piggybackInFlightExit = await PaymentPiggybackInFlightExit.new();
-    const challengeInFlightExitNotCanonical = await PaymentChallengeIFENotCanonical.new();
-    const challengeIFEInputSpent = await PaymentChallengeIFEInputSpent.new();
-    const challengeIFEOutput = await PaymentChallengeIFEOutputSpent.new();
-    const processInFlightExit = await PaymentProcessInFlightExit.new();
+
+    await deployer.deploy(PaymentStartStandardExit);
+    const startStandardExit = await PaymentStartStandardExit.deployed();
+
+    await deployer.deploy(PaymentChallengeStandardExit);
+    const challengeStandardExit = await PaymentChallengeStandardExit.deployed();
+
+    await deployer.deploy(PaymentProcessStandardExit);
+    const processStandardExit = await PaymentProcessStandardExit.deployed();
+
+    await deployer.deploy(PaymentStartInFlightExit);
+    const startInFlightExit = await PaymentStartInFlightExit.deployed();
+
+    await deployer.deploy(PaymentPiggybackInFlightExit);
+    const piggybackInFlightExit = await PaymentPiggybackInFlightExit.deployed();
+
+    await deployer.deploy(PaymentChallengeIFENotCanonical);
+    const challengeInFlightExitNotCanonical = await PaymentChallengeIFENotCanonical.deployed();
+
+    await deployer.deploy(PaymentChallengeIFEInputSpent);
+    const challengeIFEInputSpent = await PaymentChallengeIFEInputSpent.deployed();
+
+    await deployer.deploy(PaymentChallengeIFEOutputSpent);
+    const challengeIFEOutput = await PaymentChallengeIFEOutputSpent.deployed();
+
+    await deployer.deploy(PaymentProcessInFlightExit);
+    const processInFlightExit = await PaymentProcessInFlightExit.deployed();
+
     await PaymentExitGame.link('PaymentStartStandardExit', startStandardExit.address);
     await PaymentExitGame.link('PaymentChallengeStandardExit', challengeStandardExit.address);
     await PaymentExitGame.link('PaymentProcessStandardExit', processStandardExit.address);
@@ -49,12 +68,23 @@ module.exports = async (
     await PaymentExitGame.link('PaymentProcessInFlightExit', processInFlightExit.address);
 
     // deploy exit game
-    const outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
-    const spendingConditionRegistry = await SpendingConditionRegistry.new();
-    const stateVerifier = await PaymentTransactionStateTransitionVerifier.new();
-    const txFinalizationVerifier = await TxFinalizationVerifier.new();
+
+    await deployer.deploy(OutputGuardHandlerRegistry);
+    const outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.deployed();
+
+    await deployer.deploy(SpendingConditionRegistry);
+    const spendingConditionRegistry = await SpendingConditionRegistry.deployed();
+
+    await deployer.deploy(PaymentTransactionStateTransitionVerifier);
+    const stateVerifier = await PaymentTransactionStateTransitionVerifier.deployed();
+
+    await deployer.deploy(TxFinalizationVerifier);
+    const txFinalizationVerifier = await TxFinalizationVerifier.deployed();
+
     const plasmaFramework = await PlasmaFramework.deployed();
-    const paymentExitGame = await PaymentExitGame.new(
+
+    const paymentExitGame = await deployer.deploy(
+        PaymentExitGame,
         plasmaFramework.address,
         config.registerKeys.vaultId.eth,
         config.registerKeys.vaultId.erc20,
@@ -66,19 +96,30 @@ module.exports = async (
     );
 
     // handle output guard handler
-    const paymentOutputGuardHandler = await PaymentOutputGuardHandler.new(PAYMENT_OUTPUT_TYPE);
+    await deployer.deploy(PaymentOutputGuardHandler, PAYMENT_OUTPUT_TYPE);
+    const paymentOutputGuardHandler = await PaymentOutputGuardHandler.deployed();
     await outputGuardHandlerRegistry.registerOutputGuardHandler(
         PAYMENT_OUTPUT_TYPE, paymentOutputGuardHandler.address,
     );
     await outputGuardHandlerRegistry.renounceOwnership();
 
     // handle spending condition
-    const paymentToPaymentCondition = await PaymentOutputToPaymentTxCondition.new(
-        plasmaFramework.address, PAYMENT_OUTPUT_TYPE, PAYMENT_TX_TYPE,
+    await deployer.deploy(
+        PaymentOutputToPaymentTxCondition,
+        plasmaFramework.address,
+        PAYMENT_OUTPUT_TYPE,
+        PAYMENT_TX_TYPE,
     );
-    const paymentToPaymentV2Condition = await PaymentOutputToPaymentTxCondition.new(
-        plasmaFramework.address, PAYMENT_OUTPUT_TYPE, PAYMENT_V2_TX_TYPE,
+    const paymentToPaymentCondition = await PaymentOutputToPaymentTxCondition.deployed();
+
+    await deployer.deploy(
+        PaymentOutputToPaymentTxCondition,
+        plasmaFramework.address,
+        PAYMENT_OUTPUT_TYPE,
+        PAYMENT_V2_TX_TYPE,
     );
+    const paymentToPaymentV2Condition = await PaymentOutputToPaymentTxCondition.deployed();
+
     await spendingConditionRegistry.registerSpendingCondition(
         PAYMENT_OUTPUT_TYPE, PAYMENT_TX_TYPE, paymentToPaymentCondition.address,
     );
