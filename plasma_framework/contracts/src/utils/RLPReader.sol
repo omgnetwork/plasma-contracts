@@ -224,7 +224,7 @@ library RLPReader {
             payloadOffsetLength = byte0 - (LIST_LONG_START - 1) + 1;
         }
 
-        require(payloadOffsetLength <= item.len, "Encoded RLPItem payload length is invalid");
+        require(payloadOffsetLength <= item.len, "Decoded RLPItem payload length is invalid");
 
         return payloadOffsetLength;
     }

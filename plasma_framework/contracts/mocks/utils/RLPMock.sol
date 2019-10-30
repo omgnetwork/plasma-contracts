@@ -27,6 +27,10 @@ contract RLPMock {
         return _data.toRlpItem().toUint();
     }
 
+    function decodePayloadOffset(bytes memory _data) public pure returns (uint) {
+        _data.toRlpItem().decodePayloadOffset();
+    }
+
     function decodeInt(bytes memory _data) public pure returns (int) {
         return int(_data.toRlpItem().toUint());
     }
@@ -67,7 +71,7 @@ contract RLPMock {
     }
 
     function copyUnsafe(uint src, uint dest, uint len) private pure {
-        if(len == 0) return;
+        if (len == 0) return;
         uint remainingLength = len;
 
         // copy as many word sizes as possible
