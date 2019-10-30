@@ -50,6 +50,9 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob, maintainer,
     const DEPOSIT_VALUE = 1000000;
     const INITIAL_IMMUNE_VAULTS = 2; // ETH and ERC20 vault
     const INITIAL_IMMUNE_EXIT_GAMES = 1; // 1 for PaymentExitGame
+    const OUTPUT_GUARD = `0x${Array(64).fill(1).join('')}`;
+    const EMPTY_BYTES32 = `0x${Array(64).fill(0).join('')}`;
+    const DUMMY_INPUT = '0x000000000000000000000000000000000000000000000000000000003b9aca00';
 
     const alicePrivateKey = '0x7151e5dab6f8e95b5436515b83f423c4df64fe4c6149f864daa209b26adb10ca';
     let alice;
@@ -198,6 +201,90 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob, maintainer,
 
     describe('Given contracts deployed, exit game and both ETH and ERC20 vault registered', () => {
         beforeEach(setupContracts);
+
+        describe('getStandardExitId', () => {
+            it('should get the correct exit id for deposit tx output', async () => {
+                const output = new PaymentTransactionOutput(
+                    OUTPUT_TYPE.PAYMENT, 100, OUTPUT_GUARD, constants.ZERO_ADDRESS,
+                );
+                const transaction = new PaymentTransaction(1, [EMPTY_BYTES32], [output], EMPTY_BYTES32);
+                const dummyTxBytes = web3.utils.bytesToHex(transaction.rlpEncoded());
+
+                const isDeposit = true;
+                const dummyUtxoPos = 1000000000;
+
+                expect(await this.exitGame.getStandardExitId(isDeposit, dummyTxBytes, dummyUtxoPos))
+                    .to.be.bignumber.equal(new BN('1430055828788806804866763614278647402415835786'));
+            });
+
+            it('should return distinct exit ids for deposits that differ only in utxo pos', async () => {
+                const output = new PaymentTransactionOutput(
+                    OUTPUT_TYPE.PAYMENT, 100, OUTPUT_GUARD, constants.ZERO_ADDRESS,
+                );
+                const transaction = new PaymentTransaction(1, [EMPTY_BYTES32], [output], EMPTY_BYTES32);
+                const dummyTxBytes = web3.utils.bytesToHex(transaction.rlpEncoded());
+
+                const isDeposit = true;
+                const dummyUtxoPos1 = 1000000000;
+                const dummyUtxoPos2 = 2000000000;
+
+                const exitId1 = await this.exitGame.getStandardExitId(isDeposit, dummyTxBytes, dummyUtxoPos1);
+                const exitId2 = await this.exitGame.getStandardExitId(isDeposit, dummyTxBytes, dummyUtxoPos2);
+                expect(exitId1).to.not.equal(exitId2);
+            });
+
+            it('should get the correct exit id for non deposit tx output', async () => {
+                const output = new PaymentTransactionOutput(
+                    OUTPUT_TYPE.PAYMENT, 100, OUTPUT_GUARD, constants.ZERO_ADDRESS,
+                );
+                const transaction = new PaymentTransaction(1, [DUMMY_INPUT], [output], EMPTY_BYTES32);
+                const dummyTxBytes = web3.utils.bytesToHex(transaction.rlpEncoded());
+
+                const isDeposit = false;
+                const dummyUtxoPos = 123;
+                expect(await this.exitGame.getStandardExitId(isDeposit, dummyTxBytes, dummyUtxoPos))
+                    .to.be.bignumber.equal(new BN('703443512390364917023199489483417852888669222572'));
+            });
+
+            it('should overflow when created a tx with more than 255 outputs', async () => {
+                const output = new PaymentTransactionOutput(
+                    OUTPUT_TYPE.PAYMENT, 100, OUTPUT_GUARD, constants.ZERO_ADDRESS,
+                );
+                const isDeposit = false;
+
+                const notOverflowingTx = new PaymentTransaction(
+                    1, [DUMMY_INPUT], Array(255).fill(output), EMPTY_BYTES32,
+                );
+                const notOverflowingUtxoPos = 255;
+                const notOverflowingTxBytes = web3.utils.bytesToHex(notOverflowingTx.rlpEncoded());
+
+                await this.exitGame.getStandardExitId(isDeposit, notOverflowingTxBytes, notOverflowingUtxoPos);
+
+                const overflowingTx = new PaymentTransaction(
+                    1, [DUMMY_INPUT], Array(256).fill(output), EMPTY_BYTES32,
+                );
+                const overflowingUtxoPos = 256;
+                const overflowingTxBytes = web3.utils.bytesToHex(overflowingTx.rlpEncoded());
+
+                await expectRevert(
+                    this.exitGame.getStandardExitId(isDeposit, overflowingTxBytes, overflowingUtxoPos),
+                    'ExitId overflows',
+                );
+            });
+        });
+
+        describe('getInFlightExitId', () => {
+            it('should get correct in-flight exit id', async () => {
+                const output = new PaymentTransactionOutput(
+                    OUTPUT_TYPE.PAYMENT, 100, OUTPUT_GUARD, constants.ZERO_ADDRESS,
+                );
+                const transaction = new PaymentTransaction(1, [DUMMY_INPUT], [output], EMPTY_BYTES32);
+                const transactionBytes = web3.utils.bytesToHex(transaction.rlpEncoded());
+
+                expect(await this.exitGame.getInFlightExitId(transactionBytes))
+                    .to.be.bignumber.equal(new BN('4092142964444575304639364453165236061123376812'));
+            });
+        });
 
         it('should not allow to call processExit from outside of exit game controller contract', async () => {
             await expectRevert(
