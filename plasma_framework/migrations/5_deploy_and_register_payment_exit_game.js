@@ -18,7 +18,7 @@ const PlasmaFramework = artifacts.require('PlasmaFramework');
 const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry');
 const TxFinalizationVerifier = artifacts.require('TxFinalizationVerifier');
 
-const config = require('./config.js');
+const config = require('../config.js');
 
 module.exports = async (
     deployer,
