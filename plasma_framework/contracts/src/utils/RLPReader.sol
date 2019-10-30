@@ -120,8 +120,6 @@ library RLPReader {
     * @return The number of items in a inside an RLP encoded list
     */
     function countEncodedItems(RLPItem memory item) private pure returns (uint) {
-        if (item.len == 0) return 0;
-
         uint count = 0;
         uint currPtr = item.memPtr + decodePayloadOffset(item);
         uint endPtr = item.memPtr + item.len;

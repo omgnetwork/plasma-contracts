@@ -50,6 +50,8 @@ contract RLPMock {
         require(item.len > 0, "Item length must be > 0");
 
         uint itemLen = RLPReader.decodeItemLengthUnsafe(item.memPtr);
+        require(itemLen == item.len, "Decoded RLP length is invalid");
+
         uint offset = RLPReader.decodePayloadOffset(item);
         uint len = itemLen - offset;
         bytes memory result = new bytes(len);
@@ -65,7 +67,7 @@ contract RLPMock {
     }
 
     function copyUnsafe(uint src, uint dest, uint len) private pure {
-        require(len > 0, "Length can not be zero");
+        if(len == 0) return;
         uint remainingLength = len;
 
         // copy as many word sizes as possible
@@ -78,12 +80,11 @@ contract RLPMock {
             src += WORD_SIZE;
             dest += WORD_SIZE;
             remainingLength -= WORD_SIZE;
-            require(remainingLength < len, "");
+            require(remainingLength < len, "Remaining length not less than original length");
         }
 
         // left over bytes. Mask is used to remove unwanted bytes from the word
         uint mask = 256 ** (WORD_SIZE - remainingLength) - 1;
-        require(mask < WORD_SIZE, "");
 
         // solhint-disable-next-line no-inline-assembly
         assembly {

@@ -42,6 +42,8 @@ contract('RLP invalid tests', () => {
                 await expectRevert(this.rlp.decodeList(encoded), 'Invalid RLP encoding');
             } else if (testName.includes('nonOptimalLongLengthArray')) {
                 await expectRevert(this.rlp.decodeString(encoded), 'Invalid RLP encoding');
+            } else if (testName.includes('longstringInvalidEncodedItemLength')) {
+                await expectRevert(this.rlp.decodeString(encoded), 'Decoded RLP length is invalid');
             }
         });
     });
