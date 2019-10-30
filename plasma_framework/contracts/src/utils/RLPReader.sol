@@ -18,7 +18,7 @@ library RLPReader {
     }
 
     /*
-    * @param item RLP encoded bytes
+    * @param item RLP-encoded bytes
     */
     function toRlpItem(bytes memory item) internal pure returns (RLPItem memory) {
         uint memPtr;
@@ -32,10 +32,10 @@ library RLPReader {
     }
 
     /*
-    * @param item RLP encoded list in bytes
+    * @param item RLP-encoded list, in bytes
     */
     function toList(RLPItem memory item) internal pure returns (RLPItem[] memory) {
-        require(isList(item), "Item is not a list");
+        require(isList(item), "Item must be a list");
 
         uint itemLen = _itemLength(item.memPtr);
         require(itemLen <= item.len, "Length is larger than data");
@@ -49,7 +49,7 @@ library RLPReader {
         for (uint i = 0; i < items; i++) {
             dataLen = _itemLength(memPtr);
             lengthSum += dataLen;
-            require(lengthSum < item.len, "Invalid rlp item length");
+            require(lengthSum < item.len, "Invalid RLP item length");
             result[i] = RLPItem(dataLen, memPtr);
             memPtr = memPtr + dataLen;
         }
@@ -57,7 +57,7 @@ library RLPReader {
         return result;
     }
 
-    // @return indicator whether encoded payload is a list. negate this function call for isData.
+    // @return Defines whether encoded payload is a list; negate this function call for isData
     function isList(RLPItem memory item) internal pure returns (bool) {
         if (item.len == 0) return false;
 
@@ -74,7 +74,7 @@ library RLPReader {
     }
 
     /** RLPItem conversions into data types **/
-    // @returns raw rlp encoding in bytes
+    // @returns Raw RLP-encoding, in bytes
     function toRlpBytes(RLPItem memory item) internal pure returns (bytes memory) {
         bytes memory result = new bytes(item.len);
         if (result.length == 0) return result;
@@ -124,7 +124,7 @@ library RLPReader {
     /*
     * Private Helpers
     */
-    // @return number of payload items inside an encoded list.
+    // @return Number of payload items inside an encoded list
     function numItems(RLPItem memory item) private pure returns (uint) {
         if (item.len == 0) return 0;
 
@@ -133,14 +133,14 @@ library RLPReader {
         uint endPtr = item.memPtr + item.len;
         while (currPtr < endPtr) {
             currPtr = currPtr + _itemLength(currPtr); // skip over an item
-            require(currPtr <= endPtr, "Invalid rlp item length");
+            require(currPtr <= endPtr, "Invalid RLP item length");
             count++;
         }
 
         return count;
     }
 
-    // @return entire rlp item byte length
+    // @return Entire RLP item byte length
     function _itemLength(uint memPtr) private pure returns (uint) {
         uint itemLen;
         uint byte0;
@@ -161,7 +161,7 @@ library RLPReader {
             }
             if (itemLen == 2) {
                 // Check that the value is valid for a short string
-                require(byte1 >= STRING_SHORT_START, "Invalid rlp encoding");
+                require(byte1 >= STRING_SHORT_START, "Invalid RLP-encoding");
             }
         } else if (byte0 < LIST_SHORT_START) {
             uint dataLen;
@@ -179,8 +179,8 @@ library RLPReader {
                 itemLen := add(dataLen, add(byteLen, 1))
             }
             // Check valid long string i.e. value of length > MAX_SHORT_LEN with no leading zeros
-            require(byte1 != 0, "Invalid rlp encoding");
-            require(dataLen > MAX_SHORT_LEN, "Invalid rlp encoding");
+            require(byte1 != 0, "Invalid RLP-encoding");
+            require(dataLen > MAX_SHORT_LEN, "Invalid RLP-encoding");
         } else if (byte0 < LIST_LONG_START) {
             itemLen = byte0 - LIST_SHORT_START + 1;
         } else {
@@ -198,14 +198,14 @@ library RLPReader {
                 itemLen := add(dataLen, add(lengthLen, 1))
             }
             // Check valid long list i.e. value of length > MAX_SHORT_LEN with no leading zeros
-            require(byte1 != 0, "Invalid rlp encoding");
-            require(dataLen > MAX_SHORT_LEN, "Invalid rlp encoding");
+            require(byte1 != 0, "Invalid RLP-encoding");
+            require(dataLen > MAX_SHORT_LEN, "Invalid RLP-encoding");
         }
 
         return itemLen;
     }
 
-    // @return number of bytes until the data
+    // @return Number of bytes until the data
     function _payloadOffset(uint memPtr) private pure returns (uint) {
         uint byte0;
         // solhint-disable-next-line no-inline-assembly
@@ -232,7 +232,7 @@ library RLPReader {
     function copy(uint src, uint dest, uint len) private pure {
         if (len == 0) return;
 
-        // copy as many word sizes as possible
+        // Copy as many word sizes as possible
         for (; len >= WORD_SIZE; len -= WORD_SIZE) {
             // solhint-disable-next-line no-inline-assembly
             assembly {
@@ -243,7 +243,7 @@ library RLPReader {
             dest += WORD_SIZE;
         }
 
-        // left over bytes. Mask is used to remove unwanted bytes from the word
+        // Left over bytes. Mask is used to remove unwanted bytes from the word
         uint mask = 256 ** (WORD_SIZE - len) - 1;
         // solhint-disable-next-line no-inline-assembly
         assembly {
