@@ -32,8 +32,6 @@ contract('RLP invalid tests', () => {
                 await expectRevert(this.rlp.decodeList(encoded), 'Item is not a list');
             } else if (testName.includes('wrongSizeList')) {
                 await expectRevert(this.rlp.decodeList(encoded), 'Invalid RLP encoding');
-            } else if (testName.includes('incorrectLengthInArray')) {
-                await expectRevert(this.rlp.decodeList(encoded), 'Item is not a list');
             } else if (testName.includes('bytesShouldBeSingleByte')) {
                 await expectRevert(this.rlp.decodeUint(encoded), 'Invalid RLP encoding');
             } else if (testName.includes('leadingZerosInLongLengthArray2')) {
@@ -42,6 +40,8 @@ contract('RLP invalid tests', () => {
                 await expectRevert(this.rlp.decodeList(encoded), 'Invalid RLP encoding');
             } else if (testName.includes('nonOptimalLongLengthList')) {
                 await expectRevert(this.rlp.decodeList(encoded), 'Invalid RLP encoding');
+            } else if (testName.includes('nonOptimalLongLengthArray')) {
+                await expectRevert(this.rlp.decodeString(encoded), 'Invalid RLP encoding');
             }
         });
     });
