@@ -31,16 +31,16 @@ const { expect } = require('chai');
 
 const {
     PROTOCOL, TX_TYPE, OUTPUT_TYPE, EMPTY_BYTES, VAULT_ID,
-} = require('../../../helpers/constants.js');
-const { MerkleTree } = require('../../../helpers/merkle.js');
-const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
+} = require('../helpers/constants.js');
+const { MerkleTree } = require('../helpers/merkle.js');
+const { PaymentTransactionOutput, PaymentTransaction } = require('../helpers/transaction.js');
 const {
     computeDepositOutputId, computeNormalOutputId, spentOnGas, exitQueueKey,
-} = require('../../../helpers/utils.js');
-const { sign } = require('../../../helpers/sign.js');
-const { hashTx } = require('../../../helpers/paymentEip712.js');
-const { buildUtxoPos, utxoPosToTxPos } = require('../../../helpers/positions.js');
-const Testlang = require('../../../helpers/testlang.js');
+} = require('../helpers/utils.js');
+const { sign } = require('../helpers/sign.js');
+const { hashTx } = require('../helpers/paymentEip712.js');
+const { buildUtxoPos, utxoPosToTxPos } = require('../helpers/positions.js');
+const Testlang = require('../helpers/testlang.js');
 
 contract('PaymentExitGame - End to End Tests', ([_, richFather, bob, maintainer, authority]) => {
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
