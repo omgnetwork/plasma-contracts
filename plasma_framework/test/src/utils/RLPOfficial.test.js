@@ -19,9 +19,6 @@ contract('RLP official tests', () => {
                 const bignum = new BN(expected.slice(1));
                 const decodedUint = await this.rlp.decodeUint(encoded);
                 expect(decodedUint).to.bignumber.equal(bignum);
-            } else {
-                const decoded = await this.rlp.decodeString(encoded);
-                expect(decoded).to.equal(expected);
             }
         } else {
             expect.fail(`input ${expected} is an unknown type`);

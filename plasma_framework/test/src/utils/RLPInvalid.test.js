@@ -13,21 +13,6 @@ contract('RLP invalid tests', () => {
         this.rlp = await RLPMock.new();
     });
 
-    const decode = async (encoded) => {
-        const firstByte = parseInt(encoded.substring(0, 4), 16);
-        if (firstByte < STRING_SHORT_START) {
-            return this.rlp.decodeUint(encoded);
-        }
-        if (firstByte < STRING_LONG_START) {
-            return this.rlp.decodeString(encoded);
-        }
-        if (firstByte < LIST_SHORT_START) {
-            return this.rlp.decodeString(encoded);
-        }
-        const decoded = await this.rlp.decodeList(encoded);
-        return Promise.all(decoded.map(elem => decode(elem)));
-    };
-
     Object.keys(tests).forEach((testName) => {
         it(`should revert on invalid test ${testName}`, async () => {
             const encoded = tests[testName].out;
@@ -45,8 +30,18 @@ contract('RLP invalid tests', () => {
                 await expectRevert(this.rlp.decodeBytes20(encoded), 'Item length must be 21');
             } else if (testName.includes('invalidList')) {
                 await expectRevert(this.rlp.decodeList(encoded), 'Item is not a list');
-            } else {
-                await expectRevert(decode(encoded), 'Invalid RLP encoding');
+            } else if (testName.includes('wrongSizeList')) {
+                await expectRevert(this.rlp.decodeList(encoded), 'Invalid RLP encoding');
+            } else if (testName.includes('incorrectLengthInArray')) {
+                await expectRevert(this.rlp.decodeList(encoded), 'Item is not a list');
+            } else if (testName.includes('bytesShouldBeSingleByte')) {
+                await expectRevert(this.rlp.decodeUint(encoded), 'Invalid RLP encoding');
+            } else if (testName.includes('leadingZerosInLongLengthArray2')) {
+                await expectRevert(this.rlp.decodeBytes32(encoded), 'Invalid RLP encoding');
+            } else if (testName.includes('leadingZerosInLongLengthList')) {
+                await expectRevert(this.rlp.decodeList(encoded), 'Invalid RLP encoding');
+            } else if (testName.includes('nonOptimalLongLengthList')) {
+                await expectRevert(this.rlp.decodeList(encoded), 'Invalid RLP encoding');
             }
         });
     });

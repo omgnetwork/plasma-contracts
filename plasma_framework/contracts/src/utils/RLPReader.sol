@@ -81,25 +81,6 @@ library RLPReader {
         return true;
     }
 
-    /**
-     * @notice Convert a RLPItem into a dynamic bytes array
-     * @param item RLPItem
-     * @return Raw rlp encoding in bytes
-     */
-    function toRlpBytes(RLPItem memory item) internal pure returns (bytes memory) {
-        bytes memory result = new bytes(item.len);
-        if (result.length == 0) return result;
-        
-        uint resultPtr;
-        // solhint-disable-next-line no-inline-assembly
-        assembly {
-            resultPtr := add(0x20, result)
-        }
-
-        copyUnsafe(item.memPtr, resultPtr, item.len);
-        return result;
-    }
-
     function toAddress(RLPItem memory item) internal pure returns (address) {
         // 1 byte for the length prefix
         require(item.len == 21, "Item length must be 21");
@@ -145,7 +126,7 @@ library RLPReader {
         uint currPtr = item.memPtr + decodePayloadOffset(item);
         uint endPtr = item.memPtr + item.len;
         while (currPtr < endPtr) {
-            currPtr = currPtr + decodeItemLengthUnsafe(currPtr); 
+            currPtr = currPtr + decodeItemLengthUnsafe(currPtr);
             require(currPtr <= endPtr, "Invalid decoded length of RLP item found during counting items in a list");
             count++;
         }
@@ -158,7 +139,7 @@ library RLPReader {
      * @param memPtr Pointer to the dynamic bytes array in memory
      * @return The encoded RLPItem length
      */
-    function decodeItemLengthUnsafe(uint memPtr) private pure returns (uint) {
+    function decodeItemLengthUnsafe(uint memPtr) internal pure returns (uint) {
         uint decodedItemLengthUnsafe;
         uint byte0;
         // solhint-disable-next-line no-inline-assembly
@@ -199,7 +180,6 @@ library RLPReader {
 
                 byte1 := byte(0, mload(memPtr))
 
-                // TODO audit prep, check this shifting for overflow, etc
                 dataLen := div(mload(memPtr), exp(256, sub(32, lengthLen))) // right shifting to the correct length
                 decodedItemLengthUnsafe := add(dataLen, add(lengthLen, 1))
             }
@@ -207,8 +187,6 @@ library RLPReader {
             require(byte1 != 0, "Invalid RLP encoding");
             require(dataLen > MAX_SHORT_LEN, "Invalid RLP encoding");
         }
-
-        
 
         return decodedItemLengthUnsafe;
     }
@@ -218,7 +196,7 @@ library RLPReader {
      * @param item RLPItem
      * @return Length of the RLPItem payload length
      */
-    function decodePayloadOffset(RLPItem memory item) private pure returns (uint) {
+    function decodePayloadOffset(RLPItem memory item) internal pure returns (uint) {
         uint byte0;
         uint payloadOffsetLength;
         uint memPtr = item.memPtr;
@@ -253,56 +231,5 @@ library RLPReader {
         return payloadOffsetLength;
     }
 
-    /**
-    * @notice Copies the number of bytes from one memory location to another. Caller needs to check
-    *         the length of dst and ensure that structure at dst does not overflow.
-    * @param src Pointer to source
-    * @param dest Pointer to destination
-    * @param len Amount of memory to copy from the source
-    */
-    function copyUnsafe(uint src, uint dest, uint len) private pure {
-        if (len == 0) return;
-
-        // copy as many word sizes as possible
-        for (; len >= WORD_SIZE; len -= WORD_SIZE) {
-            // solhint-disable-next-line no-inline-assembly
-            assembly {
-                mstore(dest, mload(src))
-            }
-
-            src += WORD_SIZE;
-            dest += WORD_SIZE;
-        }
-
-        // left over bytes. Mask is used to remove unwanted bytes from the word
-        uint mask = 256 ** (WORD_SIZE - len) - 1;
-        // solhint-disable-next-line no-inline-assembly
-        assembly {
-            let srcpart := and(mload(src), not(mask)) // zero out src
-            let destpart := and(mload(dest), mask) // retrieve the bytes
-            mstore(dest, or(destpart, srcpart))
-        }
-    }
-
-    /**
-     * @notice Convert RLPItem in a dynamic bytes array
-     */
-    function toBytes(RLPItem memory item) internal pure returns (bytes memory) {
-        require(item.len > 0, "Item length must be > 0");
-
-        uint itemLen = decodeItemLengthUnsafe(item.memPtr);
-        uint offset = decodePayloadOffset(item);
-        uint len = itemLen - offset;
-        bytes memory result = new bytes(len);
-
-        uint destPtr;
-        // solhint-disable-next-line no-inline-assembly
-        assembly {
-            destPtr := add(0x20, result)
-        }
-
-        copyUnsafe(item.memPtr + offset, destPtr, len);
-        return result;
-    }
 
 }
