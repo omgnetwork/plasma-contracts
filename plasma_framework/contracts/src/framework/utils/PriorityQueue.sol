@@ -43,7 +43,7 @@ contract PriorityQueue is OnlyFromAddress {
     }
 
     /**
-     * @notice Inserts an element into the queue by the owner
+     * @notice Inserts an element into the queue by the framework
      * @dev Does not perform deduplication
      */
     function insert(uint256 _element) external onlyFrom(framework) {
@@ -53,10 +53,12 @@ contract PriorityQueue is OnlyFromAddress {
     }
 
     /**
-     * @notice Deletes the smallest element from the queue
+     * @notice Deletes the smallest element from the queue by the framework
+     * @dev Fails when queue is empty
      * @return The smallest element in the priority queue
      */
     function delMin() external onlyFrom(framework) returns (uint256) {
+        require(queue.currentSize > 0, "Queue is empty");
         uint256 retVal = queue.heapList[1];
         queue.heapList[1] = queue.heapList[queue.currentSize];
         delete queue.heapList[queue.currentSize];
@@ -72,6 +74,7 @@ contract PriorityQueue is OnlyFromAddress {
      * @return The smallest element in the priority queue
      */
     function getMin() external view returns (uint256) {
+        require(queue.currentSize > 0, "Queue is empty");
         return queue.heapList[1];
     }
 
