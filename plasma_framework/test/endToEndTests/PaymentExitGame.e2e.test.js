@@ -144,7 +144,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob, maintainer,
         this.piggybackBondSize = await this.exitGame.piggybackBondSize();
 
         this.toPaymentCondition = await PaymentOutputToPaymentTxCondition.new(
-            this.framework.address, OUTPUT_TYPE.PAYMENT, TX_TYPE.PAYMENT,
+            this.framework.address, TX_TYPE.PAYMENT, TX_TYPE.PAYMENT,
         );
         await spendingConditionRegistry.registerSpendingCondition(
             OUTPUT_TYPE.PAYMENT, TX_TYPE.PAYMENT, this.toPaymentCondition.address,
@@ -212,7 +212,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob, maintainer,
                 this.aliceDepositReceipt = receipt;
             });
 
-            it('should have transfered the ETH from Alice to vault', async () => {
+            it('should have transferred the ETH from Alice to vault', async () => {
                 const aliceBalanceAfterDeposit = new BN(await web3.eth.getBalance(alice));
                 const ethVaultBalanceAfterDeposit = new BN(await web3.eth.getBalance(this.ethVault.address));
                 const expectedAliceBalance = this.aliceBalanceBeforeDeposit
@@ -345,7 +345,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob, maintainer,
             });
         });
 
-        describe('Given Alice deposited ETH and transfered some to Bob', () => {
+        describe('Given Alice deposited ETH and transferred some to Bob', () => {
             beforeEach(async () => {
                 await aliceDepositsETH();
                 await aliceTransferSomeEthToBob();
