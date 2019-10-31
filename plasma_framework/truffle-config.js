@@ -2,7 +2,7 @@ require('dotenv').config(); // auto parse env variables from '.env' file
 
 const HDWalletProvider = require('@truffle/hdwallet-provider');
 
-const infuraUrl = `${process.env.INFURA_URL}/${process.env.INFURA_API_KEY}`;
+const infuraUrl = `${process.env.INFURA_URL || 'http://127.0.0.1'}/${process.env.INFURA_API_KEY || ''}`;
 const cleanInfuraUrl = infuraUrl.replace(/([^:])(\/\/+)/g, '$1/');
 
 module.exports = {
