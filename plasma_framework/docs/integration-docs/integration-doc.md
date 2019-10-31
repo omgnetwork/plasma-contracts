@@ -1,5 +1,5 @@
 # Introduction
-This document attempts to collate all of the information necessary to interact with the Plasma ALD framework. For more detailed information on the concepts involved, see the following documents:
+This document attempts to collate all of the information necessary to interact with the Plasma ALD (Abstract Layer Design) framework. For more detailed information on the concepts involved, see the following documents:
 
 - [High level design of the Plasma Abstract Layer](https://docs.google.com/document/d/1PSxLnMskjqje4MksmW2msSSg-GtZoBSMNYey9nEDvt8)
 - [Tesuji Plasma Blockchain Design](https://github.com/omisego/elixir-omg/blob/master/docs/tesuji_blockchain_design.md)
@@ -475,10 +475,69 @@ When listening for Exit Game related events, it's important to remember that the
 ```
 
 # Upgrading the Framework
-The framework is designed to be upgraded, either to fix bugs or add new functionality. Upgrades are done by adding new contracts to the framework. Any upgrade will take a certain period of time to come into effect. This is to keep the framework trustless - if a new contract is added that is malicious or vulnerable, then users will have a chance to exit before it is activated.
+The framework is designed to be upgraded, either to fix bugs or add new functionality in the style extending the framework. Extension are done by adding new contracts to the framework. Most extension will take a certain period of time to come into effect. This is to keep the framework trustless - if a new contract is added that is malicious or vulnerable, then users will have a chance to exit before it is activated.
 
-**TODO: Upgrades and security**
+## Upgrade the deposit transaction type of a vault
+With current implementation, a vault comes with a single transaction type that it accepts to be the deposit transaction. However, as time goes, we might want to use the later version of transaction type or just a whole brand new transaction type to be our deposit transaction. For instance, our ETH vault and ERC20 vault accepts Payment transaction as the deposit transaction. We would want to change it to be Payment transaction V2 in the future when we have new Payment transaction type.
 
+We design the vault with the concept of `depositVerifier`. This is a predicate contract that would have the logic of checking whether a deposit transaction is the right transaction type and with correct data needed for a deposit. As a result, to upgrade to new deposit transaction type, one should implement the new `depositVerifier` contract and set the new verifier to the vault.
+
+### Process to set a new deposit verifier
+1. Implement new deposit verifier that fullfils the interface of the certain vault, see deposit verifier code and interface: [here](https://github.com/omisego/plasma-contracts/tree/master/plasma_framework/contracts/src/vaults/verifiers)
+
+1. Call the `setDepositVerifier` function by `maintainer`, see: [setDepositVerifier doc](https://github.com/omisego/plasma-contracts/blob/master/plasma_framework/docs/contracts/Vault.md#setdepositverifier). 
+
+1. You should recieve the event `setDepositVerifierCalled` after the call.
+
+    ```
+    event SetDepositVerifierCalled(address  nextDepositVerifier);
+    ```
+1. wait **one** `minExitPeriod` for the new deposit verifier to take effect. In production, it should be a week.
+
+### Security analysis
+
+One week is chosen to be the waiting period for upgrading the deposit verifier to protect deposit transactions that are sent in root chain but still in mempool before the the `setDepositVerifier` is called. For more detail please refer to the description in this issue: https://github.com/omisego/plasma-contracts/issues/174.
+
+Users/watchers should listen to the event `setDepositVerifierCalled` to get awareness of the new deposit verifier is going to take effect. If the new deposit verifier is not trust-worthy, one should immediately stop any deposit action to the vault and exit all outputs from the plasma framework.
+
+## Add a new vault
+Though we can upgrade the deposit transaction type of a vault, but one vault only supports one ERC protocol. If we want to add new ERC protocol support, we would need a new vault. Also, if there is any bug in the exisiting vault code, we would need to add a new vault to replace the old one. However, be aware that moving fund from a vault to another requires a full exit and re-deposit. It would not be a smooth user experience.
+
+### Process to add a new vault
+1. Design and implement a new vault contract. Unless some feature breaks the abstraction, otherwise please inheritence the existing abstract Vault contract, see: [Vault.sol](https://github.com/omisego/plasma-contracts/blob/master/plasma_framework/contracts/src/vaults/Vault.sol)
+
+1. Maintainer registers the new vault to the PlasmaFramework by `registerVault` function. See: [doc](https://github.com/omisego/plasma-contracts/blob/master/plasma_framework/docs/contracts/VaultRegistry.md#registervault).
+
+1. You should get the this event: `event VaultRegistered(uint256  vaultId, address  vaultAddress);`
+1. Wait **one** `minExitPeriod` (1 week in prod), and then user would be able to deposit to new vault.
+
+### Security analysis
+Same as setting a new deposit verifier, one week is chose to protect the deposit transactions that are still in mempool while the transaction of `registerVault` is sent. For more detail, see this issue: https://github.com/omisego/plasma-contracts/issues/173.
+
+Users/watchers should listen to the event `VaultRegistered` to get awareness of the new vault. If new vault is not truthworthy, one should not do any deposit action to the new vault and exit all outputs from the plasma framework.
+
+## Add a new exit game
+This is the main way to add new features to the plasma framework. For each transaction type, there would be an exit game that is corresponding to it. As a result, when we want to add new feature, we add a new transaction type and register the type to the corresponding exit game contract in the PlasmaFramework contract.
+
+For example, we can add a DEX transaction that spends a Payment transaction to support DEX feature.
+
+### Process to add a new exit game
+1. Design a new transaction type and implement the exit game.
+1. Maintainer registers the new exit game contract to the PlasmaFramework by `registerExitGame` function. See: [doc](https://github.com/omisego/plasma-contracts/blob/389_add_priority_queue_test/plasma_framework/docs/contracts/ExitGameRegistry.md#registerexitgame)
+1. You should get the following event: `event ExitGameRegistered(uint256  txType, address  exitGameAddress, uint8  protocol);`
+1. Wait **three** `minExitPeriod` (3 weeks in Prod) for the new exit game to be able to take effect.
+
+### Security analysis
+A new exit game need to wait certain period of time to protect existing users as the exit game contract would have access to several compoenents in the framework. Exit game can insert an exit with a wrong order, flag a random output as used, or ask the vault to withdraw fund directly. As a result, we decides that any new exit game contracts should wait three weeks before taking effect.
+
+We wait three weeks for the following reason:
+1. `mined_block_time + 2 weeks` can be the time that a newly mined tx can exit once detect mass exit scenerio. So basically 2 weeks after mined.
+1. We have an extra 1 week to make sure users can clean up the exit queue (`processExits`) before bad exit can potentially be inserted with wrong priotiy by bad exit game contract.
+1. Together, it is three weeks.
+
+For details, see this issue: https://github.com/omisego/plasma-contracts/issues/172
+
+Users/Watchers should listen to the event `ExitGameRegistered` to get awareness of the new exit game. If new exit game contract is not trustworthy, one should exit immediatly.
 
 # Ensuring the correctness of the Plasma network
 Plasma is designed to be somewhat optimistic - it assumes everything is correct unless proven otherwise. Users play their part in ensuring the correctness of the system by means of the Exit Games, as described in the previous section. However, it there needs to be a way to let the users know when they need to engage in the Exit Games. This is where the Watchers come in.
