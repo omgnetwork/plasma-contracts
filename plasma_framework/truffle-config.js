@@ -34,11 +34,12 @@ module.exports = {
         },
         infura: {
             skipDryRun: true,
+            // Jesus fuck why can't this be a function
             provider: new HDWalletProvider(
                 [
-                    process.env.DEPLOYER_PRIVATEKEY,
-                    process.env.MAINTAINER_PRIVATEKEY,
-                    process.env.AUTHORITY_PRIVATEKEY,
+                    process.env.DEPLOYER_PRIVATEKEY || '0'.repeat(64),
+                    process.env.MAINTAINER_PRIVATEKEY || '0'.repeat(64),
+                    process.env.AUTHORITY_PRIVATEKEY || '0'.repeat(64),
                 ],
                 cleanInfuraUrl,
                 0, 3,
