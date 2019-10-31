@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+
 const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry');
 const PaymentExitGame = artifacts.require('PaymentExitGame');
 const PaymentChallengeStandardExit = artifacts.require('PaymentChallengeStandardExit');
@@ -120,9 +122,12 @@ module.exports = async (
     );
     const paymentToPaymentV2Condition = await PaymentOutputToPaymentTxCondition.deployed();
 
+    console.log(`Registering paymentToPaymentCondition (${paymentToPaymentCondition.address}) to spendingConditionRegistry`);
     await spendingConditionRegistry.registerSpendingCondition(
         PAYMENT_OUTPUT_TYPE, PAYMENT_TX_TYPE, paymentToPaymentCondition.address,
     );
+
+    console.log(`Registering paymentToPaymentV2Condition (${paymentToPaymentV2Condition.address}) to spendingConditionRegistry`);
     await spendingConditionRegistry.registerSpendingCondition(
         PAYMENT_OUTPUT_TYPE, PAYMENT_V2_TX_TYPE, paymentToPaymentV2Condition.address,
     );
