@@ -18,7 +18,9 @@ const { expect } = require('chai');
 const config = require('../../config.js');
 
 const { EMPTY_BYTES } = require('../helpers/constants.js');
-const { PaymentTransactionOutput, PaymentTransaction } = require('../helpers/transaction.js');
+const {
+    PaymentTransactionOutput, PaymentTransaction, WireTransaction,
+} = require('../helpers/transaction.js');
 const { buildUtxoPos, buildTxPos } = require('../helpers/positions.js');
 const Testlang = require('../helpers/testlang.js');
 const { MerkleTree } = require('../helpers/merkle.js');
@@ -26,10 +28,11 @@ const { buildOutputGuard, computeNormalOutputId } = require('../helpers/utils.js
 const { hashTx } = require('../helpers/paymentEip712.js');
 const { sign } = require('../helpers/sign.js');
 
-// first three accounts would be of the order of (deployer, maintainer, authority).
-// it is how migration scripts uses the accounts.
-// eslint-disable-next-line no-unused-vars
-contract.only('PlasmaFramework - Extendibility End to End Tests', ([_, maintainer, authority, richFather]) => {
+/**
+ * First three accounts would be of the order of (deployer, maintainer, authority).
+ * This is how migration scripts uses the account.
+ */
+contract('PlasmaFramework - Extendibility End to End Tests', ([_, maintainer, authority, richFather]) => {
     const ETH = constants.ZERO_ADDRESS;
     const PAYMENT_OUTPUT_V2_TYPE = 2;
     const PAYMENT_V2_TX_TYPE = config.registerKeys.txTypes.paymentV2;
@@ -38,7 +41,7 @@ contract.only('PlasmaFramework - Extendibility End to End Tests', ([_, maintaine
     const DUMMY_DEX_NONCE = 123;
 
     const alicePrivateKey = '0x7151e5dab6f8e95b5436515b83f423c4df64fe4c6149f864daa209b26adb10ca';
-    const venuePrivateKey = '0x7151e5dab6f8e95b5436515b83f423c4df64fe4c6149f864daa209b26adb10cb'
+    const venuePrivateKey = '0x7151e5dab6f8e95b5436515b83f423c4df64fe4c6149f864daa209b26adb10cb';
     let alice;
     let venue;
 
@@ -184,12 +187,9 @@ contract.only('PlasmaFramework - Extendibility End to End Tests', ([_, maintaine
                         });
 
                         describe('And then transfer from Payment V2 to DEX (mock)', () => {
-                            // TODO: rename PaymentTransaction to WireTransaction?
-                            // Currently cheats using PaymentTransaction/PaymentTransactionOutput as DEX transaction
-                            // They looks the same anyway.
                             beforeEach(async () => {
                                 // cheat by making the DEX tx no output, not testing the ability to exit DEX anyway
-                                this.dexTxObject = new PaymentTransaction(
+                                this.dexTxObject = new WireTransaction(
                                     DEX_MOCK_TX_TYPE, [this.dexDepositOutputId], [],
                                 );
                                 this.dexTx = this.dexTxObject.rlpEncoded();
