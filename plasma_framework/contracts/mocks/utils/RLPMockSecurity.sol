@@ -9,7 +9,6 @@ contract RLPMockSecurity {
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;
 
-
     function decodeBytes32(bytes memory _data) public pure returns (bytes32) {
         return bytes32(_data.toRlpItem().toUint());
     }
@@ -18,7 +17,7 @@ contract RLPMockSecurity {
         return bytes20(_data.toRlpItem().toAddress());
     }
 
-    function decodeUint(bytes memory _data) public pure returns (uint) {
+    function decodeUint(bytes memory _data) public returns (uint) {
         return _data.toRlpItem().toUint();
     }
 

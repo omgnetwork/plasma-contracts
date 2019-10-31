@@ -134,6 +134,7 @@ library RLPReader {
 
     /**
      * @notice Decodes the RLPItems length from a bytes array.
+     * @dev This function is dangerous !!! Ensure that the returned length is within the bounds of where memPtr points to.
      * @param memPtr Pointer to the dynamic bytes array in memory
      * @return The encoded RLPItem length
      */
@@ -148,7 +149,7 @@ library RLPReader {
         if (byte0 < STRING_SHORT_START) {
             decodedItemLengthUnsafe = 1;
         } else if (byte0 < STRING_LONG_START) {
-            decodedItemLengthUnsafe = byte0 - STRING_SHORT_START + 1;
+            decodedItemLengthUnsafe = (byte0 - STRING_SHORT_START) + 1;
         } else if (byte0 < LIST_SHORT_START) {
             uint dataLen;
             uint byte1;
@@ -167,7 +168,7 @@ library RLPReader {
             require(byte1 != 0, "Invalid RLP encoding");
             require(dataLen > MAX_SHORT_LEN, "Invalid RLP encoding");
         } else if (byte0 < LIST_LONG_START) {
-            decodedItemLengthUnsafe = byte0 - LIST_SHORT_START + 1;
+            decodedItemLengthUnsafe = (byte0 - LIST_SHORT_START) + 1;
         } else {
             uint dataLen;
             uint byte1;
@@ -219,9 +220,9 @@ library RLPReader {
         } else if (byte0 >= LIST_SHORT_START && byte0 < LIST_LONG_START){
             payloadOffsetLength = 1;
         } else if (byte0 < LIST_SHORT_START) {
-            payloadOffsetLength = byte0 - (STRING_LONG_START - 1) + 1;
+            payloadOffsetLength = (byte0 - (STRING_LONG_START - 1)) + 1;
         } else {
-            payloadOffsetLength = byte0 - (LIST_LONG_START - 1) + 1;
+            payloadOffsetLength = (byte0 - (LIST_LONG_START - 1)) + 1;
         }
 
         require(payloadOffsetLength <= item.len, "Decoded RLPItem payload length is invalid");
