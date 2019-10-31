@@ -29,6 +29,9 @@ module.exports = {
             from: process.env.DEPLOYER_ADDRESS,
             network_id: 5,
         },
+        // Remote means that the remote client does not possess the private keys.
+        // Transactions need to be signed locally with the given private keys
+        // before getting submitted to the remote client.
         remote: {
             skipDryRun: true,
             provider: () => {
