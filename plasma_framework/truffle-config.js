@@ -29,21 +29,16 @@ module.exports = {
             from: process.env.DEPLOYER_ADDRESS,
             network_id: 5,
         },
-        infura: {
+        remote: {
             skipDryRun: true,
             provider: () => {
-                const infuraUrl = `${process.env.INFURA_URL}/${process.env.INFURA_API_KEY}`;
-
-                // Replace double '//'
-                const cleanInfuraUrl = infuraUrl.replace(/([^:])(\/\/+)/g, '$1/');
-
                 return new HDWalletProvider(
                     [
                         process.env.DEPLOYER_PRIVATEKEY,
                         process.env.MAINTAINER_PRIVATEKEY,
                         process.env.AUTHORITY_PRIVATEKEY,
                     ],
-                    cleanInfuraUrl,
+                    process.env.REMOTE_URL,
                     0, 3,
                 );
             },
