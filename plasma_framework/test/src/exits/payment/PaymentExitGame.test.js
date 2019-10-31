@@ -3,7 +3,6 @@ const Erc20Vault = artifacts.require('Erc20Vault');
 const EthDepositVerifier = artifacts.require('EthDepositVerifier');
 const Erc20DepositVerifier = artifacts.require('Erc20DepositVerifier');
 const ExitableTimestamp = artifacts.require('ExitableTimestampWrapper');
-const ExitId = artifacts.require('ExitIdWrapper');
 const ExitPriority = artifacts.require('ExitPriorityWrapper');
 const ERC20Mintable = artifacts.require('ERC20Mintable');
 const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry');
@@ -85,7 +84,6 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob, maintainer,
     };
 
     const deployStableContracts = async () => {
-        this.exitIdHelper = await ExitId.new();
         this.exitPriorityHelper = await ExitPriority.new();
 
         this.erc20 = await ERC20Mintable.new();
@@ -241,7 +239,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob, maintainer,
                 });
 
                 it('should save the StandardExit data when successfully done', async () => {
-                    const exitId = await this.exitIdHelper.getStandardExitId(true, this.depositTx, this.depositUtxoPos);
+                    const exitId = await this.exitGame.getStandardExitId(true, this.depositTx, this.depositUtxoPos);
                     const standardExitData = await this.exitGame.standardExits(exitId);
 
                     const outputIndexForDeposit = 0;
@@ -266,7 +264,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob, maintainer,
                     const exitableAt = await this.exitableHelper
                         .calculateDepositTxOutputExitableTimestamp(currentTimestamp);
 
-                    const exitIdExpected = await this.exitIdHelper.getStandardExitId(
+                    const exitIdExpected = await this.exitGame.getStandardExitId(
                         true, this.depositTx, this.depositUtxoPos,
                     );
                     const priorityExpected = await this.exitPriorityHelper.computePriority(
@@ -319,7 +317,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob, maintainer,
                 });
 
                 it('should start successully', async () => {
-                    const exitId = await this.exitIdHelper.getStandardExitId(
+                    const exitId = await this.exitGame.getStandardExitId(
                         false, this.transferTx, this.transferUtxoPos,
                     );
                     const standardExitData = await this.exitGame.standardExits(exitId);
@@ -367,7 +365,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob, maintainer,
                         args, { from: alice, value: this.startStandardExitBondSize },
                     );
 
-                    this.exitId = await this.exitIdHelper.getStandardExitId(
+                    this.exitId = await this.exitGame.getStandardExitId(
                         true, this.depositTx, this.depositUtxoPos,
                     );
                 });
@@ -488,7 +486,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob, maintainer,
 
                     it('should start successully', async () => {
                         const isDeposit = true;
-                        const exitId = await this.exitIdHelper.getStandardExitId(
+                        const exitId = await this.exitGame.getStandardExitId(
                             isDeposit, this.depositTx, this.depositUtxoPos,
                         );
                         const standardExitData = await this.exitGame.standardExits(exitId);
@@ -567,7 +565,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob, maintainer,
                         { from: alice, value: this.startIFEBondSize },
                     );
 
-                    this.exitId = await this.exitIdHelper.getInFlightExitId(this.inFlightTxRaw);
+                    this.exitId = await this.exitGame.getInFlightExitId(this.inFlightTxRaw);
                 });
 
                 describe('And owner of the output piggybacks', () => {
