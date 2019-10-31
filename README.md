@@ -21,7 +21,7 @@ The framework includes two _token vaults_, supporting ETH, ERC-20, and [non-comp
 
 The child chain component of our plasma construction runs under Proof of Authority, with a single operator. The construction is secured by a distributed network of watchers. Detailed description of our child chain design is in [Tesuji document](https://github.com/omisego/elixir-omg/blob/master/docs/tesuji_blockchain_design.md).
 
-The OmiseGO implementation of the child chain and watcher can be found in our [elxir-omg](https://github.com/omisego/elixir-omg) GitHub repository.
+The OmiseGO implementation of the child chain and watcher can be found in our [elixir-omg](https://github.com/omisego/elixir-omg) GitHub repository.
 
 ## Learn more
 

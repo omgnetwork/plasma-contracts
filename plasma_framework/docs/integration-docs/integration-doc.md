@@ -1,44 +1,73 @@
 # Introduction
-This document attempts to collate all of the information necessary to interact with the Plasma ALD framework. For more detailed information on the concepts involved, see the following documents:
+This document describes how to interact with the Plasma Abstract Layer Design (ALD) framework, and provides details about the components relevant to an integration, including:
 
-- [High level design of the Plasma Abstract Layer](https://docs.google.com/document/d/1PSxLnMskjqje4MksmW2msSSg-GtZoBSMNYey9nEDvt8)
-- [Tesuji Plasma Blockchain Design](https://github.com/omisego/elixir-omg/blob/master/docs/tesuji_blockchain_design.md)
-- [Solidity contract documentation](https://github.com/omisego/plasma-contracts/blob/master/plasma_framework/docs/PlasmaFramework.md)
+- PlasmaFramework contract
+  
+  The entry point contract. Any integration with the system will interact with this contract.
+
+- Block submission
+
+  The child chain integration requires the data submitted in the blocks.
+
+- Transactions
+ 
+  Transactions are a fundamental part of the system. Any integration will require transaction-related information.
+
+> ***Note**: For more information on the concepts relevant to this process, see the following documentation:*
+- *[High level design of the Plasma Abstract Layer](https://docs.google.com/document/d/1PSxLnMskjqje4MksmW2msSSg-GtZoBSMNYey9nEDvt8)*
+- *[Tesuji Plasma Blockchain Design](https://github.com/omisego/elixir-omg/blob/master/docs/tesuji_blockchain_design.md)*
+- *[Solidity contract documentation](https://github.com/omisego/plasma-contracts/blob/master/plasma_framework/docs/PlasmaFramework.md)*
+
 
 # PlasmaFramework
-The PlasmaFramework contract can be seen as the top-level contract that contains many of the other components described below:
+The PlasmaFramework contract may be viewed as the top-level contract. It contains the following components (described in more detail in this document):  
+
 - BlockController
 - ExitGameController
 - ExitGameRegistry
 - VaultRegistry
+ 
 
-It provides access to the various components in the system. For example, to get the Payment ExitGame you should call `PlasmaFramework.exitGames(PaymentType)`.
+The PlasmaFramework contract provides access to components in the system. For example, to get the Payment ExitGame, call the following: 
 
-The PlasmaFramework also provides the means for the `maintainer` to upgrade the components in the system. This has important security considerations and the PlasmaFramework will emit events whenever a component is added. Watcher must monitor these events and inform users. See later for details.
+ `PlasmaFramework.exitGames(PaymentType)`
+ 
+The PlasmaFramework also provides the means for the `maintainer` to upgrade certain components in the system. Since this functionality has important security considerations, the PlasmaFramework emits events whenever a component is added. The Watchers monitor these events and alert users. More information is provided below. 
+
 
 # Block submission
-Only the operator can submit blocks. The data submitted is the root of the merkle tree containing all the transactions in the block. To submit a block, call
+Only the operator can submit blocks. The data submitted is the root of the Merkle tree containing all the transactions in the block. To submit a block, call the following:
+
 ```
 PlasmaFramework.submitBlock(blockRoot);
 ```
-On success emits a `BlockSubmitted` event
+
+On success, the PlasmaFramework contract emits a `BlockSubmitted` event:
+
 ```
 event BlockSubmitted(
     uint256 blockNumber
 );  
 ``` 
-[See contract docs](../contracts/BlockController.md#submitblock)
+
+ > ***Note**: For more information about parameter types, return types, valid values, and so on, see the [Plasma Contract API documentation](../contracts/BlockController.md#submitblock).*
+ 
+
 
 # Transactions
 Transactions are composed of inputs and outputs. An input is simply a pointer to the output of another transaction. 
 
-Transactions that have been included in a block have a position which is the number of the block it's in and its index in that block. For example the fourth transaction in block 5000 has a position of `(5000, 3)`.
+Transactions included in a block have a position, which is the number of the block it's in, and its index in that block. For example, the fourth transaction in block number 5000 has this position: `(5000, 3)`
 
-The position of the outputs of a transaction can be obtained by including the index of the output in the transaction. So the position of the second output of the transaction in the above example would be `(5000, 3, 1)`.
+To determine the position of the outputs of a transaction, you will include the index of the output in the transaction. So, the position of the second output of the transaction, in the example above, would be: `(5000, 3, 1)`
+
+
 
 ## Transaction type and output type
 
-The Abstract Layer Design introduces the concept of Transaction Type and Transcation Output Type. Each Transaction Type and Transcation Output Type can define different rules about how to spend funds.
+ALD introduces the concepts of transaction type, and transcation output type. Each transaction type and transcation output type can define different rules about how to spend funds.
+
+
 
 ## Transaction format
 Transactions follow the [Wire Transaction format](https://docs.google.com/document/d/1ETAO5ZUO7S_A8sXUK5cyAN6yMMotRDbJphAa2hPJIyU/edit).
@@ -63,18 +92,24 @@ amount ::= uint256
 witness ::= bytes
 ```
 
-Note that currently we don't fully follow the proposed Wire Transaction format - our implementation of output type is `outputType outputGuard token amount` instead of `outputType outputGuard token vaultId standardSpecificData confirmAddress`.
+ > ***Note**: Currently, the PlasmaFramework contract only partially follows the proposed Wire Transaction format; output type is implemented as `outputType outputGuard token amount` instead of `outputType outputGuard token vaultId standardSpecificData confirmAddress`.*
 
-The current implementation only supports `Payment` and `DEX` transaction types.
-We will need to change this when we introduce new transaction types, e.g. ERC721
+The current implementation supports only the following transaction types:  `Payment` and `DEX` 
+
+Support for additional transaction types, such as ERC721, is reserved for future development.
+
+
 
 ## Deposit transactions
-Deposit transactions are special transactions that have no inputs. Note that this should be encoded as an empty array. Deposit transactions are created by the Vault contracts and do not need to be explicitly submitted.
+Deposit transactions are special transactions that have no inputs. The transaction inputs should be encoded as an empty array. Deposit transactions are created by the vault contracts, and do not need to be explicitly submitted.
+
 
 ## EIP-712 signing
-The witness field of a transaction is the data that proves its inputs can be spent. For a normal Payment transaction this data is the signatures of the owners of the inputs. We use [EIP-712](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-712.md) for signing transactions.
+The **witness** field of a transaction contains the data that proves its inputs can be spent. For a standard payment transaction, this data is the signatures of the owners of the inputs. Transactions are signed using the [EIP-712](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-712.md) method.
 
 The EIP-712 typed data structure is as follows:
+ > ***Important**! This is likely to change in future.*
+
 ```
 {
   types: {
@@ -118,35 +153,46 @@ The EIP-712 typed data structure is as follows:
 }
 ```
 
-**Note that this is likely to change in the future!**
 
 
 # Vaults
-Vaults are used to deposit funds and indirectly to withdraw funds via the Exit Game.
+Vaults are used to deposit funds and, indirectly, to withdraw funds via the exit game.
+
 
 ## Depositing funds
-To deposit funds from the root chain (Ethereum) into the child chain, you must use the approriate Vault. For example to deposit ETH you use the EthVault contract. The address of this contract can be retrieved by calling `PlasmaFramework.vaults(1)`
+You must use the appropriate vault to deposit funds from the root chain (Ethereum) into the child chain. For example, to deposit ETH you use the EthVault contract. You can retrieve the address of this contract by calling the following function:
+
+`PlasmaFramework.vaults(1)`
 
 ### Depositing ETH
-1. The user creates the RLP encoded deposit transaction, `depositTx`
-2. The user calls `EthVault.deposit(depositTx)`. The user must send with the transaction the amount of ETH specified in the deposit transaction.
-3. The ETHVault creates a Deposit Block and submits it to the PlasmaFramework
-4. The ETHVault emits the `DepositCreated` event
-5. The child chain receives the `DepositCreated` and creates the corresponding utxo
-6. After a certain amount of blocks (`deposit_finality_margin`) the utxo is spendable by the user.
+1. Create the RLP-encoded deposit transaction: `depositTx`
+2. Call `EthVault.deposit(depositTx)`
+3. Along with the transaction, send the amount of ETH specified in the deposit transaction.
+4. The ETHVault creates a deposit block, and submits it to the PlasmaFramework.
+5. The ETHVault emits the DepositCreated event.
+6. The child chain receives the DepositCreated, and creates the corresponding UTXO.
+7. The UTXO is spendable by the user after a certain number of blocks are submitted to the PlasmaFramework (specified in `deposit_finality_margin`).
+
+
 
 ### Depositing ERC20 tokens
-1. The user approves the ERC20Vault contract to transfer the amount of tokens to be deposited.
-2. The user creates the RLP encoded deposit transaction, `depositTx`
-3. The user calls `ERC20Vault.deposit(depositTx)`.
+
+1. To transfer the amount of tokens you wish to deposit, approve the ERC20Vault contract.
+2. Create the RLP-encoded deposit transaction: `depositTx`
+3. Call `ERC20Vault.deposit(depositTx)`.
 4. The ERCVault calls `ERC20.transferFrom()` to transfer the tokens to itself.
-5. The ERC20Vault creates a Deposit Block and submits it to the PlasmaFramework
-6. The ERC20Vault emits the `DepositCreated` event
-7. The child chain receives the `DepositCreated` and creates the corresponding utxo
-8. After a certain amount of blocks (`deposit_finality_margin`) the utxo is spendable.
+5. The ERC20Vault creates a deposit block, and submits it to the PlasmaFramework.
+6. The ERC20Vault emits the `DepositCreated` event.
+7. The child chain receives the `DepositCreated`, and creates the corresponding UTXO.
+8. The UTXO is spendable by the user after a certain number of blocks are submitted to the PlasmaFramework (specified in `deposit_finality_margin`).
+
+
 
 ## Vault events
-Vaults emit events on deposit:
+Vaults emit events on deposit, and on withdrawal.
+
+Events emitted on deposit:
+
 ```
     event DepositCreated(
         address indexed depositor,
@@ -155,7 +201,8 @@ Vaults emit events on deposit:
         uint256 amount
     );
 ```
-and on withdrawal:
+
+Events emitted on withdrawal:
 ```
     event Erc20Withdrawn(
         address payable indexed receiver,
@@ -168,38 +215,47 @@ and on withdrawal:
 # Exit Game
 Exit Games handle all the actions around exits, challenges, etc.
 
-## Exit Game Bonds
-There are various bonds involved with Exit Games. These values of these bonds may change over time, the current value of a bond can be retrieved from the PlasmaFramework contract.
 
-### Standard Exit Bond
-- Bond for starting a Standard Exit.
+## Exit game bonds
+Exit games are associated with various bonds. The values of these bonds may change over time. The current value of a bond can be retrieved from the PlasmaFramework contract.
+
+
+### Standard exit bond
+A standard exit bond is used to start a standard exit:
+
 ```
     PlasmaFramework.startStandardExitBondSize()
 ```
 
-### In-flight Exit Bonds
-- Bond for starting an In-flight Exit.
+### In-flight exit bonds
+
+There are two types of in-flight exit bonds:
+
+- In-flight exit bond for starting an in-flight exit
 ```
     PlasmaFramework.startIFEBondSize()()
 ```
-- Bond for piggybacking on an In-flight Exit's input or output.
+- In-flight exit bond for piggybacking on an in-flight exit's input or output:
 ```
     PlasmaFramework.piggybackBondSize()()
 ```
 
-## Playing the Exit Game
 
-### Starting a Standard Exit
+## Playing the exit game
 
-In order to exit a UTXO, you need to get the corresponding transaction type. We currently only support Payment transactions, for which the id is 1.
+### Starting a standard exit
 
-You then need to get the Exit Game contract address from the PlasmaFramework contract:
+To start a standard exit, perform these steps:
+
+1. To exit a UTXO you will first need to retrieve the corresponding transaction type. Currently, the platform supports only payment transactions, for which the ID is 1.
+
+2. Now retrieve the exit game contract address from the PlasmaFramework contract:  
 
 ```
 address = PlasmaFramework.exitGames(1)
 ```
 
-In order to start a standard exit, you need to send the appropriate amount of ETH to cover the bond. The actual amount can be retrieved by calling the following function:
+3. To start a standard exit, send the appropriate amount of ETH to cover the bond. To retrieve the actual amount, call the following function:
 
 ```
 PaymentExitGame.startStandardExitBondSize()
@@ -214,23 +270,25 @@ PaymentExitGame.startStandardExit({
 })
 ```
 
-If it fails with an error mentioning a missing queue, you can check that the exit queue is registered for the given vault id and token by using:
+### Troubleshooting
+If starting the standard exit fails with an error that refers to a missing queue, use the following function to check that the exit queue is registered for the given vault ID and token:
+
 
 ```
 PlasmaFramework.hasExitQueue(vaultId, tokenAddress)
 ```
 
-If no exit queue registered, you can register it with:
-
+If no exit queue is registered, you’ll need to register it using the following function:
 ```
 PlasmaFramework.addExitQueue(vaultId, tokenAddress)
 ```
 
-#### Parameters
 
-- utxoPos (uint192): Position of the exiting output.
+### Parameters
+This section describes the parameters in the function for starting a standard exit.
 
-Formula:
+#### utxoPos (uint192)
+The position of the exiting output. The formula is as follows:
 
 ```
 block number * the block offset (defaults: `1000000000`) + transaction position * transaction offset (defaults to `10000`) + the index of the UTXO in the list of outputs of the transaction
@@ -242,9 +300,10 @@ For example, if we have a deposit transaction in block 160000 at index 0, and we
 160000 * 10000 + 0 * 10000 + 0 = 1600000000
 ```
 
-- rlpOutputTx (bytes): RLP encoded transaction that created the exiting output.
+#### rlpOutputTx (bytes)
+The RLP-encoded transaction that creates the exiting output. 
 
-Here's an example of a deposit transaction sent from address `0xa013debd703e28af78c2ffd0264ef70f978c5465` of 1,000,000,000,000,000 Wei to the `EthVault` contract:
+This example is a deposit transaction of 1,000,000,000,000,000 Wei, sent from address `0xa013debd703e28af78c2ffd0264ef70f978c5465`, to the `EthVault` contract:
 
 ```
 [
@@ -268,20 +327,20 @@ Here's an example of a deposit transaction sent from address `0xa013debd703e28af
 ]
 ```
 
-This transaction then needs to be RLP-encoded using a library of your choice. Be sure to decode the owner address, currency and metadata from hexadecimal to bytes before RLP-encoding.
+This transaction must be RLP-encoded, using a library of your choice. Before RLP-encoding, ensure you decode the owner address, currency and metadata, from hexadecimal to bytes. Once the transaction is RLP-encoded, encode the result to hexadecimal.
 
-Once RLP-encoded, encode the result to hexadecimal.
 
-- outputGuardPreimage (bytes): (Optional) Output guard preimage data
+#### outputGuardPreimage (bytes)
+(Optional) The output guard preimage data. Send an empty bytes value. Example with Remix: `[]`
 
-The `outputGuardPreimage` is currently unused. Send an empty bytes value. Example with Remix: `[]`
+ > ***Note**: `outputGuardPreimage` is currently reserved for future development.*
 
-- outputTxInclusionProof (bytes): A Merkle proof showing that the transaction was included.
+#### outputTxInclusionProof (bytes)
+A Merkle proof showing that the transaction was included. This Merkle proof, which is used to prove the inclusion of a specific hash in a Merkle tree, is a string containing each sibling hash for each level of the Merkle tree, concatenated together.
 
-Requirement: [Basic Merkle Tree understanding](https://en.wikipedia.org/wiki/Merkle_tree)
-[Implementation example](https://github.com/omisego/plasma-contracts/blob/master/plasma_framework/test/helpers/merkle.js)
+ > ***Note**: To learn more about Merkle tree implementation, see [Basic Merkle Tree understanding](https://en.wikipedia.org/wiki/Merkle_tree)
+[Implementation example](https://github.com/omisego/plasma-contracts/blob/master/plasma_framework/test/helpers/merkle.js)*
 
-This proof is used to prove the inclusion of a specific hash in a Merkle Tree. It is a string containing each sibling hash for each level of the Merkle tree, concatenated together. 
 
 #### Example:
 
@@ -294,13 +353,16 @@ PaymentExitGame.startStandardExit([
 ])
 ```
 
-**TODO:** Challenging a Standard Exit
+### Challenging a standard exit
+<!--- TO DO --->
 
-## Processing Exits
 
-Once the exit period is over for a standard exit, it can be processed to release the funds on the rootchain. An end user can perform this action, or the operator can do it for everyone.
+### Processing a standard exit
 
-First, get your `exitId` if you don't have it:
+For a standard exit, once the exit period completes, exit can be processed to release the funds on the root chain. An end user can perform this action, or the operator can do it for everyone.
+
+To process a standard exit: 
+1. Obtain your `exitId` (if you don’t yet have it):
 
 ```
 PaymentExitGame.getStandardExitId(
@@ -310,7 +372,8 @@ PaymentExitGame.getStandardExitId(
 )
 ```
 
-Then process your exit. See parameters below for more information.
+2. Process your exit. 
+ > ***Note**: You can find an explanation of the parameters, below.* 
 
 ```
 PlasmaFramework.processExits({
@@ -321,27 +384,31 @@ PlasmaFramework.processExits({
 })
 ```
 
-### Parameters
+### Parameters: processing a standard exit
+This section describes the parameters included in the function called for processing a standard exit.
 
-- vaultId (uint256): vault id of the vault that stores exiting funds.
+#### vaultId (uint256)
+The vault ID of the vault that stores exiting funds.
 
 Use `1` for Ether, `2` for ERC-20.
 
-- token (address): token type to process.
+#### token (address)
+The token type to process.
 
 ETH: `0x0000000000000000000000000000000000000000` 
 
 The contract address for ERC-20 tokens.
 
-- topExitId (uint160): unique priority of the first exit that should be processed. Set to zero to skip the check.
+#### topExitId (uint160)
+The unique priority of the first exit that should be processed. Set to zero to skip the check.
 
 If you're trying to process only your own exit, set your exitId here.
 
-- maxExitsToProcess (uint256): maximal number of exits to process.
+#### maxExitsToProcess (uint256)
+Defines the maximum number of exits you wish to process. Set to `1` to process only your own exit. 
 
-How many exits you wish to process, should be set to `1` if you only want to process yours.
 
-### Example
+### Example: Processing a standard exit
 
 ```
 PlasmaFramework.processExits([
@@ -365,46 +432,49 @@ PlasmaFramework.processExits([
 **TODO:** Challenging an In-flight Exit output spent 
 
 
-## Exit Game Events
-When listening for Exit Game related events, it's important to remember that there will be one Exit Game per transaction type.
+## Exit game events
+When listening for events related to the exit game, it's important to remember that there will be only one exit game per transaction type.
+
 
 ### Standard Exit Events
-- When a standard exit is started.
+- A standard exit has started:
 ```
    event ExitStarted(
         address indexed owner,
         uint160 exitId
     );
 ```
-- When a standard exit is successfully challenged.
+- A standard exit is successfully challenged:
 ```
     event ExitChallenged(
         uint256 indexed utxoPos
     );
 ```
-- When an exit is successfully processed (i.e. funds sent back to owner)
+- An exit is successfully processed; that is, funds sent back to owner:
 ```
     event ExitFinalized(
         uint160 indexed exitId
     );
 ```
-- When an exit was in the exit queue but was not processed (e.g. because it was already processed).
+- An exit was in the exit queue but was not processed; for example, because it was already processed:
 ```
     event ExitOmitted(
         uint160 indexed exitId
     );
 ```
 
-### In-flight Exit Events
+### In-flight exit events
+This section describes the events for an in-flight exit.
 
-- When an In-flight Exit has been started.
+
+- An in-flight exit has started:
 ```
     event InFlightExitStarted(
         address indexed initiator,
         bytes32 txHash
     );
 ```
-- When an input has been piggybacked on an In-flight Exit.
+- An input has been piggybacked on an in-flight exit:
 ```
     event InFlightExitInputPiggybacked(
         address indexed exitTarget,
@@ -412,7 +482,7 @@ When listening for Exit Game related events, it's important to remember that the
         uint16 inputIndex
     );
 ```
-- When an input has been piggybacked on an In-flight Exit.
+- An input has been piggybacked on an in-flight exit:
 ```
     event InFlightExitOutputPiggybacked(
         address indexed exitTarget,
@@ -420,7 +490,7 @@ When listening for Exit Game related events, it's important to remember that the
         uint16 outputIndex
     );
 ```
-- When an In-flight Exit has been successfully challenged as non-canonical.
+- An in-flight exit has been successfully challenged as non-canonical:
 ```
     event InFlightExitChallenged(
         address indexed challenger,
@@ -428,7 +498,7 @@ When listening for Exit Game related events, it's important to remember that the
         uint256 challengeTxPosition
     );
 ```
-- When an In-flight Exit has been proved canonical in response to a non-canonical challenge.
+- An in-flight exit has been proved canonical in response to a non-canonical challenge:
 ```
     event InFlightExitChallengeResponded(
         address indexed challenger,
@@ -436,7 +506,7 @@ When listening for Exit Game related events, it's important to remember that the
         uint256 challengeTxPosition
     );
 ```
-- When a piggybacked input on an In-flight Exit has been shown to have been spent
+- A piggybacked input on an in-flight exit has been shown to have been spent:
 ```
     event InFlightExitInputBlocked(
         address indexed challenger,
@@ -444,7 +514,7 @@ When listening for Exit Game related events, it's important to remember that the
         uint16 inputIndex
     );
 ```
-- When a piggybacked output on an In-flight Exit has been shown to have been spent
+- A piggybacked output on an in-flight exit has been shown to have been spent:
 ```
     event InFlightExitOutputBlocked(
         address indexed challenger,
@@ -452,21 +522,21 @@ When listening for Exit Game related events, it's important to remember that the
         uint16 inputIndex
     );
 ```
-- When a piggybacked input on an In-flight Exit has been successfully withdrawn (i.e. funds sent back to owner)
+- A piggybacked input on an in-flight exit has been successfully withdrawn; that is, funds sent back to owner:
 ```
     event InFlightExitInputWithdrawn(
         uint160 indexed exitId,
         uint16 inputIndex
     );
 ```
-- When a piggybacked output on an In-flight Exit has been successfully withdrawn (i.e. funds sent back to owner)
+- A piggybacked output on an in-flight exit has been successfully withdrawn; that is, funds sent back to owner:
 ```
     event InFlightExitOutputWithdrawn(
         uint160 indexed exitId,
         uint16 outputIndex
     );
 ```
-- When an exit was in the exit queue but was not processed (e.g. because it was already processed).
+- An exit was in the exit queue, but was not processed; for example, because it was already processed:
 ```
     event InFlightExitOmitted(
         uint160 indexed exitId,
@@ -474,17 +544,120 @@ When listening for Exit Game related events, it's important to remember that the
     );
 ```
 
-# Upgrading the Framework
-The framework is designed to be upgraded, either to fix bugs or add new functionality. Upgrades are done by adding new contracts to the framework. Any upgrade will take a certain period of time to come into effect. This is to keep the framework trustless - if a new contract is added that is malicious or vulnerable, then users will have a chance to exit before it is activated.
+# Upgrading the PlasmaFramework
+The PlasmaFramework is designed to be upgraded, either to fix bugs, or to add new functionality. Upgrades are done by adding new contracts to the framework. Any upgrade takes some time to come into effect. This keeps the framework trustless; that is, if a new malicious or vulnerable contract is added, users have an opportunity to exit before the problematic contract is activated.
 
-**TODO: Upgrades and security**
+
+## Upgrade the deposit transaction type of a vault
+In the current implementation, a vault comes with a single transaction type, which it accepts to be the deposit transaction. However, as time goes, we might want to use as the deposit transaction, the later version of transaction type or a completely new transaction type. For instance, the ETH vault and ERC20 vault accepts payment transaction as the deposit transaction. 
+
+ > ***Note**: In future, when a new payment transaction type is available, it will be changed to payment transaction v2.*
+
+The vault is designed with the concept of `depositVerifier`. This is a predicate contract with the ability to check whether a deposit transaction is the right transaction type, with the data required for a deposit. As a result, to upgrade to new deposit transaction type, it is necessary to implement the new `depositVerifier` contract and set the new verifier to the vault.
+
+### Configure a new deposit verifier
+1. Implement new deposit verifier that fullfils the interface of the certain vault.
+   
+   For details on the deposit verifier code and interface, see the documentation, [here](https://github.com/omisego/plasma-contracts/tree/master/plasma_framework/contracts/src/vaults/verifiers)
+
+2. Call the `setDepositVerifier` function by `maintainer`.
+
+   For more information, see [setDepositVerifier doc](https://github.com/omisego/plasma-contracts/blob/master/plasma_framework/docs/contracts/Vault.md#setdepositverifier). 
+
+3. After the call, you should recieve the `setDepositVerifierCalled` event: 
+
+    ```
+    event SetDepositVerifierCalled(address  nextDepositVerifier);
+    ```
+4. Wait **one** `minExitPeriod` for the new deposit verifier to take effect. In production, it should be one week.
+
+
+### Security analysis
+
+The waiting period of one week for upgrading the deposit verifier provides protection for deposit transactions that are sent in the root chain but are still in mempool before the `setDepositVerifier` is called. 
+
+For more information, see the description in the following issue: https://github.com/omisego/plasma-contracts/issues/174
+
+Users/watchers should listen to the following event to understand when the new deposit verifier takes effect: `setDepositVerifierCalled`
+
+In case the new deposit verifier is not trustworthy, immediately stop any deposit action to the vault, and exit all outputs from the PlasmaFramework.
+
+
+## Add a new vault
+Although it's possible to upgrade the deposit transaction type of a vault, one vault supports only one ERC protocol. For this reason, a new vault must be added if support is required for a new ERC protocol. 
+
+Additionally, if the existing vault code contains any bugs, a new vault is required to replace it. 
+
+ > ***Important**! The process of moving funds from one vault to another is relatively complex, involving a full exit and re-deposit, and should be done with caution.* 
+
+Perform these steps to add a new vault:
+
+1. Design and implement a new vault contract. 
+
+  Unless some feature breaks the abstraction, otherwise please inheritence the existing abstract vault contract. For more     
+  information, see: [Vault.sol](https://github.com/omisego/plasma-            contracts/blob/master/plasma_framework/contracts/src/vaults/Vault.sol)
+
+2. The maintainer registers the new vault to the PlasmaFramework, using the following function: `registerVault` 
+
+   For more information, see the documentation, [here](https://github.com/omisego/plasma-contracts/blob/master/plasma_framework/docs/contracts/VaultRegistry.md#registervault).
+
+3. Wait for the following event to be returned: `event VaultRegistered(uint256  vaultId, address  vaultAddress);`
+
+5. Wait **one** `minExitPeriod` (one week in production). 
+
+6. After the waiting period completes, the user is able to deposit to the new vault.
+
+### Security analysis
+As with the process of configuring a new deposit verifier, a period of one week waiting time is chosen to protect the deposit transactions that are still in mempool while the transaction of `registerVault` is sent. 
+
+For more information, see the description in the following issue: https://github.com/omisego/plasma-contracts/issues/173.
+
+Users/watchers should listen to the follwing event to understand when the new vault is registered: `VaultRegistered`
+
+In case the new vault is not truthworthy, do not perform any deposit to the new vault, and exit all outputs from the PlasmaFramework.
+
+
+## Add a new exit game
+Adding a new exit game is the main method for adding new features to the PlasmaFramework. 
+
+For each transaction type, there is a corresponding exit game. This means that when a feature is added, a new transaction type is also added, and the new transaction type is registered to the corresponding exit game contract in the PlasmaFramework contract.
+
+For example, to support a new DEX feature, a new DEX transaction may be added for spending a payment transaction.
+
+Perform these steps to add a new exit game: 
+1. Design a new transaction type and implement the exit game.
+2. The maintainer registers the new exit game contract to the PlasmaFramework, using the following function:  `registerExitGame` 
+
+ For more information, see the [documentation](https://github.com/omisego/plasma-contracts/blob/389_add_priority_queue_test/plasma_framework/docs/contracts/ExitGameRegistry.md#registerexitgame)
+
+3. The following event is returned: `event ExitGameRegistered(uint256  txType, address  exitGameAddress, uint8  protocol);`
+
+4. Wait **three** `minExitPeriod` (three weeks in production) for the new exit game to take effect.
+
+
+### Security analysis
+A waiting time is required when adding a new exit game. This provides protection for existing users, since the exit game contract has access to several components in the PlasmaFramework. For example, the exit game can insert an exit with the wrong order, flag a random output as used, or ask the vault to withdraw funds directly. For this reason, it has been determined that a minimum period of three weeks is required before allowing any new exit game contracts to take effect. 
+
+**Why a three week waiting period?** 
+
+The three week period is determined as follows:
+* It takes two weeks for a newly mined transaction to exit once a mass exit scenario is detected; thus, `mined_block_time + 2 weeks`; or, two weeks after it's mined.
+* One extra week provides users with an opportunity to clean up the exit queue (`processExits`) before a bad exit game contract can potentially insert a bad exit, with the wrong priority.
+
+For details, see this issue: https://github.com/omisego/plasma-contracts/issues/172
+
+Users/Watchers should listen to the following event to be alerted about a new exit game: `ExitGameRegistered`
+
+If new exit game contract is not trustworthy, it is important to exit immediately.
 
 
 # Ensuring the correctness of the Plasma network
-Plasma is designed to be somewhat optimistic - it assumes everything is correct unless proven otherwise. Users play their part in ensuring the correctness of the system by means of the Exit Games, as described in the previous section. However, it there needs to be a way to let the users know when they need to engage in the Exit Games. This is where the Watchers come in.
+Plasma is designed to be somewhat optimistic; that is, it assumes everything is correct unless proven otherwise. 
+
+Exit games allow users to participate in ensuring the correctness of the system. However, there must be a way to alert users so they know when to engage in the exit games. This role is performed by the Watchers. 
 
 
 ## Watchers
-It is the role of the Watchers to monitor the network and alert users as to when they need to react to events.
+Watchers monitor the network and send alerts so that users know when they need to react to events.
 
 **TODO: Description of all events that a Watcher should listen for, and how the user should react**
