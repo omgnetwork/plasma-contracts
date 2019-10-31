@@ -37,8 +37,8 @@ module.exports = async (
     console.log(`Maintainer address: ${maintainerAddress}`);
     console.log(`Authority address: ${authorityAddress}`);
 
-    const initAmountForMaintainer = process.env.MAINTAINER_ADDRESS_INITIAL_AMOUNT || 3e17; // 0.3 ETH by default
-    const initAmountForAuthority = process.env.AUTHORITY_ADDRESS_INITIAL_AMOUNT || 3e17; // 0.3 ETH by default
+    const initAmountForMaintainer = process.env.MAINTAINER_ADDRESS_INITIAL_AMOUNT || 2e17; // 0.2 ETH by default
+    const initAmountForAuthority = process.env.AUTHORITY_ADDRESS_INITIAL_AMOUNT || 2e17; // 0.2 ETH by default
 
     await fundAddressIfEmpty(deployerAddress, maintainerAddress, initAmountForMaintainer, 'maintainer');
     await fundAddressIfEmpty(deployerAddress, authorityAddress, initAmountForAuthority, 'authority');

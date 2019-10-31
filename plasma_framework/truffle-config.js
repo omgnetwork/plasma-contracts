@@ -2,6 +2,9 @@ require('dotenv').config(); // auto parse env variables from '.env' file
 
 const HDWalletProvider = require('@truffle/hdwallet-provider');
 
+const infuraUrl = `${process.env.INFURA_URL}/${process.env.INFURA_API_KEY}`;
+const cleanInfuraUrl = infuraUrl.replace(/([^:])(\/\/+)/g, '$1/');
+
 module.exports = {
     networks: {
         local: {
@@ -31,22 +34,15 @@ module.exports = {
         },
         infura: {
             skipDryRun: true,
-            provider: () => {
-                const infuraUrl = `${process.env.INFURA_URL}/${process.env.INFURA_API_KEY}`;
-
-                // Replace double '//'
-                const cleanInfuraUrl = infuraUrl.replace(/([^:])(\/\/+)/g, '$1/');
-
-                return new HDWalletProvider(
-                    [
-                        process.env.DEPLOYER_PRIVATEKEY,
-                        process.env.MAINTAINER_PRIVATEKEY,
-                        process.env.AUTHORITY_PRIVATEKEY,
-                    ],
-                    cleanInfuraUrl,
-                    0, 3,
-                );
-            },
+            provider: new HDWalletProvider(
+                [
+                    process.env.DEPLOYER_PRIVATEKEY,
+                    process.env.MAINTAINER_PRIVATEKEY,
+                    process.env.AUTHORITY_PRIVATEKEY,
+                ],
+                cleanInfuraUrl,
+                0, 3,
+            ),
             network_id: '*',
         },
     },
