@@ -7,9 +7,9 @@ const TransactionTypes = {
 };
 
 class PaymentTransactionOutput {
-    constructor(type, amount, owner, token) {
+    constructor(type, amount, outputGuard, token) {
         this.outputType = type;
-        this.outputGuard = owner;
+        this.outputGuard = outputGuard;
         this.token = token;
         this.amount = amount;
     }
