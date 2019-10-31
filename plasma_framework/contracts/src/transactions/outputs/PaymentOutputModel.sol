@@ -19,7 +19,7 @@ library PaymentOutputModel {
     }
 
     /**
-     * @notice Retrieve the 'owner' from the output, assuming the 
+     * @notice Retrieve the 'owner' from the output, assuming the
      *         'outputGuard' field directly holds the owner's address
      * @dev It's possible that 'outputGuard' can be a hash of preimage that holds the owner information,
      *       but this should not and cannot be handled here.

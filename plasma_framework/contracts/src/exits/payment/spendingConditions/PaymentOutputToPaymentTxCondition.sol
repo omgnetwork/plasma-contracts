@@ -19,7 +19,7 @@ contract PaymentOutputToPaymentTxCondition is ISpendingCondition {
     PaymentEip712Lib.Constants internal eip712;
 
     /**
-     * @dev This is designed to be re-useable for all versions of payment transaction, so that 
+     * @dev This is designed to be re-useable for all versions of payment transaction, so that
      *      inputTxType and spendingTxType of the payment output is injected instead
      */
     constructor(address framework, uint256 inputTxType, uint256 spendingTxType) public {
