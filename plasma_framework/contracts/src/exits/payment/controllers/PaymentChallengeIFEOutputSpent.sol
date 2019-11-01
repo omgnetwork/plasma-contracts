@@ -12,8 +12,9 @@ import "../../models/TxFinalizationModel.sol";
 import "../../registries/SpendingConditionRegistry.sol";
 import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../utils/ExitId.sol";
-import "../../../utils/UtxoPosLib.sol";
 import "../../../utils/Merkle.sol";
+import "../../../utils/SafeEthTransfer.sol";
+import "../../../utils/UtxoPosLib.sol";
 import "../../../transactions/WireTransaction.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
@@ -27,6 +28,7 @@ library PaymentChallengeIFEOutputSpent {
         SpendingConditionRegistry spendingConditionRegistry;
         OutputGuardHandlerRegistry outputGuardHandlerRegistry;
         ITxFinalizationVerifier txFinalizationVerifier;
+        uint256 safeGasStipend;
     }
 
     event InFlightExitOutputBlocked(
@@ -65,10 +67,9 @@ library PaymentChallengeIFEOutputSpent {
 
         ife.clearOutputPiggybacked(outputIndex);
 
-        //pay bond to challenger
-        // solhint-disable-next-line avoid-call-value
-        (bool success, ) = msg.sender.call.value(ife.outputs[outputIndex].piggybackBondSize)("");
-        require(success, "Paying out piggyback bond failed");
+        uint256 piggybackBondSize = ife.outputs[outputIndex].piggybackBondSize;
+        SafeEthTransfer.transfer(msg.sender, piggybackBondSize, controller.safeGasStipend);
+
         emit InFlightExitOutputBlocked(msg.sender, keccak256(args.inFlightTx), outputIndex);
     }
 

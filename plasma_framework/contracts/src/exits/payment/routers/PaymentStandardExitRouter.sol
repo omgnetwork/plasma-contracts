@@ -43,6 +43,8 @@ contract PaymentStandardExitRouter is
     BondSize.Params internal startStandardExitBond;
 
     PlasmaFramework private framework;
+    // TODO: inject this value instead
+    uint256 public constant safeGasStipend = 2300;
 
     event StandardExitBondUpdated(uint128 bondSize);
 
@@ -88,11 +90,15 @@ contract PaymentStandardExitRouter is
         );
 
         challengeStandardExitController = PaymentChallengeStandardExit.buildController(
-            plasmaFramework, spendingConditionRegistry, outputGuardHandlerRegistry, txFinalizationVerifier
+            plasmaFramework,
+            spendingConditionRegistry,
+            outputGuardHandlerRegistry,
+            txFinalizationVerifier,
+            safeGasStipend
         );
 
         processStandardExitController = PaymentProcessStandardExit.Controller(
-            plasmaFramework, ethVault, erc20Vault
+            plasmaFramework, ethVault, erc20Vault, safeGasStipend
         );
 
         startStandardExitBond = BondSize.buildParams(INITIAL_BOND_SIZE, BOND_LOWER_BOUND_DIVISOR, BOND_UPPER_BOUND_MULTIPLIER);

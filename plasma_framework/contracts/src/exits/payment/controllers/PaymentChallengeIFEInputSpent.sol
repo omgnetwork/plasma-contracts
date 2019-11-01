@@ -13,9 +13,10 @@ import "../../registries/SpendingConditionRegistry.sol";
 import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../utils/ExitId.sol";
 import "../../utils/OutputId.sol";
-import "../../../utils/UtxoPosLib.sol";
 import "../../../utils/IsDeposit.sol";
 import "../../../utils/Merkle.sol";
+import "../../../utils/SafeEthTransfer.sol";
+import "../../../utils/UtxoPosLib.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
 import "../../../transactions/WireTransaction.sol";
@@ -31,6 +32,7 @@ library PaymentChallengeIFEInputSpent {
         SpendingConditionRegistry spendingConditionRegistry;
         OutputGuardHandlerRegistry outputGuardHandlerRegistry;
         ITxFinalizationVerifier txFinalizationVerifier;
+        uint256 safeGasStipend;
     }
 
     event InFlightExitInputBlocked(
@@ -56,7 +58,8 @@ library PaymentChallengeIFEInputSpent {
         PlasmaFramework framework,
         SpendingConditionRegistry spendingConditionRegistry,
         OutputGuardHandlerRegistry outputGuardHandlerRegistry,
-        ITxFinalizationVerifier txFinalizationVerifier
+        ITxFinalizationVerifier txFinalizationVerifier,
+        uint256 safeGasStipend
     )
         public
         view
@@ -67,7 +70,8 @@ library PaymentChallengeIFEInputSpent {
             isDeposit: IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL()),
             spendingConditionRegistry: spendingConditionRegistry,
             outputGuardHandlerRegistry: outputGuardHandlerRegistry,
-            txFinalizationVerifier: txFinalizationVerifier
+            txFinalizationVerifier: txFinalizationVerifier,
+            safeGasStipend: safeGasStipend
         });
     }
 
@@ -109,10 +113,8 @@ library PaymentChallengeIFEInputSpent {
         // Remove the input from the piggyback map
         ife.clearInputPiggybacked(args.inFlightTxInputIndex);
 
-        // Pay out the bond.
-        // solhint-disable-next-line avoid-call-value
-        (bool success, ) = msg.sender.call.value(ife.inputs[args.inFlightTxInputIndex].piggybackBondSize)("");
-        require(success, "Paying out piggyback bond failed");
+        uint256 piggybackBondSize = ife.inputs[args.inFlightTxInputIndex].piggybackBondSize;
+        SafeEthTransfer.transfer(msg.sender, piggybackBondSize, self.safeGasStipend);
 
         emit InFlightExitInputBlocked(msg.sender, keccak256(args.inFlightTx), args.inFlightTxInputIndex);
     }

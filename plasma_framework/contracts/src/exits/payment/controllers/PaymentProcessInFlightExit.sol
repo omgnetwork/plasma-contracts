@@ -3,9 +3,10 @@ pragma experimental ABIEncoderV2;
 
 import "../PaymentExitDataModel.sol";
 import "../PaymentInFlightExitModelUtils.sol";
+import "../../../framework/PlasmaFramework.sol";
+import "../../../utils/SafeEthTransfer.sol";
 import "../../../vaults/EthVault.sol";
 import "../../../vaults/Erc20Vault.sol";
-import "../../../framework/PlasmaFramework.sol";
 
 library PaymentProcessInFlightExit {
     using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
@@ -17,6 +18,7 @@ library PaymentProcessInFlightExit {
         PlasmaFramework framework;
         EthVault ethVault;
         Erc20Vault erc20Vault;
+        uint256 safeGasStipend;
     }
 
     event InFlightExitOmitted(
@@ -73,8 +75,10 @@ library PaymentProcessInFlightExit {
 
                 if (shouldWithdrawInput(exit, withdrawal, token, i)) {
                     withdrawFromVault(self, withdrawal);
-                    // solhint-disable-next-line avoid-call-value
-                    (bool success, ) = withdrawal.exitTarget.call.value(withdrawal.piggybackBondSize)("");
+                    bool success = SafeEthTransfer.callTransfer(
+                        withdrawal.exitTarget, withdrawal.piggybackBondSize, self.safeGasStipend
+                    );
+
                     // we do not want to block a queue if bond return is unsuccessful
                     if (!success) {
                         emit InFlightBondReturnFailed(withdrawal.exitTarget, withdrawal.piggybackBondSize);
@@ -88,8 +92,9 @@ library PaymentProcessInFlightExit {
 
                 if (shouldWithdrawOutput(self, exit, withdrawal, token, i)) {
                     withdrawFromVault(self, withdrawal);
-                    // solhint-disable-next-line avoid-call-value
-                    (bool success, ) = withdrawal.exitTarget.call.value(withdrawal.piggybackBondSize)("");
+                    bool success = SafeEthTransfer.callTransfer(
+                        withdrawal.exitTarget, withdrawal.piggybackBondSize, self.safeGasStipend
+                    );
                     // we do not want to block a queue if bond return is unsuccessful
                     if (!success) {
                         emit InFlightBondReturnFailed(withdrawal.exitTarget, withdrawal.piggybackBondSize);
@@ -104,8 +109,10 @@ library PaymentProcessInFlightExit {
         clearPiggybackOutputFlag(exit, token);
 
         if (allPiggybacksCleared(exit)) {
-            // solhint-disable-next-line avoid-call-value
-            (bool success, ) = exit.bondOwner.call.value(exit.bondSize)("");
+            bool success = SafeEthTransfer.callTransfer(
+                exit.bondOwner, exit.bondSize, self.safeGasStipend
+            );
+
             // we do not want to block a queue if bond return is unsuccessful
             if (!success) {
                 emit InFlightBondReturnFailed(exit.bondOwner, exit.bondSize);

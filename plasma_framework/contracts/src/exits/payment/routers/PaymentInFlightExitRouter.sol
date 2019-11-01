@@ -51,6 +51,8 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyFromAddress, OnlyWithV
     BondSize.Params internal piggybackBond;
 
     PlasmaFramework private framework;
+    // TODO: inject this value instead
+    uint256 private safeGasStipend = 2300;
 
     event IFEBondUpdated(uint128 bondSize);
     event PiggybackBondUpdated(uint128 bondSize);
@@ -162,20 +164,23 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyFromAddress, OnlyWithV
             plasmaFramework,
             spendingConditionRegistry,
             outputGuardHandlerRegistry,
-            txFinalizationVerifier
+            txFinalizationVerifier,
+            safeGasStipend
         );
 
         challengeOutputSpentController = PaymentChallengeIFEOutputSpent.Controller(
             plasmaFramework,
             spendingConditionRegistry,
             outputGuardHandlerRegistry,
-            txFinalizationVerifier
+            txFinalizationVerifier,
+            safeGasStipend
         );
 
         processInflightExitController = PaymentProcessInFlightExit.Controller({
             framework: plasmaFramework,
             ethVault: ethVault,
-            erc20Vault: erc20Vault
+            erc20Vault: erc20Vault,
+            safeGasStipend: safeGasStipend
         });
         startIFEBond = BondSize.buildParams(INITIAL_IFE_BOND_SIZE, BOND_LOWER_BOUND_DIVISOR, BOND_UPPER_BOUND_MULTIPLIER);
         piggybackBond = BondSize.buildParams(INITIAL_PB_BOND_SIZE, BOND_LOWER_BOUND_DIVISOR, BOND_UPPER_BOUND_MULTIPLIER);
