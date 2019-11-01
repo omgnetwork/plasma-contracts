@@ -34,17 +34,15 @@ module.exports = {
         // before getting submitted to the remote client.
         remote: {
             skipDryRun: true,
-            provider: () => {
-                return new HDWalletProvider(
-                    [
-                        process.env.DEPLOYER_PRIVATEKEY,
-                        process.env.MAINTAINER_PRIVATEKEY,
-                        process.env.AUTHORITY_PRIVATEKEY,
-                    ],
-                    process.env.REMOTE_URL,
-                    0, 3,
-                );
-            },
+            provider: () => new HDWalletProvider(
+                [
+                    process.env.DEPLOYER_PRIVATEKEY,
+                    process.env.MAINTAINER_PRIVATEKEY,
+                    process.env.AUTHORITY_PRIVATEKEY,
+                ],
+                process.env.REMOTE_URL,
+                0, 3,
+            ),
             network_id: '*',
         },
     },
