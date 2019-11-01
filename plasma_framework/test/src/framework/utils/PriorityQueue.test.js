@@ -17,9 +17,10 @@ contract('PriorityQueue', ([_, nonOwner]) => {
         });
 
         it('fails when empty', async () => {
-            const errorMsg = 'Returned error: VM Exception while processing transaction: invalid opcode';
-            await this.priorityQueue.getMin()
-                .catch(err => expect(err.message).to.equal(errorMsg));
+            await expectRevert(
+                this.priorityQueue.getMin(),
+                'Queue is empty',
+            );
         });
     });
 
@@ -41,7 +42,7 @@ contract('PriorityQueue', ([_, nonOwner]) => {
                 .to.be.bignumber.equal(new BN(1));
         });
 
-        it('can insert multiple values with order', async () => {
+        it('can insert two values with order', async () => {
             const smallerValue = 2;
             const largerValue = 5;
             await this.priorityQueue.insert(smallerValue);
@@ -52,15 +53,15 @@ contract('PriorityQueue', ([_, nonOwner]) => {
                 .to.be.bignumber.equal(new BN(2));
         });
 
-        it('can insert out of order and still get the minimal number', async () => {
-            const smallerValue = 2;
-            const largerValue = 5;
-            await this.priorityQueue.insert(largerValue);
-            await this.priorityQueue.insert(smallerValue);
+        it('can insert multiple values out of order and still get the minimal number', async () => {
+            const valuesOutOfOrder = [13, 11, 17, 5, 3, 1, 2];
+
+            await Promise.all(valuesOutOfOrder.map(async value => this.priorityQueue.insert(value)));
+
             expect(await this.priorityQueue.getMin())
-                .to.be.bignumber.equal(new BN(smallerValue));
+                .to.be.bignumber.equal(new BN(Math.min(...valuesOutOfOrder)));
             expect(await this.priorityQueue.currentSize())
-                .to.be.bignumber.equal(new BN(2));
+                .to.be.bignumber.equal(new BN(valuesOutOfOrder.length));
         });
 
         it('is not idempotent', async () => {
@@ -74,7 +75,7 @@ contract('PriorityQueue', ([_, nonOwner]) => {
                 .to.be.bignumber.equal(new BN(2));
         });
 
-        it('should fail when not inserted by the owner', async () => {
+        it('should fail when not inserted by the framework (who deploys the priority queue contract)', async () => {
             await expectRevert(
                 this.priorityQueue.insert(100, { from: nonOwner }),
                 'Caller address is unauthorized',
@@ -91,7 +92,7 @@ contract('PriorityQueue', ([_, nonOwner]) => {
                 .to.be.bignumber.equal(new BN(0));
         });
 
-        it('can delete when multiple values in queue', async () => {
+        it('can delete when two values in queue', async () => {
             await this.priorityQueue.insert(2);
             await this.priorityQueue.insert(5);
 
@@ -102,21 +103,37 @@ contract('PriorityQueue', ([_, nonOwner]) => {
                 .to.be.bignumber.equal(new BN(1));
         });
 
+        it('can delete when multiple values in queue', async () => {
+            const valuesInOrder = [2, 3, 5, 7, 11, 13, 17];
+            await Promise.all(valuesInOrder.map(async value => this.priorityQueue.insert(value)));
+
+            await this.priorityQueue.delMin();
+            expect(await this.priorityQueue.getMin())
+                .to.be.bignumber.equal(new BN(valuesInOrder[1]));
+            expect(await this.priorityQueue.currentSize())
+                .to.be.bignumber.equal(new BN(valuesInOrder.length - 1));
+        });
+
         it('can delete all', async () => {
-            await this.priorityQueue.insert(2);
-            await this.priorityQueue.insert(5);
+            const values = [2, 3, 5, 7, 11, 13, 17];
+            await Promise.all(values.map(async value => this.priorityQueue.insert(value)));
 
-            await this.priorityQueue.delMin();
-            await this.priorityQueue.delMin();
-
+            await Promise.all(values.map(async () => this.priorityQueue.delMin()));
             expect(await this.priorityQueue.currentSize())
                 .to.be.bignumber.equal(new BN(0));
         });
 
-        it('should fail when not deleted by the owner', async () => {
+        it('should fail when not deleted by the framework (who deploys the priority queue contract)', async () => {
             await expectRevert(
                 this.priorityQueue.delMin({ from: nonOwner }),
                 'Caller address is unauthorized',
+            );
+        });
+
+        it('should fail when queue is empty', async () => {
+            await expectRevert(
+                this.priorityQueue.delMin(),
+                'Queue is empty',
             );
         });
     });
