@@ -29,24 +29,20 @@ module.exports = {
             from: process.env.DEPLOYER_ADDRESS,
             network_id: 5,
         },
-        infura: {
+        // Remote means that the remote client does not possess the private keys.
+        // Transactions need to be signed locally with the given private keys
+        // before getting submitted to the remote client.
+        remote: {
             skipDryRun: true,
-            provider: () => {
-                const infuraUrl = `${process.env.INFURA_URL}/${process.env.INFURA_API_KEY}`;
-
-                // Replace double '//'
-                const cleanInfuraUrl = infuraUrl.replace(/([^:])(\/\/+)/g, '$1/');
-
-                return new HDWalletProvider(
-                    [
-                        process.env.DEPLOYER_PRIVATEKEY,
-                        process.env.MAINTAINER_PRIVATEKEY,
-                        process.env.AUTHORITY_PRIVATEKEY,
-                    ],
-                    cleanInfuraUrl,
-                    0, 3,
-                );
-            },
+            provider: () => new HDWalletProvider(
+                [
+                    process.env.DEPLOYER_PRIVATEKEY,
+                    process.env.MAINTAINER_PRIVATEKEY,
+                    process.env.AUTHORITY_PRIVATEKEY,
+                ],
+                process.env.REMOTE_URL,
+                0, 3,
+            ),
             network_id: '*',
         },
     },
