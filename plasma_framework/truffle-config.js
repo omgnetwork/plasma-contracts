@@ -2,9 +2,6 @@ require('dotenv').config(); // auto parse env variables from '.env' file
 
 const HDWalletProvider = require('@truffle/hdwallet-provider');
 
-const infuraUrl = `${process.env.INFURA_URL || 'https://infura.io/v3/'}/${process.env.INFURA_API_KEY}`;
-const cleanInfuraUrl = infuraUrl.replace(/([^:])(\/\/+)/g, '$1/');
-
 module.exports = {
     networks: {
         local: {
@@ -32,7 +29,10 @@ module.exports = {
             from: process.env.DEPLOYER_ADDRESS,
             network_id: 5,
         },
-        infura: {
+        // Remote means that the remote client does not possess the private keys.
+        // Transactions need to be signed locally with the given private keys
+        // before getting submitted to the remote client.
+        remote: {
             skipDryRun: true,
             // Can't be a function otherwise it'll throw a JSON RPC error for some reason
             // https://github.com/trufflesuite/truffle/issues/852#issuecomment-522367001
@@ -44,7 +44,7 @@ module.exports = {
                     process.env.MAINTAINER_PRIVATEKEY || '0'.repeat(64),
                     process.env.AUTHORITY_PRIVATEKEY || '0'.repeat(64),
                 ],
-                cleanInfuraUrl,
+                process.env.REMOTE_URL,
                 0, 3,
             ),
             network_id: '*',

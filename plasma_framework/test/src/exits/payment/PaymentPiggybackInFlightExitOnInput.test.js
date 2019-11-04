@@ -211,7 +211,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
                 this.exitGame.piggybackInFlightExitOnInput(
                     data.argsInputOne, { from: inputOwner, value: this.piggybackBondSize.toString() },
                 ),
-                'Index exceed max size of the input',
+                'Invalid input index',
             );
         });
 

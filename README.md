@@ -56,6 +56,8 @@ Or run the tests
 ## Configuration
 The migration scripts can be configured via the `migrations/config.js` file. Various properties of the contracts can be set here, such as the minimum exit period. See the file itself for more details. By default the `development` environment is used, but this can be set to `production` via the `DEPLOYMENT_ENV` environment variable.
 
+You may also override the default exit period in `development` with an environment variable `MIN_EXIT_PERIOD`.
+
 
 ## Deploying
 Deploying the contracts requires three accounts:
@@ -63,15 +65,14 @@ Deploying the contracts requires three accounts:
 2. `AUTHORITY` The account that used by the Child chain to submit blocks. It must not have made any transaction prior to calling the scripts i.e. its nonce must be 0.
 3. `MAINTAINER` The account that can register new vaults, exit games, etc.
 
-
-Normally you will deploy the contracts using an Ethereum client that you run yourself, such as Geth or Parity. However, you can also use a provider such as Infura. In this case you'll need to know the private keys for the `DEPLOYER`, `AUTHORITY` and `MAINTAINER` accounts. See `truffle-config.js` for an example.
+Normally you will deploy the contracts using an Ethereum client that you run yourself, such as Geth or Parity. However, you can also use a remote provider such as Infura. In this case you'll need to know the private keys for the `DEPLOYER`, `AUTHORITY` and `MAINTAINER` accounts. See `truffle-config.js` for an example.
 
 Run truffle, passing in the network e.g.
 ```bash
 ./node_modules/.bin/truffle truffle migrate --network local
 
-# or to deploy via infura
-./node_modules/.bin/truffle truffle migrate --network infura
+# or to deploy via a remote provider
+./node_modules/.bin/truffle truffle migrate --network remote
 ```
 
 
