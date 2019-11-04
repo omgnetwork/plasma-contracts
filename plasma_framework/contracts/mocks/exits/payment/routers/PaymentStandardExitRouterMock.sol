@@ -60,7 +60,7 @@ contract PaymentStandardExitRouterMock is PaymentStandardExitRouter {
         }
     }
 
-    function stringEquals(string memory a, string memory b) private returns (bool) {
+    function stringEquals(string memory a, string memory b) private pure returns (bool) {
         return keccak256(abi.encodePacked(a)) == keccak256(abi.encodePacked(b));
     }
 }

@@ -96,7 +96,6 @@ library PaymentPiggybackInFlightExit {
         require(exit.exitStartTimestamp != 0, "No in-flight exit to piggyback on");
         require(exit.isInFirstPhase(self.minExitPeriod), "Piggyback is possible only in the first phase of the exit period");
 
-        require(args.inputIndex < MAX_INPUT_NUM, "Index exceed max size of the input");
         require(!exit.isInputPiggybacked(args.inputIndex), "Indexed input already piggybacked");
 
         PaymentExitDataModel.WithdrawData storage withdrawData = exit.inputs[args.inputIndex];
@@ -105,7 +104,7 @@ library PaymentPiggybackInFlightExit {
         require(withdrawData.exitTarget == msg.sender, "Can be called only by the exit target");
         withdrawData.piggybackBondSize = msg.value;
 
-        if (exit.isFirstPiggybackOfTheToken(withdrawData.token)) {
+        if (isFirstPiggybackOfTheToken(exit, withdrawData.token)) {
             enqueue(self, withdrawData.token, UtxoPosLib.UtxoPos(exit.position), exitId);
         }
 
@@ -134,7 +133,6 @@ library PaymentPiggybackInFlightExit {
         require(exit.exitStartTimestamp != 0, "No in-flight exit to piggyback on");
         require(exit.isInFirstPhase(self.minExitPeriod), "Piggyback is possible only in the first phase of the exit period");
 
-        require(args.outputIndex < MAX_OUTPUT_NUM, "Index exceeds max size of the output");
         require(!exit.isOutputPiggybacked(args.outputIndex), "Indexed output already piggybacked");
 
         PaymentExitDataModel.WithdrawData storage withdrawData = exit.outputs[args.outputIndex];
@@ -145,7 +143,7 @@ library PaymentPiggybackInFlightExit {
         address payable exitTarget = getExitTargetOfOutput(self, output.outputGuard, output.outputType, args.outputGuardPreimage);
         require(exitTarget == msg.sender, "Can be called only by the exit target");
 
-        if (exit.isFirstPiggybackOfTheToken(withdrawData.token)) {
+        if (isFirstPiggybackOfTheToken(exit, withdrawData.token)) {
             enqueue(self, withdrawData.token, UtxoPosLib.UtxoPos(exit.position), exitId);
         }
 
@@ -167,7 +165,7 @@ library PaymentPiggybackInFlightExit {
         private
     {
         (, uint256 blockTimestamp) = controller.framework.blocks(utxoPos.blockNum());
-        
+
         uint64 exitableAt = controller.exitableTimestampCalculator.calculateTxExitableTimestamp(now, blockTimestamp);
 
         uint256 vaultId;
@@ -203,5 +201,27 @@ library PaymentPiggybackInFlightExit {
         require(handler.isValid(outputGuardData),
                 "Some output guard information is invalid");
         return handler.getExitTarget(outputGuardData);
+    }
+
+    function isFirstPiggybackOfTheToken(ExitModel.InFlightExit memory ife, address token)
+        private
+        pure
+        returns (bool)
+    {
+        bool isPiggybackInput = true;
+        for (uint i = 0; i < MAX_INPUT_NUM; i++) {
+            if (ife.isInputPiggybacked(uint16(i)) && ife.inputs[i].token == token) {
+                return false;
+            }
+        }
+
+        isPiggybackInput = false;
+        for (uint i = 0; i < MAX_OUTPUT_NUM; i++) {
+            if (ife.isOutputPiggybacked(uint16(i)) && ife.outputs[i].token == token) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
