@@ -24,7 +24,7 @@ contract('PaymentInFlightExitModelUtils', () => {
             }
         });
 
-        it('returns false for not piggybacked input', async () => {
+        it('returns false for non-piggybacked input', async () => {
             this.modelUtils = await PaymentInFlightExitModelUtils.new(0, 0);
 
             for (let i = 0; i++; i < MAX_INPUTS) {
@@ -53,7 +53,7 @@ contract('PaymentInFlightExitModelUtils', () => {
             }
         });
 
-        it('returns false for not piggybacked output', async () => {
+        it('returns false for non-piggybacked output', async () => {
             this.modelUtils = await PaymentInFlightExitModelUtils.new(0, 0);
 
             for (let i = 0; i++; i < MAX_OUTPUTS) {
@@ -195,7 +195,7 @@ contract('PaymentInFlightExitModelUtils', () => {
             expect(actual).to.be.false;
         });
 
-        it('returns false when ife is not in the first phase - edge case', async () => {
+        it('returns false when ife just passes the first phase (MIN_EXIT_PERIOD/2)', async () => {
             await time.increase(MIN_EXIT_PERIOD / 2);
             const actual = await this.modelUtils.isInFirstPhase(MIN_EXIT_PERIOD);
             expect(actual).to.be.false;
