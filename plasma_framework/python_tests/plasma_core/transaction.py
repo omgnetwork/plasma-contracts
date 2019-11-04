@@ -122,8 +122,8 @@ class Transaction(rlp.Serializable):
         tx_sedes = rlp.sedes.List(sedes_list)
         return tx_sedes.serialize(tx_elems)
 
-    def sign(self, index, account, verifyingContract=None):
-        msg_hash = hash_struct(self, verifyingContract=verifyingContract)
+    def sign(self, index, account, verifying_contract=None):
+        msg_hash = hash_struct(self, verifying_contract=verifying_contract)
         sig = account.key.sign_msg_hash(msg_hash)
         self.signatures[index] = _amend_signature(sig.to_bytes())
         self._signers[index] = sig.recover_public_key_from_msg_hash(
