@@ -216,6 +216,8 @@ class TestingLanguage:
 
     def challenge_standard_exit(self, output_id, spend_id, input_index=None):
         spend_tx = self.child_chain.get_transaction(spend_id)
+        exiting_tx = self.child_chain.get_transaction(output_id)
+
         signature = NULL_SIGNATURE
         if input_index is None:
             for i in range(0, 4):
@@ -226,7 +228,7 @@ class TestingLanguage:
         if input_index is None:
             input_index = 3
         exit_id = self.get_standard_exit_id(output_id)
-        self.root_chain.challengeStandardExit(exit_id, spend_tx.encoded, input_index, signature)
+        self.root_chain.challengeStandardExit(exit_id, spend_tx.encoded, input_index, signature, exiting_tx.encoded)
 
     def start_in_flight_exit(self, tx_id, bond=None, sender=None):
         if sender is None:
