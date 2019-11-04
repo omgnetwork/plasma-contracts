@@ -125,6 +125,17 @@ class Transaction(rlp.Serializable):
     def sign(self, index, account, verifyingContract=None):
         msg_hash = hash_struct(self, verifyingContract=verifyingContract)
         sig = account.key.sign_msg_hash(msg_hash)
-        self.signatures[index] = sig.to_bytes()
+        self.signatures[index] = _amend_signature(sig.to_bytes())
         self._signers[index] = sig.recover_public_key_from_msg_hash(
             msg_hash).to_canonical_address() if sig != NULL_SIGNATURE else NULL_ADDRESS
+
+
+def _amend_signature(sig):
+    """ We are making it in order to make signatures produced by eth_keys library
+        compatible with openzellelin ECDSA public key recovery.
+
+        Please note:
+        https://github.com/OpenZeppelin/openzeppelin-contracts/blob/c3f2ed81683bd0095673f525f7ee9639370a2432/contracts/cryptography/ECDSA.sol#L53
+    """
+    sig_int = int.from_bytes(sig, 'big')
+    return (sig_int + 27).to_bytes(len(sig), 'big')
