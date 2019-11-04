@@ -214,10 +214,6 @@ library PaymentStartInFlightExit {
             "Number of input transactions does not match number of in-flight transaction inputs"
         );
         require(
-            exitData.inputUtxosPos.length == exitData.inFlightTx.inputs.length,
-            "Number of input transaction positions does not match the number of in-flight transaction inputs"
-        );
-        require(
             exitData.outputGuardPreimagesForInputs.length == exitData.inFlightTx.inputs.length,
             "Number of output guard preimages for inputs does not match the number of in-flight transaction inputs"
         );
@@ -262,9 +258,7 @@ library PaymentStartInFlightExit {
                                                     .outputGuardHandlers(output.outputType);
 
             require(address(outputGuardHandler) != address(0), "Failed to retrieve the outputGuardHandler of the output type");
-
-            require(outputGuardHandler.isValid(outputGuardData),
-                    "Output guard information is invalid for the input tx");
+            require(outputGuardHandler.isValid(outputGuardData), "Output guard information is invalid for the input tx");
 
             uint8 protocol = exitData.controller.framework.protocols(WireTransaction.getTransactionType(exitData.inputTxs[i]));
 
@@ -286,17 +280,6 @@ library PaymentStartInFlightExit {
         for (uint16 i = 0; i < exitData.inputTxs.length; i++) {
             uint16 outputIndex = exitData.inputUtxosPos[i].outputIndex();
             WireTransaction.Output memory output = WireTransaction.getOutput(exitData.inputTxs[i], outputIndex);
-
-            OutputGuardModel.Data memory outputGuardData = OutputGuardModel.Data({
-                guard: output.outputGuard,
-                preimage: exitData.outputGuardPreimagesForInputs[i]
-            });
-            IOutputGuardHandler outputGuardHandler = exitData.controller
-                                                    .outputGuardHandlerRegistry
-                                                    .outputGuardHandlers(output.outputType);
-            require(address(outputGuardHandler) != address(0), "Failed to retrieve the outputGuardHandler of the output type");
-            require(outputGuardHandler.isValid(outputGuardData),
-                    "Output guard information is invalid for the input tx");
 
             ISpendingCondition condition = exitData.controller.spendingConditionRegistry.spendingConditions(
                 output.outputType, exitData.controller.supportedTxType
@@ -370,7 +353,7 @@ library PaymentStartInFlightExit {
                 exitData.outputGuardPreimagesForInputs[i]
             );
             IOutputGuardHandler handler = exitData.controller.outputGuardHandlerRegistry.outputGuardHandlers(output.outputType);
-            require(address(handler) != address(0), "Output guard handler not registered");
+            assert(address(handler) != address(0));
             address payable exitTarget = handler.getExitTarget(outputGuardData);
 
             ife.inputs[i].outputId = exitData.outputIds[i];
