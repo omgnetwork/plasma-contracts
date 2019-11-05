@@ -23,7 +23,7 @@ contract EthVault is Vault {
         uint256 amount
     );
 
-    uint256 safeGasStipend;
+    uint256 public safeGasStipend;
 
     constructor(PlasmaFramework _framework, uint256 _safeGasStipend) public Vault(_framework) {
         safeGasStipend = _safeGasStipend;

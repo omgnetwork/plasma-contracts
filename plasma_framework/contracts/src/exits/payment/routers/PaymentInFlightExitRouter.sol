@@ -51,8 +51,8 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyFromAddress, OnlyWithV
     BondSize.Params internal piggybackBond;
 
     PlasmaFramework private framework;
-    // TODO: inject this value instead
-    uint256 private safeGasStipend = 2300;
+
+    // uint256 private safeGasStipend = 2300;
 
     event IFEBondUpdated(uint128 bondSize);
     event PiggybackBondUpdated(uint128 bondSize);
@@ -121,11 +121,18 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyFromAddress, OnlyWithV
         SpendingConditionRegistry spendingConditionRegistry,
         IStateTransitionVerifier stateTransitionVerifier,
         ITxFinalizationVerifier txFinalizationVerifier,
-        uint256 supportedTxType
+        uint256 supportedTxType,
+        uint256 safeGasStipend
     )
         public
     {
         framework = plasmaFramework;
+
+        EthVault ethVault = EthVault(plasmaFramework.vaults(ethVaultId));
+        require(address(ethVault) != address(0), "Invalid ETH vault");
+
+        Erc20Vault erc20Vault = Erc20Vault(plasmaFramework.vaults(erc20VaultId));
+        require(address(erc20Vault) != address(0), "Invalid ERC20 vault");
 
         startInFlightExitController = PaymentStartInFlightExit.buildController(
             plasmaFramework,
@@ -135,14 +142,6 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyFromAddress, OnlyWithV
             txFinalizationVerifier,
             supportedTxType
         );
-
-        address ethVaultAddress = plasmaFramework.vaults(ethVaultId);
-        require(ethVaultAddress != address(0), "Invalid ETH vault");
-        EthVault ethVault = EthVault(ethVaultAddress);
-
-        address erc20VaultAddress = plasmaFramework.vaults(erc20VaultId);
-        require(erc20VaultAddress != address(0), "Invalid ERC20 vault");
-        Erc20Vault erc20Vault = Erc20Vault(erc20VaultAddress);
 
         piggybackInFlightExitController = PaymentPiggybackInFlightExit.buildController(
             plasmaFramework,

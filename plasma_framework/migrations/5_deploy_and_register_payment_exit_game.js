@@ -85,8 +85,7 @@ module.exports = async (
 
     const plasmaFramework = await PlasmaFramework.deployed();
 
-    const paymentExitGame = await deployer.deploy(
-        PaymentExitGame,
+    const paymentExitGameArgs = [
         plasmaFramework.address,
         config.registerKeys.vaultId.eth,
         config.registerKeys.vaultId.erc20,
@@ -95,7 +94,9 @@ module.exports = async (
         stateVerifier.address,
         txFinalizationVerifier.address,
         PAYMENT_TX_TYPE,
-    );
+        config.frameworks.safeGasStipend.v1,
+    ];
+    const paymentExitGame = await deployer.deploy(PaymentExitGame, paymentExitGameArgs);
 
     // handle output guard handler
     await deployer.deploy(PaymentOutputGuardHandler, PAYMENT_OUTPUT_TYPE);

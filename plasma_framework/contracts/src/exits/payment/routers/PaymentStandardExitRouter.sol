@@ -43,8 +43,6 @@ contract PaymentStandardExitRouter is
     BondSize.Params internal startStandardExitBond;
 
     PlasmaFramework private framework;
-    // TODO: inject this value instead
-    uint256 public constant safeGasStipend = 2300;
 
     event StandardExitBondUpdated(uint128 bondSize);
 
@@ -71,19 +69,18 @@ contract PaymentStandardExitRouter is
         uint256 erc20VaultId,
         OutputGuardHandlerRegistry outputGuardHandlerRegistry,
         SpendingConditionRegistry spendingConditionRegistry,
-        ITxFinalizationVerifier txFinalizationVerifier
+        ITxFinalizationVerifier txFinalizationVerifier,
+        uint256 safeGasStipend
     )
         public
     {
         framework = plasmaFramework;
 
-        address ethVaultAddress = plasmaFramework.vaults(ethVaultId);
-        require(ethVaultAddress != address(0), "Invalid ETH vault");
-        EthVault ethVault = EthVault(ethVaultAddress);
+        EthVault ethVault = EthVault(plasmaFramework.vaults(ethVaultId));
+        require(address(ethVault) != address(0), "Invalid ETH vault");
 
-        address erc20VaultAddress = plasmaFramework.vaults(erc20VaultId);
-        require(erc20VaultAddress != address(0), "Invalid ERC20 vault");
-        Erc20Vault erc20Vault = Erc20Vault(erc20VaultAddress);
+        Erc20Vault erc20Vault = Erc20Vault(plasmaFramework.vaults(erc20VaultId));
+        require(address(erc20Vault) != address(0), "Invalid ERC20 vault");
 
         startStandardExitController = PaymentStartStandardExit.buildController(
             this, plasmaFramework, outputGuardHandlerRegistry, txFinalizationVerifier, ethVaultId, erc20VaultId
