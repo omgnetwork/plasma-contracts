@@ -66,6 +66,7 @@ library PaymentStartInFlightExit {
      * @param inFlightTxWitnesses Witnesses for in-flight transactions
      * @param inputSpendingConditionOptionalArgs Optional args for the spending condition, used for checking inputs
      * @param outputIds Output IDs for input transactions.
+     * @param outputGuardHandlersForInputTxs Output guard handlers for input transaction, in order of input transactions
      */
     struct StartExitData {
         Controller controller;
@@ -81,6 +82,7 @@ library PaymentStartInFlightExit {
         bytes[] inFlightTxWitnesses;
         bytes[] inputSpendingConditionOptionalArgs;
         bytes32[] outputIds;
+        IOutputGuardHandler[] outputGuardHandlersForInputTxs;
     }
 
     /**
@@ -136,7 +138,7 @@ library PaymentStartInFlightExit {
         PaymentInFlightExitRouterArgs.StartExitArgs memory args
     )
         private
-        pure
+        view
         returns (StartExitData memory)
     {
         StartExitData memory exitData;
@@ -153,6 +155,7 @@ library PaymentStartInFlightExit {
         exitData.inFlightTxWitnesses = args.inFlightTxWitnesses;
         exitData.inputSpendingConditionOptionalArgs = args.inputSpendingConditionOptionalArgs;
         exitData.outputIds = getOutputIds(controller, exitData.inputTxs, exitData.inputUtxosPos);
+        exitData.outputGuardHandlersForInputTxs = getOutputGuardHandlersForInputTxs(controller, exitData.inputTxs, exitData.inputUtxosPos);
         return exitData;
     }
 
@@ -182,6 +185,27 @@ library PaymentStartInFlightExit {
         return outputIds;
     }
 
+    function getOutputGuardHandlersForInputTxs(
+        Controller memory controller,
+        bytes[] memory inputTxs,
+        UtxoPosLib.UtxoPos[] memory inputUtxosPos
+    )
+        private
+        view
+        returns (IOutputGuardHandler[] memory)
+    {
+        IOutputGuardHandler[] memory handlers = new IOutputGuardHandler[](inputTxs.length);
+        for (uint i = 0; i < inputTxs.length; i++) {
+            uint16 outputIndex = inputUtxosPos[i].outputIndex();
+            WireTransaction.Output memory output = WireTransaction.getOutput(inputTxs[i], outputIndex);
+            IOutputGuardHandler outputGuardHandler = controller
+                                                    .outputGuardHandlerRegistry
+                                                    .outputGuardHandlers(output.outputType);
+            handlers[i] = outputGuardHandler;
+        }
+        return handlers;
+    }
+
     function verifyStart(
         StartExitData memory exitData,
         PaymentExitDataModel.InFlightExitMap storage inFlightExitMap
@@ -192,6 +216,7 @@ library PaymentStartInFlightExit {
         verifyExitNotStarted(exitData.exitId, inFlightExitMap);
         verifyNumberOfInputsMatchesNumberOfInFlightTransactionInputs(exitData);
         verifyNoInputSpentMoreThanOnce(exitData.inFlightTx);
+        verifyOutputGuardHandlersForInputTxsRegistered(exitData.outputGuardHandlersForInputTxs);
         verifyInputTransactionIsStandardFinalized(exitData);
         verifyInputsSpent(exitData);
         verifyStateTransition(exitData);
@@ -206,6 +231,17 @@ library PaymentStartInFlightExit {
     {
         PaymentExitDataModel.InFlightExit storage exit = inFlightExitMap.exits[exitId];
         require(exit.exitStartTimestamp == 0, "There is an active in-flight exit from this transaction");
+    }
+
+    function verifyOutputGuardHandlersForInputTxsRegistered(
+        IOutputGuardHandler[] memory handlers
+    )
+        private
+        pure
+    {
+        for (uint i = 0; i < handlers.length; i++) {
+            require(address(handlers[i]) != address(0), "Failed to retrieve the outputGuardHandler of the output type");
+        }
     }
 
     function verifyNumberOfInputsMatchesNumberOfInFlightTransactionInputs(StartExitData memory exitData) private pure {
@@ -253,11 +289,8 @@ library PaymentStartInFlightExit {
                 guard: output.outputGuard,
                 preimage: exitData.outputGuardPreimagesForInputs[i]
             });
-            IOutputGuardHandler outputGuardHandler = exitData.controller
-                                                    .outputGuardHandlerRegistry
-                                                    .outputGuardHandlers(output.outputType);
 
-            require(address(outputGuardHandler) != address(0), "Failed to retrieve the outputGuardHandler of the output type");
+            IOutputGuardHandler outputGuardHandler = exitData.outputGuardHandlersForInputTxs[i];
             require(outputGuardHandler.isValid(outputGuardData), "Output guard information is invalid for the input tx");
 
             uint8 protocol = exitData.controller.framework.protocols(WireTransaction.getTransactionType(exitData.inputTxs[i]));
@@ -352,8 +385,7 @@ library PaymentStartInFlightExit {
                 output.outputGuard,
                 exitData.outputGuardPreimagesForInputs[i]
             );
-            IOutputGuardHandler handler = exitData.controller.outputGuardHandlerRegistry.outputGuardHandlers(output.outputType);
-            assert(address(handler) != address(0));
+            IOutputGuardHandler handler = exitData.outputGuardHandlersForInputTxs[i];
             address payable exitTarget = handler.getExitTarget(outputGuardData);
 
             ife.inputs[i].outputId = exitData.outputIds[i];
