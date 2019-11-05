@@ -3,6 +3,7 @@ pragma solidity 0.5.11;
 import "./Vault.sol";
 import "./verifiers/IEthDepositVerifier.sol";
 import "../framework/PlasmaFramework.sol";
+import "../utils/SafeEthTransfer.sol";
 
 contract EthVault is Vault {
     event EthWithdrawn(
@@ -22,7 +23,11 @@ contract EthVault is Vault {
         uint256 amount
     );
 
-    constructor(PlasmaFramework _framework) public Vault(_framework) {}
+    uint256 safeGasStipend;
+
+    constructor(PlasmaFramework _framework, uint256 _safeGasStipend) public Vault(_framework) {
+        safeGasStipend = _safeGasStipend;
+    }
 
     /**
      * @notice Allows a user to deposit ETH into the contract
@@ -45,9 +50,8 @@ contract EthVault is Vault {
     * @param amount The amount of ETH to transfer
     */
     function withdraw(address payable receiver, uint256 amount) external onlyFromNonQuarantinedExitGame {
-        // we do not want to block exit queue if transfer is unucessful
-        // solhint-disable-next-line avoid-call-value
-        (bool success, ) = receiver.call.value(amount)("");
+        // we do not want to block exit queue if transfer is unsuccessful
+        bool success = SafeEthTransfer.callTransfer(receiver, amount, safeGasStipend);
         if (success) {
             emit EthWithdrawn(receiver, amount);
         } else {
