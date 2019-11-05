@@ -46,11 +46,13 @@ contract EthVault is Vault {
 
     /**
     * @notice Withdraw ETH that has successfully exited from the OmiseGO Network
+    * @dev we do not want to block exit queue if transfer is unsuccessful, thus silencing transfer error.
+    *      however, if remaning gas is not enough for the safeGasStipend, the EVM would revert with out of gas error.
+    *      user should retry with higher gas in that case.
     * @param receiver Address of the recipient
     * @param amount The amount of ETH to transfer
     */
     function withdraw(address payable receiver, uint256 amount) external onlyFromNonQuarantinedExitGame {
-        // we do not want to block exit queue if transfer is unsuccessful
         bool success = SafeEthTransfer.callTransfer(receiver, amount, safeGasStipend);
         if (success) {
             emit EthWithdrawn(receiver, amount);
