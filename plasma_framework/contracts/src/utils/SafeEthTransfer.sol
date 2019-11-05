@@ -10,9 +10,10 @@ pragma solidity 0.5.11;
 */
 library SafeEthTransfer {
     /**
-     * @notice Safe transfers eth within the gas limit, reverts if failed
+     * @notice Safe transfers eth within the gas limit.
+     *         Reverts if failed to transfer the ETH.
      * @param receiver the address to receive Eth
-     * @param amount the amount of Eth to transfer
+     * @param amount the amount of Eth (in wei) to transfer
      * @param gasStipend the amount of gas to be used during the transfer call
      */
     function transfer(address payable receiver, uint256 amount, uint256 gasStipend)
@@ -23,9 +24,11 @@ library SafeEthTransfer {
     }
 
     /**
-     * @notice Try to transfer eth within the gas limit, returns successful or not
+     * @notice Try to transfer eth within the gas stipend limit. 
+     *         Returns whether the transfer call is successful or not.
+     * @dev VM would revert "out of gas" error when remaining gas is not enough for the call
      * @param receiver the address to receive Eth
-     * @param amount the amount of Eth to transfer
+     * @param amount the amount of Eth (in wei) to transfer
      * @param gasStipend the amount of gas to be used during the transfer call
      * @return a flag showing the call is successful or not
      */
