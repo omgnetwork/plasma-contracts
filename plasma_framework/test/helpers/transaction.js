@@ -6,10 +6,10 @@ const TransactionTypes = {
     PLASMA_DEPOSIT: 1,
 };
 
-class PaymentTransactionOutput {
-    constructor(type, amount, owner, token) {
+class WireTransactionOutput {
+    constructor(type, amount, outputGuard, token) {
         this.outputType = type;
-        this.outputGuard = owner;
+        this.outputGuard = outputGuard;
         this.token = token;
         this.amount = amount;
     }
@@ -28,11 +28,13 @@ class PaymentTransactionOutput {
     static parseFromContractOutput(output) {
         const amount = parseInt(output.amount, 10);
         const outputType = parseInt(output.outputType, 10);
-        return new PaymentTransactionOutput(outputType, amount, output.outputGuard, output.token);
+        return new WireTransactionOutput(outputType, amount, output.outputGuard, output.token);
     }
 }
 
-class PaymentTransaction {
+class PaymentTransactionOutput extends WireTransactionOutput {}
+
+class WireTransaction {
     constructor(transactionType, inputs, outputs, metaData = EMPTY_BYTES_32) {
         this.transactionType = transactionType;
         this.inputs = inputs;
@@ -44,7 +46,7 @@ class PaymentTransaction {
         const tx = [this.transactionType];
 
         tx.push(this.inputs);
-        tx.push(PaymentTransaction.formatForRlpEncoding(this.outputs));
+        tx.push(WireTransaction.formatForRlpEncoding(this.outputs));
         tx.push(this.metaData);
 
         return rlp.encode(tx);
@@ -59,6 +61,8 @@ class PaymentTransaction {
     }
 }
 
+class PaymentTransaction extends WireTransaction {}
+
 class PlasmaDepositTransaction extends PaymentTransaction {
     constructor(output, metaData = EMPTY_BYTES_32) {
         super(TransactionTypes.PLASMA_DEPOSIT, [], [output], metaData);
@@ -69,4 +73,6 @@ module.exports = {
     PaymentTransaction,
     PlasmaDepositTransaction,
     PaymentTransactionOutput,
+    WireTransaction,
+    WireTransactionOutput,
 };

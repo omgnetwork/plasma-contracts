@@ -2,7 +2,7 @@ const Erc20DepositVerifier = artifacts.require('Erc20DepositVerifier');
 const Erc20Vault = artifacts.require('Erc20Vault');
 const PlasmaFramework = artifacts.require('PlasmaFramework');
 
-const config = require('./config.js');
+const config = require('../config.js');
 
 module.exports = async (
     deployer,

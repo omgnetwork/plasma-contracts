@@ -1,13 +1,12 @@
 pragma solidity 0.5.11;
 pragma experimental ABIEncoderV2;
 
-import "../../utils/RLPReader.sol";
-import "../../utils/AddressPayable.sol";
+import "../../src/utils/RLPReader.sol";
 
 /**
- * @notice Data structure and its decode function for payment output
+ * @notice Data structure and its decode function for Dex (mock) output
  */
-library PaymentOutputModel {
+library DexMockOutputModel {
 
     using RLPReader for RLPReader.RLPItem;
 
@@ -16,16 +15,6 @@ library PaymentOutputModel {
         bytes20 outputGuard;
         address token;
         uint256 amount;
-    }
-
-    /**
-     * @notice Retrieve the 'owner' from the output, assuming the
-     *         'outputGuard' field directly holds the owner's address
-     * @dev It's possible that 'outputGuard' can be a hash of preimage that holds the owner information,
-     *       but this should not and cannot be handled here.
-     */
-    function owner(Output memory _output) internal pure returns (address payable) {
-        return AddressPayable.convert(address(uint160(_output.outputGuard)));
     }
 
     function decode(RLPReader.RLPItem memory encoded) internal pure returns (Output memory) {
