@@ -11,7 +11,7 @@ import "../../src/utils/TxPosLib.sol";
 import {TxFinalizationModel as Model} from "../../src/exits/models/TxFinalizationModel.sol";
 
 /**
- * @notice Sample tx verifier that supports MVP and show that we can upgrade the verifier for new exit games
+ * @notice Sample tx verifier that supports MVP and shows that we can upgrade the verifier for new exit games
  */
 contract SampleTxVerifierSupportsMVP is ITxFinalizationVerifier {
     using TxPosLib for TxPosLib.TxPos;

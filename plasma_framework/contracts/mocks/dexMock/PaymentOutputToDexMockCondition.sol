@@ -55,11 +55,11 @@ contract PaymentOutputToDexMockCondition is ISpendingCondition {
         view
         returns (bool)
     {
-        (, DexMockTransactionModel.Transaction memory spendingTx) = verifyTxType(inputTxBytes, spendingTxBytes);
+        verifyInputTxType(inputTxBytes);
+        DexMockTransactionModel.Transaction memory spendingTx = verifySpendingTxType(spendingTxBytes);
 
         UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.build(TxPosLib.TxPos(inputTxPos), outputIndex);
         bytes32 outputId = getOutputId(inputTxBytes, utxoPos);
-
         require(
             spendingTx.inputs[inputIndex] == outputId,
             "Spending tx points to the incorrect outputId"
@@ -73,18 +73,20 @@ contract PaymentOutputToDexMockCondition is ISpendingCondition {
         return true;
     }
 
-    function verifyTxType(bytes memory inputTxBytes, bytes memory spendingTxBytes)
-        private
-        view
-        returns (PaymentTransactionModel.Transaction memory, DexMockTransactionModel.Transaction memory)
-    {
+    function verifyInputTxType(bytes memory inputTxBytes) private view {
         PaymentTransactionModel.Transaction memory inputTx = PaymentTransactionModel.decode(inputTxBytes);
         require(inputTx.txType == supportInputTxType, "Input tx is an unsupported payment tx type");
+    }
 
+    function verifySpendingTxType(bytes memory spendingTxBytes)
+        private
+        view
+        returns (DexMockTransactionModel.Transaction memory)
+    {
         DexMockTransactionModel.Transaction memory spendingTx = DexMockTransactionModel.decode(spendingTxBytes);
         require(spendingTx.txType == supportSpendingTxType, "The spending tx is an unsupported dex (mock) tx type");
 
-        return (inputTx, spendingTx);
+        return spendingTx;
     }
 
     function getOutputId(bytes memory inputTxBytes, UtxoPosLib.UtxoPos memory utxoPos)

@@ -7,7 +7,7 @@ import "../../src/exits/models/OutputGuardModel.sol";
 import "../../src/utils/AddressPayable.sol";
 
 /**
- * After making output type public, we decide Payment output and Payment DEX output to be sharing the same output type.
+ * After making output type public, we decided that Payment output and Payment DEX output share the same output type.
  * As a result, a Payment output can now be spent in a Payment transaction or a DEX transaction.
  * The output guard field would be using different mechanism. (Directly holding owner address vs hash of preimage)
  * We diffrentiate the two by the length of preimage.
@@ -17,7 +17,7 @@ import "../../src/utils/AddressPayable.sol";
  */
 contract PaymentOutputV2MockGuardHandler is IOutputGuardHandler {
     function isValid(OutputGuardModel.Data memory data) public view returns (bool) {
-        if (isTheCaseForPayment(data)) {
+        if (isPayment(data)) {
             return true;
         } else {
             // To be spent in DEX transaction, check the preimage and guard is matching or not
@@ -28,7 +28,7 @@ contract PaymentOutputV2MockGuardHandler is IOutputGuardHandler {
     }
 
     function getExitTarget(OutputGuardModel.Data memory data) public view returns (address payable) {
-        if (isTheCaseForPayment(data)) {
+        if (isPayment(data)) {
             return AddressPayable.convert(address(uint160(data.guard)));
         } else {
             DexMockPreimageModel.Preimage memory preimage = DexMockPreimageModel.decode(data.preimage);
@@ -41,7 +41,7 @@ contract PaymentOutputV2MockGuardHandler is IOutputGuardHandler {
         view
         returns (address)
     {
-        if (isTheCaseForPayment(data)) {
+        if (isPayment(data)) {
             // MoreVP transaction, no need to have confirm sig.
             return address(0);
         } else {
@@ -51,7 +51,7 @@ contract PaymentOutputV2MockGuardHandler is IOutputGuardHandler {
         }
     }
 
-    function isTheCaseForPayment(OutputGuardModel.Data memory data) private pure returns (bool) {
+    function isPayment(OutputGuardModel.Data memory data) private pure returns (bool) {
         return data.preimage.length == 0;
     }
 }

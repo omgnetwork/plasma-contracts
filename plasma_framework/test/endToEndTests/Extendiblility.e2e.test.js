@@ -29,10 +29,11 @@ const { hashTx } = require('../helpers/paymentEip712.js');
 const { sign } = require('../helpers/sign.js');
 
 /**
- * First three accounts would be of the order of (deployer, maintainer, authority).
- * This is how migration scripts uses the account.
+ * First three accounts are in the order of (deployer, maintainer, authority).
+ * This is how migration scripts use the account.
  */
 contract('PlasmaFramework - Extendibility End to End Tests', ([_, maintainer, authority, richFather]) => {
+    const MERKLE_TREE_DEPTH = 16;
     const ETH = constants.ZERO_ADDRESS;
     const PAYMENT_OUTPUT_V2_TYPE = 2;
     const PAYMENT_V2_TX_TYPE = config.registerKeys.txTypes.paymentV2;
@@ -142,13 +143,13 @@ contract('PlasmaFramework - Extendibility End to End Tests', ([_, maintainer, au
                         this.depositTx = Testlang.deposit(
                             config.registerKeys.outputTypes.payment, DEPOSIT_VALUE, alice,
                         );
-                        this.merkleTreeForDepositTx = new MerkleTree([this.depositTx], 16);
-                        this.merkleProofForDepositTx = this.merkleTreeForDepositTx.getInclusionProof(this.depositTx);
+                        const merkleTreeForDepositTx = new MerkleTree([this.depositTx], MERKLE_TREE_DEPTH);
+                        this.merkleProofForDepositTx = merkleTreeForDepositTx.getInclusionProof(this.depositTx);
 
                         await this.ethVault.deposit(this.depositTx, { from: alice, value: DEPOSIT_VALUE });
                     });
 
-                    describe('When Alice transfers the Payment transaction to Payment V2 transaction', () => {
+                    describe('When Alice spends the deposit (Payment tx) in a Payment V2 transaction', () => {
                         beforeEach(async () => {
                             this.dexOutputGuardPreimage = web3.eth.abi.encodeParameters([
                                 'address', 'address', 'uint256',
@@ -174,8 +175,8 @@ contract('PlasmaFramework - Extendibility End to End Tests', ([_, maintainer, au
                                 PAYMENT_V2_TX_TYPE, [this.depositUtxoPos], [dexDepositOutput, paymentOutputV2],
                             );
                             this.paymentV2Tx = this.paymentV2TxObject.rlpEncoded();
-                            this.merkleTreeForPaymentV2Tx = new MerkleTree([this.paymentV2Tx]);
-                            this.merkleProofForPaymentV2Tx = this.merkleTreeForPaymentV2Tx.getInclusionProof(
+                            const merkleTreeForPaymentV2Tx = new MerkleTree([this.paymentV2Tx]);
+                            this.merkleProofForPaymentV2Tx = merkleTreeForPaymentV2Tx.getInclusionProof(
                                 this.paymentV2Tx,
                             );
 
@@ -183,10 +184,10 @@ contract('PlasmaFramework - Extendibility End to End Tests', ([_, maintainer, au
                                 web3.utils.bytesToHex(this.paymentV2Tx), dexDepositOutputIndex,
                             );
 
-                            await this.framework.submitBlock(this.merkleTreeForPaymentV2Tx.root, { from: authority });
+                            await this.framework.submitBlock(merkleTreeForPaymentV2Tx.root, { from: authority });
                         });
 
-                        describe('And then transfer from Payment V2 to DEX (mock)', () => {
+                        describe('And then spends Payment V2 output in DEX (mock) transaction', () => {
                             beforeEach(async () => {
                                 // cheat by making the DEX tx no output, not testing the ability to exit DEX anyway
                                 this.dexTxObject = new WireTransaction(
@@ -203,7 +204,7 @@ contract('PlasmaFramework - Extendibility End to End Tests', ([_, maintainer, au
                                 await this.framework.submitBlock(this.merkleTreeForDexTx.root, { from: authority });
                             });
 
-                            describe('When Alice tries to exit the Payment transaction', () => {
+                            describe('When Alice starts exit from the ETH deposit transaction (Payment tx)', () => {
                                 beforeEach(async () => {
                                     const args = {
                                         utxoPos: this.depositUtxoPos,
@@ -228,9 +229,7 @@ contract('PlasmaFramework - Extendibility End to End Tests', ([_, maintainer, au
 
                                     const args = {
                                         exitId: exitId.toString(10),
-                                        outputType: config.registerKeys.outputTypes.payment,
                                         exitingTx: this.depositTx,
-                                        challengeTxType: PAYMENT_V2_TX_TYPE,
                                         challengeTx: this.paymentV2Tx,
                                         inputIndex: 0,
                                         witness: signature,
@@ -282,9 +281,7 @@ contract('PlasmaFramework - Extendibility End to End Tests', ([_, maintainer, au
 
                                     const args = {
                                         exitId: exitId.toString(10),
-                                        outputType: PAYMENT_OUTPUT_V2_TYPE,
                                         exitingTx: this.paymentV2Tx,
-                                        challengeTxType: DEX_MOCK_TX_TYPE,
                                         challengeTx: this.dexTx,
                                         inputIndex: 0,
                                         witness: signature,
