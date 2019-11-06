@@ -12,13 +12,30 @@ Implementation of Erc20 deposit verifier using payment transaction as the deposi
 **Constants & Variables**
 
 ```js
+//public members
+uint256 public supportedOutputType;
+
+//private members
 uint8 private constant DEPOSIT_TX_TYPE;
 
 ```
 
 ## Functions
 
+- [(uint256 outputType)](#)
 - [verify(bytes depositTx, address sender, address vault)](#verify)
+
+### 
+
+```js
+function (uint256 outputType) public nonpayable
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| outputType | uint256 |  | 
 
 ### verify
 

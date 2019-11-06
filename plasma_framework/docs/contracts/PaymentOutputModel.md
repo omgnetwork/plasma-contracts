@@ -25,7 +25,7 @@ struct Output {
 
 ### owner
 
-Retrieve the 'owner' from the output, assuming the 
+Retrieve the 'owner' from the output, assuming the
         'outputGuard' field directly holds the owner's address
 
 ```js

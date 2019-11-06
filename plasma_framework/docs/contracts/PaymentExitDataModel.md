@@ -12,7 +12,7 @@ Model library for PaymentExit
 ```js
 struct StandardExit {
  bool exitable,
- uint192 utxoPos,
+ uint256 utxoPos,
  bytes32 outputId,
  address payable exitTarget,
  uint256 amount,
@@ -24,7 +24,7 @@ struct StandardExit {
 
 ```js
 struct StandardExitMap {
- mapping(uint192 => struct PaymentExitDataModel.StandardExit) exits
+ mapping(uint160 => struct PaymentExitDataModel.StandardExit) exits
 }
 ```
 

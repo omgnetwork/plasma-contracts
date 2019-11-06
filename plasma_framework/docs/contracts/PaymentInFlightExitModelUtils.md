@@ -19,11 +19,9 @@ uint8 public constant MAX_OUTPUT_NUM;
 - [isOutputPiggybacked(struct PaymentExitDataModel.InFlightExit ife, uint16 index)](#isoutputpiggybacked)
 - [setInputPiggybacked(struct PaymentExitDataModel.InFlightExit ife, uint16 index)](#setinputpiggybacked)
 - [clearInputPiggybacked(struct PaymentExitDataModel.InFlightExit ife, uint16 index)](#clearinputpiggybacked)
-- [clearOutputPiggyback(struct PaymentExitDataModel.InFlightExit ife, uint16 index)](#clearoutputpiggyback)
 - [setOutputPiggybacked(struct PaymentExitDataModel.InFlightExit ife, uint16 index)](#setoutputpiggybacked)
 - [clearOutputPiggybacked(struct PaymentExitDataModel.InFlightExit ife, uint16 index)](#clearoutputpiggybacked)
 - [isInFirstPhase(struct PaymentExitDataModel.InFlightExit ife, uint256 minExitPeriod)](#isinfirstphase)
-- [isFirstPiggybackOfTheToken(struct PaymentExitDataModel.InFlightExit ife, address token)](#isfirstpiggybackofthetoken)
 
 ### isInputPiggybacked
 
@@ -79,19 +77,6 @@ function clearInputPiggybacked(struct PaymentExitDataModel.InFlightExit ife, uin
 | ife | struct PaymentExitDataModel.InFlightExit |  | 
 | index | uint16 |  | 
 
-### clearOutputPiggyback
-
-```js
-function clearOutputPiggyback(struct PaymentExitDataModel.InFlightExit ife, uint16 index) internal nonpayable
-```
-
-**Arguments**
-
-| Name        | Type           | Description  |
-| ------------- |------------- | -----|
-| ife | struct PaymentExitDataModel.InFlightExit |  | 
-| index | uint16 |  | 
-
 ### setOutputPiggybacked
 
 ```js
@@ -131,20 +116,6 @@ returns(bool)
 | ------------- |------------- | -----|
 | ife | struct PaymentExitDataModel.InFlightExit |  | 
 | minExitPeriod | uint256 |  | 
-
-### isFirstPiggybackOfTheToken
-
-```js
-function isFirstPiggybackOfTheToken(struct PaymentExitDataModel.InFlightExit ife, address token) internal pure
-returns(bool)
-```
-
-**Arguments**
-
-| Name        | Type           | Description  |
-| ------------- |------------- | -----|
-| ife | struct PaymentExitDataModel.InFlightExit |  | 
-| token | address |  | 
 
 ## Contracts
 

@@ -9,7 +9,7 @@ View Source: [contracts/src/exits/payment/routers/PaymentStandardExitRouterArgs.
 
 ```js
 struct StartStandardExitArgs {
- uint192 utxoPos,
+ uint256 utxoPos,
  bytes rlpOutputTx,
  bytes outputGuardPreimage,
  bytes outputTxInclusionProof
