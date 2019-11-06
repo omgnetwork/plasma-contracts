@@ -382,9 +382,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob, maintainer,
 
                         const args = {
                             exitId: this.exitId.toString(10),
-                            outputType: OUTPUT_TYPE.PAYMENT,
                             exitingTx: this.depositTx,
-                            challengeTxType: TX_TYPE.PAYMENT,
                             challengeTx: this.transferTx,
                             inputIndex: 0,
                             witness: signature,
