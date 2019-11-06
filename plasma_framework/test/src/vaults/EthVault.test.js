@@ -29,7 +29,7 @@ contract('EthVault', ([_, authority, maintainer, alice]) => {
         );
         await this.framework.activateChildChain({ from: authority });
         this.ethVault = await EthVault.new(this.framework.address);
-        const depositVerifier = await EthDepositVerifier.new();
+        const depositVerifier = await EthDepositVerifier.new(OUTPUT_TYPE.PAYMENT);
         await this.ethVault.setDepositVerifier(depositVerifier.address, { from: maintainer });
         await this.framework.registerVault(1, this.ethVault.address, { from: maintainer });
         this.currentDepositVerifier = depositVerifier.address;
@@ -113,6 +113,16 @@ contract('EthVault', ([_, authority, maintainer, alice]) => {
             );
         });
 
+        it('should not accept a deposit with invalid output type', async () => {
+            const unsupportedOutputType = 2;
+            const deposit = Testlang.deposit(unsupportedOutputType, DEPOSIT_VALUE, alice);
+
+            await expectRevert(
+                this.ethVault.deposit(deposit, { from: alice, value: DEPOSIT_VALUE }),
+                'Invalid output type',
+            );
+        });
+
         it('should not accept transaction that does not match expected transaction type', async () => {
             const output = new PaymentTransactionOutput(
                 OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, constants.ZERO_ADDRESS,
@@ -151,7 +161,7 @@ contract('EthVault', ([_, authority, maintainer, alice]) => {
 
         // NOTE: This test would be the same for `Erc20Vault` as all functionality is in base `Vault` contract
         it('deposit verifier waits a period of time before takes effect', async () => {
-            const newDepositVerifier = await EthDepositVerifier.new();
+            const newDepositVerifier = await EthDepositVerifier.new(OUTPUT_TYPE.PAYMENT);
 
             expect(await this.ethVault.getEffectiveDepositVerifier()).to.equal(this.currentDepositVerifier);
 

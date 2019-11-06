@@ -10,9 +10,10 @@ module.exports = async (
     // eslint-disable-next-line no-unused-vars
     [deployerAddress, maintainerAddress, authorityAddress],
 ) => {
+    const PAYMENT_OUTPUT_TYPE = config.registerKeys.outputTypes.payment;
     const plasmaFramework = await PlasmaFramework.deployed();
 
-    await deployer.deploy(Erc20DepositVerifier);
+    await deployer.deploy(Erc20DepositVerifier, PAYMENT_OUTPUT_TYPE);
     const erc20DepositVerifier = await Erc20DepositVerifier.deployed();
 
     await deployer.deploy(Erc20Vault, plasmaFramework.address, { from: maintainerAddress });

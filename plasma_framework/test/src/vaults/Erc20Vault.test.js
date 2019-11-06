@@ -32,7 +32,7 @@ contract('Erc20Vault', ([_, erc20Minter, authority, maintainer, alice]) => {
         );
         await this.framework.activateChildChain({ from: authority });
         this.erc20Vault = await Erc20Vault.new(this.framework.address);
-        const depositVerifier = await Erc20DepositVerifier.new();
+        const depositVerifier = await Erc20DepositVerifier.new(OUTPUT_TYPE.PAYMENT);
         await this.erc20Vault.setDepositVerifier(depositVerifier.address, { from: maintainer });
         await this.framework.registerVault(2, this.erc20Vault.address, { from: maintainer });
 
@@ -121,6 +121,16 @@ contract('Erc20Vault', ([_, erc20Minter, authority, maintainer, alice]) => {
             await expectRevert(
                 this.erc20Vault.deposit(deposit, { from: alice }),
                 'Invalid output currency (ETH)',
+            );
+        });
+
+        it('should not accept a deposit with invalid output type', async () => {
+            const unsupportedOutputType = 2;
+            const deposit = Testlang.deposit(unsupportedOutputType, DEPOSIT_VALUE, alice, this.erc20.address);
+
+            await expectRevert(
+                this.erc20Vault.deposit(deposit, { from: alice }),
+                'Invalid output type',
             );
         });
 

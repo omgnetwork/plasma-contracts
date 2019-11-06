@@ -10,8 +10,13 @@ import {PaymentOutputModel as DepositOutputModel} from "../../transactions/outpu
 contract EthDepositVerifier is IEthDepositVerifier {
     using DepositOutputModel for DepositOutputModel.Output;
 
+    uint256 public supportedOutputType;
     // Hardcoded transaction type for payment transaction
     uint8 constant internal DEPOSIT_TX_TYPE = 1;
+
+    constructor(uint256 outputType) public {
+        supportedOutputType = outputType;
+    }
 
     /**
      * @notice Overrides the function of IEthDepositVerifier and implements the verification logic
@@ -27,6 +32,7 @@ contract EthDepositVerifier is IEthDepositVerifier {
         require(decodedTx.outputs.length == 1, "Deposit must have exactly one output");
         require(decodedTx.outputs[0].amount == amount, "Deposited value must match sent amount");
         require(decodedTx.outputs[0].token == address(0), "Output requires correct currency (ETH)");
+        require(decodedTx.outputs[0].outputType == supportedOutputType, "Invalid output type");
 
         address depositorsAddress = decodedTx.outputs[0].owner();
         require(depositorsAddress == sender, "Depositor's address must match sender's address");
