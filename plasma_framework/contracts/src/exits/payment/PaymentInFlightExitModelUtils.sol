@@ -43,13 +43,6 @@ library PaymentInFlightExitModelUtils {
         ife.exitMap = ife.exitMap.clearBit(uint8(index));
     }
 
-    function clearOutputPiggyback(ExitModel.InFlightExit storage ife, uint16 index)
-        internal
-    {
-        require(index < MAX_OUTPUT_NUM, "Invalid output index");
-        ife.exitMap = ife.exitMap.clearBit(uint8(index));
-    }
-
     function setOutputPiggybacked(ExitModel.InFlightExit storage ife, uint16 index)
         internal
     {
@@ -73,27 +66,5 @@ library PaymentInFlightExitModelUtils {
     {
         uint256 periodTime = minExitPeriod / 2;
         return ((block.timestamp - ife.exitStartTimestamp) / periodTime) < 1;
-    }
-
-    function isFirstPiggybackOfTheToken(ExitModel.InFlightExit memory ife, address token)
-        internal
-        pure
-        returns (bool)
-    {
-        bool isPiggybackInput = true;
-        for (uint i = 0; i < MAX_INPUT_NUM; i++) {
-            if (isInputPiggybacked(ife, uint16(i)) && ife.inputs[i].token == token) {
-                return false;
-            }
-        }
-
-        isPiggybackInput = false;
-        for (uint i = 0; i < MAX_OUTPUT_NUM; i++) {
-            if (isOutputPiggybacked(ife, uint16(i)) && ife.outputs[i].token == token) {
-                return false;
-            }
-        }
-
-        return true;
     }
 }

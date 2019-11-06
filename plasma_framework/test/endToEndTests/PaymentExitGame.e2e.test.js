@@ -31,16 +31,16 @@ const { expect } = require('chai');
 
 const {
     PROTOCOL, TX_TYPE, OUTPUT_TYPE, EMPTY_BYTES, VAULT_ID,
-} = require('../../../helpers/constants.js');
-const { MerkleTree } = require('../../../helpers/merkle.js');
-const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
+} = require('../helpers/constants.js');
+const { MerkleTree } = require('../helpers/merkle.js');
+const { PaymentTransactionOutput, PaymentTransaction } = require('../helpers/transaction.js');
 const {
     computeDepositOutputId, computeNormalOutputId, spentOnGas, exitQueueKey,
-} = require('../../../helpers/utils.js');
-const { sign } = require('../../../helpers/sign.js');
-const { hashTx } = require('../../../helpers/paymentEip712.js');
-const { buildUtxoPos, utxoPosToTxPos } = require('../../../helpers/positions.js');
-const Testlang = require('../../../helpers/testlang.js');
+} = require('../helpers/utils.js');
+const { sign } = require('../helpers/sign.js');
+const { hashTx } = require('../helpers/paymentEip712.js');
+const { buildUtxoPos, utxoPosToTxPos } = require('../helpers/positions.js');
+const Testlang = require('../helpers/testlang.js');
 
 contract('PaymentExitGame - End to End Tests', ([_, richFather, bob, maintainer, authority]) => {
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
@@ -144,7 +144,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob, maintainer,
         this.piggybackBondSize = await this.exitGame.piggybackBondSize();
 
         this.toPaymentCondition = await PaymentOutputToPaymentTxCondition.new(
-            this.framework.address, OUTPUT_TYPE.PAYMENT, TX_TYPE.PAYMENT,
+            this.framework.address, TX_TYPE.PAYMENT, TX_TYPE.PAYMENT,
         );
         await spendingConditionRegistry.registerSpendingCondition(
             OUTPUT_TYPE.PAYMENT, TX_TYPE.PAYMENT, this.toPaymentCondition.address,
@@ -212,7 +212,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob, maintainer,
                 this.aliceDepositReceipt = receipt;
             });
 
-            it('should have transfered the ETH from Alice to vault', async () => {
+            it('should have transferred the ETH from Alice to vault', async () => {
                 const aliceBalanceAfterDeposit = new BN(await web3.eth.getBalance(alice));
                 const ethVaultBalanceAfterDeposit = new BN(await web3.eth.getBalance(this.ethVault.address));
                 const expectedAliceBalance = this.aliceBalanceBeforeDeposit
@@ -345,7 +345,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob, maintainer,
             });
         });
 
-        describe('Given Alice deposited ETH and transfered some to Bob', () => {
+        describe('Given Alice deposited ETH and transferred some to Bob', () => {
             beforeEach(async () => {
                 await aliceDepositsETH();
                 await aliceTransferSomeEthToBob();
@@ -382,9 +382,7 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob, maintainer,
 
                         const args = {
                             exitId: this.exitId.toString(10),
-                            outputType: OUTPUT_TYPE.PAYMENT,
                             exitingTx: this.depositTx,
-                            challengeTxType: TX_TYPE.PAYMENT,
                             challengeTx: this.transferTx,
                             inputIndex: 0,
                             witness: signature,

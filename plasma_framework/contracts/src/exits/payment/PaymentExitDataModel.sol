@@ -18,7 +18,7 @@ library PaymentExitDataModel {
      */
     struct StandardExit {
         bool exitable;
-        uint192 utxoPos;
+        uint256 utxoPos;
         bytes32 outputId;
         address payable exitTarget;
         uint256 amount;
@@ -29,7 +29,7 @@ library PaymentExitDataModel {
      * @dev Mapping of (exitId => StandardExit) that stores all standard exit data
      */
     struct StandardExitMap {
-        mapping (uint192 => PaymentExitDataModel.StandardExit) exits;
+        mapping (uint160 => PaymentExitDataModel.StandardExit) exits;
     }
 
     /**

@@ -114,7 +114,7 @@ contract PaymentInFlightExitRouterMock is FailFastReentrancyGuard, PaymentInFlig
     /** empty function that accepts ETH to fund the contract as test setup */
     function depositFundForTest() public payable {}
 
-    function stringEquals(string memory a, string memory b) private returns (bool) {
+    function stringEquals(string memory a, string memory b) private pure returns (bool) {
         return keccak256(abi.encodePacked(a)) == keccak256(abi.encodePacked(b));
     }
 }
