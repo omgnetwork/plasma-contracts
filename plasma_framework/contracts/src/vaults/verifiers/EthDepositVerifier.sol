@@ -10,11 +10,11 @@ import {PaymentOutputModel as DepositOutputModel} from "../../transactions/outpu
 contract EthDepositVerifier is IEthDepositVerifier {
     using DepositOutputModel for DepositOutputModel.Output;
 
+    uint256 public depositTxType;
     uint256 public supportedOutputType;
-    // Hardcoded transaction type for payment transaction
-    uint8 constant internal DEPOSIT_TX_TYPE = 1;
 
-    constructor(uint256 outputType) public {
+    constructor(uint256 txType, uint256 outputType) public {
+        depositTxType = txType;
         supportedOutputType = outputType;
     }
 
@@ -25,7 +25,7 @@ contract EthDepositVerifier is IEthDepositVerifier {
     function verify(bytes calldata depositTx, uint256 amount, address sender) external view {
         DepositTx.Transaction memory decodedTx = DepositTx.decode(depositTx);
 
-        require(decodedTx.txType == DEPOSIT_TX_TYPE, "Invalid transaction type");
+        require(decodedTx.txType == depositTxType, "Invalid transaction type");
 
         require(decodedTx.inputs.length == 0, "Deposit must have no inputs");
 

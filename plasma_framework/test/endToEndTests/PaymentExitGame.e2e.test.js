@@ -105,11 +105,11 @@ contract('PaymentExitGame - End to End Tests', ([_, richFather, bob, maintainer,
         );
         await this.framework.activateChildChain({ from: authority });
 
-        const ethDepositVerifier = await EthDepositVerifier.new(OUTPUT_TYPE.PAYMENT);
+        const ethDepositVerifier = await EthDepositVerifier.new(TX_TYPE.PAYMENT, OUTPUT_TYPE.PAYMENT);
         this.ethVault = await EthVault.new(this.framework.address);
         await this.ethVault.setDepositVerifier(ethDepositVerifier.address, { from: maintainer });
 
-        const erc20DepositVerifier = await Erc20DepositVerifier.new(OUTPUT_TYPE.PAYMENT);
+        const erc20DepositVerifier = await Erc20DepositVerifier.new(TX_TYPE.PAYMENT, OUTPUT_TYPE.PAYMENT);
         this.erc20Vault = await Erc20Vault.new(this.framework.address);
         await this.erc20Vault.setDepositVerifier(erc20DepositVerifier.address, { from: maintainer });
 

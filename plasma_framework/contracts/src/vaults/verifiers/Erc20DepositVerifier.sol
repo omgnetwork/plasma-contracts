@@ -12,11 +12,11 @@ import {PaymentOutputModel as DepositOutputModel} from "../../transactions/outpu
 contract Erc20DepositVerifier is IErc20DepositVerifier {
     using DepositOutputModel for DepositOutputModel.Output;
 
+    uint256 public depositTxType;
     uint256 public supportedOutputType;
-    // Hardcoded transaction type for payment transaction
-    uint8 constant private DEPOSIT_TX_TYPE = 1;
 
-    constructor(uint256 outputType) public {
+    constructor(uint256 txType, uint256 outputType) public {
+        depositTxType = txType;
         supportedOutputType = outputType;
     }
 
@@ -37,7 +37,7 @@ contract Erc20DepositVerifier is IErc20DepositVerifier {
     {
         DepositTx.Transaction memory decodedTx = DepositTx.decode(depositTx);
 
-        require(decodedTx.txType == DEPOSIT_TX_TYPE, "Invalid transaction type");
+        require(decodedTx.txType == depositTxType, "Invalid transaction type");
 
         require(decodedTx.inputs.length == 0, "Deposit must have no inputs");
 

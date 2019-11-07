@@ -10,7 +10,7 @@ const { expect } = require('chai');
 
 const { PaymentTransaction, PaymentTransactionOutput } = require('../../helpers/transaction.js');
 const { spentOnGas } = require('../../helpers/utils.js');
-const { PROTOCOL, OUTPUT_TYPE } = require('../../helpers/constants.js');
+const { PROTOCOL, OUTPUT_TYPE, TX_TYPE } = require('../../helpers/constants.js');
 const Testlang = require('../../helpers/testlang.js');
 
 contract('EthVault', ([_, authority, maintainer, alice]) => {
@@ -29,7 +29,7 @@ contract('EthVault', ([_, authority, maintainer, alice]) => {
         );
         await this.framework.activateChildChain({ from: authority });
         this.ethVault = await EthVault.new(this.framework.address);
-        const depositVerifier = await EthDepositVerifier.new(OUTPUT_TYPE.PAYMENT);
+        const depositVerifier = await EthDepositVerifier.new(TX_TYPE.PAYMENT, OUTPUT_TYPE.PAYMENT);
         await this.ethVault.setDepositVerifier(depositVerifier.address, { from: maintainer });
         await this.framework.registerVault(1, this.ethVault.address, { from: maintainer });
         this.currentDepositVerifier = depositVerifier.address;
@@ -161,7 +161,7 @@ contract('EthVault', ([_, authority, maintainer, alice]) => {
 
         // NOTE: This test would be the same for `Erc20Vault` as all functionality is in base `Vault` contract
         it('deposit verifier waits a period of time before takes effect', async () => {
-            const newDepositVerifier = await EthDepositVerifier.new(OUTPUT_TYPE.PAYMENT);
+            const newDepositVerifier = await EthDepositVerifier.new(TX_TYPE.PAYMENT, OUTPUT_TYPE.PAYMENT);
 
             expect(await this.ethVault.getEffectiveDepositVerifier()).to.equal(this.currentDepositVerifier);
 

@@ -37,8 +37,14 @@ class PlasmaFramework:
         self._setup_exit_games(get_contract, maintainer)
 
     def _setup_deposit_verifiers(self, get_contract, maintainer):
-        self.eth_deposit_verifier = get_contract('EthDepositVerifier', args=(TxOutputTypes.PAYMENT.value,), sender=maintainer)
-        self.erc20_deposit_verifier = get_contract('Erc20DepositVerifier', args=(TxOutputTypes.PAYMENT.value,), sender=maintainer)
+        self.eth_deposit_verifier = get_contract(
+            'EthDepositVerifier',
+            args=(TxTypes.PAYMENT.value, TxOutputTypes.PAYMENT.value,),
+            sender=maintainer)
+        self.erc20_deposit_verifier = get_contract(
+            'Erc20DepositVerifier',
+            args=(TxTypes.PAYMENT.value, TxOutputTypes.PAYMENT.value,),
+            sender=maintainer)
 
     def _setup_vaults(self, get_contract, maintainer):
         self.eth_vault = get_contract('EthVault', args=(self.plasma_framework.address,), sender=maintainer)
