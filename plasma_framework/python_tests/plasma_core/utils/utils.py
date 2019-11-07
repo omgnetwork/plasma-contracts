@@ -20,6 +20,7 @@ def normalize_key(key):
 
 
 def hex_to_binary(h):
+    assert isinstance(h, str)
     if h[:2] == '0x':
         h = h[2:]
     return bytes.fromhex(h)
