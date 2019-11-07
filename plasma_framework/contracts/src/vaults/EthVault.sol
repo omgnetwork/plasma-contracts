@@ -53,7 +53,7 @@ contract EthVault is Vault {
     * @param amount The amount of ETH to transfer
     */
     function withdraw(address payable receiver, uint256 amount) external onlyFromNonQuarantinedExitGame {
-        bool success = SafeEthTransfer.callTransfer(receiver, amount, safeGasStipend);
+        bool success = SafeEthTransfer.callReturningResult(receiver, amount, safeGasStipend);
         if (success) {
             emit EthWithdrawn(receiver, amount);
         } else {

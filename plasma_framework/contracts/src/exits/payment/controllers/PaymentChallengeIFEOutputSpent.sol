@@ -68,7 +68,7 @@ library PaymentChallengeIFEOutputSpent {
         ife.clearOutputPiggybacked(outputIndex);
 
         uint256 piggybackBondSize = ife.outputs[outputIndex].piggybackBondSize;
-        SafeEthTransfer.transfer(msg.sender, piggybackBondSize, controller.safeGasStipend);
+        SafeEthTransfer.transferRevertOnError(msg.sender, piggybackBondSize, controller.safeGasStipend);
 
         emit InFlightExitOutputBlocked(msg.sender, keccak256(args.inFlightTx), outputIndex);
     }

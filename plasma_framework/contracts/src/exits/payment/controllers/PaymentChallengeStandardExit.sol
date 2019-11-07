@@ -97,7 +97,7 @@ library PaymentChallengeStandardExit {
 
         delete exitMap.exits[args.exitId];
 
-        SafeEthTransfer.transfer(msg.sender, data.exitData.bondSize, self.safeGasStipend);
+        SafeEthTransfer.transferRevertOnError(msg.sender, data.exitData.bondSize, self.safeGasStipend);
 
         emit ExitChallenged(data.exitData.utxoPos);
     }

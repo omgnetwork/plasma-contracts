@@ -3,18 +3,18 @@ pragma solidity 0.5.11;
 import "../../src/utils/SafeEthTransfer.sol";
 
 contract SafeEthTransferMock {
-    bool public callTransferResult;
+    bool public callResult;
 
-    function transfer(address payable receiver, uint256 amount, uint256 gasStipend)
-        public    
-    {
-        SafeEthTransfer.transfer(receiver, amount, gasStipend);
-    }
-
-    function callTransfer(address payable receiver, uint256 amount, uint256 gasStipend)
+    function transferRevertOnError(address payable receiver, uint256 amount, uint256 gasStipend)
         public
     {
-        callTransferResult = SafeEthTransfer.callTransfer(receiver, amount, gasStipend);
+        SafeEthTransfer.transferRevertOnError(receiver, amount, gasStipend);
+    }
+
+    function callReturningResult(address payable receiver, uint256 amount, uint256 gasStipend)
+        public
+    {
+        callResult = SafeEthTransfer.callReturningResult(receiver, amount, gasStipend);
     }
 
     /** helper function to pre-fund the contract to test */

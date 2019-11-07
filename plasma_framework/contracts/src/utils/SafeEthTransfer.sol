@@ -16,15 +16,15 @@ library SafeEthTransfer {
      * @param amount the amount of ETH (in wei) to transfer
      * @param gasStipend the maximum amount of gas to be used for the call
      */
-    function transfer(address payable receiver, uint256 amount, uint256 gasStipend)
+    function transferRevertOnError(address payable receiver, uint256 amount, uint256 gasStipend)
         internal
     {
-        bool success = callTransfer(receiver, amount, gasStipend);
+        bool success = callReturningResult(receiver, amount, gasStipend);
         require(success, "SafeEthTransfer: failed to transfer ETH");
     }
 
     /**
-     * @notice Transfer ETH without using more gas than the `gasStipend`. 
+     * @notice Transfer ETH without using more gas than the `gasStipend`.
      *         Returns whether the transfer call is successful or not.
      * @dev EVM will revert with "out of gas" error if there is not enough gas left for the call
      * @param receiver the address to receive ETH
@@ -32,7 +32,7 @@ library SafeEthTransfer {
      * @param gasStipend the maximum amount of gas to be used during the transfer call
      * @return a flag showing the call is successful or not
      */
-    function callTransfer(address payable receiver, uint256 amount, uint256 gasStipend)
+    function callReturningResult(address payable receiver, uint256 amount, uint256 gasStipend)
         internal
         returns (bool)
     {

@@ -75,7 +75,7 @@ library PaymentProcessInFlightExit {
 
                 if (shouldWithdrawInput(exit, withdrawal, token, i)) {
                     withdrawFromVault(self, withdrawal);
-                    bool success = SafeEthTransfer.callTransfer(
+                    bool success = SafeEthTransfer.callReturningResult(
                         withdrawal.exitTarget, withdrawal.piggybackBondSize, self.safeGasStipend
                     );
 
@@ -92,7 +92,7 @@ library PaymentProcessInFlightExit {
 
                 if (shouldWithdrawOutput(self, exit, withdrawal, token, i)) {
                     withdrawFromVault(self, withdrawal);
-                    bool success = SafeEthTransfer.callTransfer(
+                    bool success = SafeEthTransfer.callReturningResult(
                         withdrawal.exitTarget, withdrawal.piggybackBondSize, self.safeGasStipend
                     );
                     // we do not want to block a queue if bond return is unsuccessful
@@ -109,7 +109,7 @@ library PaymentProcessInFlightExit {
         clearPiggybackOutputFlag(exit, token);
 
         if (allPiggybacksCleared(exit)) {
-            bool success = SafeEthTransfer.callTransfer(
+            bool success = SafeEthTransfer.callReturningResult(
                 exit.bondOwner, exit.bondSize, self.safeGasStipend
             );
 
