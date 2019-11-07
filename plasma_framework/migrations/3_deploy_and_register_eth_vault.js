@@ -12,7 +12,11 @@ module.exports = async (
 ) => {
     const plasmaFramework = await PlasmaFramework.deployed();
 
-    await deployer.deploy(EthDepositVerifier);
+    await deployer.deploy(
+        EthDepositVerifier,
+        config.registerKeys.txTypes.payment,
+        config.registerKeys.outputTypes.payment,
+    );
     const ethDepositVerifier = await EthDepositVerifier.deployed();
 
     await deployer.deploy(EthVault, plasmaFramework.address, { from: maintainerAddress });

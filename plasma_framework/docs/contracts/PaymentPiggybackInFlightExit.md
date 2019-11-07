@@ -43,6 +43,7 @@ event InFlightExitOutputPiggybacked(address indexed exitTarget, bytes32  txHash,
 - [piggybackOutput(struct PaymentPiggybackInFlightExit.Controller self, struct PaymentExitDataModel.InFlightExitMap inFlightExitMap, struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnOutputArgs args)](#piggybackoutput)
 - [enqueue(struct PaymentPiggybackInFlightExit.Controller controller, address token, struct UtxoPosLib.UtxoPos utxoPos, uint160 exitId)](#enqueue)
 - [getExitTargetOfOutput(struct PaymentPiggybackInFlightExit.Controller controller, bytes20 outputGuard, uint256 outputType, bytes outputGuardPreimage)](#getexittargetofoutput)
+- [isFirstPiggybackOfTheToken(struct PaymentExitDataModel.InFlightExit ife, address token)](#isfirstpiggybackofthetoken)
 
 ### buildController
 
@@ -129,6 +130,20 @@ returns(address payable)
 | outputGuard | bytes20 |  | 
 | outputType | uint256 |  | 
 | outputGuardPreimage | bytes |  | 
+
+### isFirstPiggybackOfTheToken
+
+```js
+function isFirstPiggybackOfTheToken(struct PaymentExitDataModel.InFlightExit ife, address token) private pure
+returns(bool)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| ife | struct PaymentExitDataModel.InFlightExit |  | 
+| token | address |  | 
 
 ## Contracts
 

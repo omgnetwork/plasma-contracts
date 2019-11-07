@@ -12,8 +12,13 @@ import {PaymentOutputModel as DepositOutputModel} from "../../transactions/outpu
 contract Erc20DepositVerifier is IErc20DepositVerifier {
     using DepositOutputModel for DepositOutputModel.Output;
 
-    // Hardcoded transaction type for payment transaction
-    uint8 constant private DEPOSIT_TX_TYPE = 1;
+    uint256 public depositTxType;
+    uint256 public supportedOutputType;
+
+    constructor(uint256 txType, uint256 outputType) public {
+        depositTxType = txType;
+        supportedOutputType = outputType;
+    }
 
     /**
      * @notice Overrides the function of IErc20DepositVerifier and implements the verification logic
@@ -32,12 +37,13 @@ contract Erc20DepositVerifier is IErc20DepositVerifier {
     {
         DepositTx.Transaction memory decodedTx = DepositTx.decode(depositTx);
 
-        require(decodedTx.txType == DEPOSIT_TX_TYPE, "Invalid transaction type");
+        require(decodedTx.txType == depositTxType, "Invalid transaction type");
 
         require(decodedTx.inputs.length == 0, "Deposit must have no inputs");
 
         require(decodedTx.outputs.length == 1, "Deposit must have exactly one output");
         require(decodedTx.outputs[0].token != address(0), "Invalid output currency (ETH)");
+        require(decodedTx.outputs[0].outputType == supportedOutputType, "Invalid output type");
 
         address depositorsAddress = decodedTx.outputs[0].owner();
         require(depositorsAddress == sender, "Depositor's address must match sender's address");

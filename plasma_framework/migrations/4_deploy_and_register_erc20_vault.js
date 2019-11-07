@@ -12,7 +12,11 @@ module.exports = async (
 ) => {
     const plasmaFramework = await PlasmaFramework.deployed();
 
-    await deployer.deploy(Erc20DepositVerifier);
+    await deployer.deploy(
+        Erc20DepositVerifier,
+        config.registerKeys.txTypes.payment,
+        config.registerKeys.outputTypes.payment,
+    );
     const erc20DepositVerifier = await Erc20DepositVerifier.deployed();
 
     await deployer.deploy(Erc20Vault, plasmaFramework.address, { from: maintainerAddress });
