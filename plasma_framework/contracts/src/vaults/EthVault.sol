@@ -46,9 +46,9 @@ contract EthVault is Vault {
 
     /**
     * @notice Withdraw ETH that has successfully exited from the OmiseGO Network
-    * @dev we do not want to block exit queue if transfer is unsuccessful, thus silencing transfer error.
-    *      however, if remaning gas is not enough for the safeGasStipend, the EVM would revert with out of gas error.
-    *      user should retry with higher gas in that case.
+    * @dev We do not want to block exit queue if a transfer is unsuccessful, so we don't revert on transfer error.
+    *      However, if there is not enough gas left for the safeGasStipend, then the EVM _will_ revert with an 'out of gas' error.
+    *      If this happens, the user should retry with higher gas.
     * @param receiver Address of the recipient
     * @param amount The amount of ETH to transfer
     */

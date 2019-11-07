@@ -25,6 +25,7 @@ contract PaymentExitGame is IExitProcessor, OnlyFromAddress, PaymentStandardExit
      * @param stateTransitionVerifier state transition verifier predicate contract that checks the transaction correctness
      * @param txFinalizationVerifier util contract that checks tx is finalized or not
      * @param supportTxType the tx type of this exit game is using
+     * @param safeGasStipend a gas amount limit when tranferring Eth to protect from attack with draining gas
      */
     struct PaymentExitGameArgs {
         PlasmaFramework framework;

@@ -52,8 +52,6 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyFromAddress, OnlyWithV
 
     PlasmaFramework private framework;
 
-    // uint256 private safeGasStipend = 2300;
-
     event IFEBondUpdated(uint128 bondSize);
     event PiggybackBondUpdated(uint128 bondSize);
 
