@@ -27,7 +27,7 @@ library WireTransaction {
     function getOutput(bytes memory transaction, uint16 outputIndex) internal pure returns (Output memory) {
         RLPReader.RLPItem[] memory rlpTx = transaction.toRlpItem().toList();
         RLPReader.RLPItem[] memory outputs = rlpTx[2].toList();
-        require(outputIndex < outputs.length, "Invalid wire transaction format");
+        require(outputIndex < outputs.length, "Output index out of bounds");
 
         RLPReader.RLPItem[] memory output = outputs[outputIndex].toList();
         uint256 outputType = output[0].toUint();
