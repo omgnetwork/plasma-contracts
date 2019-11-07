@@ -482,7 +482,7 @@ This section describes the events for an in-flight exit.
         uint16 inputIndex
     );
 ```
-- An input has been piggybacked on an in-flight exit:
+- An output has been piggybacked on an in-flight exit:
 ```
     event InFlightExitOutputPiggybacked(
         address indexed exitTarget,
