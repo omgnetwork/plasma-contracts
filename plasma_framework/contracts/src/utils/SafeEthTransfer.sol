@@ -1,20 +1,20 @@
 pragma solidity 0.5.11;
 
 /**
-* @notice Util library to safely transfer ETH
+* @notice Utility library to safely transfer ETH
 * @dev transfer is no longer the recommended way to do ETH transfer.
 *      see issue: https://github.com/omisego/plasma-contracts/issues/312
 *
-*      This library adds extra protection on gas to protect potential DOS/griefing attack by burning gas.
+*      This library limits the amount of gas used for external calls with value to protect against potential DOS/griefing attacks that try use up all the gas.
 *      see issue: https://github.com/omisego/plasma-contracts/issues/385
 */
 library SafeEthTransfer {
     /**
      * @notice Try to transfer eth without using more gas than `gasStipend`.
-     *         Reverts if failed to transfer the ETH.
+     *         Reverts if it fails to transfer the ETH.
      * @param receiver the address to receive Eth
-     * @param amount the amount of Eth (in wei) to transfer
-     * @param gasStipend the maximum amount of gas to be used during the transfer call
+     * @param amount the amount of ETH (in wei) to transfer
+     * @param gasStipend the maximum amount of gas to be used for the call
      */
     function transfer(address payable receiver, uint256 amount, uint256 gasStipend)
         internal
@@ -24,11 +24,11 @@ library SafeEthTransfer {
     }
 
     /**
-     * @notice Try to transfer eth without using more gas than `gasStipend`. 
+     * @notice Transfer ETH without using more gas than the `gasStipend`. 
      *         Returns whether the transfer call is successful or not.
-     * @dev VM will revert with "out of gas" error if there is not enough gas left for the call
-     * @param receiver the address to receive Eth
-     * @param amount the amount of Eth (in wei) to transfer
+     * @dev EVM will revert with "out of gas" error if there is not enough gas left for the call
+     * @param receiver the address to receive ETH
+     * @param amount the amount of ETH (in wei) to transfer
      * @param gasStipend the maximum amount of gas to be used during the transfer call
      * @return a flag showing the call is successful or not
      */
