@@ -99,7 +99,7 @@ contract('PlasmaFramework - Extendibility End to End Tests', ([_, maintainer, au
                 const stateVerifier = await PaymentTransactionStateTransitionVerifier.new();
                 const txFinalizationVerifier = await SampleTxVerifierSupportsMVP.new();
 
-                this.paymentV2ExitGame = await PaymentExitGame.new(
+                const paymentV2Args = [
                     this.framework.address,
                     config.registerKeys.vaultId.eth,
                     config.registerKeys.vaultId.erc20,
@@ -108,7 +108,9 @@ contract('PlasmaFramework - Extendibility End to End Tests', ([_, maintainer, au
                     stateVerifier.address,
                     txFinalizationVerifier.address,
                     PAYMENT_V2_TX_TYPE,
-                );
+                    config.frameworks.safeGasStipend.v1,
+                ];
+                this.paymentV2ExitGame = await PaymentExitGame.new(paymentV2Args);
 
                 await this.framework.registerExitGame(
                     PAYMENT_V2_TX_TYPE,
