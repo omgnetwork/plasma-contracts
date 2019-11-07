@@ -2,7 +2,7 @@ const BlockController = artifacts.require('BlockControllerMock');
 const DummyVault = artifacts.require('DummyVault');
 
 const {
-    BN, constants, expectRevert, expectEvent,
+    BN, expectRevert, expectEvent,
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
@@ -48,20 +48,6 @@ contract('BlockController', ([maintainer, authority, other]) => {
             expect(await this.blockController.childBlockInterval())
                 .to.be.bignumber.equal(new BN(this.childBlockInterval));
         });
-
-        it('setAuthority rejects zero-address as new authority', async () => {
-            await expectRevert(
-                this.blockController.setAuthority(constants.ZERO_ADDRESS, { from: authority }),
-                'Authority address cannot be zero',
-            );
-        });
-
-        it('setAuthority can be called only by the authority', async () => {
-            await expectRevert(
-                this.blockController.setAuthority(other, { from: other }),
-                'Caller address is unauthorized',
-            );
-        });
     });
 
     describe('activateChildChain', () => {
@@ -95,7 +81,7 @@ contract('BlockController', ([maintainer, authority, other]) => {
                 );
             });
 
-            it('should not be ablt to be activated by non authority', async () => {
+            it('should not be able to be activated by non authority', async () => {
                 await expectRevert(
                     this.blockController.activateChildChain({ from: maintainer }),
                     'Caller address is unauthorized',
@@ -166,17 +152,6 @@ contract('BlockController', ([maintainer, authority, other]) => {
                 this.blockController.submitBlock(this.dummyBlockHash, { from: other }),
                 'Caller address is unauthorized',
             );
-        });
-
-        it('allows authority address to be changed', async () => {
-            await expectRevert(
-                this.blockController.submitBlock(this.dummyBlockHash, { from: other }),
-                'Caller address is unauthorized',
-            );
-
-            await this.blockController.setAuthority(other, { from: authority });
-
-            await this.blockController.submitBlock(this.dummyBlockHash, { from: other });
         });
     });
 
