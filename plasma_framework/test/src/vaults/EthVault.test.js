@@ -158,28 +158,6 @@ contract('EthVault', ([_, authority, maintainer, alice]) => {
                 'Deposit must have exactly one output.',
             );
         });
-
-        // NOTE: This test would be the same for `Erc20Vault` as functionality is in base `Vault` contract
-        it('deposit verifier waits a period of time before takes effect', async () => {
-            const newDepositVerifier = await EthDepositVerifier.new(TX_TYPE.PAYMENT, OUTPUT_TYPE.PAYMENT);
-
-            expect(await this.ethVault.getEffectiveDepositVerifier()).to.equal(this.currentDepositVerifier);
-
-            const tx = await this.ethVault.setDepositVerifier(newDepositVerifier.address, { from: maintainer });
-            expect(await this.ethVault.getEffectiveDepositVerifier()).to.equal(this.currentDepositVerifier);
-            await expectEvent.inLogs(tx.logs, 'SetDepositVerifierCalled', { nextDepositVerifier: newDepositVerifier.address });
-
-            await time.increase(2 * MIN_EXIT_PERIOD);
-            expect(await this.ethVault.getEffectiveDepositVerifier()).to.equal(newDepositVerifier.address);
-        });
-
-        // NOTE: This test would be the same for `Erc20Vault` as functionality is in base `Vault` contract
-        it('should not allow for setting empty address as deposit verifier', async () => {
-            await expectRevert(
-                this.ethVault.setDepositVerifier(constants.ZERO_ADDRESS, { from: maintainer }),
-                'Cannot set an empty address as deposit verifier',
-            );
-        });
     });
 
     describe('withdraw', () => {
