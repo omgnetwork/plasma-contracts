@@ -169,7 +169,7 @@ contract('EthVault', ([_, authority, maintainer, alice]) => {
             expect(await this.ethVault.getEffectiveDepositVerifier()).to.equal(this.currentDepositVerifier);
             await expectEvent.inLogs(tx.logs, 'SetDepositVerifierCalled', { nextDepositVerifier: newDepositVerifier.address });
 
-            await time.increase(MIN_EXIT_PERIOD);
+            await time.increase(2 * MIN_EXIT_PERIOD);
             expect(await this.ethVault.getEffectiveDepositVerifier()).to.equal(newDepositVerifier.address);
         });
 
