@@ -52,9 +52,8 @@ contract TxFinalizationVerifier is ITxFinalizationVerifier {
         }
 
         (bytes32 root,) = data.framework.blocks(data.txPos.blockNum());
-        bytes32 leafData = keccak256(data.txBytes);
         return Merkle.checkMembership(
-            leafData, data.txPos.txIndex(), root, data.inclusionProof
+            data.txBytes, data.txPos.txIndex(), root, data.inclusionProof
         );
     }
 }

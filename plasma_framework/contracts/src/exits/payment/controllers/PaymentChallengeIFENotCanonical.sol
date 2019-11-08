@@ -194,9 +194,8 @@ library PaymentChallengeIFENotCanonical {
         pure
         returns(uint256)
     {
-        bytes32 leaf = keccak256(txbytes);
         require(
-            Merkle.checkMembership(leaf, utxoPos.txIndex(), root, inclusionProof),
+            Merkle.checkMembership(txbytes, utxoPos.txIndex(), root, inclusionProof),
             "Transaction is not included in block of Plasma chain"
         );
 
