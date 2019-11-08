@@ -4,7 +4,6 @@ const ExitableTimestamp = artifacts.require('ExitableTimestampWrapper');
 const ExitPriority = artifacts.require('ExitPriorityWrapper');
 const ERC20Mintable = artifacts.require('ERC20Mintable');
 const PaymentExitGame = artifacts.require('PaymentExitGame');
-const PaymentOutputToPaymentTxCondition = artifacts.require('PaymentOutputToPaymentTxCondition');
 const PaymentProcessStandardExit = artifacts.require('PaymentProcessStandardExit');
 const PlasmaFramework = artifacts.require('PlasmaFramework');
 const PriorityQueue = artifacts.require('PriorityQueue');
@@ -14,9 +13,7 @@ const {
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
-const {
-    TX_TYPE, OUTPUT_TYPE, EMPTY_BYTES,
-} = require('../helpers/constants.js');
+const { EMPTY_BYTES } = require('../helpers/constants.js');
 const { MerkleTree } = require('../helpers/merkle.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../helpers/transaction.js');
 const {
@@ -32,6 +29,7 @@ contract('PaymentExitGame - End to End Tests', ([_deployer, _maintainer, authori
     const ETH = constants.ZERO_ADDRESS;
     const INITIAL_ERC20_SUPPLY = 10000000000;
     const DEPOSIT_VALUE = 1000000;
+    const OUTPUT_TYPE_PAYMENT = config.registerKeys.outputTypes.payment;
 
     const alicePrivateKey = '0x7151e5dab6f8e95b5436515b83f423c4df64fe4c6149f864daa209b26adb10ca';
     let alice;
@@ -59,16 +57,14 @@ contract('PaymentExitGame - End to End Tests', ([_deployer, _maintainer, authori
     const setupContracts = async () => {
         this.framework = await PlasmaFramework.deployed();
 
-        this.ethVault = await EthVault.deployed();
-        this.erc20Vault = await Erc20Vault.deployed();
+        this.ethVault = await EthVault.at(await this.framework.vaults(config.registerKeys.vaultId.eth));
+        this.erc20Vault = await Erc20Vault.at(await this.framework.vaults(config.registerKeys.vaultId.erc20));
 
-        this.exitGame = await PaymentExitGame.deployed();
+        this.exitGame = await PaymentExitGame.at(await this.framework.exitGames(config.registerKeys.txTypes.payment));
 
         this.startStandardExitBondSize = await this.exitGame.startStandardExitBondSize();
         this.startIFEBondSize = await this.exitGame.startIFEBondSize();
         this.piggybackBondSize = await this.exitGame.piggybackBondSize();
-
-        this.toPaymentCondition = await PaymentOutputToPaymentTxCondition.deployed();
 
         this.framework.addExitQueue(config.registerKeys.vaultId.eth, ETH);
     };
@@ -76,7 +72,7 @@ contract('PaymentExitGame - End to End Tests', ([_deployer, _maintainer, authori
     const aliceDepositsETH = async () => {
         const depositBlockNum = (await this.framework.nextDepositBlock()).toNumber();
         this.depositUtxoPos = buildUtxoPos(depositBlockNum, 0, 0);
-        this.depositTx = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice);
+        this.depositTx = Testlang.deposit(OUTPUT_TYPE_PAYMENT, DEPOSIT_VALUE, alice);
         this.merkleTreeForDepositTx = new MerkleTree([this.depositTx], 16);
         this.merkleProofForDepositTx = this.merkleTreeForDepositTx.getInclusionProof(this.depositTx);
 
@@ -88,9 +84,9 @@ contract('PaymentExitGame - End to End Tests', ([_deployer, _maintainer, authori
         this.transferUtxoPos = buildUtxoPos(tranferTxBlockNum, 0, 0);
 
         const transferAmount = 1000;
-        const outputBob = new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, transferAmount, bob, ETH);
+        const outputBob = new PaymentTransactionOutput(OUTPUT_TYPE_PAYMENT, transferAmount, bob, ETH);
         const outputAlice = new PaymentTransactionOutput(
-            OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE - transferAmount, alice, ETH,
+            OUTPUT_TYPE_PAYMENT, DEPOSIT_VALUE - transferAmount, alice, ETH,
         );
         this.transferTxObject = new PaymentTransaction(1, [this.depositUtxoPos], [outputBob, outputAlice]);
         this.transferTx = this.transferTxObject.rlpEncoded();
@@ -103,7 +99,7 @@ contract('PaymentExitGame - End to End Tests', ([_deployer, _maintainer, authori
     const aliceDepositsErc20 = async () => {
         const depositBlockNum = (await this.framework.nextDepositBlock()).toNumber();
         this.depositUtxoPos = buildUtxoPos(depositBlockNum, 0, 0);
-        this.depositTx = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, this.erc20.address);
+        this.depositTx = Testlang.deposit(OUTPUT_TYPE_PAYMENT, DEPOSIT_VALUE, alice, this.erc20.address);
         this.merkleTreeForDepositTx = new MerkleTree([this.depositTx], 16);
         this.merkleProofForDepositTx = this.merkleTreeForDepositTx.getInclusionProof(this.depositTx);
 
@@ -145,7 +141,7 @@ contract('PaymentExitGame - End to End Tests', ([_deployer, _maintainer, authori
                     const args = {
                         utxoPos: this.depositUtxoPos,
                         rlpOutputTx: this.depositTx,
-                        outputType: OUTPUT_TYPE.PAYMENT,
+                        outputType: OUTPUT_TYPE_PAYMENT,
                         outputGuardPreimage: EMPTY_BYTES,
                         outputTxInclusionProof: this.merkleProofForDepositTx,
                     };
@@ -222,7 +218,7 @@ contract('PaymentExitGame - End to End Tests', ([_deployer, _maintainer, authori
                     const args = {
                         utxoPos: this.transferUtxoPos,
                         rlpOutputTx: this.transferTx,
-                        outputType: OUTPUT_TYPE.PAYMENT,
+                        outputType: OUTPUT_TYPE_PAYMENT,
                         outputGuardPreimage: EMPTY_BYTES,
                         outputTxInclusionProof: this.merkleProofForTransferTx,
                     };
@@ -272,7 +268,7 @@ contract('PaymentExitGame - End to End Tests', ([_deployer, _maintainer, authori
                     const args = {
                         utxoPos: this.depositUtxoPos,
                         rlpOutputTx: this.depositTx,
-                        outputType: OUTPUT_TYPE.PAYMENT,
+                        outputType: OUTPUT_TYPE_PAYMENT,
                         outputGuardPreimage: EMPTY_BYTES,
                         outputTxInclusionProof: this.merkleProofForDepositTx,
                     };
@@ -395,7 +391,7 @@ contract('PaymentExitGame - End to End Tests', ([_deployer, _maintainer, authori
                         const args = {
                             utxoPos: this.depositUtxoPos,
                             rlpOutputTx: this.depositTx,
-                            outputType: OUTPUT_TYPE.PAYMENT,
+                            outputType: OUTPUT_TYPE_PAYMENT,
                             outputGuardPreimage: EMPTY_BYTES,
                             outputTxInclusionProof: this.merkleProofForDepositTx,
                         };
@@ -459,12 +455,16 @@ contract('PaymentExitGame - End to End Tests', ([_deployer, _maintainer, authori
             describe('Given she started an in-flight exit from transaction that is not mined', () => {
                 before(async () => {
                     const amount = DEPOSIT_VALUE / 2;
-                    const output = new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, amount, alice, ETH);
-                    this.inFlightTx = new PaymentTransaction(TX_TYPE.PAYMENT, [this.depositUtxoPos], [output]);
+                    const output = new PaymentTransactionOutput(OUTPUT_TYPE_PAYMENT, amount, alice, ETH);
+                    this.inFlightTx = new PaymentTransaction(
+                        config.registerKeys.txTypes.payment,
+                        [this.depositUtxoPos],
+                        [output],
+                    );
 
                     this.inFlightTxRaw = web3.utils.bytesToHex(this.inFlightTx.rlpEncoded());
                     const inputTxs = [this.depositTx];
-                    const inputTxTypes = [TX_TYPE.PAYMENT];
+                    const inputTxTypes = [config.registerKeys.txTypes.payment];
                     const inputUtxosPos = [this.depositUtxoPos];
                     const outputGuardPreimagesForInputs = [EMPTY_BYTES];
                     const inputTxsInclusionProofs = [this.merkleProofForDepositTx];
