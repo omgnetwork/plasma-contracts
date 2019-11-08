@@ -33,7 +33,10 @@ contract Erc20Vault is Vault {
      * @param depositTx RLP-encoded transaction to act as the deposit
      */
     function deposit(bytes calldata depositTx) external {
-        (address depositor, address token, uint256 amount) = IErc20DepositVerifier(getEffectiveDepositVerifier())
+        address depositVerifier = super.getEffectiveDepositVerifier();
+        require(depositVerifier != address(0), "Deposit verifier has not been set");
+
+        (address depositor, address token, uint256 amount) = IErc20DepositVerifier(depositVerifier)
             .verify(depositTx, msg.sender, address(this));
 
         IERC20(token).safeTransferFrom(depositor, address(this), amount);

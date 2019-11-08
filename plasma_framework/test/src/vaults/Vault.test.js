@@ -9,7 +9,7 @@ const { expect } = require('chai');
 
 const { OUTPUT_TYPE, TX_TYPE } = require('../../helpers/constants.js');
 
-contract.only('Vault', ([_, authority, maintainer, alice]) => {
+contract('Vault', ([_, authority, maintainer, alice]) => {
     const MIN_EXIT_PERIOD = 10;
     const INITIAL_IMMUNE_VAULTS = 1;
     const INITIAL_IMMUNE_EXIT_GAMES = 1;
