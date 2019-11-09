@@ -16,13 +16,16 @@ contract VaultRegistry is OnlyFromAddress {
     );
 
     /**
-     * @dev It takes at least 1 minExitPeriod for each new vault contract to start protecting deposit transaction in mempool
-     *      see: https://github.com/omisego/plasma-contracts/issues/173
+     * @dev It takes at least 2 minExitPeriod for each new vault contract to start.
+     *      This is to protect deposit transactions already in mempool,
+     *      and also make sure user only needs to SE within first week when invalid vault is registered.
+     *      see: https://github.com/omisego/plasma-contracts/issues/412
+     *           https://github.com/omisego/plasma-contracts/issues/173
      */
     constructor(uint256 _minExitPeriod, uint256 _initialImmuneVaults)
         public
     {
-        _vaultQuarantine.quarantinePeriod = _minExitPeriod;
+        _vaultQuarantine.quarantinePeriod = 2 * _minExitPeriod;
         _vaultQuarantine.immunitiesRemaining = _initialImmuneVaults;
     }
 

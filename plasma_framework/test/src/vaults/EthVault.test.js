@@ -19,7 +19,7 @@ contract('EthVault', ([_, authority, maintainer, alice]) => {
     const INITIAL_IMMUNE_EXIT_GAMES = 1;
     const MIN_EXIT_PERIOD = 10;
 
-    beforeEach('setup contracts', async () => {
+    const setupContractsWithoutDepositVerifier = async () => {
         this.framework = await PlasmaFramework.new(
             MIN_EXIT_PERIOD,
             INITIAL_IMMUNE_VAULTS,
@@ -29,161 +29,162 @@ contract('EthVault', ([_, authority, maintainer, alice]) => {
         );
         await this.framework.activateChildChain({ from: authority });
         this.ethVault = await EthVault.new(this.framework.address);
-        const depositVerifier = await EthDepositVerifier.new(TX_TYPE.PAYMENT, OUTPUT_TYPE.PAYMENT);
-        await this.ethVault.setDepositVerifier(depositVerifier.address, { from: maintainer });
+
         await this.framework.registerVault(1, this.ethVault.address, { from: maintainer });
-        this.currentDepositVerifier = depositVerifier.address;
 
         this.exitGame = await DummyExitGame.new();
         await this.exitGame.setEthVault(this.ethVault.address);
         await this.framework.registerExitGame(1, this.exitGame.address, PROTOCOL.MORE_VP, { from: maintainer });
-    });
+    };
+
+    const setupAllContracts = async () => {
+        await setupContractsWithoutDepositVerifier();
+        const depositVerifier = await EthDepositVerifier.new(TX_TYPE.PAYMENT, OUTPUT_TYPE.PAYMENT);
+        await this.ethVault.setDepositVerifier(depositVerifier.address, { from: maintainer });
+    };
 
     describe('deposit', () => {
-        it('should store ethereum deposit', async () => {
-            const preDepositBlockNumber = (await this.framework.nextDepositBlock()).toNumber();
+        describe('before deposit verifier has been set', () => {
+            beforeEach(setupContractsWithoutDepositVerifier);
 
-            const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice);
-            await this.ethVault.deposit(deposit, { from: alice, value: DEPOSIT_VALUE });
-            const postDepositBlockNumber = (await this.framework.nextDepositBlock()).toNumber();
+            it('should fail with error message', async () => {
+                const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice);
 
-            expect(postDepositBlockNumber).to.be.equal(preDepositBlockNumber + 1);
+                await expectRevert(
+                    this.ethVault.deposit(deposit, { from: alice, value: DEPOSIT_VALUE + 1 }),
+                    'Deposit verifier has not been set',
+                );
+            });
         });
 
-        it('should emit deposit event', async () => {
-            const preDepositBlockNumber = await this.framework.nextDepositBlock();
+        describe('after all related contracts set', () => {
+            beforeEach(setupAllContracts);
 
-            const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice);
-            const { receipt } = await this.ethVault.deposit(deposit, { from: alice, value: DEPOSIT_VALUE });
-            await expectEvent.inTransaction(
-                receipt.transactionHash,
-                EthVault,
-                'DepositCreated',
-                {
-                    depositor: alice,
-                    blknum: preDepositBlockNumber,
-                    token: constants.ZERO_ADDRESS,
-                    amount: new BN(DEPOSIT_VALUE),
-                },
-            );
-        });
+            it('should store ethereum deposit', async () => {
+                const preDepositBlockNumber = (await this.framework.nextDepositBlock()).toNumber();
 
-        it('should charge eth from depositing user', async () => {
-            const preDepositBalance = await web3.eth.getBalance(alice);
-            const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice);
-            const tx = await this.ethVault.deposit(deposit, { from: alice, value: DEPOSIT_VALUE });
+                const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice);
+                await this.ethVault.deposit(deposit, { from: alice, value: DEPOSIT_VALUE });
+                const postDepositBlockNumber = (await this.framework.nextDepositBlock()).toNumber();
 
-            const actualPostDepositBalance = new BN(await web3.eth.getBalance(alice));
-            const expectedPostDepositBalance = (new BN(preDepositBalance))
-                .sub(new BN(DEPOSIT_VALUE)).sub(await spentOnGas(tx.receipt));
+                expect(postDepositBlockNumber).to.be.equal(preDepositBlockNumber + 1);
+            });
 
-            expect(actualPostDepositBalance).to.be.bignumber.equal(expectedPostDepositBalance);
-        });
+            it('should emit deposit event', async () => {
+                const preDepositBlockNumber = await this.framework.nextDepositBlock();
 
-        it('should not store deposit when output value mismatches sent wei', async () => {
-            const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice);
+                const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice);
+                const { receipt } = await this.ethVault.deposit(deposit, { from: alice, value: DEPOSIT_VALUE });
+                await expectEvent.inTransaction(
+                    receipt.transactionHash,
+                    EthVault,
+                    'DepositCreated',
+                    {
+                        depositor: alice,
+                        blknum: preDepositBlockNumber,
+                        token: constants.ZERO_ADDRESS,
+                        amount: new BN(DEPOSIT_VALUE),
+                    },
+                );
+            });
 
-            await expectRevert(
-                this.ethVault.deposit(deposit, { from: alice, value: DEPOSIT_VALUE + 1 }),
-                'Deposited value must match sent amount.',
-            );
+            it('should charge eth from depositing user', async () => {
+                const preDepositBalance = await web3.eth.getBalance(alice);
+                const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice);
+                const tx = await this.ethVault.deposit(deposit, { from: alice, value: DEPOSIT_VALUE });
 
-            await expectRevert(
-                this.ethVault.deposit(deposit, { from: alice, value: DEPOSIT_VALUE - 1 }),
-                'Deposited value must match sent amount.',
-            );
-        });
+                const actualPostDepositBalance = new BN(await web3.eth.getBalance(alice));
+                const expectedPostDepositBalance = (new BN(preDepositBalance))
+                    .sub(new BN(DEPOSIT_VALUE)).sub(await spentOnGas(tx.receipt));
 
-        it('should not store a deposit from user who does not match output address', async () => {
-            const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice);
+                expect(actualPostDepositBalance).to.be.bignumber.equal(expectedPostDepositBalance);
+            });
 
-            await expectRevert(
-                this.ethVault.deposit(deposit, { value: DEPOSIT_VALUE }),
-                "Depositor's address must match sender's address",
-            );
-        });
+            it('should not store deposit when output value mismatches sent wei', async () => {
+                const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice);
 
-        it('should not store a non-ethereum deposit', async () => {
-            const nonEth = Buffer.alloc(20, 1);
-            const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, nonEth);
+                await expectRevert(
+                    this.ethVault.deposit(deposit, { from: alice, value: DEPOSIT_VALUE + 1 }),
+                    'Deposited value must match sent amount.',
+                );
 
-            await expectRevert(
-                this.ethVault.deposit(deposit, { from: alice, value: DEPOSIT_VALUE }),
-                'Output requires correct currency (ETH).',
-            );
-        });
+                await expectRevert(
+                    this.ethVault.deposit(deposit, { from: alice, value: DEPOSIT_VALUE - 1 }),
+                    'Deposited value must match sent amount.',
+                );
+            });
 
-        it('should not accept a deposit with invalid output type', async () => {
-            const unsupportedOutputType = 2;
-            const deposit = Testlang.deposit(unsupportedOutputType, DEPOSIT_VALUE, alice);
+            it('should not store a deposit from user who does not match output address', async () => {
+                const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice);
 
-            await expectRevert(
-                this.ethVault.deposit(deposit, { from: alice, value: DEPOSIT_VALUE }),
-                'Invalid output type',
-            );
-        });
+                await expectRevert(
+                    this.ethVault.deposit(deposit, { value: DEPOSIT_VALUE }),
+                    "Depositor's address must match sender's address",
+                );
+            });
 
-        it('should not accept transaction that does not match expected transaction type', async () => {
-            const output = new PaymentTransactionOutput(
-                OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, constants.ZERO_ADDRESS,
-            );
-            const deposit = new PaymentTransaction(123, [0], [output]);
+            it('should not store a non-ethereum deposit', async () => {
+                const nonEth = Buffer.alloc(20, 1);
+                const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, nonEth);
 
-            await expectRevert(
-                this.ethVault.deposit(deposit.rlpEncoded(), { from: alice, value: DEPOSIT_VALUE }),
-                'Invalid transaction type.',
-            );
-        });
+                await expectRevert(
+                    this.ethVault.deposit(deposit, { from: alice, value: DEPOSIT_VALUE }),
+                    'Output requires correct currency (ETH).',
+                );
+            });
 
-        it('should not accept transaction with inputs', async () => {
-            const output = new PaymentTransactionOutput(
-                OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, constants.ZERO_ADDRESS,
-            );
-            const deposit = new PaymentTransaction(1, [0], [output]);
+            it('should not accept a deposit with invalid output type', async () => {
+                const unsupportedOutputType = 2;
+                const deposit = Testlang.deposit(unsupportedOutputType, DEPOSIT_VALUE, alice);
 
-            await expectRevert(
-                this.ethVault.deposit(deposit.rlpEncoded(), { from: alice, value: DEPOSIT_VALUE }),
-                'Deposit must have no inputs.',
-            );
-        });
+                await expectRevert(
+                    this.ethVault.deposit(deposit, { from: alice, value: DEPOSIT_VALUE }),
+                    'Invalid output type',
+                );
+            });
 
-        it('should not accept transaction with more than one output', async () => {
-            const output = new PaymentTransactionOutput(
-                OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, constants.ZERO_ADDRESS,
-            );
-            const deposit = new PaymentTransaction(1, [], [output, output]);
+            it('should not accept transaction that does not match expected transaction type', async () => {
+                const output = new PaymentTransactionOutput(
+                    OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, constants.ZERO_ADDRESS,
+                );
+                const deposit = new PaymentTransaction(123, [0], [output]);
 
-            await expectRevert(
-                this.ethVault.deposit(deposit.rlpEncoded(), { from: alice, value: DEPOSIT_VALUE }),
-                'Deposit must have exactly one output.',
-            );
-        });
+                await expectRevert(
+                    this.ethVault.deposit(deposit.rlpEncoded(), { from: alice, value: DEPOSIT_VALUE }),
+                    'Invalid transaction type.',
+                );
+            });
 
-        // NOTE: This test would be the same for `Erc20Vault` as functionality is in base `Vault` contract
-        it('deposit verifier waits a period of time before takes effect', async () => {
-            const newDepositVerifier = await EthDepositVerifier.new(TX_TYPE.PAYMENT, OUTPUT_TYPE.PAYMENT);
+            it('should not accept transaction with inputs', async () => {
+                const output = new PaymentTransactionOutput(
+                    OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, constants.ZERO_ADDRESS,
+                );
+                const deposit = new PaymentTransaction(1, [0], [output]);
 
-            expect(await this.ethVault.getEffectiveDepositVerifier()).to.equal(this.currentDepositVerifier);
+                await expectRevert(
+                    this.ethVault.deposit(deposit.rlpEncoded(), { from: alice, value: DEPOSIT_VALUE }),
+                    'Deposit must have no inputs.',
+                );
+            });
 
-            const tx = await this.ethVault.setDepositVerifier(newDepositVerifier.address, { from: maintainer });
-            expect(await this.ethVault.getEffectiveDepositVerifier()).to.equal(this.currentDepositVerifier);
-            await expectEvent.inLogs(tx.logs, 'SetDepositVerifierCalled', { nextDepositVerifier: newDepositVerifier.address });
+            it('should not accept transaction with more than one output', async () => {
+                const output = new PaymentTransactionOutput(
+                    OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, constants.ZERO_ADDRESS,
+                );
+                const deposit = new PaymentTransaction(1, [], [output, output]);
 
-            await time.increase(MIN_EXIT_PERIOD);
-            expect(await this.ethVault.getEffectiveDepositVerifier()).to.equal(newDepositVerifier.address);
-        });
-
-        // NOTE: This test would be the same for `Erc20Vault` as functionality is in base `Vault` contract
-        it('should not allow for setting empty address as deposit verifier', async () => {
-            await expectRevert(
-                this.ethVault.setDepositVerifier(constants.ZERO_ADDRESS, { from: maintainer }),
-                'Cannot set an empty address as deposit verifier',
-            );
+                await expectRevert(
+                    this.ethVault.deposit(deposit.rlpEncoded(), { from: alice, value: DEPOSIT_VALUE }),
+                    'Deposit must have exactly one output.',
+                );
+            });
         });
     });
 
     describe('withdraw', () => {
         beforeEach(async () => {
+            await setupAllContracts();
+
             const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice);
             await this.ethVault.deposit(deposit, { from: alice, value: DEPOSIT_VALUE });
         });

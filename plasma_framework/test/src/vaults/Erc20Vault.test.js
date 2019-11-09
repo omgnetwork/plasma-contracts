@@ -21,8 +21,7 @@ contract('Erc20Vault', ([_, erc20Minter, authority, maintainer, alice]) => {
     const INITIAL_IMMUNE_EXIT_GAMES = 1;
     const MIN_EXIT_PERIOD = 10;
 
-
-    beforeEach('setup contracts', async () => {
+    const setupContractsWithoutDepositVerifier = async () => {
         this.framework = await PlasmaFramework.new(
             MIN_EXIT_PERIOD,
             INITIAL_IMMUNE_VAULTS,
@@ -32,8 +31,6 @@ contract('Erc20Vault', ([_, erc20Minter, authority, maintainer, alice]) => {
         );
         await this.framework.activateChildChain({ from: authority });
         this.erc20Vault = await Erc20Vault.new(this.framework.address);
-        const depositVerifier = await Erc20DepositVerifier.new(TX_TYPE.PAYMENT, OUTPUT_TYPE.PAYMENT);
-        await this.erc20Vault.setDepositVerifier(depositVerifier.address, { from: maintainer });
         await this.framework.registerVault(2, this.erc20Vault.address, { from: maintainer });
 
         this.exitGame = await DummyExitGame.new();
@@ -43,126 +40,156 @@ contract('Erc20Vault', ([_, erc20Minter, authority, maintainer, alice]) => {
         this.erc20 = await ERC20Mintable.new({ from: erc20Minter });
         await this.erc20.mint(erc20Minter, INITIAL_SUPPLY, { from: erc20Minter });
         await this.erc20.transfer(alice, DEPOSIT_VALUE, { from: erc20Minter });
-    });
+    };
+
+    const setupAllContracts = async () => {
+        await setupContractsWithoutDepositVerifier();
+
+        const depositVerifier = await Erc20DepositVerifier.new(TX_TYPE.PAYMENT, OUTPUT_TYPE.PAYMENT);
+        await this.erc20Vault.setDepositVerifier(depositVerifier.address, { from: maintainer });
+    };
 
     describe('deposit', () => {
-        it('should store erc20 deposit', async () => {
-            await this.erc20.approve(this.erc20Vault.address, DEPOSIT_VALUE, { from: alice });
-            const preDepositBlockNumber = (await this.framework.nextDepositBlock()).toNumber();
+        describe('before deposit verifier is set', () => {
+            beforeEach(setupContractsWithoutDepositVerifier);
 
-            const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, this.erc20.address);
-            await this.erc20Vault.deposit(deposit, { from: alice });
-            const postDepositBlockNumber = (await this.framework.nextDepositBlock()).toNumber();
+            it('should fail with error message', async () => {
+                const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, this.erc20.address);
 
-            expect(postDepositBlockNumber).to.be.equal(preDepositBlockNumber + 1);
+                await expectRevert(
+                    this.erc20Vault.deposit(deposit, { from: alice }),
+                    'Deposit verifier has not been set',
+                );
+            });
         });
 
-        it('should emit deposit event', async () => {
-            await this.erc20.approve(this.erc20Vault.address, DEPOSIT_VALUE, { from: alice });
-            const preDepositBlockNumber = await this.framework.nextDepositBlock();
+        describe('after all contracts are set', () => {
+            beforeEach(setupAllContracts);
 
-            const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, this.erc20.address);
-            const { receipt } = await this.erc20Vault.deposit(deposit, { from: alice });
-            await expectEvent.inTransaction(
-                receipt.transactionHash,
-                Erc20Vault,
-                'DepositCreated',
-                {
-                    depositor: alice,
-                    blknum: preDepositBlockNumber,
-                    token: this.erc20.address,
-                    amount: new BN(DEPOSIT_VALUE),
-                },
-            );
-        });
+            it('should store erc20 deposit', async () => {
+                await this.erc20.approve(this.erc20Vault.address, DEPOSIT_VALUE, { from: alice });
+                const preDepositBlockNumber = (await this.framework.nextDepositBlock()).toNumber();
 
-        it('should spend erc20 tokens from depositing user', async () => {
-            const preDepositBalance = await this.erc20.balanceOf(alice);
+                const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, this.erc20.address);
+                await this.erc20Vault.deposit(deposit, { from: alice });
+                const postDepositBlockNumber = (await this.framework.nextDepositBlock()).toNumber();
 
-            await this.erc20.approve(this.erc20Vault.address, DEPOSIT_VALUE, { from: alice });
-            const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, this.erc20.address);
-            await this.erc20Vault.deposit(deposit, { from: alice });
+                expect(postDepositBlockNumber).to.be.equal(preDepositBlockNumber + 1);
+            });
 
-            const actualPostDepositBalance = new BN(await this.erc20.balanceOf(alice));
-            const expectedPostDepositBalance = (new BN(preDepositBalance)).sub(new BN(DEPOSIT_VALUE));
+            it('should emit deposit event', async () => {
+                await this.erc20.approve(this.erc20Vault.address, DEPOSIT_VALUE, { from: alice });
+                const preDepositBlockNumber = await this.framework.nextDepositBlock();
 
-            expect(actualPostDepositBalance).to.be.bignumber.equal(expectedPostDepositBalance);
-        });
+                const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, this.erc20.address);
+                const { receipt } = await this.erc20Vault.deposit(deposit, { from: alice });
+                await expectEvent.inTransaction(
+                    receipt.transactionHash,
+                    Erc20Vault,
+                    'DepositCreated',
+                    {
+                        depositor: alice,
+                        blknum: preDepositBlockNumber,
+                        token: this.erc20.address,
+                        amount: new BN(DEPOSIT_VALUE),
+                    },
+                );
+            });
 
-        it('should not store a deposit when the tokens have not been approved', async () => {
-            const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, this.erc20.address);
+            it('should spend erc20 tokens from depositing user', async () => {
+                const preDepositBalance = await this.erc20.balanceOf(alice);
 
-            await expectRevert(
-                this.erc20Vault.deposit(deposit, { from: alice }),
-                'Tokens have not been approved',
-            );
-        });
+                await this.erc20.approve(this.erc20Vault.address, DEPOSIT_VALUE, { from: alice });
+                const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, this.erc20.address);
+                await this.erc20Vault.deposit(deposit, { from: alice });
 
-        it('should not store a deposit from user who does not match output address', async () => {
-            const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, this.erc20.address);
+                const actualPostDepositBalance = new BN(await this.erc20.balanceOf(alice));
+                const expectedPostDepositBalance = (new BN(preDepositBalance)).sub(new BN(DEPOSIT_VALUE));
 
-            await expectRevert(
-                this.erc20Vault.deposit(deposit),
-                "Depositor's address must match sender's address",
-            );
-        });
+                expect(actualPostDepositBalance).to.be.bignumber.equal(expectedPostDepositBalance);
+            });
 
-        it('should not store an ethereum deposit that sends funds', async () => {
-            const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice);
+            it('should not store a deposit when the tokens have not been approved', async () => {
+                const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, this.erc20.address);
 
-            await expectRevert.unspecified(
-                this.erc20Vault.deposit(deposit, { from: alice, value: DEPOSIT_VALUE }),
-            );
-        });
+                await expectRevert(
+                    this.erc20Vault.deposit(deposit, { from: alice }),
+                    'Tokens have not been approved',
+                );
+            });
 
-        it('should not store an ethereum deposit that does not send funds', async () => {
-            const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice);
+            it('should not store a deposit from user who does not match output address', async () => {
+                const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, this.erc20.address);
 
-            await expectRevert(
-                this.erc20Vault.deposit(deposit, { from: alice }),
-                'Invalid output currency (ETH)',
-            );
-        });
+                await expectRevert(
+                    this.erc20Vault.deposit(deposit),
+                    "Depositor's address must match sender's address",
+                );
+            });
 
-        it('should not accept a deposit with invalid output type', async () => {
-            const unsupportedOutputType = 2;
-            const deposit = Testlang.deposit(unsupportedOutputType, DEPOSIT_VALUE, alice, this.erc20.address);
+            it('should not store an ethereum deposit that sends funds', async () => {
+                const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice);
 
-            await expectRevert(
-                this.erc20Vault.deposit(deposit, { from: alice }),
-                'Invalid output type',
-            );
-        });
+                await expectRevert.unspecified(
+                    this.erc20Vault.deposit(deposit, { from: alice, value: DEPOSIT_VALUE }),
+                );
+            });
 
-        it('should not accept transaction that does not match expected transaction type', async () => {
-            const output = new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, this.erc20.address);
-            const WRONG_TX_TYPE = 123;
-            const deposit = new PaymentTransaction(WRONG_TX_TYPE, [0], [output]);
+            it('should not store an ethereum deposit that does not send funds', async () => {
+                const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice);
 
-            await expectRevert(
-                this.erc20Vault.deposit(deposit.rlpEncoded(), { from: alice }),
-                'Invalid transaction type.',
-            );
-        });
+                await expectRevert(
+                    this.erc20Vault.deposit(deposit, { from: alice }),
+                    'Invalid output currency (ETH)',
+                );
+            });
 
-        it('should not accept transaction with inputs', async () => {
-            const output = new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, this.erc20.address);
-            const deposit = new PaymentTransaction(1, [0], [output]);
+            it('should not accept a deposit with invalid output type', async () => {
+                const unsupportedOutputType = 2;
+                const deposit = Testlang.deposit(unsupportedOutputType, DEPOSIT_VALUE, alice, this.erc20.address);
 
-            await expectRevert(
-                this.erc20Vault.deposit(deposit.rlpEncoded(), { from: alice }),
-                'Deposit must have no inputs',
-            );
-        });
+                await expectRevert(
+                    this.erc20Vault.deposit(deposit, { from: alice }),
+                    'Invalid output type',
+                );
+            });
 
-        it('should not accept transaction with more than one output', async () => {
-            const output = new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, this.erc20.address);
-            const deposit = new PaymentTransaction(1, [], [output, output]);
+            it('should not accept transaction that does not match expected transaction type', async () => {
+                const output = new PaymentTransactionOutput(
+                    OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, this.erc20.address,
+                );
+                const WRONG_TX_TYPE = 123;
+                const deposit = new PaymentTransaction(WRONG_TX_TYPE, [0], [output]);
 
-            await expectRevert(
-                this.erc20Vault.deposit(deposit.rlpEncoded(), { from: alice }),
-                'Deposit must have exactly one output',
-            );
+                await expectRevert(
+                    this.erc20Vault.deposit(deposit.rlpEncoded(), { from: alice }),
+                    'Invalid transaction type.',
+                );
+            });
+
+            it('should not accept transaction with inputs', async () => {
+                const output = new PaymentTransactionOutput(
+                    OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, this.erc20.address,
+                );
+                const deposit = new PaymentTransaction(1, [0], [output]);
+
+                await expectRevert(
+                    this.erc20Vault.deposit(deposit.rlpEncoded(), { from: alice }),
+                    'Deposit must have no inputs',
+                );
+            });
+
+            it('should not accept transaction with more than one output', async () => {
+                const output = new PaymentTransactionOutput(
+                    OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, this.erc20.address,
+                );
+                const deposit = new PaymentTransaction(1, [], [output, output]);
+
+                await expectRevert(
+                    this.erc20Vault.deposit(deposit.rlpEncoded(), { from: alice }),
+                    'Deposit must have exactly one output',
+                );
+            });
         });
     });
 
@@ -174,6 +201,8 @@ contract('Erc20Vault', ([_, erc20Minter, authority, maintainer, alice]) => {
             this.nonCompliantERC20 = await NonCompliantERC20.new(INITIAL_SUPPLY, { from: erc20Minter });
             await this.nonCompliantERC20.transfer(alice, DEPOSIT_VALUE, { from: erc20Minter });
         });
+
+        beforeEach(setupAllContracts);
 
         it('should store erc20 deposit', async () => {
             await this.nonCompliantERC20.approve(this.erc20Vault.address, DEPOSIT_VALUE, { from: alice });
@@ -189,6 +218,8 @@ contract('Erc20Vault', ([_, erc20Minter, authority, maintainer, alice]) => {
 
     describe('withdraw', () => {
         beforeEach(async () => {
+            await setupAllContracts();
+
             this.testFundAmount = 1000;
             await this.erc20.transfer(this.erc20Vault.address, this.testFundAmount, { from: erc20Minter });
         });
@@ -266,6 +297,8 @@ contract('Erc20Vault', ([_, erc20Minter, authority, maintainer, alice]) => {
 
     describe('withdraw with NonCompliantERC20', () => {
         beforeEach(async () => {
+            await setupAllContracts();
+
             this.testFundAmount = 1000;
             this.nonCompliantERC20 = await NonCompliantERC20.new(INITIAL_SUPPLY, { from: erc20Minter });
             await this.nonCompliantERC20.transfer(this.erc20Vault.address, this.testFundAmount, { from: erc20Minter });
