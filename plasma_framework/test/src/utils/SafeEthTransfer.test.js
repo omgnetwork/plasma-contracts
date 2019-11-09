@@ -44,12 +44,12 @@ contract('SafeEthTransfer', ([_, alice]) => {
         });
     });
 
-    describe('callReturningResult', () => {
+    describe('transferReturnResult', () => {
         it('should revert when remaining gas is less than the gas stipend', async () => {
             const highGasStipendToFail = 20000;
             const notEnoughGas = 30000;
             await expectRevert(
-                this.contract.callReturningResult(
+                this.contract.transferReturnResult(
                     alice, TEST_AMOUNT, highGasStipendToFail, { gas: notEnoughGas },
                 ),
                 'out of gas',
@@ -58,20 +58,20 @@ contract('SafeEthTransfer', ([_, alice]) => {
 
         it('should return false when the contract does not have enough fund to transfer', async () => {
             const fundMoreThanWhatContractHolds = TEST_AMOUNT + 1;
-            await this.contract.callReturningResult(alice, fundMoreThanWhatContractHolds, SAFE_GAS_STIPEND);
-            expect(await this.contract.callResult()).to.be.false;
+            await this.contract.transferReturnResult(alice, fundMoreThanWhatContractHolds, SAFE_GAS_STIPEND);
+            expect(await this.contract.transferResult()).to.be.false;
         });
 
         it('should return false when called to a attacking contract that would fail in fallback function', async () => {
             const attacker = await FallbackFunctionFailAttacker.new();
-            await this.contract.callReturningResult(attacker.address, TEST_AMOUNT, SAFE_GAS_STIPEND);
-            expect(await this.contract.callResult()).to.be.false;
+            await this.contract.transferReturnResult(attacker.address, TEST_AMOUNT, SAFE_GAS_STIPEND);
+            expect(await this.contract.transferResult()).to.be.false;
         });
 
         it('should return false when called to a contract that would need more gas than gas stipend', async () => {
             const attacker = await OutOfGasFallbackAttacker.new();
-            await this.contract.callReturningResult(attacker.address, TEST_AMOUNT, SAFE_GAS_STIPEND);
-            expect(await this.contract.callResult()).to.be.false;
+            await this.contract.transferReturnResult(attacker.address, TEST_AMOUNT, SAFE_GAS_STIPEND);
+            expect(await this.contract.transferResult()).to.be.false;
         });
 
         describe('when successfully called', () => {
@@ -81,13 +81,13 @@ contract('SafeEthTransfer', ([_, alice]) => {
             beforeEach(async () => {
                 preContractBalance = new BN(await web3.eth.getBalance(this.contract.address));
                 preAliceBalance = new BN(await web3.eth.getBalance(alice));
-                await this.contract.callReturningResult(
+                await this.contract.transferReturnResult(
                     alice, TEST_AMOUNT, SAFE_GAS_STIPEND,
                 );
             });
 
             it('should return true when successfully transferred', async () => {
-                expect(await this.contract.callResult()).to.be.true;
+                expect(await this.contract.transferResult()).to.be.true;
             });
 
             it('should transfer the fund', async () => {

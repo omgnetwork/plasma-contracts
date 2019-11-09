@@ -19,7 +19,7 @@ library SafeEthTransfer {
     function transferRevertOnError(address payable receiver, uint256 amount, uint256 gasStipend)
         internal
     {
-        bool success = callReturningResult(receiver, amount, gasStipend);
+        bool success = transferReturnResult(receiver, amount, gasStipend);
         require(success, "SafeEthTransfer: failed to transfer ETH");
     }
 
@@ -32,7 +32,7 @@ library SafeEthTransfer {
      * @param gasStipend the maximum amount of gas to be used during the transfer call
      * @return a flag showing the call is successful or not
      */
-    function callReturningResult(address payable receiver, uint256 amount, uint256 gasStipend)
+    function transferReturnResult(address payable receiver, uint256 amount, uint256 gasStipend)
         internal
         returns (bool)
     {
