@@ -65,6 +65,16 @@ jobs:
           name: Run tests
           command: truffle test 
           working_directory: ~/repo/plasma_framework
+
+  Gas Report:
+    executor: truffle_executor
+    working_directory: ~/repo
+    steps:
+      - setup_truffle_env
+      - run:
+          name: Run tests
+          command: npx truffle test test/**/**.e2e.test.js
+          working_directory: ~/repo/plasma_framework
           environment:
             CI: true
             MOCHA_REPORTER: eth-gas-reporter
@@ -144,6 +154,7 @@ workflows:
   Run truffle tests:
     jobs:
       - Truffle tests
+      - Gas Report
       - Solidity coverage
       - Javascript linter
       - Solidity linter
