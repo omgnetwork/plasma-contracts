@@ -5,14 +5,14 @@ pragma solidity 0.5.11;
 * @dev transfer is no longer the recommended way to do ETH transfer.
 *      see issue: https://github.com/omisego/plasma-contracts/issues/312
 *
-*      This library limits the amount of gas used for external calls with value to protect against potential DOS/griefing attacks that try use up all the gas.
+*      This library limits the amount of gas used for external calls with value to protect against potential DOS/griefing attacks that try to use up all the gas.
 *      see issue: https://github.com/omisego/plasma-contracts/issues/385
 */
 library SafeEthTransfer {
     /**
      * @notice Try to transfer eth without using more gas than `gasStipend`.
      *         Reverts if it fails to transfer the ETH.
-     * @param receiver the address to receive Eth
+     * @param receiver the address to receive ETH
      * @param amount the amount of ETH (in wei) to transfer
      * @param gasStipend the maximum amount of gas to be used for the call
      */
