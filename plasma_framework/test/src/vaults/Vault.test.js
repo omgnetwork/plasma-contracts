@@ -7,7 +7,7 @@ const {
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
-const { OUTPUT_TYPE, TX_TYPE } = require('../../helpers/constants.js');
+const { OUTPUT_TYPE, TX_TYPE, SAFE_GAS_STIPEND } = require('../../helpers/constants.js');
 
 contract('Vault', ([_, authority, maintainer, alice]) => {
     const MIN_EXIT_PERIOD = 10;
@@ -24,7 +24,7 @@ contract('Vault', ([_, authority, maintainer, alice]) => {
             authority,
             maintainer,
         );
-        vault = await EthVault.new(framework.address);
+        vault = await EthVault.new(framework.address, SAFE_GAS_STIPEND);
     });
 
     describe('setDepositVerifier / getEffectiveDepositVerifier', () => {
