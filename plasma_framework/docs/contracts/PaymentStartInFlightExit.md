@@ -36,7 +36,8 @@ struct StartExitData {
  bytes[] inputTxsConfirmSigs,
  bytes[] inFlightTxWitnesses,
  bytes[] inputSpendingConditionOptionalArgs,
- bytes32[] outputIds
+ bytes32[] outputIds,
+ contract IOutputGuardHandler[] outputGuardHandlersForInputTxs
 }
 ```
 
@@ -61,8 +62,10 @@ event InFlightExitStarted(address indexed initiator, bytes32  txHash);
 - [createStartExitData(struct PaymentStartInFlightExit.Controller controller, struct PaymentInFlightExitRouterArgs.StartExitArgs args)](#createstartexitdata)
 - [decodeInputTxsPositions(uint256[] inputUtxosPos)](#decodeinputtxspositions)
 - [getOutputIds(struct PaymentStartInFlightExit.Controller controller, bytes[] inputTxs, struct UtxoPosLib.UtxoPos[] utxoPos)](#getoutputids)
+- [getOutputGuardHandlersForInputTxs(struct PaymentStartInFlightExit.Controller controller, bytes[] inputTxs, struct UtxoPosLib.UtxoPos[] inputUtxosPos)](#getoutputguardhandlersforinputtxs)
 - [verifyStart(struct PaymentStartInFlightExit.StartExitData exitData, struct PaymentExitDataModel.InFlightExitMap inFlightExitMap)](#verifystart)
 - [verifyExitNotStarted(uint160 exitId, struct PaymentExitDataModel.InFlightExitMap inFlightExitMap)](#verifyexitnotstarted)
+- [verifyOutputGuardHandlersForInputTxsRegistered(IOutputGuardHandler[] handlers)](#verifyoutputguardhandlersforinputtxsregistered)
 - [verifyNumberOfInputsMatchesNumberOfInFlightTransactionInputs(struct PaymentStartInFlightExit.StartExitData exitData)](#verifynumberofinputsmatchesnumberofinflighttransactioninputs)
 - [verifyNoInputSpentMoreThanOnce(struct PaymentTransactionModel.Transaction inFlightTx)](#verifynoinputspentmorethanonce)
 - [verifyInputTransactionIsStandardFinalized(struct PaymentStartInFlightExit.StartExitData exitData)](#verifyinputtransactionisstandardfinalized)
@@ -116,7 +119,7 @@ function run(struct PaymentStartInFlightExit.Controller self, struct PaymentExit
 ### createStartExitData
 
 ```js
-function createStartExitData(struct PaymentStartInFlightExit.Controller controller, struct PaymentInFlightExitRouterArgs.StartExitArgs args) private pure
+function createStartExitData(struct PaymentStartInFlightExit.Controller controller, struct PaymentInFlightExitRouterArgs.StartExitArgs args) private view
 returns(struct PaymentStartInFlightExit.StartExitData)
 ```
 
@@ -155,6 +158,21 @@ returns(bytes32[])
 | inputTxs | bytes[] |  | 
 | utxoPos | struct UtxoPosLib.UtxoPos[] |  | 
 
+### getOutputGuardHandlersForInputTxs
+
+```js
+function getOutputGuardHandlersForInputTxs(struct PaymentStartInFlightExit.Controller controller, bytes[] inputTxs, struct UtxoPosLib.UtxoPos[] inputUtxosPos) private view
+returns(contract IOutputGuardHandler[])
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| controller | struct PaymentStartInFlightExit.Controller |  | 
+| inputTxs | bytes[] |  | 
+| inputUtxosPos | struct UtxoPosLib.UtxoPos[] |  | 
+
 ### verifyStart
 
 ```js
@@ -180,6 +198,18 @@ function verifyExitNotStarted(uint160 exitId, struct PaymentExitDataModel.InFlig
 | ------------- |------------- | -----|
 | exitId | uint160 |  | 
 | inFlightExitMap | struct PaymentExitDataModel.InFlightExitMap |  | 
+
+### verifyOutputGuardHandlersForInputTxsRegistered
+
+```js
+function verifyOutputGuardHandlersForInputTxsRegistered(IOutputGuardHandler[] handlers) private pure
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| handlers | IOutputGuardHandler[] |  | 
 
 ### verifyNumberOfInputsMatchesNumberOfInFlightTransactionInputs
 
@@ -358,6 +388,7 @@ function setInFlightExitOutputs(struct PaymentExitDataModel.InFlightExit ife, st
 * [Quarantine](Quarantine.md)
 * [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
+* [SafeEthTransfer](SafeEthTransfer.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)
 * [TxFinalizationModel](TxFinalizationModel.md)

@@ -8,6 +8,23 @@ View Source: [contracts/src/exits/payment/PaymentExitGame.sol](../../contracts/s
 
 The exit game contract implementation for Payment Transaction
 
+## Structs
+### PaymentExitGameArgs
+
+```js
+struct PaymentExitGameArgs {
+ contract PlasmaFramework framework,
+ uint256 ethVaultId,
+ uint256 erc20VaultId,
+ contract OutputGuardHandlerRegistry outputGuardHandlerRegistry,
+ contract SpendingConditionRegistry spendingConditionRegistry,
+ contract IStateTransitionVerifier stateTransitionVerifier,
+ contract ITxFinalizationVerifier txFinalizationVerifier,
+ uint256 supportTxType,
+ uint256 safeGasStipend
+}
+```
+
 ## Contract Members
 **Constants & Variables**
 
@@ -18,29 +35,24 @@ contract PlasmaFramework private plasmaFramework;
 
 ## Functions
 
-- [(PlasmaFramework framework, uint256 ethVaultId, uint256 erc20VaultId, OutputGuardHandlerRegistry outputGuardHandlerRegistry, SpendingConditionRegistry spendingConditionRegistry, IStateTransitionVerifier stateTransitionVerifier, ITxFinalizationVerifier txFinalizationVerifier, uint256 supportTxType)](#)
+- [(struct PaymentExitGame.PaymentExitGameArgs args)](#)
 - [processExit(uint160 exitId, uint256 , address token)](#processexit)
 - [getStandardExitId(bool _isDeposit, bytes _txBytes, uint256 _utxoPos)](#getstandardexitid)
 - [getInFlightExitId(bytes _txBytes)](#getinflightexitid)
 
 ### 
 
+use struct PaymentExitGameArgs to avoid stack too deep compilation error.
+
 ```js
-function (PlasmaFramework framework, uint256 ethVaultId, uint256 erc20VaultId, OutputGuardHandlerRegistry outputGuardHandlerRegistry, SpendingConditionRegistry spendingConditionRegistry, IStateTransitionVerifier stateTransitionVerifier, ITxFinalizationVerifier txFinalizationVerifier, uint256 supportTxType) public nonpayable PaymentStandardExitRouter PaymentInFlightExitRouter 
+function (struct PaymentExitGame.PaymentExitGameArgs args) public nonpayable PaymentStandardExitRouter PaymentInFlightExitRouter 
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| framework | PlasmaFramework |  | 
-| ethVaultId | uint256 |  | 
-| erc20VaultId | uint256 |  | 
-| outputGuardHandlerRegistry | OutputGuardHandlerRegistry |  | 
-| spendingConditionRegistry | SpendingConditionRegistry |  | 
-| stateTransitionVerifier | IStateTransitionVerifier |  | 
-| txFinalizationVerifier | ITxFinalizationVerifier |  | 
-| supportTxType | uint256 |  | 
+| args | struct PaymentExitGame.PaymentExitGameArgs |  | 
 
 ### processExit
 
@@ -157,6 +169,7 @@ returns(uint160)
 * [Quarantine](Quarantine.md)
 * [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
+* [SafeEthTransfer](SafeEthTransfer.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)
 * [TxFinalizationModel](TxFinalizationModel.md)

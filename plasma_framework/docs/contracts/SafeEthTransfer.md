@@ -1,121 +1,54 @@
-# PaymentInFlightExitModelUtils.sol
+# SafeEthTransfer.sol
 
-View Source: [contracts/src/exits/payment/PaymentInFlightExitModelUtils.sol](../../contracts/src/exits/payment/PaymentInFlightExitModelUtils.sol)
+View Source: [contracts/src/utils/SafeEthTransfer.sol](../../contracts/src/utils/SafeEthTransfer.sol)
 
-**PaymentInFlightExitModelUtils**
+**SafeEthTransfer**
 
-## Contract Members
-**Constants & Variables**
-
-```js
-uint8 public constant MAX_INPUT_NUM;
-uint8 public constant MAX_OUTPUT_NUM;
-
-```
+Utility library to safely transfer ETH
 
 ## Functions
 
-- [isInputPiggybacked(struct PaymentExitDataModel.InFlightExit ife, uint16 index)](#isinputpiggybacked)
-- [isOutputPiggybacked(struct PaymentExitDataModel.InFlightExit ife, uint16 index)](#isoutputpiggybacked)
-- [setInputPiggybacked(struct PaymentExitDataModel.InFlightExit ife, uint16 index)](#setinputpiggybacked)
-- [clearInputPiggybacked(struct PaymentExitDataModel.InFlightExit ife, uint16 index)](#clearinputpiggybacked)
-- [setOutputPiggybacked(struct PaymentExitDataModel.InFlightExit ife, uint16 index)](#setoutputpiggybacked)
-- [clearOutputPiggybacked(struct PaymentExitDataModel.InFlightExit ife, uint16 index)](#clearoutputpiggybacked)
-- [isInFirstPhase(struct PaymentExitDataModel.InFlightExit ife, uint256 minExitPeriod)](#isinfirstphase)
+- [transferRevertOnError(address payable receiver, uint256 amount, uint256 gasStipend)](#transferrevertonerror)
+- [transferReturnResult(address payable receiver, uint256 amount, uint256 gasStipend)](#transferreturnresult)
 
-### isInputPiggybacked
+### transferRevertOnError
+
+Try to transfer eth without using more gas than `gasStipend`.
+        Reverts if it fails to transfer the ETH.
 
 ```js
-function isInputPiggybacked(struct PaymentExitDataModel.InFlightExit ife, uint16 index) internal pure
+function transferRevertOnError(address payable receiver, uint256 amount, uint256 gasStipend) internal nonpayable
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| receiver | address payable | the address to receive ETH | 
+| amount | uint256 | the amount of ETH (in wei) to transfer | 
+| gasStipend | uint256 | the maximum amount of gas to be used for the call | 
+
+### transferReturnResult
+
+Transfer ETH without using more gas than the `gasStipend`.
+        Returns whether the transfer call is successful or not.
+
+```js
+function transferReturnResult(address payable receiver, uint256 amount, uint256 gasStipend) internal nonpayable
 returns(bool)
 ```
 
-**Arguments**
+**Returns**
 
-| Name        | Type           | Description  |
-| ------------- |------------- | -----|
-| ife | struct PaymentExitDataModel.InFlightExit |  | 
-| index | uint16 |  | 
-
-### isOutputPiggybacked
-
-```js
-function isOutputPiggybacked(struct PaymentExitDataModel.InFlightExit ife, uint16 index) internal pure
-returns(bool)
-```
+a flag showing the call is successful or not
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| ife | struct PaymentExitDataModel.InFlightExit |  | 
-| index | uint16 |  | 
-
-### setInputPiggybacked
-
-```js
-function setInputPiggybacked(struct PaymentExitDataModel.InFlightExit ife, uint16 index) internal nonpayable
-```
-
-**Arguments**
-
-| Name        | Type           | Description  |
-| ------------- |------------- | -----|
-| ife | struct PaymentExitDataModel.InFlightExit |  | 
-| index | uint16 |  | 
-
-### clearInputPiggybacked
-
-```js
-function clearInputPiggybacked(struct PaymentExitDataModel.InFlightExit ife, uint16 index) internal nonpayable
-```
-
-**Arguments**
-
-| Name        | Type           | Description  |
-| ------------- |------------- | -----|
-| ife | struct PaymentExitDataModel.InFlightExit |  | 
-| index | uint16 |  | 
-
-### setOutputPiggybacked
-
-```js
-function setOutputPiggybacked(struct PaymentExitDataModel.InFlightExit ife, uint16 index) internal nonpayable
-```
-
-**Arguments**
-
-| Name        | Type           | Description  |
-| ------------- |------------- | -----|
-| ife | struct PaymentExitDataModel.InFlightExit |  | 
-| index | uint16 |  | 
-
-### clearOutputPiggybacked
-
-```js
-function clearOutputPiggybacked(struct PaymentExitDataModel.InFlightExit ife, uint16 index) internal nonpayable
-```
-
-**Arguments**
-
-| Name        | Type           | Description  |
-| ------------- |------------- | -----|
-| ife | struct PaymentExitDataModel.InFlightExit |  | 
-| index | uint16 |  | 
-
-### isInFirstPhase
-
-```js
-function isInFirstPhase(struct PaymentExitDataModel.InFlightExit ife, uint256 minExitPeriod) internal view
-returns(bool)
-```
-
-**Arguments**
-
-| Name        | Type           | Description  |
-| ------------- |------------- | -----|
-| ife | struct PaymentExitDataModel.InFlightExit |  | 
-| minExitPeriod | uint256 |  | 
+| receiver | address payable | the address to receive ETH | 
+| amount | uint256 | the amount of ETH (in wei) to transfer | 
+| gasStipend | uint256 | the maximum amount of gas to be used during the transfer call | 
 
 ## Contracts
 

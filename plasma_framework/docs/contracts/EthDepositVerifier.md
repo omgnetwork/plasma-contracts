@@ -12,29 +12,27 @@ Implementation of ETH deposit verifier using payment transaction as the deposit 
 **Constants & Variables**
 
 ```js
-//public members
+uint256 public depositTxType;
 uint256 public supportedOutputType;
-
-//internal members
-uint8 internal constant DEPOSIT_TX_TYPE;
 
 ```
 
 ## Functions
 
-- [(uint256 outputType)](#)
+- [(uint256 txType, uint256 outputType)](#)
 - [verify(bytes depositTx, uint256 amount, address sender)](#verify)
 
 ### 
 
 ```js
-function (uint256 outputType) public nonpayable
+function (uint256 txType, uint256 outputType) public nonpayable
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
+| txType | uint256 |  | 
 | outputType | uint256 |  | 
 
 ### verify
@@ -121,6 +119,7 @@ function verify(bytes depositTx, uint256 amount, address sender) external view
 * [Quarantine](Quarantine.md)
 * [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
+* [SafeEthTransfer](SafeEthTransfer.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)
 * [TxFinalizationModel](TxFinalizationModel.md)

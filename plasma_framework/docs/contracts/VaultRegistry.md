@@ -50,8 +50,11 @@ modifier onlyFromNonQuarantinedVault() internal
 
 ### 
 
-It takes at least 1 minExitPeriod for each new vault contract to start protecting deposit transaction in mempool
-     see: https://github.com/omisego/plasma-contracts/issues/173
+It takes at least 2 minExitPeriod for each new vault contract to start.
+     This is to protect deposit transactions already in mempool,
+     and also make sure user only needs to SE within first week when invalid vault is registered.
+     see: https://github.com/omisego/plasma-contracts/issues/412
+          https://github.com/omisego/plasma-contracts/issues/173
 
 ```js
 function (uint256 _minExitPeriod, uint256 _initialImmuneVaults) public nonpayable
@@ -190,6 +193,7 @@ returns(uint256)
 * [Quarantine](Quarantine.md)
 * [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
+* [SafeEthTransfer](SafeEthTransfer.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)
 * [TxFinalizationModel](TxFinalizationModel.md)
