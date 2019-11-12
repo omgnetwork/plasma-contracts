@@ -44,6 +44,8 @@ contract('RLP invalid tests', () => {
                 await expectRevert(this.rlp.decodeString(encoded), 'Invalid RLP encoding');
             } else if (testName.includes('longstringInvalidEncodedLength')) {
                 await expectRevert(this.rlp.decodePayloadOffset(encoded), 'Decoded RLPItem payload length is invalid');
+            } else if (testName.includes('UInt')) {
+                await expectRevert(this.rlp.decodeUint(encoded), 'Leading zeros are invalid');
             }
         });
     });

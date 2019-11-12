@@ -109,5 +109,17 @@
 	"longstringInvalidEncodedLength1": {
 		"in": "Lorem ipsum dolor sit amet, consectetur adipisicing elit",
 		"out": "0xb911"
+	},
+	"leadingZerosInUInt": {
+		"in": "INVALID",
+		"out": "0x83001234"
+	},
+	"leadingZerosInUInt2": {
+		"in": "INVALID",
+		"out": "0x8400001234"
+	},
+	"leadingZerosInUInt3": {
+		"in": "INVALID",
+		"out": "0x820000"
 	}
 }
