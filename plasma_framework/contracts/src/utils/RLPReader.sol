@@ -102,16 +102,27 @@ library RLPReader {
         uint256 offset = decodePayloadOffset(item);
         uint256 len = itemLen - offset;
 
+<<<<<<< HEAD
         uint256 result;
         uint256 memPtr = item.memPtr + offset;
+||||||| constructed merge base
+        uint result;
+        uint memPtr = item.memPtr + offset;
+=======
+        uint result;
+        uint byte0;
+        uint memPtr = item.memPtr + offset;
+>>>>>>> fix: rlp catch invalid leading zeros
         // solhint-disable-next-line no-inline-assembly
         assembly {
             result := mload(memPtr)
+            byte0 := byte(0, result)
             // shift to the correct location if necessary
             if lt(len, 32) {
                 result := div(result, exp(256, sub(32, len)))
             }
         }
+        require(!(byte0 == 0 && len > 1), "Leading zeros are invalid");
 
         return result;
     }
