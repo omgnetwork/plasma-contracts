@@ -24,6 +24,10 @@ contract.skip('PriorityQueue Load Test', ([framework]) => {
          * This test is designed to inject and deleted every BATCH_SIZE.
          * The test itself requires some gas more than usually Ethereum block gas limit,
          * also quite a lot much more initial Eth fund on the test accounts.
+         *
+         * During this test, it injects sorted value to heap as sorted array would fullfil the requirement for heap.
+         * For each batch, it inserts 0 and delMin (which would always be 0 as 0 is the min value of uint).
+         * Reason of using 0 is to make sure it would be testing worse case + it would be removed right after.
          */
         it('should test and print the gas cost for each batch size items', async () => {
             const values = [...Array(TEST_SIZE)].map(() => {
