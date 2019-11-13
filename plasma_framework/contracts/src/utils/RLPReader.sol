@@ -92,7 +92,7 @@ library RLPReader {
      * @notice Create a uint256 from a RLPItem
      * @param item RLPItem
      */
-    function toUint(RLPItem memory item) internal pure returns (uint) {
+    function toUint(RLPItem memory item) internal pure returns (uint256) {
         require(item.len > 0 && item.len <= 33, "Item length must be between 1 and 33 bytes");
         uint256 itemLen = decodeItemLengthUnsafe(item.memPtr);
         require(itemLen <= item.len, "Decoded length is greater than input data");
@@ -119,7 +119,7 @@ library RLPReader {
     * @param item RLPItem
     * @return The number of items in a inside an RLP encoded list
     */
-    function countEncodedItems(RLPItem memory item) private pure returns (uint) {
+    function countEncodedItems(RLPItem memory item) private pure returns (uint256) {
         uint256 count = 0;
         uint256 currPtr = item.memPtr + decodePayloadOffset(item);
         uint256 endPtr = item.memPtr + item.len;
@@ -138,7 +138,7 @@ library RLPReader {
      * @param memPtr Pointer to the dynamic bytes array in memory
      * @return The encoded RLPItem length
      */
-    function decodeItemLengthUnsafe(uint256 memPtr) internal pure returns (uint) {
+    function decodeItemLengthUnsafe(uint256 memPtr) internal pure returns (uint256) {
         uint256 decodedItemLengthUnsafe;
         uint256 byte0;
         // solhint-disable-next-line no-inline-assembly
@@ -195,7 +195,7 @@ library RLPReader {
      * @param item RLPItem
      * @return Length of the RLPItem payload length
      */
-    function decodePayloadOffset(RLPItem memory item) internal pure returns (uint) {
+    function decodePayloadOffset(RLPItem memory item) internal pure returns (uint256) {
         uint256 byte0;
         uint256 payloadOffsetLength;
         uint256 memPtr = item.memPtr;
