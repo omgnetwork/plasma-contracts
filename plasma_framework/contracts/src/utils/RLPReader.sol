@@ -1,9 +1,11 @@
 /**
  * @author Hamdi Allam hamdi.allam97@gmail.com
  * @notice RLP decoding library forked from https://github.com/hamdiallam/Solidity-RLP
- * @dev Added more test cases from https://github.com/ethereum/tests/tree/master/RLPTests
- *      Created more custom invalid test cases
- *      Added more checks to ensure the decoder reads within bounds of the input length
+ * @dev Some changes that were made to the library are:
+ *      - Added more test cases from https://github.com/ethereum/tests/tree/master/RLPTests
+ *      - Created more custom invalid test cases
+ *      - Added more checks to ensure the decoder reads within bounds of the input length
+ *      - Moved utility functions necessary to run some of the tests to the RLPMock.sol
 */
 
 pragma solidity ^0.5.0;
