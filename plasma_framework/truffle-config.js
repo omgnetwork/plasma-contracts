@@ -17,24 +17,6 @@ module.exports = {
             gas: 6000000,
             network_id: '*',
         },
-        mainnet: {
-            host: process.env.ETH_CLIENT_HOST || '127.0.0.1',
-            port: process.env.ETH_CLIENT_PORT || 8545,
-            from: process.env.DEPLOYER_ADDRESS,
-            network_id: 1,
-        },
-        rinkeby: {
-            host: process.env.ETH_CLIENT_HOST || '127.0.0.1',
-            port: process.env.ETH_CLIENT_PORT || 8545,
-            from: process.env.DEPLOYER_ADDRESS,
-            network_id: 4,
-        },
-        goerli: {
-            host: process.env.ETH_CLIENT_HOST || '127.0.0.1',
-            port: process.env.ETH_CLIENT_PORT || 8545,
-            from: process.env.DEPLOYER_ADDRESS,
-            network_id: 5,
-        },
         // Remote means that the remote client does not possess the private keys.
         // Transactions need to be signed locally with the given private keys
         // before getting submitted to the remote client.
