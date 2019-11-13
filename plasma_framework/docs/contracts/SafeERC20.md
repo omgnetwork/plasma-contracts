@@ -181,4 +181,3 @@ function callOptionalReturn(IERC20 token, bytes data) private nonpayable
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)
 * [WireTransaction](WireTransaction.md)
-* [ZeroHashesProvider](ZeroHashesProvider.md)

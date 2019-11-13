@@ -34,7 +34,7 @@ contract Vault is OnlyFromAddress {
      */
     function getZeroHashes() private pure returns (bytes32[16] memory) {
         bytes32[16] memory zeroHashes;
-        bytes32 zeroHash = keccak256(abi.encodePacked(uint256(0)));
+        bytes32 zeroHash = keccak256(abi.encodePacked(LEAF_SALT, uint256(0)));
         for (uint i = 0; i < 16; i++) {
             zeroHashes[i] = zeroHash;
             zeroHash = keccak256(abi.encodePacked(NODE_SALT, zeroHash, zeroHash));

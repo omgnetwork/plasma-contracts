@@ -5,16 +5,30 @@ const { expect } = require('chai');
 
 const { MerkleTree } = require('../../helpers/merkle.js');
 
+const Testlang = require('../../helpers/testlang.js');
+const config = require('../../../config.js');
+
 contract('Merkle', () => {
     const maxSize = 2 ** 16;
-    const leaves = [...Array(maxSize).keys()].map(index => web3.utils.bytesToHex(`leaf ${index}`));
+    const DEPOSIT_VALUE = 1000000;
+    const OUTPUT_TYPE_PAYMENT = config.registerKeys.outputTypes.payment;
+    const MERKLE_TREE_DEPTH = 16;
 
-    before('setup merkle contract and tree value', async () => {
+    const alicePrivateKey = '0x7151e5dab6f8e95b5436515b83f423c4df64fe4c6149f864daa209b26adb10ca';
+    const password = 'password1234';
+
+    before('setup merkle contract', async () => {
         this.merkleContract = await Merkle.new();
-        this.merkleTree = new MerkleTree(leaves);
     });
 
     describe('checkMembership', () => {
+        const leaves = [...Array(maxSize).keys()].map(index => web3.utils.bytesToHex(`leaf ${index}`));
+
+        before('setup merkle contract and tree value', async () => {
+            this.merkleContract = await Merkle.new();
+            this.merkleTree = new MerkleTree(leaves);
+        });
+
         describe('Prove inclusion', () => {
             const testIndex = [0, 1, 2, 3, maxSize - 2, maxSize - 1];
 
@@ -80,5 +94,22 @@ contract('Merkle', () => {
                 'Length of Merkle proof must be a multiple of 32',
             );
         });
+    });
+
+    it('check membership for tree with empty leaves', async () => {
+        let alice = await web3.eth.personal.importRawKey(alicePrivateKey, password);
+        alice = web3.utils.toChecksumAddress(alice);
+
+        const depositTx = Testlang.deposit(OUTPUT_TYPE_PAYMENT, DEPOSIT_VALUE, alice);
+        const merkleTreeForDepositTx = new MerkleTree([depositTx], MERKLE_TREE_DEPTH);
+        const merkleProofForDepositTx = merkleTreeForDepositTx.getInclusionProof(depositTx);
+
+        const result = await this.merkleContract.checkMembership(
+            depositTx,
+            0,
+            merkleTreeForDepositTx.root,
+            merkleProofForDepositTx,
+        );
+        expect(result).to.be.true;
     });
 });

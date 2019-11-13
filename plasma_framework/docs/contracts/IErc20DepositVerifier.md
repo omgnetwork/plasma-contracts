@@ -107,4 +107,3 @@ Verified (owner, token, amount) of the deposit ERC20 token data
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)
 * [WireTransaction](WireTransaction.md)
-* [ZeroHashesProvider](ZeroHashesProvider.md)

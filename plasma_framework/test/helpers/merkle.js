@@ -1,6 +1,6 @@
-const NullHash = web3.utils.sha3('\0'.repeat(32));
 const LeafSalt = '0x00';
 const NodeSalt = '0x01';
+const NullHash = web3.utils.sha3('\0'.repeat(33));
 
 
 class MerkleNode {
@@ -55,7 +55,7 @@ class MerkleTree {
         while (i < levelSize) {
             // JS stores hashes as hex-encoded strings
             const combinedData = NodeSalt + level[i].data.slice(2) + level[i + 1].data.slice(2);
-            const combined = web3.utils.sha3(web3.utils.hexToBytes(combinedData));
+            const combined = web3.utils.sha3(combinedData);
             const nextNode = new MerkleNode(combined, level[i], level[i + 1]);
             nextLevel.push(nextNode);
             i += 2;

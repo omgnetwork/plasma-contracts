@@ -138,4 +138,3 @@ function withdraw(address payable receiver, address token, uint256 amount) exter
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)
 * [WireTransaction](WireTransaction.md)
-* [ZeroHashesProvider](ZeroHashesProvider.md)

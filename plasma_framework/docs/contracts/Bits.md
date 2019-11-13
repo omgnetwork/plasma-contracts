@@ -175,4 +175,3 @@ True, if the bit is '0'; otherwise, False
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)
 * [WireTransaction](WireTransaction.md)
-* [ZeroHashesProvider](ZeroHashesProvider.md)
