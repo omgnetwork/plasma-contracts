@@ -38,7 +38,7 @@ contract('RLP official tests', () => {
             const original = tests[testName].in;
             const encoded = tests[testName].out;
 
-            if (testName === 'bigint') {
+            if (testName.startsWith('bigint')) {
                 // Special test that encodes a number bigger than max uint256 so it has to be decoded as bytes.
                 const expected = new BN(original.slice(1));
                 const decodedBytes = await this.rlp.decodeBytes(encoded);
