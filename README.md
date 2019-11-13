@@ -45,12 +45,12 @@ npm install
 
 You can then compile the contracts.
 ```
-./node_modules/.bin/truffle compile
+npx truffle compile
 ```
 
 Or run the tests
 ```
-./node_modules/.bin/truffle test
+npm run test
 ```
 
 ## Configuration
@@ -96,4 +96,21 @@ make test
 Running slow (overnight) tests:
 ```
 make runslow | tee raport.txt
+```
+
+### Run Load Tests
+We have code for load tests but is skipped by default. Currently it needs manual setup to run it locally.
+You should go to the `test/loadTests/` folder to find the test you would like to enable.
+Remove the `.skip` part on the test, and change it to `.only`.
+
+The load test would need a ETH network with super high block gas limit and high initial ETH fund for test accounts. You can do the following with ganache:
+
+```
+ganache-cli -e 10000000000000 -l 0xfffffffffff
+```
+
+Run the following command to run the test afterward:
+
+```
+npx truffle test --network loadTest
 ```
