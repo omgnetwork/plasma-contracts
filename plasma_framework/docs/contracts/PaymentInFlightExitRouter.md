@@ -346,4 +346,3 @@ function updatePiggybackBondSize(uint128 newBondSize) public nonpayable onlyFrom
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)
 * [WireTransaction](WireTransaction.md)
-* [ZeroHashesProvider](ZeroHashesProvider.md)

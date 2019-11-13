@@ -125,4 +125,3 @@ function registerSpendingCondition(uint256 outputType, uint256 spendingTxType, I
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)
 * [WireTransaction](WireTransaction.md)
-* [ZeroHashesProvider](ZeroHashesProvider.md)

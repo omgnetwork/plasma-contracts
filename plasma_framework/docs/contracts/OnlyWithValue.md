@@ -98,4 +98,3 @@ modifier onlyWithValue(uint256 _value) internal
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)
 * [WireTransaction](WireTransaction.md)
-* [ZeroHashesProvider](ZeroHashesProvider.md)

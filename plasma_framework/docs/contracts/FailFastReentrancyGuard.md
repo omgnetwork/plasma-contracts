@@ -103,4 +103,3 @@ modifier nonReentrant(PlasmaFramework framework) internal
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)
 * [WireTransaction](WireTransaction.md)
-* [ZeroHashesProvider](ZeroHashesProvider.md)

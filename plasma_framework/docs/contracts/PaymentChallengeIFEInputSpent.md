@@ -189,4 +189,3 @@ function verifySpendingCondition(struct PaymentChallengeIFEInputSpent.ChallengeI
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)
 * [WireTransaction](WireTransaction.md)
-* [ZeroHashesProvider](ZeroHashesProvider.md)

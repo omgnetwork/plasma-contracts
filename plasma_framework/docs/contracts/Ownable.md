@@ -213,4 +213,3 @@ function _transferOwnership(address newOwner) internal nonpayable
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)
 * [WireTransaction](WireTransaction.md)
-* [ZeroHashesProvider](ZeroHashesProvider.md)

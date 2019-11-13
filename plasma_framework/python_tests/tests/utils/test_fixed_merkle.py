@@ -50,9 +50,12 @@ def test_empty_tree(depth):
 def test_create_membership_proof():
     leaf = b'c'
     leaves = [b'a', b'b', leaf]
-    proof = FixedMerkle(2, leaves).create_membership_proof(leaves[2])
-    root_hash = sha3(NODE_SALT + sha3(LEAF_SALT + leaves[0]) + sha3(LEAF_SALT + leaves[1]))
-    assert proof == sha3(LEAF_SALT + NULL_HASH) + root_hash
+    proof = FixedMerkle(2, leaves).create_membership_proof(leaf)
+    leaf_hash = sha3(LEAF_SALT + leaf)
+    node_hash_1 = sha3(NODE_SALT + sha3(LEAF_SALT + leaves[0]) + sha3(LEAF_SALT + leaves[1]))
+    node_hash_2 = sha3(NODE_SALT + leaf_hash + sha3(NULL_HASH))
+    root_hash = sha3(NODE_SALT + node_hash_1 + node_hash_2)
+    assert proof == leaf_hash + node_hash_2 + root_hash
 
 
 def test_check_membership():

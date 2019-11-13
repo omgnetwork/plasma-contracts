@@ -102,4 +102,3 @@ function verify(bytes depositTx, uint256 amount, address sender) external view
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)
 * [WireTransaction](WireTransaction.md)
-* [ZeroHashesProvider](ZeroHashesProvider.md)

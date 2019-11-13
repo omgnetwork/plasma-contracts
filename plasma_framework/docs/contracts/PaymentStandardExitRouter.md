@@ -225,4 +225,3 @@ function processStandardExit(uint160 exitId, address token) internal nonpayable
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)
 * [WireTransaction](WireTransaction.md)
-* [ZeroHashesProvider](ZeroHashesProvider.md)
