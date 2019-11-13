@@ -17,8 +17,8 @@ library RLPReader {
     uint8 constant internal WORD_SIZE = 32;
 
     struct RLPItem {
-        uint len;
-        uint memPtr;
+        uint256 len;
+        uint256 memPtr;
     }
 
     /**
@@ -27,7 +27,7 @@ library RLPReader {
      * @return The decoded RLPItem
      */
     function toRlpItem(bytes memory item) internal pure returns (RLPItem memory) {
-        uint memPtr;
+        uint256 memPtr;
 
         // solhint-disable-next-line no-inline-assembly
         assembly {
@@ -45,16 +45,16 @@ library RLPReader {
     function toList(RLPItem memory item) internal pure returns (RLPItem[] memory) {
         require(isList(item), "Item is not a list");
 
-        uint listLength = decodeItemLengthUnsafe(item.memPtr);
+        uint256 listLength = decodeItemLengthUnsafe(item.memPtr);
         require(listLength == item.len, "Decoded RLP length for list is invalid");
 
-        uint items = countEncodedItems(item);
+        uint256 items = countEncodedItems(item);
         RLPItem[] memory result = new RLPItem[](items);
 
-        uint memPtr = item.memPtr + decodePayloadOffset(item);
-        uint dataLen;
-        uint lengthSum;
-        for (uint i = 0; i < items; i++) {
+        uint256 memPtr = item.memPtr + decodePayloadOffset(item);
+        uint256 dataLen;
+        uint256 lengthSum;
+        for (uint256 i = 0; i < items; i++) {
             dataLen = decodeItemLengthUnsafe(memPtr);
             lengthSum += dataLen;
             require(lengthSum < item.len, "Decoded length of RLP item in list is invalid");
@@ -70,7 +70,7 @@ library RLPReader {
         if (item.len == 0) return false;
 
         uint8 byte0;
-        uint memPtr = item.memPtr;
+        uint256 memPtr = item.memPtr;
         // solhint-disable-next-line no-inline-assembly
         assembly {
             byte0 := byte(0, mload(memPtr))
@@ -89,19 +89,19 @@ library RLPReader {
     }
 
     /**
-     * @notice Create a uint from a RLPItem
+     * @notice Create a uint256 from a RLPItem
      * @param item RLPItem
      */
     function toUint(RLPItem memory item) internal pure returns (uint) {
         require(item.len > 0 && item.len <= 33, "Item length must be between 1 and 33 bytes");
-        uint itemLen = decodeItemLengthUnsafe(item.memPtr);
+        uint256 itemLen = decodeItemLengthUnsafe(item.memPtr);
         require(itemLen <= item.len, "Decoded length is greater than input data");
 
-        uint offset = decodePayloadOffset(item);
-        uint len = itemLen - offset;
+        uint256 offset = decodePayloadOffset(item);
+        uint256 len = itemLen - offset;
 
-        uint result;
-        uint memPtr = item.memPtr + offset;
+        uint256 result;
+        uint256 memPtr = item.memPtr + offset;
         // solhint-disable-next-line no-inline-assembly
         assembly {
             result := mload(memPtr)
@@ -120,9 +120,9 @@ library RLPReader {
     * @return The number of items in a inside an RLP encoded list
     */
     function countEncodedItems(RLPItem memory item) private pure returns (uint) {
-        uint count = 0;
-        uint currPtr = item.memPtr + decodePayloadOffset(item);
-        uint endPtr = item.memPtr + item.len;
+        uint256 count = 0;
+        uint256 currPtr = item.memPtr + decodePayloadOffset(item);
+        uint256 endPtr = item.memPtr + item.len;
         while (currPtr < endPtr) {
             currPtr = currPtr + decodeItemLengthUnsafe(currPtr);
             require(currPtr <= endPtr, "Invalid decoded length of RLP item found during counting items in a list");
@@ -138,9 +138,9 @@ library RLPReader {
      * @param memPtr Pointer to the dynamic bytes array in memory
      * @return The encoded RLPItem length
      */
-    function decodeItemLengthUnsafe(uint memPtr) internal pure returns (uint) {
-        uint decodedItemLengthUnsafe;
-        uint byte0;
+    function decodeItemLengthUnsafe(uint256 memPtr) internal pure returns (uint) {
+        uint256 decodedItemLengthUnsafe;
+        uint256 byte0;
         // solhint-disable-next-line no-inline-assembly
         assembly {
             byte0 := byte(0, mload(memPtr))
@@ -151,8 +151,8 @@ library RLPReader {
         } else if (byte0 < STRING_LONG_START) {
             decodedItemLengthUnsafe = (byte0 - STRING_SHORT_START) + 1;
         } else if (byte0 < LIST_SHORT_START) {
-            uint dataLen;
-            uint byte1;
+            uint256 dataLen;
+            uint256 byte1;
             // solhint-disable-next-line no-inline-assembly
             assembly {
                 let byteLen := sub(byte0, 0xb7) // # of bytes the actual length is
@@ -170,8 +170,8 @@ library RLPReader {
         } else if (byte0 < LIST_LONG_START) {
             decodedItemLengthUnsafe = (byte0 - LIST_SHORT_START) + 1;
         } else {
-            uint dataLen;
-            uint byte1;
+            uint256 dataLen;
+            uint256 byte1;
             // solhint-disable-next-line no-inline-assembly
             assembly {
                 let lengthLen := sub(byte0, 0xf7)
@@ -196,9 +196,9 @@ library RLPReader {
      * @return Length of the RLPItem payload length
      */
     function decodePayloadOffset(RLPItem memory item) internal pure returns (uint) {
-        uint byte0;
-        uint payloadOffsetLength;
-        uint memPtr = item.memPtr;
+        uint256 byte0;
+        uint256 payloadOffsetLength;
+        uint256 memPtr = item.memPtr;
 
         // solhint-disable-next-line no-inline-assembly
         assembly {
@@ -209,7 +209,7 @@ library RLPReader {
             payloadOffsetLength = 0;
         } else if (byte0 < STRING_LONG_START) {
             if (item.len == 2){
-                uint byte1;
+                uint256 byte1;
                 // solhint-disable-next-line no-inline-assembly
                 assembly {
                     byte1 := byte(0, mload(add(memPtr, 1)))
