@@ -2,7 +2,7 @@ const EthDepositVerifier = artifacts.require('EthDepositVerifier');
 const EthVault = artifacts.require('EthVault');
 const PlasmaFramework = artifacts.require('PlasmaFramework');
 
-const config = require('./config.js');
+const config = require('../config.js');
 
 module.exports = async (
     deployer,
@@ -11,8 +11,16 @@ module.exports = async (
     [deployerAddress, maintainerAddress, authorityAddress],
 ) => {
     const plasmaFramework = await PlasmaFramework.deployed();
-    const ethDepositVerifier = await EthDepositVerifier.new();
-    const ethVault = await EthVault.new(plasmaFramework.address, { from: maintainerAddress });
+
+    await deployer.deploy(
+        EthDepositVerifier,
+        config.registerKeys.txTypes.payment,
+        config.registerKeys.outputTypes.payment,
+    );
+    const ethDepositVerifier = await EthDepositVerifier.deployed();
+
+    await deployer.deploy(EthVault, plasmaFramework.address, { from: maintainerAddress });
+    const ethVault = await EthVault.deployed();
     await ethVault.setDepositVerifier(ethDepositVerifier.address, { from: maintainerAddress });
 
     await plasmaFramework.registerVault(

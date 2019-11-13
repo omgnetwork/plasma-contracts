@@ -40,7 +40,13 @@ contract Vault is OnlyFromAddress {
     /**
      * @notice Sets the deposit verifier contract, which may be called only by the operator
      * @dev emit SetDepositVerifierCalled
-     * @dev When one contract is already set, the next one is effective after MIN_EXIT_PERIOD
+     * @dev When one contract is already set, the next one is effective after 2 * MIN_EXIT_PERIOD.
+     *      This is to protect deposit transactions already in mempool,
+     *      and also make sure user only needs to SE within first week when invalid vault is registered.
+     *
+     *      see: https://github.com/omisego/plasma-contracts/issues/412
+     *           https://github.com/omisego/plasma-contracts/issues/173
+     *
      * @param _verifier Address of the verifier contract
      */
     function setDepositVerifier(address _verifier) public onlyFrom(framework.getMaintainer()) {
@@ -49,7 +55,7 @@ contract Vault is OnlyFromAddress {
         if (depositVerifiers[0] != address(0)) {
             depositVerifiers[0] = getEffectiveDepositVerifier();
             depositVerifiers[1] = _verifier;
-            newDepositVerifierMaturityTimestamp = now + framework.minExitPeriod();
+            newDepositVerifierMaturityTimestamp = now + 2 * framework.minExitPeriod();
         } else {
             depositVerifiers[0] = _verifier;
         }

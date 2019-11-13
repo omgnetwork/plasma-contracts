@@ -4,7 +4,7 @@ from web3.exceptions import MismatchedABI
 from plasma_core.child_chain import ChildChain
 from plasma_core.block import Block
 from plasma_core.transaction import Transaction, TransactionOutput
-from plasma_core.constants import MIN_EXIT_PERIOD, NULL_SIGNATURE, NULL_ADDRESS
+from plasma_core.constants import MIN_EXIT_PERIOD, NULL_ADDRESS
 from plasma_core.utils.transactions import decode_utxo_id, encode_utxo_id
 from plasma_core.utils.merkle.fixed_merkle import FixedMerkle
 
@@ -193,7 +193,7 @@ class TestingLanguage:
         inputs = [decode_utxo_id(input_id) for input_id in input_ids]
         spend_tx = Transaction(inputs=inputs, outputs=outputs, metadata=metadata)
         for i in range(0, len(inputs)):
-            spend_tx.sign(i, accounts[i], verifyingContract=self.root_chain.plasma_framework)
+            spend_tx.sign(i, accounts[i], verifying_contract=self.root_chain.plasma_framework)
         blknum = self.submit_block([spend_tx], force_invalid=force_invalid)
         spend_id = encode_utxo_id(blknum, 0, 0)
         return spend_id
@@ -214,19 +214,20 @@ class TestingLanguage:
         self.root_chain.startStandardExit(output_id, output_tx.encoded, proof,
                                           **{'value': bond, 'from': account.address})
 
-    def challenge_standard_exit(self, output_id, spend_id, input_index=None):
+    def challenge_standard_exit(self, output_id, spend_id, input_index=None, signature=None):
         spend_tx = self.child_chain.get_transaction(spend_id)
-        signature = NULL_SIGNATURE
+        exiting_tx = self.child_chain.get_transaction(output_id)
+
         if input_index is None:
-            for i in range(0, 4):
-                signature = spend_tx.signatures[i]
-                if spend_tx.inputs[i].identifier == output_id and signature != NULL_SIGNATURE:
+            for i in range(len(spend_tx.inputs)):
+                if spend_tx.inputs[i].identifier == output_id:
                     input_index = i
                     break
-        if input_index is None:
-            input_index = 3
+        if signature is None:
+            signature = spend_tx.signatures[input_index]
+
         exit_id = self.get_standard_exit_id(output_id)
-        self.root_chain.challengeStandardExit(exit_id, spend_tx.encoded, input_index, signature)
+        self.root_chain.challengeStandardExit(exit_id, spend_tx.encoded, input_index, signature, exiting_tx.encoded)
 
     def start_in_flight_exit(self, tx_id, bond=None, sender=None):
         if sender is None:

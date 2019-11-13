@@ -27,7 +27,7 @@ contract('VaultRegistry', ([_, maintainer, other]) => {
         });
 
         it('should accept call when called by registered and non quarantined vault contract', async () => {
-            await time.increase(MIN_EXIT_PERIOD + 1);
+            await time.increase(2 * MIN_EXIT_PERIOD + 1);
             expect(await this.dummyVault.checkOnlyFromNonQuarantinedVault()).to.be.true;
         });
 

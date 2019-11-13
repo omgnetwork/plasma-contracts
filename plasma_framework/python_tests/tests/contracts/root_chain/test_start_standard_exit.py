@@ -102,7 +102,7 @@ def test_start_standard_exit_wrong_oindex_should_fail(testlang):
 
     spend_tx = Transaction(inputs=[decode_utxo_id(deposit_id)],
                            outputs=[(alice.address, NULL_ADDRESS, alice_money), (bob.address, NULL_ADDRESS, bob_money)])
-    spend_tx.sign(0, alice, verifyingContract=testlang.root_chain)
+    spend_tx.sign(0, alice, verifying_contract=testlang.root_chain)
     blknum = testlang.submit_block([spend_tx])
     alice_utxo = encode_utxo_id(blknum, 0, 0)
     bob_utxo = encode_utxo_id(blknum, 0, 1)
@@ -245,7 +245,7 @@ def test_old_signature_scheme_does_not_work_any_longer(testlang, utxo):
         testlang.root_chain.challengeStandardExit(exit_id, spend_tx.encoded, 0, old_signature)
 
     # sanity check: let's provide new schema signature for a challenge
-    new_signature = alice.key.sign_msg_hash(hash_struct(spend_tx, verifyingContract=testlang.root_chain)).to_bytes()
+    new_signature = alice.key.sign_msg_hash(hash_struct(spend_tx, verifying_contract=testlang.root_chain)).to_bytes()
     testlang.root_chain.challengeStandardExit(exit_id, spend_tx.encoded, 0, new_signature)
 
 
@@ -260,12 +260,12 @@ def test_signature_scheme_respects_verifying_contract(testlang, utxo):
 
     spend_tx = Transaction(inputs=[decode_utxo_id(spend_id)], outputs=outputs)
 
-    bad_contract_signature = alice.key.sign_msg_hash(hash_struct(spend_tx, verifyingContract=None)).to_bytes()
+    bad_contract_signature = alice.key.sign_msg_hash(hash_struct(spend_tx, verifying_contract=None)).to_bytes()
 
     # challenge will fail on signature verification
     with pytest.raises(TransactionFailed):
         testlang.root_chain.challengeStandardExit(exit_id, spend_tx.encoded, 0, bad_contract_signature)
 
     # sanity check
-    proper_signature = alice.key.sign_msg_hash(hash_struct(spend_tx, verifyingContract=testlang.root_chain)).to_bytes()
+    proper_signature = alice.key.sign_msg_hash(hash_struct(spend_tx, verifying_contract=testlang.root_chain)).to_bytes()
     testlang.root_chain.challengeStandardExit(exit_id, spend_tx.encoded, 0, proper_signature)

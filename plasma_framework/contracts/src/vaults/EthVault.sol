@@ -5,8 +5,6 @@ import "./verifiers/IEthDepositVerifier.sol";
 import "../framework/PlasmaFramework.sol";
 
 contract EthVault is Vault {
-    uint256 private withdrawEntryCounter = 0;
-
     event EthWithdrawn(
         address indexed receiver,
         uint256 amount
@@ -32,7 +30,10 @@ contract EthVault is Vault {
      * @param _depositTx RLP-encoded transaction to act as the deposit
      */
     function deposit(bytes calldata _depositTx) external payable {
-        IEthDepositVerifier(getEffectiveDepositVerifier()).verify(_depositTx, msg.value, msg.sender);
+        address depositVerifier = super.getEffectiveDepositVerifier();
+        require(depositVerifier != address(0), "Deposit verifier has not been set");
+
+        IEthDepositVerifier(depositVerifier).verify(_depositTx, msg.value, msg.sender);
         uint256 blknum = super._submitDepositBlock(_depositTx);
 
         emit DepositCreated(msg.sender, blknum, address(0), msg.value);

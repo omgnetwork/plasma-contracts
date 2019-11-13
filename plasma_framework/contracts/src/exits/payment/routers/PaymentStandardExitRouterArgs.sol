@@ -9,7 +9,7 @@ library PaymentStandardExitRouterArgs {
      * @param outputTxInclusionProof A Merkle proof showing that the transaction was included
     */
     struct StartStandardExitArgs {
-        uint192 utxoPos;
+        uint256 utxoPos;
         bytes rlpOutputTx;
         bytes outputGuardPreimage;
         bytes outputTxInclusionProof;

@@ -6,14 +6,6 @@ View Source: [contracts/src/vaults/EthVault.sol](../../contracts/src/vaults/EthV
 
 **EthVault**
 
-## Contract Members
-**Constants & Variables**
-
-```js
-uint256 private withdrawEntryCounter;
-
-```
-
 **Events**
 
 ```js

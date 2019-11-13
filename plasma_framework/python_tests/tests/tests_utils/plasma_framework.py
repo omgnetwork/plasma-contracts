@@ -1,6 +1,6 @@
 import enum
 
-from plasma_core.constants import CHILD_BLOCK_INTERVAL
+from plasma_core.constants import CHILD_BLOCK_INTERVAL, EMPTY_BYTES
 from plasma_core.transaction import TxOutputTypes, TxTypes
 from plasma_core.utils.transactions import decode_utxo_id
 from plasma_core.utils.exit_priority import parse_exit_priority
@@ -37,8 +37,14 @@ class PlasmaFramework:
         self._setup_exit_games(get_contract, maintainer)
 
     def _setup_deposit_verifiers(self, get_contract, maintainer):
-        self.eth_deposit_verifier = get_contract('EthDepositVerifier', sender=maintainer)
-        self.erc20_deposit_verifier = get_contract('Erc20DepositVerifier', sender=maintainer)
+        self.eth_deposit_verifier = get_contract(
+            'EthDepositVerifier',
+            args=(TxTypes.PAYMENT.value, TxOutputTypes.PAYMENT.value,),
+            sender=maintainer)
+        self.erc20_deposit_verifier = get_contract(
+            'Erc20DepositVerifier',
+            args=(TxTypes.PAYMENT.value, TxOutputTypes.PAYMENT.value,),
+            sender=maintainer)
 
     def _setup_vaults(self, get_contract, maintainer):
         self.eth_vault = get_contract('EthVault', args=(self.plasma_framework.address,), sender=maintainer)
@@ -50,10 +56,30 @@ class PlasmaFramework:
 
         self.erc20_vault_id = 2
         self.erc20_vault.setDepositVerifier(self.erc20_deposit_verifier.address, **{"from": maintainer.address})
-        self.plasma_framework.registerVault(self.erc20_vault_id, self.erc20_vault.address, **{"from": maintainer.address})
+        self.plasma_framework.registerVault(self.erc20_vault_id, self.erc20_vault.address,
+                                            **{"from": maintainer.address})
 
     def _setup_spending_conditions(self, get_contract, maintainer):
+        self.spending_conditions = dict()
         self.spending_condition_registry = get_contract("SpendingConditionRegistry", sender=maintainer)
+
+        def _register_spending_condition(spending_condition, tx_output_type, tx_type):
+            self.spending_conditions[(tx_output_type, tx_type)] = get_contract(
+                spending_condition,
+                args=(
+                    self.plasma_framework.address,
+                    tx_output_type.value,
+                    tx_type.value),
+                sender=maintainer)
+
+            self.spending_condition_registry.registerSpendingCondition(
+                tx_output_type.value,
+                tx_type.value,
+                self.spending_conditions[(tx_output_type, tx_type)].address,
+                **{'from': maintainer.address}
+            )
+
+        _register_spending_condition("PaymentOutputToPaymentTxCondition", TxOutputTypes.PAYMENT, TxTypes.PAYMENT)
 
     def _setup_output_guards(self, get_contract, maintainer):
         self.output_guard_registry = get_contract("OutputGuardHandlerRegistry", sender=maintainer)
@@ -149,8 +175,25 @@ class PlasmaFramework:
         args = (utxo_pos, output_tx, b'', output_tx_inclusion_proof)
         return self.payment_exit_game.startStandardExit(args, **kwargs)
 
-    def challengeStandardExit(self, standard_exit_id, challenge_tx, input_index, challenge_tx_sig):
-        raise NotImplementedError
+    def challengeStandardExit(self,
+                              standard_exit_id, challenge_tx,
+                              input_index,
+                              challenge_tx_sig,
+                              exiting_tx,
+                              **kwargs):
+        """ NOTICE: ALD takes more obligatory arguments (exiting_tx) in comparison to the RootChain contract """
+
+        # The following arguments are to be used in the future
+        spending_condition_optional_args = EMPTY_BYTES
+        output_guard_preimage = EMPTY_BYTES
+        challenge_tx_pos = 0
+        challenge_tx_inclusion_proof = EMPTY_BYTES
+
+        witness = challenge_tx_sig
+        args = (standard_exit_id, exiting_tx, challenge_tx, input_index, witness, spending_condition_optional_args,
+                output_guard_preimage, challenge_tx_pos, challenge_tx_inclusion_proof, challenge_tx_sig)
+
+        return self.payment_exit_game.challengeStandardExit(args, **kwargs)
 
     def startFeeExit(self, token, amount):
         raise NotImplementedError

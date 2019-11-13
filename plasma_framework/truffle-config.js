@@ -29,24 +29,24 @@ module.exports = {
             from: process.env.DEPLOYER_ADDRESS,
             network_id: 5,
         },
-        infura: {
+        // Remote means that the remote client does not possess the private keys.
+        // Transactions need to be signed locally with the given private keys
+        // before getting submitted to the remote client.
+        remote: {
             skipDryRun: true,
-            provider: () => {
-                const infuraUrl = `${process.env.INFURA_URL}/${process.env.INFURA_API_KEY}`;
-
-                // Replace double '//'
-                const cleanInfuraUrl = infuraUrl.replace(/([^:])(\/\/+)/g, '$1/');
-
-                return new HDWalletProvider(
-                    [
-                        process.env.DEPLOYER_PRIVATEKEY,
-                        process.env.MAINTAINER_PRIVATEKEY,
-                        process.env.AUTHORITY_PRIVATEKEY,
-                    ],
-                    cleanInfuraUrl,
-                    0, 3,
-                );
-            },
+            // Can't be a function otherwise it'll throw a JSON RPC error for some reason
+            // https://github.com/trufflesuite/truffle/issues/852#issuecomment-522367001
+            // Using 0's as private key because it'll throw an error if the private keys
+            // are undefined as this is instanciating a class....
+            provider: new HDWalletProvider(
+                [
+                    process.env.DEPLOYER_PRIVATEKEY || '0'.repeat(64),
+                    process.env.MAINTAINER_PRIVATEKEY || '0'.repeat(64),
+                    process.env.AUTHORITY_PRIVATEKEY || '0'.repeat(64),
+                ],
+                process.env.REMOTE_URL || 'http://127.0.0.1:8545',
+                0, 3,
+            ),
             network_id: '*',
         },
     },

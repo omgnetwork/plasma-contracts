@@ -23,7 +23,7 @@ struct PaymentEip712Lib.Constants internal eip712;
 
 ### 
 
-This is designed to be re-useable for all versions of payment transaction, so that 
+This is designed to be re-useable for all versions of payment transaction, so that
      inputTxType and spendingTxType of the payment output is injected instead
 
 ```js

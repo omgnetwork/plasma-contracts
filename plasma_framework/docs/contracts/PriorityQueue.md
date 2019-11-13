@@ -80,7 +80,7 @@ returns(uint256[])
 
 ### insert
 
-Inserts an element into the queue by the owner
+Inserts an element into the queue by the framework
 
 ```js
 function insert(uint256 _element) external nonpayable onlyFrom 
@@ -94,7 +94,7 @@ function insert(uint256 _element) external nonpayable onlyFrom
 
 ### delMin
 
-Deletes the smallest element from the queue
+Deletes the smallest element from the queue by the framework
 
 ```js
 function delMin() external nonpayable onlyFrom 

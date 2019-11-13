@@ -62,16 +62,6 @@ contract BlockController is OnlyFromAddress, VaultRegistry {
     }
 
     /**
-     * @notice Allows the operator to set a new authority address, enabling implementation of mechanical
-     * re-org protection mechanism described here: https://github.com/omisego/plasma-contracts/issues/118
-     * @param newAuthority Address of new authority, which cannot be blank
-     */
-    function setAuthority(address newAuthority) external onlyFrom(authority) {
-        require(newAuthority != address(0), "Authority address cannot be zero");
-        authority = newAuthority;
-    }
-
-    /**
      * @notice Allows the authority to submit the Merkle root of a Plasma block
      * @dev emit BlockSubmitted event
      * @dev Block number jumps 'childBlockInterval' per submission

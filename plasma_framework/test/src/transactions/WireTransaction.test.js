@@ -1,18 +1,18 @@
 const rlp = require('rlp');
 const { expect } = require('chai');
-const { BN, constants } = require('openzeppelin-test-helpers');
+const { BN, constants, expectRevert } = require('openzeppelin-test-helpers');
 
 const { PaymentTransaction, PaymentTransactionOutput } = require('../../helpers/transaction.js');
 
 const WireTransaction = artifacts.require('WireTransactionWrapper.sol');
 
-const OUTPUT_GUARD = `0x${Array(40).fill(1).join('')}`;
-const EMPTY_BYTES32 = `0x${Array(64).fill(0).join('')}`;
-const AMOUNT = 100;
-const TX_TYPE = 1;
-const OUTPUT_TYPE = 1;
-
 contract('WireTransaction', () => {
+    const OUTPUT_GUARD = `0x${Array(40).fill(1).join('')}`;
+    const EMPTY_BYTES32 = `0x${Array(64).fill(0).join('')}`;
+    const AMOUNT = 100;
+    const TX_TYPE = 1;
+    const OUTPUT_TYPE = 1;
+
     before(async () => {
         this.test = await WireTransaction.new();
         const output = new PaymentTransactionOutput(OUTPUT_TYPE, AMOUNT, OUTPUT_GUARD, constants.ZERO_ADDRESS);
@@ -44,6 +44,14 @@ contract('WireTransaction', () => {
             expect(actual.outputGuard).to.equal(OUTPUT_GUARD);
             expect(new BN(actual.amount)).to.be.bignumber.equal(new BN(AMOUNT));
             expect(actual.token).to.equal(constants.ZERO_ADDRESS);
+        });
+
+        it('should fail when output index is out of bounds', async () => {
+            const outOfBoundsOutputIndex = 2;
+            await expectRevert(
+                this.test.getOutput(this.paymentTransaction, outOfBoundsOutputIndex),
+                'Output index out of bound',
+            );
         });
     });
 

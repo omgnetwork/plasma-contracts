@@ -19,5 +19,16 @@ def normalize_key(key):
     return o
 
 
+def hex_to_binary(h):
+    assert isinstance(h, str)
+    if h[:2] == '0x':
+        h = h[2:]
+    return bytes.fromhex(h)
+
+
+def decode_int32(v):
+    return int.from_bytes(v, byteorder='big')
+
+
 def encode_int32(v):
     return v.to_bytes(32, byteorder='big')
