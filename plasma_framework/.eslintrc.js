@@ -27,6 +27,12 @@ module.exports = {
             ignoreStrings: true,
             ignoreTemplateLiterals: true,
         }],
+
+        // Ignore warning around test helper codes using dev dependency
+        'import/no-extraneous-dependencies': [
+            true,
+            {'packageDir': ['./test/']}
+        ]
     },
 
     // Define some truffle globals
