@@ -574,7 +574,7 @@ The vault is designed with the concept of `depositVerifier`. This is a predicate
 
 ### Security analysis
 
-The waiting period of two weeks for upgrading the deposit verifier provides protection for deposit transactions that are sent in the root chain but are still in mempool before the `setDepositVerifier` is called. Also, it gives one week buffer for user to standard exit if invalid deposit verifier is set.
+The waiting period of two weeks when upgrading the deposit verifier provides protection for deposit transactions that are sent on the root chain, but are still in mempool before the `setDepositVerifier` is called. Also, it gives a one week buffer for the user to perform a standard exit if an invalid deposit verifier is set.
 
 For more information, see the description in the following issues: 
 - https://github.com/omisego/plasma-contracts/issues/174
@@ -610,7 +610,7 @@ Perform these steps to add a new vault:
 6. After the waiting period completes, the user is able to deposit to the new vault.
 
 ### Security analysis
-As with the process of configuring a new deposit verifier, a period of two weeks waiting time is chosen to protect the deposit transactions that are still in mempool while the transaction of `registerVault` is sent. Also, it gives one week buffer for user to standard exit if invalid deposit verifier is set.
+As with the process of configuring a new deposit verifier, a period of two weeks waiting time is chosen to protect the deposit transactions that are still in the mempool when the transaction of `registerVault` is sent. Also, it gives a one week buffer for the user to perform a standard exit if an invalid deposit verifier is set.
 
 For more information, see the description in the following issues: 
 - https://github.com/omisego/plasma-contracts/issues/173
