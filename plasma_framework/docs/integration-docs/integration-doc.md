@@ -569,14 +569,16 @@ The vault is designed with the concept of `depositVerifier`. This is a predicate
     ```
     event SetDepositVerifierCalled(address  nextDepositVerifier);
     ```
-4. Wait **one** `minExitPeriod` for the new deposit verifier to take effect. In production, it should be one week.
+4. Wait **two** `minExitPeriod` for the new deposit verifier to take effect. In production, it should be two weeks.
 
 
 ### Security analysis
 
-The waiting period of one week for upgrading the deposit verifier provides protection for deposit transactions that are sent in the root chain but are still in mempool before the `setDepositVerifier` is called. 
+The waiting period of two weeks for upgrading the deposit verifier provides protection for deposit transactions that are sent in the root chain but are still in mempool before the `setDepositVerifier` is called. Also, it gives one week buffer for user to standard exit if invalid deposit verifier is set.
 
-For more information, see the description in the following issue: https://github.com/omisego/plasma-contracts/issues/174
+For more information, see the description in the following issues: 
+- https://github.com/omisego/plasma-contracts/issues/174
+- https://github.com/omisego/plasma-contracts/issues/412
 
 Users/watchers should listen to the following event to understand when the new deposit verifier takes effect: `setDepositVerifierCalled`
 
@@ -603,14 +605,16 @@ Perform these steps to add a new vault:
 
 3. Wait for the following event to be returned: `event VaultRegistered(uint256  vaultId, address  vaultAddress);`
 
-5. Wait **one** `minExitPeriod` (one week in production). 
+5. Wait **two** `minExitPeriod` (two weeks in production). 
 
 6. After the waiting period completes, the user is able to deposit to the new vault.
 
 ### Security analysis
-As with the process of configuring a new deposit verifier, a period of one week waiting time is chosen to protect the deposit transactions that are still in mempool while the transaction of `registerVault` is sent. 
+As with the process of configuring a new deposit verifier, a period of two weeks waiting time is chosen to protect the deposit transactions that are still in mempool while the transaction of `registerVault` is sent. Also, it gives one week buffer for user to standard exit if invalid deposit verifier is set.
 
-For more information, see the description in the following issue: https://github.com/omisego/plasma-contracts/issues/173.
+For more information, see the description in the following issues: 
+- https://github.com/omisego/plasma-contracts/issues/173
+- https://github.com/omisego/plasma-contracts/issues/412
 
 Users/watchers should listen to the follwing event to understand when the new vault is registered: `VaultRegistered`
 
