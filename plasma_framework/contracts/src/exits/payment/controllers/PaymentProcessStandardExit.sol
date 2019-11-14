@@ -3,15 +3,17 @@ pragma experimental ABIEncoderV2;
 
 import "../PaymentExitDataModel.sol";
 import "../routers/PaymentStandardExitRouterArgs.sol";
+import "../../../framework/PlasmaFramework.sol";
+import "../../../utils/SafeEthTransfer.sol";
 import "../../../vaults/EthVault.sol";
 import "../../../vaults/Erc20Vault.sol";
-import "../../../framework/PlasmaFramework.sol";
 
 library PaymentProcessStandardExit {
     struct Controller {
         PlasmaFramework framework;
         EthVault ethVault;
         Erc20Vault erc20Vault;
+        uint256 safeGasStipend;
     }
 
     event ExitOmitted(
@@ -54,8 +56,7 @@ library PaymentProcessStandardExit {
         self.framework.flagOutputSpent(exit.outputId);
 
         // we do not want to block a queue if bond return is unsuccessful
-        // solhint-disable-next-line avoid-call-value
-        (bool success, ) = exit.exitTarget.call.value(exit.bondSize)("");
+        bool success = SafeEthTransfer.transferReturnResult(exit.exitTarget, exit.bondSize, self.safeGasStipend);
         if (!success) {
             emit BondReturnFailed(exit.exitTarget, exit.bondSize);
         }

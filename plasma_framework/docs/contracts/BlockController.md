@@ -33,7 +33,6 @@ event ChildChainActivated(address  authority);
 
 - [(uint256 _interval, uint256 _minExitPeriod, uint256 _initialImmuneVaults, address _authority)](#)
 - [activateChildChain()](#activatechildchain)
-- [setAuthority(address newAuthority)](#setauthority)
 - [submitBlock(bytes32 _blockRoot)](#submitblock)
 - [submitDepositBlock(bytes32 _blockRoot)](#submitdepositblock)
 - [nextDepositBlock()](#nextdepositblock)
@@ -65,21 +64,6 @@ function activateChildChain() external nonpayable onlyFrom
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-
-### setAuthority
-
-Allows the operator to set a new authority address, enabling implementation of mechanical
-re-org protection mechanism described here: https://github.com/omisego/plasma-contracts/issues/118
-
-```js
-function setAuthority(address newAuthority) external nonpayable onlyFrom 
-```
-
-**Arguments**
-
-| Name        | Type           | Description  |
-| ------------- |------------- | -----|
-| newAuthority | address | Address of new authority, which cannot be blank | 
 
 ### submitBlock
 
@@ -191,6 +175,7 @@ returns(uint256)
 * [Quarantine](Quarantine.md)
 * [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
+* [SafeEthTransfer](SafeEthTransfer.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)
 * [TxFinalizationModel](TxFinalizationModel.md)

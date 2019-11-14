@@ -20,6 +20,7 @@ const VAULT_ID = {
 };
 
 const CHILD_BLOCK_INTERVAL = 1000;
+const SAFE_GAS_STIPEND = 2300;
 
 module.exports = {
     EMPTY_BYTES,
@@ -29,4 +30,5 @@ module.exports = {
     OUTPUT_TYPE,
     CHILD_BLOCK_INTERVAL,
     VAULT_ID,
+    SAFE_GAS_STIPEND,
 };

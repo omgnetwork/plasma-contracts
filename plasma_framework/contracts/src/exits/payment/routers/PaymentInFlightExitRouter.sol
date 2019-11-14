@@ -119,11 +119,18 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyFromAddress, OnlyWithV
         SpendingConditionRegistry spendingConditionRegistry,
         IStateTransitionVerifier stateTransitionVerifier,
         ITxFinalizationVerifier txFinalizationVerifier,
-        uint256 supportedTxType
+        uint256 supportedTxType,
+        uint256 safeGasStipend
     )
         public
     {
         framework = plasmaFramework;
+
+        EthVault ethVault = EthVault(plasmaFramework.vaults(ethVaultId));
+        require(address(ethVault) != address(0), "Invalid ETH vault");
+
+        Erc20Vault erc20Vault = Erc20Vault(plasmaFramework.vaults(erc20VaultId));
+        require(address(erc20Vault) != address(0), "Invalid ERC20 vault");
 
         startInFlightExitController = PaymentStartInFlightExit.buildController(
             plasmaFramework,
@@ -133,14 +140,6 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyFromAddress, OnlyWithV
             txFinalizationVerifier,
             supportedTxType
         );
-
-        address ethVaultAddress = plasmaFramework.vaults(ethVaultId);
-        require(ethVaultAddress != address(0), "Invalid ETH vault");
-        EthVault ethVault = EthVault(ethVaultAddress);
-
-        address erc20VaultAddress = plasmaFramework.vaults(erc20VaultId);
-        require(erc20VaultAddress != address(0), "Invalid ERC20 vault");
-        Erc20Vault erc20Vault = Erc20Vault(erc20VaultAddress);
 
         piggybackInFlightExitController = PaymentPiggybackInFlightExit.buildController(
             plasmaFramework,
@@ -162,20 +161,23 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyFromAddress, OnlyWithV
             plasmaFramework,
             spendingConditionRegistry,
             outputGuardHandlerRegistry,
-            txFinalizationVerifier
+            txFinalizationVerifier,
+            safeGasStipend
         );
 
         challengeOutputSpentController = PaymentChallengeIFEOutputSpent.Controller(
             plasmaFramework,
             spendingConditionRegistry,
             outputGuardHandlerRegistry,
-            txFinalizationVerifier
+            txFinalizationVerifier,
+            safeGasStipend
         );
 
         processInflightExitController = PaymentProcessInFlightExit.Controller({
             framework: plasmaFramework,
             ethVault: ethVault,
-            erc20Vault: erc20Vault
+            erc20Vault: erc20Vault,
+            safeGasStipend: safeGasStipend
         });
         startIFEBond = BondSize.buildParams(INITIAL_IFE_BOND_SIZE, BOND_LOWER_BOUND_DIVISOR, BOND_UPPER_BOUND_MULTIPLIER);
         piggybackBond = BondSize.buildParams(INITIAL_PB_BOND_SIZE, BOND_LOWER_BOUND_DIVISOR, BOND_UPPER_BOUND_MULTIPLIER);

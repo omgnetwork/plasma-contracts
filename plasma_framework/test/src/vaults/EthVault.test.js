@@ -10,7 +10,9 @@ const { expect } = require('chai');
 
 const { PaymentTransaction, PaymentTransactionOutput } = require('../../helpers/transaction.js');
 const { spentOnGas } = require('../../helpers/utils.js');
-const { PROTOCOL, OUTPUT_TYPE, TX_TYPE } = require('../../helpers/constants.js');
+const {
+    PROTOCOL, OUTPUT_TYPE, TX_TYPE, SAFE_GAS_STIPEND,
+} = require('../../helpers/constants.js');
 const Testlang = require('../../helpers/testlang.js');
 
 contract('EthVault', ([_, authority, maintainer, alice]) => {
@@ -28,7 +30,7 @@ contract('EthVault', ([_, authority, maintainer, alice]) => {
             maintainer,
         );
         await this.framework.activateChildChain({ from: authority });
-        this.ethVault = await EthVault.new(this.framework.address);
+        this.ethVault = await EthVault.new(this.framework.address, SAFE_GAS_STIPEND);
 
         await this.framework.registerVault(1, this.ethVault.address, { from: maintainer });
 
@@ -223,6 +225,7 @@ contract('EthVault', ([_, authority, maintainer, alice]) => {
 
         describe('when fund transfer fails', () => {
             beforeEach(async () => {
+                // fails by asking more fund then what the vault has
                 this.amount = 2 * DEPOSIT_VALUE;
                 this.preBalance = new BN(await web3.eth.getBalance(this.ethVault.address));
                 const { receipt } = await this.exitGame.proxyEthWithdraw(alice, this.amount);

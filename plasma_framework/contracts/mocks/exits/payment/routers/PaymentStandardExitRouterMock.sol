@@ -6,6 +6,7 @@ import "../../../../src/exits/payment/routers/PaymentStandardExitRouterArgs.sol"
 import "../../../../src/framework/PlasmaFramework.sol";
 
 contract PaymentStandardExitRouterMock is PaymentStandardExitRouter {
+    uint256 constant public SAFE_GAS_STIPEND = 2300;
     PlasmaFramework private framework;
 
     PaymentStandardExitRouterArgs.StartStandardExitArgs private startStandardExitArgs;
@@ -26,7 +27,8 @@ contract PaymentStandardExitRouterMock is PaymentStandardExitRouter {
             erc20VaultId,
             outputGuardHandlerRegistry,
             spendingConditionRegistry,
-            txFinalizationVerifier
+            txFinalizationVerifier,
+            SAFE_GAS_STIPEND
         )
     {
         framework = plasmaFramework;

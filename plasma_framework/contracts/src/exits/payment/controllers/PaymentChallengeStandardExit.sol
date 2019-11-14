@@ -14,8 +14,9 @@ import "../../utils/OutputId.sol";
 import "../../../vaults/EthVault.sol";
 import "../../../vaults/Erc20Vault.sol";
 import "../../../framework/PlasmaFramework.sol";
-import "../../../utils/UtxoPosLib.sol";
 import "../../../utils/IsDeposit.sol";
+import "../../../utils/SafeEthTransfer.sol";
+import "../../../utils/UtxoPosLib.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
 import "../../../transactions/WireTransaction.sol";
 import "../../../transactions/outputs/PaymentOutputModel.sol";
@@ -30,6 +31,7 @@ library PaymentChallengeStandardExit {
         SpendingConditionRegistry spendingConditionRegistry;
         OutputGuardHandlerRegistry outputGuardHandlerRegistry;
         ITxFinalizationVerifier txFinalizationVerifier;
+        uint256 safeGasStipend;
     }
 
     event ExitChallenged(
@@ -53,7 +55,8 @@ library PaymentChallengeStandardExit {
         PlasmaFramework framework,
         SpendingConditionRegistry spendingConditionRegistry,
         OutputGuardHandlerRegistry outputGuardHandlerRegistry,
-        ITxFinalizationVerifier txFinalizationVerifier
+        ITxFinalizationVerifier txFinalizationVerifier,
+        uint256 safeGasStipend
     )
         public
         view
@@ -64,7 +67,8 @@ library PaymentChallengeStandardExit {
             isDeposit: IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL()),
             spendingConditionRegistry: spendingConditionRegistry,
             outputGuardHandlerRegistry: outputGuardHandlerRegistry,
-            txFinalizationVerifier: txFinalizationVerifier
+            txFinalizationVerifier: txFinalizationVerifier,
+            safeGasStipend: safeGasStipend
         });
     }
 
@@ -92,9 +96,8 @@ library PaymentChallengeStandardExit {
         verifySpendingCondition(data);
 
         delete exitMap.exits[args.exitId];
-        // solhint-disable-next-line avoid-call-value
-        (bool success, ) = msg.sender.call.value(data.exitData.bondSize)("");
-        require(success, "Paying out bond failed");
+
+        SafeEthTransfer.transferRevertOnError(msg.sender, data.exitData.bondSize, self.safeGasStipend);
 
         emit ExitChallenged(data.exitData.utxoPos);
     }

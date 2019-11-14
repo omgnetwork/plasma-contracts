@@ -13,7 +13,8 @@ struct Controller {
  struct IsDeposit.Predicate isDeposit,
  contract SpendingConditionRegistry spendingConditionRegistry,
  contract OutputGuardHandlerRegistry outputGuardHandlerRegistry,
- contract ITxFinalizationVerifier txFinalizationVerifier
+ contract ITxFinalizationVerifier txFinalizationVerifier,
+ uint256 safeGasStipend
 }
 ```
 
@@ -35,7 +36,7 @@ event ExitChallenged(uint256 indexed utxoPos);
 
 ## Functions
 
-- [buildController(PlasmaFramework framework, SpendingConditionRegistry spendingConditionRegistry, OutputGuardHandlerRegistry outputGuardHandlerRegistry, ITxFinalizationVerifier txFinalizationVerifier)](#buildcontroller)
+- [buildController(PlasmaFramework framework, SpendingConditionRegistry spendingConditionRegistry, OutputGuardHandlerRegistry outputGuardHandlerRegistry, ITxFinalizationVerifier txFinalizationVerifier, uint256 safeGasStipend)](#buildcontroller)
 - [run(struct PaymentChallengeStandardExit.Controller self, struct PaymentExitDataModel.StandardExitMap exitMap, struct PaymentStandardExitRouterArgs.ChallengeStandardExitArgs args)](#run)
 - [verifyChallengeExitExists(struct PaymentChallengeStandardExit.ChallengeStandardExitData data)](#verifychallengeexitexists)
 - [verifyChallengeTxProtocolFinalized(struct PaymentChallengeStandardExit.ChallengeStandardExitData data)](#verifychallengetxprotocolfinalized)
@@ -46,7 +47,7 @@ event ExitChallenged(uint256 indexed utxoPos);
 Function that builds the controller struct
 
 ```js
-function buildController(PlasmaFramework framework, SpendingConditionRegistry spendingConditionRegistry, OutputGuardHandlerRegistry outputGuardHandlerRegistry, ITxFinalizationVerifier txFinalizationVerifier) public view
+function buildController(PlasmaFramework framework, SpendingConditionRegistry spendingConditionRegistry, OutputGuardHandlerRegistry outputGuardHandlerRegistry, ITxFinalizationVerifier txFinalizationVerifier, uint256 safeGasStipend) public view
 returns(struct PaymentChallengeStandardExit.Controller)
 ```
 
@@ -62,6 +63,7 @@ Controller struct of PaymentChallengeStandardExit
 | spendingConditionRegistry | SpendingConditionRegistry |  | 
 | outputGuardHandlerRegistry | OutputGuardHandlerRegistry |  | 
 | txFinalizationVerifier | ITxFinalizationVerifier |  | 
+| safeGasStipend | uint256 |  | 
 
 ### run
 
@@ -180,6 +182,7 @@ function verifySpendingCondition(struct PaymentChallengeStandardExit.ChallengeSt
 * [Quarantine](Quarantine.md)
 * [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
+* [SafeEthTransfer](SafeEthTransfer.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)
 * [TxFinalizationModel](TxFinalizationModel.md)

@@ -14,6 +14,7 @@ import "../../../../src/utils/FailFastReentrancyGuard.sol";
 contract PaymentInFlightExitRouterMock is FailFastReentrancyGuard, PaymentInFlightExitRouter {
     using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
 
+    uint256 constant public SAFE_GAS_STIPEND = 2300;
     PlasmaFramework public framework;
 
     PaymentInFlightExitRouterArgs.StartExitArgs private startIfeArgs;
@@ -42,7 +43,8 @@ contract PaymentInFlightExitRouterMock is FailFastReentrancyGuard, PaymentInFlig
             spendingConditionRegistry,
             stateTransitionVerifier,
             txFinalizationVerifier,
-            supportedTxType
+            supportedTxType,
+            SAFE_GAS_STIPEND
         )
     {
         framework = plasmaFramework;

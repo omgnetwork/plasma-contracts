@@ -4,7 +4,7 @@ import os
 import pytest
 from eth_keys.datatypes import PrivateKey
 from solc_simple import Builder
-from solcx import link_code
+from solcx import link_code, set_solc_version_pragma
 from web3 import Web3, HTTPProvider
 from web3.main import get_default_modules
 from xprocess import ProcessStarter
@@ -35,6 +35,7 @@ OWN_DIR = os.path.dirname(os.path.realpath(__file__))
 CONTRACTS_DIR = os.path.abspath(os.path.realpath(os.path.join(OWN_DIR, '../../contracts')))
 OUTPUT_DIR = os.path.abspath(os.path.realpath(os.path.join(OWN_DIR, '../build')))
 OPENZEPPELIN_DIR = os.path.abspath(os.path.realpath(os.path.join(OWN_DIR, '../openzeppelin-solidity')))
+set_solc_version_pragma('0.5.11')
 builder = Builder(CONTRACTS_DIR, OUTPUT_DIR)
 builder.compile_all(allow_paths="*,",
                     import_remappings=[f"openzeppelin-solidity={OPENZEPPELIN_DIR}"],

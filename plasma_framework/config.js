@@ -11,6 +11,12 @@ const development = {
             mvp: 1,
             moreVp: 2,
         },
+        // Defines how much gas should be considered safe when transferring ETH
+        // Under version control so that it can be upgraded to reflect Ethereum network changes,
+        // while keeping a record of the previous gas stipend.
+        safeGasStipend: {
+            v1: 2300,
+        },
     },
     registerKeys: {
         txTypes: {

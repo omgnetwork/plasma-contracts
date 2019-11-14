@@ -177,7 +177,7 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
 
                 await expectRevert(
                     this.exitGame.challengeStandardExit(this.args, { from: attacker.address }),
-                    'Paying out bond failed',
+                    'SafeEthTransfer: failed to transfer ETH',
                 );
             });
 
