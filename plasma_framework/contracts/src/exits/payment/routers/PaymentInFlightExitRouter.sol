@@ -71,6 +71,11 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyFromAddress, OnlyWithV
         address token
     );
 
+    event InFlightBondReturnFailed(
+        address indexed receiver,
+        uint256 amount
+    );
+
     event InFlightExitOutputWithdrawn(
         uint160 indexed exitId,
         uint16 outputIndex

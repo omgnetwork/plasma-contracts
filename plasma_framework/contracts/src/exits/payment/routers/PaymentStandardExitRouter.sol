@@ -63,6 +63,11 @@ contract PaymentStandardExitRouter is
         uint160 indexed exitId
     );
 
+    event BondReturnFailed(
+        address indexed receiver,
+        uint256 amount
+    );
+
     constructor(
         PlasmaFramework plasmaFramework,
         uint256 ethVaultId,
