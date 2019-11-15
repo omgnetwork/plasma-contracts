@@ -185,7 +185,7 @@ library PaymentStartStandardExit {
     {
         exitMap.exits[data.exitId] = PaymentExitDataModel.StandardExit({
             exitable: true,
-            utxoPos: uint192(data.utxoPos.value),
+            utxoPos: data.utxoPos.value,
             outputId: data.outputId,
             exitTarget: msg.sender,
             amount: data.output.amount,
