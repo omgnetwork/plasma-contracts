@@ -33,9 +33,6 @@ commands:
           name: Change dependencies directories ownership
           command: |
             sudo chown -R circleci:circleci /usr/local/bin /usr/local/lib /usr/local/lib/python3.7/site-packages 
-      - restore_cache:
-          keys:
-            - dependencies_v2_{{ checksum "plasma_framework/python_tests/requirements.txt" }}
       - run:
           name: Prepare environment
           command: |
@@ -48,12 +45,6 @@ commands:
           command: |
             make init dev 
             python -m solcx.install v0.5.11
-      - save_cache:
-          key: dependencies_v2_{{ checksum "plasma_framework/python_tests/requirements.txt" }}
-          paths:
-            - /usr/local/bin
-            - /usr/local/lib/python3.7/site-packages
-            - /usr/local/lib/node_modules
 
 jobs:
   Truffle tests:
