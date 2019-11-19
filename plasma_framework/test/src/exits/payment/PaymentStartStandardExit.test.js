@@ -82,6 +82,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
 
             this.dummyAmount = 1000;
             this.dummyBlockNum = 1001;
+            this.dummyBlockTimestamp = await time.latest();
         });
 
         beforeEach(async () => {
@@ -123,7 +124,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
             const { args } = buildTestData(this.dummyAmount, outputOwner, this.dummyBlockNum);
             const fakeRoot = web3.utils.sha3('fake root data');
 
-            await this.framework.setBlock(this.dummyBlockNum, fakeRoot, 0);
+            await this.framework.setBlock(this.dummyBlockNum, fakeRoot, this.dummyBlockTimestamp);
 
             await expectRevert(
                 this.exitGame.startStandardExit(
@@ -137,7 +138,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
             const testAmountZero = 0;
             const { args, merkleTree } = buildTestData(testAmountZero, outputOwner, this.dummyBlockNum);
 
-            await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, 0);
+            await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, this.dummyBlockTimestamp);
 
             await expectRevert(
                 this.exitGame.startStandardExit(
@@ -147,10 +148,21 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
             );
         });
 
+        it('should fail when the block of the position does not exists in the Plasma Framework', async () => {
+            const { args } = buildTestData(this.dummyAmount, outputOwner, this.dummyBlockNum);
+            // test by not stubbing the block data accordingly
+            await expectRevert(
+                this.exitGame.startStandardExit(
+                    args, { from: outputOwner, value: this.startStandardExitBondSize },
+                ),
+                'Failed to get the block timestamp of the UTXO position',
+            );
+        });
+
         it('should fail when amount of bond is invalid', async () => {
             const { args, merkleTree } = buildTestData(this.dummyAmount, outputOwner, this.dummyBlockNum);
 
-            await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, 0);
+            await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, this.dummyBlockTimestamp);
 
             const invalidBond = this.startStandardExitBondSize.subn(100);
             await expectRevert(
@@ -168,7 +180,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
                 this.dummyAmount, outputOwner, this.dummyBlockNum, nonRegisteredOutputType,
             );
 
-            await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, 0);
+            await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, this.dummyBlockTimestamp);
 
             await expectRevert(
                 this.exitGame.startStandardExit(
@@ -189,7 +201,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
                 this.dummyAmount, outputOwner, this.dummyBlockNum, testOutputType,
             );
 
-            await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, 0);
+            await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, this.dummyBlockTimestamp);
 
             await expectRevert(
                 this.exitGame.startStandardExit(
@@ -202,7 +214,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
         it('should fail when not initiated by the exit target', async () => {
             const { args, merkleTree } = buildTestData(this.dummyAmount, outputOwner, this.dummyBlockNum);
 
-            await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, 0);
+            await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, this.dummyBlockTimestamp);
 
             await expectRevert(
                 this.exitGame.startStandardExit(
@@ -215,7 +227,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
         it('should fail when same Exit has already started', async () => {
             const { args, merkleTree } = buildTestData(this.dummyAmount, outputOwner, this.dummyBlockNum);
 
-            await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, 0);
+            await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, this.dummyBlockTimestamp);
 
             await this.exitGame.startStandardExit(
                 args, { from: outputOwner, value: this.startStandardExitBondSize },
@@ -234,7 +246,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
 
             const outputId = computeDepositOutputId(args.rlpOutputTx, 0, args.utxoPos);
             await this.framework.setOutputSpent(outputId);
-            await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, 0);
+            await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, this.dummyBlockTimestamp);
 
             await expectRevert(
                 this.exitGame.startStandardExit(
@@ -247,7 +259,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
         it('should charge the bond from the user', async () => {
             const { args, merkleTree } = buildTestData(this.dummyAmount, outputOwner, this.dummyBlockNum);
 
-            await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, 0);
+            await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, this.dummyBlockTimestamp);
 
             const preBalance = new BN(await web3.eth.getBalance(outputOwner));
             const tx = await this.exitGame.startStandardExit(
@@ -265,7 +277,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
             const depositBlockNum = 2019;
             const { args, merkleTree, outputIndex } = buildTestData(this.dummyAmount, outputOwner, depositBlockNum);
 
-            await this.framework.setBlock(depositBlockNum, merkleTree.root, 0);
+            await this.framework.setBlock(depositBlockNum, merkleTree.root, this.dummyBlockTimestamp);
 
             await this.exitGame.startStandardExit(
                 args, { from: outputOwner, value: this.startStandardExitBondSize },
@@ -288,7 +300,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
             const nonDepositBlockNum = 1000;
             const { args, outputIndex, merkleTree } = buildTestData(this.dummyAmount, outputOwner, nonDepositBlockNum);
 
-            await this.framework.setBlock(nonDepositBlockNum, merkleTree.root, 0);
+            await this.framework.setBlock(nonDepositBlockNum, merkleTree.root, this.dummyBlockTimestamp);
 
             await this.exitGame.startStandardExit(
                 args, { from: outputOwner, value: this.startStandardExitBondSize },
@@ -310,7 +322,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
         it('should put the exit data into the queue of framework', async () => {
             const { args, merkleTree } = buildTestData(this.dummyAmount, outputOwner, this.dummyBlockNum);
 
-            await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, 0);
+            await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, this.dummyBlockTimestamp);
 
             const { receipt } = await this.exitGame.startStandardExit(
                 args, { from: outputOwner, value: this.startStandardExitBondSize },
@@ -339,7 +351,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
         it('should emit ExitStarted event', async () => {
             const { args, merkleTree } = buildTestData(this.dummyAmount, outputOwner, this.dummyBlockNum);
 
-            await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, 0);
+            await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, this.dummyBlockTimestamp);
 
             const isTxDeposit = await this.isDeposit.test(this.dummyBlockNum);
             const exitId = await this.exitIdHelper.getStandardExitId(isTxDeposit, args.rlpOutputTx, args.utxoPos);

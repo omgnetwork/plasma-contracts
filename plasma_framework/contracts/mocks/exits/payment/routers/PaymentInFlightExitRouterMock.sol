@@ -82,6 +82,10 @@ contract PaymentInFlightExitRouterMock is FailFastReentrancyGuard, PaymentInFlig
         inFlightExitMap.exits[exitId].setInputPiggybacked(inputIndex);
     }
 
+    function setInFlightExitOutputPiggybacked(uint160 exitId, uint16 outputIndex) public payable {
+        inFlightExitMap.exits[exitId].setOutputPiggybacked(outputIndex);
+    }
+
     function getInFlightExitOutput(uint160 exitId, uint16 outputIndex) public view returns (PaymentExitDataModel.WithdrawData memory) {
         return inFlightExitMap.exits[exitId].outputs[outputIndex];
     }

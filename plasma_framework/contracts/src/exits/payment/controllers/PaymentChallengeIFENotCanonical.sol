@@ -170,10 +170,12 @@ library PaymentChallengeIFENotCanonical {
 
         require(
             ife.oldestCompetitorPosition > inFlightTxPos,
-            "In-flight transaction must be younger than competitors to respond to non-canonical challenge");
+            "In-flight transaction must be older than competitors to respond to non-canonical challenge");
 
         UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(inFlightTxPos);
         (bytes32 root, ) = self.framework.blocks(utxoPos.blockNum());
+        require(root != bytes32(""), "Failed to get the block root hash of the UTXO position");
+
         ife.oldestCompetitorPosition = verifyAndDeterminePositionOfTransactionIncludedInBlock(
             inFlightTx, utxoPos, root, inFlightTxInclusionProof
         );

@@ -97,6 +97,13 @@ contract('TxFinalizationVerifier', ([richFather]) => {
                 ];
             });
 
+            it('should revert if there is no block root hash data in the PlasmaFramework for the position', async () => {
+                await expectRevert(
+                    this.test.isStandardFinalized(this.data),
+                    'Failed to get the root hash of the block num',
+                );
+            });
+
             it('should return true given valid inclusion proof', async () => {
                 await this.framework.setBlock(TEST_BLOCK_NUM, this.merkle.root, 0);
 

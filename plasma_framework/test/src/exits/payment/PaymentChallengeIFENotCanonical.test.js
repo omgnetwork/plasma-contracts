@@ -388,6 +388,13 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
             });
 
             it('fails when competing tx is not included in the given position', async () => {
+                const wrongBlockHash = web3.utils.sha3('wrong block hash');
+                await this.framework.setBlock(
+                    this.competingTxBlock.blockNum,
+                    wrongBlockHash,
+                    this.competingTxBlock.blockTimestamp,
+                );
+
                 await expectRevert(
                     this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: challenger }),
                     'Failed to verify the position of competing tx',
@@ -638,44 +645,73 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
         });
 
         describe('is unsuccessful and', () => {
+            beforeEach('include in-flight tx in a previous block', async () => {
+                const competitorTxPos = new UtxoPos(this.challengeArgs.competingTxPos);
+                const prevBlockNum = competitorTxPos.blockNum - 1000;
+                const blockBeforeCompetitorTxPos = new UtxoPos(buildUtxoPos(prevBlockNum, 0, 0));
+
+                const { inclusionProof, blockHash } = createInclusionProof(
+                    this.challengeArgs.inFlightTx, blockBeforeCompetitorTxPos,
+                );
+
+                this.inFlightTxPos = blockBeforeCompetitorTxPos.utxoPos;
+                this.inFlightTxInclusionProof = inclusionProof;
+
+                await this.framework.setBlock(prevBlockNum, blockHash, 1000);
+            });
+
             it('fails when in-flight exit does not exists', async () => {
-                const inflightTx = this.challengeArgs.competingTx;
+                const notExitingInflightTx = this.challengeArgs.competingTx;
 
                 await expectRevert(
                     this.exitGame.respondToNonCanonicalChallenge(
-                        inflightTx,
-                        this.challengeArgs.competingTxPos,
-                        this.challengeArgs.competingTxInclusionProof,
+                        notExitingInflightTx,
+                        this.inFlightTxPos,
+                        this.inFlightTxInclusionProof,
                         { from: ifeOwner },
                     ),
                     'In-flight exit does not exist',
                 );
             });
 
-            it('fails when in-flight transaction is not younger than competitor', async () => {
+            it('fails when in-flight transaction is not older than competitor', async () => {
+                const nonYoungerThenCompetitorPosition = this.challengeArgs.competingTxPos;
                 await expectRevert(
                     this.exitGame.respondToNonCanonicalChallenge(
                         this.challengeArgs.inFlightTx,
-                        this.challengeArgs.competingTxPos,
-                        this.challengeArgs.competingTxInclusionProof,
+                        nonYoungerThenCompetitorPosition,
+                        this.inFlightTxInclusionProof,
                         { from: ifeOwner },
                     ),
-                    'In-flight transaction must be younger than competitors to respond to non-canonical challenge',
+                    'In-flight transaction must be older than competitors to respond to non-canonical challenge',
+                );
+            });
+
+            it('fails when the block of the in-flight tx position does not exist', async () => {
+                const validIFEBlockNum = (new UtxoPos(this.inFlightTxPos)).blockNum;
+                const noBlockExistingPosition = buildUtxoPos(validIFEBlockNum - 1000, 0, 0);
+                await expectRevert(
+                    this.exitGame.respondToNonCanonicalChallenge(
+                        this.challengeArgs.inFlightTx,
+                        noBlockExistingPosition,
+                        this.inFlightTxInclusionProof,
+                        { from: ifeOwner },
+                    ),
+                    'Failed to get the block root hash of the UTXO position',
                 );
             });
 
             it('fails when in-flight transaction is not included in block', async () => {
-                const competitorTxPos = new UtxoPos(this.challengeArgs.competingTxPos);
-                const blockBeforeCompetitorTxPos = buildUtxoPos(competitorTxPos.blockNum - 1000, 0, 0);
-
+                const inclusionProof = this.inFlightTxInclusionProof;
+                const wrongInclusionProof = inclusionProof.substring(0, inclusionProof.length - 1).concat('f');
                 await expectRevert(
                     this.exitGame.respondToNonCanonicalChallenge(
                         this.challengeArgs.inFlightTx,
-                        blockBeforeCompetitorTxPos,
-                        this.challengeArgs.competingTxInclusionProof,
+                        this.inFlightTxPos,
+                        wrongInclusionProof,
                         { from: ifeOwner },
                     ),
-                    'Transaction is not included in block of Plasma chain.',
+                    'Transaction is not included in block of Plasma chain',
                 );
             });
         });

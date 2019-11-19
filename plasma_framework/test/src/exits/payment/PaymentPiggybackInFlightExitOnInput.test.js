@@ -218,11 +218,9 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
         it('should fail when the same input has been piggybacked', async () => {
             const data = await buildPiggybackInputData();
             await this.exitGame.setInFlightExit(data.exitId, data.inFlightExitData);
-            await this.exitGame.piggybackInFlightExitOnInput(
-                data.argsInputOne, { from: inputOwner, value: this.piggybackBondSize.toString() },
-            );
 
-            // second attmept should fail
+            await this.exitGame.setInFlightExitInputPiggybacked(data.exitId, data.argsInputOne.inputIndex);
+
             await expectRevert(
                 this.exitGame.piggybackInFlightExitOnInput(
                     data.argsInputOne, { from: inputOwner, value: this.piggybackBondSize.toString() },
@@ -239,6 +237,17 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, nonInputOwner, out
                     data.argsInputOne, { from: nonInputOwner, value: this.piggybackBondSize.toString() },
                 ),
                 'Can be called only by the exit target',
+            );
+        });
+
+        it('should fail when failed to get the block timestamp info of the exit position', async () => {
+            const data = await buildPiggybackInputData();
+            await this.exitGame.setInFlightExit(data.exitId, data.inFlightExitData);
+            await expectRevert(
+                this.exitGame.piggybackInFlightExitOnInput(
+                    data.argsInputOne, { from: inputOwner, value: this.piggybackBondSize.toString() },
+                ),
+                'Failed to get the block timestamp information of the exit position to enqueue',
             );
         });
 

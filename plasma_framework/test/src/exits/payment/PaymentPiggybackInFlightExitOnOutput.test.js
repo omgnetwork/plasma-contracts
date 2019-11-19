@@ -244,16 +244,28 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, outputOwner, nonOu
 
             await this.exitGame.setInFlightExit(data.exitId, data.inFlightExitData);
 
-            await this.exitGame.piggybackInFlightExitOnOutput(
-                data.outputOneCase.args, { from: outputOwner, value: this.piggybackBondSize.toString() },
+            await this.exitGame.setInFlightExitOutputPiggybacked(
+                data.exitId, data.outputOneCase.args.outputIndex,
             );
 
-            // second piggyback should fail
             await expectRevert(
                 this.exitGame.piggybackInFlightExitOnOutput(
                     data.outputOneCase.args, { from: outputOwner, value: this.piggybackBondSize.toString() },
                 ),
                 'Indexed output already piggybacked',
+            );
+        });
+
+        it('should fail when failed to get the block timestamp information of the exit position to enqueue', async () => {
+            const data = await buildPiggybackOutputData();
+
+            await this.exitGame.setInFlightExit(data.exitId, data.inFlightExitData);
+
+            await expectRevert(
+                this.exitGame.piggybackInFlightExitOnOutput(
+                    data.outputOneCase.args, { from: outputOwner, value: this.piggybackBondSize.toString() },
+                ),
+                'Failed to get the block timestamp information of the exit position to enqueue',
             );
         });
 
@@ -306,6 +318,12 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, outputOwner, nonOu
         it('should call the OutputGuardHandler with the expected data', async () => {
             const data = await buildPiggybackOutputData();
             await this.exitGame.setInFlightExit(data.exitId, data.inFlightExitData);
+
+            // set some different timestamp then "now" to the youngest position.
+            this.youngestPositionTimestamp = (await time.latest()).sub(new BN(100)).toNumber();
+            await this.framework.setBlock(
+                YOUNGEST_POSITION_BLOCK, web3.utils.sha3('dummy root'), this.youngestPositionTimestamp,
+            );
 
             const expectedOutputGuardData = {
                 guard: data.outputTwoCase.outputGuard,
