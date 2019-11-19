@@ -316,7 +316,7 @@ contract('ExitGameController', () => {
                 );
             });
 
-            it('should be able to process when the "top priority" is set to 0', async () => {
+            it('should be able to process when the exitId is set to 0', async () => {
                 const tx = await this.controller.processExits(VAULT_ID, this.dummyToken, 0, 1);
                 await expectEvent.inLogs(tx.logs, 'ProcessedExitsNum', {
                     processedNum: new BN(1),
@@ -324,10 +324,10 @@ contract('ExitGameController', () => {
                 });
             });
 
-            it('should be able to process when the "top priority" is set to the exact top of the queue', async () => {
-                const priority = await this.dummyExitGame.priorityFromEnqueue();
-
-                const tx = await this.controller.processExits(VAULT_ID, this.dummyToken, priority, 1);
+            it('should be able to process when the exitId is set to the exact top of the queue', async () => {
+                const tx = await this.controller.processExits(
+                    VAULT_ID, this.dummyToken, this.dummyExit.exitId, 1,
+                );
                 await expectEvent.inLogs(tx.logs, 'ProcessedExitsNum', {
                     processedNum: new BN(1),
                     token: this.dummyToken,
