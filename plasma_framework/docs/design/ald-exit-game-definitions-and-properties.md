@@ -1,7 +1,7 @@
 # ALD Exit Game Definitions And Properties
 
 ## New definitions from ALD (abstract layer design)
-Based on [MoreVP document](https://github.com/omisego/elixir-omg/blob/master/docs/morevp.md). This section adds some new definition introduced from ALD.
+Based on [MoreVP document](https://github.com/omisego/elixir-omg/blob/master/docs/morevp.md). This section adds some new definitions introduced from ALD or give explicit names to some of the implicit characteristics of the origin MoreVP spec.
 
 ### SpendingCondition Fulfilled
 1. Checks an input tx and the spending tx, whether the spending tx fulfil the requirement of spending the output of input tx or not.
@@ -14,15 +14,14 @@ Based on [MoreVP document](https://github.com/omisego/elixir-omg/blob/master/doc
 1. MVP:
     - Tx is in a plasma block. (Checks inclusion proof of plasma block)
     - It is confirmed by user. (Checks confirm signature is valid for the inclusion block)
-1. MoreVP:
+2. MoreVP:
     - Tx is in a plasma block. (Checks inclusion proof of plasma block)
 
-### Tx In-flight Finalization
-Only with MoreVP, and only need the existence of an tx (Nothing specific is checked)
+### Tx Protocol Finalized
+This is the minimal finalization requirement according to each protocol.
 
-### Tx Protocol Finalized:
-1. MoreVp tx: needs to be in-flight finalized
-1. MVP tx: needs to be standard finalized.
+1. MoreVp tx: the transaction exists
+2. MVP tx: the transaction is standard finalized
 
 ## Exit Properties
 
@@ -54,7 +53,7 @@ The input/output is not finalized already
 #### Canonical tx
 1. The tx is exitable
 1. No competing tx that has higher or same priority (txPos) then the exiting one. (PS, same priority is for the case both txs are in-flight)
-1. All inputs of the tx are withdrawable
+1. All inputs of the tx are not finalized
 
 #### Piggybacked input/output to be valid
 1. It is the input or output of the exiting tx
