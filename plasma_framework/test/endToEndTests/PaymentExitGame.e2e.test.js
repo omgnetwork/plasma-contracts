@@ -287,7 +287,7 @@ contract('PaymentExitGame - End to End Tests', ([_deployer, _maintainer, authori
                 });
 
                 it('should still be able to start standard exit even already spent', async () => {
-                    let standardExitData = await this.exitGame.standardExits(this.exitId);
+                    let standardExitData = await this.exitGame.standardExits([this.exitId]);
                     standardExitData = standardExitData[0]
                     expect(standardExitData.exitable).to.be.true;
                 });
@@ -412,7 +412,8 @@ contract('PaymentExitGame - End to End Tests', ([_deployer, _maintainer, authori
                             isDeposit, this.depositTx, this.depositUtxoPos,
                         );
                         const exitIds = [exitId];
-                        const standardExitData = await this.exitGame.standardExits(exitIds);
+                        let standardExitData = await this.exitGame.standardExits(exitIds);
+                        standardExitData = standardExitData[0];
                         expect(standardExitData.exitable).to.be.true;
                     });
 
