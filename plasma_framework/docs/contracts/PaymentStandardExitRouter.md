@@ -74,7 +74,7 @@ returns(struct PaymentExitDataModel.StandardExits)
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| exitId | uint160[] | Exit IDs of the standard exit | 
+| exitIds | uint160[] | Exit IDs of the standard exit | 
 
 
 ### startStandardExitBondSize
