@@ -311,8 +311,7 @@ contract('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
             const exitId = await this.exitIdHelper.getStandardExitId(isTxDeposit, args.rlpOutputTx, args.utxoPos);
             const outputId = computeDepositOutputId(args.rlpOutputTx, outputIndex, args.utxoPos);
 
-            let standardExitData = await this.exitGame.standardExits([exitId]);
-            standardExitData = standardExitData[0];
+            const standardExitData = await this.exitGame.standardExits([exitId])[0];
 
             expect(standardExitData.exitable).to.be.true;
             expect(new BN(standardExitData.utxoPos)).to.be.bignumber.equal(new BN(args.utxoPos));
@@ -335,8 +334,7 @@ contract('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
             const exitId = await this.exitIdHelper.getStandardExitId(isTxDeposit, args.rlpOutputTx, args.utxoPos);
             const outputId = computeNormalOutputId(args.rlpOutputTx, outputIndex);
 
-            let standardExitData = await this.exitGame.standardExits([exitId]);
-            standardExitData = standardExitData[0];
+            const standardExitData = await this.exitGame.standardExits([exitId])[0];
 
             expect(standardExitData.exitable).to.be.true;
             expect(new BN(standardExitData.utxoPos)).to.be.bignumber.equal(new BN(args.utxoPos));

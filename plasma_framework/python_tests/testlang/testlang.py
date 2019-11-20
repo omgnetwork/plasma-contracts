@@ -335,10 +335,7 @@ class TestingLanguage:
         """
 
         exit_id = self.get_standard_exit_id(utxo_pos)
-        print("we're here!")
         exit_info = self.root_chain.exits([exit_id])
-        print("we're here! not")
-        print(exit_info)
         return StandardExit(*exit_info[0])
 
     def get_standard_exit_id(self, utxo_pos):
