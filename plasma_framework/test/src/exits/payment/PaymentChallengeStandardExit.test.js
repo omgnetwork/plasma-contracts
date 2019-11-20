@@ -325,7 +325,7 @@ contract('PaymentChallengeStandardExit', ([_, alice, bob]) => {
                 });
 
                 it('should delete the exit data when successfully challenged', async () => {
-                    const exitData = await this.exitGame.standardExits(this.args.exitId);
+                    const exitData = await this.exitGame.standardExit(this.args.exitId);
                     Object.values(exitData).forEach((val) => {
                         expect(val).to.be.oneOf([false, '0', EMPTY_BYTES_32, constants.ZERO_ADDRESS]);
                     });
