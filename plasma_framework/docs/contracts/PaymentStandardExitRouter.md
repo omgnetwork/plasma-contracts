@@ -61,21 +61,6 @@ function (struct PaymentExitGameArgs.Args args) public nonpayable
 | ------------- |------------- | -----|
 | args | struct PaymentExitGameArgs.Args |  | 
 
-### standardexit
-
-Getter retrieves standard exit data of the PaymentExitGame
-
-```js
-function standardExit(uint160 exitId) public view
-returns(struct PaymentExitDataModel.StandardExit)
-```
-
-**Arguments**
-
-| Name        | Type           | Description  |
-| ------------- |------------- | -----|
-| exitId | uint160 | Exit ID of the standard exit | 
-
 ### standardexits
 
 Getter retrieves standard exit data of the PaymentExitGame

@@ -1,6 +1,6 @@
 init:
 	(test -d openzeppelin-solidity || git clone https://github.com/OpenZeppelin/openzeppelin-solidity.git) && cd openzeppelin-solidity && git checkout v2.3.0
-	pip install -e .
+	pip3 install -e .
 
 .PHONY: help
 help:
@@ -33,24 +33,24 @@ lint:
 
 .PHONY: test
 test:
-	python -m pytest -m "not slow"
+	python3 -m pytest -m "not slow"
 	rm -fr .pytest_cache
 
 .PHONY: test_quick
 test_quick:
-	python -m pytest -m "not slow" -n auto
+	python3 -m pytest -m "not slow" -n auto
 	rm -fr .pytest_cache
 
 .PHONY: conctest
 conctest:
-	python -m pytest -n auto
+	python3 -m pytest -n auto
 	rm -fr .pytest_cache
 
 .PHONY: runslow
 runslow:
-	python -m pytest -m "slow" 
+	python3 -m pytest -m "slow" 
 	rm -fr .pytest_cache
 
 .PHONY: dev
 dev:
-	pip install -e .[dev]
+	pip3 install -e .[dev]
