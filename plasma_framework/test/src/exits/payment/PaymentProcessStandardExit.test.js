@@ -227,7 +227,7 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
 
             await this.exitGame.processExit(exitId, VAULT_ID.ETH, ETH);
 
-            const exitData = await this.exitGame.standardExits([exitId])[0];
+            const exitData = (await this.exitGame.standardExits([exitId]))[0];
             Object.values(exitData).forEach((val) => {
                 expect(val).to.be.oneOf([false, '0', EMPTY_BYTES32, constants.ZERO_ADDRESS]);
             });

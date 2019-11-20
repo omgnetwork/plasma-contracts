@@ -154,7 +154,7 @@ contract('PaymentExitGame - End to End Tests', ([_deployer, _maintainer, authori
                 it('should save the StandardExit data when successfully done', async () => {
                     const exitId = await this.exitGame.getStandardExitId(true, this.depositTx, this.depositUtxoPos);
                     const exitIds = [exitId];
-                    const standardExitData = await this.exitGame.standardExits(exitIds)[0];
+                    const standardExitData = (await this.exitGame.standardExits(exitIds))[0];
                     const outputIndexForDeposit = 0;
                     const outputId = computeDepositOutputId(
                         this.depositTx, outputIndexForDeposit, this.depositUtxoPos,
@@ -234,7 +234,7 @@ contract('PaymentExitGame - End to End Tests', ([_deployer, _maintainer, authori
                         false, this.transferTx, this.transferUtxoPos,
                     );
                     const exitIds = [exitId];
-                    const standardExitData = await this.exitGame.standardExits(exitIds)[0];
+                    const standardExitData = (await this.exitGame.standardExits(exitIds))[0];
                     expect(standardExitData.exitable).to.be.true;
                 });
 
@@ -285,7 +285,7 @@ contract('PaymentExitGame - End to End Tests', ([_deployer, _maintainer, authori
                 });
 
                 it('should still be able to start standard exit even already spent', async () => {
-                    const standardExitData = await this.exitGame.standardExits([this.exitId])[0];
+                    const standardExitData = (await this.exitGame.standardExits([this.exitId]))[0];
                     expect(standardExitData.exitable).to.be.true;
                 });
 
@@ -409,7 +409,7 @@ contract('PaymentExitGame - End to End Tests', ([_deployer, _maintainer, authori
                             isDeposit, this.depositTx, this.depositUtxoPos,
                         );
                         const exitIds = [exitId];
-                        const standardExitData = await this.exitGame.standardExits(exitIds)[0];
+                        const standardExitData = (await this.exitGame.standardExits(exitIds))[0];
                         expect(standardExitData.exitable).to.be.true;
                     });
 
