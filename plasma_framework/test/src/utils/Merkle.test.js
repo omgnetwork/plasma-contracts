@@ -5,17 +5,8 @@ const { expect } = require('chai');
 
 const { MerkleTree } = require('../../helpers/merkle.js');
 
-const Testlang = require('../../helpers/testlang.js');
-const config = require('../../../config.js');
-
 contract('Merkle', () => {
     const maxSize = 2 ** 16;
-    const DEPOSIT_VALUE = 1000000;
-    const OUTPUT_TYPE_PAYMENT = config.registerKeys.outputTypes.payment;
-    const MERKLE_TREE_DEPTH = 16;
-
-    const alicePrivateKey = '0x7151e5dab6f8e95b5436515b83f423c4df64fe4c6149f864daa209b26adb10ca';
-    const password = 'password1234';
 
     before('setup merkle contract', async () => {
         this.merkleContract = await Merkle.new();
@@ -25,7 +16,7 @@ contract('Merkle', () => {
         const leaves = [...Array(maxSize).keys()].map(index => web3.utils.bytesToHex(`leaf ${index}`));
 
         before('setup tree value', async () => {
-            this.merkleTree = new MerkleTree(leaves, MERKLE_TREE_DEPTH);
+            this.merkleTree = new MerkleTree(leaves);
         });
 
         describe('Prove inclusion', () => {
@@ -109,18 +100,15 @@ contract('Merkle', () => {
     });
 
     it('check membership for tree where some leaves are empty', async () => {
-        let alice = await web3.eth.personal.importRawKey(alicePrivateKey, password);
-        alice = web3.utils.toChecksumAddress(alice);
-
-        const depositTx = Testlang.deposit(OUTPUT_TYPE_PAYMENT, DEPOSIT_VALUE, alice);
-        const merkleTreeForDepositTx = new MerkleTree([depositTx]);
-        const merkleProofForDepositTx = merkleTreeForDepositTx.getInclusionProof(depositTx);
+        const leaf = '0x01';
+        const merkleTree = new MerkleTree([leaf], 3);
+        const proof = merkleTree.getInclusionProof(leaf);
 
         const result = await this.merkleContract.checkMembership(
-            depositTx,
+            leaf,
             0,
-            merkleTreeForDepositTx.root,
-            merkleProofForDepositTx,
+            merkleTree.root,
+            proof,
         );
         expect(result).to.be.true;
     });
