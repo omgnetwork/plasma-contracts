@@ -6,9 +6,13 @@ Based on [MoreVP document](https://github.com/omisego/elixir-omg/blob/master/doc
 ### SpendingCondition Fulfilled
 1. Checks an input tx and the spending tx, whether the spending tx fulfil the requirement of spending the output of input tx or not.
 1. Basic checks:
-    - Spending tx input points to the output of input tx.
-    - Spending tx fulfil the “lock” condition of the output
-1. This checks on (at most) tx level, does not check things on Plasma protocol level.
+    - Spending tx input points to the output of input tx
+    - Spending tx fulfil the specific condition to spend the output (similar to the bitcoin lock and unlock script idea, but with spending condition predicates instead)
+1. This checks on (at most) tx level, does not check things on Plasma protocol level. For instance, checking signature of a transaction ownership would usually be part of the spending condition. But checking whether the transaction fulfill protocol requirements such as confirmation signature would be out of scope of the responsibility of spending condition.
+
+### State Transition to be valid
+1. Checks whether the state transition logic from all inputs to all outputs is valid. For instance, for a Payment transaction it would check that no money is printed (sum of inputs >= sum of outputs).
+1. Different from spending condition which checks it is valid to spend an output or not, this checks the transaction itself whether it is fulfilling the specific logic of the transaction type.
 
 ### Tx Standard Finalization
 1. MVP:
@@ -29,7 +33,7 @@ This is the minimal finalization requirement according to each protocol.
 
 #### Valid Spending Tx:
 1. Needs to be protocol finalized
-1. Fulfils the spending condition of the output
+1. Fulfils the spending condition of the input
 
 #### Input/Output finalized
 1. The input/output has been withdrawn/processed.
@@ -52,8 +56,8 @@ The input/output is not finalized already
 
 #### Canonical tx
 1. The tx is exitable
-1. No competing tx that has higher or same priority (txPos) then the exiting one. (PS, same priority is for the case both txs are in-flight)
-1. All inputs of the tx are not finalized
+1. No competing tx that has higher or same priority (txPos) then the exiting one. (PS. same priority is for the case both txs are in-flight)
+1. Note that a canonical tx does not check double spending by exit of any inputs. As a result, the exit game should make sure double spending of exit is handled via definition outside of canonicity.
 
 #### Piggybacked input/output to be valid
 1. It is the input or output of the exiting tx
@@ -75,59 +79,3 @@ The input/output is not finalized already
 
 #### Standard exit to be valid
 1. There is no valid spending tx of the output existing.
-
-## Current Implementation
-
-### In-flight Exit
-
-#### Start InFlight exit
-1. Checks InFlight exitable
-1. Saves the exit data to storage of Exit Game contract
-
-#### Piggyback InFlight Exit
-1. Checks the input/output is of the exiting tx
-1. If it is the first piggyback, put the exit into the priority queue.
-1. Flags the certain input/output as piggybacked
-
-#### Challenge InFlight Exit non-canonical:
-1. Shows there exists a competing tx
-1. Flags the IFE as non-canonical
-
-#### Respond non-canonical challenge:
-1. Shows the competing tx is of lower priority than the exiting tx
-1. Flags the IFE as canonical
-
-#### Challenge piggybacked input/output
-1. Shows there exists valid spending tx of the input/output
-1. Removes the piggybacked flag of the challenged input or output
-
-#### Process exit:
-1. Check the in-flight exit is canonical or not
-1. None of the inputs is finalized
-1. To withdraw:
-    - The piggybacked input/output is valid
-    - The piggybacked input/output is withdrawable
-1. Flag all inputs as finalized
-1. Flag all processed output as finalized (if tx is canonical and the output piggybacked)
-1. Deletes the IFE data
-
-As this issue shown: https://github.com/omisego/plasma-contracts/issues/102
-The above interactive game implementation has the issue of not able to decide true canonical due to data unavailability from operator. We mitigate this by checking all input of the exiting tx is finalized to make sure no double spending exists. However, this is not a _real_ canonical if we consider the priority of tx can be gamed.
-
-
-### Standard Exit
-
-#### Start Standard Exit
-1. Check standard exit exitable
-1. Stores the exit data to Exit Game contract
-1. Put the exit into the priority queue
-
-#### Challenge standard exit
-1. Check there exists a spending tx of the exiting output
-1. Delete the exit data of the standard exit
-
-#### Process exit:
-1. Checks the standard exit is valid or not
-1. Checks the output is withdrawable or not
-1. Flags the output as finalized
-1. Delete the SE data
