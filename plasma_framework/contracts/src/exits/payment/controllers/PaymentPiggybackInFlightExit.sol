@@ -165,6 +165,7 @@ library PaymentPiggybackInFlightExit {
         private
     {
         (, uint256 blockTimestamp) = controller.framework.blocks(utxoPos.blockNum());
+        require(blockTimestamp != 0, "There is no block for the exit position to enqueue");
 
         uint64 exitableAt = controller.exitableTimestampCalculator.calculateTxExitableTimestamp(now, blockTimestamp);
 
@@ -208,14 +209,12 @@ library PaymentPiggybackInFlightExit {
         pure
         returns (bool)
     {
-        bool isPiggybackInput = true;
         for (uint i = 0; i < MAX_INPUT_NUM; i++) {
             if (ife.isInputPiggybacked(uint16(i)) && ife.inputs[i].token == token) {
                 return false;
             }
         }
 
-        isPiggybackInput = false;
         for (uint i = 0; i < MAX_OUTPUT_NUM; i++) {
             if (ife.isOutputPiggybacked(uint16(i)) && ife.outputs[i].token == token) {
                 return false;

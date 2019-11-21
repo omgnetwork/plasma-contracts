@@ -136,6 +136,25 @@ contract('PaymentOutputToPaymentTxCondition', ([richFather, bob]) => {
             );
         });
 
+        it('should fail when failed to recover the signer from the signature', async () => {
+            const { args } = getTestData();
+
+            const wrongSignature = args.signature.substring(0, args.signature.length - 1).concat('f');
+
+            await expectRevert(
+                this.condition.verify(
+                    args.inputTxBytes,
+                    args.outputIndex,
+                    args.inputTxPos,
+                    args.spendingTxBytes,
+                    args.inputIndex,
+                    wrongSignature,
+                    args.optionalArgs,
+                ),
+                'Failed to recover the signer from the signature',
+            );
+        });
+
         it('should fail when spending tx not correctly signed by the input owner', async () => {
             const { args, spendingTx } = getTestData();
 
