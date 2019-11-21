@@ -6,6 +6,14 @@ View Source: [contracts/src/vaults/EthVault.sol](../../contracts/src/vaults/EthV
 
 **EthVault**
 
+## Contract Members
+**Constants & Variables**
+
+```js
+uint256 public safeGasStipend;
+
+```
+
 **Events**
 
 ```js
@@ -16,14 +24,14 @@ event DepositCreated(address indexed depositor, uint256 indexed blknum, address 
 
 ## Functions
 
-- [(PlasmaFramework _framework)](#)
+- [(PlasmaFramework _framework, uint256 _safeGasStipend)](#)
 - [deposit(bytes _depositTx)](#deposit)
 - [withdraw(address payable receiver, uint256 amount)](#withdraw)
 
 ### 
 
 ```js
-function (PlasmaFramework _framework) public nonpayable Vault 
+function (PlasmaFramework _framework, uint256 _safeGasStipend) public nonpayable Vault 
 ```
 
 **Arguments**
@@ -31,6 +39,7 @@ function (PlasmaFramework _framework) public nonpayable Vault
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
 | _framework | PlasmaFramework |  | 
+| _safeGasStipend | uint256 |  | 
 
 ### deposit
 
@@ -127,6 +136,7 @@ function withdraw(address payable receiver, uint256 amount) external nonpayable 
 * [Quarantine](Quarantine.md)
 * [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
+* [SafeEthTransfer](SafeEthTransfer.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)
 * [TxFinalizationModel](TxFinalizationModel.md)

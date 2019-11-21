@@ -246,7 +246,7 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
 
             await expectRevert(
                 this.exitGame.challengeInFlightExitInputSpent(this.challengeArgs, { from: attacker.address }),
-                'Paying out piggyback bond failed.',
+                'SafeEthTransfer: failed to transfer ETH',
             );
         });
 

@@ -62,8 +62,10 @@ contract PaymentOutputToPaymentTxCondition is ISpendingCondition {
             "Spending tx points to the incorrect output UTXO position"
         );
 
-        address payable owner = inputTx.outputs[outputIndex].owner();
-        require(owner == ECDSA.recover(eip712.hashTx(spendingTx), signature), "Tx in not signed correctly");
+        address owner = inputTx.outputs[outputIndex].owner();
+        address signer = ECDSA.recover(eip712.hashTx(spendingTx), signature);
+        require(signer != address(0), "Failed to recover the signer from the signature");
+        require(owner == signer, "Tx in not signed correctly");
 
         return true;
     }

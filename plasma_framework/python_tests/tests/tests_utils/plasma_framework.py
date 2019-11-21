@@ -4,7 +4,7 @@ from plasma_core.constants import CHILD_BLOCK_INTERVAL, EMPTY_BYTES
 from plasma_core.transaction import TxOutputTypes, TxTypes
 from plasma_core.utils.transactions import decode_utxo_id
 from plasma_core.utils.exit_priority import parse_exit_priority
-from .constants import EXIT_PERIOD, INITIAL_IMMUNE_EXIT_GAMES, INITIAL_IMMUNE_VAULTS
+from .constants import EXIT_PERIOD, INITIAL_IMMUNE_EXIT_GAMES, INITIAL_IMMUNE_VAULTS, SAFE_GAS_STIPEND
 from .convenience_wrappers import ConvenienceContractWrapper
 
 
@@ -47,7 +47,7 @@ class PlasmaFramework:
             sender=maintainer)
 
     def _setup_vaults(self, get_contract, maintainer):
-        self.eth_vault = get_contract('EthVault', args=(self.plasma_framework.address,), sender=maintainer)
+        self.eth_vault = get_contract('EthVault', args=(self.plasma_framework.address, SAFE_GAS_STIPEND,), sender=maintainer)
         self.erc20_vault = get_contract('Erc20Vault', args=(self.plasma_framework.address,), sender=maintainer)
 
         self.eth_vault_id = 1
@@ -119,17 +119,20 @@ class PlasmaFramework:
 
         libs, libs_map = self._deploy_libraries(libs, get_contract, maintainer)
 
+        paymet_exit_game_args = (
+            self.plasma_framework.address,
+            self.eth_vault_id,
+            self.erc20_vault_id,
+            self.output_guard_registry.address,
+            self.spending_condition_registry.address,
+            self.payment_state_verifier.address,
+            self.tx_finalization_verifier.address,
+            TxTypes.PAYMENT.value,
+            SAFE_GAS_STIPEND,
+        )
         payment_exit_game = get_contract("PaymentExitGame",
                                          sender=maintainer,
-                                         args=(self.plasma_framework.address,
-                                               self.eth_vault_id,
-                                               self.erc20_vault_id,
-                                               self.output_guard_registry.address,
-                                               self.spending_condition_registry.address,
-                                               self.payment_state_verifier.address,
-                                               self.tx_finalization_verifier.address,
-                                               TxTypes.PAYMENT.value,
-                                               ),
+                                         args=(paymet_exit_game_args,),
                                          libraries=libs_map)
 
         return payment_exit_game

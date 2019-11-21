@@ -40,7 +40,7 @@ event ExitFinalized(uint160 indexed exitId);
 
 ## Functions
 
-- [(PlasmaFramework plasmaFramework, uint256 ethVaultId, uint256 erc20VaultId, OutputGuardHandlerRegistry outputGuardHandlerRegistry, SpendingConditionRegistry spendingConditionRegistry, ITxFinalizationVerifier txFinalizationVerifier)](#)
+- [(PlasmaFramework plasmaFramework, uint256 ethVaultId, uint256 erc20VaultId, OutputGuardHandlerRegistry outputGuardHandlerRegistry, SpendingConditionRegistry spendingConditionRegistry, ITxFinalizationVerifier txFinalizationVerifier, uint256 safeGasStipend)](#)
 - [standardExits(uint160 exitId)](#standardexits)
 - [startStandardExitBondSize()](#startstandardexitbondsize)
 - [updateStartStandardExitBondSize(uint128 newBondSize)](#updatestartstandardexitbondsize)
@@ -51,7 +51,7 @@ event ExitFinalized(uint160 indexed exitId);
 ### 
 
 ```js
-function (PlasmaFramework plasmaFramework, uint256 ethVaultId, uint256 erc20VaultId, OutputGuardHandlerRegistry outputGuardHandlerRegistry, SpendingConditionRegistry spendingConditionRegistry, ITxFinalizationVerifier txFinalizationVerifier) public nonpayable
+function (PlasmaFramework plasmaFramework, uint256 ethVaultId, uint256 erc20VaultId, OutputGuardHandlerRegistry outputGuardHandlerRegistry, SpendingConditionRegistry spendingConditionRegistry, ITxFinalizationVerifier txFinalizationVerifier, uint256 safeGasStipend) public nonpayable
 ```
 
 **Arguments**
@@ -64,6 +64,7 @@ function (PlasmaFramework plasmaFramework, uint256 ethVaultId, uint256 erc20Vaul
 | outputGuardHandlerRegistry | OutputGuardHandlerRegistry |  | 
 | spendingConditionRegistry | SpendingConditionRegistry |  | 
 | txFinalizationVerifier | ITxFinalizationVerifier |  | 
+| safeGasStipend | uint256 |  | 
 
 ### standardExits
 
@@ -216,6 +217,7 @@ function processStandardExit(uint160 exitId, address token) internal nonpayable
 * [Quarantine](Quarantine.md)
 * [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
+* [SafeEthTransfer](SafeEthTransfer.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)
 * [TxFinalizationModel](TxFinalizationModel.md)

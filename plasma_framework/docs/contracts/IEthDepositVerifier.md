@@ -93,6 +93,7 @@ function verify(bytes depositTx, uint256 amount, address sender) external view
 * [Quarantine](Quarantine.md)
 * [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
+* [SafeEthTransfer](SafeEthTransfer.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)
 * [TxFinalizationModel](TxFinalizationModel.md)

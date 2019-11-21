@@ -108,10 +108,10 @@ contract('VaultRegistry', ([_, maintainer, other]) => {
             );
         });
 
-        it('rejects when trying to register with an empty vault address', async () => {
+        it('rejects when trying to register with a non-contract address', async () => {
             await expectRevert(
                 this.registry.registerVault(1, constants.ZERO_ADDRESS, { from: maintainer }),
-                'Should not register an empty vault address',
+                'Should not register with a non-contract address',
             );
         });
 

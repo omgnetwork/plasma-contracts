@@ -69,30 +69,33 @@ contract PaymentStandardExitRouter is
         uint256 erc20VaultId,
         OutputGuardHandlerRegistry outputGuardHandlerRegistry,
         SpendingConditionRegistry spendingConditionRegistry,
-        ITxFinalizationVerifier txFinalizationVerifier
+        ITxFinalizationVerifier txFinalizationVerifier,
+        uint256 safeGasStipend
     )
         public
     {
         framework = plasmaFramework;
 
-        address ethVaultAddress = plasmaFramework.vaults(ethVaultId);
-        require(ethVaultAddress != address(0), "Invalid ETH vault");
-        EthVault ethVault = EthVault(ethVaultAddress);
+        EthVault ethVault = EthVault(plasmaFramework.vaults(ethVaultId));
+        require(address(ethVault) != address(0), "Invalid ETH vault");
 
-        address erc20VaultAddress = plasmaFramework.vaults(erc20VaultId);
-        require(erc20VaultAddress != address(0), "Invalid ERC20 vault");
-        Erc20Vault erc20Vault = Erc20Vault(erc20VaultAddress);
+        Erc20Vault erc20Vault = Erc20Vault(plasmaFramework.vaults(erc20VaultId));
+        require(address(erc20Vault) != address(0), "Invalid ERC20 vault");
 
         startStandardExitController = PaymentStartStandardExit.buildController(
             this, plasmaFramework, outputGuardHandlerRegistry, txFinalizationVerifier, ethVaultId, erc20VaultId
         );
 
         challengeStandardExitController = PaymentChallengeStandardExit.buildController(
-            plasmaFramework, spendingConditionRegistry, outputGuardHandlerRegistry, txFinalizationVerifier
+            plasmaFramework,
+            spendingConditionRegistry,
+            outputGuardHandlerRegistry,
+            txFinalizationVerifier,
+            safeGasStipend
         );
 
         processStandardExitController = PaymentProcessStandardExit.Controller(
-            plasmaFramework, ethVault, erc20Vault
+            plasmaFramework, ethVault, erc20Vault, safeGasStipend
         );
 
         startStandardExitBond = BondSize.buildParams(INITIAL_BOND_SIZE, BOND_LOWER_BOUND_DIVISOR, BOND_UPPER_BOUND_MULTIPLIER);

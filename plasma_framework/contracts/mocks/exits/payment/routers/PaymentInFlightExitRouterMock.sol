@@ -14,6 +14,7 @@ import "../../../../src/utils/FailFastReentrancyGuard.sol";
 contract PaymentInFlightExitRouterMock is FailFastReentrancyGuard, PaymentInFlightExitRouter {
     using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
 
+    uint256 constant public SAFE_GAS_STIPEND = 2300;
     PlasmaFramework public framework;
 
     PaymentInFlightExitRouterArgs.StartExitArgs private startIfeArgs;
@@ -42,7 +43,8 @@ contract PaymentInFlightExitRouterMock is FailFastReentrancyGuard, PaymentInFlig
             spendingConditionRegistry,
             stateTransitionVerifier,
             txFinalizationVerifier,
-            supportedTxType
+            supportedTxType,
+            SAFE_GAS_STIPEND
         )
     {
         framework = plasmaFramework;
@@ -78,6 +80,10 @@ contract PaymentInFlightExitRouterMock is FailFastReentrancyGuard, PaymentInFlig
 
     function setInFlightExitInputPiggybacked(uint160 exitId, uint16 inputIndex) public payable {
         inFlightExitMap.exits[exitId].setInputPiggybacked(inputIndex);
+    }
+
+    function setInFlightExitOutputPiggybacked(uint160 exitId, uint16 outputIndex) public payable {
+        inFlightExitMap.exits[exitId].setOutputPiggybacked(outputIndex);
     }
 
     function getInFlightExitOutput(uint160 exitId, uint16 outputIndex) public view returns (PaymentExitDataModel.WithdrawData memory) {

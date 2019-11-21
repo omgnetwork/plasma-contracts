@@ -11,7 +11,8 @@ View Source: [contracts/src/exits/payment/controllers/PaymentProcessInFlightExit
 struct Controller {
  contract PlasmaFramework framework,
  contract EthVault ethVault,
- contract Erc20Vault erc20Vault
+ contract Erc20Vault erc20Vault,
+ uint256 safeGasStipend
 }
 ```
 
@@ -241,6 +242,7 @@ returns(bool)
 * [Quarantine](Quarantine.md)
 * [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
+* [SafeEthTransfer](SafeEthTransfer.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)
 * [TxFinalizationModel](TxFinalizationModel.md)

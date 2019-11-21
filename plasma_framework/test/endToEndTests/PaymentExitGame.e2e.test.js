@@ -13,7 +13,7 @@ const {
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
-const { EMPTY_BYTES } = require('../helpers/constants.js');
+const { EMPTY_BYTES, SAFE_GAS_STIPEND } = require('../helpers/constants.js');
 const { MerkleTree } = require('../helpers/merkle.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../helpers/transaction.js');
 const {

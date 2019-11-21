@@ -12,7 +12,8 @@ struct Controller {
  contract PlasmaFramework framework,
  contract SpendingConditionRegistry spendingConditionRegistry,
  contract OutputGuardHandlerRegistry outputGuardHandlerRegistry,
- contract ITxFinalizationVerifier txFinalizationVerifier
+ contract ITxFinalizationVerifier txFinalizationVerifier,
+ uint256 safeGasStipend
 }
 ```
 
@@ -135,6 +136,7 @@ function verifyChallengingTransactionSpendsOutput(struct PaymentChallengeIFEOutp
 * [Quarantine](Quarantine.md)
 * [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
+* [SafeEthTransfer](SafeEthTransfer.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)
 * [TxFinalizationModel](TxFinalizationModel.md)

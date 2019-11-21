@@ -1,5 +1,7 @@
 pragma solidity 0.5.11;
 
+import "openzeppelin-solidity/contracts/utils/Address.sol";
+
 import "../Protocol.sol";
 import "../utils/Quarantine.sol";
 import "../../utils/OnlyFromAddress.sol";
@@ -64,7 +66,7 @@ contract ExitGameRegistry is OnlyFromAddress {
      */
     function registerExitGame(uint256 _txType, address _contract, uint8 _protocol) public onlyFrom(getMaintainer()) {
         require(_txType != 0, "Should not register with tx type 0");
-        require(_contract != address(0), "Should not register with an empty exit game address");
+        require(Address.isContract(_contract), "Should not register with a non-contract address");
         require(_exitGames[_txType] == address(0), "The tx type is already registered");
         require(_exitGameToTxType[_contract] == 0, "The exit game contract is already registered");
         require(Protocol.isValidProtocol(_protocol), "Invalid protocol value");

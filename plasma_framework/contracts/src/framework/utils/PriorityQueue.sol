@@ -16,8 +16,8 @@ contract PriorityQueue is OnlyFromAddress {
         uint256 currentSize;
     }
 
-    Queue private queue;
-    address private framework;
+    Queue public queue;
+    address public framework;
 
     constructor() public {
         queue.heapList = [0];

@@ -52,7 +52,7 @@ event InFlightExitOutputBlocked(address indexed challenger, bytes32  ifeTxHash, 
 
 ## Functions
 
-- [(PlasmaFramework plasmaFramework, uint256 ethVaultId, uint256 erc20VaultId, OutputGuardHandlerRegistry outputGuardHandlerRegistry, SpendingConditionRegistry spendingConditionRegistry, IStateTransitionVerifier stateTransitionVerifier, ITxFinalizationVerifier txFinalizationVerifier, uint256 supportedTxType)](#)
+- [(PlasmaFramework plasmaFramework, uint256 ethVaultId, uint256 erc20VaultId, OutputGuardHandlerRegistry outputGuardHandlerRegistry, SpendingConditionRegistry spendingConditionRegistry, IStateTransitionVerifier stateTransitionVerifier, ITxFinalizationVerifier txFinalizationVerifier, uint256 supportedTxType, uint256 safeGasStipend)](#)
 - [inFlightExits(uint160 exitId)](#inflightexits)
 - [startInFlightExit(struct PaymentInFlightExitRouterArgs.StartExitArgs args)](#startinflightexit)
 - [piggybackInFlightExitOnInput(struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnInputArgs args)](#piggybackinflightexitoninput)
@@ -70,7 +70,7 @@ event InFlightExitOutputBlocked(address indexed challenger, bytes32  ifeTxHash, 
 ### 
 
 ```js
-function (PlasmaFramework plasmaFramework, uint256 ethVaultId, uint256 erc20VaultId, OutputGuardHandlerRegistry outputGuardHandlerRegistry, SpendingConditionRegistry spendingConditionRegistry, IStateTransitionVerifier stateTransitionVerifier, ITxFinalizationVerifier txFinalizationVerifier, uint256 supportedTxType) public nonpayable
+function (PlasmaFramework plasmaFramework, uint256 ethVaultId, uint256 erc20VaultId, OutputGuardHandlerRegistry outputGuardHandlerRegistry, SpendingConditionRegistry spendingConditionRegistry, IStateTransitionVerifier stateTransitionVerifier, ITxFinalizationVerifier txFinalizationVerifier, uint256 supportedTxType, uint256 safeGasStipend) public nonpayable
 ```
 
 **Arguments**
@@ -85,6 +85,7 @@ function (PlasmaFramework plasmaFramework, uint256 ethVaultId, uint256 erc20Vaul
 | stateTransitionVerifier | IStateTransitionVerifier |  | 
 | txFinalizationVerifier | ITxFinalizationVerifier |  | 
 | supportedTxType | uint256 |  | 
+| safeGasStipend | uint256 |  | 
 
 ### inFlightExits
 
@@ -337,6 +338,7 @@ function updatePiggybackBondSize(uint128 newBondSize) public nonpayable onlyFrom
 * [Quarantine](Quarantine.md)
 * [RLPReader](RLPReader.md)
 * [SafeERC20](SafeERC20.md)
+* [SafeEthTransfer](SafeEthTransfer.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)
 * [TxFinalizationModel](TxFinalizationModel.md)
