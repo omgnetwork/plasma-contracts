@@ -155,7 +155,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
                 this.exitGame.startStandardExit(
                     args, { from: outputOwner, value: this.startStandardExitBondSize },
                 ),
-                'Failed to get the block timestamp of the UTXO position',
+                'There is no block for the position',
             );
         });
 

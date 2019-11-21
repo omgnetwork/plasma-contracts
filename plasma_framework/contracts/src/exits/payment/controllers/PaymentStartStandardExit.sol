@@ -166,7 +166,7 @@ library PaymentStartStandardExit {
         view
     {
         require(data.output.amount > 0, "Should not exit with amount 0");
-        require(data.txBlockTimeStamp != 0, "Failed to get the block timestamp of the UTXO position");
+        require(data.txBlockTimeStamp != 0, "There is no block for the position");
 
         require(address(data.outputGuardHandler) != address(0), "Failed to get the output guard handler for the output type");
         require(data.outputGuardHandler.isValid(data.outputGuardData), "Some output guard information is invalid");

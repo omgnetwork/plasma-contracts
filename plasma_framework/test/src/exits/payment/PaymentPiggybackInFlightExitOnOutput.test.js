@@ -256,7 +256,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, outputOwner, nonOu
             );
         });
 
-        it('should fail when failed to get the block timestamp information of the exit position to enqueue', async () => {
+        it('should fail when there is no block for the exit position to enqueue', async () => {
             const data = await buildPiggybackOutputData();
 
             await this.exitGame.setInFlightExit(data.exitId, data.inFlightExitData);
@@ -265,7 +265,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, outputOwner, nonOu
                 this.exitGame.piggybackInFlightExitOnOutput(
                     data.outputOneCase.args, { from: outputOwner, value: this.piggybackBondSize.toString() },
                 ),
-                'Failed to get the block timestamp information of the exit position to enqueue',
+                'There is no block for the exit position to enqueue',
             );
         });
 

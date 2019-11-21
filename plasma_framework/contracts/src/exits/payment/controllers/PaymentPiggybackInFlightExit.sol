@@ -165,7 +165,7 @@ library PaymentPiggybackInFlightExit {
         private
     {
         (, uint256 blockTimestamp) = controller.framework.blocks(utxoPos.blockNum());
-        require(blockTimestamp != 0, "There is no block for the position to enqueue");
+        require(blockTimestamp != 0, "There is no block for the exit position to enqueue");
 
         uint64 exitableAt = controller.exitableTimestampCalculator.calculateTxExitableTimestamp(now, blockTimestamp);
 
