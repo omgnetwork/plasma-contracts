@@ -49,10 +49,10 @@ contract('OutputGuardHandlerRegistry', ([_, other]) => {
             );
         });
 
-        it('should reject when trying to register with an empty address', async () => {
+        it('should reject when trying to register with a non-contract address', async () => {
             await expectRevert(
                 this.registry.registerOutputGuardHandler(1, constants.ZERO_ADDRESS),
-                'Registration not possible with an empty address',
+                'Registration not possible with a non-contract address',
             );
         });
 

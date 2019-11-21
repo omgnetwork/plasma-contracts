@@ -74,10 +74,10 @@ contract('SpendingConditionRegistry', ([_, other]) => {
             );
         });
 
-        it('should reject when trying to register with an empty address', async () => {
+        it('should reject when trying to register with a non-contract address', async () => {
             await expectRevert(
-                this.registry.registerSpendingCondition(1, 1, constants.ZERO_ADDRESS),
-                'Registration not possible with an empty address',
+                this.registry.registerSpendingCondition(1, 1, other),
+                'Registration not possible with a non-contract address',
             );
         });
 

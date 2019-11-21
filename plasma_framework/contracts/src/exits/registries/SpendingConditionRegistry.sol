@@ -1,6 +1,8 @@
 pragma solidity 0.5.11;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "openzeppelin-solidity/contracts/utils/Address.sol";
+
 import "../interfaces/ISpendingCondition.sol";
 
 /**
@@ -32,7 +34,7 @@ contract SpendingConditionRegistry is Ownable {
     {
         require(outputType != 0, "Registration not possible with output type 0");
         require(spendingTxType != 0, "Registration not possible with spending tx type 0");
-        require(address(condition) != address(0), "Registration not possible with an empty address");
+        require(Address.isContract(address(condition)), "Registration not possible with a non-contract address");
 
         bytes32 key = keccak256(abi.encode(outputType, spendingTxType));
         require(address(_spendingConditions[key]) == address(0), "The (output type, spending tx type) pair is already registered");
