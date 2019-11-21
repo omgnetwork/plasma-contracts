@@ -25,10 +25,10 @@ In the first version of the Plasma Framework system, there is only one type of P
 1. `txType` represents the type of the transaction. Each transaction type has only one exit game contract mapping the exit game interactions. 
 1. The `inputs` field is an array of `bytes32` representing the `utxoPos` as the output identifier. There are a maximum four inputs. A deposit transaction does have zero inputs.
 1. The `outputs` field is an array of `Output` struct representing payment output information. There are a maximum four outputs.  A deposit transaction does have one output.
-1. `metaData` field is a `bytes32` that can be used to put extra data for the transaction. It should be an empty bytes if the transaction does not want to hold any data in this field.
+1. `metaData` field is a `bytes32` field that can be used to add extra data to the transaction. It should contain zeros if the transaction does not have an extra data.
 
 Output has four elements that fulfills the current `WireTransactionOutput`:
-1. `outputType` represents the type of the output. The output type would be used to decide, eg. spending condition. Each new valid transaction type should owns new output type.
+1. `outputType` represents the type of output. Each new valid transaction type is tied to one or more new output types. In Payment transaction V1, there would be only one output type. The output type is used to decide, eg. which spending condition to use. Also, output type is bind to the input type. Currently the only output type requires the spending tx's input to be using `utxoPos`. Potentially there can be output type deciding to be pointed by `outputId` instead in the future.
 1. `outputGuard` is the field that represents the authentication data of the output. Its value must always be the same as the `owner` address of the output in the first version of Payment Transaction. For instance, if the output belongs to Alice, then the value of `outputGuard` equals Alice's address.
 1. `token` is the ERC20 token contract address that represents the ERC20 token. For `ETH`, it uses `address(0)`.
 1. `amount` tells how much of the token is hold within this output
