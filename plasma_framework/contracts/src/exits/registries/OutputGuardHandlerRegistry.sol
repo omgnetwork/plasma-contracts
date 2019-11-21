@@ -1,6 +1,8 @@
 pragma solidity 0.5.11;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "openzeppelin-solidity/contracts/utils/Address.sol";
+
 import "../interfaces/IOutputGuardHandler.sol";
 
 /**
@@ -25,7 +27,7 @@ contract OutputGuardHandlerRegistry is Ownable {
         onlyOwner
     {
         require(outputType != 0, "Registration not possible with output type 0");
-        require(address(handler) != address(0), "Registration not possible with an empty address");
+        require(Address.isContract(address(handler)), "Registration not possible with a non-contract address");
         require(address(outputGuardHandlers[outputType]) == address(0), "Output type already registered");
 
         outputGuardHandlers[outputType] = handler;

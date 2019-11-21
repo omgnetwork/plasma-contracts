@@ -2,7 +2,7 @@ const ExitGameRegistry = artifacts.require('ExitGameRegistryMock');
 const DummyExitGame = artifacts.require('DummyExitGame');
 
 const {
-    BN, constants, expectEvent, expectRevert, time,
+    BN, expectEvent, expectRevert, time,
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 const { PROTOCOL } = require('../../../helpers/constants.js');
@@ -119,10 +119,10 @@ contract('ExitGameRegistry', ([_, maintainer, other]) => {
             );
         });
 
-        it('rejects when trying to register with empty address', async () => {
+        it('rejects when trying to register with a non contract address', async () => {
             await expectRevert(
-                this.registry.registerExitGame(1, constants.ZERO_ADDRESS, PROTOCOL.MORE_VP, { from: maintainer }),
-                'Should not register with an empty exit game address',
+                this.registry.registerExitGame(1, other, PROTOCOL.MORE_VP, { from: maintainer }),
+                'Should not register with a non-contract address',
             );
         });
 

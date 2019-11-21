@@ -1,5 +1,7 @@
 pragma solidity 0.5.11;
 
+import "openzeppelin-solidity/contracts/utils/Address.sol";
+
 import "../utils/Quarantine.sol";
 import "../../utils/OnlyFromAddress.sol";
 
@@ -52,7 +54,7 @@ contract VaultRegistry is OnlyFromAddress {
      */
     function registerVault(uint256 _vaultId, address _vaultAddress) public onlyFrom(getMaintainer()) {
         require(_vaultId != 0, "Should not register with vault ID 0");
-        require(_vaultAddress != address(0), "Should not register an empty vault address");
+        require(Address.isContract(_vaultAddress), "Should not register with a non-contract address");
         require(_vaults[_vaultId] == address(0), "The vault ID is already registered");
         require(_vaultToId[_vaultAddress] == 0, "The vault contract is already registered");
 
