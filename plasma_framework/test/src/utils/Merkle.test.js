@@ -24,9 +24,8 @@ contract('Merkle', () => {
     describe('checkMembership', () => {
         const leaves = [...Array(maxSize).keys()].map(index => web3.utils.bytesToHex(`leaf ${index}`));
 
-        before('setup merkle contract and tree value', async () => {
-            this.merkleContract = await Merkle.new();
-            this.merkleTree = new MerkleTree(leaves);
+        before('setup tree value', async () => {
+            this.merkleTree = new MerkleTree(leaves, MERKLE_TREE_DEPTH);
         });
 
         describe('Prove inclusion', () => {
@@ -62,7 +61,7 @@ contract('Merkle', () => {
             expect(result).to.be.false;
         });
 
-        it('should return false node preimage is provided as a leaf', async () => {
+        it('should return false when a node preimage is provided as a leaf', async () => {
             const rootHash = this.merkleTree.root;
             const leafProof = this.merkleTree.getInclusionProof(leaves[0]);
             const nodePreimage = this.merkleTree.leaves[0] + this.merkleTree.leaves[1].slice(2);
@@ -73,6 +72,19 @@ contract('Merkle', () => {
                 0,
                 rootHash,
                 nodeProof,
+            );
+            expect(result).to.be.false;
+        });
+
+        it('should return false when leaf index mismatches the proof', async () => {
+            const rootHash = this.merkleTree.root;
+            const proof = this.merkleTree.getInclusionProof(leaves[0]);
+
+            const result = await this.merkleContract.checkMembership(
+                leaves[0],
+                1,
+                rootHash,
+                proof,
             );
             expect(result).to.be.false;
         });
@@ -96,12 +108,12 @@ contract('Merkle', () => {
         });
     });
 
-    it('check membership for tree with empty leaves', async () => {
+    it('check membership for tree where some leaves are empty', async () => {
         let alice = await web3.eth.personal.importRawKey(alicePrivateKey, password);
         alice = web3.utils.toChecksumAddress(alice);
 
         const depositTx = Testlang.deposit(OUTPUT_TYPE_PAYMENT, DEPOSIT_VALUE, alice);
-        const merkleTreeForDepositTx = new MerkleTree([depositTx], MERKLE_TREE_DEPTH);
+        const merkleTreeForDepositTx = new MerkleTree([depositTx]);
         const merkleProofForDepositTx = merkleTreeForDepositTx.getInclusionProof(depositTx);
 
         const result = await this.merkleContract.checkMembership(

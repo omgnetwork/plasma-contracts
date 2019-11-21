@@ -52,6 +52,8 @@ contract TxFinalizationVerifier is ITxFinalizationVerifier {
         }
 
         (bytes32 root,) = data.framework.blocks(data.txPos.blockNum());
+        require(root != bytes32(""), "Failed to get the root hash of the block num");
+
         return Merkle.checkMembership(
             data.txBytes, data.txPos.txIndex(), root, data.inclusionProof
         );
