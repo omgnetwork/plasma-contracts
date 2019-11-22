@@ -118,17 +118,9 @@ library RLPReader {
 
         uint256 len = itemLen - offset;
 
-<<<<<<< HEAD
-        uint256 result;
-        uint256 memPtr = item.memPtr + offset;
-||||||| constructed merge base
-        uint result;
-        uint memPtr = item.memPtr + offset;
-=======
         uint result;
         uint byte0;
         uint memPtr = item.memPtr + offset;
->>>>>>> fix: rlp catch invalid leading zeros
         // solhint-disable-next-line no-inline-assembly
         assembly {
             result := mload(memPtr)
