@@ -18,7 +18,7 @@ const {
 const { expect } = require('chai');
 
 const {
-    TX_TYPE, OUTPUT_TYPE, PROTOCOL, EMPTY_BYTES_32, VAULT_ID,
+    TX_TYPE, OUTPUT_TYPE, PROTOCOL, EMPTY_BYTES_32, VAULT_ID, DUMMY_INPUT_1,
 } = require('../../../helpers/constants.js');
 const { buildUtxoPos, UtxoPos } = require('../../../helpers/positions.js');
 const {
@@ -27,7 +27,7 @@ const {
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
 
 
-contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
+contract('PaymentChallengeStandardExit', ([_, alice, bob]) => {
     const ETH = constants.ZERO_ADDRESS;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week in seconds
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
@@ -50,7 +50,7 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
     describe('challengeStandardExit', () => {
         const getTestInputArgs = (outputType, outputOwner) => {
             const output = new PaymentTransactionOutput(outputType, TEST_AMOUNT, outputOwner, ETH);
-            const exitingTxObj = new PaymentTransaction(TX_TYPE.PAYMENT, [0], [output]);
+            const exitingTxObj = new PaymentTransaction(TX_TYPE.PAYMENT, [DUMMY_INPUT_1], [output]);
             const exitingTx = web3.utils.bytesToHex(exitingTxObj.rlpEncoded());
 
             const challengeTxObj = new PaymentTransaction(TX_TYPE.PAYMENT, [EXITING_TX_UTXOPOS], [output]);
@@ -262,7 +262,7 @@ contract('PaymentStandardExitRouter', ([_, alice, bob]) => {
                 await this.exitGame.setExit(args.exitId, getTestExitData(args, alice, this.startStandardExitBondSize));
 
                 const output = new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, TEST_AMOUNT, alice, ETH);
-                const exitingTxObj = new PaymentTransaction(2, [0], [output]);
+                const exitingTxObj = new PaymentTransaction(2, [DUMMY_INPUT_1], [output]);
                 const exitingTx = web3.utils.bytesToHex(exitingTxObj.rlpEncoded());
                 args.exitingTx = exitingTx;
 

@@ -19,7 +19,7 @@ const {
 const { expect } = require('chai');
 
 const {
-    OUTPUT_TYPE, PROTOCOL, TX_TYPE, VAULT_ID,
+    OUTPUT_TYPE, PROTOCOL, TX_TYPE, VAULT_ID, DUMMY_INPUT_1,
 } = require('../../../helpers/constants.js');
 const { MerkleTree } = require('../../../helpers/merkle.js');
 const { buildUtxoPos, utxoPosToTxPos } = require('../../../helpers/positions.js');
@@ -30,7 +30,7 @@ const {
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
 
 
-contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
+contract('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
     const ETH = constants.ZERO_ADDRESS;
     const CHILD_BLOCK_INTERVAL = 1000;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week in seconds
@@ -55,7 +55,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
             outputGuardPreimage = EMPTY_BYTES,
         ) => {
             const output = new PaymentTransactionOutput(outputType, amount, owner, ETH);
-            const txObj = new PaymentTransaction(1, [0], [output]);
+            const txObj = new PaymentTransaction(1, [DUMMY_INPUT_1], [output]);
             const tx = web3.utils.bytesToHex(txObj.rlpEncoded());
 
             const outputIndex = 0;

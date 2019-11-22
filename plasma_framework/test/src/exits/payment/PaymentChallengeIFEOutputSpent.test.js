@@ -26,7 +26,9 @@ const { buildUtxoPos } = require('../../../helpers/positions.js');
 const { computeNormalOutputId, spentOnGas } = require('../../../helpers/utils.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
 const { MerkleTree } = require('../../../helpers/merkle.js');
-const { PROTOCOL, TX_TYPE, VAULT_ID } = require('../../../helpers/constants.js');
+const {
+    PROTOCOL, TX_TYPE, VAULT_ID, DUMMY_INPUT_1,
+} = require('../../../helpers/constants.js');
 
 contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
     const DUMMY_IFE_BOND_SIZE = 31415926535; // wei
@@ -79,7 +81,7 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
         const buildValidChallengeOutputArgs = async () => {
             const output1 = new PaymentTransactionOutput(OUTPUT_TYPE_ONE, AMOUNT, alice, ETH);
             const output2 = new PaymentTransactionOutput(OUTPUT_TYPE_ONE, AMOUNT, alice, ETH);
-            const inFlightTx = new PaymentTransaction(IFE_TX_TYPE, [0], [output1, output2]);
+            const inFlightTx = new PaymentTransaction(IFE_TX_TYPE, [DUMMY_INPUT_1], [output1, output2]);
             const inFlightTxBytes = web3.utils.bytesToHex(inFlightTx.rlpEncoded());
 
             const merkleTree = new MerkleTree([inFlightTxBytes], MERKLE_TREE_HEIGHT);

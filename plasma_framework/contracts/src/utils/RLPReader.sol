@@ -47,17 +47,17 @@ library RLPReader {
     function toList(RLPItem memory item) internal pure returns (RLPItem[] memory) {
         require(isList(item), "Item is not a list");
 
-        uint256 listLength = decodeItemLengthUnsafe(item.memPtr);
+        (uint256 listLength, uint256 offset) = decodeLengthAndOffset(item.memPtr);
         require(listLength == item.len, "Decoded RLP length for list is invalid");
 
         uint256 items = countEncodedItems(item);
         RLPItem[] memory result = new RLPItem[](items);
 
-        uint256 memPtr = item.memPtr + decodePayloadOffset(item);
+        uint256 memPtr = item.memPtr + offset;
         uint256 dataLen;
         uint256 lengthSum;
         for (uint256 i = 0; i < items; i++) {
-            dataLen = decodeItemLengthUnsafe(memPtr);
+            (dataLen, ) = decodeLengthAndOffset(memPtr);
             lengthSum += dataLen;
             require(lengthSum < item.len, "Decoded length of RLP item in list is invalid");
             result[i] = RLPItem(dataLen, memPtr);
@@ -83,23 +83,39 @@ library RLPReader {
         return true;
     }
 
+    /**
+     * @notice Create an address from a RLPItem
+     * @param item RLPItem
+     */
     function toAddress(RLPItem memory item) internal pure returns (address) {
         // 1 byte for the length prefix
         require(item.len == 21, "Item length must be 21");
 
-        return address(toUint(item));
+        (uint256 itemLen, uint256 offset) = decodeLengthAndOffset(item.memPtr);
+        require(itemLen == 21, "Decoded item length must be 21");
+        require(offset == 1, "Offset must be 1");
+
+        uint256 memPtr = item.memPtr + offset;
+        uint256 result;
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            result := mload(memPtr)
+            // right shift by 12 to make bytes20
+            result := div(result, exp(256, 12))
+        }
+
+        return address(result);
     }
 
     /**
-     * @notice Create a uint256 from a RLPItem
+     * @notice Create a uint256 from a RLPItem. Leading zeros are invalid.
      * @param item RLPItem
      */
     function toUint(RLPItem memory item) internal pure returns (uint256) {
         require(item.len > 0 && item.len <= 33, "Item length must be between 1 and 33 bytes");
-        uint256 itemLen = decodeItemLengthUnsafe(item.memPtr);
+        (uint256 itemLen, uint256 offset) = decodeLengthAndOffset(item.memPtr);
         require(itemLen <= item.len, "Decoded length is greater than input data");
 
-        uint256 offset = decodePayloadOffset(item);
         uint256 len = itemLen - offset;
 
 <<<<<<< HEAD
@@ -118,11 +134,33 @@ library RLPReader {
             result := mload(memPtr)
             byte0 := byte(0, result)
             // shift to the correct location if necessary
-            if lt(len, 32) {
-                result := div(result, exp(256, sub(32, len)))
+            if lt(len, WORD_SIZE) {
+                result := div(result, exp(256, sub(WORD_SIZE, len)))
             }
         }
         require(!(byte0 == 0 && len > 1), "Leading zeros are invalid");
+
+        return result;
+    }
+
+    /**
+     * @notice Create a bytes32 from a RLPItem
+     * @param item RLPItem
+     */
+    function toBytes32(RLPItem memory item) internal pure returns (bytes32) {
+        // 1 byte for the length prefix
+        require(item.len == 33, "Item length must be 33");
+
+        (uint256 itemLen, uint256 offset) = decodeLengthAndOffset(item.memPtr);
+        require(itemLen == 33, "Decoded item length must be 33");
+        require(offset == 1, "Offset must be 1");
+
+        uint256 memPtr = item.memPtr + offset;
+        bytes32 result;
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            result := mload(memPtr)
+        }
 
         return result;
     }
@@ -134,10 +172,12 @@ library RLPReader {
     */
     function countEncodedItems(RLPItem memory item) private pure returns (uint256) {
         uint256 count = 0;
-        uint256 currPtr = item.memPtr + decodePayloadOffset(item);
+        (, uint256 offset) = decodeLengthAndOffset(item.memPtr);
+        uint256 currPtr = item.memPtr + offset;
         uint256 endPtr = item.memPtr + item.len;
         while (currPtr < endPtr) {
-            currPtr = currPtr + decodeItemLengthUnsafe(currPtr);
+            (uint256 currLen, ) = decodeLengthAndOffset(currPtr);
+            currPtr = currPtr + currLen;
             require(currPtr <= endPtr, "Invalid decoded length of RLP item found during counting items in a list");
             count++;
         }
@@ -146,72 +186,15 @@ library RLPReader {
     }
 
     /**
-     * @notice Decodes the RLPItems length from a bytes array.
+     * @notice Decodes the RLPItem's length and offset.
      * @dev This function is dangerous !!! Ensure that the returned length is within the bounds of where memPtr points to.
      * @param memPtr Pointer to the dynamic bytes array in memory
-     * @return The encoded RLPItem length
+     * @return The length of the RLPItem (including the length field) and the offset of the payload
      */
-    function decodeItemLengthUnsafe(uint256 memPtr) internal pure returns (uint256) {
-        uint256 decodedItemLengthUnsafe;
+    function decodeLengthAndOffset(uint256 memPtr) internal pure returns (uint256, uint256) {
+        uint256 decodedLength;
+        uint256 offset;
         uint256 byte0;
-        // solhint-disable-next-line no-inline-assembly
-        assembly {
-            byte0 := byte(0, mload(memPtr))
-        }
-
-        if (byte0 < STRING_SHORT_START) {
-            decodedItemLengthUnsafe = 1;
-        } else if (byte0 < STRING_LONG_START) {
-            decodedItemLengthUnsafe = (byte0 - STRING_SHORT_START) + 1;
-        } else if (byte0 < LIST_SHORT_START) {
-            uint256 dataLen;
-            uint256 byte1;
-            // solhint-disable-next-line no-inline-assembly
-            assembly {
-                let byteLen := sub(byte0, 0xb7) // # of bytes the actual length is
-                memPtr := add(memPtr, 1) // skip over the first byte
-
-                byte1 := byte(0, mload(memPtr))
-
-                /* 32 byte word size */
-                dataLen := div(mload(memPtr), exp(256, sub(32, byteLen))) // right shifting to get the len
-                decodedItemLengthUnsafe := add(dataLen, add(byteLen, 1))
-            }
-            // Check valid long string i.e. value of length > MAX_SHORT_LEN with no leading zeros
-            require(byte1 != 0, "Invalid RLP encoding");
-            require(dataLen > MAX_SHORT_LEN, "Invalid RLP encoding");
-        } else if (byte0 < LIST_LONG_START) {
-            decodedItemLengthUnsafe = (byte0 - LIST_SHORT_START) + 1;
-        } else {
-            uint256 dataLen;
-            uint256 byte1;
-            // solhint-disable-next-line no-inline-assembly
-            assembly {
-                let lengthLen := sub(byte0, 0xf7)
-                memPtr := add(memPtr, 1)
-
-                byte1 := byte(0, mload(memPtr))
-
-                dataLen := div(mload(memPtr), exp(256, sub(32, lengthLen))) // right shifting to the correct length
-                decodedItemLengthUnsafe := add(dataLen, add(lengthLen, 1))
-            }
-            // Check valid long list i.e. value of length > MAX_SHORT_LEN with no leading zeros
-            require(byte1 != 0, "Invalid RLP encoding");
-            require(dataLen > MAX_SHORT_LEN, "Invalid RLP encoding");
-        }
-
-        return decodedItemLengthUnsafe;
-    }
-
-    /**
-     * @notice Decode the length of the RLPItem payload length
-     * @param item RLPItem
-     * @return Length of the RLPItem payload length
-     */
-    function decodePayloadOffset(RLPItem memory item) internal pure returns (uint256) {
-        uint256 byte0;
-        uint256 payloadOffsetLength;
-        uint256 memPtr = item.memPtr;
 
         // solhint-disable-next-line no-inline-assembly
         assembly {
@@ -219,29 +202,69 @@ library RLPReader {
         }
 
         if (byte0 < STRING_SHORT_START) {
-            payloadOffsetLength = 0;
+            // Item is a single byte
+            decodedLength = 1;
+            offset = 0;
         } else if (byte0 < STRING_LONG_START) {
-            if (item.len == 2){
+            // Item is a short string (length <= 55 bytes)
+            decodedLength = (byte0 - STRING_SHORT_START) + 1;
+            if (decodedLength == 2){
                 uint256 byte1;
                 // solhint-disable-next-line no-inline-assembly
                 assembly {
                     byte1 := byte(0, mload(add(memPtr, 1)))
                 }
+                // A single byte below 0x80 must be encoded as itself.
                 require(byte1 >= STRING_SHORT_START, "Invalid RLP encoding");
             }
-            payloadOffsetLength = 1;
-        } else if (byte0 >= LIST_SHORT_START && byte0 < LIST_LONG_START){
-            payloadOffsetLength = 1;
+            offset = 1;
         } else if (byte0 < LIST_SHORT_START) {
-            payloadOffsetLength = (byte0 - (STRING_LONG_START - 1)) + 1;
+            // Item is a long string (length > 55 bytes)
+            uint256 dataLen;
+            uint256 byte1;
+            // solhint-disable-next-line no-inline-assembly
+            assembly {
+                let lengthLen := sub(byte0, 0xb7) // Number of bytes the actual length is
+                memPtr := add(memPtr, 1) // skip over the first byte
+                byte1 := byte(0, mload(memPtr)) // read the first byte to check for leading zeros
+
+                // right shift to the correct position
+                dataLen := div(mload(memPtr), exp(256, sub(WORD_SIZE, lengthLen)))
+                decodedLength := add(dataLen, add(lengthLen, 1))
+            }
+            // Check that the length has no leading zeros
+            require(byte1 != 0, "Invalid RLP encoding");
+            // Check that the value of length > MAX_SHORT_LEN
+            require(dataLen > MAX_SHORT_LEN, "Invalid RLP encoding");
+            // Calculate the offset
+            offset = (byte0 - (STRING_LONG_START - 1)) + 1;
+        } else if (byte0 < LIST_LONG_START) {
+            // Item is a short list (length <= 55 bytes)
+            decodedLength = (byte0 - LIST_SHORT_START) + 1;
+            offset = 1;
         } else {
-            payloadOffsetLength = (byte0 - (LIST_LONG_START - 1)) + 1;
+            // Item is a long list (length > 55 bytes)
+            uint256 dataLen;
+            uint256 byte1;
+            // solhint-disable-next-line no-inline-assembly
+            assembly {
+                let lengthLen := sub(byte0, 0xf7) // Number of bytes the actual length is
+                memPtr := add(memPtr, 1) // skip over the first byte
+                byte1 := byte(0, mload(memPtr)) // read the first byte to check for leading zeros
+
+                // right shift to the correct position
+                dataLen := div(mload(memPtr), exp(256, sub(WORD_SIZE, lengthLen)))
+                decodedLength := add(dataLen, add(lengthLen, 1))
+            }
+            // Check that the length has no leading zeros
+            require(byte1 != 0, "Invalid RLP encoding");
+            // Check that the value of length > MAX_SHORT_LEN
+            require(dataLen > MAX_SHORT_LEN, "Invalid RLP encoding");
+            // Calculate the offset
+            offset = (byte0 - (LIST_LONG_START - 1)) + 1;
         }
 
-        require(payloadOffsetLength <= item.len, "Decoded RLPItem payload length is invalid");
-
-        return payloadOffsetLength;
+        require(offset <= decodedLength, "Decoded RLPItem payload length is invalid");
+        return (decodedLength, offset);
     }
-
-
 }
