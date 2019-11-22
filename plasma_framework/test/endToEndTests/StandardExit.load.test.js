@@ -47,7 +47,6 @@ contract('StandardExit getter Load Test', ([_deployer, _maintainer, richFather])
     const aliceDepositsETH = async () => {
         this.depositUtxoPos = [];
         this.depositTx = [];
-        this.merkleTreeForDepositTx = [];
         this.merkleProofForDepositTx = [];
         const receipts = [];
         for (let i = 0; i < NUMBER_OF_EXITS; i++) {
@@ -55,8 +54,8 @@ contract('StandardExit getter Load Test', ([_deployer, _maintainer, richFather])
             const depositBlockNum = (await this.framework.nextDepositBlock()).toNumber();
             this.depositUtxoPos.push(buildUtxoPos(depositBlockNum, 0, 0));
             this.depositTx.push(Testlang.deposit(OUTPUT_TYPE_PAYMENT, DEPOSIT_VALUE, alice));
-            this.merkleTreeForDepositTx.push(new MerkleTree([this.depositTx[i]], 16));
-            this.merkleProofForDepositTx.push(this.merkleTreeForDepositTx[i].getInclusionProof(this.depositTx[i]));
+            this.merkleTreeForDepositTx = new MerkleTree([this.depositTx[i]], 16);
+            this.merkleProofForDepositTx.push(this.merkleTreeForDepositTx.getInclusionProof(this.depositTx[i]));
             receipts.push(this.ethVault.deposit(this.depositTx[i], { from: alice, value: DEPOSIT_VALUE }));
         }
         return receipts;
