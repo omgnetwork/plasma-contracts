@@ -41,7 +41,7 @@ There are only two spending conditions: Payment V1 -> Payment V1 and Payment V1 
 ### Valid Spending Tx
 Since Payment V1 only have two cases that would be spending it: spending in Payment tx v1 and Payment tx v2, the cases is rather simple as both tx types shares mostly the same logic:
 
-1. Needs to be protocol finalized: Payment tx is protocol finalized if it is included in a Plasma block.
+1. Needs to be protocol finalized: Payment tx is protocol finalized as long as the tx exists (MoreVP protocol).
 1. Fulfils the spending condition of the input: Checks the signature of the output owner.
 
 ### State Transition
@@ -68,7 +68,7 @@ For a Payment transaction to be exitable on standard exit, it only needs to chec
 1. Delete the exit data of the standard exit
 
 ### Process Standard Exit:
-1. Checks the standard exit is valid or not
+1. Checks the standard exit is valid or not. If not valid, omit to process the exit
 1. Checks the output is withdrawable or not
 1. Flags the output as finalized
 1. Delete the SE data
@@ -76,29 +76,28 @@ For a Payment transaction to be exitable on standard exit, it only needs to chec
 ## In-flight Exit
 
 ### Start In-flight exit
-1. Checks if the in-flight tx is exitable:
+1. Checks whether the in-flight tx is exitable
 1. Saves the exit data to storage of Exit Game contract
-
 ### Piggyback In-flight Exit
-1. Checks the input/output is of the exiting tx
-1. If it is the first piggyback, put the exit into the priority queue.
+1. Checks whether the input/output is one of the input/output of the exiting tx
+1. If it is the first piggyback of a certain token, put the exit into the priority queue of that token.
 1. Flags the certain input/output as piggybacked
 
 ### Challenge In-flight Exit non-canonical:
-1. Shows there exists a competing tx
+1. Shows that there exists a protocol finalized competing tx. In Payment V1, since it only needs to consider Payment V1 and V2, as long as competing tx exists, it is protocol finalized
 1. Flags the IFE as non-canonical
 
 ### Respond non-canonical challenge:
-1. Shows the competing tx is of lower priority than the exiting tx
-1. Flags the IFE as canonical
+1. Proves that the in-fight tx actually has higher priority than the best competing tx. Uses inclusion proof to prove the position of the transaction and compare it with the best competing tx.
+1. Flags the IFE as canonical back
 
 ### Challenge piggybacked input/output
 1. Shows there exists valid spending tx of the input/output
 1. Removes the piggybacked flag of the challenged input or output
 
 ### Process In-flight exit:
-1. Check the in-flight exit is canonical or not
-1. None of the inputs is finalized
+1. Checks that none of the inputs is finalized. If any inputs is finalized, omit to process exit
+1. Checks the in-flight exit is canonical or not. Canonicity decides whether it should withdraw outputs or inputs
 1. To withdraw:
     - The piggybacked input/output is valid
     - The piggybacked input/output is withdrawable
