@@ -10,6 +10,7 @@ const PaymentProcessInFlightExit = artifacts.require('PaymentProcessInFlightExit
 const PaymentChallengeIFENotCanonical = artifacts.require('PaymentChallengeIFENotCanonical');
 const PaymentChallengeIFEInputSpent = artifacts.require('PaymentChallengeIFEInputSpent');
 const PaymentChallengeIFEOutputSpent = artifacts.require('PaymentChallengeIFEOutputSpent');
+const PaymentDeleteInFlightExit = artifacts.require('PaymentDeleteInFlightExit');
 const PaymentStartStandardExit = artifacts.require('PaymentStartStandardExit');
 const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry');
 const StateTransitionVerifierMock = artifacts.require('StateTransitionVerifierMock');
@@ -42,12 +43,14 @@ contract('PaymentExitGame - Reentrant Protected', ([_, outputOwner]) => {
         const challengeIFEInputSpent = await PaymentChallengeIFEInputSpent.new();
         const challengeIFEOutputSpent = await PaymentChallengeIFEOutputSpent.new();
         const processInFlightExit = await PaymentProcessInFlightExit.new();
+        const deleteInFlightExit = await PaymentDeleteInFlightExit.new();
 
         await PaymentInFlightExitRouter.link('PaymentStartInFlightExit', startInFlightExit.address);
         await PaymentInFlightExitRouter.link('PaymentPiggybackInFlightExit', piggybackInFlightExit.address);
         await PaymentInFlightExitRouter.link('PaymentChallengeIFENotCanonical', challengeInFlightExitNotCanonical.address);
         await PaymentInFlightExitRouter.link('PaymentChallengeIFEInputSpent', challengeIFEInputSpent.address);
         await PaymentInFlightExitRouter.link('PaymentChallengeIFEOutputSpent', challengeIFEOutputSpent.address);
+        await PaymentInFlightExitRouter.link('PaymentDeleteInFlightExit', deleteInFlightExit.address);
         await PaymentInFlightExitRouter.link('PaymentProcessInFlightExit', processInFlightExit.address);
     });
 
@@ -166,6 +169,13 @@ contract('PaymentExitGame - Reentrant Protected', ([_, outputOwner]) => {
         it('should not be able to re-enter challengeInFlightExitOutputSpent', async () => {
             await expectRevert(
                 this.exitGame.testNonReentrant('challengeInFlightExitOutputSpent'),
+                'Reentrant call',
+            );
+        });
+
+        it('should not be able to re-enter deleteNonPiggybackedInFlightExit', async () => {
+            await expectRevert(
+                this.exitGame.testNonReentrant('deleteNonPiggybackedInFlightExit'),
                 'Reentrant call',
             );
         });

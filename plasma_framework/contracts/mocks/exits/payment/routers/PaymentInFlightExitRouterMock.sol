@@ -114,7 +114,11 @@ contract PaymentInFlightExitRouterMock is FailFastReentrancyGuard, PaymentInFlig
             PaymentInFlightExitRouter.challengeInFlightExitInputSpent(challengeInputSpentArgs);
         } else if (stringEquals(testTarget, "challengeInFlightExitOutputSpent")) {
             PaymentInFlightExitRouter.challengeInFlightExitOutputSpent(challengeOutputSpentArgs);
+        } else if (stringEquals(testTarget, "deleteNonPiggybackedInFlightExit")) {
+            PaymentInFlightExitRouter.deleteNonPiggybackedInFlightExit(uint160(0));
         }
+
+        revert("non defined function");
     }
 
     /** empty function that accepts ETH to fund the contract as test setup */
