@@ -38,18 +38,26 @@ library PaymentTransactionModel {
 
         bytes32[] memory inputs = new bytes32[](rlpInputs.length);
         for (uint i = 0; i < rlpInputs.length; i++) {
-            bytes32 input = bytes32(rlpInputs[i].toUint());
+            bytes32 input = rlpInputs[i].toBytes32();
+            // Disallow empty inputs
+            require(uint256(input) != 0, "Empty input not allowed");
             inputs[i] = input;
         }
 
         PaymentOutputModel.Output[] memory outputs = new PaymentOutputModel.Output[](rlpOutputs.length);
         for (uint i = 0; i < rlpOutputs.length; i++) {
             PaymentOutputModel.Output memory output = PaymentOutputModel.decode(rlpOutputs[i]);
+            // Disallow empty outputs.
+            require(!isOutputEmpty(output), "Empty output not allowed");
             outputs[i] = output;
         }
 
-        bytes32 metaData = bytes32(rlpTx[3].toUint());
+        bytes32 metaData = rlpTx[3].toBytes32();
 
         return Transaction({txType: txType, inputs: inputs, outputs: outputs, metaData: metaData});
+    }
+
+    function isOutputEmpty(PaymentOutputModel.Output memory output) internal pure returns (bool) {
+        return uint160(output.outputGuard) == 0 && output.amount == 0;
     }
 }

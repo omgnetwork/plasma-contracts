@@ -36,7 +36,7 @@ library DexMockTransactionModel {
 
         bytes32[] memory inputs = new bytes32[](rlpInputs.length);
         for (uint i = 0; i < rlpInputs.length; i++) {
-            bytes32 input = bytes32(rlpInputs[i].toUint());
+            bytes32 input = rlpInputs[i].toBytes32();
             inputs[i] = input;
         }
 
@@ -46,7 +46,7 @@ library DexMockTransactionModel {
             outputs[i] = output;
         }
 
-        bytes32 metaData = bytes32(rlpTx[3].toUint());
+        bytes32 metaData = rlpTx[3].toBytes32();
 
         return Transaction({txType: txType, inputs: inputs, outputs: outputs, metaData: metaData});
     }

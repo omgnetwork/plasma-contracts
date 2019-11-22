@@ -12,7 +12,9 @@ const { expect } = require('chai');
 
 const Testlang = require('../../helpers/testlang.js');
 const { PaymentTransaction, PaymentTransactionOutput } = require('../../helpers/transaction.js');
-const { PROTOCOL, OUTPUT_TYPE, TX_TYPE } = require('../../helpers/constants.js');
+const {
+    PROTOCOL, OUTPUT_TYPE, TX_TYPE, DUMMY_INPUT_1,
+} = require('../../helpers/constants.js');
 
 contract('Erc20Vault', ([_, erc20Minter, authority, maintainer, alice]) => {
     const DEPOSIT_VALUE = 100;
@@ -159,7 +161,7 @@ contract('Erc20Vault', ([_, erc20Minter, authority, maintainer, alice]) => {
                     OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, this.erc20.address,
                 );
                 const WRONG_TX_TYPE = 123;
-                const deposit = new PaymentTransaction(WRONG_TX_TYPE, [0], [output]);
+                const deposit = new PaymentTransaction(WRONG_TX_TYPE, [DUMMY_INPUT_1], [output]);
 
                 await expectRevert(
                     this.erc20Vault.deposit(deposit.rlpEncoded(), { from: alice }),
@@ -171,7 +173,7 @@ contract('Erc20Vault', ([_, erc20Minter, authority, maintainer, alice]) => {
                 const output = new PaymentTransactionOutput(
                     OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, this.erc20.address,
                 );
-                const deposit = new PaymentTransaction(1, [0], [output]);
+                const deposit = new PaymentTransaction(1, [DUMMY_INPUT_1], [output]);
 
                 await expectRevert(
                     this.erc20Vault.deposit(deposit.rlpEncoded(), { from: alice }),

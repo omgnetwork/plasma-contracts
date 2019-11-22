@@ -34,8 +34,8 @@ contract('RLP invalid tests', () => {
                 await expectRevert(this.rlp.decodeList(encoded), 'Invalid RLP encoding');
             } else if (testName.includes('bytesShouldBeSingleByte')) {
                 await expectRevert(this.rlp.decodeUint(encoded), 'Invalid RLP encoding');
-            } else if (testName.includes('leadingZerosInLongLengthArray2')) {
-                await expectRevert(this.rlp.decodeBytes32(encoded), 'Invalid RLP encoding');
+            } else if (testName.includes('leadingZerosInLongLengthArray')) {
+                await expectRevert(this.rlp.decodeString(encoded), 'Invalid RLP encoding');
             } else if (testName.includes('leadingZerosInLongLengthList')) {
                 await expectRevert(this.rlp.decodeList(encoded), 'Invalid RLP encoding');
             } else if (testName.includes('nonOptimalLongLengthList')) {
@@ -43,7 +43,9 @@ contract('RLP invalid tests', () => {
             } else if (testName.includes('nonOptimalLongLengthArray')) {
                 await expectRevert(this.rlp.decodeString(encoded), 'Invalid RLP encoding');
             } else if (testName.includes('longstringInvalidEncodedLength')) {
-                await expectRevert(this.rlp.decodePayloadOffset(encoded), 'Decoded RLPItem payload length is invalid');
+                await expectRevert(this.rlp.decodeString(encoded), 'Decoded RLP length is invalid');
+            } else if (testName.includes('incorrectLengthInArray')) {
+                await expectRevert(this.rlp.decodeBytes(encoded), 'Invalid RLP encoding');
             } else if (testName.includes('UInt')) {
                 await expectRevert(this.rlp.decodeUint(encoded), 'Leading zeros are invalid');
             }
