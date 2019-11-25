@@ -32,12 +32,19 @@ contract('RLP', () => {
         await testNumberDecoded(this.test.decodeUint, 0);
     });
 
+    it('should decode uint 0', async () => {
+        await testNumberDecoded(this.test.decodeUint, 0);
+    });
+
     it('should decode positive uint', async () => {
         await testNumberDecoded(this.test.decodeUint, 100);
     });
 
-    it('should decode int 0', async () => {
-        await testNumberDecoded(this.test.decodeInt, 0);
+    it('should decode 0x00', async () => {
+        const encoded = '0x00';
+        const callback = this.test.decodeUint;
+        const actual = (await callback(encoded)).toNumber();
+        expect(actual).is.equal(0);
     });
 
     it('should decode positive int', async () => {
