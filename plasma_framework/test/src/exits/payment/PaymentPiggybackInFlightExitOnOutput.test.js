@@ -25,9 +25,11 @@ const { calculateNormalExitable } = require('../../../helpers/exitable.js');
 const { buildUtxoPos, utxoPosToTxPos } = require('../../../helpers/positions.js');
 const { buildOutputGuard } = require('../../../helpers/utils.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
-const { PROTOCOL, TX_TYPE, VAULT_ID } = require('../../../helpers/constants.js');
+const {
+    PROTOCOL, TX_TYPE, VAULT_ID, SAFE_GAS_STIPEND,
+} = require('../../../helpers/constants.js');
 
-contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, outputOwner, nonOutputOwner]) => {
+contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputOwner, nonOutputOwner]) => {
     const ETH = constants.ZERO_ADDRESS;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week in seconds
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
@@ -83,7 +85,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, outputOwner, nonOu
         this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
         const spendingConditionRegistry = await SpendingConditionRegistry.new();
 
-        this.exitGame = await PaymentInFlightExitRouter.new(
+        const exitGameArgs = [
             this.framework.address,
             VAULT_ID.ETH,
             VAULT_ID.ERC20,
@@ -92,7 +94,9 @@ contract('PaymentInFlightExitRouter', ([_, alice, inputOwner, outputOwner, nonOu
             this.stateTransitionVerifier.address,
             this.txFinalizationVerifier.address,
             PAYMENT_TX_TYPE,
-        );
+            SAFE_GAS_STIPEND,
+        ];
+        this.exitGame = await PaymentInFlightExitRouter.new(exitGameArgs);
 
         await this.framework.registerExitGame(TX_TYPE.PAYMENT, this.exitGame.address, PROTOCOL.MORE_VP);
 

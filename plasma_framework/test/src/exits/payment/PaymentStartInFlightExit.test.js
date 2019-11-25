@@ -26,7 +26,7 @@ const { expect } = require('chai');
 
 const { buildUtxoPos, UtxoPos } = require('../../../helpers/positions.js');
 const { computeNormalOutputId, spentOnGas } = require('../../../helpers/utils.js');
-const { PROTOCOL, VAULT_ID } = require('../../../helpers/constants.js');
+const { PROTOCOL, VAULT_ID, SAFE_GAS_STIPEND } = require('../../../helpers/constants.js');
 const {
     buildValidIfeStartArgs, buildIfeStartArgs, createInputTransaction, createDepositTransaction, createInFlightTx,
 } = require('../../../helpers/ife.js');
@@ -152,7 +152,7 @@ contract('PaymentStartInFlightExit', ([_, alice, richFather, carol]) => {
 
                 this.txFinalizationVerifier = await TxFinalizationVerifier.new();
 
-                this.exitGame = await PaymentInFlightExitRouter.new(
+                const exitGameArgs = [
                     this.framework.address,
                     VAULT_ID.ETH,
                     VAULT_ID.ERC20,
@@ -161,7 +161,10 @@ contract('PaymentStartInFlightExit', ([_, alice, richFather, carol]) => {
                     this.stateTransitionVerifier.address,
                     this.txFinalizationVerifier.address,
                     IFE_TX_TYPE,
-                );
+                    SAFE_GAS_STIPEND,
+                ];
+                this.exitGame = await PaymentInFlightExitRouter.new(exitGameArgs);
+
                 await this.framework.registerExitGame(IFE_TX_TYPE, this.exitGame.address, PROTOCOL.MORE_VP);
 
                 const {
@@ -327,7 +330,7 @@ contract('PaymentStartInFlightExit', ([_, alice, richFather, carol]) => {
 
                 this.txFinalizationVerifier = await TxFinalizationVerifier.new();
 
-                this.exitGame = await PaymentInFlightExitRouter.new(
+                const exitGameArgs = [
                     this.framework.address,
                     VAULT_ID.ETH,
                     VAULT_ID.ERC20,
@@ -336,7 +339,10 @@ contract('PaymentStartInFlightExit', ([_, alice, richFather, carol]) => {
                     this.stateTransitionVerifier.address,
                     this.txFinalizationVerifier.address,
                     IFE_TX_TYPE,
-                );
+                    SAFE_GAS_STIPEND,
+                ];
+                this.exitGame = await PaymentInFlightExitRouter.new(exitGameArgs);
+
                 await this.framework.registerExitGame(IFE_TX_TYPE, this.exitGame.address, PROTOCOL.MORE_VP);
                 this.startIFEBondSize = await this.exitGame.startIFEBondSize();
             });

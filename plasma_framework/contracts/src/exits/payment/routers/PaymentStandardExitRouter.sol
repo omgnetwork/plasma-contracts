@@ -2,7 +2,7 @@ pragma solidity 0.5.11;
 pragma experimental ABIEncoderV2;
 
 import "./PaymentStandardExitRouterArgs.sol";
-import "../PaymentExitGame.sol";
+import "../PaymentExitGameArgs.sol";
 import "../PaymentExitDataModel.sol";
 import "../controllers/PaymentStartStandardExit.sol";
 import "../controllers/PaymentProcessStandardExit.sol";
@@ -69,9 +69,7 @@ contract PaymentStandardExitRouter is
         uint256 amount
     );
 
-    constructor(
-        PaymentExitGame.PaymentExitGameArgs memory args
-    )
+    constructor(PaymentExitGameArgs.Args memory args)
         public
     {
         framework = args.framework;

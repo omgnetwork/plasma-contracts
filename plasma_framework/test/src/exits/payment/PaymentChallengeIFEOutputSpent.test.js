@@ -27,7 +27,9 @@ const { buildUtxoPos } = require('../../../helpers/positions.js');
 const { computeNormalOutputId, spentOnGas } = require('../../../helpers/utils.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
 const { MerkleTree } = require('../../../helpers/merkle.js');
-const { PROTOCOL, TX_TYPE, VAULT_ID } = require('../../../helpers/constants.js');
+const {
+    PROTOCOL, TX_TYPE, VAULT_ID, SAFE_GAS_STIPEND,
+} = require('../../../helpers/constants.js');
 
 contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
     const DUMMY_IFE_BOND_SIZE = 31415926535; // wei
@@ -165,7 +167,7 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
             await this.framework.registerVault(VAULT_ID.ETH, ethVault.address);
             await this.framework.registerVault(VAULT_ID.ERC20, erc20Vault.address);
 
-            this.exitGame = await PaymentInFlightExitRouter.new(
+            const exitGameArgs = [
                 this.framework.address,
                 VAULT_ID.ETH,
                 VAULT_ID.ERC20,
@@ -174,7 +176,9 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
                 this.stateTransitionVerifier.address,
                 this.txFinalizationVerifier.address,
                 IFE_TX_TYPE,
-            );
+                SAFE_GAS_STIPEND,
+            ];
+            this.exitGame = await PaymentInFlightExitRouter.new(exitGameArgs);
 
             await this.framework.registerExitGame(TX_TYPE.PAYMENT, this.exitGame.address, PROTOCOL.MORE_VP);
 

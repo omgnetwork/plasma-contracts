@@ -1,10 +1,9 @@
 pragma solidity 0.5.11;
 pragma experimental ABIEncoderV2;
 
+import "./PaymentExitGameArgs.sol";
 import "./routers/PaymentStandardExitRouter.sol";
 import "./routers/PaymentInFlightExitRouter.sol";
-import "../interfaces/IStateTransitionVerifier.sol";
-import "../interfaces/ITxFinalizationVerifier.sol";
 import "../utils/ExitId.sol";
 import "../../framework/interfaces/IExitProcessor.sol";
 import "../../framework/PlasmaFramework.sol";
@@ -17,47 +16,12 @@ contract PaymentExitGame is IExitProcessor, OnlyFromAddress, PaymentStandardExit
     PlasmaFramework private plasmaFramework;
 
     /**
-     * @param framework The Plasma framework
-     * @param ethVaultId Vault id for EthVault
-     * @param erc20VaultId Vault id for the Erc20Vault
-     * @param outputGuardHandlerRegistry the outputGuardHandlerRegistry that can provide outputGuardHandler implementation by types
-     * @param spendingConditionRegistry the spendingConditionRegistry that can provide spending condition implementation by types
-     * @param stateTransitionVerifier state transition verifier predicate contract that checks the transaction correctness
-     * @param txFinalizationVerifier util contract that checks tx is finalized or not
-     * @param supportTxType the tx type of this exit game is using
-     * @param safeGasStipend a gas amount limit when tranferring Eth to protect from attack with draining gas
-     */
-    struct PaymentExitGameArgs {
-        PlasmaFramework framework;
-        uint256 ethVaultId;
-        uint256 erc20VaultId;
-        OutputGuardHandlerRegistry outputGuardHandlerRegistry;
-        SpendingConditionRegistry spendingConditionRegistry;
-        IStateTransitionVerifier stateTransitionVerifier;
-        ITxFinalizationVerifier txFinalizationVerifier;
-        uint256 supportTxType;
-        uint256 safeGasStipend;
-    }
-
-    /**
      * @dev use struct PaymentExitGameArgs to avoid stack too deep compilation error.
      */
-    constructor(
-        PaymentExitGameArgs memory args
-    )
+    constructor(PaymentExitGameArgs.Args memory args)
         public
         PaymentStandardExitRouter(args)
-        PaymentInFlightExitRouter(
-            args.framework,
-            args.ethVaultId,
-            args.erc20VaultId,
-            args.outputGuardHandlerRegistry,
-            args.spendingConditionRegistry,
-            args.stateTransitionVerifier,
-            args.txFinalizationVerifier,
-            args.supportTxType,
-            args.safeGasStipend
-        )
+        PaymentInFlightExitRouter(args)
     {
         plasmaFramework = args.framework;
     }

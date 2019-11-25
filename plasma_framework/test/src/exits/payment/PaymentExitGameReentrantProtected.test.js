@@ -20,7 +20,9 @@ const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
 const TxFinalizationVerifier = artifacts.require('TxFinalizationVerifier');
 
 const { expectRevert } = require('openzeppelin-test-helpers');
-const { PROTOCOL, TX_TYPE, VAULT_ID } = require('../../../helpers/constants.js');
+const {
+    PROTOCOL, TX_TYPE, VAULT_ID, SAFE_GAS_STIPEND,
+} = require('../../../helpers/constants.js');
 
 contract('PaymentExitGame - Reentrant Protected', ([_, outputOwner]) => {
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
@@ -54,7 +56,7 @@ contract('PaymentExitGame - Reentrant Protected', ([_, outputOwner]) => {
         await PaymentInFlightExitRouter.link('PaymentProcessInFlightExit', processInFlightExit.address);
     });
 
-    before('setup outpug guard handler and condition registries', async () => {
+    before('setup output guard handler and condition registries', async () => {
         this.spendingConditionRegistry = await SpendingConditionRegistry.new();
         this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
 
@@ -81,14 +83,18 @@ contract('PaymentExitGame - Reentrant Protected', ([_, outputOwner]) => {
 
     describe('standard exit functions are protected', () => {
         beforeEach(async () => {
-            this.exitGame = await PaymentStandardExitRouter.new(
+            const exitGameArgs = [
                 this.framework.address,
                 VAULT_ID.ETH,
                 VAULT_ID.ERC20,
                 this.outputGuardHandlerRegistry.address,
                 this.spendingConditionRegistry.address,
+                this.stateTransitionVerifier.address,
                 this.txFinalizationVerifier.address,
-            );
+                TX_TYPE.PAYMENT,
+                SAFE_GAS_STIPEND,
+            ];
+            this.exitGame = await PaymentStandardExitRouter.new(exitGameArgs);
 
             await this.framework.registerExitGame(TX_TYPE.PAYMENT, this.exitGame.address, PROTOCOL.MORE_VP);
         });
@@ -110,7 +116,7 @@ contract('PaymentExitGame - Reentrant Protected', ([_, outputOwner]) => {
 
     describe('in-flight exit functions are protected', () => {
         beforeEach(async () => {
-            this.exitGame = await PaymentInFlightExitRouter.new(
+            const exitGameArgs = [
                 this.framework.address,
                 VAULT_ID.ETH,
                 VAULT_ID.ERC20,
@@ -119,7 +125,9 @@ contract('PaymentExitGame - Reentrant Protected', ([_, outputOwner]) => {
                 this.stateTransitionVerifier.address,
                 this.txFinalizationVerifier.address,
                 TX_TYPE.PAYMENT,
-            );
+                SAFE_GAS_STIPEND,
+            ];
+            this.exitGame = await PaymentInFlightExitRouter.new(exitGameArgs);
 
             await this.framework.registerExitGame(TX_TYPE.PAYMENT, this.exitGame.address, PROTOCOL.MORE_VP);
         });

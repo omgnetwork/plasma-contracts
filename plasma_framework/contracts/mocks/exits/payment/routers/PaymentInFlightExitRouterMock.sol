@@ -14,7 +14,6 @@ import "../../../../src/utils/FailFastReentrancyGuard.sol";
 contract PaymentInFlightExitRouterMock is FailFastReentrancyGuard, PaymentInFlightExitRouter {
     using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
 
-    uint256 constant public SAFE_GAS_STIPEND = 2300;
     PlasmaFramework public framework;
 
     PaymentInFlightExitRouterArgs.StartExitArgs private startIfeArgs;
@@ -24,30 +23,11 @@ contract PaymentInFlightExitRouterMock is FailFastReentrancyGuard, PaymentInFlig
     PaymentInFlightExitRouterArgs.ChallengeInputSpentArgs private challengeInputSpentArgs;
     PaymentInFlightExitRouterArgs.ChallengeOutputSpent private challengeOutputSpentArgs;
 
-    constructor(
-        PlasmaFramework plasmaFramework,
-        uint256 ethVaultId,
-        uint256 erc20VaultId,
-        OutputGuardHandlerRegistry outputGuardHandlerRegistry,
-        SpendingConditionRegistry spendingConditionRegistry,
-        IStateTransitionVerifier stateTransitionVerifier,
-        ITxFinalizationVerifier txFinalizationVerifier,
-        uint256 supportedTxType
-    )
+    constructor(PaymentExitGameArgs.Args memory args)
         public
-        PaymentInFlightExitRouter(
-            plasmaFramework,
-            ethVaultId,
-            erc20VaultId,
-            outputGuardHandlerRegistry,
-            spendingConditionRegistry,
-            stateTransitionVerifier,
-            txFinalizationVerifier,
-            supportedTxType,
-            SAFE_GAS_STIPEND
-        )
+        PaymentInFlightExitRouter(args)
     {
-        framework = plasmaFramework;
+        framework = args.framework;
     }
 
     /** override and calls processInFlightExit for test */
