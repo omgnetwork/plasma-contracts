@@ -17,7 +17,7 @@ const {
 const { expect } = require('chai');
 
 const { buildUtxoPos } = require('../../../helpers/positions.js');
-const { PROTOCOL, VAULT_ID } = require('../../../helpers/constants.js');
+const { EMPTY_BYTES_32, PROTOCOL, VAULT_ID } = require('../../../helpers/constants.js');
 
 contract('PaymentStandardExitRouter', ([_, alice]) => {
     const ETH = constants.ZERO_ADDRESS;
@@ -121,6 +121,11 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
                 'ExitOmitted',
                 { exitId: new BN(exitId) },
             );
+
+            const exitData = await this.exitGame.standardExits(exitId);
+            Object.values(exitData).forEach((val) => {
+                expect(val).to.be.oneOf([false, '0', EMPTY_BYTES_32, constants.ZERO_ADDRESS]);
+            });
         });
 
         it('should not process the exit when output already flagged as spent', async () => {
@@ -136,6 +141,11 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
                 'ExitOmitted',
                 { exitId: new BN(exitId) },
             );
+
+            const exitData = await this.exitGame.standardExits(exitId);
+            Object.values(exitData).forEach((val) => {
+                expect(val).to.be.oneOf([false, '0', EMPTY_BYTES_32, constants.ZERO_ADDRESS]);
+            });
         });
 
         it('should flag the output spent when sucessfully processed', async () => {

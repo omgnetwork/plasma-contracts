@@ -50,6 +50,7 @@ library PaymentProcessStandardExit {
 
         if (!exit.exitable || self.framework.isOutputSpent(exit.outputId)) {
             emit ExitOmitted(exitId);
+            delete exitMap.exits[exitId];
             return;
         }
 
