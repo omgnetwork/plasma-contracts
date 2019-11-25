@@ -53,12 +53,12 @@ library RLPReader {
         uint256 items = countEncodedItems(item);
         RLPItem[] memory result = new RLPItem[](items);
 
-        uint256 memPtr = item.memPtr + offset;
+        uint256 dataMemPtr = item.memPtr + offset;
         uint256 dataLen;
         for (uint256 i = 0; i < items; i++) {
-            (dataLen, ) = decodeLengthAndOffset(memPtr);
-            result[i] = RLPItem(dataLen, memPtr);
-            memPtr = memPtr + dataLen;
+            (dataLen, ) = decodeLengthAndOffset(dataMemPtr);
+            result[i] = RLPItem(dataLen, dataMemPtr);
+            dataMemPtr = dataMemPtr + dataLen;
         }
 
         return result;
@@ -95,11 +95,11 @@ library RLPReader {
         (uint256 itemLen, uint256 offset) = decodeLengthAndOffset(item.memPtr);
         require(itemLen == 21, "Decoded item length must be 21");
 
-        uint256 memPtr = item.memPtr + offset;
+        uint256 dataMemPtr = item.memPtr + offset;
         uint256 result;
         // solhint-disable-next-line no-inline-assembly
         assembly {
-            result := mload(memPtr)
+            result := mload(dataMemPtr)
             // right shift by 12 to make bytes20
             result := div(result, exp(256, 12))
         }
@@ -119,12 +119,12 @@ library RLPReader {
         uint256 dataLen = itemLen - offset;
 
         uint result;
-        uint byte0Data;
-        uint memPtrToData = item.memPtr + offset;
+        uint dataByte0;
+        uint dataMemPtr = item.memPtr + offset;
         // solhint-disable-next-line no-inline-assembly
         assembly {
-            result := mload(memPtrToData)
-            byte0Data := byte(0, result)
+            result := mload(dataMemPtr)
+            dataByte0 := byte(0, result)
             // shift to the correct location if necessary
             if lt(dataLen, WORD_SIZE) {
                 result := div(result, exp(256, sub(WORD_SIZE, dataLen)))
@@ -146,11 +146,11 @@ library RLPReader {
         (uint256 itemLen, uint256 offset) = decodeLengthAndOffset(item.memPtr);
         require(itemLen == 33, "Decoded item length must be 33");
 
-        uint256 memPtr = item.memPtr + offset;
+        uint256 dataMemPtr = item.memPtr + offset;
         bytes32 result;
         // solhint-disable-next-line no-inline-assembly
         assembly {
-            result := mload(memPtr)
+            result := mload(dataMemPtr)
         }
 
         return result;
