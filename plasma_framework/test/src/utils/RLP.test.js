@@ -1,5 +1,6 @@
 const rlp = require('rlp');
 const { expect } = require('chai');
+const { expectRevert } = require('openzeppelin-test-helpers');
 
 const RLPMock = artifacts.require('RLPMock');
 
@@ -26,6 +27,12 @@ contract('RLP', () => {
             web3.utils.hexToBytes(await this.test.decodeBytes20(encoded)),
         );
         expect(actual.compare(expected)).to.equal(0);
+    });
+
+    it('should not decode an invalid length address', async () => {
+        const expected = '0xCA35b7d915458EF540aDe6068dFe2F44E8fa733c00';
+        const encoded = web3.utils.bytesToHex(rlp.encode(expected));
+        await expectRevert(this.test.decodeBytes20(encoded), 'Item length must be 21');
     });
 
     it('should decode uint 0', async () => {
