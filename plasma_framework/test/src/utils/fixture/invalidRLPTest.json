@@ -130,9 +130,5 @@
 	"leadingZerosInUInt3": {
 		"in": "INVALID",
 		"out": "0x820000"
-	},
-	"invalidZero": {
-		"in": "INVALID",
-		"out": "0x00"
 	}
 }

@@ -47,11 +47,9 @@ contract('RLP', () => {
         await testNumberDecoded(this.test.decodeUint, 100);
     });
 
-    it('should decode 0x00', async () => {
+    it('should fail to decode 0x00 as a uint', async () => {
         const encoded = '0x00';
-        const callback = this.test.decodeUint;
-        const actual = (await callback(encoded)).toNumber();
-        expect(actual).is.equal(0);
+        await expectRevert(this.test.decodeUint(encoded), 'Scalar 0 should be encoded as 0x80');
     });
 
     it('should decode positive int', async () => {

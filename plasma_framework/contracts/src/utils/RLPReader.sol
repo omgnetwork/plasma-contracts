@@ -130,7 +130,11 @@ library RLPReader {
                 result := div(result, exp(256, sub(WORD_SIZE, dataLen)))
             }
         }
-        require(!(byte0Data == 0 && dataLen > 1), "Leading zeros are invalid");
+        // Special case: scalar 0 should be enoded as 0x80 and _not_ as 0x00
+        require(!(dataByte0 == 0 && offset == 0), "Scalar 0 should be encoded as 0x80");
+
+        // Disallow leading zeros
+        require(!(dataByte0 == 0 && dataLen > 1), "Leading zeros are invalid");
 
         return result;
     }
