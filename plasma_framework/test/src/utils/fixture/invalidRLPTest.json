@@ -84,6 +84,11 @@
 		"out": "0x84000001"
 	},
 
+	"shortStringInvalidEncodedLength2": {
+		"in": "INVALID",
+		"out": "0x840000000001"
+	},
+
 	"stringListInvalidEncodedLength1": {
 		"in": "INVALID",
 		"out": "0xcf83646f6783676f6483636174"
@@ -106,6 +111,10 @@
 		"in": "INVALID",
 		"out": "0x1234567890"
 	},
+	"emptyLonglist": {
+		"in": "INVALID",
+		"out": "0xf7"
+	  },
 	"longstringInvalidEncodedLength1": {
 		"in": "Lorem ipsum dolor sit amet, consectetur adipisicing elit",
 		"out": "0xb911"
@@ -121,5 +130,9 @@
 	"leadingZerosInUInt3": {
 		"in": "INVALID",
 		"out": "0x820000"
+	},
+	"invalidZero": {
+		"in": "INVALID",
+		"out": "0x00"
 	}
 }
