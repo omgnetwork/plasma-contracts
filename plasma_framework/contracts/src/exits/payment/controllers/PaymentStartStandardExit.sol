@@ -33,6 +33,7 @@ library PaymentStartStandardExit {
         ITxFinalizationVerifier txFinalizationVerifier;
         uint256 ethVaultId;
         uint256 erc20VaultId;
+        uint256 supportedTxType;
     }
 
     /**
@@ -68,7 +69,8 @@ library PaymentStartStandardExit {
         OutputGuardHandlerRegistry outputGuardHandlerRegistry,
         ITxFinalizationVerifier txFinalizationVerifier,
         uint256 ethVaultId,
-        uint256 erc20VaultId
+        uint256 erc20VaultId,
+        uint256 supportedTxType
     )
         public
         view
@@ -82,7 +84,8 @@ library PaymentStartStandardExit {
             outputGuardHandlerRegistry: outputGuardHandlerRegistry,
             txFinalizationVerifier: txFinalizationVerifier,
             ethVaultId: ethVaultId,
-            erc20VaultId: erc20VaultId
+            erc20VaultId: erc20VaultId,
+            supportedTxType: supportedTxType
         });
     }
 
@@ -165,6 +168,7 @@ library PaymentStartStandardExit {
         private
         view
     {
+        require(data.outputTx.txType == data.controller.supportedTxType, "Not the supported tx type of the exit game");
         require(data.output.amount > 0, "Should not exit with amount 0");
         require(data.txBlockTimeStamp != 0, "There is no block for the position");
 

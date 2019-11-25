@@ -46,15 +46,7 @@ contract PaymentExitGame is IExitProcessor, OnlyFromAddress, PaymentStandardExit
         PaymentExitGameArgs memory args
     )
         public
-        PaymentStandardExitRouter(
-            args.framework,
-            args.ethVaultId,
-            args.erc20VaultId,
-            args.outputGuardHandlerRegistry,
-            args.spendingConditionRegistry,
-            args.txFinalizationVerifier,
-            args.safeGasStipend
-        )
+        PaymentStandardExitRouter(args)
         PaymentInFlightExitRouter(
             args.framework,
             args.ethVaultId,
