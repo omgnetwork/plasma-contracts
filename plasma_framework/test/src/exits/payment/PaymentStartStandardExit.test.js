@@ -107,7 +107,6 @@ contract('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
             await this.outputGuardHandlerRegistry.registerOutputGuardHandler(OUTPUT_TYPE.PAYMENT, handler.address);
 
             const txFinalizationVerifier = await TxFinalizationVerifier.new();
-
             const stateTransitionVerifier = await StateTransitionVerifierMock.new();
 
             const exitGameArgs = [
