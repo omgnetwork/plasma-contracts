@@ -214,6 +214,7 @@ library PaymentStartInFlightExit {
         view
     {
         verifyExitNotStarted(exitData.exitId, inFlightExitMap);
+        verifyInFlightTxType(exitData);
         verifyNumberOfInputsMatchesNumberOfInFlightTransactionInputs(exitData);
         verifyNoInputSpentMoreThanOnce(exitData.inFlightTx);
         verifyOutputGuardHandlersForInputTxsRegistered(exitData.outputGuardHandlersForInputTxs);
@@ -231,6 +232,10 @@ library PaymentStartInFlightExit {
     {
         PaymentExitDataModel.InFlightExit storage exit = inFlightExitMap.exits[exitId];
         require(exit.exitStartTimestamp == 0, "There is an active in-flight exit from this transaction");
+    }
+
+    function verifyInFlightTxType(StartExitData memory exitData) private pure {
+        require(exitData.inFlightTx.txType == exitData.controller.supportedTxType, "Not the supported tx type of the exit game");
     }
 
     function verifyOutputGuardHandlersForInputTxsRegistered(
