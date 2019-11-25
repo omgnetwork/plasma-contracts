@@ -55,11 +55,8 @@ library RLPReader {
 
         uint256 memPtr = item.memPtr + offset;
         uint256 dataLen;
-        uint256 lengthSum;
         for (uint256 i = 0; i < items; i++) {
             (dataLen, ) = decodeLengthAndOffset(memPtr);
-            lengthSum += dataLen;
-            require(lengthSum < item.len, "Decoded length of RLP item in list is invalid");
             result[i] = RLPItem(dataLen, memPtr);
             memPtr = memPtr + dataLen;
         }
