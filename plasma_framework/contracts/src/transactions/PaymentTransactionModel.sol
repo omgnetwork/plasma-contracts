@@ -24,8 +24,24 @@ library PaymentTransactionModel {
         bytes32 metaData;
     }
 
-    function decode(bytes memory _tx) internal pure returns (PaymentTransactionModel.Transaction memory) {
-        RLPReader.RLPItem[] memory rlpTx = _tx.toRlpItem().toList();
+    /*
+     * @notice Decodes a encoded byte array into a PaymentTransaction
+     * The following rules about the rlp-encoded transaction are enforced:
+     *      - `txType` must be an integer value with no leading zeros
+     *      - `inputs` is an list of 0 to 4 elements
+     *      - Each `input` is a 32 byte long array
+     *      - An `input` may not be all zeros
+     *      - `outputs` is an list of 0 to 4 elements
+     *      - `output.outputType` must be an integer value with no leading zeros
+     *      - `output.outputGuard` is a 20 byte long array
+     *      - `output.token` is a 20 byte long array
+     *      - `output.amount` must be an integer value with no leading zeros
+     *      - An `output` may not be null; A null output is one whose amount is zero
+     * @param tx An RLP-encoded transaction
+     * @return A decoded PaymentTransaction struct
+     */
+    function decode(bytes memory tx) internal pure returns (PaymentTransactionModel.Transaction memory) {
+        RLPReader.RLPItem[] memory rlpTx = tx.toRlpItem().toList();
         require(rlpTx.length == ENCODED_LENGTH, "Invalid encoding of transaction");
 
         RLPReader.RLPItem[] memory rlpInputs = rlpTx[1].toList();
@@ -39,16 +55,16 @@ library PaymentTransactionModel {
         bytes32[] memory inputs = new bytes32[](rlpInputs.length);
         for (uint i = 0; i < rlpInputs.length; i++) {
             bytes32 input = rlpInputs[i].toBytes32();
-            // Disallow empty inputs
-            require(uint256(input) != 0, "Empty input not allowed");
+            // Disallow null inputs
+            require(uint256(input) != 0, "Null input not allowed");
             inputs[i] = input;
         }
 
         PaymentOutputModel.Output[] memory outputs = new PaymentOutputModel.Output[](rlpOutputs.length);
         for (uint i = 0; i < rlpOutputs.length; i++) {
             PaymentOutputModel.Output memory output = PaymentOutputModel.decode(rlpOutputs[i]);
-            // Disallow empty outputs.
-            require(!isOutputEmpty(output), "Empty output not allowed");
+            // Disallow null outputs.
+            require(!isOutputEmpty(output), "Null output not allowed");
             outputs[i] = output;
         }
 

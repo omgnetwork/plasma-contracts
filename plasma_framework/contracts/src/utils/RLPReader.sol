@@ -243,7 +243,7 @@ library RLPReader {
             // Check that the value of length > MAX_SHORT_LEN
             require(dataLen > MAX_SHORT_LEN, "Invalid length for a long string");
             // Calculate the offset
-            offset = (byte0 - (STRING_LONG_START - 1)) + 1;
+            offset = lengthLen + 1;
         } else if (LIST_SHORT_START <= byte0 && byte0 < LIST_LONG_START) {
             // Item is a short list (length <= 55 bytes)
             decodedLength = (byte0 - LIST_SHORT_START) + 1;
@@ -277,7 +277,7 @@ library RLPReader {
             // Check that the value of length > MAX_SHORT_LEN
             require(dataLen > MAX_SHORT_LEN, "Invalid length for a long list");
             // Calculate the offset
-            offset = (byte0 - (LIST_LONG_START - 1)) + 1;
+            offset = lengthLen + 1;
         }
 
         return (decodedLength, offset);
