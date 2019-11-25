@@ -146,4 +146,3 @@ function withdraw(address payable receiver, uint256 amount) external nonpayable 
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)
 * [WireTransaction](WireTransaction.md)
-* [ZeroHashesProvider](ZeroHashesProvider.md)

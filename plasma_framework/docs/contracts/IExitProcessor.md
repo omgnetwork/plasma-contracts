@@ -106,4 +106,3 @@ function processExit(uint160 exitId, uint256 vaultId, address token) external no
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)
 * [WireTransaction](WireTransaction.md)
-* [ZeroHashesProvider](ZeroHashesProvider.md)

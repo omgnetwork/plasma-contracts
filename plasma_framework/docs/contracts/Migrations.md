@@ -144,4 +144,3 @@ function upgrade(address new_address) public nonpayable restricted
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)
 * [WireTransaction](WireTransaction.md)
-* [ZeroHashesProvider](ZeroHashesProvider.md)

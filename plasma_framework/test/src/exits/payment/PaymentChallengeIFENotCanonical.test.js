@@ -703,7 +703,7 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
 
             it('fails when in-flight transaction is not included in block', async () => {
                 const inclusionProof = this.inFlightTxInclusionProof;
-                const wrongInclusionProof = inclusionProof.substring(0, inclusionProof.length - 1).concat('f');
+                const wrongInclusionProof = inclusionProof.substring(0, inclusionProof.length - 1).concat('e');
                 await expectRevert(
                     this.exitGame.respondToNonCanonicalChallenge(
                         this.challengeArgs.inFlightTx,

@@ -128,4 +128,3 @@ function quarantine(struct Quarantine.Data _self, address _contractAddress) inte
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)
 * [WireTransaction](WireTransaction.md)
-* [ZeroHashesProvider](ZeroHashesProvider.md)

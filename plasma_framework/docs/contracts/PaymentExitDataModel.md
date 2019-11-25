@@ -150,4 +150,3 @@ uint8 public constant MAX_OUTPUT_NUM;
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)
 * [WireTransaction](WireTransaction.md)
-* [ZeroHashesProvider](ZeroHashesProvider.md)

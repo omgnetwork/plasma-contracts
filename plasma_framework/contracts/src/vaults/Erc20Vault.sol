@@ -41,7 +41,7 @@ contract Erc20Vault is Vault {
 
         IERC20(token).safeTransferFrom(depositor, address(this), amount);
 
-        uint256 blknum = super._submitDepositBlock(depositTx);
+        uint256 blknum = super.submitDepositBlock(depositTx);
 
         emit DepositCreated(msg.sender, blknum, token, amount);
     }

@@ -6,16 +6,25 @@ View Source: [contracts/src/utils/Merkle.sol](../../contracts/src/utils/Merkle.s
 
 Library for working with Merkle trees
 
+## Contract Members
+**Constants & Variables**
+
+```js
+bytes1 private constant LEAF_SALT;
+bytes1 private constant NODE_SALT;
+
+```
+
 ## Functions
 
-- [checkMembership(bytes32 leaf, uint256 index, bytes32 rootHash, bytes proof)](#checkmembership)
+- [checkMembership(bytes leaf, uint256 index, bytes32 rootHash, bytes proof)](#checkmembership)
 
 ### checkMembership
 
 Checks that a leaf hash is contained in a root hash
 
 ```js
-function checkMembership(bytes32 leaf, uint256 index, bytes32 rootHash, bytes proof) internal pure
+function checkMembership(bytes leaf, uint256 index, bytes32 rootHash, bytes proof) internal pure
 returns(bool)
 ```
 
@@ -27,7 +36,7 @@ True, if the leaf hash is in the Merkle tree; otherwise, False
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| leaf | bytes32 | Leaf hash to verify | 
+| leaf | bytes | Leaf hash to verify | 
 | index | uint256 | Position of the leaf hash in the Merkle tree | 
 | rootHash | bytes32 | Root of the Merkle tree | 
 | proof | bytes | A Merkle proof demonstrating membership of the leaf hash | 
@@ -107,4 +116,3 @@ True, if the leaf hash is in the Merkle tree; otherwise, False
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)
 * [WireTransaction](WireTransaction.md)
-* [ZeroHashesProvider](ZeroHashesProvider.md)

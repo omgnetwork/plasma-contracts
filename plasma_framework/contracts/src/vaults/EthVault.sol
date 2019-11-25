@@ -39,7 +39,7 @@ contract EthVault is Vault {
         require(depositVerifier != address(0), "Deposit verifier has not been set");
 
         IEthDepositVerifier(depositVerifier).verify(_depositTx, msg.value, msg.sender);
-        uint256 blknum = super._submitDepositBlock(_depositTx);
+        uint256 blknum = super.submitDepositBlock(_depositTx);
 
         emit DepositCreated(msg.sender, blknum, address(0), msg.value);
     }

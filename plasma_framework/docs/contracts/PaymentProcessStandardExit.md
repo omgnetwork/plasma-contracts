@@ -120,4 +120,3 @@ function run(struct PaymentProcessStandardExit.Controller self, struct PaymentEx
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)
 * [WireTransaction](WireTransaction.md)
-* [ZeroHashesProvider](ZeroHashesProvider.md)

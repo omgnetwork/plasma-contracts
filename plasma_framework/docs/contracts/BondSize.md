@@ -167,4 +167,3 @@ function validateBondSize(struct BondSize.Params self, uint128 newBondSize) priv
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)
 * [WireTransaction](WireTransaction.md)
-* [ZeroHashesProvider](ZeroHashesProvider.md)

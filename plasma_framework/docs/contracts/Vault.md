@@ -13,6 +13,10 @@ Base contract for vault implementation
 **Constants & Variables**
 
 ```js
+//private members
+bytes1 private constant LEAF_SALT;
+bytes1 private constant NODE_SALT;
+
 //internal members
 contract PlasmaFramework internal framework;
 bytes32[16] internal zeroHashes;
@@ -49,9 +53,11 @@ modifier onlyFromNonQuarantinedExitGame() internal
 ## Functions
 
 - [(PlasmaFramework _framework)](#)
+- [getZeroHashes()](#getzerohashes)
 - [setDepositVerifier(address _verifier)](#setdepositverifier)
 - [getEffectiveDepositVerifier()](#geteffectivedepositverifier)
-- [_submitDepositBlock(bytes _depositTx)](#_submitdepositblock)
+- [submitDepositBlock(bytes depositTx)](#submitdepositblock)
+- [getDepositBlockRoot(bytes depositTx)](#getdepositblockroot)
 
 ### 
 
@@ -64,6 +70,20 @@ function (PlasmaFramework _framework) public nonpayable
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
 | _framework | PlasmaFramework |  | 
+
+### getZeroHashes
+
+Pre-computes zero hashes to be used for building Merkle tree for deposit block
+
+```js
+function getZeroHashes() private pure
+returns(bytes32[16])
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
 
 ### setDepositVerifier
 
@@ -97,12 +117,12 @@ Contract address of the deposit verifier
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
 
-### _submitDepositBlock
+### submitDepositBlock
 
 Generate and submit a deposit block root to the PlasmaFramework
 
 ```js
-function _submitDepositBlock(bytes _depositTx) internal nonpayable
+function submitDepositBlock(bytes depositTx) internal nonpayable
 returns(uint256)
 ```
 
@@ -110,7 +130,20 @@ returns(uint256)
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| _depositTx | bytes |  | 
+| depositTx | bytes |  | 
+
+### getDepositBlockRoot
+
+```js
+function getDepositBlockRoot(bytes depositTx) private view
+returns(bytes32)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| depositTx | bytes |  | 
 
 ## Contracts
 
@@ -187,4 +220,3 @@ returns(uint256)
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)
 * [WireTransaction](WireTransaction.md)
-* [ZeroHashesProvider](ZeroHashesProvider.md)

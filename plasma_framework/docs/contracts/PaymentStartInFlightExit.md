@@ -398,4 +398,3 @@ function setInFlightExitOutputs(struct PaymentExitDataModel.InFlightExit ife, st
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)
 * [WireTransaction](WireTransaction.md)
-* [ZeroHashesProvider](ZeroHashesProvider.md)

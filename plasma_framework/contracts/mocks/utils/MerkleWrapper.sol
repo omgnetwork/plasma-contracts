@@ -4,7 +4,7 @@ import "../../src/utils/Merkle.sol";
 
 contract MerkleWrapper {
 
-    function checkMembership(bytes32 leaf, uint256 index, bytes32 rootHash, bytes memory proof)
+    function checkMembership(bytes memory leaf, uint256 index, bytes32 rootHash, bytes memory proof)
         public
         pure
         returns (bool)
