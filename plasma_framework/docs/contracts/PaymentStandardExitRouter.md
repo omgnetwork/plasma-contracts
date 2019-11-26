@@ -42,7 +42,7 @@ event BondReturnFailed(address indexed receiver, uint256  amount);
 ## Functions
 
 - [(struct PaymentExitGameArgs.Args args)](#)
-- [standardExits(uint160 exitId)](#standardexits)
+- [standardExits(uint160[] exitIds)](#standardexits)
 - [startStandardExitBondSize()](#startstandardexitbondsize)
 - [updateStartStandardExitBondSize(uint128 newBondSize)](#updatestartstandardexitbondsize)
 - [startStandardExit(struct PaymentStandardExitRouterArgs.StartStandardExitArgs args)](#startstandardexit)
