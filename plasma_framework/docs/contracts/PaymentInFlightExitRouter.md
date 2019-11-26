@@ -55,7 +55,7 @@ event InFlightExitDeleted(uint160 indexed exitId);
 
 ## Functions
 
-- [(PlasmaFramework plasmaFramework, uint256 ethVaultId, uint256 erc20VaultId, OutputGuardHandlerRegistry outputGuardHandlerRegistry, SpendingConditionRegistry spendingConditionRegistry, IStateTransitionVerifier stateTransitionVerifier, ITxFinalizationVerifier txFinalizationVerifier, uint256 supportedTxType, uint256 safeGasStipend)](#)
+- [(struct PaymentExitGameArgs.Args args)](#)
 - [inFlightExits(uint160 exitId)](#inflightexits)
 - [startInFlightExit(struct PaymentInFlightExitRouterArgs.StartExitArgs args)](#startinflightexit)
 - [piggybackInFlightExitOnInput(struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnInputArgs args)](#piggybackinflightexitoninput)
@@ -74,22 +74,14 @@ event InFlightExitDeleted(uint160 indexed exitId);
 ### 
 
 ```js
-function (PlasmaFramework plasmaFramework, uint256 ethVaultId, uint256 erc20VaultId, OutputGuardHandlerRegistry outputGuardHandlerRegistry, SpendingConditionRegistry spendingConditionRegistry, IStateTransitionVerifier stateTransitionVerifier, ITxFinalizationVerifier txFinalizationVerifier, uint256 supportedTxType, uint256 safeGasStipend) public nonpayable
+function (struct PaymentExitGameArgs.Args args) public nonpayable
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| plasmaFramework | PlasmaFramework |  | 
-| ethVaultId | uint256 |  | 
-| erc20VaultId | uint256 |  | 
-| outputGuardHandlerRegistry | OutputGuardHandlerRegistry |  | 
-| spendingConditionRegistry | SpendingConditionRegistry |  | 
-| stateTransitionVerifier | IStateTransitionVerifier |  | 
-| txFinalizationVerifier | ITxFinalizationVerifier |  | 
-| supportedTxType | uint256 |  | 
-| safeGasStipend | uint256 |  | 
+| args | struct PaymentExitGameArgs.Args |  | 
 
 ### inFlightExits
 
@@ -336,6 +328,7 @@ function updatePiggybackBondSize(uint128 newBondSize) public nonpayable onlyFrom
 * [PaymentEip712Lib](PaymentEip712Lib.md)
 * [PaymentExitDataModel](PaymentExitDataModel.md)
 * [PaymentExitGame](PaymentExitGame.md)
+* [PaymentExitGameArgs](PaymentExitGameArgs.md)
 * [PaymentInFlightExitModelUtils](PaymentInFlightExitModelUtils.md)
 * [PaymentInFlightExitRouter](PaymentInFlightExitRouter.md)
 * [PaymentInFlightExitRouterArgs](PaymentInFlightExitRouterArgs.md)
