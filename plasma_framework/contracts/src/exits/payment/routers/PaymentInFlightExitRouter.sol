@@ -182,8 +182,8 @@ contract PaymentInFlightExitRouter is
         );
 
         deleteNonPiggybackIFEController = PaymentDeleteInFlightExit.Controller({
-            minExitPeriod: plasmaFramework.minExitPeriod(),
-            safeGasStipend: safeGasStipend
+            minExitPeriod: args.framework.minExitPeriod(),
+            safeGasStipend: args.safeGasStipend
         });
 
         processInflightExitController = PaymentProcessInFlightExit.Controller({
