@@ -26,15 +26,15 @@ struct Output {
 
 `Transaction` is the top level structure and it has the following fields:
 1. `txType` is a unique number that represents the type of transaction. Each transaction type has only one exit game contract associated with it. 
-1. The `inputs` field is an array of `bytes32` representing the `utxoPos` as the output identifier. There are a maximum four inputs allowed. An input can not be zero if it is specified. 
+1. The `inputs` field is an array of `bytes32` representing the `utxoPos` as the output identifier. There are a maximum four inputs allowed. An input can not be `0x0` if it is specified `inputs` list. 
 1. The `outputs` field is an array of `Output` struct representing payment output information. There are a maximum of four outputs allowed. 
 1. `metaData` field is a `bytes32` field that can be used to add extra data to the transaction. It should contain `0x0` if the transaction does not have extra data.
 
 Output has four elements that fulfil the current `WireTransactionOutput`:
-1. `outputType` represents the type of output. Each new valid transaction type is tied to one or more new output types. In Payment transaction V1, there is only one output type. The output type is used to decide, eg. which spending condition to use. Also, output type is bound to the input type. Currently the only output type requires the spending tx's input to be using `utxoPos`. Potentially there can be output type deciding to be pointed by `outputId` instead in the future.
+1. `outputType` represents the type of output. Each transaction type is tied to one or more output types. In Payment transaction V1, there is only one output type. The output type is used to decide, eg. which spending condition to use. Also, output type is bound to the input type. Currently the only output type that requires the spending tx's input to be using `utxoPos`. Potentially there can be output type deciding to be pointed by `outputId` instead in the future.
 1. `outputGuard` is the field that represents the authentication data of the output. Its value must always be the same as the `owner` address of the output in the first version of Payment Transaction. For instance, if the output belongs to Alice, then the value of `outputGuard` equals Alice's address.
 1. `token` is the ERC20 token contract address that represents the transferred asset. For `ETH`, it uses `address(0)`.
-1. `amount` defined how many units of the asset are being transferred.
+1. `amount` defines how many units of the asset are being transferred.
 
 A `Transaction` can be further grouped into two different sub categories. They both fit into the above specification of a `Transaction` but they are both unique in how many inputs and outputs they allow and how they are processed by the different components in the Plasma Framework system. 
 
