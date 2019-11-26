@@ -1,10 +1,13 @@
 # Payment ExitGame Implementation V1
 
-This document is a short description of the interaction functions of the current Payment ExitGame implementation. Please check the [ALD ExitGame definitions and properties doc](./ald-exit-game-definitions-and-properties.md) for the description of each specific phrases used in here.
+This document is a short description of the interactions in the current Payment ExitGame implementation. Check the [ALD ExitGame definitions and properties doc](./ald-exit-game-definitions-and-properties.md) for more background on the terminologies used in this document.
 
-In Payment transaction V1, it only allows to have Payment transaction V1 as inputs and have both Payment transaction V1 and V2 as outputs. Specification of V2 is still undefined. However, the spending condition of V1 to V2 is defined as the signature of output owner should be correctly signed.
+Payment transaction V1 is specified such that it only allows to have Payment transaction V1 as input and have both Payment transaction V1 and V2 as outputs. Specification of V2 is still undefined and a place holder at the moment. However, the spending condition of V1 to V2 is fulfilled if the output owner correctly signs the spending transaction.
 
 ## Transaction Data Structure
+
+In the first version of the Plasma Framework system, there is only one type of Payment Transaction.  It is defined as the following data structure:
+
 ```
 struct Transaction {
     uint256 txType;
@@ -21,22 +24,29 @@ struct Output {
 }
 ```
 
-In the first version of the Plasma Framework system, there is only one type of Payment Transaction. 
-1. `txType` represents the type of the transaction. Each transaction type has only one exit game contract mapping the exit game interactions. 
-1. The `inputs` field is an array of `bytes32` representing the `utxoPos` as the output identifier. There are a maximum four inputs. A deposit transaction does have zero inputs.
-1. The `outputs` field is an array of `Output` struct representing payment output information. There are a maximum four outputs.  A deposit transaction does have one output.
-1. `metaData` field is a `bytes32` field that can be used to add extra data to the transaction. It should contain zeros if the transaction does not have an extra data.
+`Transaction` is the top level structure and it has the following fields:
+1. `txType` is a unique number that represents the type of transaction. Each transaction type has only one exit game contract associated with it. 
+1. The `inputs` field is an array of `bytes32` representing the `utxoPos` as the output identifier. There are a maximum four inputs allowed. An input can not be zero if it is specified. 
+1. The `outputs` field is an array of `Output` struct representing payment output information. There are a maximum of four outputs allowed. 
+1. `metaData` field is a `bytes32` field that can be used to add extra data to the transaction. It should contain `0x0` if the transaction does not have extra data.
 
-Output has four elements that fulfills the current `WireTransactionOutput`:
-1. `outputType` represents the type of output. Each new valid transaction type is tied to one or more new output types. In Payment transaction V1, there would be only one output type. The output type is used to decide, eg. which spending condition to use. Also, output type is bind to the input type. Currently the only output type requires the spending tx's input to be using `utxoPos`. Potentially there can be output type deciding to be pointed by `outputId` instead in the future.
+Output has four elements that fulfil the current `WireTransactionOutput`:
+1. `outputType` represents the type of output. Each new valid transaction type is tied to one or more new output types. In Payment transaction V1, there is only one output type. The output type is used to decide, eg. which spending condition to use. Also, output type is bound to the input type. Currently the only output type requires the spending tx's input to be using `utxoPos`. Potentially there can be output type deciding to be pointed by `outputId` instead in the future.
 1. `outputGuard` is the field that represents the authentication data of the output. Its value must always be the same as the `owner` address of the output in the first version of Payment Transaction. For instance, if the output belongs to Alice, then the value of `outputGuard` equals Alice's address.
-1. `token` is the ERC20 token contract address that represents the ERC20 token. For `ETH`, it uses `address(0)`.
-1. `amount` tells how much of the token is hold within this output
+1. `token` is the ERC20 token contract address that represents the transferred asset. For `ETH`, it uses `address(0)`.
+1. `amount` defined how many units of the asset are being transferred.
+
+A `Transaction` can be further grouped into two different sub categories. They both fit into the above specification of a `Transaction` but they are both unique in how many inputs and outputs they allow and how they are processed by the different components in the Plasma Framework system. 
+
+1. A `Standard Tx` has between one and four inputs and one and four outputs. It can only be created by the operator who holds the authority key. 
+
+1. A `Deposit Tx` has zero inputs and one output. It is a special transaction that can only be created by the root chain contracts when a deposit occurs. They are also distinguishable from a `Standard Tx` by the fact that they are included in deposit blocks, that only contains one `Deposit Tx` per block. 
+
 
 ## Exit Game Properties of Payment Transaction V1
 
 ### Spending Condition
-There are only two spending conditions: Payment V1 -> Payment V1 and Payment V1 -> Payment V2. Both shares the same main logic: Checks the signature of the output owner.
+There are only two spending conditions: Payment V1 -> Payment V1 and Payment V1 -> Payment V2. Both share the same main logic which is to verify that the signature of the output owner matches.
 
 ### Valid Spending Tx
 Since Payment V1 only have two cases that would be spending it: spending in Payment tx v1 and Payment tx v2, the cases is rather simple as both tx types shares mostly the same logic:
