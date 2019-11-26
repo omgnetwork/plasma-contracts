@@ -95,6 +95,7 @@ function verify(bytes depositTx, uint256 amount, address sender) external view
 * [PaymentChallengeIFENotCanonical](PaymentChallengeIFENotCanonical.md)
 * [PaymentChallengeIFEOutputSpent](PaymentChallengeIFEOutputSpent.md)
 * [PaymentChallengeStandardExit](PaymentChallengeStandardExit.md)
+* [PaymentDeleteInFlightExit](PaymentDeleteInFlightExit.md)
 * [PaymentEip712Lib](PaymentEip712Lib.md)
 * [PaymentExitDataModel](PaymentExitDataModel.md)
 * [PaymentExitGame](PaymentExitGame.md)

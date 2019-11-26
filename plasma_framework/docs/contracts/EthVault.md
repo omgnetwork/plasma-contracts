@@ -112,6 +112,7 @@ function withdraw(address payable receiver, uint256 amount) external nonpayable 
 * [PaymentChallengeIFENotCanonical](PaymentChallengeIFENotCanonical.md)
 * [PaymentChallengeIFEOutputSpent](PaymentChallengeIFEOutputSpent.md)
 * [PaymentChallengeStandardExit](PaymentChallengeStandardExit.md)
+* [PaymentDeleteInFlightExit](PaymentDeleteInFlightExit.md)
 * [PaymentEip712Lib](PaymentEip712Lib.md)
 * [PaymentExitDataModel](PaymentExitDataModel.md)
 * [PaymentExitGame](PaymentExitGame.md)

@@ -10,6 +10,7 @@ const PaymentProcessInFlightExit = artifacts.require('PaymentProcessInFlightExit
 const PaymentChallengeIFENotCanonical = artifacts.require('PaymentChallengeIFENotCanonical');
 const PaymentChallengeIFEInputSpent = artifacts.require('PaymentChallengeIFEInputSpent');
 const PaymentChallengeIFEOutputSpent = artifacts.require('PaymentChallengeIFEOutputSpent');
+const PaymentDeleteInFlightExit = artifacts.require('PaymentDeleteInFlightExit');
 const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry');
 const SpendingConditionMock = artifacts.require('SpendingConditionMock');
 const StateTransitionVerifierMock = artifacts.require('StateTransitionVerifierMock');
@@ -53,6 +54,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
         const challengeInFlightExitNotCanonical = await PaymentChallengeIFENotCanonical.new();
         const challengeIFEInputSpent = await PaymentChallengeIFEInputSpent.new();
         const challengeIFEOutputSpent = await PaymentChallengeIFEOutputSpent.new();
+        const deleteInFlightEixt = await PaymentDeleteInFlightExit.new();
         const processInFlightExit = await PaymentProcessInFlightExit.new();
 
         await PaymentInFlightExitRouter.link('PaymentStartInFlightExit', startInFlightExit.address);
@@ -60,6 +62,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
         await PaymentInFlightExitRouter.link('PaymentChallengeIFENotCanonical', challengeInFlightExitNotCanonical.address);
         await PaymentInFlightExitRouter.link('PaymentChallengeIFEInputSpent', challengeIFEInputSpent.address);
         await PaymentInFlightExitRouter.link('PaymentChallengeIFEOutputSpent', challengeIFEOutputSpent.address);
+        await PaymentInFlightExitRouter.link('PaymentDeleteInFlightExit', deleteInFlightEixt.address);
         await PaymentInFlightExitRouter.link('PaymentProcessInFlightExit', processInFlightExit.address);
     });
 

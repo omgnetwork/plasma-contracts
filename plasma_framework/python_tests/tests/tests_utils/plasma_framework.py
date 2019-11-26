@@ -114,6 +114,7 @@ class PlasmaFramework:
             'PaymentChallengeIFENotCanonical',
             'PaymentChallengeIFEInputSpent',
             'PaymentChallengeIFEOutputSpent',
+            'PaymentDeleteInFlightExit',
             'PaymentProcessInFlightExit',
         ]
 

@@ -23,8 +23,9 @@ struct PaymentStartInFlightExit.Controller internal startInFlightExitController;
 struct PaymentPiggybackInFlightExit.Controller internal piggybackInFlightExitController;
 struct PaymentChallengeIFENotCanonical.Controller internal challengeCanonicityController;
 struct PaymentChallengeIFEInputSpent.Controller internal challengeInputSpentController;
-struct PaymentProcessInFlightExit.Controller internal processInflightExitController;
 struct PaymentChallengeIFEOutputSpent.Controller internal challengeOutputSpentController;
+struct PaymentDeleteInFlightExit.Controller internal deleteNonPiggybackIFEController;
+struct PaymentProcessInFlightExit.Controller internal processInflightExitController;
 struct BondSize.Params internal startIFEBond;
 struct BondSize.Params internal piggybackBond;
 
@@ -41,6 +42,7 @@ event PiggybackBondUpdated(uint128  bondSize);
 event InFlightExitStarted(address indexed initiator, bytes32  txHash);
 event InFlightExitInputPiggybacked(address indexed exitTarget, bytes32  txHash, uint16  inputIndex);
 event InFlightExitOmitted(uint160 indexed exitId, address  token);
+event InFlightBondReturnFailed(address indexed receiver, uint256  amount);
 event InFlightExitOutputWithdrawn(uint160 indexed exitId, uint16  outputIndex);
 event InFlightExitInputWithdrawn(uint160 indexed exitId, uint16  inputIndex);
 event InFlightExitOutputPiggybacked(address indexed exitTarget, bytes32  txHash, uint16  outputIndex);
@@ -48,6 +50,7 @@ event InFlightExitChallenged(address indexed challenger, bytes32  txHash, uint25
 event InFlightExitChallengeResponded(address  challenger, bytes32  txHash, uint256  challengeTxPosition);
 event InFlightExitInputBlocked(address indexed challenger, bytes32  txHash, uint16  inputIndex);
 event InFlightExitOutputBlocked(address indexed challenger, bytes32  ifeTxHash, uint16  outputIndex);
+event InFlightExitDeleted(uint160 indexed exitId);
 ```
 
 ## Functions
@@ -61,6 +64,7 @@ event InFlightExitOutputBlocked(address indexed challenger, bytes32  ifeTxHash, 
 - [respondToNonCanonicalChallenge(bytes inFlightTx, uint256 inFlightTxPos, bytes inFlightTxInclusionProof)](#respondtononcanonicalchallenge)
 - [challengeInFlightExitInputSpent(struct PaymentInFlightExitRouterArgs.ChallengeInputSpentArgs args)](#challengeinflightexitinputspent)
 - [challengeInFlightExitOutputSpent(struct PaymentInFlightExitRouterArgs.ChallengeOutputSpent args)](#challengeinflightexitoutputspent)
+- [deleteNonPiggybackedInFlightExit(uint160 exitId)](#deletenonpiggybackedinflightexit)
 - [processInFlightExit(uint160 exitId, address token)](#processinflightexit)
 - [startIFEBondSize()](#startifebondsize)
 - [updateStartIFEBondSize(uint128 newBondSize)](#updatestartifebondsize)
@@ -202,6 +206,20 @@ function challengeInFlightExitOutputSpent(struct PaymentInFlightExitRouterArgs.C
 | ------------- |------------- | -----|
 | args | struct PaymentInFlightExitRouterArgs.ChallengeOutputSpent | Argument data to challenge (see also struct 'ChallengeOutputSpent') | 
 
+### deleteNonPiggybackedInFlightExit
+
+Deletes in-flight exit if the first phase has passed and not being piggybacked
+
+```js
+function deleteNonPiggybackedInFlightExit(uint160 exitId) public nonpayable nonReentrant 
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| exitId | uint160 | The exitId of the in-flight exit | 
+
 ### processInFlightExit
 
 Process in-flight exit
@@ -314,6 +332,7 @@ function updatePiggybackBondSize(uint128 newBondSize) public nonpayable onlyFrom
 * [PaymentChallengeIFENotCanonical](PaymentChallengeIFENotCanonical.md)
 * [PaymentChallengeIFEOutputSpent](PaymentChallengeIFEOutputSpent.md)
 * [PaymentChallengeStandardExit](PaymentChallengeStandardExit.md)
+* [PaymentDeleteInFlightExit](PaymentDeleteInFlightExit.md)
 * [PaymentEip712Lib](PaymentEip712Lib.md)
 * [PaymentExitDataModel](PaymentExitDataModel.md)
 * [PaymentExitGame](PaymentExitGame.md)

@@ -7,8 +7,9 @@ import "../controllers/PaymentStartInFlightExit.sol";
 import "../controllers/PaymentPiggybackInFlightExit.sol";
 import "../controllers/PaymentChallengeIFENotCanonical.sol";
 import "../controllers/PaymentChallengeIFEInputSpent.sol";
-import "../controllers/PaymentProcessInFlightExit.sol";
 import "../controllers/PaymentChallengeIFEOutputSpent.sol";
+import "../controllers/PaymentDeleteInFlightExit.sol";
+import "../controllers/PaymentProcessInFlightExit.sol";
 import "../../registries/SpendingConditionRegistry.sol";
 import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../interfaces/IStateTransitionVerifier.sol";
@@ -26,8 +27,9 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyFromAddress, OnlyWithV
     using PaymentPiggybackInFlightExit for PaymentPiggybackInFlightExit.Controller;
     using PaymentChallengeIFENotCanonical for PaymentChallengeIFENotCanonical.Controller;
     using PaymentChallengeIFEInputSpent for PaymentChallengeIFEInputSpent.Controller;
-    using PaymentProcessInFlightExit for PaymentProcessInFlightExit.Controller;
     using PaymentChallengeIFEOutputSpent for PaymentChallengeIFEOutputSpent.Controller;
+    using PaymentDeleteInFlightExit for PaymentDeleteInFlightExit.Controller;
+    using PaymentProcessInFlightExit for PaymentProcessInFlightExit.Controller;
     using BondSize for BondSize.Params;
 
     // Initial IFE bond size = 185000 (gas cost of challenge) * 20 gwei (current fast gas price) * 10 (safety margin)
@@ -45,8 +47,9 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyFromAddress, OnlyWithV
     PaymentPiggybackInFlightExit.Controller internal piggybackInFlightExitController;
     PaymentChallengeIFENotCanonical.Controller internal challengeCanonicityController;
     PaymentChallengeIFEInputSpent.Controller internal challengeInputSpentController;
-    PaymentProcessInFlightExit.Controller internal processInflightExitController;
     PaymentChallengeIFEOutputSpent.Controller internal challengeOutputSpentController;
+    PaymentDeleteInFlightExit.Controller internal deleteNonPiggybackIFEController;
+    PaymentProcessInFlightExit.Controller internal processInflightExitController;
     BondSize.Params internal startIFEBond;
     BondSize.Params internal piggybackBond;
 
@@ -116,6 +119,10 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyFromAddress, OnlyWithV
         uint16 outputIndex
     );
 
+    event InFlightExitDeleted(
+        uint160 indexed exitId
+    );
+
     constructor(
         PlasmaFramework plasmaFramework,
         uint256 ethVaultId,
@@ -177,6 +184,11 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyFromAddress, OnlyWithV
             txFinalizationVerifier,
             safeGasStipend
         );
+
+        deleteNonPiggybackIFEController = PaymentDeleteInFlightExit.Controller({
+            minExitPeriod: plasmaFramework.minExitPeriod(),
+            safeGasStipend: safeGasStipend
+        });
 
         processInflightExitController = PaymentProcessInFlightExit.Controller({
             framework: plasmaFramework,
@@ -287,6 +299,17 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyFromAddress, OnlyWithV
         nonReentrant(framework)
     {
         challengeOutputSpentController.run(inFlightExitMap, args);
+    }
+
+    /**
+     * @notice Deletes in-flight exit if the first phase has passed and not being piggybacked
+     * @dev Since IFE is enqueued during piggyback, a non-piggybacked IFE means that it will never be processed.
+     *      This means that the IFE bond will never be returned.
+     *      see: https://github.com/omisego/plasma-contracts/issues/440
+     * @param exitId The exitId of the in-flight exit
+     */
+    function deleteNonPiggybackedInFlightExit(uint160 exitId) public nonReentrant(framework) {
+        deleteNonPiggybackIFEController.run(inFlightExitMap, exitId);
     }
 
     /**
