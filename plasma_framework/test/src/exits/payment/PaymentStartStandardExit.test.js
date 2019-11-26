@@ -168,7 +168,7 @@ contract('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
                 this.exitGame.startStandardExit(
                     args, { from: outputOwner, value: this.startStandardExitBondSize },
                 ),
-                'Not the supported tx type of the exit game',
+                'Unsupported transaction type of the exit game',
             );
         });
 

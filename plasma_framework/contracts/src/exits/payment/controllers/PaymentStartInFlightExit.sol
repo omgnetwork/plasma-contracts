@@ -235,7 +235,7 @@ library PaymentStartInFlightExit {
     }
 
     function verifyInFlightTxType(StartExitData memory exitData) private pure {
-        require(exitData.inFlightTx.txType == exitData.controller.supportedTxType, "Not the supported tx type of the exit game");
+        require(exitData.inFlightTx.txType == exitData.controller.supportedTxType, "Unsupported transaction type of the exit game");
     }
 
     function verifyOutputGuardHandlersForInputTxsRegistered(

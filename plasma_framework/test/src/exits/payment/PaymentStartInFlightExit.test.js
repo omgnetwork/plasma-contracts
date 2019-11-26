@@ -573,7 +573,7 @@ contract('PaymentStartInFlightExit', ([_, alice, richFather, carol]) => {
 
                 await expectRevert(
                     this.exitGame.startInFlightExit(args, { from: alice, value: this.startIFEBondSize.toString() }),
-                    'Not the supported tx type of the exit game',
+                    'Unsupported transaction type of the exit game',
                 );
             });
 

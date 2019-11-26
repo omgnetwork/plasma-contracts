@@ -168,7 +168,7 @@ library PaymentStartStandardExit {
         private
         view
     {
-        require(data.outputTx.txType == data.controller.supportedTxType, "Not the supported tx type of the exit game");
+        require(data.outputTx.txType == data.controller.supportedTxType, "Unsupported transaction type of the exit game");
         require(data.output.amount > 0, "Should not exit with amount 0");
         require(data.txBlockTimeStamp != 0, "There is no block for the position");
 
