@@ -32,59 +32,55 @@ uint8 internal constant WORD_SIZE;
 - [toRlpItem(bytes item)](#torlpitem)
 - [toList(struct RLPReader.RLPItem item)](#tolist)
 - [isList(struct RLPReader.RLPItem item)](#islist)
-- [toRlpBytes(struct RLPReader.RLPItem item)](#torlpbytes)
 - [toAddress(struct RLPReader.RLPItem item)](#toaddress)
 - [toUint(struct RLPReader.RLPItem item)](#touint)
-- [numItems(struct RLPReader.RLPItem item)](#numitems)
-- [_itemLength(uint256 memPtr)](#_itemlength)
-- [_payloadOffset(uint256 memPtr)](#_payloadoffset)
-- [copy(uint256 src, uint256 dest, uint256 len)](#copy)
-- [toBytes(struct RLPReader.RLPItem item)](#tobytes)
+- [countEncodedItems(struct RLPReader.RLPItem item)](#countencodeditems)
+- [decodeItemLengthUnsafe(uint256 memPtr)](#decodeitemlengthunsafe)
+- [decodePayloadOffset(struct RLPReader.RLPItem item)](#decodepayloadoffset)
 
 ### toRlpItem
+
+Convert a dynamic bytes array into an RLPItem
 
 ```js
 function toRlpItem(bytes item) internal pure
 returns(struct RLPReader.RLPItem)
 ```
 
+**Returns**
+
+The decoded RLPItem
+
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| item | bytes |  | 
+| item | bytes | RLP encoded bytes | 
 
 ### toList
+
+Convert a dynamic bytes array into a list of RLPItems
 
 ```js
 function toList(struct RLPReader.RLPItem item) internal pure
 returns(struct RLPReader.RLPItem[])
 ```
 
+**Returns**
+
+A list of RLPItems
+
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| item | struct RLPReader.RLPItem |  | 
+| item | struct RLPReader.RLPItem | RLP encoded list in bytes | 
 
 ### isList
 
 ```js
 function isList(struct RLPReader.RLPItem item) internal pure
 returns(bool)
-```
-
-**Arguments**
-
-| Name        | Type           | Description  |
-| ------------- |------------- | -----|
-| item | struct RLPReader.RLPItem |  | 
-
-### toRlpBytes
-
-```js
-function toRlpBytes(struct RLPReader.RLPItem item) internal pure
-returns(bytes)
 ```
 
 **Arguments**
@@ -108,6 +104,8 @@ returns(address)
 
 ### toUint
 
+Create a uint256 from a RLPItem
+
 ```js
 function toUint(struct RLPReader.RLPItem item) internal pure
 returns(uint256)
@@ -117,73 +115,64 @@ returns(uint256)
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| item | struct RLPReader.RLPItem |  | 
+| item | struct RLPReader.RLPItem | RLPItem | 
 
-### numItems
+### countEncodedItems
+
+Counts the number of payload items inside an RLP encoded list
 
 ```js
-function numItems(struct RLPReader.RLPItem item) private pure
+function countEncodedItems(struct RLPReader.RLPItem item) private pure
 returns(uint256)
 ```
 
+**Returns**
+
+The number of items in a inside an RLP encoded list
+
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| item | struct RLPReader.RLPItem |  | 
+| item | struct RLPReader.RLPItem | RLPItem | 
 
-### _itemLength
+### decodeItemLengthUnsafe
+
+Decodes the RLPItems length from a bytes array.
 
 ```js
-function _itemLength(uint256 memPtr) private pure
+function decodeItemLengthUnsafe(uint256 memPtr) internal pure
 returns(uint256)
 ```
 
+**Returns**
+
+The encoded RLPItem length
+
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| memPtr | uint256 |  | 
+| memPtr | uint256 | Pointer to the dynamic bytes array in memory | 
 
-### _payloadOffset
+### decodePayloadOffset
+
+Decode the length of the RLPItem payload length
 
 ```js
-function _payloadOffset(uint256 memPtr) private pure
+function decodePayloadOffset(struct RLPReader.RLPItem item) internal pure
 returns(uint256)
 ```
 
-**Arguments**
+**Returns**
 
-| Name        | Type           | Description  |
-| ------------- |------------- | -----|
-| memPtr | uint256 |  | 
-
-### copy
-
-```js
-function copy(uint256 src, uint256 dest, uint256 len) private pure
-```
+Length of the RLPItem payload length
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| src | uint256 |  | 
-| dest | uint256 |  | 
-| len | uint256 |  | 
-
-### toBytes
-
-```js
-function toBytes(struct RLPReader.RLPItem item) internal pure
-returns(bytes)
-```
-
-**Arguments**
-
-| Name        | Type           | Description  |
-| ------------- |------------- | -----|
-| item | struct RLPReader.RLPItem |  | 
+| item | struct RLPReader.RLPItem | RLPItem | 
 
 ## Contracts
 
@@ -226,9 +215,11 @@ returns(bytes)
 * [PaymentChallengeIFENotCanonical](PaymentChallengeIFENotCanonical.md)
 * [PaymentChallengeIFEOutputSpent](PaymentChallengeIFEOutputSpent.md)
 * [PaymentChallengeStandardExit](PaymentChallengeStandardExit.md)
+* [PaymentDeleteInFlightExit](PaymentDeleteInFlightExit.md)
 * [PaymentEip712Lib](PaymentEip712Lib.md)
 * [PaymentExitDataModel](PaymentExitDataModel.md)
 * [PaymentExitGame](PaymentExitGame.md)
+* [PaymentExitGameArgs](PaymentExitGameArgs.md)
 * [PaymentInFlightExitModelUtils](PaymentInFlightExitModelUtils.md)
 * [PaymentInFlightExitRouter](PaymentInFlightExitRouter.md)
 * [PaymentInFlightExitRouterArgs](PaymentInFlightExitRouterArgs.md)

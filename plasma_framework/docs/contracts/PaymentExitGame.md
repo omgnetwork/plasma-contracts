@@ -8,23 +8,6 @@ View Source: [contracts/src/exits/payment/PaymentExitGame.sol](../../contracts/s
 
 The exit game contract implementation for Payment Transaction
 
-## Structs
-### PaymentExitGameArgs
-
-```js
-struct PaymentExitGameArgs {
- contract PlasmaFramework framework,
- uint256 ethVaultId,
- uint256 erc20VaultId,
- contract OutputGuardHandlerRegistry outputGuardHandlerRegistry,
- contract SpendingConditionRegistry spendingConditionRegistry,
- contract IStateTransitionVerifier stateTransitionVerifier,
- contract ITxFinalizationVerifier txFinalizationVerifier,
- uint256 supportTxType,
- uint256 safeGasStipend
-}
-```
-
 ## Contract Members
 **Constants & Variables**
 
@@ -35,7 +18,7 @@ contract PlasmaFramework private plasmaFramework;
 
 ## Functions
 
-- [(struct PaymentExitGame.PaymentExitGameArgs args)](#)
+- [(struct PaymentExitGameArgs.Args args)](#)
 - [processExit(uint160 exitId, uint256 , address token)](#processexit)
 - [getStandardExitId(bool _isDeposit, bytes _txBytes, uint256 _utxoPos)](#getstandardexitid)
 - [getInFlightExitId(bytes _txBytes)](#getinflightexitid)
@@ -45,14 +28,14 @@ contract PlasmaFramework private plasmaFramework;
 use struct PaymentExitGameArgs to avoid stack too deep compilation error.
 
 ```js
-function (struct PaymentExitGame.PaymentExitGameArgs args) public nonpayable PaymentStandardExitRouter PaymentInFlightExitRouter 
+function (struct PaymentExitGameArgs.Args args) public nonpayable PaymentStandardExitRouter PaymentInFlightExitRouter 
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| args | struct PaymentExitGame.PaymentExitGameArgs |  | 
+| args | struct PaymentExitGameArgs.Args |  | 
 
 ### processExit
 
@@ -145,9 +128,11 @@ returns(uint160)
 * [PaymentChallengeIFENotCanonical](PaymentChallengeIFENotCanonical.md)
 * [PaymentChallengeIFEOutputSpent](PaymentChallengeIFEOutputSpent.md)
 * [PaymentChallengeStandardExit](PaymentChallengeStandardExit.md)
+* [PaymentDeleteInFlightExit](PaymentDeleteInFlightExit.md)
 * [PaymentEip712Lib](PaymentEip712Lib.md)
 * [PaymentExitDataModel](PaymentExitDataModel.md)
 * [PaymentExitGame](PaymentExitGame.md)
+* [PaymentExitGameArgs](PaymentExitGameArgs.md)
 * [PaymentInFlightExitModelUtils](PaymentInFlightExitModelUtils.md)
 * [PaymentInFlightExitRouter](PaymentInFlightExitRouter.md)
 * [PaymentInFlightExitRouterArgs](PaymentInFlightExitRouterArgs.md)

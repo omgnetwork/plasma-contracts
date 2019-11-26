@@ -16,7 +16,8 @@ struct Controller {
  contract OutputGuardHandlerRegistry outputGuardHandlerRegistry,
  contract ITxFinalizationVerifier txFinalizationVerifier,
  uint256 ethVaultId,
- uint256 erc20VaultId
+ uint256 erc20VaultId,
+ uint256 supportedTxType
 }
 ```
 
@@ -47,7 +48,7 @@ event ExitStarted(address indexed owner, uint160  exitId);
 
 ## Functions
 
-- [buildController(IExitProcessor exitProcessor, PlasmaFramework framework, OutputGuardHandlerRegistry outputGuardHandlerRegistry, ITxFinalizationVerifier txFinalizationVerifier, uint256 ethVaultId, uint256 erc20VaultId)](#buildcontroller)
+- [buildController(IExitProcessor exitProcessor, PlasmaFramework framework, OutputGuardHandlerRegistry outputGuardHandlerRegistry, ITxFinalizationVerifier txFinalizationVerifier, uint256 ethVaultId, uint256 erc20VaultId, uint256 supportedTxType)](#buildcontroller)
 - [run(struct PaymentStartStandardExit.Controller self, struct PaymentExitDataModel.StandardExitMap exitMap, struct PaymentStandardExitRouterArgs.StartStandardExitArgs args)](#run)
 - [setupStartStandardExitData(struct PaymentStartStandardExit.Controller controller, struct PaymentStandardExitRouterArgs.StartStandardExitArgs args)](#setupstartstandardexitdata)
 - [verifyStartStandardExitData(struct PaymentStartStandardExit.Controller self, struct PaymentStartStandardExit.StartStandardExitData data, struct PaymentExitDataModel.StandardExitMap exitMap)](#verifystartstandardexitdata)
@@ -59,7 +60,7 @@ event ExitStarted(address indexed owner, uint160  exitId);
 Function that builds the controller struct
 
 ```js
-function buildController(IExitProcessor exitProcessor, PlasmaFramework framework, OutputGuardHandlerRegistry outputGuardHandlerRegistry, ITxFinalizationVerifier txFinalizationVerifier, uint256 ethVaultId, uint256 erc20VaultId) public view
+function buildController(IExitProcessor exitProcessor, PlasmaFramework framework, OutputGuardHandlerRegistry outputGuardHandlerRegistry, ITxFinalizationVerifier txFinalizationVerifier, uint256 ethVaultId, uint256 erc20VaultId, uint256 supportedTxType) public view
 returns(struct PaymentStartStandardExit.Controller)
 ```
 
@@ -77,6 +78,7 @@ Controller struct of PaymentStartStandardExit
 | txFinalizationVerifier | ITxFinalizationVerifier |  | 
 | ethVaultId | uint256 |  | 
 | erc20VaultId | uint256 |  | 
+| supportedTxType | uint256 |  | 
 
 ### run
 
@@ -188,9 +190,11 @@ function enqueueStandardExit(struct PaymentStartStandardExit.StartStandardExitDa
 * [PaymentChallengeIFENotCanonical](PaymentChallengeIFENotCanonical.md)
 * [PaymentChallengeIFEOutputSpent](PaymentChallengeIFEOutputSpent.md)
 * [PaymentChallengeStandardExit](PaymentChallengeStandardExit.md)
+* [PaymentDeleteInFlightExit](PaymentDeleteInFlightExit.md)
 * [PaymentEip712Lib](PaymentEip712Lib.md)
 * [PaymentExitDataModel](PaymentExitDataModel.md)
 * [PaymentExitGame](PaymentExitGame.md)
+* [PaymentExitGameArgs](PaymentExitGameArgs.md)
 * [PaymentInFlightExitModelUtils](PaymentInFlightExitModelUtils.md)
 * [PaymentInFlightExitRouter](PaymentInFlightExitRouter.md)
 * [PaymentInFlightExitRouterArgs](PaymentInFlightExitRouterArgs.md)

@@ -7,7 +7,6 @@ const { PaymentTransactionOutput, PaymentTransaction, PlasmaDepositTransaction }
 const { EMPTY_BYTES } = require('./constants.js');
 
 const ETH = constants.ZERO_ADDRESS;
-const OUTPUT_TYPE_ONE = 1;
 const IFE_TX_TYPE = 1;
 const WITNESS_LENGTH_IN_BYTES = 65;
 const IN_FLIGHT_TX_WITNESS_BYTES = web3.utils.bytesToHex('a'.repeat(WITNESS_LENGTH_IN_BYTES));

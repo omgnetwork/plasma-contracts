@@ -65,6 +65,7 @@ event InFlightExitStarted(address indexed initiator, bytes32  txHash);
 - [getOutputGuardHandlersForInputTxs(struct PaymentStartInFlightExit.Controller controller, bytes[] inputTxs, struct UtxoPosLib.UtxoPos[] inputUtxosPos)](#getoutputguardhandlersforinputtxs)
 - [verifyStart(struct PaymentStartInFlightExit.StartExitData exitData, struct PaymentExitDataModel.InFlightExitMap inFlightExitMap)](#verifystart)
 - [verifyExitNotStarted(uint160 exitId, struct PaymentExitDataModel.InFlightExitMap inFlightExitMap)](#verifyexitnotstarted)
+- [verifyInFlightTxType(struct PaymentStartInFlightExit.StartExitData exitData)](#verifyinflighttxtype)
 - [verifyOutputGuardHandlersForInputTxsRegistered(IOutputGuardHandler[] handlers)](#verifyoutputguardhandlersforinputtxsregistered)
 - [verifyNumberOfInputsMatchesNumberOfInFlightTransactionInputs(struct PaymentStartInFlightExit.StartExitData exitData)](#verifynumberofinputsmatchesnumberofinflighttransactioninputs)
 - [verifyNoInputSpentMoreThanOnce(struct PaymentTransactionModel.Transaction inFlightTx)](#verifynoinputspentmorethanonce)
@@ -198,6 +199,18 @@ function verifyExitNotStarted(uint160 exitId, struct PaymentExitDataModel.InFlig
 | ------------- |------------- | -----|
 | exitId | uint160 |  | 
 | inFlightExitMap | struct PaymentExitDataModel.InFlightExitMap |  | 
+
+### verifyInFlightTxType
+
+```js
+function verifyInFlightTxType(struct PaymentStartInFlightExit.StartExitData exitData) private pure
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| exitData | struct PaymentStartInFlightExit.StartExitData |  | 
 
 ### verifyOutputGuardHandlersForInputTxsRegistered
 
@@ -364,9 +377,11 @@ function setInFlightExitOutputs(struct PaymentExitDataModel.InFlightExit ife, st
 * [PaymentChallengeIFENotCanonical](PaymentChallengeIFENotCanonical.md)
 * [PaymentChallengeIFEOutputSpent](PaymentChallengeIFEOutputSpent.md)
 * [PaymentChallengeStandardExit](PaymentChallengeStandardExit.md)
+* [PaymentDeleteInFlightExit](PaymentDeleteInFlightExit.md)
 * [PaymentEip712Lib](PaymentEip712Lib.md)
 * [PaymentExitDataModel](PaymentExitDataModel.md)
 * [PaymentExitGame](PaymentExitGame.md)
+* [PaymentExitGameArgs](PaymentExitGameArgs.md)
 * [PaymentInFlightExitModelUtils](PaymentInFlightExitModelUtils.md)
 * [PaymentInFlightExitRouter](PaymentInFlightExitRouter.md)
 * [PaymentInFlightExitRouterArgs](PaymentInFlightExitRouterArgs.md)

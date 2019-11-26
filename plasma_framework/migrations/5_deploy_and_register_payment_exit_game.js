@@ -6,6 +6,7 @@ const PaymentChallengeStandardExit = artifacts.require('PaymentChallengeStandard
 const PaymentChallengeIFENotCanonical = artifacts.require('PaymentChallengeIFENotCanonical');
 const PaymentChallengeIFEInputSpent = artifacts.require('PaymentChallengeIFEInputSpent');
 const PaymentChallengeIFEOutputSpent = artifacts.require('PaymentChallengeIFEOutputSpent');
+const PaymentDeleteInFlightExit = artifacts.require('PaymentDeleteInFlightExit');
 const PaymentOutputGuardHandler = artifacts.require('PaymentOutputGuardHandler');
 const PaymentOutputToPaymentTxCondition = artifacts.require('PaymentOutputToPaymentTxCondition');
 const PaymentStartInFlightExit = artifacts.require('PaymentStartInFlightExit');
@@ -56,6 +57,9 @@ module.exports = async (
     await deployer.deploy(PaymentChallengeIFEOutputSpent);
     const challengeIFEOutput = await PaymentChallengeIFEOutputSpent.deployed();
 
+    await deployer.deploy(PaymentDeleteInFlightExit);
+    const deleteInFlightExit = await PaymentDeleteInFlightExit.deployed();
+
     await deployer.deploy(PaymentProcessInFlightExit);
     const processInFlightExit = await PaymentProcessInFlightExit.deployed();
 
@@ -67,6 +71,7 @@ module.exports = async (
     await PaymentExitGame.link('PaymentChallengeIFENotCanonical', challengeInFlightExitNotCanonical.address);
     await PaymentExitGame.link('PaymentChallengeIFEInputSpent', challengeIFEInputSpent.address);
     await PaymentExitGame.link('PaymentChallengeIFEOutputSpent', challengeIFEOutput.address);
+    await PaymentExitGame.link('PaymentDeleteInFlightExit', deleteInFlightExit.address);
     await PaymentExitGame.link('PaymentProcessInFlightExit', processInFlightExit.address);
 
     // deploy exit game

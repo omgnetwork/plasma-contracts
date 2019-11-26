@@ -10,6 +10,7 @@ const PaymentProcessInFlightExit = artifacts.require('PaymentProcessInFlightExit
 const PaymentChallengeIFENotCanonical = artifacts.require('PaymentChallengeIFENotCanonical');
 const PaymentChallengeIFEInputSpent = artifacts.require('PaymentChallengeIFEInputSpent');
 const PaymentChallengeIFEOutputSpent = artifacts.require('PaymentChallengeIFEOutputSpent');
+const PaymentDeleteInFlightExit = artifacts.require('PaymentDeleteInFlightExit');
 const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry');
 const SpendingConditionMock = artifacts.require('SpendingConditionMock');
 const StateTransitionVerifierMock = artifacts.require('StateTransitionVerifierMock');
@@ -25,12 +26,12 @@ const { expect } = require('chai');
 
 const { buildUtxoPos, UtxoPos } = require('../../../helpers/positions.js');
 const { computeNormalOutputId, spentOnGas } = require('../../../helpers/utils.js');
-const { PROTOCOL, VAULT_ID } = require('../../../helpers/constants.js');
+const { PROTOCOL, VAULT_ID, SAFE_GAS_STIPEND } = require('../../../helpers/constants.js');
 const {
     buildValidIfeStartArgs, buildIfeStartArgs, createInputTransaction, createDepositTransaction, createInFlightTx,
 } = require('../../../helpers/ife.js');
 
-contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
+contract('PaymentStartInFlightExit', ([_, alice, richFather, carol]) => {
     const CHILD_BLOCK_INTERVAL = 1000;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week in seconds
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
@@ -53,6 +54,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
         const challengeInFlightExitNotCanonical = await PaymentChallengeIFENotCanonical.new();
         const challengeIFEInputSpent = await PaymentChallengeIFEInputSpent.new();
         const challengeIFEOutputSpent = await PaymentChallengeIFEOutputSpent.new();
+        const deleteInFlightEixt = await PaymentDeleteInFlightExit.new();
         const processInFlightExit = await PaymentProcessInFlightExit.new();
 
         await PaymentInFlightExitRouter.link('PaymentStartInFlightExit', startInFlightExit.address);
@@ -60,6 +62,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
         await PaymentInFlightExitRouter.link('PaymentChallengeIFENotCanonical', challengeInFlightExitNotCanonical.address);
         await PaymentInFlightExitRouter.link('PaymentChallengeIFEInputSpent', challengeIFEInputSpent.address);
         await PaymentInFlightExitRouter.link('PaymentChallengeIFEOutputSpent', challengeIFEOutputSpent.address);
+        await PaymentInFlightExitRouter.link('PaymentDeleteInFlightExit', deleteInFlightEixt.address);
         await PaymentInFlightExitRouter.link('PaymentProcessInFlightExit', processInFlightExit.address);
     });
 
@@ -148,7 +151,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
 
                 this.txFinalizationVerifier = await TxFinalizationVerifier.new();
 
-                this.exitGame = await PaymentInFlightExitRouter.new(
+                const exitGameArgs = [
                     this.framework.address,
                     VAULT_ID.ETH,
                     VAULT_ID.ERC20,
@@ -157,7 +160,10 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                     this.stateTransitionVerifier.address,
                     this.txFinalizationVerifier.address,
                     IFE_TX_TYPE,
-                );
+                    SAFE_GAS_STIPEND,
+                ];
+                this.exitGame = await PaymentInFlightExitRouter.new(exitGameArgs);
+
                 await this.framework.registerExitGame(IFE_TX_TYPE, this.exitGame.address, PROTOCOL.MORE_VP);
 
                 const {
@@ -323,7 +329,7 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
 
                 this.txFinalizationVerifier = await TxFinalizationVerifier.new();
 
-                this.exitGame = await PaymentInFlightExitRouter.new(
+                const exitGameArgs = [
                     this.framework.address,
                     VAULT_ID.ETH,
                     VAULT_ID.ERC20,
@@ -332,7 +338,10 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                     this.stateTransitionVerifier.address,
                     this.txFinalizationVerifier.address,
                     IFE_TX_TYPE,
-                );
+                    SAFE_GAS_STIPEND,
+                ];
+                this.exitGame = await PaymentInFlightExitRouter.new(exitGameArgs);
+
                 await this.framework.registerExitGame(IFE_TX_TYPE, this.exitGame.address, PROTOCOL.MORE_VP);
                 this.startIFEBondSize = await this.exitGame.startIFEBondSize();
             });
@@ -540,6 +549,31 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
                         'There is an active in-flight exit from this transaction',
                     );
                 });
+            });
+
+            it('should fail when the in-flight tx is not the supported tx type', async () => {
+                const inputTx1 = createInputTransaction([DUMMY_INPUT_1], OUTPUT_TYPE_ONE, alice, AMOUNT);
+                const inputTx2 = createDepositTransaction(OUTPUT_TYPE_ONE, bob, AMOUNT);
+
+                const inputUtxosPos = [buildUtxoPos(BLOCK_NUMBER, 0, 0), buildUtxoPos(BLOCK_NUMBER, 1, 0)];
+                const inFlightTx = createInFlightTx([inputTx1], inputUtxosPos, OUTPUT_TYPE_ONE, carol, AMOUNT);
+                const nonSupportedTxType = IFE_TX_TYPE + 1;
+                inFlightTx.transactionType = nonSupportedTxType;
+
+                const {
+                    args,
+                    inputTxsBlockRoot1,
+                    inputTxsBlockRoot2,
+                } = buildIfeStartArgs([inputTx1, inputTx2], [alice, alice], inputUtxosPos, inFlightTx);
+
+                await registerSpendingConditionTrue(this.spendingConditionRegistry);
+                await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot1, 0);
+                await this.framework.setBlock(DEPOSIT_BLOCK_NUMBER, inputTxsBlockRoot2, 0);
+
+                await expectRevert(
+                    this.exitGame.startInFlightExit(args, { from: alice, value: this.startIFEBondSize.toString() }),
+                    'Unsupported transaction type of the exit game',
+                );
             });
 
             it('should fail when there too many input transaction utxos provided', async () => {
