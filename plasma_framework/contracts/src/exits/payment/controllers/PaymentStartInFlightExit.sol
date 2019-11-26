@@ -48,7 +48,7 @@ library PaymentStartInFlightExit {
 
     event InFlightExitStarted(
         address indexed initiator,
-        bytes32 txHash
+        bytes32 indexed txHash
     );
 
      /**
