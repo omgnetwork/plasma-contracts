@@ -2,7 +2,7 @@
 
 In an ideal world, whenever we want to expand the features of the Plasma Framework, we just need to add and register a new the Exit Game contract. However, in practice, this is not as trivial since there are some dependencies across tx types and output types due to the M(ore)VP protocol design, especially for the in-flight exit protocol.
 
-In the in-flight exit game, there are two kinds of challenges (challenge piggyback input already spent + challenge non canonical) that are challenging the input of an in-flight tx. This increases the dependencies of input tx types of the current tx type further. For instance, if an input tx type 1 has multiple dependencies (tx type 2, 3, 4) that can spend it. And our current tx type 2 can only be spend by tx type 5. However, the Exit Game contract of tx type 2 would still need to know how a tx-type-1 tx can be spend in tx type 3 and 4 too.
+In the in-flight exit game, there are two kinds of challenges (challenge piggyback input already spent + challenge non canonical) that are challenging the input of an in-flight tx. This increases the dependencies of input tx types of the current tx type further. For instance, if an input tx type 1 has multiple dependencies (tx type 2, 3, 4) that can spend it. And our current tx type 2 can only be spent by tx type 5. However, the Exit Game contract of tx type 2 would still need to know how a tx type 1 tx can be spent in tx type 3 and 4 too.
 
 In conclusion, one tx type does not only have dependencies on how the tx type can be spent, but also how the input can be spent.
 
@@ -10,7 +10,7 @@ In conclusion, one tx type does not only have dependencies on how the tx type ca
 
 ## Code design to keep things flexible with the tx type dependencies
 
-There are concepts that keeps the system more flexible in situation when there is a need to add an extension. The `SpendingConditionRegistry` and `WireTransaction` are ways to abstract things further.
+There are concepts that keep the system more flexible in situation when there is a need to add an extension. The `SpendingConditionRegistry` and `WireTransaction` are ways to abstract things further.
 
 ### Spending Condition Registry
 
