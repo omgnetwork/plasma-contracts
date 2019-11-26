@@ -86,6 +86,7 @@ True, if the leaf hash is in the Merkle tree; otherwise, False
 * [PaymentEip712Lib](PaymentEip712Lib.md)
 * [PaymentExitDataModel](PaymentExitDataModel.md)
 * [PaymentExitGame](PaymentExitGame.md)
+* [PaymentExitGameArgs](PaymentExitGameArgs.md)
 * [PaymentInFlightExitModelUtils](PaymentInFlightExitModelUtils.md)
 * [PaymentInFlightExitRouter](PaymentInFlightExitRouter.md)
 * [PaymentInFlightExitRouterArgs](PaymentInFlightExitRouterArgs.md)

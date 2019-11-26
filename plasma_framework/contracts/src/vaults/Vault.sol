@@ -33,13 +33,13 @@ contract Vault is OnlyFromAddress {
      * @dev Pre-computes zero hashes to be used for building Merkle tree for deposit block
      */
     function getZeroHashes() private pure returns (bytes32[16] memory) {
-        bytes32[16] memory zeroHashes;
+        bytes32[16] memory hashes;
         bytes32 zeroHash = keccak256(abi.encodePacked(LEAF_SALT, uint256(0)));
         for (uint i = 0; i < 16; i++) {
-            zeroHashes[i] = zeroHash;
+            hashes[i] = zeroHash;
             zeroHash = keccak256(abi.encodePacked(NODE_SALT, zeroHash, zeroHash));
         }
-        return zeroHashes;
+        return hashes;
     }
 
     /**

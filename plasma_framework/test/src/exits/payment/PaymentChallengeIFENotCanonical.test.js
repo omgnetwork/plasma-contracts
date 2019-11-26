@@ -26,7 +26,7 @@ const {
 const { expect } = require('chai');
 
 const {
-    PROTOCOL, OUTPUT_TYPE, VAULT_ID,
+    PROTOCOL, OUTPUT_TYPE, VAULT_ID, SAFE_GAS_STIPEND,
 } = require('../../../helpers/constants.js');
 const { buildOutputGuard } = require('../../../helpers/utils.js');
 const { buildUtxoPos, UtxoPos } = require('../../../helpers/positions.js');
@@ -35,7 +35,7 @@ const {
 } = require('../../../helpers/transaction.js');
 const { createInclusionProof } = require('../../../helpers/ife.js');
 
-contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, competitorOwner, challenger]) => {
+contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwner, competitorOwner, challenger]) => {
     const DUMMY_IFE_BOND_SIZE = 31415926535; // wei
     const PIGGYBACK_BOND = 31415926535; // wei
     const CHILD_BLOCK_INTERVAL = 1000;
@@ -236,7 +236,8 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
 
         this.spendingConditionRegistry = await SpendingConditionRegistry.new();
         this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
-        this.exitGame = await PaymentInFlightExitRouter.new(
+
+        const exitGameArgs = [
             this.framework.address,
             VAULT_ID.ETH,
             VAULT_ID.ERC20,
@@ -245,7 +246,9 @@ contract('PaymentInFlightExitRouter', ([_, ifeOwner, inputOwner, outputOwner, co
             this.stateTransitionVerifier.address,
             this.txFinalizationVerifier.address,
             IFE_TX_TYPE,
-        );
+            SAFE_GAS_STIPEND,
+        ];
+        this.exitGame = await PaymentInFlightExitRouter.new(exitGameArgs);
 
         this.framework.registerExitGame(IFE_TX_TYPE, this.exitGame.address, PROTOCOL.MORE_VP);
 

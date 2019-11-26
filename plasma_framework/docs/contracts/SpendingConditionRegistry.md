@@ -96,6 +96,7 @@ function registerSpendingCondition(uint256 outputType, uint256 spendingTxType, I
 * [PaymentEip712Lib](PaymentEip712Lib.md)
 * [PaymentExitDataModel](PaymentExitDataModel.md)
 * [PaymentExitGame](PaymentExitGame.md)
+* [PaymentExitGameArgs](PaymentExitGameArgs.md)
 * [PaymentInFlightExitModelUtils](PaymentInFlightExitModelUtils.md)
 * [PaymentInFlightExitRouter](PaymentInFlightExitRouter.md)
 * [PaymentInFlightExitRouterArgs](PaymentInFlightExitRouterArgs.md)

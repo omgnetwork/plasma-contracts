@@ -1,73 +1,27 @@
-# Migrations.sol
+# PaymentExitGameArgs.sol
 
-View Source: [contracts/Migrations.sol](../../contracts/Migrations.sol)
+View Source: [contracts/src/exits/payment/PaymentExitGameArgs.sol](../../contracts/src/exits/payment/PaymentExitGameArgs.sol)
 
-**Migrations**
+**PaymentExitGameArgs**
 
-## Contract Members
-**Constants & Variables**
-
-```js
-address public owner;
-uint256 public last_completed_migration;
-
-```
-
-## Modifiers
-
-- [restricted](#restricted)
-
-### restricted
+## Structs
+### Args
 
 ```js
-modifier restricted() internal
+struct Args {
+ contract PlasmaFramework framework,
+ uint256 ethVaultId,
+ uint256 erc20VaultId,
+ contract OutputGuardHandlerRegistry outputGuardHandlerRegistry,
+ contract SpendingConditionRegistry spendingConditionRegistry,
+ contract IStateTransitionVerifier stateTransitionVerifier,
+ contract ITxFinalizationVerifier txFinalizationVerifier,
+ uint256 supportTxType,
+ uint256 safeGasStipend
+}
 ```
-
-**Arguments**
-
-| Name        | Type           | Description  |
-| ------------- |------------- | -----|
 
 ## Functions
-
-- [()](#)
-- [setCompleted(uint256 completed)](#setcompleted)
-- [upgrade(address new_address)](#upgrade)
-
-### 
-
-```js
-function () public nonpayable
-```
-
-**Arguments**
-
-| Name        | Type           | Description  |
-| ------------- |------------- | -----|
-
-### setCompleted
-
-```js
-function setCompleted(uint256 completed) public nonpayable restricted 
-```
-
-**Arguments**
-
-| Name        | Type           | Description  |
-| ------------- |------------- | -----|
-| completed | uint256 |  | 
-
-### upgrade
-
-```js
-function upgrade(address new_address) public nonpayable restricted 
-```
-
-**Arguments**
-
-| Name        | Type           | Description  |
-| ------------- |------------- | -----|
-| new_address | address |  | 
 
 ## Contracts
 

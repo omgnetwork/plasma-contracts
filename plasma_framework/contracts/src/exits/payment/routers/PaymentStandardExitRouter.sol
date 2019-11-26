@@ -2,6 +2,7 @@ pragma solidity 0.5.11;
 pragma experimental ABIEncoderV2;
 
 import "./PaymentStandardExitRouterArgs.sol";
+import "../PaymentExitGameArgs.sol";
 import "../PaymentExitDataModel.sol";
 import "../controllers/PaymentStartStandardExit.sol";
 import "../controllers/PaymentProcessStandardExit.sol";
@@ -68,39 +69,37 @@ contract PaymentStandardExitRouter is
         uint256 amount
     );
 
-    constructor(
-        PlasmaFramework plasmaFramework,
-        uint256 ethVaultId,
-        uint256 erc20VaultId,
-        OutputGuardHandlerRegistry outputGuardHandlerRegistry,
-        SpendingConditionRegistry spendingConditionRegistry,
-        ITxFinalizationVerifier txFinalizationVerifier,
-        uint256 safeGasStipend
-    )
+    constructor(PaymentExitGameArgs.Args memory args)
         public
     {
-        framework = plasmaFramework;
+        framework = args.framework;
 
-        EthVault ethVault = EthVault(plasmaFramework.vaults(ethVaultId));
+        EthVault ethVault = EthVault(args.framework.vaults(args.ethVaultId));
         require(address(ethVault) != address(0), "Invalid ETH vault");
 
-        Erc20Vault erc20Vault = Erc20Vault(plasmaFramework.vaults(erc20VaultId));
+        Erc20Vault erc20Vault = Erc20Vault(args.framework.vaults(args.erc20VaultId));
         require(address(erc20Vault) != address(0), "Invalid ERC20 vault");
 
         startStandardExitController = PaymentStartStandardExit.buildController(
-            this, plasmaFramework, outputGuardHandlerRegistry, txFinalizationVerifier, ethVaultId, erc20VaultId
+            this,
+            args.framework,
+            args.outputGuardHandlerRegistry,
+            args.txFinalizationVerifier,
+            args.ethVaultId,
+            args.erc20VaultId,
+            args.supportTxType
         );
 
         challengeStandardExitController = PaymentChallengeStandardExit.buildController(
-            plasmaFramework,
-            spendingConditionRegistry,
-            outputGuardHandlerRegistry,
-            txFinalizationVerifier,
-            safeGasStipend
+            args.framework,
+            args.spendingConditionRegistry,
+            args.outputGuardHandlerRegistry,
+            args.txFinalizationVerifier,
+            args.safeGasStipend
         );
 
         processStandardExitController = PaymentProcessStandardExit.Controller(
-            plasmaFramework, ethVault, erc20Vault, safeGasStipend
+            args.framework, ethVault, erc20Vault, args.safeGasStipend
         );
 
         startStandardExitBond = BondSize.buildParams(INITIAL_BOND_SIZE, BOND_LOWER_BOUND_DIVISOR, BOND_UPPER_BOUND_MULTIPLIER);

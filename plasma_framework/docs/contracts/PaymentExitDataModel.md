@@ -120,6 +120,7 @@ uint8 public constant MAX_OUTPUT_NUM;
 * [PaymentEip712Lib](PaymentEip712Lib.md)
 * [PaymentExitDataModel](PaymentExitDataModel.md)
 * [PaymentExitGame](PaymentExitGame.md)
+* [PaymentExitGameArgs](PaymentExitGameArgs.md)
 * [PaymentInFlightExitModelUtils](PaymentInFlightExitModelUtils.md)
 * [PaymentInFlightExitRouter](PaymentInFlightExitRouter.md)
 * [PaymentInFlightExitRouterArgs](PaymentInFlightExitRouterArgs.md)

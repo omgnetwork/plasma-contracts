@@ -41,7 +41,7 @@ event BondReturnFailed(address indexed receiver, uint256  amount);
 
 ## Functions
 
-- [(PlasmaFramework plasmaFramework, uint256 ethVaultId, uint256 erc20VaultId, OutputGuardHandlerRegistry outputGuardHandlerRegistry, SpendingConditionRegistry spendingConditionRegistry, ITxFinalizationVerifier txFinalizationVerifier, uint256 safeGasStipend)](#)
+- [(struct PaymentExitGameArgs.Args args)](#)
 - [standardExits(uint160 exitId)](#standardexits)
 - [startStandardExitBondSize()](#startstandardexitbondsize)
 - [updateStartStandardExitBondSize(uint128 newBondSize)](#updatestartstandardexitbondsize)
@@ -52,20 +52,14 @@ event BondReturnFailed(address indexed receiver, uint256  amount);
 ### 
 
 ```js
-function (PlasmaFramework plasmaFramework, uint256 ethVaultId, uint256 erc20VaultId, OutputGuardHandlerRegistry outputGuardHandlerRegistry, SpendingConditionRegistry spendingConditionRegistry, ITxFinalizationVerifier txFinalizationVerifier, uint256 safeGasStipend) public nonpayable
+function (struct PaymentExitGameArgs.Args args) public nonpayable
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| plasmaFramework | PlasmaFramework |  | 
-| ethVaultId | uint256 |  | 
-| erc20VaultId | uint256 |  | 
-| outputGuardHandlerRegistry | OutputGuardHandlerRegistry |  | 
-| spendingConditionRegistry | SpendingConditionRegistry |  | 
-| txFinalizationVerifier | ITxFinalizationVerifier |  | 
-| safeGasStipend | uint256 |  | 
+| args | struct PaymentExitGameArgs.Args |  | 
 
 ### standardExits
 
@@ -198,6 +192,7 @@ function processStandardExit(uint160 exitId, address token) internal nonpayable
 * [PaymentEip712Lib](PaymentEip712Lib.md)
 * [PaymentExitDataModel](PaymentExitDataModel.md)
 * [PaymentExitGame](PaymentExitGame.md)
+* [PaymentExitGameArgs](PaymentExitGameArgs.md)
 * [PaymentInFlightExitModelUtils](PaymentInFlightExitModelUtils.md)
 * [PaymentInFlightExitRouter](PaymentInFlightExitRouter.md)
 * [PaymentInFlightExitRouterArgs](PaymentInFlightExitRouterArgs.md)

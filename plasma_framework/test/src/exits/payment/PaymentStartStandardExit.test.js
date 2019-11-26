@@ -11,6 +11,7 @@ const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry')
 const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
+const StateTransitionVerifierMock = artifacts.require('StateTransitionVerifierMock');
 const TxFinalizationVerifier = artifacts.require('TxFinalizationVerifier');
 
 const {
@@ -19,7 +20,7 @@ const {
 const { expect } = require('chai');
 
 const {
-    OUTPUT_TYPE, PROTOCOL, TX_TYPE, VAULT_ID,
+    OUTPUT_TYPE, PROTOCOL, TX_TYPE, VAULT_ID, SAFE_GAS_STIPEND,
 } = require('../../../helpers/constants.js');
 const { MerkleTree } = require('../../../helpers/merkle.js');
 const { buildUtxoPos, utxoPosToTxPos } = require('../../../helpers/positions.js');
@@ -30,7 +31,7 @@ const {
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
 
 
-contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
+contract('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
     const ETH = constants.ZERO_ADDRESS;
     const CHILD_BLOCK_INTERVAL = 1000;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week in seconds
@@ -51,11 +52,12 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
     describe('startStandardExit', () => {
         const buildTestData = (
             amount, owner, blockNum,
+            txType = TX_TYPE.PAYMENT,
             outputType = OUTPUT_TYPE.PAYMENT,
             outputGuardPreimage = EMPTY_BYTES,
         ) => {
             const output = new PaymentTransactionOutput(outputType, amount, owner, ETH);
-            const txObj = new PaymentTransaction(1, [0], [output]);
+            const txObj = new PaymentTransaction(txType, [0], [output]);
             const tx = web3.utils.bytesToHex(txObj.rlpEncoded());
 
             const outputIndex = 0;
@@ -105,15 +107,20 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
             await this.outputGuardHandlerRegistry.registerOutputGuardHandler(OUTPUT_TYPE.PAYMENT, handler.address);
 
             const txFinalizationVerifier = await TxFinalizationVerifier.new();
+            const stateTransitionVerifier = await StateTransitionVerifierMock.new();
 
-            this.exitGame = await PaymentStandardExitRouter.new(
+            const exitGameArgs = [
                 this.framework.address,
                 VAULT_ID.ETH,
                 VAULT_ID.ERC20,
                 this.outputGuardHandlerRegistry.address,
                 spendingConditionRegistry.address,
+                stateTransitionVerifier.address,
                 txFinalizationVerifier.address,
-            );
+                TX_TYPE.PAYMENT,
+                SAFE_GAS_STIPEND,
+            ];
+            this.exitGame = await PaymentStandardExitRouter.new(exitGameArgs);
 
             await this.framework.registerExitGame(TX_TYPE.PAYMENT, this.exitGame.address, PROTOCOL.MORE_VP);
 
@@ -148,6 +155,23 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
             );
         });
 
+        it('should fail when the exiting tx type is not the supported one', async () => {
+            const nonSupportedTxType = TX_TYPE.PAYMENT + 1;
+
+            const { args, merkleTree } = buildTestData(
+                this.dummyAmount, outputOwner, this.dummyBlockNum, nonSupportedTxType,
+            );
+
+            await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, this.dummyBlockTimestamp);
+
+            await expectRevert(
+                this.exitGame.startStandardExit(
+                    args, { from: outputOwner, value: this.startStandardExitBondSize },
+                ),
+                'Unsupported transaction type of the exit game',
+            );
+        });
+
         it('should fail when the block of the position does not exists in the Plasma Framework', async () => {
             const { args } = buildTestData(this.dummyAmount, outputOwner, this.dummyBlockNum);
             // test by not stubbing the block data accordingly
@@ -177,7 +201,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
             const nonRegisteredOutputType = 2;
 
             const { args, merkleTree } = buildTestData(
-                this.dummyAmount, outputOwner, this.dummyBlockNum, nonRegisteredOutputType,
+                this.dummyAmount, outputOwner, this.dummyBlockNum, TX_TYPE.PAYMENT, nonRegisteredOutputType,
             );
 
             await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, this.dummyBlockTimestamp);
@@ -198,7 +222,7 @@ contract('PaymentStandardExitRouter', ([_, outputOwner, nonOutputOwner]) => {
             await this.outputGuardHandlerRegistry.registerOutputGuardHandler(testOutputType, handler.address);
 
             const { args, merkleTree } = buildTestData(
-                this.dummyAmount, outputOwner, this.dummyBlockNum, testOutputType,
+                this.dummyAmount, outputOwner, this.dummyBlockNum, TX_TYPE.PAYMENT, testOutputType,
             );
 
             await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, this.dummyBlockTimestamp);

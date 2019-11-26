@@ -22,7 +22,9 @@ const { expect } = require('chai');
 
 const { buildUtxoPos } = require('../../../helpers/positions.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
-const { PROTOCOL, TX_TYPE, VAULT_ID } = require('../../../helpers/constants.js');
+const {
+    PROTOCOL, TX_TYPE, VAULT_ID, SAFE_GAS_STIPEND,
+} = require('../../../helpers/constants.js');
 
 contract('PaymentInFlightExitRouter', ([_, bondOwner, inputOwner, outputOwner]) => {
     const ETH = constants.ZERO_ADDRESS;
@@ -77,7 +79,7 @@ contract('PaymentInFlightExitRouter', ([_, bondOwner, inputOwner, outputOwner]) 
         this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
         const spendingConditionRegistry = await SpendingConditionRegistry.new();
 
-        this.exitGame = await PaymentInFlightExitRouter.new(
+        const exitArgs = [
             this.framework.address,
             VAULT_ID.ETH,
             VAULT_ID.ERC20,
@@ -86,7 +88,9 @@ contract('PaymentInFlightExitRouter', ([_, bondOwner, inputOwner, outputOwner]) 
             this.stateTransitionVerifier.address,
             this.txFinalizationVerifier.address,
             PAYMENT_TX_TYPE,
-        );
+            SAFE_GAS_STIPEND,
+        ];
+        this.exitGame = await PaymentInFlightExitRouter.new(exitArgs);
 
         await this.framework.registerExitGame(TX_TYPE.PAYMENT, this.exitGame.address, PROTOCOL.MORE_VP);
 
