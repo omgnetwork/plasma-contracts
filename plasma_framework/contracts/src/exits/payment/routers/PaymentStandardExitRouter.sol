@@ -107,10 +107,15 @@ contract PaymentStandardExitRouter is
 
     /**
      * @notice Getter retrieves standard exit data of the PaymentExitGame
-     * @param exitId Exit ID of the standard exit
+     * @param exitIds Exit IDs of the standard exits
      */
-    function standardExits(uint160 exitId) public view returns (PaymentExitDataModel.StandardExit memory) {
-        return standardExitMap.exits[exitId];
+    function standardExits(uint160[] calldata exitIds) external view returns (PaymentExitDataModel.StandardExit[] memory) {
+        PaymentExitDataModel.StandardExit[] memory exits = new PaymentExitDataModel.StandardExit[](exitIds.length);
+        for (uint i = 0; i < exitIds.length; i++){
+            uint160 exitId = exitIds[i];
+            exits[i] = standardExitMap.exits[exitId];
+        }
+        return exits;
     }
 
     /**

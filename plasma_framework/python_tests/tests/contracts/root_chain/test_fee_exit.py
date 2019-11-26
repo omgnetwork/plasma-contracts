@@ -16,7 +16,7 @@ def test_start_fee_exit_should_succeed(testlang, plasma_framework):
     [exit_started] = testlang.flush_events()
 
     assert_event(exit_started, expected_event_name="ExitStarted", expected_event_args={"owner": operator.address, "exitId": exit_id})
-    assert testlang.root_chain.exits(exit_id) == [operator.address, NULL_ADDRESS_HEX, amount, 1]
+    assert testlang.root_chain.exits([exit_id]) == [operator.address, NULL_ADDRESS_HEX, amount, 1]
 
 
 def test_start_fee_exit_non_operator_should_fail(testlang):

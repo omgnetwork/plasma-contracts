@@ -42,7 +42,7 @@ event BondReturnFailed(address indexed receiver, uint256  amount);
 ## Functions
 
 - [(struct PaymentExitGameArgs.Args args)](#)
-- [standardExits(uint160 exitId)](#standardexits)
+- [standardExits(uint160[] exitIds)](#standardexits)
 - [startStandardExitBondSize()](#startstandardexitbondsize)
 - [updateStartStandardExitBondSize(uint128 newBondSize)](#updatestartstandardexitbondsize)
 - [startStandardExit(struct PaymentStandardExitRouterArgs.StartStandardExitArgs args)](#startstandardexit)
@@ -66,15 +66,15 @@ function (struct PaymentExitGameArgs.Args args) public nonpayable
 Getter retrieves standard exit data of the PaymentExitGame
 
 ```js
-function standardExits(uint160 exitId) public view
-returns(struct PaymentExitDataModel.StandardExit)
+function standardExits(uint160[] exitIds) external view
+returns(struct PaymentExitDataModel.StandardExit[])
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| exitId | uint160 | Exit ID of the standard exit | 
+| exitIds | uint160[] | Exit IDs of the standard exits | 
 
 ### startStandardExitBondSize
 

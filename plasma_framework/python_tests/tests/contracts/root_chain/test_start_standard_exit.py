@@ -78,7 +78,8 @@ def test_start_standard_exit_old_utxo_has_required_exit_period_to_start_exit(tes
     testlang.start_standard_exit(utxo.spend_id, utxo.owner)
 
     _, _, next_exit_id = testlang.root_chain.getNextExit(testlang.root_chain.eth_vault_id, NULL_ADDRESS)
-    next_exit = StandardExit(*testlang.root_chain.exits(next_exit_id))
+    exits = testlang.root_chain.exits([next_exit_id])
+    next_exit = StandardExit(*exits[0])
     assert next_exit.position == utxo.spend_id
 
 
@@ -98,7 +99,6 @@ def test_start_standard_exit_wrong_oindex_should_fail(testlang):
     alice, bob, alice_money, bob_money = testlang.accounts[0], testlang.accounts[1], 10, 90
 
     deposit_id = testlang.deposit(alice, alice_money + bob_money)
-    deposit_blknum, _, _ = decode_utxo_id(deposit_id)
 
     spend_tx = Transaction(inputs=[decode_utxo_id(deposit_id)],
                            outputs=[(alice.address, NULL_ADDRESS, alice_money), (bob.address, NULL_ADDRESS, bob_money)])
