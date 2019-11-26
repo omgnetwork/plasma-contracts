@@ -21,8 +21,8 @@ struct Controller {
 **Events**
 
 ```js
-event InFlightExitChallenged(address indexed challenger, bytes32  txHash, uint256  challengeTxPosition);
-event InFlightExitChallengeResponded(address  challenger, bytes32  txHash, uint256  challengeTxPosition);
+event InFlightExitChallenged(address indexed challenger, bytes32 indexed txHash, uint256  challengeTxPosition);
+event InFlightExitChallengeResponded(address indexed challenger, bytes32 indexed txHash, uint256  challengeTxPosition);
 ```
 
 ## Functions
