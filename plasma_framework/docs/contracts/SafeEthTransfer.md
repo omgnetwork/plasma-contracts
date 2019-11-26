@@ -91,6 +91,7 @@ a flag showing the call is successful or not
 * [PaymentChallengeIFENotCanonical](PaymentChallengeIFENotCanonical.md)
 * [PaymentChallengeIFEOutputSpent](PaymentChallengeIFEOutputSpent.md)
 * [PaymentChallengeStandardExit](PaymentChallengeStandardExit.md)
+* [PaymentDeleteInFlightExit](PaymentDeleteInFlightExit.md)
 * [PaymentEip712Lib](PaymentEip712Lib.md)
 * [PaymentExitDataModel](PaymentExitDataModel.md)
 * [PaymentExitGame](PaymentExitGame.md)
@@ -125,4 +126,3 @@ a flag showing the call is successful or not
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)
 * [WireTransaction](WireTransaction.md)
-* [ZeroHashesProvider](ZeroHashesProvider.md)

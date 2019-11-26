@@ -94,6 +94,7 @@ function quarantine(struct Quarantine.Data _self, address _contractAddress) inte
 * [PaymentChallengeIFENotCanonical](PaymentChallengeIFENotCanonical.md)
 * [PaymentChallengeIFEOutputSpent](PaymentChallengeIFEOutputSpent.md)
 * [PaymentChallengeStandardExit](PaymentChallengeStandardExit.md)
+* [PaymentDeleteInFlightExit](PaymentDeleteInFlightExit.md)
 * [PaymentEip712Lib](PaymentEip712Lib.md)
 * [PaymentExitDataModel](PaymentExitDataModel.md)
 * [PaymentExitGame](PaymentExitGame.md)
