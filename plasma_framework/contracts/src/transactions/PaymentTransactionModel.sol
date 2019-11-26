@@ -51,6 +51,7 @@ library PaymentTransactionModel {
         require(rlpOutputs.length <= MAX_OUTPUT_NUM, "Transaction outputs num exceeds limit");
 
         uint txType = rlpTx[0].toUint();
+        require(txType > 0, "Transaction type must not be 0");
 
         bytes32[] memory inputs = new bytes32[](rlpInputs.length);
         for (uint i = 0; i < rlpInputs.length; i++) {
@@ -63,7 +64,8 @@ library PaymentTransactionModel {
         PaymentOutputModel.Output[] memory outputs = new PaymentOutputModel.Output[](rlpOutputs.length);
         for (uint i = 0; i < rlpOutputs.length; i++) {
             PaymentOutputModel.Output memory output = PaymentOutputModel.decode(rlpOutputs[i]);
-            // Disallow null outputs.
+            require(output.outputType > 0, "Output type must not be 0");
+            // Disallow null outputs. // TODO really?
             require(!isOutputEmpty(output), "Null output not allowed");
             outputs[i] = output;
         }
