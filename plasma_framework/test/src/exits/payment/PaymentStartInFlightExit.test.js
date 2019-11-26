@@ -75,7 +75,6 @@ contract('PaymentInFlightExitRouter', ([_, alice, richFather, carol]) => {
         });
     });
 
-
     describe('startInFlightExit', () => {
         function expectWithdrawData(withdrawData, outputId, exitTarget, amount, token) {
             expect(new BN(withdrawData.amount)).to.be.bignumber.equal(new BN(amount));
