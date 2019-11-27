@@ -20,7 +20,7 @@ struct Controller {
 **Events**
 
 ```js
-event InFlightExitOutputBlocked(address indexed challenger, bytes32  ifeTxHash, uint16  outputIndex);
+event InFlightExitOutputBlocked(address indexed challenger, bytes32 indexed txHash, uint16  outputIndex);
 ```
 
 ## Functions

@@ -32,8 +32,8 @@ uint8 public constant MAX_OUTPUT_NUM;
 **Events**
 
 ```js
-event InFlightExitInputPiggybacked(address indexed exitTarget, bytes32  txHash, uint16  inputIndex);
-event InFlightExitOutputPiggybacked(address indexed exitTarget, bytes32  txHash, uint16  outputIndex);
+event InFlightExitInputPiggybacked(address indexed exitTarget, bytes32 indexed txHash, uint16  inputIndex);
+event InFlightExitOutputPiggybacked(address indexed exitTarget, bytes32 indexed txHash, uint16  outputIndex);
 ```
 
 ## Functions

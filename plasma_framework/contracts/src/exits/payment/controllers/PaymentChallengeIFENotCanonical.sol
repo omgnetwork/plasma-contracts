@@ -39,13 +39,13 @@ library PaymentChallengeIFENotCanonical {
 
     event InFlightExitChallenged(
         address indexed challenger,
-        bytes32 txHash,
+        bytes32 indexed txHash,
         uint256 challengeTxPosition
     );
 
     event InFlightExitChallengeResponded(
-        address challenger,
-        bytes32 txHash,
+        address indexed challenger,
+        bytes32 indexed txHash,
         uint256 challengeTxPosition
     );
 

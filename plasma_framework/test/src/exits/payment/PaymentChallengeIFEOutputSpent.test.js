@@ -221,7 +221,7 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
                 'InFlightExitOutputBlocked',
                 {
                     challenger: bob,
-                    ifeTxHash: web3.utils.sha3(this.challengeArgs.inFlightTx),
+                    txHash: web3.utils.sha3(this.challengeArgs.inFlightTx),
                     outputIndex: new BN(0),
                 },
             );
