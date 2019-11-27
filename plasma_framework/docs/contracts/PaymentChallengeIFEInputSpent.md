@@ -31,7 +31,7 @@ struct ChallengeIFEData {
 **Events**
 
 ```js
-event InFlightExitInputBlocked(address indexed challenger, bytes32  txHash, uint16  inputIndex);
+event InFlightExitInputBlocked(address indexed challenger, bytes32 indexed txHash, uint16  inputIndex);
 ```
 
 ## Functions

@@ -471,14 +471,14 @@ This section describes the events for an in-flight exit.
 ```
     event InFlightExitStarted(
         address indexed initiator,
-        bytes32 txHash
+        bytes32 indexed txHash
     );
 ```
 - An input has been piggybacked on an in-flight exit:
 ```
     event InFlightExitInputPiggybacked(
         address indexed exitTarget,
-        bytes32 txHash,
+        bytes32 indexed txHash,
         uint16 inputIndex
     );
 ```
@@ -486,7 +486,7 @@ This section describes the events for an in-flight exit.
 ```
     event InFlightExitOutputPiggybacked(
         address indexed exitTarget,
-        bytes32 txHash,
+        bytes32 indexed txHash,
         uint16 outputIndex
     );
 ```
@@ -494,7 +494,7 @@ This section describes the events for an in-flight exit.
 ```
     event InFlightExitChallenged(
         address indexed challenger,
-        bytes32 txHash,
+        bytes32 indexed txHash,
         uint256 challengeTxPosition
     );
 ```
@@ -502,7 +502,7 @@ This section describes the events for an in-flight exit.
 ```
     event InFlightExitChallengeResponded(
         address indexed challenger,
-        bytes32 txHash,
+        bytes32 indexed txHash,
         uint256 challengeTxPosition
     );
 ```
@@ -510,7 +510,7 @@ This section describes the events for an in-flight exit.
 ```
     event InFlightExitInputBlocked(
         address indexed challenger,
-        bytes32 txHash,
+        bytes32 indexed txHash,
         uint16 inputIndex
     );
 ```
@@ -518,7 +518,7 @@ This section describes the events for an in-flight exit.
 ```
     event InFlightExitOutputBlocked(
         address indexed challenger,
-        bytes32 txHash,
+        bytes32 indexed txHash,
         uint16 inputIndex
     );
 ```

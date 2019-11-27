@@ -33,7 +33,7 @@ library PaymentChallengeIFEOutputSpent {
 
     event InFlightExitOutputBlocked(
         address indexed challenger,
-        bytes32 ifeTxHash,
+        bytes32 indexed txHash,
         uint16 outputIndex
     );
 

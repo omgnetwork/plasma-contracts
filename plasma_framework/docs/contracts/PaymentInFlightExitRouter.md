@@ -39,17 +39,17 @@ contract PlasmaFramework private framework;
 ```js
 event IFEBondUpdated(uint128  bondSize);
 event PiggybackBondUpdated(uint128  bondSize);
-event InFlightExitStarted(address indexed initiator, bytes32  txHash);
-event InFlightExitInputPiggybacked(address indexed exitTarget, bytes32  txHash, uint16  inputIndex);
+event InFlightExitStarted(address indexed initiator, bytes32 indexed txHash);
+event InFlightExitInputPiggybacked(address indexed exitTarget, bytes32 indexed txHash, uint16  inputIndex);
 event InFlightExitOmitted(uint160 indexed exitId, address  token);
 event InFlightBondReturnFailed(address indexed receiver, uint256  amount);
 event InFlightExitOutputWithdrawn(uint160 indexed exitId, uint16  outputIndex);
 event InFlightExitInputWithdrawn(uint160 indexed exitId, uint16  inputIndex);
-event InFlightExitOutputPiggybacked(address indexed exitTarget, bytes32  txHash, uint16  outputIndex);
-event InFlightExitChallenged(address indexed challenger, bytes32  txHash, uint256  challengeTxPosition);
-event InFlightExitChallengeResponded(address  challenger, bytes32  txHash, uint256  challengeTxPosition);
-event InFlightExitInputBlocked(address indexed challenger, bytes32  txHash, uint16  inputIndex);
-event InFlightExitOutputBlocked(address indexed challenger, bytes32  ifeTxHash, uint16  outputIndex);
+event InFlightExitOutputPiggybacked(address indexed exitTarget, bytes32 indexed txHash, uint16  outputIndex);
+event InFlightExitChallenged(address indexed challenger, bytes32 indexed txHash, uint256  challengeTxPosition);
+event InFlightExitChallengeResponded(address indexed challenger, bytes32 indexed txHash, uint256  challengeTxPosition);
+event InFlightExitInputBlocked(address indexed challenger, bytes32 indexed txHash, uint16  inputIndex);
+event InFlightExitOutputBlocked(address indexed challenger, bytes32 indexed txHash, uint16  outputIndex);
 event InFlightExitDeleted(uint160 indexed exitId);
 ```
 
