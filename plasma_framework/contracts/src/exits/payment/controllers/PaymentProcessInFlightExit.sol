@@ -90,7 +90,7 @@ library PaymentProcessInFlightExit {
                 }
             }
 
-            flagOutputsWhenNoncanonical(self.framework, exit, token);
+            flagOutputsWhenNonCanonical(self.framework, exit, token);
         } else {
             for (uint16 i = 0; i < MAX_OUTPUT_NUM; i++) {
                 PaymentExitDataModel.WithdrawData memory withdrawal = exit.outputs[i];
@@ -138,14 +138,14 @@ library PaymentProcessInFlightExit {
     {
         uint256 inputNumOfTheToken;
         for (uint i = 0; i < MAX_INPUT_NUM; i++) {
-            if (exit.inputs[i].token == token) {
+            if (exit.inputs[i].token == token && exit.inputs[i].amount > 0) {
                 inputNumOfTheToken++;
             }
         }
         bytes32[] memory outputIdsOfInputs = new bytes32[](inputNumOfTheToken);
         uint sameTokenIndex = 0;
         for (uint i = 0; i < MAX_INPUT_NUM; i++) {
-            if (exit.inputs[i].token == token) {
+            if (exit.inputs[i].token == token && exit.inputs[i].amount > 0) {
                 outputIdsOfInputs[sameTokenIndex] = exit.inputs[i].outputId;
                 sameTokenIndex++;
             }
@@ -197,7 +197,7 @@ library PaymentProcessInFlightExit {
         }
     }
 
-    function flagOutputsWhenNoncanonical(
+    function flagOutputsWhenNonCanonical(
         PlasmaFramework framework,
         PaymentExitDataModel.InFlightExit memory exit,
         address token
@@ -231,7 +231,7 @@ library PaymentProcessInFlightExit {
     {
         uint256 inputNumOfTheToken;
         for (uint16 i = 0; i < MAX_INPUT_NUM; i++) {
-            if (exit.inputs[i].token == token) {
+            if (exit.inputs[i].token == token && exit.inputs[i].amount > 0) {
                 inputNumOfTheToken++;
             }
         }
@@ -246,7 +246,7 @@ library PaymentProcessInFlightExit {
         bytes32[] memory outputIdsToFlag = new bytes32[](inputNumOfTheToken + piggybackedOutputNumOfTheToken);
         uint indexForOutputIds = 0;
         for (uint16 i = 0; i < MAX_INPUT_NUM; i++) {
-            if (exit.inputs[i].token == token) {
+            if (exit.inputs[i].token == token && exit.inputs[i].amount > 0) {
                 outputIdsToFlag[indexForOutputIds] = exit.inputs[i].outputId;
                 indexForOutputIds++;
             }

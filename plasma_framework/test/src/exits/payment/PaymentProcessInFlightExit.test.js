@@ -24,7 +24,7 @@ const {
 const { expect } = require('chai');
 
 const {
-    TX_TYPE, PROTOCOL, VAULT_ID, SAFE_GAS_STIPEND,
+    TX_TYPE, PROTOCOL, VAULT_ID, SAFE_GAS_STIPEND, EMPTY_BYTES_32,
 } = require('../../../helpers/constants.js');
 const { buildUtxoPos } = require('../../../helpers/positions.js');
 
@@ -84,7 +84,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
         bondOwner = ifeBondOwner,
     ) => {
         const emptyWithdrawData = {
-            outputId: web3.utils.sha3('dummy output id'),
+            outputId: EMPTY_BYTES_32,
             exitTarget: constants.ZERO_ADDRESS,
             token: constants.ZERO_ADDRESS,
             amount: 0,

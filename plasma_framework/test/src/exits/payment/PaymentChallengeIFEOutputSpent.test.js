@@ -28,7 +28,7 @@ const { computeNormalOutputId, spentOnGas } = require('../../../helpers/utils.js
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
 const { MerkleTree } = require('../../../helpers/merkle.js');
 const {
-    PROTOCOL, TX_TYPE, VAULT_ID, SAFE_GAS_STIPEND,
+    PROTOCOL, TX_TYPE, VAULT_ID, SAFE_GAS_STIPEND, EMPTY_BYTES_32,
 } = require('../../../helpers/constants.js');
 
 contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
@@ -44,7 +44,7 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
     const AMOUNT = 1;
     const MERKLE_TREE_HEIGHT = 3;
     const DUMMY_WITHDRAW_DATA = {
-        outputId: web3.utils.sha3('dummy output id'),
+        outputId: EMPTY_BYTES_32,
         exitTarget: constants.ZERO_ADDRESS,
         token: constants.ZERO_ADDRESS,
         amount: 0,

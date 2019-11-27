@@ -25,7 +25,7 @@ const { calculateNormalExitable } = require('../../../helpers/exitable.js');
 const { buildUtxoPos, utxoPosToTxPos } = require('../../../helpers/positions.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
 const {
-    PROTOCOL, TX_TYPE, VAULT_ID, SAFE_GAS_STIPEND,
+    PROTOCOL, TX_TYPE, VAULT_ID, SAFE_GAS_STIPEND, EMPTY_BYTES_32,
 } = require('../../../helpers/constants.js');
 
 contract('PaymentPiggybackInFlightExitOnInput', ([_, alice, inputOwner, nonInputOwner, outputOwner]) => {
@@ -116,7 +116,7 @@ contract('PaymentPiggybackInFlightExitOnInput', ([_, alice, inputOwner, nonInput
             const rlpInFlighTxBytes = web3.utils.bytesToHex(inFlightTx.rlpEncoded());
 
             const emptyWithdrawData = {
-                outputId: web3.utils.sha3('dummy output id'),
+                outputId: EMPTY_BYTES_32,
                 exitTarget: constants.ZERO_ADDRESS,
                 token: constants.ZERO_ADDRESS,
                 amount: 0,

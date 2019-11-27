@@ -26,7 +26,7 @@ const {
 const { expect } = require('chai');
 
 const {
-    PROTOCOL, OUTPUT_TYPE, VAULT_ID, SAFE_GAS_STIPEND,
+    PROTOCOL, OUTPUT_TYPE, VAULT_ID, SAFE_GAS_STIPEND, EMPTY_BYTES_32,
 } = require('../../../helpers/constants.js');
 const { buildOutputGuard } = require('../../../helpers/utils.js');
 const { buildUtxoPos, UtxoPos } = require('../../../helpers/positions.js');
@@ -143,7 +143,7 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
 
     const buildInFlightExitData = async (exitIdHelper, outputIdHelper, outputType, isInputTxDeposit = false) => {
         const emptyWithdrawData = {
-            outputId: web3.utils.sha3('dummy output id'),
+            outputId: EMPTY_BYTES_32,
             exitTarget: constants.ZERO_ADDRESS,
             token: constants.ZERO_ADDRESS,
             amount: 0,
