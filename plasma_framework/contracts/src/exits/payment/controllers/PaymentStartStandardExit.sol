@@ -178,7 +178,7 @@ library PaymentStartStandardExit {
 
         require(data.controller.txFinalizationVerifier.isStandardFinalized(data.finalizationData), "The transaction must be standard finalized");
         PaymentExitDataModel.StandardExit memory exit = exitMap.exits[data.exitId];
-        require(!exit.exitable && exit.amount == 0, "Exit has already started");
+        require(exit.amount == 0, "Exit has already started");
 
         require(self.framework.isOutputSpent(data.outputId) == false, "Output is already spent");
     }
