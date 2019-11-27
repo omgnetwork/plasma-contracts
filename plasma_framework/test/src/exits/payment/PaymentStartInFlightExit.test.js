@@ -26,7 +26,9 @@ const { expect } = require('chai');
 
 const { buildUtxoPos, UtxoPos } = require('../../../helpers/positions.js');
 const { computeNormalOutputId, spentOnGas } = require('../../../helpers/utils.js');
-const { PROTOCOL, VAULT_ID, DUMMY_INPUT_1, SAFE_GAS_STIPEND } = require('../../../helpers/constants.js');
+const {
+    PROTOCOL, VAULT_ID, DUMMY_INPUT_1, SAFE_GAS_STIPEND,
+} = require('../../../helpers/constants.js');
 const {
     buildValidIfeStartArgs, buildIfeStartArgs, createInputTransaction, createDepositTransaction, createInFlightTx,
 } = require('../../../helpers/ife.js');
