@@ -1,6 +1,5 @@
 pragma solidity 0.5.11;
 
-import "./ZeroHashesProvider.sol";
 import "../framework/PlasmaFramework.sol";
 import "../utils/OnlyFromAddress.sol";
 
@@ -10,6 +9,10 @@ import "../utils/OnlyFromAddress.sol";
  *      Setting a new deposit verifier allows an upgrade to a new deposit tx type without upgrading the vault
  */
 contract Vault is OnlyFromAddress {
+
+    byte private constant LEAF_SALT = 0x00;
+    byte private constant NODE_SALT = 0x01;
+
     event SetDepositVerifierCalled(address nextDepositVerifier);
     PlasmaFramework internal framework;
     bytes32[16] internal zeroHashes; // Pre-computes zero hashes to be used for building merkle tree for deposit block
@@ -23,7 +26,20 @@ contract Vault is OnlyFromAddress {
 
     constructor(PlasmaFramework _framework) public {
         framework = _framework;
-        zeroHashes = ZeroHashesProvider.getZeroHashes();
+        zeroHashes = getZeroHashes();
+    }
+
+    /**
+     * @dev Pre-computes zero hashes to be used for building Merkle tree for deposit block
+     */
+    function getZeroHashes() private pure returns (bytes32[16] memory) {
+        bytes32[16] memory hashes;
+        bytes32 zeroHash = keccak256(abi.encodePacked(LEAF_SALT, uint256(0)));
+        for (uint i = 0; i < 16; i++) {
+            hashes[i] = zeroHash;
+            zeroHash = keccak256(abi.encodePacked(NODE_SALT, zeroHash, zeroHash));
+        }
+        return hashes;
     }
 
     /**
@@ -79,13 +95,18 @@ contract Vault is OnlyFromAddress {
      * @notice Generate and submit a deposit block root to the PlasmaFramework
      * @dev Designed to be called by the contract that inherits Vault
      */
-    function _submitDepositBlock(bytes memory _depositTx) internal returns (uint256) {
-        bytes32 root = keccak256(_depositTx);
-        for (uint i = 0; i < 16; i++) {
-            root = keccak256(abi.encodePacked(root, zeroHashes[i]));
-        }
+    function submitDepositBlock(bytes memory depositTx) internal returns (uint256) {
+        bytes32 root = getDepositBlockRoot(depositTx);
 
         uint256 depositBlkNum = framework.submitDepositBlock(root);
         return depositBlkNum;
+    }
+
+    function getDepositBlockRoot(bytes memory depositTx) private view returns (bytes32) {
+        bytes32 root = keccak256(abi.encodePacked(LEAF_SALT, depositTx));
+        for (uint i = 0; i < 16; i++) {
+            root = keccak256(abi.encodePacked(NODE_SALT, root, zeroHashes[i]));
+        }
+        return root;
     }
 }

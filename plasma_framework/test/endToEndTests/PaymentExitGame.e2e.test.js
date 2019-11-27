@@ -30,6 +30,7 @@ contract('PaymentExitGame - End to End Tests', ([_deployer, _maintainer, authori
     const INITIAL_ERC20_SUPPLY = 10000000000;
     const DEPOSIT_VALUE = 1000000;
     const OUTPUT_TYPE_PAYMENT = config.registerKeys.outputTypes.payment;
+    const MERKLE_TREE_DEPTH = 16;
 
     const alicePrivateKey = '0x7151e5dab6f8e95b5436515b83f423c4df64fe4c6149f864daa209b26adb10ca';
     let alice;
@@ -73,7 +74,7 @@ contract('PaymentExitGame - End to End Tests', ([_deployer, _maintainer, authori
         const depositBlockNum = (await this.framework.nextDepositBlock()).toNumber();
         this.depositUtxoPos = buildUtxoPos(depositBlockNum, 0, 0);
         this.depositTx = Testlang.deposit(OUTPUT_TYPE_PAYMENT, DEPOSIT_VALUE, alice);
-        this.merkleTreeForDepositTx = new MerkleTree([this.depositTx], 16);
+        this.merkleTreeForDepositTx = new MerkleTree([this.depositTx], MERKLE_TREE_DEPTH);
         this.merkleProofForDepositTx = this.merkleTreeForDepositTx.getInclusionProof(this.depositTx);
 
         return this.ethVault.deposit(this.depositTx, { from: alice, value: DEPOSIT_VALUE });
@@ -89,7 +90,7 @@ contract('PaymentExitGame - End to End Tests', ([_deployer, _maintainer, authori
             OUTPUT_TYPE_PAYMENT, DEPOSIT_VALUE - transferAmount, alice, ETH,
         );
         this.transferTxObject = new PaymentTransaction(1, [this.depositUtxoPos], [outputBob, outputAlice]);
-        this.transferTx = this.transferTxObject.rlpEncoded();
+        this.transferTx = web3.utils.bytesToHex(this.transferTxObject.rlpEncoded());
         this.merkleTreeForTransferTx = new MerkleTree([this.transferTx]);
         this.merkleProofForTransferTx = this.merkleTreeForTransferTx.getInclusionProof(this.transferTx);
 
@@ -100,7 +101,7 @@ contract('PaymentExitGame - End to End Tests', ([_deployer, _maintainer, authori
         const depositBlockNum = (await this.framework.nextDepositBlock()).toNumber();
         this.depositUtxoPos = buildUtxoPos(depositBlockNum, 0, 0);
         this.depositTx = Testlang.deposit(OUTPUT_TYPE_PAYMENT, DEPOSIT_VALUE, alice, this.erc20.address);
-        this.merkleTreeForDepositTx = new MerkleTree([this.depositTx], 16);
+        this.merkleTreeForDepositTx = new MerkleTree([this.depositTx], MERKLE_TREE_DEPTH);
         this.merkleProofForDepositTx = this.merkleTreeForDepositTx.getInclusionProof(this.depositTx);
 
         return this.erc20Vault.deposit(this.depositTx, { from: alice });
@@ -152,8 +153,8 @@ contract('PaymentExitGame - End to End Tests', ([_deployer, _maintainer, authori
 
                 it('should save the StandardExit data when successfully done', async () => {
                     const exitId = await this.exitGame.getStandardExitId(true, this.depositTx, this.depositUtxoPos);
-                    const standardExitData = await this.exitGame.standardExits(exitId);
-
+                    const exitIds = [exitId];
+                    const standardExitData = (await this.exitGame.standardExits(exitIds))[0];
                     const outputIndexForDeposit = 0;
                     const outputId = computeDepositOutputId(
                         this.depositTx, outputIndexForDeposit, this.depositUtxoPos,
@@ -232,7 +233,8 @@ contract('PaymentExitGame - End to End Tests', ([_deployer, _maintainer, authori
                     const exitId = await this.exitGame.getStandardExitId(
                         false, this.transferTx, this.transferUtxoPos,
                     );
-                    const standardExitData = await this.exitGame.standardExits(exitId);
+                    const exitIds = [exitId];
+                    const standardExitData = (await this.exitGame.standardExits(exitIds))[0];
                     expect(standardExitData.exitable).to.be.true;
                 });
 
@@ -283,7 +285,7 @@ contract('PaymentExitGame - End to End Tests', ([_deployer, _maintainer, authori
                 });
 
                 it('should still be able to start standard exit even already spent', async () => {
-                    const standardExitData = await this.exitGame.standardExits(this.exitId);
+                    const standardExitData = (await this.exitGame.standardExits([this.exitId]))[0];
                     expect(standardExitData.exitable).to.be.true;
                 });
 
@@ -406,7 +408,8 @@ contract('PaymentExitGame - End to End Tests', ([_deployer, _maintainer, authori
                         const exitId = await this.exitGame.getStandardExitId(
                             isDeposit, this.depositTx, this.depositUtxoPos,
                         );
-                        const standardExitData = await this.exitGame.standardExits(exitId);
+                        const exitIds = [exitId];
+                        const standardExitData = (await this.exitGame.standardExits(exitIds))[0];
                         expect(standardExitData.exitable).to.be.true;
                     });
 

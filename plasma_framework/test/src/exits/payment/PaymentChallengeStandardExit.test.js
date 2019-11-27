@@ -9,6 +9,7 @@ const PaymentStartStandardExit = artifacts.require('PaymentStartStandardExit');
 const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
+const StateTransitionVerifierMock = artifacts.require('StateTransitionVerifierMock');
 const TxFinalizationVerifier = artifacts.require('TxFinalizationVerifier');
 const Attacker = artifacts.require('FallbackFunctionFailAttacker');
 
@@ -18,7 +19,7 @@ const {
 const { expect } = require('chai');
 
 const {
-    TX_TYPE, OUTPUT_TYPE, PROTOCOL, EMPTY_BYTES_32, VAULT_ID, DUMMY_INPUT_1,
+    TX_TYPE, OUTPUT_TYPE, PROTOCOL, EMPTY_BYTES_32, VAULT_ID, DUMMY_INPUT_1, SAFE_GAS_STIPEND,
 } = require('../../../helpers/constants.js');
 const { buildUtxoPos, UtxoPos } = require('../../../helpers/positions.js');
 const {
@@ -102,15 +103,21 @@ contract('PaymentChallengeStandardExit', ([_, alice, bob]) => {
             await this.spendingCondition.mockResult(true);
 
             this.txFinalizationVerifier = await TxFinalizationVerifier.new();
+            const stateTransitionVerifier = await StateTransitionVerifierMock.new();
 
-            this.exitGame = await PaymentStandardExitRouter.new(
+            this.exitGameArgs = [
                 this.framework.address,
                 VAULT_ID.ETH,
                 VAULT_ID.ERC20,
                 this.outputGuardHandlerRegistry.address,
                 this.spendingConditionRegistry.address,
+                stateTransitionVerifier.address,
                 this.txFinalizationVerifier.address,
-            );
+                TX_TYPE.PAYMENT,
+                SAFE_GAS_STIPEND,
+            ];
+            this.exitGame = await PaymentStandardExitRouter.new(this.exitGameArgs);
+
             await this.framework.registerExitGame(TX_TYPE.PAYMENT, this.exitGame.address, PROTOCOL.MORE_VP);
 
             this.startStandardExitBondSize = await this.exitGame.startStandardExitBondSize();
@@ -203,14 +210,7 @@ contract('PaymentChallengeStandardExit', ([_, alice, bob]) => {
             });
 
             it('should fail when TxFinalizationVerifier reverts while checking whether challenge tx is protocol finalized', async () => {
-                const dummyExitGame = await PaymentStandardExitRouter.new(
-                    this.framework.address,
-                    VAULT_ID.ETH,
-                    VAULT_ID.ERC20,
-                    this.outputGuardHandlerRegistry.address,
-                    this.spendingConditionRegistry.address,
-                    this.txFinalizationVerifier.address,
-                );
+                const dummyExitGame = await PaymentStandardExitRouter.new(this.exitGameArgs);
 
                 const args = getTestInputArgs(OUTPUT_TYPE.PAYMENT, alice);
 
@@ -325,7 +325,7 @@ contract('PaymentChallengeStandardExit', ([_, alice, bob]) => {
                 });
 
                 it('should delete the exit data when successfully challenged', async () => {
-                    const exitData = await this.exitGame.standardExits(this.args.exitId);
+                    const exitData = (await this.exitGame.standardExits([this.args.exitId]))[0];
                     Object.values(exitData).forEach((val) => {
                         expect(val).to.be.oneOf([false, '0', EMPTY_BYTES_32, constants.ZERO_ADDRESS]);
                     });

@@ -176,15 +176,13 @@ contract('PlasmaFramework - Extendibility End to End Tests', ([_, maintainer, au
                             this.paymentV2TxObject = new PaymentTransaction(
                                 PAYMENT_V2_TX_TYPE, [this.depositUtxoPos], [dexDepositOutput, paymentOutputV2],
                             );
-                            this.paymentV2Tx = this.paymentV2TxObject.rlpEncoded();
+                            this.paymentV2Tx = web3.utils.bytesToHex(this.paymentV2TxObject.rlpEncoded());
                             const merkleTreeForPaymentV2Tx = new MerkleTree([this.paymentV2Tx]);
                             this.merkleProofForPaymentV2Tx = merkleTreeForPaymentV2Tx.getInclusionProof(
                                 this.paymentV2Tx,
                             );
 
-                            this.dexDepositOutputId = computeNormalOutputId(
-                                web3.utils.bytesToHex(this.paymentV2Tx), dexDepositOutputIndex,
-                            );
+                            this.dexDepositOutputId = computeNormalOutputId(this.paymentV2Tx, dexDepositOutputIndex);
 
                             await this.framework.submitBlock(merkleTreeForPaymentV2Tx.root, { from: authority });
                         });

@@ -10,6 +10,7 @@ const PaymentProcessInFlightExit = artifacts.require('PaymentProcessInFlightExit
 const PaymentChallengeIFENotCanonical = artifacts.require('PaymentChallengeIFENotCanonical');
 const PaymentChallengeIFEInputSpent = artifacts.require('PaymentChallengeIFEInputSpent');
 const PaymentChallengeIFEOutputSpent = artifacts.require('PaymentChallengeIFEOutputSpent');
+const PaymentDeleteInFlightExit = artifacts.require('PaymentDeleteInFlightExit');
 const PaymentStartStandardExit = artifacts.require('PaymentStartStandardExit');
 const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry');
 const StateTransitionVerifierMock = artifacts.require('StateTransitionVerifierMock');
@@ -20,7 +21,7 @@ const TxFinalizationVerifier = artifacts.require('TxFinalizationVerifier');
 
 const { expect } = require('chai');
 const { expectEvent, time } = require('openzeppelin-test-helpers');
-const { TX_TYPE, VAULT_ID } = require('../../../helpers/constants.js');
+const { TX_TYPE, VAULT_ID, SAFE_GAS_STIPEND } = require('../../../helpers/constants.js');
 
 contract('PaymentExitGame - Update Bond', ([_, outputOwner]) => {
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
@@ -44,6 +45,7 @@ contract('PaymentExitGame - Update Bond', ([_, outputOwner]) => {
         const challengeIFEInputSpent = await PaymentChallengeIFEInputSpent.new();
         const challengeIFEOutputSpent = await PaymentChallengeIFEOutputSpent.new();
         const processInFlightExit = await PaymentProcessInFlightExit.new();
+        const deleteInFlightExit = await PaymentDeleteInFlightExit.new();
 
         await PaymentInFlightExitRouter.link('PaymentStartInFlightExit', startInFlightExit.address);
         await PaymentInFlightExitRouter.link('PaymentPiggybackInFlightExit', piggybackInFlightExit.address);
@@ -51,6 +53,7 @@ contract('PaymentExitGame - Update Bond', ([_, outputOwner]) => {
         await PaymentInFlightExitRouter.link('PaymentChallengeIFEInputSpent', challengeIFEInputSpent.address);
         await PaymentInFlightExitRouter.link('PaymentChallengeIFEOutputSpent', challengeIFEOutputSpent.address);
         await PaymentInFlightExitRouter.link('PaymentProcessInFlightExit', processInFlightExit.address);
+        await PaymentInFlightExitRouter.link('PaymentDeleteInFlightExit', deleteInFlightExit.address);
     });
 
 
@@ -79,14 +82,18 @@ contract('PaymentExitGame - Update Bond', ([_, outputOwner]) => {
 
     describe('updateStartStandardExitBondSize', () => {
         beforeEach(async () => {
-            this.exitGame = await PaymentStandardExitRouter.new(
+            const exitGameArgs = [
                 this.framework.address,
                 VAULT_ID.ETH,
                 VAULT_ID.ERC20,
                 this.outputGuardHandlerRegistry.address,
                 this.spendingConditionRegistry.address,
+                this.stateTransitionVerifier.address,
                 this.txFinalizationVerifier.address,
-            );
+                TX_TYPE.PAYMENT,
+                SAFE_GAS_STIPEND,
+            ];
+            this.exitGame = await PaymentStandardExitRouter.new(exitGameArgs);
 
             this.startStandardExitBondSize = await this.exitGame.startStandardExitBondSize();
             this.newBondSize = this.startStandardExitBondSize.addn(20);
@@ -112,7 +119,7 @@ contract('PaymentExitGame - Update Bond', ([_, outputOwner]) => {
 
     describe('updateStartIFEBondSize', () => {
         beforeEach(async () => {
-            this.exitGame = await PaymentInFlightExitRouter.new(
+            const exitGameArgs = [
                 this.framework.address,
                 VAULT_ID.ETH,
                 VAULT_ID.ERC20,
@@ -121,7 +128,9 @@ contract('PaymentExitGame - Update Bond', ([_, outputOwner]) => {
                 this.stateTransitionVerifier.address,
                 this.txFinalizationVerifier.address,
                 TX_TYPE.PAYMENT,
-            );
+                SAFE_GAS_STIPEND,
+            ];
+            this.exitGame = await PaymentInFlightExitRouter.new(exitGameArgs);
 
             this.startIFEBondSize = await this.exitGame.startIFEBondSize();
             this.newBondSize = this.startIFEBondSize.addn(20);
@@ -147,7 +156,7 @@ contract('PaymentExitGame - Update Bond', ([_, outputOwner]) => {
 
     describe('updatePiggybackBondSize', () => {
         beforeEach(async () => {
-            this.exitGame = await PaymentInFlightExitRouter.new(
+            const exitGameArgs = [
                 this.framework.address,
                 VAULT_ID.ETH,
                 VAULT_ID.ERC20,
@@ -156,7 +165,9 @@ contract('PaymentExitGame - Update Bond', ([_, outputOwner]) => {
                 this.stateTransitionVerifier.address,
                 this.txFinalizationVerifier.address,
                 TX_TYPE.PAYMENT,
-            );
+                SAFE_GAS_STIPEND,
+            ];
+            this.exitGame = await PaymentInFlightExitRouter.new(exitGameArgs);
 
             this.piggybackBondSize = await this.exitGame.piggybackBondSize();
             this.newBondSize = this.piggybackBondSize.addn(20);

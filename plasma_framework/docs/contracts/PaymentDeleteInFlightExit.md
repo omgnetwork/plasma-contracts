@@ -1,73 +1,67 @@
-# Migrations.sol
+# PaymentDeleteInFlightExit.sol
 
-View Source: [contracts/Migrations.sol](../../contracts/Migrations.sol)
+View Source: [contracts/src/exits/payment/controllers/PaymentDeleteInFlightExit.sol](../../contracts/src/exits/payment/controllers/PaymentDeleteInFlightExit.sol)
 
-**Migrations**
+**PaymentDeleteInFlightExit**
+
+## Structs
+### Controller
+
+```js
+struct Controller {
+ uint256 minExitPeriod,
+ uint256 safeGasStipend
+}
+```
 
 ## Contract Members
 **Constants & Variables**
 
 ```js
-address public owner;
-uint256 public last_completed_migration;
+uint8 public constant MAX_INPUT_NUM;
+uint8 public constant MAX_OUTPUT_NUM;
 
 ```
 
-## Modifiers
-
-- [restricted](#restricted)
-
-### restricted
+**Events**
 
 ```js
-modifier restricted() internal
+event InFlightExitDeleted(uint160 indexed exitId);
 ```
-
-**Arguments**
-
-| Name        | Type           | Description  |
-| ------------- |------------- | -----|
 
 ## Functions
 
-- [()](#)
-- [setCompleted(uint256 completed)](#setcompleted)
-- [upgrade(address new_address)](#upgrade)
+- [run(struct PaymentDeleteInFlightExit.Controller self, struct PaymentExitDataModel.InFlightExitMap exitMap, uint160 exitId)](#run)
+- [isPiggybacked(struct PaymentExitDataModel.InFlightExit ife)](#ispiggybacked)
 
-### 
+### run
+
+Main logic function to delete the non piggybacked in-flight exit
 
 ```js
-function () public nonpayable
+function run(struct PaymentDeleteInFlightExit.Controller self, struct PaymentExitDataModel.InFlightExitMap exitMap, uint160 exitId) public nonpayable
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
+| self | struct PaymentDeleteInFlightExit.Controller |  | 
+| exitMap | struct PaymentExitDataModel.InFlightExitMap |  | 
+| exitId | uint160 | The exitId of the standard exit | 
 
-### setCompleted
+### isPiggybacked
 
 ```js
-function setCompleted(uint256 completed) public nonpayable restricted 
+function isPiggybacked(struct PaymentExitDataModel.InFlightExit ife) private pure
+returns(bool)
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| completed | uint256 |  | 
-
-### upgrade
-
-```js
-function upgrade(address new_address) public nonpayable restricted 
-```
-
-**Arguments**
-
-| Name        | Type           | Description  |
-| ------------- |------------- | -----|
-| new_address | address |  | 
+| ife | struct PaymentExitDataModel.InFlightExit |  | 
 
 ## Contracts
 

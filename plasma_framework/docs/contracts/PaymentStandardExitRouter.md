@@ -36,12 +36,13 @@ event ExitStarted(address indexed owner, uint160  exitId);
 event ExitChallenged(uint256 indexed utxoPos);
 event ExitOmitted(uint160 indexed exitId);
 event ExitFinalized(uint160 indexed exitId);
+event BondReturnFailed(address indexed receiver, uint256  amount);
 ```
 
 ## Functions
 
-- [(PlasmaFramework plasmaFramework, uint256 ethVaultId, uint256 erc20VaultId, OutputGuardHandlerRegistry outputGuardHandlerRegistry, SpendingConditionRegistry spendingConditionRegistry, ITxFinalizationVerifier txFinalizationVerifier, uint256 safeGasStipend)](#)
-- [standardExits(uint160 exitId)](#standardexits)
+- [(struct PaymentExitGameArgs.Args args)](#)
+- [standardExits(uint160[] exitIds)](#standardexits)
 - [startStandardExitBondSize()](#startstandardexitbondsize)
 - [updateStartStandardExitBondSize(uint128 newBondSize)](#updatestartstandardexitbondsize)
 - [startStandardExit(struct PaymentStandardExitRouterArgs.StartStandardExitArgs args)](#startstandardexit)
@@ -51,35 +52,29 @@ event ExitFinalized(uint160 indexed exitId);
 ### 
 
 ```js
-function (PlasmaFramework plasmaFramework, uint256 ethVaultId, uint256 erc20VaultId, OutputGuardHandlerRegistry outputGuardHandlerRegistry, SpendingConditionRegistry spendingConditionRegistry, ITxFinalizationVerifier txFinalizationVerifier, uint256 safeGasStipend) public nonpayable
+function (struct PaymentExitGameArgs.Args args) public nonpayable
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| plasmaFramework | PlasmaFramework |  | 
-| ethVaultId | uint256 |  | 
-| erc20VaultId | uint256 |  | 
-| outputGuardHandlerRegistry | OutputGuardHandlerRegistry |  | 
-| spendingConditionRegistry | SpendingConditionRegistry |  | 
-| txFinalizationVerifier | ITxFinalizationVerifier |  | 
-| safeGasStipend | uint256 |  | 
+| args | struct PaymentExitGameArgs.Args |  | 
 
 ### standardExits
 
 Getter retrieves standard exit data of the PaymentExitGame
 
 ```js
-function standardExits(uint160 exitId) public view
-returns(struct PaymentExitDataModel.StandardExit)
+function standardExits(uint160[] exitIds) external view
+returns(struct PaymentExitDataModel.StandardExit[])
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| exitId | uint160 | Exit ID of the standard exit | 
+| exitIds | uint160[] | Exit IDs of the standard exits | 
 
 ### startStandardExitBondSize
 
@@ -193,9 +188,11 @@ function processStandardExit(uint160 exitId, address token) internal nonpayable
 * [PaymentChallengeIFENotCanonical](PaymentChallengeIFENotCanonical.md)
 * [PaymentChallengeIFEOutputSpent](PaymentChallengeIFEOutputSpent.md)
 * [PaymentChallengeStandardExit](PaymentChallengeStandardExit.md)
+* [PaymentDeleteInFlightExit](PaymentDeleteInFlightExit.md)
 * [PaymentEip712Lib](PaymentEip712Lib.md)
 * [PaymentExitDataModel](PaymentExitDataModel.md)
 * [PaymentExitGame](PaymentExitGame.md)
+* [PaymentExitGameArgs](PaymentExitGameArgs.md)
 * [PaymentInFlightExitModelUtils](PaymentInFlightExitModelUtils.md)
 * [PaymentInFlightExitRouter](PaymentInFlightExitRouter.md)
 * [PaymentInFlightExitRouterArgs](PaymentInFlightExitRouterArgs.md)
@@ -227,4 +224,3 @@ function processStandardExit(uint160 exitId, address token) internal nonpayable
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)
 * [WireTransaction](WireTransaction.md)
-* [ZeroHashesProvider](ZeroHashesProvider.md)

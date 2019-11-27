@@ -44,6 +44,7 @@ library PaymentProcessInFlightExit {
     /**
      * @notice Main logic function to process in-flight exit
      * @dev emits InFlightExitOmitted event if the exit is omitted
+     * @dev emits InFlightBondReturnFailed event if failed to pay out bond. Would continue to process the exit.
      * @dev emits InFlightExitInputWithdrawn event if the input of IFE is withdrawn successfully
      * @dev emits InFlightExitOutputWithdrawn event if the output of IFE is withdrawn successfully
      * @param self The controller struct

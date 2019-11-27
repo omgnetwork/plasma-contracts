@@ -52,22 +52,21 @@ contract SampleTxVerifierSupportsMVP is ITxFinalizationVerifier {
         }
 
         (bytes32 root,) = data.framework.blocks(data.txPos.blockNum());
-        bytes32 leafData = keccak256(data.txBytes);
         return Merkle.checkMembership(
-            leafData, data.txPos.txIndex(), root, data.inclusionProof
+            data.txBytes, data.txPos.txIndex(), root, data.inclusionProof
         );
     }
 
-    /**		
-     * @dev Checks confirm signature over the block root hash directly.		
-     * @dev All transactions within the root with same owner would be consider confirmed by this signature.		
-     */		
-    function checkConfirmSig(Model.Data memory data) private view returns (bool) {		
-        if (data.confirmSig.length == 0) {		
-            return false;		
-        }		
+    /**
+     * @dev Checks confirm signature over the block root hash directly.
+     * @dev All transactions within the root with same owner would be consider confirmed by this signature.
+     */
+    function checkConfirmSig(Model.Data memory data) private view returns (bool) {
+        if (data.confirmSig.length == 0) {
+            return false;
+        }
 
-        (bytes32 root,) = data.framework.blocks(data.txPos.blockNum());		
-        return data.confirmSigAddress == ECDSA.recover(root, data.confirmSig);		
+        (bytes32 root,) = data.framework.blocks(data.txPos.blockNum());
+        return data.confirmSigAddress == ECDSA.recover(root, data.confirmSig);
     }
 }

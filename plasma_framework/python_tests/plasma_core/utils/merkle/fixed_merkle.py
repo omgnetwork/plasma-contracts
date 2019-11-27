@@ -2,6 +2,9 @@ from eth_utils import keccak as sha3
 from .exceptions import MemberNotExistException
 from plasma_core.constants import NULL_HASH
 
+LEAF_SALT = b'\x00'
+NODE_SALT = b'\x01'
+
 
 class MerkleNode(object):
 
@@ -23,9 +26,9 @@ class FixedMerkle(object):
         if len(leaves) > self.leaf_count:
             raise ValueError('number of leaves should be at most depth ** 2')
 
-        leaves = [sha3(leaf) for leaf in leaves]
+        leaves = [sha3(LEAF_SALT + leaf) for leaf in leaves]
 
-        self.leaves = leaves + [sha3(NULL_HASH)] * (self.leaf_count - len(leaves))
+        self.leaves = leaves + [sha3(LEAF_SALT + NULL_HASH)] * (self.leaf_count - len(leaves))
         self.tree = [self.__create_nodes(self.leaves)]
         self.__create_tree(self.tree[0])
 
@@ -41,7 +44,7 @@ class FixedMerkle(object):
         tree_level = []
 
         for i in range(0, next_level, 2):
-            combined = sha3(leaves[i].data + leaves[i + 1].data)
+            combined = sha3(NODE_SALT + leaves[i].data + leaves[i + 1].data)
             next_node = MerkleNode(combined, leaves[i], leaves[i + 1])
             tree_level.append(next_node)
 
@@ -49,7 +52,7 @@ class FixedMerkle(object):
         self.__create_tree(tree_level)
 
     def check_membership(self, leaf, index, proof):
-        hashed_leaf = sha3(leaf)
+        hashed_leaf = sha3(LEAF_SALT + leaf)
         computed_hash = hashed_leaf
         computed_index = index
 
@@ -57,15 +60,15 @@ class FixedMerkle(object):
             proof_segment = proof[i:i + 32]
 
             if computed_index % 2 == 0:
-                computed_hash = sha3(computed_hash + proof_segment)
+                computed_hash = sha3(NODE_SALT + computed_hash + proof_segment)
             else:
-                computed_hash = sha3(proof_segment + computed_hash)
+                computed_hash = sha3(NODE_SALT + proof_segment + computed_hash)
             computed_index = computed_index // 2
 
         return computed_hash == self.root
 
     def create_membership_proof(self, leaf):
-        hashed_leaf = sha3(leaf)
+        hashed_leaf = sha3(LEAF_SALT + leaf)
         if not self.__is_member(hashed_leaf):
             raise MemberNotExistException('leaf is not in the merkle tree')
 

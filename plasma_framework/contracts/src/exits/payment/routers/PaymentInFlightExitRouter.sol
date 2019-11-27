@@ -3,12 +3,14 @@ pragma experimental ABIEncoderV2;
 
 import "./PaymentInFlightExitRouterArgs.sol";
 import "../PaymentExitDataModel.sol";
+import "../PaymentExitGameArgs.sol";
 import "../controllers/PaymentStartInFlightExit.sol";
 import "../controllers/PaymentPiggybackInFlightExit.sol";
 import "../controllers/PaymentChallengeIFENotCanonical.sol";
 import "../controllers/PaymentChallengeIFEInputSpent.sol";
-import "../controllers/PaymentProcessInFlightExit.sol";
 import "../controllers/PaymentChallengeIFEOutputSpent.sol";
+import "../controllers/PaymentDeleteInFlightExit.sol";
+import "../controllers/PaymentProcessInFlightExit.sol";
 import "../../registries/SpendingConditionRegistry.sol";
 import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../interfaces/IStateTransitionVerifier.sol";
@@ -21,13 +23,19 @@ import "../../../framework/PlasmaFramework.sol";
 import "../../../framework/interfaces/IExitProcessor.sol";
 
 
-contract PaymentInFlightExitRouter is IExitProcessor, OnlyFromAddress, OnlyWithValue, FailFastReentrancyGuard {
+contract PaymentInFlightExitRouter is
+    IExitProcessor,
+    OnlyFromAddress,
+    OnlyWithValue,
+    FailFastReentrancyGuard
+{
     using PaymentStartInFlightExit for PaymentStartInFlightExit.Controller;
     using PaymentPiggybackInFlightExit for PaymentPiggybackInFlightExit.Controller;
     using PaymentChallengeIFENotCanonical for PaymentChallengeIFENotCanonical.Controller;
     using PaymentChallengeIFEInputSpent for PaymentChallengeIFEInputSpent.Controller;
-    using PaymentProcessInFlightExit for PaymentProcessInFlightExit.Controller;
     using PaymentChallengeIFEOutputSpent for PaymentChallengeIFEOutputSpent.Controller;
+    using PaymentDeleteInFlightExit for PaymentDeleteInFlightExit.Controller;
+    using PaymentProcessInFlightExit for PaymentProcessInFlightExit.Controller;
     using BondSize for BondSize.Params;
 
     // Initial IFE bond size = 185000 (gas cost of challenge) * 20 gwei (current fast gas price) * 10 (safety margin)
@@ -45,8 +53,9 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyFromAddress, OnlyWithV
     PaymentPiggybackInFlightExit.Controller internal piggybackInFlightExitController;
     PaymentChallengeIFENotCanonical.Controller internal challengeCanonicityController;
     PaymentChallengeIFEInputSpent.Controller internal challengeInputSpentController;
-    PaymentProcessInFlightExit.Controller internal processInflightExitController;
     PaymentChallengeIFEOutputSpent.Controller internal challengeOutputSpentController;
+    PaymentDeleteInFlightExit.Controller internal deleteNonPiggybackIFEController;
+    PaymentProcessInFlightExit.Controller internal processInflightExitController;
     BondSize.Params internal startIFEBond;
     BondSize.Params internal piggybackBond;
 
@@ -69,6 +78,11 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyFromAddress, OnlyWithV
     event InFlightExitOmitted(
         uint160 indexed exitId,
         address token
+    );
+
+    event InFlightBondReturnFailed(
+        address indexed receiver,
+        uint256 amount
     );
 
     event InFlightExitOutputWithdrawn(
@@ -111,73 +125,72 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyFromAddress, OnlyWithV
         uint16 outputIndex
     );
 
-    constructor(
-        PlasmaFramework plasmaFramework,
-        uint256 ethVaultId,
-        uint256 erc20VaultId,
-        OutputGuardHandlerRegistry outputGuardHandlerRegistry,
-        SpendingConditionRegistry spendingConditionRegistry,
-        IStateTransitionVerifier stateTransitionVerifier,
-        ITxFinalizationVerifier txFinalizationVerifier,
-        uint256 supportedTxType,
-        uint256 safeGasStipend
-    )
+    event InFlightExitDeleted(
+        uint160 indexed exitId
+    );
+
+    constructor(PaymentExitGameArgs.Args memory args)
         public
     {
-        framework = plasmaFramework;
+        framework = args.framework;
 
-        EthVault ethVault = EthVault(plasmaFramework.vaults(ethVaultId));
+        EthVault ethVault = EthVault(args.framework.vaults(args.ethVaultId));
         require(address(ethVault) != address(0), "Invalid ETH vault");
 
-        Erc20Vault erc20Vault = Erc20Vault(plasmaFramework.vaults(erc20VaultId));
+        Erc20Vault erc20Vault = Erc20Vault(args.framework.vaults(args.erc20VaultId));
         require(address(erc20Vault) != address(0), "Invalid ERC20 vault");
 
         startInFlightExitController = PaymentStartInFlightExit.buildController(
-            plasmaFramework,
-            outputGuardHandlerRegistry,
-            spendingConditionRegistry,
-            stateTransitionVerifier,
-            txFinalizationVerifier,
-            supportedTxType
+            args.framework,
+            args.outputGuardHandlerRegistry,
+            args.spendingConditionRegistry,
+            args.stateTransitionVerifier,
+            args.txFinalizationVerifier,
+            args.supportTxType
         );
 
         piggybackInFlightExitController = PaymentPiggybackInFlightExit.buildController(
-            plasmaFramework,
+            args.framework,
             this,
-            outputGuardHandlerRegistry,
-            ethVaultId,
-            erc20VaultId
+            args.outputGuardHandlerRegistry,
+            args.ethVaultId,
+            args.erc20VaultId
         );
 
         challengeCanonicityController = PaymentChallengeIFENotCanonical.buildController(
-            plasmaFramework,
-            spendingConditionRegistry,
-            outputGuardHandlerRegistry,
-            txFinalizationVerifier,
-            supportedTxType
+            args.framework,
+            args.spendingConditionRegistry,
+            args.outputGuardHandlerRegistry,
+            args.txFinalizationVerifier,
+            args.supportTxType
         );
 
         challengeInputSpentController = PaymentChallengeIFEInputSpent.buildController(
-            plasmaFramework,
-            spendingConditionRegistry,
-            outputGuardHandlerRegistry,
-            txFinalizationVerifier,
-            safeGasStipend
+            args.framework,
+            args.spendingConditionRegistry,
+            args.outputGuardHandlerRegistry,
+            args.txFinalizationVerifier,
+            args.safeGasStipend
         );
 
         challengeOutputSpentController = PaymentChallengeIFEOutputSpent.Controller(
-            plasmaFramework,
-            spendingConditionRegistry,
-            outputGuardHandlerRegistry,
-            txFinalizationVerifier,
-            safeGasStipend
+            args.framework,
+            args.spendingConditionRegistry,
+            args.outputGuardHandlerRegistry,
+            args.txFinalizationVerifier,
+            args.safeGasStipend
         );
 
+        deleteNonPiggybackIFEController = PaymentDeleteInFlightExit.Controller({
+            minExitPeriod: args.framework.minExitPeriod(),
+            safeGasStipend: args.safeGasStipend
+        });
+
         processInflightExitController = PaymentProcessInFlightExit.Controller({
-            framework: plasmaFramework,
+            framework: args.framework,
             ethVault: ethVault,
             erc20Vault: erc20Vault,
-            safeGasStipend: safeGasStipend
+            safeGasStipend: args.safeGasStipend
         });
         startIFEBond = BondSize.buildParams(INITIAL_IFE_BOND_SIZE, BOND_LOWER_BOUND_DIVISOR, BOND_UPPER_BOUND_MULTIPLIER);
         piggybackBond = BondSize.buildParams(INITIAL_PB_BOND_SIZE, BOND_LOWER_BOUND_DIVISOR, BOND_UPPER_BOUND_MULTIPLIER);
@@ -282,6 +295,17 @@ contract PaymentInFlightExitRouter is IExitProcessor, OnlyFromAddress, OnlyWithV
         nonReentrant(framework)
     {
         challengeOutputSpentController.run(inFlightExitMap, args);
+    }
+
+    /**
+     * @notice Deletes in-flight exit if the first phase has passed and not being piggybacked
+     * @dev Since IFE is enqueued during piggyback, a non-piggybacked IFE means that it will never be processed.
+     *      This means that the IFE bond will never be returned.
+     *      see: https://github.com/omisego/plasma-contracts/issues/440
+     * @param exitId The exitId of the in-flight exit
+     */
+    function deleteNonPiggybackedInFlightExit(uint160 exitId) public nonReentrant(framework) {
+        deleteNonPiggybackIFEController.run(inFlightExitMap, exitId);
     }
 
     /**

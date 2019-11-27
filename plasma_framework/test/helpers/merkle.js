@@ -1,4 +1,6 @@
-const NullHash = web3.utils.sha3('\0'.repeat(32));
+const LeafSalt = '0x00';
+const NodeSalt = '0x01';
+const NullHash = web3.utils.sha3('\0'.repeat(33));
 
 
 class MerkleNode {
@@ -25,12 +27,16 @@ class MerkleTree {
 
         this.leafCount = 2 ** this.height;
 
-        this.leaves = leaves.map(web3.utils.sha3);
+        this.leaves = leaves.map(MerkleTree.hashLeaf);
 
         const fill = Array.from({ length: this.leafCount - this.leaves.length }, () => NullHash);
         this.leaves = this.leaves.concat(fill);
         this.tree = [MerkleTree.createNodes(this.leaves)];
         this.root = this.createTree(this.tree[0]);
+    }
+
+    static hashLeaf(leaf) {
+        return web3.utils.sha3(LeafSalt + leaf.slice(2));
     }
 
     static createNodes(leaves) {
@@ -47,8 +53,9 @@ class MerkleTree {
 
         let i = 0;
         while (i < levelSize) {
-            const combinedData = level[i].data + level[i + 1].data.slice(2); // JS stores hashes as hex-encoded strings
-            const combined = web3.utils.sha3(web3.utils.hexToBytes(combinedData));
+            // JS stores hashes as hex-encoded strings
+            const combinedData = NodeSalt + level[i].data.slice(2) + level[i + 1].data.slice(2);
+            const combined = web3.utils.sha3(combinedData);
             const nextNode = new MerkleNode(combined, level[i], level[i + 1]);
             nextLevel.push(nextNode);
             i += 2;
@@ -59,7 +66,7 @@ class MerkleTree {
     }
 
     getInclusionProof(leaf) {
-        const hashedLeaf = web3.utils.sha3(leaf);
+        const hashedLeaf = MerkleTree.hashLeaf(leaf);
 
         let index = this.leaves.indexOf(hashedLeaf);
         if (index === -1) {

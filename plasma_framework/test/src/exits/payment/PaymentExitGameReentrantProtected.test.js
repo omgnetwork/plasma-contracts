@@ -10,6 +10,7 @@ const PaymentProcessInFlightExit = artifacts.require('PaymentProcessInFlightExit
 const PaymentChallengeIFENotCanonical = artifacts.require('PaymentChallengeIFENotCanonical');
 const PaymentChallengeIFEInputSpent = artifacts.require('PaymentChallengeIFEInputSpent');
 const PaymentChallengeIFEOutputSpent = artifacts.require('PaymentChallengeIFEOutputSpent');
+const PaymentDeleteInFlightExit = artifacts.require('PaymentDeleteInFlightExit');
 const PaymentStartStandardExit = artifacts.require('PaymentStartStandardExit');
 const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry');
 const StateTransitionVerifierMock = artifacts.require('StateTransitionVerifierMock');
@@ -19,7 +20,9 @@ const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
 const TxFinalizationVerifier = artifacts.require('TxFinalizationVerifier');
 
 const { expectRevert } = require('openzeppelin-test-helpers');
-const { PROTOCOL, TX_TYPE, VAULT_ID } = require('../../../helpers/constants.js');
+const {
+    PROTOCOL, TX_TYPE, VAULT_ID, SAFE_GAS_STIPEND,
+} = require('../../../helpers/constants.js');
 
 contract('PaymentExitGame - Reentrant Protected', ([_, outputOwner]) => {
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
@@ -42,16 +45,18 @@ contract('PaymentExitGame - Reentrant Protected', ([_, outputOwner]) => {
         const challengeIFEInputSpent = await PaymentChallengeIFEInputSpent.new();
         const challengeIFEOutputSpent = await PaymentChallengeIFEOutputSpent.new();
         const processInFlightExit = await PaymentProcessInFlightExit.new();
+        const deleteInFlightExit = await PaymentDeleteInFlightExit.new();
 
         await PaymentInFlightExitRouter.link('PaymentStartInFlightExit', startInFlightExit.address);
         await PaymentInFlightExitRouter.link('PaymentPiggybackInFlightExit', piggybackInFlightExit.address);
         await PaymentInFlightExitRouter.link('PaymentChallengeIFENotCanonical', challengeInFlightExitNotCanonical.address);
         await PaymentInFlightExitRouter.link('PaymentChallengeIFEInputSpent', challengeIFEInputSpent.address);
         await PaymentInFlightExitRouter.link('PaymentChallengeIFEOutputSpent', challengeIFEOutputSpent.address);
+        await PaymentInFlightExitRouter.link('PaymentDeleteInFlightExit', deleteInFlightExit.address);
         await PaymentInFlightExitRouter.link('PaymentProcessInFlightExit', processInFlightExit.address);
     });
 
-    before('setup outpug guard handler and condition registries', async () => {
+    before('setup output guard handler and condition registries', async () => {
         this.spendingConditionRegistry = await SpendingConditionRegistry.new();
         this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
 
@@ -78,14 +83,18 @@ contract('PaymentExitGame - Reentrant Protected', ([_, outputOwner]) => {
 
     describe('standard exit functions are protected', () => {
         beforeEach(async () => {
-            this.exitGame = await PaymentStandardExitRouter.new(
+            const exitGameArgs = [
                 this.framework.address,
                 VAULT_ID.ETH,
                 VAULT_ID.ERC20,
                 this.outputGuardHandlerRegistry.address,
                 this.spendingConditionRegistry.address,
+                this.stateTransitionVerifier.address,
                 this.txFinalizationVerifier.address,
-            );
+                TX_TYPE.PAYMENT,
+                SAFE_GAS_STIPEND,
+            ];
+            this.exitGame = await PaymentStandardExitRouter.new(exitGameArgs);
 
             await this.framework.registerExitGame(TX_TYPE.PAYMENT, this.exitGame.address, PROTOCOL.MORE_VP);
         });
@@ -107,7 +116,7 @@ contract('PaymentExitGame - Reentrant Protected', ([_, outputOwner]) => {
 
     describe('in-flight exit functions are protected', () => {
         beforeEach(async () => {
-            this.exitGame = await PaymentInFlightExitRouter.new(
+            const exitGameArgs = [
                 this.framework.address,
                 VAULT_ID.ETH,
                 VAULT_ID.ERC20,
@@ -116,7 +125,9 @@ contract('PaymentExitGame - Reentrant Protected', ([_, outputOwner]) => {
                 this.stateTransitionVerifier.address,
                 this.txFinalizationVerifier.address,
                 TX_TYPE.PAYMENT,
-            );
+                SAFE_GAS_STIPEND,
+            ];
+            this.exitGame = await PaymentInFlightExitRouter.new(exitGameArgs);
 
             await this.framework.registerExitGame(TX_TYPE.PAYMENT, this.exitGame.address, PROTOCOL.MORE_VP);
         });
@@ -166,6 +177,13 @@ contract('PaymentExitGame - Reentrant Protected', ([_, outputOwner]) => {
         it('should not be able to re-enter challengeInFlightExitOutputSpent', async () => {
             await expectRevert(
                 this.exitGame.testNonReentrant('challengeInFlightExitOutputSpent'),
+                'Reentrant call',
+            );
+        });
+
+        it('should not be able to re-enter deleteNonPiggybackedInFlightExit', async () => {
+            await expectRevert(
+                this.exitGame.testNonReentrant('deleteNonPiggybackedInFlightExit'),
                 'Reentrant call',
             );
         });
