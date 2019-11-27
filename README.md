@@ -54,7 +54,7 @@ npm run test
 ```
 
 ## Configuration
-The migration scripts can be configured via the `migrations/config.js` file. Various properties of the contracts can be set here, such as the minimum exit period. See the file itself for more details. By default the `development` environment is used, but this can be set to `production` via the `DEPLOYMENT_ENV` environment variable.
+The migration scripts can be configured in `plasma_framework/config.js`. Various properties of the contracts can be set here, such as the minimum exit period. See the file itself for more details. By default the `development` environment is used, but this can be set to `production` via the `DEPLOYMENT_ENV` environment variable.
 
 You may also override the default exit period in `development` with an environment variable `MIN_EXIT_PERIOD`.
 
