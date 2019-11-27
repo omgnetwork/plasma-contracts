@@ -40,8 +40,8 @@ library PaymentTransactionModel {
      * @param tx An RLP-encoded transaction
      * @return A decoded PaymentTransaction struct
      */
-    function decode(bytes memory tx) internal pure returns (PaymentTransactionModel.Transaction memory) {
-        RLPReader.RLPItem[] memory rlpTx = tx.toRlpItem().toList();
+    function decode(bytes memory _tx) internal pure returns (PaymentTransactionModel.Transaction memory) {
+        RLPReader.RLPItem[] memory rlpTx = _tx.toRlpItem().toList();
         require(rlpTx.length == ENCODED_LENGTH, "Invalid encoding of transaction");
 
         RLPReader.RLPItem[] memory rlpInputs = rlpTx[1].toList();
