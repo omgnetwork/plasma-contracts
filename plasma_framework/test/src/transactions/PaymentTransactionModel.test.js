@@ -111,14 +111,6 @@ contract('PaymentTransactionModel', () => {
         await expectRevert(this.test.decode(encoded), 'Null input not allowed');
     });
 
-    it('should fail when the transaction contains a null output', async () => {
-        const transaction = new PaymentTransaction(
-            TX_TYPE.PAYMENT, [DUMMY_INPUT_1], [NULL_OUTPUT, OUTPUT], EMPTY_BYTES32,
-        );
-        const encoded = web3.utils.bytesToHex(transaction.rlpEncoded());
-        await expectRevert(this.test.decode(encoded), 'Null output not allowed');
-    });
-
     it('should fail when the transaction type is zero', async () => {
         const transaction = new PaymentTransaction(0, [DUMMY_INPUT_1], [OUTPUT], EMPTY_BYTES32);
         const encoded = web3.utils.bytesToHex(transaction.rlpEncoded());

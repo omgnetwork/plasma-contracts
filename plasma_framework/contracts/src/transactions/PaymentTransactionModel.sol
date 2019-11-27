@@ -65,17 +65,11 @@ library PaymentTransactionModel {
         for (uint i = 0; i < rlpOutputs.length; i++) {
             PaymentOutputModel.Output memory output = PaymentOutputModel.decode(rlpOutputs[i]);
             require(output.outputType > 0, "Output type must not be 0");
-            // Disallow null outputs. // TODO really?
-            require(!isOutputEmpty(output), "Null output not allowed");
             outputs[i] = output;
         }
 
         bytes32 metaData = rlpTx[3].toBytes32();
 
         return Transaction({txType: txType, inputs: inputs, outputs: outputs, metaData: metaData});
-    }
-
-    function isOutputEmpty(PaymentOutputModel.Output memory output) internal pure returns (bool) {
-        return uint160(output.outputGuard) == 0 && output.amount == 0;
     }
 }
