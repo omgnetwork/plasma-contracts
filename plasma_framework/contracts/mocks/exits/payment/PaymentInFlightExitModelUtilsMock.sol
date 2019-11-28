@@ -14,8 +14,10 @@ contract PaymentInFlightExitModelUtilsMock {
     }
 
     /** Helper functions */
-
-    function setWithdrawData(string memory target, uint16 index, ExitModel.WithdrawData memory data)
+    function setWithdrawData(
+        string memory target,
+        uint16 index, ExitModel.WithdrawData memory data
+    )
         public
     {
         if (stringEquals(target, "inputs")) {
@@ -31,9 +33,7 @@ contract PaymentInFlightExitModelUtilsMock {
         return keccak256(abi.encodePacked(a)) == keccak256(abi.encodePacked(b));
     }
 
-
     /** Wrapper functions */
-
     function isInputEmpty(uint16 index)
         external
         view
