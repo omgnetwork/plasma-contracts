@@ -19,7 +19,7 @@ const { expect } = require('chai');
 
 const { buildUtxoPos } = require('../../../helpers/positions.js');
 const {
-    PROTOCOL, VAULT_ID, TX_TYPE, SAFE_GAS_STIPEND,
+    EMPTY_BYTES_32, PROTOCOL, VAULT_ID, TX_TYPE, SAFE_GAS_STIPEND,
 } = require('../../../helpers/constants.js');
 
 contract('PaymentStandardExitRouter', ([_, alice]) => {
@@ -28,6 +28,7 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
     const INITIAL_IMMUNE_EXIT_GAME_NUM = 1;
     const EMPTY_BYTES32 = '0x0000000000000000000000000000000000000000000000000000000000000000';
+    const EMPTY_EXIT_DATA = [false, '0', EMPTY_BYTES32, ETH, '0', '0'];
 
     before('deploy and link with controller lib', async () => {
         const startStandardExit = await PaymentStartStandardExit.new();
@@ -129,6 +130,9 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
                 'ExitOmitted',
                 { exitId: new BN(exitId) },
             );
+
+            const exitData = (await this.exitGame.standardExits([exitId]))[0];
+            expect(exitData).to.deep.equal(EMPTY_EXIT_DATA);
         });
 
         it('should not process the exit when output already flagged as spent', async () => {
@@ -144,6 +148,9 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
                 'ExitOmitted',
                 { exitId: new BN(exitId) },
             );
+
+            const exitData = (await this.exitGame.standardExits([exitId]))[0];
+            expect(exitData).to.deep.equal(EMPTY_EXIT_DATA);
         });
 
         it('should flag the output spent when sucessfully processed', async () => {
@@ -228,9 +235,7 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
             await this.exitGame.processExit(exitId, VAULT_ID.ETH, ETH);
 
             const exitData = (await this.exitGame.standardExits([exitId]))[0];
-            Object.values(exitData).forEach((val) => {
-                expect(val).to.be.oneOf([false, '0', EMPTY_BYTES32, constants.ZERO_ADDRESS]);
-            });
+            expect(exitData).to.deep.equal(EMPTY_EXIT_DATA);
         });
 
         it('should emit ExitFinalized event', async () => {

@@ -14,7 +14,7 @@ def test_challenge_standard_exit_valid_spend_should_succeed(testlang):
     doublespend_id = testlang.spend_utxo([spend_id], [owner], outputs=[(owner.address, NULL_ADDRESS, amount)])
     testlang.challenge_standard_exit(spend_id, doublespend_id)
 
-    assert testlang.get_standard_exit(spend_id) == [NULL_ADDRESS_HEX, 0, 0, False]
+    assert not testlang.get_standard_exit(spend_id).exitable
 
 
 def test_challenge_standard_exit_if_successful_awards_the_bond(testlang):
@@ -42,7 +42,7 @@ def test_challenge_standard_exit_mature_valid_spend_should_succeed(testlang):
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
 
     testlang.challenge_standard_exit(spend_id, doublespend_id)
-    assert testlang.get_standard_exit(spend_id) == [NULL_ADDRESS_HEX, 0, 0, False]
+    assert not testlang.get_standard_exit(spend_id).exitable
 
 
 def test_challenge_standard_exit_invalid_spend_should_fail(testlang):
