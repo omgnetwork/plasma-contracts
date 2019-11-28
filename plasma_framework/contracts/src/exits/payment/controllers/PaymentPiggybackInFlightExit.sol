@@ -39,13 +39,13 @@ library PaymentPiggybackInFlightExit {
 
     event InFlightExitInputPiggybacked(
         address indexed exitTarget,
-        bytes32 txHash,
+        bytes32 indexed txHash,
         uint16 inputIndex
     );
 
     event InFlightExitOutputPiggybacked(
         address indexed exitTarget,
-        bytes32 txHash,
+        bytes32 indexed txHash,
         uint16 outputIndex
     );
 

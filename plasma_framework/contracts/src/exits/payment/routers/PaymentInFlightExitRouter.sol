@@ -66,12 +66,12 @@ contract PaymentInFlightExitRouter is
 
     event InFlightExitStarted(
         address indexed initiator,
-        bytes32 txHash
+        bytes32 indexed txHash
     );
 
     event InFlightExitInputPiggybacked(
         address indexed exitTarget,
-        bytes32 txHash,
+        bytes32 indexed txHash,
         uint16 inputIndex
     );
 
@@ -97,31 +97,31 @@ contract PaymentInFlightExitRouter is
 
     event InFlightExitOutputPiggybacked(
         address indexed exitTarget,
-        bytes32 txHash,
+        bytes32 indexed txHash,
         uint16 outputIndex
     );
 
     event InFlightExitChallenged(
         address indexed challenger,
-        bytes32 txHash,
+        bytes32 indexed txHash,
         uint256 challengeTxPosition
     );
 
     event InFlightExitChallengeResponded(
-        address challenger,
-        bytes32 txHash,
+        address indexed challenger,
+        bytes32 indexed txHash,
         uint256 challengeTxPosition
     );
 
     event InFlightExitInputBlocked(
         address indexed challenger,
-        bytes32 txHash,
+        bytes32 indexed txHash,
         uint16 inputIndex
     );
 
     event InFlightExitOutputBlocked(
         address indexed challenger,
-        bytes32 ifeTxHash,
+        bytes32 indexed txHash,
         uint16 outputIndex
     );
 

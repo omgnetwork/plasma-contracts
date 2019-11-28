@@ -52,7 +52,7 @@ uint256 public constant MAX_INPUT_NUM;
 **Events**
 
 ```js
-event InFlightExitStarted(address indexed initiator, bytes32  txHash);
+event InFlightExitStarted(address indexed initiator, bytes32 indexed txHash);
 ```
 
 ## Functions
