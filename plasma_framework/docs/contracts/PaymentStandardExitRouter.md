@@ -123,7 +123,7 @@ function startStandardExit(struct PaymentStandardExitRouterArgs.StartStandardExi
 Challenge a standard exit by showing the exiting output was spent
 
 ```js
-function challengeStandardExit(struct PaymentStandardExitRouterArgs.ChallengeStandardExitArgs args) public payable nonReentrant 
+function challengeStandardExit(struct PaymentStandardExitRouterArgs.ChallengeStandardExitArgs args) public nonpayable nonReentrant 
 ```
 
 **Arguments**
