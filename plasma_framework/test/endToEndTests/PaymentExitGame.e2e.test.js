@@ -267,7 +267,7 @@ contract('PaymentExitGame - End to End Tests', ([_deployer, _maintainer, authori
 
             describe('When Alice tries to start the standard exit on the deposit tx', () => {
                 before(async () => {
-                    const args = {
+                    this.startStandardExitArgs = {
                         utxoPos: this.depositUtxoPos,
                         rlpOutputTx: this.depositTx,
                         outputType: OUTPUT_TYPE_PAYMENT,
@@ -276,7 +276,7 @@ contract('PaymentExitGame - End to End Tests', ([_deployer, _maintainer, authori
                     };
 
                     await this.exitGame.startStandardExit(
-                        args, { from: alice, value: this.startStandardExitBondSize },
+                        this.startStandardExitArgs, { from: alice, value: this.startStandardExitBondSize },
                     );
 
                     this.exitId = await this.exitGame.getStandardExitId(
@@ -330,8 +330,18 @@ contract('PaymentExitGame - End to End Tests', ([_deployer, _maintainer, authori
                         expect(actualBobBalanceAfterChallenge).to.be.bignumber.equal(expectedBobBalanceAfterChallenge);
                     });
 
+                    it('should not allow Alice to restart the exit', async () => {
+                        await expectRevert(
+                            this.exitGame.startStandardExit(
+                                this.startStandardExitArgs, { from: alice, value: this.startStandardExitBondSize },
+                            ),
+                            'Exit has already started.',
+                        );
+                    });
+
                     describe('And then someone processes the exits for ETH after two weeks', () => {
                         before(async () => {
+                            this.ethVaultBalance = new BN(await web3.eth.getBalance(this.ethVault.address));
                             await time.increase(time.duration.weeks(2).add(time.duration.seconds(1)));
 
                             const { receipt } = await this.framework.processExits(
@@ -350,6 +360,11 @@ contract('PaymentExitGame - End to End Tests', ([_deployer, _maintainer, authori
                                 'ExitOmitted',
                                 { exitId: this.exitId },
                             );
+                        });
+
+                        it('should not withdraw funds from the vault', async () => {
+                            const actualEthVaultBalance = new BN(await web3.eth.getBalance(this.ethVault.address));
+                            expect(actualEthVaultBalance).to.be.bignumber.equal(this.ethVaultBalance);
                         });
                     });
                 });

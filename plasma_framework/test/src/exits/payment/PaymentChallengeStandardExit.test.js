@@ -324,11 +324,9 @@ contract('PaymentChallengeStandardExit', ([_, alice, bob]) => {
                     this.tx = await this.exitGame.challengeStandardExit(this.args, { from: bob });
                 });
 
-                it('should delete the exit data when successfully challenged', async () => {
+                it('should set exitable flag to false when successfully challenged', async () => {
                     const exitData = (await this.exitGame.standardExits([this.args.exitId]))[0];
-                    Object.values(exitData).forEach((val) => {
-                        expect(val).to.be.oneOf([false, '0', EMPTY_BYTES_32, constants.ZERO_ADDRESS]);
-                    });
+                    expect(exitData.exitable).to.be.false;
                 });
 
                 it('should transfer the standard exit bond to challenger when successfully challenged', async () => {
