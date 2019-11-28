@@ -137,15 +137,15 @@ library PaymentProcessInFlightExit {
         returns (bool)
     {
         uint256 inputNumOfTheToken;
-        for (uint i = 0; i < MAX_INPUT_NUM; i++) {
-            if (exit.inputs[i].token == token && exit.inputs[i].amount > 0) {
+        for (uint16 i = 0; i < MAX_INPUT_NUM; i++) {
+            if (exit.inputs[i].token == token && !exit.isInputEmpty(i)) {
                 inputNumOfTheToken++;
             }
         }
         bytes32[] memory outputIdsOfInputs = new bytes32[](inputNumOfTheToken);
         uint sameTokenIndex = 0;
-        for (uint i = 0; i < MAX_INPUT_NUM; i++) {
-            if (exit.inputs[i].token == token && exit.inputs[i].amount > 0) {
+        for (uint16 i = 0; i < MAX_INPUT_NUM; i++) {
+            if (exit.inputs[i].token == token && !exit.isInputEmpty(i)) {
                 outputIdsOfInputs[sameTokenIndex] = exit.inputs[i].outputId;
                 sameTokenIndex++;
             }
@@ -232,7 +232,7 @@ library PaymentProcessInFlightExit {
     {
         uint256 inputNumOfTheToken;
         for (uint16 i = 0; i < MAX_INPUT_NUM; i++) {
-            if (exit.inputs[i].token == token && exit.inputs[i].amount > 0) {
+            if (exit.inputs[i].token == token && !exit.isInputEmpty(i)) {
                 inputNumOfTheToken++;
             }
         }
@@ -247,7 +247,7 @@ library PaymentProcessInFlightExit {
         bytes32[] memory outputIdsToFlag = new bytes32[](inputNumOfTheToken + piggybackedOutputNumOfTheToken);
         uint indexForOutputIds = 0;
         for (uint16 i = 0; i < MAX_INPUT_NUM; i++) {
-            if (exit.inputs[i].token == token && exit.inputs[i].amount > 0) {
+            if (exit.inputs[i].token == token && !exit.isInputEmpty(i)) {
                 outputIdsToFlag[indexForOutputIds] = exit.inputs[i].outputId;
                 indexForOutputIds++;
             }

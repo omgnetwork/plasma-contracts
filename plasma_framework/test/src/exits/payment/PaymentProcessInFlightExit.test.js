@@ -28,7 +28,7 @@ const {
 } = require('../../../helpers/constants.js');
 const { buildUtxoPos } = require('../../../helpers/positions.js');
 
-contract.only('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwner2, inputOwner3, outputOwner1, outputOwner2, outputOwner3]) => {
+contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwner2, inputOwner3, outputOwner1, outputOwner2, outputOwner3]) => {
     const MAX_INPUT_NUM = 4;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week in seconds
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
@@ -295,11 +295,10 @@ contract.only('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inpu
                 this.exit = await buildInFlightExitData();
                 await this.exitGame.setInFlightExit(DUMMY_EXIT_ID, this.exit);
 
-                // piggybacks the first input for ETH and third for ERC20
+                // piggybacks the first input for ETH
                 // piggybacks the first output for ETH and third for ERC20
                 // second input/output is left non-piggybacked
                 await this.exitGame.setInFlightExitInputPiggybacked(DUMMY_EXIT_ID, 0);
-                await this.exitGame.setInFlightExitInputPiggybacked(DUMMY_EXIT_ID, 2);
                 await this.exitGame.setInFlightExitOutputPiggybacked(DUMMY_EXIT_ID, 0);
                 await this.exitGame.setInFlightExitOutputPiggybacked(DUMMY_EXIT_ID, 2);
 
@@ -315,11 +314,10 @@ contract.only('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inpu
                 expect(postBalance).to.be.bignumber.equal(expectedBalance);
             });
 
-            it('should clean the piggyback flag of the inputs/outputs with same token', async () => {
+            it('should only clean the piggyback flag of the inputs/outputs with same token', async () => {
                 const exit = await this.exitGame.inFlightExits(DUMMY_EXIT_ID);
-                const thirdInputIndexInExitMap = 2;
                 const thirdOutputIndexInExitMap = MAX_INPUT_NUM + 2;
-                const exitMapWithErc20Outputs = 2 ** thirdOutputIndexInExitMap | 2 ** thirdInputIndexInExitMap;
+                const exitMapWithErc20Outputs = 2 ** thirdOutputIndexInExitMap;
                 expect(exit.exitMap).to.equal(exitMapWithErc20Outputs.toString());
             });
 
