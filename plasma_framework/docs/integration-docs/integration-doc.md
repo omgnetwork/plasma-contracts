@@ -421,7 +421,7 @@ Provide value zero when exiting a payment transaction.
 > ***Note**: `challengeTxPos` is currently reserved for future development.*
 
 #### challengeTxInclusionProof (bytes)
-(Optional) Inclustion proof for a challenging transaction that follows MVP protocol. For MoreVP send empty bytes.
+(Optional) Inclusion proof for a challenging transaction that follows MVP protocol. For MoreVP send empty bytes.
 
 > ***Note**: `challengeTxInclusionProof` is currently reserved for future development.*
 
