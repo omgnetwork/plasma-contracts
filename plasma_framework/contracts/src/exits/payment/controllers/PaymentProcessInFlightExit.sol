@@ -70,13 +70,13 @@ library PaymentProcessInFlightExit {
         // Check whether any input is already spent. Required to prevent operator stealing funds.
         // See: https://github.com/omisego/plasma-contracts/issues/102#issuecomment-495809967
         // Also, slightly different from the solution above, we treat input spent as non-canonical.
-        // So a IFE is only canonical if all inputs of the in-flight tx are not double spent by competing tx or exit.
+        // So an IFE is only canonical if all inputs of the in-flight tx are not double spent by competing tx or exit.
         // see: https://github.com/omisego/plasma-contracts/issues/470
         if (!exit.isCanonical || isAnyInputSpent(self.framework, exit, token)) {
             for (uint16 i = 0; i < MAX_INPUT_NUM; i++) {
                 PaymentExitDataModel.WithdrawData memory withdrawal = exit.inputs[i];
 
-                if (shouldWithdrawInput(exit, withdrawal, token, i)) {
+                if (shouldWithdrawInput(self, exit, withdrawal, token, i)) {
                     withdrawFromVault(self, withdrawal);
                     bool success = SafeEthTransfer.transferReturnResult(
                         withdrawal.exitTarget, withdrawal.piggybackBondSize, self.safeGasStipend
@@ -154,18 +154,19 @@ library PaymentProcessInFlightExit {
     }
 
     function shouldWithdrawInput(
+        Controller memory controller,
         PaymentExitDataModel.InFlightExit memory exit,
         PaymentExitDataModel.WithdrawData memory withdrawal,
         address token,
         uint16 index
     )
         private
-        pure
+        view
         returns (bool)
     {
         return withdrawal.token == token &&
                 exit.isInputPiggybacked(index) &&
-                exit.isInputPiggybacked(index);
+                !controller.framework.isOutputSpent(withdrawal.outputId);
     }
 
     function shouldWithdrawOutput(
