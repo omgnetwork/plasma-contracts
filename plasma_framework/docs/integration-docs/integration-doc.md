@@ -359,7 +359,7 @@ Then obtain `exitId` (if you don’t yet have it):
 
 ```
 PaymentExitGame.getStandardExitId(
-  true, # true if deposit, false else
+  true, # true if the exiting output is from a deposit transaction, false otherwise
   "0xf85801c0f4f3019441777dc7bdcc6b58be1c25eb3df7df52d1bfecbd94000000000000000000000000000000000000000087038d7ea4c68000a00000000000000000000000000000000000000000000000000000000000000000", # RLP-encoded transaction sent when startStandardExit was called
   1600000000, # utxoPos
 )
