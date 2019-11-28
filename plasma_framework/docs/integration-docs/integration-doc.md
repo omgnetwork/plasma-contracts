@@ -449,7 +449,7 @@ PaymentExitGame.challengeStandardExit([
 
 ### Processing a standard exit
 
-For a standard exit, once the exit period completes, exit can be processed to release the funds on the root chain. An end user can perform this action, or the operator can do it for everyone.
+Once the exit period is over, an exit can be processed to release the funds on the root chain. An end user can perform this action, or the operator can do it for everyone.
 
 To process a standard exit: 
 1. Obtain your `exitId` as described [here](#challenging-a-standard-exit)
