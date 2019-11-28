@@ -246,6 +246,21 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
             );
         });
 
+        it('should fail when the indexed output is empty', async () => {
+            const data = await buildPiggybackOutputData();
+
+            await this.exitGame.setInFlightExit(data.exitId, data.inFlightExitData);
+
+            const indexOfEmptyOutput = 3;
+            data.outputOneCase.args.outputIndex = indexOfEmptyOutput;
+            await expectRevert(
+                this.exitGame.piggybackInFlightExitOnOutput(
+                    data.outputOneCase.args, { from: outputOwner, value: this.piggybackBondSize.toString() },
+                ),
+                'Indexed output is empty',
+            );
+        });
+
         it('should fail when the same output has been piggybacked', async () => {
             const data = await buildPiggybackOutputData();
 

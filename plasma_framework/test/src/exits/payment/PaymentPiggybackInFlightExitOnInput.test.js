@@ -222,6 +222,20 @@ contract('PaymentPiggybackInFlightExitOnInput', ([_, alice, inputOwner, nonInput
             );
         });
 
+        it('should fail when the input is empty', async () => {
+            const data = await buildPiggybackInputData();
+            await this.exitGame.setInFlightExit(data.exitId, data.inFlightExitData);
+
+            const indexOfEmptyInput = 3;
+            data.argsInputOne.inputIndex = indexOfEmptyInput;
+            await expectRevert(
+                this.exitGame.piggybackInFlightExitOnInput(
+                    data.argsInputOne, { from: inputOwner, value: this.piggybackBondSize.toString() },
+                ),
+                'Indexed input is empty',
+            );
+        });
+
         it('should fail when the same input has been piggybacked', async () => {
             const data = await buildPiggybackInputData();
             await this.exitGame.setInFlightExit(data.exitId, data.inFlightExitData);
