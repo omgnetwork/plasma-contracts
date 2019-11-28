@@ -10,6 +10,24 @@ library PaymentInFlightExitModelUtils {
     uint8 constant public MAX_INPUT_NUM = 4;
     uint8 constant public MAX_OUTPUT_NUM = 4;
 
+    function isInputEmpty(ExitModel.InFlightExit memory ife, uint16 index)
+        internal
+        pure
+        returns (bool)
+    {
+        require(index < MAX_INPUT_NUM, "Invalid input index");
+        return isEmptyWithdrawData(ife.inputs[index]);
+    }
+
+    function isOutputEmpty(ExitModel.InFlightExit memory ife, uint16 index)
+        internal
+        pure
+        returns (bool)
+    {
+        require(index < MAX_OUTPUT_NUM, "Invalid output index");
+        return isEmptyWithdrawData(ife.outputs[index]);
+    }
+
     function isInputPiggybacked(ExitModel.InFlightExit memory ife, uint16 index)
         internal
         pure
@@ -66,5 +84,13 @@ library PaymentInFlightExitModelUtils {
     {
         uint256 periodTime = minExitPeriod / 2;
         return ((block.timestamp - ife.exitStartTimestamp) / periodTime) < 1;
+    }
+
+    function isEmptyWithdrawData(ExitModel.WithdrawData memory data) private pure returns (bool) {
+        return data.outputId == bytes32("") &&
+                data.exitTarget == address(0) &&
+                data.token == address(0) &&
+                data.amount == 0 &&
+                data.piggybackBondSize == 0;
     }
 }
