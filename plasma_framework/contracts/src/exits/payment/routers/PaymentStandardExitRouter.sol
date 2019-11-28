@@ -153,7 +153,6 @@ contract PaymentStandardExitRouter is
      */
     function challengeStandardExit(PaymentStandardExitRouterArgs.ChallengeStandardExitArgs memory args)
         public
-        payable
         nonReentrant(framework)
     {
         challengeStandardExitController.run(standardExitMap, args);
