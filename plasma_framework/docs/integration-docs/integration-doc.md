@@ -247,12 +247,13 @@ There are two types of in-flight exit bonds:
 
 To start a standard exit, perform these steps:
 
-1. To exit a UTXO you will first need to retrieve the corresponding transaction type. Currently, the platform supports only payment transactions, for which the ID is 1.
+1. To exit a UTXO you need to retrieve the corresponding transaction type. Currently, the platform supports only payment transactions, for which the ID is 1.
 
 2. Now retrieve the exit game contract address from the PlasmaFramework contract:  
 
 ```
 address = PlasmaFramework.exitGames(1)
+PaymentExitGame = PaymetExitGame.at(address);
 ```
 
 3. To start a standard exit, send the appropriate amount of ETH to cover the bond. To retrieve the actual amount, call the following function:
@@ -269,20 +270,6 @@ PaymentExitGame.startStandardExit({
   outputTxInclusionProof,
 })
 ```
-
-### Troubleshooting
-If starting the standard exit fails with an error that refers to a missing queue, use the following function to check that the exit queue is registered for the given vault ID and token:
-
-
-```
-PlasmaFramework.hasExitQueue(vaultId, tokenAddress)
-```
-
-If no exit queue is registered, you’ll need to register it using the following function:
-```
-PlasmaFramework.addExitQueue(vaultId, tokenAddress)
-```
-
 
 ### Parameters
 This section describes the parameters in the function for starting a standard exit.
@@ -341,6 +328,18 @@ A Merkle proof showing that the transaction was included. This Merkle proof, whi
  > ***Note**: To learn more about Merkle tree implementation, see [Basic Merkle Tree understanding](https://en.wikipedia.org/wiki/Merkle_tree)
 [Implementation example](https://github.com/omisego/plasma-contracts/blob/master/plasma_framework/test/helpers/merkle.js)*
 
+### Troubleshooting
+If starting the standard exit fails with an error that refers to a missing queue, use the following function to check that the exit queue is registered for the given vault ID and token:
+
+
+```
+PlasmaFramework.hasExitQueue(vaultId, tokenAddress)
+```
+
+If no exit queue is registered, you’ll need to register it using the following function:
+```
+PlasmaFramework.addExitQueue(vaultId, tokenAddress)
+```
 
 #### Example:
 
@@ -354,15 +353,9 @@ PaymentExitGame.startStandardExit([
 ```
 
 ### Challenging a standard exit
-<!--- TO DO --->
+To challenge an exit, retrieve payment exit game as in [step 2 for starting a standard exit](#starting-a-standard-exit).
 
-
-### Processing a standard exit
-
-For a standard exit, once the exit period completes, exit can be processed to release the funds on the root chain. An end user can perform this action, or the operator can do it for everyone.
-
-To process a standard exit: 
-1. Obtain your `exitId` (if you don’t yet have it):
+Then obtain `exitId` (if you don’t yet have it):
 
 ```
 PaymentExitGame.getStandardExitId(
@@ -370,10 +363,98 @@ PaymentExitGame.getStandardExitId(
   "0xf85801c0f4f3019441777dc7bdcc6b58be1c25eb3df7df52d1bfecbd94000000000000000000000000000000000000000087038d7ea4c68000a00000000000000000000000000000000000000000000000000000000000000000", # RLP-encoded transaction sent when startStandardExit was called
   1600000000, # utxoPos
 )
+``` 
+
+Once you have the exit game and `exitId`, call `challengeStandardExit`:
+
+```
+PaymentExitGame.challengeStandardExit({
+  exitId,
+  exitingTx,
+  challengeTx,
+  inputIndex,
+  witness,
+  spendingConditionOptionalArgs,
+  outputGuardPreimage,
+  challengeTxPos,
+  challengeTxInclusionProof,
+  challengeTxConfirmSig,
+});
 ```
 
+### Parameters
+This section describes arguments provided to `PaymentExitGame.challengeStandardExit` 
+
+#### exitId (uint160)
+Identifier of the exit to challenge.
+
+#### exitingTx (bytes)
+RLP-encoded transaction that created the exiting output.
+
+#### challengeTx (bytes)
+RLP-encoded transaction that spends the exiting output (challenging transaction).
+
+#### inputIndex (uint16)
+Input index of exiting UTXO in the challenging transaction.
+
+#### witness (bytes)
+Data proving that exiting output was spent. A signature of exiting output owner on challenging transaction.
+
+#### spendingConditionOptionalArgs (bytes)
+(Optional) Additional data that is used to verify that output was spent. Send empty bytes.
+
+> ***Note**: `spendingConditionOptionalArgs` is currently reserved for future development.*
+
+#### outputGuardPreimage (bytes)
+(Optional) Output guard preimage data for the exiting output. For payment exit game send empty bytes.
+
+> ***Note**: `outputGuardPreimage` is currently reserved for future development.*
+
+#### challengeTxPos (uint256)
+(Optional) Transaction position of challenging transaction. Transaction position is
+
+```
+block number * the block offset (defaults: `1000000000`) + transaction position * transaction offset (defaults to `10000`)
+```
+Provide value zero when exiting a payment transaction.
+
+> ***Note**: `challengeTxPos` is currently reserved for future development.*
+
+#### challengeTxInclusionProof (bytes)
+(Optional) Inclustion proof for a challenging transaction that follows MVP protocol. For MoreVP send empty bytes.
+
+> ***Note**: `challengeTxInclusionProof` is currently reserved for future development.*
+
+#### challengeTxConfirmSig (bytes)
+(Optional) Confirmation signature for a challenging transaction that follows MVP protocol. For MoreVP send empty bytes.
+
+> ***Note**: `challengeTxConfirmSig` is currently reserved for future development.*
+
+#### Example:
+
+```
+PaymentExitGame.challengeStandardExit([
+  1590417156246506823621774965204183050418265227,
+  0xf85401c0f0ef01949c7fc8601655b4e1ef395107217e6ed600f7ba48940000000000000000000000000000000000000000830f4240a00000000000000000000000000000000000000000000000000000000000000000,
+  0xf88a01c685e9103fda00f85fee0194821aea9a577a9b44299b9c15c88cf3087f3b55449400000000000000000000000000000000000000008203e8ef01949c7fc8601655b4e1ef395107217e6ed600f7ba48940000000000000000000000000000000000000000830f3e58a00000000000000000000000000000000000000000000000000000000000000000,
+  0,
+  0xc8fafc7490868b372863778cd2c7928c835e66c59d7bc44b912d14ca574732434f928004b680d9a231c3a688fe1c1f62bac47c663695c8287d779ff2658626c81b,
+  0x,
+  0x,
+  0,
+  0x,
+  0x
+])
+```
+
+### Processing a standard exit
+
+For a standard exit, once the exit period completes, exit can be processed to release the funds on the root chain. An end user can perform this action, or the operator can do it for everyone.
+
+To process a standard exit: 
+1. Obtain your `exitId` as described [here](#challenging-a-standard-exit)
+
 2. Process your exit. 
- > ***Note**: You can find an explanation of the parameters, below.* 
 
 ```
 PlasmaFramework.processExits({
@@ -384,7 +465,7 @@ PlasmaFramework.processExits({
 })
 ```
 
-### Parameters: processing a standard exit
+### Parameters
 This section describes the parameters included in the function called for processing a standard exit.
 
 #### vaultId (uint256)
@@ -413,8 +494,8 @@ Defines the maximum number of exits you wish to process. Set to `1` to process o
 ```
 PlasmaFramework.processExits([
   1, # vaultId 
-  "0x0000000000000000000000000000000000000000", # token, ETH
-  "707372774235521271159305957085057710072500938", # topExitId
+  0x0000000000000000000000000000000000000000, # token, ETH
+  707372774235521271159305957085057710072500938, # topExitId
   1 # maxExitsToProcess
 ])
 ```
