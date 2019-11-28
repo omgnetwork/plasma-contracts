@@ -151,7 +151,7 @@ contract('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
                 this.exitGame.startStandardExit(
                     args, { from: outputOwner, value: this.startStandardExitBondSize },
                 ),
-                'Should not exit with amount 0',
+                'Output amount must not be 0',
             );
         });
 

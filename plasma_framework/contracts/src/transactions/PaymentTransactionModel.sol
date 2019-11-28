@@ -64,7 +64,8 @@ library PaymentTransactionModel {
         PaymentOutputModel.Output[] memory outputs = new PaymentOutputModel.Output[](rlpOutputs.length);
         for (uint i = 0; i < rlpOutputs.length; i++) {
             PaymentOutputModel.Output memory output = PaymentOutputModel.decode(rlpOutputs[i]);
-            require(output.outputType > 0, "Output type must not be 0");
+            require(output.outputType != 0, "Output type must not be 0");
+            require(output.amount != 0, "Output amount must not be 0");
             outputs[i] = output;
         }
 

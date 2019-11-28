@@ -17,9 +17,15 @@ contract('PaymentTransactionStateTransitionVerifier', ([alice, bob]) => {
         '0x0000000000000000000000000000000000000000000000000000000000000003',
         '0x0000000000000000000000000000000000000000000000000000000000000004',
     ];
-    const EXTRA_OUTPUT = new PaymentTransactionOutput(
+    const TEST_TX_OUTPUT = new PaymentTransactionOutput(
         OUTPUT_TYPE.PAYMENT,
-        0,
+        1,
+        bob,
+        ETH,
+    );
+    const INPUT_TX_OUTPUT = new PaymentTransactionOutput(
+        OUTPUT_TYPE.PAYMENT,
+        TEST_TX_OUTPUT.amount * 4,
         bob,
         ETH,
     );
@@ -118,7 +124,7 @@ contract('PaymentTransactionStateTransitionVerifier', ([alice, bob]) => {
             const inputTxs = [];
             const inputUtxosPos = [];
             for (let i = 0; i < numberOfInputs; i++) {
-                const inputTx = new PaymentTransaction(IFE_TX_TYPE, [INPUTS[i]], [EXTRA_OUTPUT]);
+                const inputTx = new PaymentTransaction(IFE_TX_TYPE, [INPUTS[i]], [INPUT_TX_OUTPUT]);
                 inputTxs.push(inputTx);
                 inputUtxosPos.push(buildUtxoPos(BLOCK_NUM, i, 0));
             }
@@ -127,7 +133,7 @@ contract('PaymentTransactionStateTransitionVerifier', ([alice, bob]) => {
 
             const outputs = [];
             for (let i = 0; i < numberOfOutputs; i++) {
-                outputs.push(EXTRA_OUTPUT);
+                outputs.push(TEST_TX_OUTPUT);
             }
 
             const encodedInputTxs = inputTxs.map(inputTx => web3.utils.bytesToHex(inputTx.rlpEncoded()));
@@ -151,7 +157,7 @@ contract('PaymentTransactionStateTransitionVerifier', ([alice, bob]) => {
         });
 
         it('should verify transition for any combination of inputs / outputs numbers', async () => {
-            for (let numberOfInputs = 0; numberOfInputs < MAX_INPUTS_OUTPUTS; numberOfInputs++) {
+            for (let numberOfInputs = 1; numberOfInputs < MAX_INPUTS_OUTPUTS; numberOfInputs++) {
                 for (let numberOfOutputs = 0; numberOfOutputs < MAX_INPUTS_OUTPUTS; numberOfOutputs++) {
                     const args = createArgsForInputsOutputsNumberTest(numberOfInputs, numberOfOutputs);
                     /* eslint-disable no-await-in-loop */

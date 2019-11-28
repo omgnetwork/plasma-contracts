@@ -125,6 +125,17 @@ contract('PaymentTransactionModel', () => {
         const encoded = web3.utils.bytesToHex(transaction.rlpEncoded());
         await expectRevert(this.test.decode(encoded), 'Output type must not be 0');
     });
+
+    it('should fail when an output amount is zero', async () => {
+        const zeroOutputAmount = new PaymentTransactionOutput(
+            OUTPUT_TYPE.PAYMENT, 0, OUTPUT_GUARD, constants.ZERO_ADDRESS,
+        );
+        const transaction = new PaymentTransaction(
+            TX_TYPE.PAYMENT, [DUMMY_INPUT_1], [OUTPUT, zeroOutputAmount], EMPTY_BYTES32,
+        );
+        const encoded = web3.utils.bytesToHex(transaction.rlpEncoded());
+        await expectRevert(this.test.decode(encoded), 'Output amount must not be 0');
+    });
 });
 
 function parseInputs(inputs) {
