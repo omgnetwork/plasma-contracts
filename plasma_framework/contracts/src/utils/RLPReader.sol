@@ -222,14 +222,7 @@ library RLPReader {
 
             // solhint-disable-next-line no-inline-assembly
             assembly {
-                lengthLen := sub(byte0, 0xb7) // The length of the length of the payload is encoded in the first byte. It must be between 1 and 8 bytes.
-            }
-
-            // Check that the length of the length of the payload is valid
-            require(0 < lengthLen && lengthLen <= 8, "Invalid length of the length for a long string");
-
-            // solhint-disable-next-line no-inline-assembly
-            assembly {
+                lengthLen := sub(byte0, 0xb7) // The length of the length of the payload is encoded in the first byte.
                 memPtr := add(memPtr, 1) // skip over the first byte
 
                 // right shift to the correct position
@@ -256,14 +249,7 @@ library RLPReader {
 
             // solhint-disable-next-line no-inline-assembly
             assembly {
-                lengthLen := sub(byte0, 0xf7) // The length of the length of the payload is encoded in the first byte. It must be between 1 and 8 bytes.
-            }
-
-            // Check that the length of the length of the payload is valid
-            require(0 < lengthLen && lengthLen <= 8, "Invalid length of the length for a long list");
-
-            // solhint-disable-next-line no-inline-assembly
-            assembly {
+                lengthLen := sub(byte0, 0xf7) // The length of the length of the payload is encoded in the first byte.
                 memPtr := add(memPtr, 1) // skip over the first byte
 
                 // right shift to the correct position
