@@ -16,7 +16,8 @@ contract PaymentInFlightExitModelUtilsMock {
     /** Helper functions */
     function setWithdrawData(
         string memory target,
-        uint16 index, ExitModel.WithdrawData memory data
+        uint16 index,
+        ExitModel.WithdrawData memory data
     )
         public
     {

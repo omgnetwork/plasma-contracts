@@ -15,6 +15,13 @@ contract('PaymentInFlightExitModelUtils', () => {
     const ALL_INPUTS_PIGGYBACKED = 2 ** 0 | 2 ** 1 | 2 ** 2 | 2 ** 3;
     const ALL_OUTPUTS_PIGGYBACKED = 2 ** MAX_INPUTS | 2 ** (MAX_INPUTS + 1)
     | 2 ** (MAX_INPUTS + 2) | 2 ** (MAX_INPUTS + 3);
+    const EMPTY_WITHDRAW_DATA = {
+        outputId: EMPTY_BYTES_32,
+        exitTarget: constants.ZERO_ADDRESS,
+        token: constants.ZERO_ADDRESS,
+        amount: 0,
+        piggybackBondSize: 0,
+    };
 
     describe('isInputEmpty', () => {
         it('returns true when the input is empty', async () => {
@@ -29,13 +36,8 @@ contract('PaymentInFlightExitModelUtils', () => {
         it('returns false when the outputId is not empty', async () => {
             const modelUtils = await PaymentInFlightExitModelUtils.new(0, 0);
 
-            const dataWithNonEmptyOutputId = {
-                outputId: web3.utils.sha3('non empty output id'),
-                exitTarget: constants.ZERO_ADDRESS,
-                token: constants.ZERO_ADDRESS,
-                amount: 0,
-                piggybackBondSize: 0,
-            };
+            const dataWithNonEmptyOutputId = { ...EMPTY_WITHDRAW_DATA };
+            dataWithNonEmptyOutputId.outputId = web3.utils.sha3('non empty outputId');
 
             for (let i = 0; i < MAX_INPUTS; i++) {
                 await modelUtils.setWithdrawData('inputs', i, dataWithNonEmptyOutputId);
@@ -47,13 +49,8 @@ contract('PaymentInFlightExitModelUtils', () => {
         it('returns false when the exitTarget is not empty', async () => {
             const modelUtils = await PaymentInFlightExitModelUtils.new(0, 0);
 
-            const dataWithNonEmptyAddress = {
-                outputId: EMPTY_BYTES_32,
-                exitTarget: modelUtils.address,
-                token: constants.ZERO_ADDRESS,
-                amount: 0,
-                piggybackBondSize: 0,
-            };
+            const dataWithNonEmptyAddress = { ...EMPTY_WITHDRAW_DATA };
+            dataWithNonEmptyAddress.exitTarget = modelUtils.address;
 
             for (let i = 0; i < MAX_INPUTS; i++) {
                 await modelUtils.setWithdrawData('inputs', i, dataWithNonEmptyAddress);
@@ -65,13 +62,8 @@ contract('PaymentInFlightExitModelUtils', () => {
         it('returns false when the token is not empty', async () => {
             const modelUtils = await PaymentInFlightExitModelUtils.new(0, 0);
 
-            const dataWithNonEmptyToken = {
-                outputId: EMPTY_BYTES_32,
-                exitTarget: constants.ZERO_ADDRESS,
-                token: modelUtils.address,
-                amount: 0,
-                piggybackBondSize: 0,
-            };
+            const dataWithNonEmptyToken = { ...EMPTY_WITHDRAW_DATA };
+            dataWithNonEmptyToken.token = modelUtils.address;
 
             for (let i = 0; i < MAX_INPUTS; i++) {
                 await modelUtils.setWithdrawData('inputs', i, dataWithNonEmptyToken);
@@ -83,13 +75,8 @@ contract('PaymentInFlightExitModelUtils', () => {
         it('returns false when the amount is not empty', async () => {
             const modelUtils = await PaymentInFlightExitModelUtils.new(0, 0);
 
-            const dataWithNonEmptyAmount = {
-                outputId: EMPTY_BYTES_32,
-                exitTarget: constants.ZERO_ADDRESS,
-                token: constants.ZERO_ADDRESS,
-                amount: 1,
-                piggybackBondSize: 0,
-            };
+            const dataWithNonEmptyAmount = { ...EMPTY_WITHDRAW_DATA };
+            dataWithNonEmptyAmount.amount = 1;
 
             for (let i = 0; i < MAX_INPUTS; i++) {
                 await modelUtils.setWithdrawData('inputs', i, dataWithNonEmptyAmount);
@@ -101,13 +88,8 @@ contract('PaymentInFlightExitModelUtils', () => {
         it('returns false when the piggyback bond is not empty', async () => {
             const modelUtils = await PaymentInFlightExitModelUtils.new(0, 0);
 
-            const dataWithNonEmptyPiggybackBondSize = {
-                outputId: EMPTY_BYTES_32,
-                exitTarget: constants.ZERO_ADDRESS,
-                token: constants.ZERO_ADDRESS,
-                amount: 0,
-                piggybackBondSize: 1,
-            };
+            const dataWithNonEmptyPiggybackBondSize = { ...EMPTY_WITHDRAW_DATA };
+            dataWithNonEmptyPiggybackBondSize.piggybackBondSize = 1;
 
             for (let i = 0; i < MAX_INPUTS; i++) {
                 await modelUtils.setWithdrawData('inputs', i, dataWithNonEmptyPiggybackBondSize);
@@ -130,13 +112,8 @@ contract('PaymentInFlightExitModelUtils', () => {
         it('returns false when the outputId is not empty', async () => {
             const modelUtils = await PaymentInFlightExitModelUtils.new(0, 0);
 
-            const dataWithNonEmptyOutputId = {
-                outputId: web3.utils.sha3('non empty output id'),
-                exitTarget: constants.ZERO_ADDRESS,
-                token: constants.ZERO_ADDRESS,
-                amount: 0,
-                piggybackBondSize: 0,
-            };
+            const dataWithNonEmptyOutputId = { ...EMPTY_WITHDRAW_DATA };
+            dataWithNonEmptyOutputId.outputId = web3.utils.sha3('non empty outputId');
 
             for (let i = 0; i < MAX_OUTPUTS; i++) {
                 await modelUtils.setWithdrawData('outputs', i, dataWithNonEmptyOutputId);
@@ -148,13 +125,8 @@ contract('PaymentInFlightExitModelUtils', () => {
         it('returns false when the exitTarget is not empty', async () => {
             const modelUtils = await PaymentInFlightExitModelUtils.new(0, 0);
 
-            const dataWithNonEmptyAddress = {
-                outputId: EMPTY_BYTES_32,
-                exitTarget: modelUtils.address,
-                token: constants.ZERO_ADDRESS,
-                amount: 0,
-                piggybackBondSize: 0,
-            };
+            const dataWithNonEmptyAddress = { ...EMPTY_WITHDRAW_DATA };
+            dataWithNonEmptyAddress.exitTarget = modelUtils.address;
 
             for (let i = 0; i < MAX_OUTPUTS; i++) {
                 await modelUtils.setWithdrawData('outputs', i, dataWithNonEmptyAddress);
@@ -166,13 +138,8 @@ contract('PaymentInFlightExitModelUtils', () => {
         it('returns false when the token is not empty', async () => {
             const modelUtils = await PaymentInFlightExitModelUtils.new(0, 0);
 
-            const dataWithNonEmptyToken = {
-                outputId: EMPTY_BYTES_32,
-                exitTarget: constants.ZERO_ADDRESS,
-                token: modelUtils.address,
-                amount: 0,
-                piggybackBondSize: 0,
-            };
+            const dataWithNonEmptyToken = { ...EMPTY_WITHDRAW_DATA };
+            dataWithNonEmptyToken.token = modelUtils.address;
 
             for (let i = 0; i < MAX_OUTPUTS; i++) {
                 await modelUtils.setWithdrawData('outputs', i, dataWithNonEmptyToken);
@@ -184,13 +151,8 @@ contract('PaymentInFlightExitModelUtils', () => {
         it('returns false when the amount is not empty', async () => {
             const modelUtils = await PaymentInFlightExitModelUtils.new(0, 0);
 
-            const dataWithNonEmptyAmount = {
-                outputId: EMPTY_BYTES_32,
-                exitTarget: constants.ZERO_ADDRESS,
-                token: constants.ZERO_ADDRESS,
-                amount: 1,
-                piggybackBondSize: 0,
-            };
+            const dataWithNonEmptyAmount = { ...EMPTY_WITHDRAW_DATA };
+            dataWithNonEmptyAmount.amount = 1;
 
             for (let i = 0; i < MAX_OUTPUTS; i++) {
                 await modelUtils.setWithdrawData('outputs', i, dataWithNonEmptyAmount);
@@ -202,13 +164,8 @@ contract('PaymentInFlightExitModelUtils', () => {
         it('returns false when the piggyback bond is not empty', async () => {
             const modelUtils = await PaymentInFlightExitModelUtils.new(0, 0);
 
-            const dataWithNonEmptyPiggybackBondSize = {
-                outputId: EMPTY_BYTES_32,
-                exitTarget: constants.ZERO_ADDRESS,
-                token: constants.ZERO_ADDRESS,
-                amount: 0,
-                piggybackBondSize: 1,
-            };
+            const dataWithNonEmptyPiggybackBondSize = { ...EMPTY_WITHDRAW_DATA };
+            dataWithNonEmptyPiggybackBondSize.piggybackBondSize = 1;
 
             for (let i = 0; i < MAX_OUTPUTS; i++) {
                 await modelUtils.setWithdrawData('outputs', i, dataWithNonEmptyPiggybackBondSize);
