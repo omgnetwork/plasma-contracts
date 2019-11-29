@@ -73,7 +73,7 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                 await aliceDepositsETH();
             });
 
-            describe('Given Alice started an in-flight exit from transaction to Bob that is not mined', () => {
+            describe('Given Alice started an canonical in-flight exit from transaction to Bob that is not mined', () => {
                 before(async () => {
                     this.amountIFE = DEPOSIT_VALUE / 2;
                     const output = new PaymentTransactionOutput(OUTPUT_TYPE_PAYMENT, this.amountIFE, bob, ETH);
@@ -179,6 +179,27 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                         it('should mark output as spent', async () => {
                             const outputId = computeNormalOutputId(this.inFlightTxRaw, this.exitingOutputIndex);
                             expect(await this.framework.isOutputSpent(outputId)).to.be.true;
+                        });
+                    });
+                });
+            });
+        });
+
+        describe.only('Given Alice deposited ETH two times, creating output oA and oB', () => {
+            describe('When Alice signs a tx1 to Bob using oA, and oB as input', () => {
+                describe('And then Alice also signs another competing tx2 to Carol using oA as input', () => {
+                    describe('When Bob start IFE on tx1', () => {
+                        describe('And Bob piggybacks the output of tx1', () => {
+                            describe('Then the IFE of tx1 is challenge non-canonical by Carol', () => {
+                                describe('And then Alice piggyback both outputs oA and oB', () => {
+                                    describe('And then the piggyback of oA is challenged with tx2', () => {
+                                        describe('When sb process exits after two weeks', () => {
+                                            it('should return fund of oB to Alice (input exited)', async () => {});
+                                            it('should NOT return fund to Bob (output not exited)', async () => {});
+                                        });
+                                    });
+                                });
+                            });
                         });
                     });
                 });
