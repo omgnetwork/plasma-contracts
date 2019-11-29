@@ -21,13 +21,13 @@ const {
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
-const { calculateNormalExitable } = require('../../../helpers/exitable.js');
-const { buildUtxoPos, utxoPosToTxPos } = require('../../../helpers/positions.js');
-const { buildOutputGuard } = require('../../../helpers/utils.js');
-const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
+const { calculateNormalExitable } = require('../../../../helpers/exitable.js');
+const { buildUtxoPos, utxoPosToTxPos } = require('../../../../helpers/positions.js');
+const { buildOutputGuard } = require('../../../../helpers/utils.js');
+const { PaymentTransactionOutput, PaymentTransaction } = require('../../../../helpers/transaction.js');
 const {
-    PROTOCOL, TX_TYPE, VAULT_ID, SAFE_GAS_STIPEND,
-} = require('../../../helpers/constants.js');
+    PROTOCOL, TX_TYPE, VAULT_ID, SAFE_GAS_STIPEND, EMPTY_BYTES_32,
+} = require('../../../../helpers/constants.js');
 
 contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputOwner, nonOutputOwner]) => {
     const ETH = constants.ZERO_ADDRESS;
@@ -134,7 +134,7 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
             const rlpInFlighTxBytes = web3.utils.bytesToHex(inFlightTx.rlpEncoded());
 
             const emptyWithdrawData = {
-                outputId: web3.utils.sha3('dummy output id'),
+                outputId: EMPTY_BYTES_32,
                 exitTarget: constants.ZERO_ADDRESS,
                 token: constants.ZERO_ADDRESS,
                 amount: 0,
@@ -243,6 +243,21 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
                     data.outputOneCase.args, { from: outputOwner, value: this.piggybackBondSize.toString() },
                 ),
                 'Invalid output index',
+            );
+        });
+
+        it('should fail when the indexed output is empty', async () => {
+            const data = await buildPiggybackOutputData();
+
+            await this.exitGame.setInFlightExit(data.exitId, data.inFlightExitData);
+
+            const indexOfEmptyOutput = 3;
+            data.outputOneCase.args.outputIndex = indexOfEmptyOutput;
+            await expectRevert(
+                this.exitGame.piggybackInFlightExitOnOutput(
+                    data.outputOneCase.args, { from: outputOwner, value: this.piggybackBondSize.toString() },
+                ),
+                'Indexed output is empty',
             );
         });
 

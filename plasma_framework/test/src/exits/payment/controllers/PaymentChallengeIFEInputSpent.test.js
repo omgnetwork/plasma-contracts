@@ -24,12 +24,12 @@ const {
 const { expect } = require('chai');
 const {
     TX_TYPE, OUTPUT_TYPE, EMPTY_BYTES, CHILD_BLOCK_INTERVAL,
-    VAULT_ID, PROTOCOL, SAFE_GAS_STIPEND,
-} = require('../../../helpers/constants.js');
-const { buildUtxoPos } = require('../../../helpers/positions.js');
-const { createInputTransaction, createInFlightTx } = require('../../../helpers/ife.js');
-const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
-const { spentOnGas, computeNormalOutputId, getOutputId } = require('../../../helpers/utils.js');
+    VAULT_ID, PROTOCOL, SAFE_GAS_STIPEND, EMPTY_BYTES_32,
+} = require('../../../../helpers/constants.js');
+const { buildUtxoPos } = require('../../../../helpers/positions.js');
+const { createInputTransaction, createInFlightTx } = require('../../../../helpers/ife.js');
+const { PaymentTransactionOutput, PaymentTransaction } = require('../../../../helpers/transaction.js');
+const { spentOnGas, computeNormalOutputId, getOutputId } = require('../../../../helpers/utils.js');
 
 contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, challenger]) => {
     const DUMMY_IFE_BOND_SIZE = 31415926535;
@@ -114,8 +114,8 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
             const rlpInFlightTxBytes = web3.utils.bytesToHex(inFlightTx.rlpEncoded());
 
             const emptyWithdrawData = {
-                outputId: web3.utils.sha3('dummy output id'),
-                outputGuard: web3.utils.sha3('dummy output guard'),
+                outputId: EMPTY_BYTES_32,
+                outputGuard: constants.ZERO_ADDRESS,
                 exitTarget: constants.ZERO_ADDRESS,
                 token: constants.ZERO_ADDRESS,
                 amount: 0,

@@ -15,6 +15,8 @@ uint8 public constant MAX_OUTPUT_NUM;
 
 ## Functions
 
+- [isInputEmpty(struct PaymentExitDataModel.InFlightExit ife, uint16 index)](#isinputempty)
+- [isOutputEmpty(struct PaymentExitDataModel.InFlightExit ife, uint16 index)](#isoutputempty)
 - [isInputPiggybacked(struct PaymentExitDataModel.InFlightExit ife, uint16 index)](#isinputpiggybacked)
 - [isOutputPiggybacked(struct PaymentExitDataModel.InFlightExit ife, uint16 index)](#isoutputpiggybacked)
 - [setInputPiggybacked(struct PaymentExitDataModel.InFlightExit ife, uint16 index)](#setinputpiggybacked)
@@ -22,6 +24,35 @@ uint8 public constant MAX_OUTPUT_NUM;
 - [setOutputPiggybacked(struct PaymentExitDataModel.InFlightExit ife, uint16 index)](#setoutputpiggybacked)
 - [clearOutputPiggybacked(struct PaymentExitDataModel.InFlightExit ife, uint16 index)](#clearoutputpiggybacked)
 - [isInFirstPhase(struct PaymentExitDataModel.InFlightExit ife, uint256 minExitPeriod)](#isinfirstphase)
+- [isEmptyWithdrawData(struct PaymentExitDataModel.WithdrawData data)](#isemptywithdrawdata)
+
+### isInputEmpty
+
+```js
+function isInputEmpty(struct PaymentExitDataModel.InFlightExit ife, uint16 index) internal pure
+returns(bool)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| ife | struct PaymentExitDataModel.InFlightExit |  | 
+| index | uint16 |  | 
+
+### isOutputEmpty
+
+```js
+function isOutputEmpty(struct PaymentExitDataModel.InFlightExit ife, uint16 index) internal pure
+returns(bool)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| ife | struct PaymentExitDataModel.InFlightExit |  | 
+| index | uint16 |  | 
 
 ### isInputPiggybacked
 
@@ -116,6 +147,19 @@ returns(bool)
 | ------------- |------------- | -----|
 | ife | struct PaymentExitDataModel.InFlightExit |  | 
 | minExitPeriod | uint256 |  | 
+
+### isEmptyWithdrawData
+
+```js
+function isEmptyWithdrawData(struct PaymentExitDataModel.WithdrawData data) private pure
+returns(bool)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| data | struct PaymentExitDataModel.WithdrawData |  | 
 
 ## Contracts
 

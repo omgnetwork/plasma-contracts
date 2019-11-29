@@ -21,12 +21,12 @@ const {
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
-const { calculateNormalExitable } = require('../../../helpers/exitable.js');
-const { buildUtxoPos, utxoPosToTxPos } = require('../../../helpers/positions.js');
-const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
+const { calculateNormalExitable } = require('../../../../helpers/exitable.js');
+const { buildUtxoPos, utxoPosToTxPos } = require('../../../../helpers/positions.js');
+const { PaymentTransactionOutput, PaymentTransaction } = require('../../../../helpers/transaction.js');
 const {
-    PROTOCOL, TX_TYPE, VAULT_ID, SAFE_GAS_STIPEND,
-} = require('../../../helpers/constants.js');
+    PROTOCOL, TX_TYPE, VAULT_ID, SAFE_GAS_STIPEND, EMPTY_BYTES_32,
+} = require('../../../../helpers/constants.js');
 
 contract('PaymentPiggybackInFlightExitOnInput', ([_, alice, inputOwner, nonInputOwner, outputOwner]) => {
     const ETH = constants.ZERO_ADDRESS;
@@ -116,7 +116,7 @@ contract('PaymentPiggybackInFlightExitOnInput', ([_, alice, inputOwner, nonInput
             const rlpInFlighTxBytes = web3.utils.bytesToHex(inFlightTx.rlpEncoded());
 
             const emptyWithdrawData = {
-                outputId: web3.utils.sha3('dummy output id'),
+                outputId: EMPTY_BYTES_32,
                 exitTarget: constants.ZERO_ADDRESS,
                 token: constants.ZERO_ADDRESS,
                 amount: 0,
@@ -219,6 +219,20 @@ contract('PaymentPiggybackInFlightExitOnInput', ([_, alice, inputOwner, nonInput
                     data.argsInputOne, { from: inputOwner, value: this.piggybackBondSize.toString() },
                 ),
                 'Invalid input index',
+            );
+        });
+
+        it('should fail when the input is empty', async () => {
+            const data = await buildPiggybackInputData();
+            await this.exitGame.setInFlightExit(data.exitId, data.inFlightExitData);
+
+            const indexOfEmptyInput = 3;
+            data.argsInputOne.inputIndex = indexOfEmptyInput;
+            await expectRevert(
+                this.exitGame.piggybackInFlightExitOnInput(
+                    data.argsInputOne, { from: inputOwner, value: this.piggybackBondSize.toString() },
+                ),
+                'Indexed input is empty',
             );
         });
 
