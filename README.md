@@ -77,6 +77,7 @@ Run truffle, passing in the network e.g.
 
 
 ### Building and running the python tests
+All the code is in the `plasma_framework/python_tests` directory, so go there first.
 
 Installing dependencies needed for compilation:
 ```
