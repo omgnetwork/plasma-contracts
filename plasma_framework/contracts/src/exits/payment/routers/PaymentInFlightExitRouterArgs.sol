@@ -45,7 +45,7 @@ library PaymentInFlightExitRouterArgs {
         bytes outputGuardPreimage;
     }
 
-    /*
+    /**
      * @notice Wraps arguments for challenging non-canonical in-flight exits
      * @param inputTx Transaction that created shared input
      * @param inputUtxoPos Position of input utxo
@@ -75,7 +75,7 @@ library PaymentInFlightExitRouterArgs {
         bytes competingTxSpendingConditionOptionalArgs;
     }
 
-    /*
+    /**
      * @notice Wraps arguments for challenging in-flight exit input spent
      * @param inFlightTx RLP-encoded in-flight transaction
      * @param inFlightTxInputIndex Index of spent input
@@ -97,7 +97,7 @@ library PaymentInFlightExitRouterArgs {
         bytes spendingConditionOptionalArgs;
     }
 
-     /*
+     /**
      * @notice Wraps arguments for challenging in-flight transaction output exit
      * @param inFlightTx RLP-encoded in-flight transaction
      * @param inFlightTxInclusionProof Proof that an in-flight transaction is included in Plasma

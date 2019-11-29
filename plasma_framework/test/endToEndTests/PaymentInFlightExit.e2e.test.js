@@ -1,8 +1,5 @@
 const EthVault = artifacts.require('EthVault');
 const Erc20Vault = artifacts.require('Erc20Vault');
-const ExitableTimestamp = artifacts.require('ExitableTimestampWrapper');
-const ExitPriority = artifacts.require('ExitPriorityWrapper');
-const ERC20Mintable = artifacts.require('ERC20Mintable');
 const PaymentExitGame = artifacts.require('PaymentExitGame');
 const PlasmaFramework = artifacts.require('PlasmaFramework');
 
@@ -21,9 +18,10 @@ const { buildUtxoPos } = require('../helpers/positions.js');
 const Testlang = require('../helpers/testlang.js');
 const config = require('../../config.js');
 
-contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _maintainer, _authority, bob, richFather]) => {
+contract.only('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _maintainer, _authority, bob, carol, richFather]) => {
     const ETH = constants.ZERO_ADDRESS;
     const DEPOSIT_VALUE = 1000000;
+    const TX_TYPE_PAYMENT = config.registerKeys.txTypes.payment;
     const OUTPUT_TYPE_PAYMENT = config.registerKeys.outputTypes.payment;
     const MERKLE_TREE_DEPTH = 16;
 
@@ -55,14 +53,22 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
         this.framework.addExitQueue(config.registerKeys.vaultId.eth, ETH);
     };
 
-    const aliceDepositsETH = async () => {
+    const depositETH = async (depositor) => {
         const depositBlockNum = (await this.framework.nextDepositBlock()).toNumber();
-        this.depositUtxoPos = buildUtxoPos(depositBlockNum, 0, 0);
-        this.depositTx = Testlang.deposit(OUTPUT_TYPE_PAYMENT, DEPOSIT_VALUE, alice);
-        const merkleTreeForDepositTx = new MerkleTree([this.depositTx], MERKLE_TREE_DEPTH);
-        this.merkleProofForDepositTx = merkleTreeForDepositTx.getInclusionProof(this.depositTx);
+        const depositUtxoPos = buildUtxoPos(depositBlockNum, 0, 0);
+        const depositTx = Testlang.deposit(OUTPUT_TYPE_PAYMENT, DEPOSIT_VALUE, depositor);
 
-        return this.ethVault.deposit(this.depositTx, { from: alice, value: DEPOSIT_VALUE });
+        const merkleTreeForDepositTx = new MerkleTree([depositTx], MERKLE_TREE_DEPTH);
+        const depositInclusionProof = merkleTreeForDepositTx.getInclusionProof(depositTx);
+
+        const tx = await this.ethVault.deposit(depositTx, { from: depositor, value: DEPOSIT_VALUE });
+
+        return {
+            depositTx,
+            depositUtxoPos,
+            depositInclusionProof,
+            tx,
+        };
     };
 
     describe('Given contracts deployed, exit game and both ETH and ERC20 vault registered', () => {
@@ -70,7 +76,11 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
 
         describe('Given Alice deposited ETH', () => {
             before(async () => {
-                await aliceDepositsETH();
+                const result = await depositETH(alice);
+
+                this.depositUtxoPos = result.depositUtxoPos;
+                this.depositTx = result.depositTx;
+                this.merkleProofForDepositTx = result.depositInclusionProof;
             });
 
             describe('Given Alice started an canonical in-flight exit from transaction to Bob that is not mined', () => {
@@ -78,14 +88,14 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                     this.amountIFE = DEPOSIT_VALUE / 2;
                     const output = new PaymentTransactionOutput(OUTPUT_TYPE_PAYMENT, this.amountIFE, bob, ETH);
                     this.inFlightTx = new PaymentTransaction(
-                        config.registerKeys.txTypes.payment,
+                        TX_TYPE_PAYMENT,
                         [this.depositUtxoPos],
                         [output],
                     );
 
                     this.inFlightTxRaw = web3.utils.bytesToHex(this.inFlightTx.rlpEncoded());
                     const inputTxs = [this.depositTx];
-                    const inputTxTypes = [config.registerKeys.txTypes.payment];
+                    const inputTxTypes = [TX_TYPE_PAYMENT];
                     const inputUtxosPos = [this.depositUtxoPos];
                     const outputGuardPreimagesForInputs = [EMPTY_BYTES];
                     const inputTxsInclusionProofs = [this.merkleProofForDepositTx];
@@ -185,17 +195,179 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
             });
         });
 
-        describe.only('Given Alice deposited ETH two times, creating output oA and oB', () => {
-            describe('When Alice signs a tx1 to Bob using oA, and oB as input', () => {
-                describe('And then Alice also signs another competing tx2 to Carol using oA as input', () => {
+        describe('Given Alice deposited ETH two times, creating output A and output B', () => {
+            before(async () => {
+                this.outputAData = await depositETH(alice);
+                this.outputBData = await depositETH(alice);
+            });
+
+            describe('When Alice signs a tx1 to Bob using output A and output B as input', () => {
+                before(async () => {
+                    const amount = DEPOSIT_VALUE / 2;
+                    const output = new PaymentTransactionOutput(OUTPUT_TYPE_PAYMENT, amount, bob, ETH);
+                    this.tx1 = new PaymentTransaction(
+                        TX_TYPE_PAYMENT,
+                        [this.outputAData.depositUtxoPos, this.outputBData.depositUtxoPos],
+                        [output],
+                    );
+
+                    const txHash = hashTx(this.tx1, this.framework.address);
+                    this.signatureTx1 = sign(txHash, alicePrivateKey);
+                });
+
+                describe('And then Alice also signs another competing tx2 to Carol using output A as input', () => {
+                    before(async () => {
+                        const amount = DEPOSIT_VALUE / 2;
+                        const output = new PaymentTransactionOutput(OUTPUT_TYPE_PAYMENT, amount, carol, ETH);
+                        this.tx2 = new PaymentTransaction(
+                            TX_TYPE_PAYMENT,
+                            [this.outputAData.depositUtxoPos],
+                            [output],
+                        );
+
+                        const txHash = hashTx(this.tx2, this.framework.address);
+                        this.signatureTx2 = sign(txHash, alicePrivateKey);
+                    });
+
                     describe('When Bob start IFE on tx1', () => {
+                        before(async () => {
+                            this.tx1RlpEncoded = web3.utils.bytesToHex(this.tx1.rlpEncoded());
+                            const inputTxs = [this.outputAData.depositTx, this.outputBData.depositTx];
+                            const inputTxTypes = [TX_TYPE_PAYMENT, TX_TYPE_PAYMENT];
+                            const inputUtxosPos = [this.outputAData.depositUtxoPos, this.outputBData.depositUtxoPos];
+                            const inputTxsInclusionProofs = [
+                                this.outputAData.depositInclusionProof, this.outputBData.depositInclusionProof,
+                            ];
+
+                            const args = {
+                                inFlightTx: this.tx1RlpEncoded,
+                                inputTxs,
+                                inputTxTypes,
+                                inputUtxosPos,
+                                outputGuardPreimagesForInputs: [EMPTY_BYTES, EMPTY_BYTES],
+                                inputTxsInclusionProofs,
+                                inputTxsConfirmSigs: [EMPTY_BYTES, EMPTY_BYTES],
+                                inFlightTxWitnesses: [this.signatureTx1, this.signatureTx1],
+                                inputSpendingConditionOptionalArgs: [EMPTY_BYTES, EMPTY_BYTES],
+                            };
+
+                            await this.exitGame.startInFlightExit(
+                                args,
+                                { from: bob, value: this.startIFEBondSize },
+                            );
+                        });
+
                         describe('And Bob piggybacks the output of tx1', () => {
-                            describe('Then the IFE of tx1 is challenge non-canonical by Carol', () => {
-                                describe('And then Alice piggyback both outputs oA and oB', () => {
-                                    describe('And then the piggyback of oA is challenged with tx2', () => {
+                            before(async () => {
+                                const exitingOutputIndex = 0;
+                                const args = {
+                                    inFlightTx: this.tx1RlpEncoded,
+                                    outputIndex: exitingOutputIndex,
+                                    outputGuardPreimage: EMPTY_BYTES,
+                                };
+
+                                await this.exitGame.piggybackInFlightExitOnOutput(
+                                    args,
+                                    { from: bob, value: this.piggybackBondSize },
+                                );
+                            });
+
+                            describe('Then the IFE of tx1 is challenged non-canonical by Carol', () => {
+                                before(async () => {
+                                    const args = {
+                                        inputTx: this.outputAData.depositTx,
+                                        inputUtxoPos: this.outputAData.depositUtxoPos,
+                                        inFlightTx: this.tx1RlpEncoded,
+                                        inFlightTxInputIndex: 0,
+                                        competingTx: web3.utils.bytesToHex(this.tx2.rlpEncoded()),
+                                        competingTxInputIndex: 0,
+                                        outputGuardPreimage: EMPTY_BYTES,
+                                        competingTxPos: 0,
+                                        competingTxInclusionProof: EMPTY_BYTES,
+                                        competingTxWitness: this.signatureTx2,
+                                        competingTxConfirmSig: EMPTY_BYTES,
+                                        competingTxSpendingConditionOptionalArgs: EMPTY_BYTES,
+                                    };
+
+                                    await this.exitGame.challengeInFlightExitNotCanonical(
+                                        args,
+                                        { from: carol },
+                                    );
+                                });
+
+                                describe('And then Alice piggyback both outputs output A and output B', () => {
+                                    before(async () => {
+                                        const args1 = {
+                                            inFlightTx: this.tx1RlpEncoded,
+                                            inputIndex: 0,
+                                        };
+
+                                        const args2 = {
+                                            inFlightTx: this.tx1RlpEncoded,
+                                            inputIndex: 1,
+                                        };
+
+                                        await this.exitGame.piggybackInFlightExitOnInput(
+                                            args1,
+                                            { from: alice, value: this.piggybackBondSize },
+                                        );
+
+                                        await this.exitGame.piggybackInFlightExitOnInput(
+                                            args2,
+                                            { from: alice, value: this.piggybackBondSize },
+                                        );
+                                    });
+
+                                    describe('And then the piggyback of output A is challenged with tx2', () => {
+                                        before(async () => {
+                                            const args = {
+                                                inFlightTx: this.tx1RlpEncoded,
+                                                inFlightTxInputIndex: 0,
+                                                challengingTx: web3.utils.bytesToHex(this.tx2.rlpEncoded()),
+                                                challengingTxInputIndex: 0,
+                                                challengingTxWitness: this.signatureTx2,
+                                                inputTx: this.outputAData.depositTx,
+                                                inputUtxoPos: this.outputAData.depositUtxoPos,
+                                                spendingConditionOptionalArgs: EMPTY_BYTES,
+                                            };
+                                            await this.exitGame.challengeInFlightExitInputSpent(
+                                                args,
+                                                { from: carol },
+                                            );
+                                        });
+
                                         describe('When sb process exits after two weeks', () => {
-                                            it('should return fund of oB to Alice (input exited)', async () => {});
-                                            it('should NOT return fund to Bob (output not exited)', async () => {});
+                                            let preBalanceAlice;
+                                            let preBalanceBob;
+
+                                            before(async () => {
+                                                preBalanceAlice = new BN(await web3.eth.getBalance(alice));
+                                                preBalanceBob = new BN(await web3.eth.getBalance(bob));
+
+                                                const slightlyMoreThanTwoWeeks = (
+                                                    time.duration.weeks(2).add(time.duration.seconds(1))
+                                                );
+                                                await time.increase(slightlyMoreThanTwoWeeks);
+                                                this.exitsToProcess = 1;
+
+                                                this.processTx = await this.framework.processExits(
+                                                    config.registerKeys.vaultId.eth, ETH, 0, this.exitsToProcess,
+                                                );
+                                            });
+
+                                            it('should return only fund of output B to Alice (input exited)', async () => {
+                                                const postBalanceAlice = new BN(await web3.eth.getBalance(alice));
+                                                const expectedBalance = preBalanceAlice
+                                                    .add(new BN(DEPOSIT_VALUE))
+                                                    .add(new BN(this.piggybackBondSize));
+
+                                                expect(expectedBalance).to.be.bignumber.equal(postBalanceAlice);
+                                            });
+
+                                            it('should NOT return fund to Bob (output not exited)', async () => {
+                                                const postBalanceBob = new BN(await web3.eth.getBalance(bob));
+                                                expect(preBalanceBob).to.be.bignumber.equal(postBalanceBob);
+                                            });
                                         });
                                     });
                                 });
