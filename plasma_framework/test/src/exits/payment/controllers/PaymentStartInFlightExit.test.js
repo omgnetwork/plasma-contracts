@@ -26,7 +26,9 @@ const { expect } = require('chai');
 
 const { buildUtxoPos, UtxoPos } = require('../../../../helpers/positions.js');
 const { computeNormalOutputId, spentOnGas } = require('../../../../helpers/utils.js');
-const { PROTOCOL, VAULT_ID, SAFE_GAS_STIPEND } = require('../../../../helpers/constants.js');
+const {
+    PROTOCOL, VAULT_ID, DUMMY_INPUT_1, SAFE_GAS_STIPEND,
+} = require('../../../../helpers/constants.js');
 const {
     buildValidIfeStartArgs, buildIfeStartArgs, createInputTransaction, createDepositTransaction, createInFlightTx,
 } = require('../../../../helpers/ife.js');
@@ -42,7 +44,6 @@ contract('PaymentStartInFlightExit', ([_, alice, richFather, carol]) => {
     const INCLUSION_PROOF_LENGTH_IN_BYTES = 512;
     const BLOCK_NUMBER = 1000;
     const DEPOSIT_BLOCK_NUMBER = BLOCK_NUMBER + 1;
-    const DUMMY_INPUT_1 = '0x0000000000000000000000000000000000000000000000000000000000000001';
     const AMOUNT = 10;
     const TOLERANCE_SECONDS = new BN(1);
     const bobPrivateKey = '0x7151e5dab6f8e95b5436515b83f423c4df64fe4c6149f864daa209b26adb10ca';
@@ -818,7 +819,7 @@ contract('PaymentStartInFlightExit', ([_, alice, richFather, carol]) => {
             });
 
             it('should fail when in-flight tx input transactions are not unique', async () => {
-                const inputTx = createInputTransaction(DUMMY_INPUT_1, OUTPUT_TYPE_ONE, alice, AMOUNT);
+                const inputTx = createInputTransaction([DUMMY_INPUT_1], OUTPUT_TYPE_ONE, alice, AMOUNT);
                 const inputUtxosPos = [buildUtxoPos(BLOCK_NUMBER, 0, 0), buildUtxoPos(BLOCK_NUMBER, 0, 0)];
                 const inFlightTx = createInFlightTx([inputTx, inputTx], inputUtxosPos, OUTPUT_TYPE_ONE, carol, AMOUNT);
 

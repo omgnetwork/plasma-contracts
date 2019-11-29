@@ -19,7 +19,7 @@ const {
 const { expect } = require('chai');
 
 const {
-    TX_TYPE, OUTPUT_TYPE, PROTOCOL, EMPTY_BYTES_32, VAULT_ID, SAFE_GAS_STIPEND,
+    TX_TYPE, OUTPUT_TYPE, PROTOCOL, EMPTY_BYTES_32, VAULT_ID, DUMMY_INPUT_1, SAFE_GAS_STIPEND,
 } = require('../../../../helpers/constants.js');
 const { buildUtxoPos, UtxoPos } = require('../../../../helpers/positions.js');
 const {
@@ -51,7 +51,7 @@ contract('PaymentChallengeStandardExit', ([_, alice, bob]) => {
     describe('challengeStandardExit', () => {
         const getTestInputArgs = (outputType, outputOwner) => {
             const output = new PaymentTransactionOutput(outputType, TEST_AMOUNT, outputOwner, ETH);
-            const exitingTxObj = new PaymentTransaction(TX_TYPE.PAYMENT, [0], [output]);
+            const exitingTxObj = new PaymentTransaction(TX_TYPE.PAYMENT, [DUMMY_INPUT_1], [output]);
             const exitingTx = web3.utils.bytesToHex(exitingTxObj.rlpEncoded());
 
             const challengeTxObj = new PaymentTransaction(TX_TYPE.PAYMENT, [EXITING_TX_UTXOPOS], [output]);
@@ -262,7 +262,7 @@ contract('PaymentChallengeStandardExit', ([_, alice, bob]) => {
                 await this.exitGame.setExit(args.exitId, getTestExitData(args, alice, this.startStandardExitBondSize));
 
                 const output = new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, TEST_AMOUNT, alice, ETH);
-                const exitingTxObj = new PaymentTransaction(2, [0], [output]);
+                const exitingTxObj = new PaymentTransaction(2, [DUMMY_INPUT_1], [output]);
                 const exitingTx = web3.utils.bytesToHex(exitingTxObj.rlpEncoded());
                 args.exitingTx = exitingTx;
 

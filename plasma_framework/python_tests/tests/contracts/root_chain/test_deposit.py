@@ -28,7 +28,7 @@ def test_deposit_invalid_value_should_fail(testlang):
 
 
 def test_deposit_zero_amount_should_succeed(testlang):
-    owner, amount = testlang.accounts[0], 0
+    owner, amount = testlang.accounts[0], 1
 
     deposit_id = testlang.deposit(owner, amount)
     deposit_blknum, _, _ = decode_utxo_id(deposit_id)

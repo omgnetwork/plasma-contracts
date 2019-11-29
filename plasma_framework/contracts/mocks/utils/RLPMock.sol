@@ -12,9 +12,13 @@ contract RLPMock {
     uint8 constant internal WORD_SIZE = 32;
 
     function decodeBytes32(bytes memory _data) public pure returns (bytes32) {
-        return bytes32(_data.toRlpItem().toUint());
+        return _data.toRlpItem().toBytes32();
     }
 
+    function decodeAddress(bytes memory _data) public pure returns (address) {
+        return _data.toRlpItem().toAddress();
+    }
+    
     function decodeBytes20(bytes memory _data) public pure returns (bytes20) {
         return bytes20(_data.toRlpItem().toAddress());
     }
@@ -25,10 +29,6 @@ contract RLPMock {
 
     function decodeUint(bytes memory _data) public pure returns (uint) {
         return _data.toRlpItem().toUint();
-    }
-
-    function decodePayloadOffset(bytes memory _data) public pure returns (uint) {
-        _data.toRlpItem().decodePayloadOffset();
     }
 
     function decodeInt(bytes memory _data) public pure returns (int) {
@@ -53,10 +53,8 @@ contract RLPMock {
     function toBytes(RLPReader.RLPItem memory item) internal pure returns (bytes memory) {
         require(item.len > 0, "Item length must be > 0");
 
-        uint itemLen = RLPReader.decodeItemLengthUnsafe(item.memPtr);
+        (uint256 itemLen, uint256 offset) = RLPReader.decodeLengthAndOffset(item.memPtr);
         require(itemLen == item.len, "Decoded RLP length is invalid");
-
-        uint offset = RLPReader.decodePayloadOffset(item);
         uint len = itemLen - offset;
         bytes memory result = new bytes(len);
 
@@ -101,7 +99,7 @@ contract RLPMock {
     function toRlpBytes(RLPReader.RLPItem memory item) internal pure returns (bytes memory) {
         bytes memory result = new bytes(item.len);
         if (result.length == 0) return result;
-        
+
         uint resultPtr;
         // solhint-disable-next-line no-inline-assembly
         assembly {
