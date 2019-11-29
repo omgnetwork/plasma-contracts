@@ -86,8 +86,8 @@ library RLPReader {
 
     /**
      * @notice Create an address from a RLPItem
+     * @dev Function is not a standard RLP decoding function and it used to decode to the Solidity native address type
      * @param item RLPItem
-     * @return The decoded address
      */
     function toAddress(RLPItem memory item) internal pure returns (address) {
         require(item.len == 21, "Item length must be 21");
@@ -109,6 +109,7 @@ library RLPReader {
 
     /**
      * @notice Create a uint256 from a RLPItem. Leading zeros are invalid.
+     * @dev Function is not a standard RLP decoding function and it used to decode to the Solidity native uint256 type
      * @param item RLPItem
      */
     function toUint(RLPItem memory item) internal pure returns (uint256) {
@@ -130,7 +131,7 @@ library RLPReader {
                 result := div(result, exp(256, sub(WORD_SIZE, dataLen)))
             }
         }
-        // Special case: scalar 0 should be enoded as 0x80 and _not_ as 0x00
+        // Special case: scalar 0 should be encoded as 0x80 and _not_ as 0x00
         require(!(dataByte0 == 0 && offset == 0), "Scalar 0 should be encoded as 0x80");
 
         // Disallow leading zeros
@@ -141,6 +142,7 @@ library RLPReader {
 
     /**
      * @notice Create a bytes32 from a RLPItem
+    * @dev Function is not a standard RLP decoding function and it used to decode to the Solidity native bytes32 type
      * @param item RLPItem
      */
     function toBytes32(RLPItem memory item) internal pure returns (bytes32) {
@@ -182,7 +184,7 @@ library RLPReader {
 
     /**
      * @notice Decodes the RLPItem's length and offset.
-     * @dev This function is dangerous !!! Ensure that the returned length is within the bounds of where memPtr points to.
+     * @dev This function is dangerous. Ensure that the returned length is within bounds that memPtr points to.
      * @param memPtr Pointer to the dynamic bytes array in memory
      * @return The length of the RLPItem (including the length field) and the offset of the payload
      */
@@ -201,8 +203,8 @@ library RLPReader {
             decodedLength = 1;
             offset = 0;
         } else if (STRING_SHORT_START <= byte0 && byte0 < STRING_LONG_START) {
-            // The range of the first byte is between 0x80 and 0xb7 then it is a short string
-            // The decoded length must be between 1 and 55 bytes
+            // The range of the first byte is between 0x80 and 0xb7 therefore it is a short string
+            // decodedLength is between 1 and 56 bytes
             decodedLength = (byte0 - STRING_SHORT_START) + 1;
             if (decodedLength == 2){
                 uint256 byte1;
@@ -215,7 +217,9 @@ library RLPReader {
             }
             offset = 1;
         } else if (STRING_LONG_START <= byte0 && byte0 < LIST_SHORT_START) {
-            // Item is a long string (payload length > 55 bytes)
+            // The range of the first byte is between 0xb8 and 0xbf therefore it is a long string
+            // lengthLen is between 1 and 8 bytes
+            // dataLen is greater than 55 bytes
             uint256 dataLen;
             uint256 byte1;
             uint256 lengthLen;
@@ -238,11 +242,14 @@ library RLPReader {
             // Calculate the offset
             offset = lengthLen + 1;
         } else if (LIST_SHORT_START <= byte0 && byte0 < LIST_LONG_START) {
-            // Item is a short list (length <= 55 bytes)
+            // The range of the first byte is between 0xc0 and 0xf7 therefore it is a short list
+            // decodedLength is between 1 and 56 bytes
             decodedLength = (byte0 - LIST_SHORT_START) + 1;
             offset = 1;
         } else {
-            // Item is a long list (length > 55 bytes)
+            // The range of the first byte is between 0xf8 and 0xff therefore it is a long list
+            // lengthLen is between 1 and 8 bytes
+            // dataLen is greater than 55 bytes
             uint256 dataLen;
             uint256 byte1;
             uint256 lengthLen;
