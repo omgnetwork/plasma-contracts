@@ -17,10 +17,10 @@ const {
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
-const { buildUtxoPos } = require('../../../helpers/positions.js');
+const { buildUtxoPos } = require('../../../../helpers/positions.js');
 const {
     EMPTY_BYTES_32, PROTOCOL, VAULT_ID, TX_TYPE, SAFE_GAS_STIPEND,
-} = require('../../../helpers/constants.js');
+} = require('../../../../helpers/constants.js');
 
 contract('PaymentStandardExitRouter', ([_, alice]) => {
     const ETH = constants.ZERO_ADDRESS;

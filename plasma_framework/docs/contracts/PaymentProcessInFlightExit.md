@@ -38,10 +38,11 @@ event InFlightBondReturnFailed(address indexed receiver, uint256  amount);
 
 - [run(struct PaymentProcessInFlightExit.Controller self, struct PaymentExitDataModel.InFlightExitMap exitMap, uint160 exitId, address token)](#run)
 - [isAnyInputSpent(PlasmaFramework framework, struct PaymentExitDataModel.InFlightExit exit, address token)](#isanyinputspent)
-- [shouldWithdrawInput(struct PaymentExitDataModel.InFlightExit exit, struct PaymentExitDataModel.WithdrawData withdrawal, address token, uint16 index)](#shouldwithdrawinput)
+- [shouldWithdrawInput(struct PaymentProcessInFlightExit.Controller controller, struct PaymentExitDataModel.InFlightExit exit, struct PaymentExitDataModel.WithdrawData withdrawal, address token, uint16 index)](#shouldwithdrawinput)
 - [shouldWithdrawOutput(struct PaymentProcessInFlightExit.Controller controller, struct PaymentExitDataModel.InFlightExit exit, struct PaymentExitDataModel.WithdrawData withdrawal, address token, uint16 index)](#shouldwithdrawoutput)
 - [withdrawFromVault(struct PaymentProcessInFlightExit.Controller self, struct PaymentExitDataModel.WithdrawData withdrawal)](#withdrawfromvault)
-- [flagInputsAndOutputsSpent(PlasmaFramework framework, struct PaymentExitDataModel.InFlightExit exit, address token)](#flaginputsandoutputsspent)
+- [flagOutputsWhenNonCanonical(PlasmaFramework framework, struct PaymentExitDataModel.InFlightExit exit, address token)](#flagoutputswhennoncanonical)
+- [flagOutputsWhenCanonical(PlasmaFramework framework, struct PaymentExitDataModel.InFlightExit exit, address token)](#flagoutputswhencanonical)
 - [clearPiggybackInputFlag(struct PaymentExitDataModel.InFlightExit exit, address token)](#clearpiggybackinputflag)
 - [clearPiggybackOutputFlag(struct PaymentExitDataModel.InFlightExit exit, address token)](#clearpiggybackoutputflag)
 - [allPiggybacksCleared(struct PaymentExitDataModel.InFlightExit exit)](#allpiggybackscleared)
@@ -81,7 +82,7 @@ returns(bool)
 ### shouldWithdrawInput
 
 ```js
-function shouldWithdrawInput(struct PaymentExitDataModel.InFlightExit exit, struct PaymentExitDataModel.WithdrawData withdrawal, address token, uint16 index) private pure
+function shouldWithdrawInput(struct PaymentProcessInFlightExit.Controller controller, struct PaymentExitDataModel.InFlightExit exit, struct PaymentExitDataModel.WithdrawData withdrawal, address token, uint16 index) private view
 returns(bool)
 ```
 
@@ -89,6 +90,7 @@ returns(bool)
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
+| controller | struct PaymentProcessInFlightExit.Controller |  | 
 | exit | struct PaymentExitDataModel.InFlightExit |  | 
 | withdrawal | struct PaymentExitDataModel.WithdrawData |  | 
 | token | address |  | 
@@ -124,10 +126,24 @@ function withdrawFromVault(struct PaymentProcessInFlightExit.Controller self, st
 | self | struct PaymentProcessInFlightExit.Controller |  | 
 | withdrawal | struct PaymentExitDataModel.WithdrawData |  | 
 
-### flagInputsAndOutputsSpent
+### flagOutputsWhenNonCanonical
 
 ```js
-function flagInputsAndOutputsSpent(PlasmaFramework framework, struct PaymentExitDataModel.InFlightExit exit, address token) private nonpayable
+function flagOutputsWhenNonCanonical(PlasmaFramework framework, struct PaymentExitDataModel.InFlightExit exit, address token) private nonpayable
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| framework | PlasmaFramework |  | 
+| exit | struct PaymentExitDataModel.InFlightExit |  | 
+| token | address |  | 
+
+### flagOutputsWhenCanonical
+
+```js
+function flagOutputsWhenCanonical(PlasmaFramework framework, struct PaymentExitDataModel.InFlightExit exit, address token) private nonpayable
 ```
 
 **Arguments**

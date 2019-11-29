@@ -62,19 +62,21 @@ library PaymentProcessInFlightExit {
     {
         PaymentExitDataModel.InFlightExit storage exit = exitMap.exits[exitId];
 
-        // Check whether any input is already spent. Required to prevent operator stealing funds.
-        // Since process exit should not revert to avoid blocking the while loop, return directly.
-        // See: https://github.com/omisego/plasma-contracts/issues/102#issuecomment-495809967
-        if (exit.exitStartTimestamp == 0 || isAnyInputSpent(self.framework, exit, token)) {
+        if (exit.exitStartTimestamp == 0) {
             emit InFlightExitOmitted(exitId, token);
             return;
         }
 
-        if (!exit.isCanonical) {
+        // Check whether any input is already spent. Required to prevent operator stealing funds.
+        // See: https://github.com/omisego/plasma-contracts/issues/102#issuecomment-495809967
+        // Also, slightly different from the solution above, we treat input spent as non-canonical.
+        // So an IFE is only canonical if all inputs of the in-flight tx are not double spent by competing tx or exit.
+        // see: https://github.com/omisego/plasma-contracts/issues/470
+        if (!exit.isCanonical || isAnyInputSpent(self.framework, exit, token)) {
             for (uint16 i = 0; i < MAX_INPUT_NUM; i++) {
                 PaymentExitDataModel.WithdrawData memory withdrawal = exit.inputs[i];
 
-                if (shouldWithdrawInput(exit, withdrawal, token, i)) {
+                if (shouldWithdrawInput(self, exit, withdrawal, token, i)) {
                     withdrawFromVault(self, withdrawal);
                     bool success = SafeEthTransfer.transferReturnResult(
                         withdrawal.exitTarget, withdrawal.piggybackBondSize, self.safeGasStipend
@@ -87,6 +89,8 @@ library PaymentProcessInFlightExit {
                     emit InFlightExitInputWithdrawn(exitId, i);
                 }
             }
+
+            flagOutputsWhenNonCanonical(self.framework, exit, token);
         } else {
             for (uint16 i = 0; i < MAX_OUTPUT_NUM; i++) {
                 PaymentExitDataModel.WithdrawData memory withdrawal = exit.outputs[i];
@@ -103,9 +107,10 @@ library PaymentProcessInFlightExit {
                     emit InFlightExitOutputWithdrawn(exitId, i);
                 }
             }
+
+            flagOutputsWhenCanonical(self.framework, exit, token);
         }
 
-        flagInputsAndOutputsSpent(self.framework, exit, token);
         clearPiggybackInputFlag(exit, token);
         clearPiggybackOutputFlag(exit, token);
 
@@ -132,15 +137,15 @@ library PaymentProcessInFlightExit {
         returns (bool)
     {
         uint256 inputNumOfTheToken;
-        for (uint i = 0; i < MAX_INPUT_NUM; i++) {
-            if (exit.inputs[i].token == token) {
+        for (uint16 i = 0; i < MAX_INPUT_NUM; i++) {
+            if (exit.inputs[i].token == token && !exit.isInputEmpty(i)) {
                 inputNumOfTheToken++;
             }
         }
         bytes32[] memory outputIdsOfInputs = new bytes32[](inputNumOfTheToken);
         uint sameTokenIndex = 0;
-        for (uint i = 0; i < MAX_INPUT_NUM; i++) {
-            if (exit.inputs[i].token == token) {
+        for (uint16 i = 0; i < MAX_INPUT_NUM; i++) {
+            if (exit.inputs[i].token == token && !exit.isInputEmpty(i)) {
                 outputIdsOfInputs[sameTokenIndex] = exit.inputs[i].outputId;
                 sameTokenIndex++;
             }
@@ -149,19 +154,19 @@ library PaymentProcessInFlightExit {
     }
 
     function shouldWithdrawInput(
+        Controller memory controller,
         PaymentExitDataModel.InFlightExit memory exit,
         PaymentExitDataModel.WithdrawData memory withdrawal,
         address token,
         uint16 index
     )
         private
-        pure
+        view
         returns (bool)
     {
-        // The check to determine whether input is spent, performed in 'isAnyInputSpent'
-        // For this reason, no need to check again here.
         return withdrawal.token == token &&
-                exit.isInputPiggybacked(index);
+                exit.isInputPiggybacked(index) &&
+                !controller.framework.isOutputSpent(withdrawal.outputId);
     }
 
     function shouldWithdrawOutput(
@@ -193,25 +198,45 @@ library PaymentProcessInFlightExit {
         }
     }
 
-    function flagInputsAndOutputsSpent(
+    function flagOutputsWhenNonCanonical(
         PlasmaFramework framework,
         PaymentExitDataModel.InFlightExit memory exit,
         address token
     )
         private
     {
-        // We flag _all_ inputs regardless of whether it is piggybacked
-        // If exiting from output, all inputs are considered spent and can only exit from output in future.
-        // If exiting from input, to keep things simple, all users must piggyback the input at the same time,
-        // instead of re-starting the IFE and then re-piggyback their input.
+        uint256 piggybackedInputNumOfTheToken;
+        for (uint16 i = 0; i < MAX_INPUT_NUM; i++) {
+            if (exit.inputs[i].token == token && exit.isInputPiggybacked(i)) {
+                piggybackedInputNumOfTheToken++;
+            }
+        }
+
+        bytes32[] memory outputIdsToFlag = new bytes32[](piggybackedInputNumOfTheToken);
+        uint indexForOutputIds = 0;
+        for (uint16 i = 0; i < MAX_INPUT_NUM; i++) {
+            if (exit.inputs[i].token == token && exit.isInputPiggybacked(i)) {
+                outputIdsToFlag[indexForOutputIds] = exit.inputs[i].outputId;
+                indexForOutputIds++;
+            }
+        }
+        framework.batchFlagOutputsSpent(outputIdsToFlag);
+    }
+
+    function flagOutputsWhenCanonical(
+        PlasmaFramework framework,
+        PaymentExitDataModel.InFlightExit memory exit,
+        address token
+    )
+        private
+    {
         uint256 inputNumOfTheToken;
         for (uint16 i = 0; i < MAX_INPUT_NUM; i++) {
-            if (exit.inputs[i].token == token && exit.inputs[i].amount > 0) {
+            if (exit.inputs[i].token == token && !exit.isInputEmpty(i)) {
                 inputNumOfTheToken++;
             }
         }
 
-        // Only piggybacked outputs are flagged. User can still perform standard exit if non-piggybacked.
         uint256 piggybackedOutputNumOfTheToken;
         for (uint16 i = 0; i < MAX_OUTPUT_NUM; i++) {
             if (exit.outputs[i].token == token && exit.isOutputPiggybacked(i)) {
@@ -222,7 +247,7 @@ library PaymentProcessInFlightExit {
         bytes32[] memory outputIdsToFlag = new bytes32[](inputNumOfTheToken + piggybackedOutputNumOfTheToken);
         uint indexForOutputIds = 0;
         for (uint16 i = 0; i < MAX_INPUT_NUM; i++) {
-            if (exit.inputs[i].token == token && exit.inputs[i].amount > 0) {
+            if (exit.inputs[i].token == token && !exit.isInputEmpty(i)) {
                 outputIdsToFlag[indexForOutputIds] = exit.inputs[i].outputId;
                 indexForOutputIds++;
             }

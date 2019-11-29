@@ -96,6 +96,7 @@ library PaymentPiggybackInFlightExit {
         require(exit.exitStartTimestamp != 0, "No in-flight exit to piggyback on");
         require(exit.isInFirstPhase(self.minExitPeriod), "Piggyback is possible only in the first phase of the exit period");
 
+        require(!exit.isInputEmpty(args.inputIndex), "Indexed input is empty");
         require(!exit.isInputPiggybacked(args.inputIndex), "Indexed input already piggybacked");
 
         PaymentExitDataModel.WithdrawData storage withdrawData = exit.inputs[args.inputIndex];
@@ -133,6 +134,7 @@ library PaymentPiggybackInFlightExit {
         require(exit.exitStartTimestamp != 0, "No in-flight exit to piggyback on");
         require(exit.isInFirstPhase(self.minExitPeriod), "Piggyback is possible only in the first phase of the exit period");
 
+        require(!exit.isOutputEmpty(args.outputIndex), "Indexed output is empty");
         require(!exit.isOutputPiggybacked(args.outputIndex), "Indexed output already piggybacked");
 
         PaymentExitDataModel.WithdrawData storage withdrawData = exit.outputs[args.outputIndex];
