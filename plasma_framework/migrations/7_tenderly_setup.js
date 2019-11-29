@@ -7,7 +7,7 @@ module.exports = async (
     // eslint-disable-next-line no-unused-vars
     [deployerAddress, maintainerAddress, authorityAddress],
 ) => {
-    const tenderly = process.env.TENDERLY || true;
+    const tenderly = process.env.TENDERLY || false;
 
     if (tenderly) {
         const installationStatus = execSync('curl https://raw.githubusercontent.com/Tenderly/tenderly-cli/master/scripts/install-linux.sh | sh', { encoding: 'utf-8' }); // the default is 'buffer'
