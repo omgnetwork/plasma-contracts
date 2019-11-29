@@ -21,12 +21,12 @@ const {
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
-const { calculateNormalExitable } = require('../../../helpers/exitable.js');
-const { buildUtxoPos, utxoPosToTxPos } = require('../../../helpers/positions.js');
-const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
+const { calculateNormalExitable } = require('../../../../helpers/exitable.js');
+const { buildUtxoPos, utxoPosToTxPos } = require('../../../../helpers/positions.js');
+const { PaymentTransactionOutput, PaymentTransaction } = require('../../../../helpers/transaction.js');
 const {
     PROTOCOL, TX_TYPE, VAULT_ID, SAFE_GAS_STIPEND, EMPTY_BYTES_32,
-} = require('../../../helpers/constants.js');
+} = require('../../../../helpers/constants.js');
 
 contract('PaymentPiggybackInFlightExitOnInput', ([_, alice, inputOwner, nonInputOwner, outputOwner]) => {
     const ETH = constants.ZERO_ADDRESS;

@@ -20,12 +20,12 @@ const { expect } = require('chai');
 
 const {
     TX_TYPE, OUTPUT_TYPE, PROTOCOL, EMPTY_BYTES_32, VAULT_ID, SAFE_GAS_STIPEND,
-} = require('../../../helpers/constants.js');
-const { buildUtxoPos, UtxoPos } = require('../../../helpers/positions.js');
+} = require('../../../../helpers/constants.js');
+const { buildUtxoPos, UtxoPos } = require('../../../../helpers/positions.js');
 const {
     spentOnGas, computeNormalOutputId,
-} = require('../../../helpers/utils.js');
-const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
+} = require('../../../../helpers/utils.js');
+const { PaymentTransactionOutput, PaymentTransaction } = require('../../../../helpers/transaction.js');
 
 
 contract('PaymentChallengeStandardExit', ([_, alice, bob]) => {

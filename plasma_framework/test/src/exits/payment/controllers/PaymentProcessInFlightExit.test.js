@@ -25,8 +25,8 @@ const { expect } = require('chai');
 
 const {
     TX_TYPE, PROTOCOL, VAULT_ID, SAFE_GAS_STIPEND, EMPTY_BYTES_32,
-} = require('../../../helpers/constants.js');
-const { buildUtxoPos } = require('../../../helpers/positions.js');
+} = require('../../../../helpers/constants.js');
+const { buildUtxoPos } = require('../../../../helpers/positions.js');
 
 contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwner2, inputOwner3, outputOwner1, outputOwner2, outputOwner3]) => {
     const MAX_INPUT_NUM = 4;

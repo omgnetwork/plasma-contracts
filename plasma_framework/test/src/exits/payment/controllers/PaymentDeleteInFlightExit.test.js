@@ -20,11 +20,11 @@ const {
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
-const { buildUtxoPos } = require('../../../helpers/positions.js');
-const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
+const { buildUtxoPos } = require('../../../../helpers/positions.js');
+const { PaymentTransactionOutput, PaymentTransaction } = require('../../../../helpers/transaction.js');
 const {
     PROTOCOL, TX_TYPE, VAULT_ID, SAFE_GAS_STIPEND,
-} = require('../../../helpers/constants.js');
+} = require('../../../../helpers/constants.js');
 
 contract('PaymentInFlightExitRouter', ([_, bondOwner, inputOwner, outputOwner]) => {
     const ETH = constants.ZERO_ADDRESS;

@@ -25,11 +25,11 @@ const { expect } = require('chai');
 const {
     TX_TYPE, OUTPUT_TYPE, EMPTY_BYTES, CHILD_BLOCK_INTERVAL,
     VAULT_ID, PROTOCOL, SAFE_GAS_STIPEND, EMPTY_BYTES_32,
-} = require('../../../helpers/constants.js');
-const { buildUtxoPos } = require('../../../helpers/positions.js');
-const { createInputTransaction, createInFlightTx } = require('../../../helpers/ife.js');
-const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
-const { spentOnGas, computeNormalOutputId, getOutputId } = require('../../../helpers/utils.js');
+} = require('../../../../helpers/constants.js');
+const { buildUtxoPos } = require('../../../../helpers/positions.js');
+const { createInputTransaction, createInFlightTx } = require('../../../../helpers/ife.js');
+const { PaymentTransactionOutput, PaymentTransaction } = require('../../../../helpers/transaction.js');
+const { spentOnGas, computeNormalOutputId, getOutputId } = require('../../../../helpers/utils.js');
 
 contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, challenger]) => {
     const DUMMY_IFE_BOND_SIZE = 31415926535;

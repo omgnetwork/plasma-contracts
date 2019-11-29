@@ -27,13 +27,13 @@ const { expect } = require('chai');
 
 const {
     PROTOCOL, OUTPUT_TYPE, VAULT_ID, SAFE_GAS_STIPEND, EMPTY_BYTES_32,
-} = require('../../../helpers/constants.js');
-const { buildOutputGuard } = require('../../../helpers/utils.js');
-const { buildUtxoPos, UtxoPos } = require('../../../helpers/positions.js');
+} = require('../../../../helpers/constants.js');
+const { buildOutputGuard } = require('../../../../helpers/utils.js');
+const { buildUtxoPos, UtxoPos } = require('../../../../helpers/positions.js');
 const {
     PaymentTransactionOutput, PaymentTransaction, PlasmaDepositTransaction,
-} = require('../../../helpers/transaction.js');
-const { createInclusionProof } = require('../../../helpers/ife.js');
+} = require('../../../../helpers/transaction.js');
+const { createInclusionProof } = require('../../../../helpers/ife.js');
 
 contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwner, competitorOwner, challenger]) => {
     const DUMMY_IFE_BOND_SIZE = 31415926535; // wei

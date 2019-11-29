@@ -23,13 +23,13 @@ const {
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
-const { buildUtxoPos } = require('../../../helpers/positions.js');
-const { computeNormalOutputId, spentOnGas } = require('../../../helpers/utils.js');
-const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
-const { MerkleTree } = require('../../../helpers/merkle.js');
+const { buildUtxoPos } = require('../../../../helpers/positions.js');
+const { computeNormalOutputId, spentOnGas } = require('../../../../helpers/utils.js');
+const { PaymentTransactionOutput, PaymentTransaction } = require('../../../../helpers/transaction.js');
+const { MerkleTree } = require('../../../../helpers/merkle.js');
 const {
     PROTOCOL, TX_TYPE, VAULT_ID, SAFE_GAS_STIPEND, EMPTY_BYTES_32,
-} = require('../../../helpers/constants.js');
+} = require('../../../../helpers/constants.js');
 
 contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
     const DUMMY_IFE_BOND_SIZE = 31415926535; // wei

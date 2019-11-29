@@ -21,14 +21,14 @@ const { expect } = require('chai');
 
 const {
     OUTPUT_TYPE, PROTOCOL, TX_TYPE, VAULT_ID, SAFE_GAS_STIPEND,
-} = require('../../../helpers/constants.js');
-const { MerkleTree } = require('../../../helpers/merkle.js');
-const { buildUtxoPos, utxoPosToTxPos } = require('../../../helpers/positions.js');
+} = require('../../../../helpers/constants.js');
+const { MerkleTree } = require('../../../../helpers/merkle.js');
+const { buildUtxoPos, utxoPosToTxPos } = require('../../../../helpers/positions.js');
 const {
     computeDepositOutputId,
     computeNormalOutputId, spentOnGas,
-} = require('../../../helpers/utils.js');
-const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
+} = require('../../../../helpers/utils.js');
+const { PaymentTransactionOutput, PaymentTransaction } = require('../../../../helpers/transaction.js');
 
 
 contract('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
