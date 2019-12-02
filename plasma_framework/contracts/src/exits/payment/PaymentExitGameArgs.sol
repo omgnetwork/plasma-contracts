@@ -1,6 +1,5 @@
 pragma solidity 0.5.11;
 
-import "../registries/OutputGuardHandlerRegistry.sol";
 import "../registries/SpendingConditionRegistry.sol";
 import "../interfaces/IStateTransitionVerifier.sol";
 import "../interfaces/ITxFinalizationVerifier.sol";
