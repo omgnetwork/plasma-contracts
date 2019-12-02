@@ -313,6 +313,15 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
                 );
             });
 
+            it('should NOT enqueue with correct data when it is not the first piggyback of the exit on the token', async () => {
+                const originalEnqueuedCount = await this.framework.enqueuedCount();
+                await this.exitGame.piggybackInFlightExitOnOutput(
+                    this.testData.outputTwoCase.args, { from: outputOwner, value: this.piggybackBondSize.toString() },
+                );
+
+                expect(await this.framework.enqueuedCount()).to.be.bignumber.equal(originalEnqueuedCount);
+            });
+
             it('should set the exit as piggybacked on the output index', async () => {
                 const exit = await this.exitGame.inFlightExits(this.testData.exitId);
 
