@@ -91,7 +91,7 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                     this.merkleProofForDepositTx = result.depositInclusionProof;
                 });
 
-                describe('Given Alice started an canonical in-flight exit from transaction to Bob that is not mined', () => {
+                describe('Given Alice started a canonical in-flight exit from transaction to Bob that is not mined', () => {
                     before(async () => {
                         this.amountIFE = DEPOSIT_VALUE / 2;
                         const output = new PaymentTransactionOutput(OUTPUT_TYPE_PAYMENT, this.amountIFE, bob, ETH);
@@ -173,7 +173,7 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                 );
                             });
 
-                            it('should exit the fund to the output owner (Bob)', async () => {
+                            it('should transfer the funds to the output owner (Bob)', async () => {
                                 const postBalanceBob = new BN(await web3.eth.getBalance(bob));
                                 const expectedBalance = preBalanceBob
                                     .add(new BN(this.piggybackBondSize))
@@ -239,7 +239,7 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                             this.signatureTx2 = sign(txHash, alicePrivateKey);
                         });
 
-                        describe('When Bob start IFE on tx1', () => {
+                        describe('When Bob starts IFE on tx1', () => {
                             before(async () => {
                                 this.tx1RlpEncoded = web3.utils.bytesToHex(this.tx1.rlpEncoded());
                                 const inputTxs = [this.outputAData.depositTx, this.outputBData.depositTx];
@@ -307,7 +307,7 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                         );
                                     });
 
-                                    describe('And then Alice piggyback both outputs output A and output B', () => {
+                                    describe('And then Alice piggybacks both outputs output A and output B', () => {
                                         before(async () => {
                                             const args1 = {
                                                 inFlightTx: this.tx1RlpEncoded,
@@ -367,7 +367,7 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                                     );
                                                 });
 
-                                                it('should return only fund of output B to Alice (input exited)', async () => {
+                                                it('should return only funds of output B to Alice (input exited)', async () => {
                                                     const postBalanceAlice = new BN(await web3.eth.getBalance(alice));
                                                     const expectedBalance = preBalanceAlice
                                                         .add(new BN(DEPOSIT_VALUE))
@@ -448,7 +448,7 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                 );
                             });
 
-                            describe('Alice starts IFE for tx1 after', () => {
+                            describe('Nex Alice starts IFE for tx1', () => {
                                 before(async () => {
                                     const tx1RlpEncoded = web3.utils.bytesToHex(this.tx1.rlpEncoded());
                                     const inputTxs = [this.outputAData.depositTx, this.outputBData.depositTx];
