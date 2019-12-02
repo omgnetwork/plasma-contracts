@@ -106,13 +106,13 @@ For a Payment transaction to be exitable on standard exit, it only needs to chec
 1. Shows there exists valid spending tx of the input/output
 1. Removes the piggybacked flag of the challenged input or output
 
-### Delete non piggybacked In-flight Exit
-1. Checks that it is not in the first phase
-1. Checks that no piggyback on the in-flight exit
-1. Delete the in-flight exit and transfer IFE bond back to owner
+### Remove non piggybacked In-flight Exit
+1. Checks that the in-flight exit is not in the first half of the exit period
+1. Checks that there is no piggyback on the in-flight exit
+1. Delete the in-flight exit and transfer IFE bond back to the owner
 
 ### Process In-flight exit:
-1. Checks the in-flight exit is canonical or not. Canonicity decides whether it should withdraw outputs or inputs. An in-flight exit would be considered non-canonical when:
+1. Checks whether the in-flight exit is canonical. Canonicity decides whether outputs or inputs are withdrawn. An in-flight exit is considered non-canonical when:
    1. The canonicity games end up to be non-canonical
    1. Any of the input is already flagged as finalized
 1. To be able withdraw:
