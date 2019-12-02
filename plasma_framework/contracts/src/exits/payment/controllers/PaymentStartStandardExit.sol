@@ -3,11 +3,8 @@ pragma experimental ABIEncoderV2;
 
 import "../PaymentExitDataModel.sol";
 import "../routers/PaymentStandardExitRouterArgs.sol";
-import "../../interfaces/IOutputGuardHandler.sol";
 import "../../interfaces/ITxFinalizationVerifier.sol";
-import "../../models/OutputGuardModel.sol";
 import "../../models/TxFinalizationModel.sol";
-import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../utils/ExitableTimestamp.sol";
 import "../../utils/ExitId.sol";
 import "../../utils/OutputId.sol";
@@ -29,7 +26,6 @@ library PaymentStartStandardExit {
         PlasmaFramework framework;
         IsDeposit.Predicate isDeposit;
         ExitableTimestamp.Calculator exitableTimestampCalculator;
-        OutputGuardHandlerRegistry outputGuardHandlerRegistry;
         ITxFinalizationVerifier txFinalizationVerifier;
         uint256 ethVaultId;
         uint256 erc20VaultId;
@@ -45,8 +41,6 @@ library PaymentStartStandardExit {
         UtxoPosLib.UtxoPos utxoPos;
         PaymentTransactionModel.Transaction outputTx;
         PaymentOutputModel.Output output;
-        IOutputGuardHandler outputGuardHandler;
-        OutputGuardModel.Data outputGuardData;
         uint160 exitId;
         bool isTxDeposit;
         uint256 txBlockTimeStamp;
@@ -66,7 +60,6 @@ library PaymentStartStandardExit {
     function buildController(
         IExitProcessor exitProcessor,
         PlasmaFramework framework,
-        OutputGuardHandlerRegistry outputGuardHandlerRegistry,
         ITxFinalizationVerifier txFinalizationVerifier,
         uint256 ethVaultId,
         uint256 erc20VaultId,
@@ -81,7 +74,6 @@ library PaymentStartStandardExit {
             framework: framework,
             isDeposit: IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL()),
             exitableTimestampCalculator: ExitableTimestamp.Calculator(framework.minExitPeriod()),
-            outputGuardHandlerRegistry: outputGuardHandlerRegistry,
             txFinalizationVerifier: txFinalizationVerifier,
             ethVaultId: ethVaultId,
             erc20VaultId: erc20VaultId,
@@ -126,13 +118,6 @@ library PaymentStartStandardExit {
         uint160 exitId = ExitId.getStandardExitId(isTxDeposit, args.rlpOutputTx, utxoPos);
         (, uint256 blockTimestamp) = controller.framework.blocks(utxoPos.blockNum());
 
-        OutputGuardModel.Data memory outputGuardData = OutputGuardModel.Data({
-            guard: output.outputGuard,
-            preimage: args.outputGuardPreimage
-        });
-
-        IOutputGuardHandler outputGuardHandler = controller.outputGuardHandlerRegistry.outputGuardHandlers(output.outputType);
-
         TxFinalizationModel.Data memory finalizationData = TxFinalizationModel.moreVpData(
             controller.framework,
             args.rlpOutputTx,
@@ -150,8 +135,6 @@ library PaymentStartStandardExit {
             utxoPos: utxoPos,
             outputTx: outputTx,
             output: output,
-            outputGuardHandler: outputGuardHandler,
-            outputGuardData: outputGuardData,
             exitId: exitId,
             isTxDeposit: isTxDeposit,
             txBlockTimeStamp: blockTimestamp,
@@ -171,9 +154,7 @@ library PaymentStartStandardExit {
         require(data.outputTx.txType == data.controller.supportedTxType, "Unsupported transaction type of the exit game");
         require(data.txBlockTimeStamp != 0, "There is no block for the position");
 
-        require(address(data.outputGuardHandler) != address(0), "Failed to get the output guard handler for the output type");
-        require(data.outputGuardHandler.isValid(data.outputGuardData), "Some output guard information is invalid");
-        require(data.outputGuardHandler.getExitTarget(data.outputGuardData) == msg.sender, "Only exit target can start an exit");
+        require(data.output.owner() == msg.sender, "Only output owner can start an exit");
 
         require(data.controller.txFinalizationVerifier.isStandardFinalized(data.finalizationData), "The transaction must be standard finalized");
         PaymentExitDataModel.StandardExit memory exit = exitMap.exits[data.exitId];

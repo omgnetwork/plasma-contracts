@@ -31,7 +31,7 @@ const {
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../../helpers/transaction.js');
 
 
-contract('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
+contract.only('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
     const ETH = constants.ZERO_ADDRESS;
     const CHILD_BLOCK_INTERVAL = 1000;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week in seconds
@@ -197,45 +197,7 @@ contract('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
             );
         });
 
-        it('should fail when output guard handler is not registered with the output type', async () => {
-            const nonRegisteredOutputType = 2;
-
-            const { args, merkleTree } = buildTestData(
-                this.dummyAmount, outputOwner, this.dummyBlockNum, TX_TYPE.PAYMENT, nonRegisteredOutputType,
-            );
-
-            await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, this.dummyBlockTimestamp);
-
-            await expectRevert(
-                this.exitGame.startStandardExit(
-                    args, { from: outputOwner, value: this.startStandardExitBondSize },
-                ),
-                'Failed to get the output guard handler for the output type',
-            );
-        });
-
-        it('should fail when some of the output guard information (guard, pre-image) is not valid', async () => {
-            // register with handler that returns false when checking output guard information
-            const expectedValid = false;
-            const testOutputType = 2;
-            const handler = await ExpectedOutputGuardHandler.new(expectedValid, outputOwner);
-            await this.outputGuardHandlerRegistry.registerOutputGuardHandler(testOutputType, handler.address);
-
-            const { args, merkleTree } = buildTestData(
-                this.dummyAmount, outputOwner, this.dummyBlockNum, TX_TYPE.PAYMENT, testOutputType,
-            );
-
-            await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, this.dummyBlockTimestamp);
-
-            await expectRevert(
-                this.exitGame.startStandardExit(
-                    args, { from: outputOwner, value: this.startStandardExitBondSize },
-                ),
-                'Some output guard information is invalid',
-            );
-        });
-
-        it('should fail when not initiated by the exit target', async () => {
+        it('should fail when not initiated by the output owner', async () => {
             const { args, merkleTree } = buildTestData(this.dummyAmount, outputOwner, this.dummyBlockNum);
 
             await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, this.dummyBlockTimestamp);
@@ -244,7 +206,7 @@ contract('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
                 this.exitGame.startStandardExit(
                     args, { from: nonOutputOwner, value: this.startStandardExitBondSize },
                 ),
-                'Only exit target can start an exit',
+                'Only output owner can start an exit',
             );
         });
 
