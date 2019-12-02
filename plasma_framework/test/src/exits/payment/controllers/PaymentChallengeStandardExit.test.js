@@ -28,7 +28,7 @@ const {
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../../helpers/transaction.js');
 
 
-contract('PaymentChallengeStandardExit', ([_, alice, bob]) => {
+contract.only('PaymentChallengeStandardExit', ([_, alice, bob]) => {
     const ETH = constants.ZERO_ADDRESS;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week in seconds
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
@@ -142,34 +142,10 @@ contract('PaymentChallengeStandardExit', ([_, alice, bob]) => {
             });
         });
 
-        describe('When output guard handler not registered', () => {
-            beforeEach(async () => {
-                await this.spendingConditionRegistry.registerSpendingCondition(
-                    OUTPUT_TYPE.PAYMENT, TX_TYPE.PAYMENT, this.spendingCondition.address,
-                );
-            });
-
-            it('should fail by not able to find the output guard handler contract', async () => {
-                const nonRegisteredOutputType = 3;
-                const args = getTestInputArgs(nonRegisteredOutputType, alice);
-                const exitData = getTestExitData(args, alice, this.startStandardExitBondSize);
-                await this.exitGame.setExit(args.exitId, exitData);
-
-                await expectRevert(
-                    this.exitGame.challengeStandardExit(args),
-                    'Failed to retrieve the outputGuardHandler of the output type',
-                );
-            });
-        });
-
         describe('Given everything registered', () => {
             beforeEach(async () => {
                 await this.spendingConditionRegistry.registerSpendingCondition(
                     OUTPUT_TYPE.PAYMENT, TX_TYPE.PAYMENT, this.spendingCondition.address,
-                );
-
-                await this.outputGuardHandlerRegistry.registerOutputGuardHandler(
-                    OUTPUT_TYPE.PAYMENT, this.outputGuardHandler.address,
                 );
             });
 
@@ -193,19 +169,6 @@ contract('PaymentChallengeStandardExit', ([_, alice, bob]) => {
                 await expectRevert(
                     this.exitGame.challengeStandardExit(args),
                     'The exit does not exist',
-                );
-            });
-
-            it('should fail when output guard related info is not valid', async () => {
-                const args = getTestInputArgs(OUTPUT_TYPE.PAYMENT, alice);
-
-                await this.outputGuardHandler.mockIsValid(false);
-
-                await this.exitGame.setExit(args.exitId, getTestExitData(args, alice, this.startStandardExitBondSize));
-
-                await expectRevert(
-                    this.exitGame.challengeStandardExit(args),
-                    'Output guard information is invalid',
                 );
             });
 

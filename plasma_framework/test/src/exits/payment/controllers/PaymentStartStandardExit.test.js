@@ -31,7 +31,7 @@ const {
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../../helpers/transaction.js');
 
 
-contract.only('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
+contract('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
     const ETH = constants.ZERO_ADDRESS;
     const CHILD_BLOCK_INTERVAL = 1000;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week in seconds

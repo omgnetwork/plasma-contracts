@@ -3,12 +3,9 @@ pragma experimental ABIEncoderV2;
 
 import "../PaymentExitDataModel.sol";
 import "../routers/PaymentStandardExitRouterArgs.sol";
-import "../../interfaces/IOutputGuardHandler.sol";
 import "../../interfaces/ISpendingCondition.sol";
 import "../../interfaces/ITxFinalizationVerifier.sol";
-import "../../models/OutputGuardModel.sol";
 import "../../models/TxFinalizationModel.sol";
-import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../registries/SpendingConditionRegistry.sol";
 import "../../utils/OutputId.sol";
 import "../../../vaults/EthVault.sol";
@@ -29,7 +26,6 @@ library PaymentChallengeStandardExit {
         PlasmaFramework framework;
         IsDeposit.Predicate isDeposit;
         SpendingConditionRegistry spendingConditionRegistry;
-        OutputGuardHandlerRegistry outputGuardHandlerRegistry;
         ITxFinalizationVerifier txFinalizationVerifier;
         uint256 safeGasStipend;
     }
@@ -54,7 +50,6 @@ library PaymentChallengeStandardExit {
     function buildController(
         PlasmaFramework framework,
         SpendingConditionRegistry spendingConditionRegistry,
-        OutputGuardHandlerRegistry outputGuardHandlerRegistry,
         ITxFinalizationVerifier txFinalizationVerifier,
         uint256 safeGasStipend
     )
@@ -66,7 +61,6 @@ library PaymentChallengeStandardExit {
             framework: framework,
             isDeposit: IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL()),
             spendingConditionRegistry: spendingConditionRegistry,
-            outputGuardHandlerRegistry: outputGuardHandlerRegistry,
             txFinalizationVerifier: txFinalizationVerifier,
             safeGasStipend: safeGasStipend
         });
@@ -107,34 +101,18 @@ library PaymentChallengeStandardExit {
     }
 
     function verifyChallengeTxProtocolFinalized(ChallengeStandardExitData memory data) private view {
-        UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(data.exitData.utxoPos);
-        PaymentOutputModel.Output memory output = PaymentTransactionModel
-            .decode(data.args.exitingTx)
-            .outputs[utxoPos.outputIndex()];
-
-        IOutputGuardHandler outputGuardHandler = data.controller
-                                                .outputGuardHandlerRegistry
-                                                .outputGuardHandlers(output.outputType);
-
-        require(address(outputGuardHandler) != address(0), "Failed to retrieve the outputGuardHandler of the output type");
-
-        OutputGuardModel.Data memory outputGuardData = OutputGuardModel.Data({
-            guard: output.outputGuard,
-            preimage: data.args.outputGuardPreimage
-        });
-        require(outputGuardHandler.isValid(outputGuardData),
-                "Output guard information is invalid");
-
         uint256 challengeTxType = WireTransaction.getTransactionType(data.args.challengeTx);
         uint8 protocol = data.controller.framework.protocols(challengeTxType);
+
+        //TODO: simplify tx finalizeion to be MoreVP only
         TxFinalizationModel.Data memory finalizationData = TxFinalizationModel.Data({
             framework: data.controller.framework,
             protocol: protocol,
             txBytes: data.args.challengeTx,
             txPos: TxPosLib.TxPos(data.args.challengeTxPos),
             inclusionProof: data.args.challengeTxInclusionProof,
-            confirmSig: data.args.challengeTxConfirmSig,
-            confirmSigAddress: outputGuardHandler.getConfirmSigAddress(outputGuardData)
+            confirmSig: bytes(""),
+            confirmSigAddress: address(0)
         });
         require(data.controller.txFinalizationVerifier.isProtocolFinalized(finalizationData),
                 "Challenge transaction is not protocol finalized");
