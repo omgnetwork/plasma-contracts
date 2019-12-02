@@ -113,7 +113,7 @@ For a Payment transaction to be exitable on standard exit, it only needs to chec
 
 ### Process In-flight exit:
 1. Checks whether the in-flight exit is canonical. Canonicity decides whether outputs or inputs are withdrawn. An in-flight exit is considered non-canonical when:
-   1. The canonicity games end up to be non-canonical
+   1. The canonicity games (`challenge in-flight exit non-canonical` and respond `non-canonical challenge`) end up to be non-canonical
    1. Any of the input is already flagged as finalized
 1. To be able withdraw:
     - The piggybacked input/output is valid
