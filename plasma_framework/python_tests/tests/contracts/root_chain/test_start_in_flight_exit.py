@@ -218,6 +218,7 @@ def test_start_in_flight_exit_invalid_outputs_should_fail(testlang):
         testlang.start_in_flight_exit(spend_id)
 
 
+@pytest.mark.skip("TODO: remove test when such scenarion is covered by a test that processes exits")
 @pytest.mark.parametrize("num_inputs", [1, 2, 3, 4])
 def test_start_in_flight_exit_cancelling_standard_exits_from_inputs(testlang, num_inputs):
     # exit cross-spend test, case 1
@@ -249,6 +250,7 @@ def test_start_in_flight_exit_cancelling_standard_exits_from_inputs(testlang, nu
         assert testlang.get_standard_exit(deposit_ids[i]) == [NULL_ADDRESS_HEX, NULL_ADDRESS_HEX, 0]
 
 
+@pytest.mark.skip("TODO: remove test when such scenarion is covered by a test that processes exits")
 @pytest.mark.parametrize("num_inputs", [1, 2, 3, 4])
 def test_start_in_flight_exit_with_finalized_standard_exits_from_inputs_flags_exit(testlang, num_inputs):
     # exit cross-spend test, case 2
