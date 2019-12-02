@@ -1,8 +1,6 @@
 const ExitableTimestamp = artifacts.require('ExitableTimestampWrapper');
 const ExitId = artifacts.require('ExitIdWrapper');
-const ExpectedOutputGuardHandler = artifacts.require('ExpectedOutputGuardHandler');
 const IsDeposit = artifacts.require('IsDepositWrapper');
-const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry');
 const PaymentChallengeStandardExit = artifacts.require('PaymentChallengeStandardExit');
 const PaymentProcessStandardExit = artifacts.require('PaymentProcessStandardExit');
 const PaymentStandardExitRouter = artifacts.require('PaymentStandardExitRouterMock');
@@ -54,7 +52,6 @@ contract('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
             amount, owner, blockNum,
             txType = TX_TYPE.PAYMENT,
             outputType = OUTPUT_TYPE.PAYMENT,
-            outputGuardPreimage = EMPTY_BYTES,
         ) => {
             const output = new PaymentTransactionOutput(outputType, amount, owner, ETH);
             const txObj = new PaymentTransaction(txType, [DUMMY_INPUT_1], [output]);
@@ -68,7 +65,6 @@ contract('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
             const args = {
                 utxoPos,
                 rlpOutputTx: tx,
-                outputGuardPreimage,
                 outputTxInclusionProof: merkleProof,
             };
 
@@ -99,21 +95,17 @@ contract('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
             await this.framework.registerVault(VAULT_ID.ERC20, erc20Vault.address);
 
             const spendingConditionRegistry = await SpendingConditionRegistry.new();
-            this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
-
-            const handler = await ExpectedOutputGuardHandler.new();
-            await handler.mockIsValid(true);
-            await handler.mockGetExitTarget(outputOwner);
-            await this.outputGuardHandlerRegistry.registerOutputGuardHandler(OUTPUT_TYPE.PAYMENT, handler.address);
 
             const txFinalizationVerifier = await TxFinalizationVerifier.new();
             const stateTransitionVerifier = await StateTransitionVerifierMock.new();
 
+            // TODO: remove this when IFE removes output guard as well
+            const outputGuardRegisterAddress = constants.ZERO_ADDRESS;
             const exitGameArgs = [
                 this.framework.address,
                 VAULT_ID.ETH,
                 VAULT_ID.ERC20,
-                this.outputGuardHandlerRegistry.address,
+                outputGuardRegisterAddress,
                 spendingConditionRegistry.address,
                 stateTransitionVerifier.address,
                 txFinalizationVerifier.address,
