@@ -1,6 +1,4 @@
-const ExpectedOutputGuardHandler = artifacts.require('ExpectedOutputGuardHandler');
 const ExitIdWrapper = artifacts.require('ExitIdWrapper');
-const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry');
 const PaymentChallengeIFENotCanonical = artifacts.require('PaymentChallengeIFENotCanonical');
 const PaymentChallengeIFEInputSpent = artifacts.require('PaymentChallengeIFEInputSpent');
 const PaymentChallengeIFEOutputSpent = artifacts.require('PaymentChallengeIFEOutputSpent');
@@ -28,7 +26,7 @@ const {
     PROTOCOL, TX_TYPE, VAULT_ID, SAFE_GAS_STIPEND, EMPTY_BYTES_32,
 } = require('../../../../helpers/constants.js');
 
-contract('PaymentPiggybackInFlightExitOnInput', ([_, alice, inputOwner, nonInputOwner, outputOwner]) => {
+contract.only('PaymentPiggybackInFlightExitOnInput', ([_, alice, inputOwner, nonInputOwner, outputOwner]) => {
     const ETH = constants.ZERO_ADDRESS;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week in seconds
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
@@ -78,14 +76,13 @@ contract('PaymentPiggybackInFlightExitOnInput', ([_, alice, inputOwner, nonInput
         await this.framework.registerVault(VAULT_ID.ETH, ethVault.address);
         await this.framework.registerVault(VAULT_ID.ERC20, erc20Vault.address);
 
-        this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
         const spendingConditionRegistry = await SpendingConditionRegistry.new();
 
         const exitGameArgs = [
             this.framework.address,
             VAULT_ID.ETH,
             VAULT_ID.ERC20,
-            this.outputGuardHandlerRegistry.address,
+            constants.ZERO_ADDRESS, // TODO: remove outputGuardRegistry after refactoring all
             spendingConditionRegistry.address,
             this.stateTransitionVerifier.address,
             this.txFinalizationVerifier.address,
@@ -102,13 +99,12 @@ contract('PaymentPiggybackInFlightExitOnInput', ([_, alice, inputOwner, nonInput
 
     describe('piggybackOnInput', () => {
         /** This setup IFE data with 2 inputs with same owner and 1 output.
-         *  First input uses output type 1, this uses the default outputguard handler in tests.
-         *  Second input uses output type 2, so we can register custom outputguard handler for tests.
+         *  First input uses output type 1
+         *  Second input uses output type 2
          */
         const buildPiggybackInputData = async (firstInputToken = ETH) => {
             const outputAmount = 997;
-            const outputGuard = outputOwner;
-            const output = new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, outputAmount, outputGuard, ETH);
+            const output = new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, outputAmount, outputOwner, ETH);
 
             const dummyInputUtxopos1 = buildUtxoPos(BLOCK_NUMBER, 0, 0);
             const dummyInputUtxopos2 = buildUtxoPos(BLOCK_NUMBER, 1, 0);
@@ -310,14 +306,6 @@ contract('PaymentPiggybackInFlightExitOnInput', ([_, alice, inputOwner, nonInput
             });
 
             it('should not enqueue when it is not first piggyback of the exit on the same token', async () => {
-                const expectedOutputGuardHandler = await ExpectedOutputGuardHandler.new(true, inputOwner);
-                await expectedOutputGuardHandler.mockIsValid(true);
-                await expectedOutputGuardHandler.mockGetExitTarget(inputOwner);
-
-                await this.outputGuardHandlerRegistry.registerOutputGuardHandler(
-                    OUTPUT_TYPE.TWO, expectedOutputGuardHandler.address,
-                );
-
                 const enqueuedCountBeforePiggyback = (await this.framework.enqueuedCount()).toNumber();
                 await this.exitGame.piggybackInFlightExitOnInput(
                     this.testData.argsInputTwo, { from: inputOwner, value: this.piggybackBondSize.toString() },

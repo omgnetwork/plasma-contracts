@@ -1,6 +1,4 @@
-const ExpectedOutputGuardHandler = artifacts.require('ExpectedOutputGuardHandler');
 const ExitIdWrapper = artifacts.require('ExitIdWrapper');
-const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry');
 const PaymentChallengeIFENotCanonical = artifacts.require('PaymentChallengeIFENotCanonical');
 const PaymentChallengeIFEInputSpent = artifacts.require('PaymentChallengeIFEInputSpent');
 const PaymentChallengeIFEOutputSpent = artifacts.require('PaymentChallengeIFEOutputSpent');
@@ -23,13 +21,12 @@ const { expect } = require('chai');
 
 const { calculateNormalExitable } = require('../../../../helpers/exitable.js');
 const { buildUtxoPos, utxoPosToTxPos } = require('../../../../helpers/positions.js');
-const { buildOutputGuard } = require('../../../../helpers/utils.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../../helpers/transaction.js');
 const {
     PROTOCOL, TX_TYPE, VAULT_ID, SAFE_GAS_STIPEND, EMPTY_BYTES_32,
 } = require('../../../../helpers/constants.js');
 
-contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputOwner, nonOutputOwner]) => {
+contract.only('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputOwner, nonOutputOwner]) => {
     const ETH = constants.ZERO_ADDRESS;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week in seconds
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
@@ -40,7 +37,6 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
     const OUTPUT_TYPE = {
         ONE: 1, TWO: 2,
     };
-    const DUMMY_OUTPUT_GUARD_PREIMAGE = web3.utils.toHex('dummy pre-image of output guard');
     const MAX_INPUT_SIZE = 4;
     const MAX_OUTPUT_SIZE = 4;
     const PAYMENT_TX_TYPE = 1;
@@ -82,14 +78,13 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
         await this.framework.registerVault(VAULT_ID.ETH, ethVault.address);
         await this.framework.registerVault(VAULT_ID.ERC20, erc20Vault.address);
 
-        this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
         const spendingConditionRegistry = await SpendingConditionRegistry.new();
 
         const exitGameArgs = [
             this.framework.address,
             VAULT_ID.ETH,
             VAULT_ID.ERC20,
-            this.outputGuardHandlerRegistry.address,
+            constants.ZERO_ADDRESS, // TODO: remove outputGuardRegistry fully
             spendingConditionRegistry.address,
             this.stateTransitionVerifier.address,
             this.txFinalizationVerifier.address,
@@ -105,30 +100,15 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
     });
 
     describe('piggybackOnOutput', () => {
-        beforeEach(async () => {
-            // returns true when "isValid" is called and return the outputOwner when "exitTarget" is called
-            // only set the output type 1 case. Leave output 2 case to stub more complex test cases.
-            const expectedOutputGuardHandler = await ExpectedOutputGuardHandler.new();
-            await expectedOutputGuardHandler.mockIsValid(true);
-            await expectedOutputGuardHandler.mockGetExitTarget(outputOwner);
-            await this.outputGuardHandlerRegistry.registerOutputGuardHandler(
-                OUTPUT_TYPE.ONE, expectedOutputGuardHandler.address,
-            );
-        });
-
         /**
          * This setup IFE data with 1 input and 2 outputs with same owner.
-         * First output is of output having the address in output guard. (mimic payment)
-         * Secode output uses the outputguard mechanism to hide output type and output guard preimage. (mimic DEX)
          * */
         const buildPiggybackOutputData = async () => {
             const outputAmount1 = 499;
-            const outputGuard1 = outputOwner;
-            const output1 = new PaymentTransactionOutput(OUTPUT_TYPE.ONE, outputAmount1, outputGuard1, ETH);
+            const output1 = new PaymentTransactionOutput(OUTPUT_TYPE.ONE, outputAmount1, outputOwner, ETH);
 
             const outputAmount2 = 498;
-            const outputGuard2 = buildOutputGuard(DUMMY_OUTPUT_GUARD_PREIMAGE);
-            const output2 = new PaymentTransactionOutput(OUTPUT_TYPE.TWO, outputAmount2, outputGuard2, ETH);
+            const output2 = new PaymentTransactionOutput(OUTPUT_TYPE.TWO, outputAmount2, outputOwner, ETH);
 
             const inFlightTx = new PaymentTransaction(1, [buildUtxoPos(BLOCK_NUMBER, 0, 0)], [output1, output2]);
             const rlpInFlighTxBytes = web3.utils.bytesToHex(inFlightTx.rlpEncoded());
@@ -175,25 +155,21 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
             const argsForOutputOne = {
                 inFlightTx: rlpInFlighTxBytes,
                 outputIndex: 0,
-                outputGuardPreimage: '0x',
             };
 
             const argsForOutputTwo = {
                 inFlightTx: rlpInFlighTxBytes,
                 outputIndex: 1,
-                outputGuardPreimage: DUMMY_OUTPUT_GUARD_PREIMAGE,
             };
 
             return {
                 outputOneCase: {
                     args: argsForOutputOne,
                     amount: outputAmount1,
-                    outputGuard: outputGuard1,
                 },
                 outputTwoCase: {
                     args: argsForOutputTwo,
                     amount: outputAmount2,
-                    outputGuard: outputGuard2,
                 },
                 exitId,
                 inFlightExitData,
@@ -291,41 +267,6 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
             );
         });
 
-        it('should fail when the output guard handler of the type is not registered', async () => {
-            const data = await buildPiggybackOutputData();
-
-            await this.exitGame.setInFlightExit(data.exitId, data.inFlightExitData);
-
-            // output type 2 handler is never registered, thus should fail
-            await expectRevert(
-                this.exitGame.piggybackInFlightExitOnOutput(
-                    data.outputTwoCase.args, { from: outputOwner, value: this.piggybackBondSize.toString() },
-                ),
-                'No outputGuardHandler is registered for the output type',
-            );
-        });
-
-        it('should fail when the output guard related data is not valid', async () => {
-            // Return false when outputGuard handler is checking for output type 2
-            const expectedOutputGuardHandler = await ExpectedOutputGuardHandler.new();
-            await expectedOutputGuardHandler.mockIsValid(false);
-            await expectedOutputGuardHandler.mockGetExitTarget(outputOwner);
-            await this.outputGuardHandlerRegistry.registerOutputGuardHandler(
-                OUTPUT_TYPE.TWO, expectedOutputGuardHandler.address,
-            );
-
-            const data = await buildPiggybackOutputData();
-
-            await this.exitGame.setInFlightExit(data.exitId, data.inFlightExitData);
-
-            await expectRevert(
-                this.exitGame.piggybackInFlightExitOnOutput(
-                    data.outputTwoCase.args, { from: outputOwner, value: this.piggybackBondSize.toString() },
-                ),
-                'Some output guard information is invalid',
-            );
-        });
-
         it('should fail when not called by the exit target of the output', async () => {
             const data = await buildPiggybackOutputData();
             await this.exitGame.setInFlightExit(data.exitId, data.inFlightExitData);
@@ -334,35 +275,6 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
                     data.outputOneCase.args, { from: nonOutputOwner, value: this.piggybackBondSize.toString() },
                 ),
                 'Can be called only by the exit target',
-            );
-        });
-
-        it('should call the OutputGuardHandler with the expected data', async () => {
-            const data = await buildPiggybackOutputData();
-            await this.exitGame.setInFlightExit(data.exitId, data.inFlightExitData);
-
-            // set some different timestamp then "now" to the youngest position.
-            this.youngestPositionTimestamp = (await time.latest()).sub(new BN(100)).toNumber();
-            await this.framework.setBlock(
-                YOUNGEST_POSITION_BLOCK, web3.utils.sha3('dummy root'), this.youngestPositionTimestamp,
-            );
-
-            const expectedOutputGuardData = {
-                guard: data.outputTwoCase.outputGuard,
-                preimage: data.outputTwoCase.args.outputGuardPreimage,
-            };
-            const expectedOutputGuardHandler = await ExpectedOutputGuardHandler.new();
-            expectedOutputGuardHandler.mockIsValid(true);
-            expectedOutputGuardHandler.mockGetExitTarget(outputOwner);
-
-            // test would revert if data not as expected after setting this
-            await expectedOutputGuardHandler.shouldVerifyArgumentEquals(expectedOutputGuardData);
-            await this.outputGuardHandlerRegistry.registerOutputGuardHandler(
-                OUTPUT_TYPE.TWO, expectedOutputGuardHandler.address,
-            );
-
-            await this.exitGame.piggybackInFlightExitOnOutput(
-                data.outputTwoCase.args, { from: outputOwner, value: this.piggybackBondSize.toString() },
             );
         });
 
@@ -400,24 +312,6 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
                         exitId: this.testData.exitId,
                     },
                 );
-            });
-
-            it('should not enqueue when it is not first piggyback of the exit on the token', async () => {
-                const enqueuedCountBeforePiggyback = (await this.framework.enqueuedCount()).toNumber();
-
-                // set the exit target to output owner
-                const handler = await ExpectedOutputGuardHandler.new();
-                await handler.mockIsValid(true);
-                await handler.mockGetExitTarget(outputOwner);
-
-                await this.outputGuardHandlerRegistry.registerOutputGuardHandler(
-                    OUTPUT_TYPE.TWO, handler.address,
-                );
-
-                await this.exitGame.piggybackInFlightExitOnOutput(
-                    this.testData.outputTwoCase.args, { from: outputOwner, value: this.piggybackBondSize.toString() },
-                );
-                expect((await this.framework.enqueuedCount()).toNumber()).to.equal(enqueuedCountBeforePiggyback);
             });
 
             it('should set the exit as piggybacked on the output index', async () => {

@@ -151,7 +151,6 @@ contract PaymentInFlightExitRouter is
         piggybackInFlightExitController = PaymentPiggybackInFlightExit.buildController(
             args.framework,
             this,
-            args.outputGuardHandlerRegistry,
             args.ethVaultId,
             args.erc20VaultId
         );
