@@ -1,5 +1,3 @@
-const ExpectedOutputGuardHandler = artifacts.require('ExpectedOutputGuardHandler');
-const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry');
 const PaymentChallengeStandardExit = artifacts.require('PaymentChallengeStandardExit');
 const PaymentProcessStandardExit = artifacts.require('PaymentProcessStandardExit');
 const PaymentStandardExitRouter = artifacts.require('PaymentStandardExitRouterMock');
@@ -23,11 +21,10 @@ const { expect } = require('chai');
 const { expectEvent, time } = require('openzeppelin-test-helpers');
 const { TX_TYPE, VAULT_ID, SAFE_GAS_STIPEND } = require('../../../helpers/constants.js');
 
-contract('PaymentExitGame - Update Bond', ([_, outputOwner]) => {
+contract('PaymentExitGame - Update Bond', () => {
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
     const INITIAL_IMMUNE_EXIT_GAME_NUM = 1;
-    const PAYMENT_OUTPUT_TYPE = 1;
     const UPDATE_BOND_WAITING_PERIOD = time.duration.days(2);
 
     before('deploy and link with controller lib', async () => {
@@ -69,13 +66,9 @@ contract('PaymentExitGame - Update Bond', ([_, outputOwner]) => {
         await this.framework.registerVault(VAULT_ID.ERC20, this.erc20Vault.address);
 
         this.spendingConditionRegistry = await SpendingConditionRegistry.new();
-        this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
 
         this.stateTransitionVerifier = await StateTransitionVerifierMock.new();
         await this.stateTransitionVerifier.mockResult(true);
-
-        const handler = await ExpectedOutputGuardHandler.new(true, outputOwner);
-        await this.outputGuardHandlerRegistry.registerOutputGuardHandler(PAYMENT_OUTPUT_TYPE, handler.address);
 
         this.txFinalizationVerifier = await TxFinalizationVerifier.new();
     });
@@ -86,7 +79,6 @@ contract('PaymentExitGame - Update Bond', ([_, outputOwner]) => {
                 this.framework.address,
                 VAULT_ID.ETH,
                 VAULT_ID.ERC20,
-                this.outputGuardHandlerRegistry.address,
                 this.spendingConditionRegistry.address,
                 this.stateTransitionVerifier.address,
                 this.txFinalizationVerifier.address,
@@ -123,7 +115,6 @@ contract('PaymentExitGame - Update Bond', ([_, outputOwner]) => {
                 this.framework.address,
                 VAULT_ID.ETH,
                 VAULT_ID.ERC20,
-                this.outputGuardHandlerRegistry.address,
                 this.spendingConditionRegistry.address,
                 this.stateTransitionVerifier.address,
                 this.txFinalizationVerifier.address,
@@ -160,7 +151,6 @@ contract('PaymentExitGame - Update Bond', ([_, outputOwner]) => {
                 this.framework.address,
                 VAULT_ID.ETH,
                 VAULT_ID.ERC20,
-                this.outputGuardHandlerRegistry.address,
                 this.spendingConditionRegistry.address,
                 this.stateTransitionVerifier.address,
                 this.txFinalizationVerifier.address,

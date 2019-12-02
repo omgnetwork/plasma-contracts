@@ -1,5 +1,3 @@
-const ExpectedOutputGuardHandler = artifacts.require('ExpectedOutputGuardHandler');
-const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry');
 const PaymentChallengeStandardExit = artifacts.require('PaymentChallengeStandardExit');
 const PaymentProcessStandardExit = artifacts.require('PaymentProcessStandardExit');
 const PaymentStandardExitRouter = artifacts.require('PaymentStandardExitRouterMock');
@@ -24,7 +22,7 @@ const {
     PROTOCOL, TX_TYPE, VAULT_ID, SAFE_GAS_STIPEND,
 } = require('../../../helpers/constants.js');
 
-contract('PaymentExitGame - Reentrant Protected', ([_, outputOwner]) => {
+contract('PaymentExitGame - Reentrant Protected', () => {
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
     const INITIAL_IMMUNE_EXIT_GAME_NUM = 1;
@@ -56,15 +54,11 @@ contract('PaymentExitGame - Reentrant Protected', ([_, outputOwner]) => {
         await PaymentInFlightExitRouter.link('PaymentProcessInFlightExit', processInFlightExit.address);
     });
 
-    before('setup output guard handler and condition registries', async () => {
+    before('setup condition registries', async () => {
         this.spendingConditionRegistry = await SpendingConditionRegistry.new();
-        this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
 
         this.stateTransitionVerifier = await StateTransitionVerifierMock.new();
         await this.stateTransitionVerifier.mockResult(true);
-
-        const handler = await ExpectedOutputGuardHandler.new(true, outputOwner);
-        await this.outputGuardHandlerRegistry.registerOutputGuardHandler(PAYMENT_OUTPUT_TYPE, handler.address);
 
         this.txFinalizationVerifier = await TxFinalizationVerifier.new();
     });
@@ -87,7 +81,6 @@ contract('PaymentExitGame - Reentrant Protected', ([_, outputOwner]) => {
                 this.framework.address,
                 VAULT_ID.ETH,
                 VAULT_ID.ERC20,
-                this.outputGuardHandlerRegistry.address,
                 this.spendingConditionRegistry.address,
                 this.stateTransitionVerifier.address,
                 this.txFinalizationVerifier.address,
@@ -120,7 +113,6 @@ contract('PaymentExitGame - Reentrant Protected', ([_, outputOwner]) => {
                 this.framework.address,
                 VAULT_ID.ETH,
                 VAULT_ID.ERC20,
-                this.outputGuardHandlerRegistry.address,
                 this.spendingConditionRegistry.address,
                 this.stateTransitionVerifier.address,
                 this.txFinalizationVerifier.address,
