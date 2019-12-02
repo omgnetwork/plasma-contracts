@@ -88,6 +88,7 @@ For a Payment transaction to be exitable on standard exit, it only needs to chec
 ### Start In-flight exit
 1. Checks whether the in-flight tx is exitable
 1. Saves the exit data to storage of Exit Game contract
+
 ### Piggyback In-flight Exit
 1. Checks whether the input/output is one of the input/output of the exiting tx
 1. If it is the first piggyback of a certain token, put the exit into the priority queue of that token.
@@ -105,14 +106,23 @@ For a Payment transaction to be exitable on standard exit, it only needs to chec
 1. Shows there exists valid spending tx of the input/output
 1. Removes the piggybacked flag of the challenged input or output
 
+### Remove non piggybacked In-flight Exit
+1. Checks that the in-flight exit is not in the first half of the exit period
+1. Checks that there is no piggyback on the in-flight exit
+1. Delete the in-flight exit and transfer IFE bond back to the owner
+
 ### Process In-flight exit:
-1. Checks that none of the inputs is finalized. If any inputs is finalized, omit to process exit
-1. Checks the in-flight exit is canonical or not. Canonicity decides whether it should withdraw outputs or inputs
-1. To withdraw:
+1. Checks whether the in-flight exit is canonical. Canonicity decides whether outputs or inputs are withdrawn. An in-flight exit is considered non-canonical when:
+   1. The canonicity games (`challenge in-flight exit non-canonical` and respond `non-canonical challenge`) end up to be non-canonical
+   1. Any of the input is already flagged as finalized
+1. To be able withdraw:
     - The piggybacked input/output is valid
     - The piggybacked input/output is withdrawable
-1. Flag all inputs as finalized
-1. Flag all processed output as finalized (if tx is canonical and the output piggybacked)
+1. If non-canonical:
+    - Flag all processed inputs as finalized
+1. If canonical:
+    - Flag all inputs as finalized
+    - Flag all processed outputs as finalized
 1. Deletes the IFE data
 
 As this issue shown: https://github.com/omisego/plasma-contracts/issues/102
