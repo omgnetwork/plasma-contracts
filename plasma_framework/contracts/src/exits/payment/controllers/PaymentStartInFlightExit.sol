@@ -4,14 +4,11 @@ pragma experimental ABIEncoderV2;
 import "../PaymentExitDataModel.sol";
 import "../PaymentInFlightExitModelUtils.sol";
 import "../routers/PaymentInFlightExitRouterArgs.sol";
-import "../../interfaces/IOutputGuardHandler.sol";
 import "../../interfaces/ISpendingCondition.sol";
 import "../../interfaces/IStateTransitionVerifier.sol";
 import "../../interfaces/ITxFinalizationVerifier.sol";
-import "../../models/OutputGuardModel.sol";
 import "../../models/TxFinalizationModel.sol";
 import "../../registries/SpendingConditionRegistry.sol";
-import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../utils/ExitableTimestamp.sol";
 import "../../utils/ExitId.sol";
 import "../../utils/OutputId.sol";
@@ -39,7 +36,6 @@ library PaymentStartInFlightExit {
         PlasmaFramework framework;
         IsDeposit.Predicate isDeposit;
         ExitableTimestamp.Calculator exitTimestampCalculator;
-        OutputGuardHandlerRegistry outputGuardHandlerRegistry;
         SpendingConditionRegistry spendingConditionRegistry;
         IStateTransitionVerifier transitionVerifier;
         ITxFinalizationVerifier txFinalizationVerifier;
@@ -60,13 +56,11 @@ library PaymentStartInFlightExit {
      * @param inFlightTxHash Hash of in-flight transaction
      * @param inputTxs Input transactions as bytes
      * @param inputUtxosPos Postions of input utxos coded as integers
-     * @param outputGuardPreimagesForInputs Output guard pre-images for in-flight transaction inputs
      * @param inputTxsInclusionProofs Merkle proofs for input transactions
      * @param inputTxsConfirmSigs Confirm signatures for the input txs
      * @param inFlightTxWitnesses Witnesses for in-flight transactions
      * @param inputSpendingConditionOptionalArgs Optional args for the spending condition, used for checking inputs
      * @param outputIds Output IDs for input transactions.
-     * @param outputGuardHandlersForInputTxs Output guard handlers for input transaction, in order of input transactions
      */
     struct StartExitData {
         Controller controller;
@@ -76,13 +70,11 @@ library PaymentStartInFlightExit {
         bytes32 inFlightTxHash;
         bytes[] inputTxs;
         UtxoPosLib.UtxoPos[] inputUtxosPos;
-        bytes[] outputGuardPreimagesForInputs;
         bytes[] inputTxsInclusionProofs;
         bytes[] inputTxsConfirmSigs;
         bytes[] inFlightTxWitnesses;
         bytes[] inputSpendingConditionOptionalArgs;
         bytes32[] outputIds;
-        IOutputGuardHandler[] outputGuardHandlersForInputTxs;
     }
 
     /**
@@ -91,7 +83,6 @@ library PaymentStartInFlightExit {
      */
     function buildController(
         PlasmaFramework framework,
-        OutputGuardHandlerRegistry outputGuardHandlerRegistry,
         SpendingConditionRegistry spendingConditionRegistry,
         IStateTransitionVerifier transitionVerifier,
         ITxFinalizationVerifier txFinalizationVerifier,
@@ -105,7 +96,6 @@ library PaymentStartInFlightExit {
             framework: framework,
             isDeposit: IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL()),
             exitTimestampCalculator: ExitableTimestamp.Calculator(framework.minExitPeriod()),
-            outputGuardHandlerRegistry: outputGuardHandlerRegistry,
             spendingConditionRegistry: spendingConditionRegistry,
             transitionVerifier: transitionVerifier,
             txFinalizationVerifier: txFinalizationVerifier,
@@ -151,11 +141,9 @@ library PaymentStartInFlightExit {
         exitData.inputUtxosPos = decodeInputTxsPositions(args.inputUtxosPos);
         exitData.inputTxsInclusionProofs = args.inputTxsInclusionProofs;
         exitData.inputTxsConfirmSigs = args.inputTxsConfirmSigs;
-        exitData.outputGuardPreimagesForInputs = args.outputGuardPreimagesForInputs;
         exitData.inFlightTxWitnesses = args.inFlightTxWitnesses;
         exitData.inputSpendingConditionOptionalArgs = args.inputSpendingConditionOptionalArgs;
         exitData.outputIds = getOutputIds(controller, exitData.inputTxs, exitData.inputUtxosPos);
-        exitData.outputGuardHandlersForInputTxs = getOutputGuardHandlersForInputTxs(controller, exitData.inputTxs, exitData.inputUtxosPos);
         return exitData;
     }
 
@@ -185,27 +173,6 @@ library PaymentStartInFlightExit {
         return outputIds;
     }
 
-    function getOutputGuardHandlersForInputTxs(
-        Controller memory controller,
-        bytes[] memory inputTxs,
-        UtxoPosLib.UtxoPos[] memory inputUtxosPos
-    )
-        private
-        view
-        returns (IOutputGuardHandler[] memory)
-    {
-        IOutputGuardHandler[] memory handlers = new IOutputGuardHandler[](inputTxs.length);
-        for (uint i = 0; i < inputTxs.length; i++) {
-            uint16 outputIndex = inputUtxosPos[i].outputIndex();
-            WireTransaction.Output memory output = WireTransaction.getOutput(inputTxs[i], outputIndex);
-            IOutputGuardHandler outputGuardHandler = controller
-                                                    .outputGuardHandlerRegistry
-                                                    .outputGuardHandlers(output.outputType);
-            handlers[i] = outputGuardHandler;
-        }
-        return handlers;
-    }
-
     function verifyStart(
         StartExitData memory exitData,
         PaymentExitDataModel.InFlightExitMap storage inFlightExitMap
@@ -217,7 +184,6 @@ library PaymentStartInFlightExit {
         verifyInFlightTxType(exitData);
         verifyNumberOfInputsMatchesNumberOfInFlightTransactionInputs(exitData);
         verifyNoInputSpentMoreThanOnce(exitData.inFlightTx);
-        verifyOutputGuardHandlersForInputTxsRegistered(exitData.outputGuardHandlersForInputTxs);
         verifyInputTransactionIsStandardFinalized(exitData);
         verifyInputsSpent(exitData);
         verifyStateTransition(exitData);
@@ -238,25 +204,10 @@ library PaymentStartInFlightExit {
         require(exitData.inFlightTx.txType == exitData.controller.supportedTxType, "Unsupported transaction type of the exit game");
     }
 
-    function verifyOutputGuardHandlersForInputTxsRegistered(
-        IOutputGuardHandler[] memory handlers
-    )
-        private
-        pure
-    {
-        for (uint i = 0; i < handlers.length; i++) {
-            require(address(handlers[i]) != address(0), "Failed to retrieve the outputGuardHandler of the output type");
-        }
-    }
-
     function verifyNumberOfInputsMatchesNumberOfInFlightTransactionInputs(StartExitData memory exitData) private pure {
         require(
             exitData.inputTxs.length == exitData.inFlightTx.inputs.length,
             "Number of input transactions does not match number of in-flight transaction inputs"
-        );
-        require(
-            exitData.outputGuardPreimagesForInputs.length == exitData.inFlightTx.inputs.length,
-            "Number of output guard preimages for inputs does not match the number of in-flight transaction inputs"
         );
         require(
             exitData.inputTxsInclusionProofs.length == exitData.inFlightTx.inputs.length,
@@ -290,24 +241,18 @@ library PaymentStartInFlightExit {
         for (uint i = 0; i < exitData.inputTxs.length; i++) {
             uint16 outputIndex = exitData.inputUtxosPos[i].outputIndex();
             WireTransaction.Output memory output = WireTransaction.getOutput(exitData.inputTxs[i], outputIndex);
-            OutputGuardModel.Data memory outputGuardData = OutputGuardModel.Data({
-                guard: output.outputGuard,
-                preimage: exitData.outputGuardPreimagesForInputs[i]
-            });
-
-            IOutputGuardHandler outputGuardHandler = exitData.outputGuardHandlersForInputTxs[i];
-            require(outputGuardHandler.isValid(outputGuardData), "Output guard information is invalid for the input tx");
 
             uint8 protocol = exitData.controller.framework.protocols(WireTransaction.getTransactionType(exitData.inputTxs[i]));
 
+            // TODO: move the simplified MVP verifier
             TxFinalizationModel.Data memory finalizationData = TxFinalizationModel.Data({
                 framework: exitData.controller.framework,
                 protocol: protocol,
                 txBytes: exitData.inputTxs[i],
                 txPos: exitData.inputUtxosPos[i].txPos(),
                 inclusionProof: exitData.inputTxsInclusionProofs[i],
-                confirmSig: exitData.inputTxsConfirmSigs[i],
-                confirmSigAddress: outputGuardHandler.getConfirmSigAddress(outputGuardData)
+                confirmSig: bytes(""),
+                confirmSigAddress: address(0)
             });
             require(exitData.controller.txFinalizationVerifier.isStandardFinalized(finalizationData),
                     "Input transaction is not standard finalized");
@@ -386,15 +331,8 @@ library PaymentStartInFlightExit {
             uint16 outputIndex = exitData.inputUtxosPos[i].outputIndex();
             WireTransaction.Output memory output = WireTransaction.getOutput(exitData.inputTxs[i], outputIndex);
 
-            OutputGuardModel.Data memory outputGuardData = OutputGuardModel.Data(
-                output.outputGuard,
-                exitData.outputGuardPreimagesForInputs[i]
-            );
-            IOutputGuardHandler handler = exitData.outputGuardHandlersForInputTxs[i];
-            address payable exitTarget = handler.getExitTarget(outputGuardData);
-
             ife.inputs[i].outputId = exitData.outputIds[i];
-            ife.inputs[i].exitTarget = exitTarget;
+            ife.inputs[i].exitTarget = address(uint160(output.outputGuard));
             ife.inputs[i].token = output.token;
             ife.inputs[i].amount = output.amount;
         }

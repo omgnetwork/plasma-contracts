@@ -2,7 +2,7 @@ const { constants } = require('openzeppelin-test-helpers');
 
 const { MerkleTree } = require('./merkle.js');
 const { buildUtxoPos } = require('./positions.js');
-const { buildOutputGuard, isDeposit, getOutputId } = require('./utils.js');
+const { isDeposit, getOutputId } = require('./utils.js');
 const { PaymentTransactionOutput, PaymentTransaction, PlasmaDepositTransaction } = require('./transaction.js');
 const { EMPTY_BYTES, DUMMY_INPUT_1, DUMMY_INPUT_2 } = require('./constants.js');
 
@@ -43,7 +43,7 @@ function buildValidIfeStartArgs(
         args,
         inputTxsBlockRoot1,
         inputTxsBlockRoot2,
-    } = buildIfeStartArgs(inputTxs, [inputOwner1, inputOwner2], inputUtxosPos, inFlightTx);
+    } = buildIfeStartArgs(inputTxs, inputUtxosPos, inFlightTx);
 
     const argsDecoded = { inputTxs, inputUtxosPos, inFlightTx };
 
@@ -55,7 +55,7 @@ function buildValidIfeStartArgs(
     };
 }
 
-function buildIfeStartArgs([inputTx1, inputTx2], [inputOwner1, inputOwner2], inputUtxosPos, inFlightTx) {
+function buildIfeStartArgs([inputTx1, inputTx2], inputUtxosPos, inFlightTx) {
     const rlpInputTx1 = inputTx1.rlpEncoded();
     const encodedInputTx1 = web3.utils.bytesToHex(rlpInputTx1);
 
@@ -79,16 +79,10 @@ function buildIfeStartArgs([inputTx1, inputTx2], [inputOwner1, inputOwner2], inp
 
     const inputSpendingConditionOptionalArgs = [EMPTY_BYTES, EMPTY_BYTES];
 
-    const outputGuardPreimagesForInputs = [
-        web3.utils.toHex(inputOwner1),
-        web3.utils.toHex(inputOwner2),
-    ];
-
     const args = {
         inFlightTx: inFlightTxRaw,
         inputTxs,
         inputUtxosPos,
-        outputGuardPreimagesForInputs,
         inputTxsInclusionProofs,
         inputTxsConfirmSigs,
         inFlightTxWitnesses,
@@ -102,12 +96,12 @@ function buildIfeStartArgs([inputTx1, inputTx2], [inputOwner1, inputOwner2], inp
 }
 
 function createInputTransaction(inputs, outputType, owner, amount, token = ETH) {
-    const output = new PaymentTransactionOutput(outputType, amount, buildOutputGuard(owner), token);
+    const output = new PaymentTransactionOutput(outputType, amount, owner, token);
     return new PaymentTransaction(IFE_TX_TYPE, inputs, [output]);
 }
 
 function createDepositTransaction(outputType, owner, amount, token = ETH) {
-    const output = new PaymentTransactionOutput(outputType, amount, buildOutputGuard(owner), token);
+    const output = new PaymentTransactionOutput(outputType, amount, owner, token);
     return new PlasmaDepositTransaction(output);
 }
 

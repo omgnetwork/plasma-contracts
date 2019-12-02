@@ -142,7 +142,6 @@ contract PaymentInFlightExitRouter is
 
         startInFlightExitController = PaymentStartInFlightExit.buildController(
             args.framework,
-            args.outputGuardHandlerRegistry,
             args.spendingConditionRegistry,
             args.stateTransitionVerifier,
             args.txFinalizationVerifier,
