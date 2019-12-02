@@ -1,5 +1,3 @@
-const OutputGuardHandler = artifacts.require('ExpectedOutputGuardHandler');
-const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry');
 const PaymentInFlightExitRouter = artifacts.require('PaymentInFlightExitRouterMock');
 const PaymentStartInFlightExit = artifacts.require('PaymentStartInFlightExit');
 const PaymentPiggybackInFlightExit = artifacts.require('PaymentPiggybackInFlightExit');
@@ -174,14 +172,6 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
             await this.framework.registerVault(VAULT_ID.ETH, ethVault.address);
             await this.framework.registerVault(VAULT_ID.ERC20, erc20Vault.address);
 
-            this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
-            const expectedOutputGuardHandler = await OutputGuardHandler.new();
-            await expectedOutputGuardHandler.mockIsValid(true);
-            await expectedOutputGuardHandler.mockGetExitTarget(alice);
-            await this.outputGuardHandlerRegistry.registerOutputGuardHandler(
-                OUTPUT_TYPE.PAYMENT, expectedOutputGuardHandler.address,
-            );
-
             this.spendingConditionRegistry = await SpendingConditionRegistry.new();
             this.spendingCondition = await SpendingConditionMock.new();
             // lets the spending condition pass by default
@@ -194,7 +184,6 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                 this.framework.address,
                 VAULT_ID.ETH,
                 VAULT_ID.ERC20,
-                this.outputGuardHandlerRegistry.address,
                 this.spendingConditionRegistry.address,
                 this.stateTransitionVerifier.address,
                 this.txFinalizationVerifier.address,
@@ -239,7 +228,6 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                 inFlightTxInputIndex: this.inFlightTxPiggybackedIndex,
                 challengingTx: web3.utils.bytesToHex(challengingTx.rlpEncoded()),
                 challengingTxInputIndex: 0,
-                challengingTxInputOutputGuardPreimage: web3.utils.bytesToHex('preimage'),
                 challengingTxWitness: web3.utils.utf8ToHex('dummy witness'),
                 inputTx: this.inputTx.txBytes,
                 inputUtxoPos: this.inputTx.utxoPos,

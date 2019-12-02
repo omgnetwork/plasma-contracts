@@ -235,7 +235,6 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
             this.framework.address,
             VAULT_ID.ETH,
             VAULT_ID.ERC20,
-            constants.ZERO_ADDRESS, // TODO: remove outputGuardRegistry
             this.spendingConditionRegistry.address,
             this.stateTransitionVerifier.address,
             this.txFinalizationVerifier.address,

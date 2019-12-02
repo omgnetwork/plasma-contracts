@@ -99,13 +99,10 @@ contract('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
             const txFinalizationVerifier = await TxFinalizationVerifier.new();
             const stateTransitionVerifier = await StateTransitionVerifierMock.new();
 
-            // TODO: remove this when IFE removes output guard as well
-            const outputGuardRegisterAddress = constants.ZERO_ADDRESS;
             const exitGameArgs = [
                 this.framework.address,
                 VAULT_ID.ETH,
                 VAULT_ID.ERC20,
-                outputGuardRegisterAddress,
                 spendingConditionRegistry.address,
                 stateTransitionVerifier.address,
                 txFinalizationVerifier.address,

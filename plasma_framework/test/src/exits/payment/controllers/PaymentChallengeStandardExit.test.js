@@ -97,13 +97,10 @@ contract('PaymentChallengeStandardExit', ([_, alice, bob]) => {
             this.txFinalizationVerifier = await TxFinalizationVerifier.new();
             const stateTransitionVerifier = await StateTransitionVerifierMock.new();
 
-            // TODO: remove this when IFE is done as well
-            const outputGuardGHandlerAddress = constants.ZERO_ADDRESS;
             this.exitGameArgs = [
                 this.framework.address,
                 VAULT_ID.ETH,
                 VAULT_ID.ERC20,
-                outputGuardGHandlerAddress,
                 this.spendingConditionRegistry.address,
                 stateTransitionVerifier.address,
                 this.txFinalizationVerifier.address,

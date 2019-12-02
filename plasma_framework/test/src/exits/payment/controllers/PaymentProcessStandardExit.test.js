@@ -1,5 +1,4 @@
 const ERC20Mintable = artifacts.require('ERC20Mintable');
-const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry');
 const PaymentChallengeStandardExit = artifacts.require('PaymentChallengeStandardExit');
 const PaymentProcessStandardExit = artifacts.require('PaymentProcessStandardExit');
 const PaymentStandardExitRouter = artifacts.require('PaymentStandardExitRouterMock');
@@ -52,7 +51,6 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
             await this.framework.registerVault(VAULT_ID.ETH, ethVault.address);
             await this.framework.registerVault(VAULT_ID.ERC20, erc20Vault.address);
 
-            const outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
             const spendingConditionRegistry = await SpendingConditionRegistry.new();
             const txFinalizationVerifier = await TxFinalizationVerifier.new();
             const stateTransitionVerifier = await StateTransitionVerifierMock.new();
@@ -61,7 +59,6 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
                 this.framework.address,
                 VAULT_ID.ETH,
                 VAULT_ID.ERC20,
-                outputGuardHandlerRegistry.address,
                 spendingConditionRegistry.address,
                 stateTransitionVerifier.address,
                 txFinalizationVerifier.address,

@@ -26,7 +26,7 @@ const {
     PROTOCOL, TX_TYPE, VAULT_ID, SAFE_GAS_STIPEND, EMPTY_BYTES_32,
 } = require('../../../../helpers/constants.js');
 
-contract.only('PaymentPiggybackInFlightExitOnInput', ([_, alice, inputOwner, nonInputOwner, outputOwner]) => {
+contract('PaymentPiggybackInFlightExitOnInput', ([_, alice, inputOwner, nonInputOwner, outputOwner]) => {
     const ETH = constants.ZERO_ADDRESS;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week in seconds
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
@@ -82,7 +82,6 @@ contract.only('PaymentPiggybackInFlightExitOnInput', ([_, alice, inputOwner, non
             this.framework.address,
             VAULT_ID.ETH,
             VAULT_ID.ERC20,
-            constants.ZERO_ADDRESS, // TODO: remove outputGuardRegistry after refactoring all
             spendingConditionRegistry.address,
             this.stateTransitionVerifier.address,
             this.txFinalizationVerifier.address,

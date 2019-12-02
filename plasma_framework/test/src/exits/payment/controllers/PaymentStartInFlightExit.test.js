@@ -128,13 +128,10 @@ contract('PaymentStartInFlightExit', ([_, alice, richFather, carol]) => {
 
                 this.txFinalizationVerifier = await TxFinalizationVerifier.new();
 
-                // TODO: remove fully after all IFE refactored.
-                const outputGuardRegistryAddress = constants.ZERO_ADDRESS;
                 const exitGameArgs = [
                     this.framework.address,
                     VAULT_ID.ETH,
                     VAULT_ID.ERC20,
-                    outputGuardRegistryAddress,
                     this.spendingConditionRegistry.address,
                     this.stateTransitionVerifier.address,
                     this.txFinalizationVerifier.address,
@@ -329,7 +326,6 @@ contract('PaymentStartInFlightExit', ([_, alice, richFather, carol]) => {
                     this.framework.address,
                     VAULT_ID.ETH,
                     VAULT_ID.ERC20,
-                    constants.ZERO_ADDRESS, // TODO: remove outputGuardRegistry fully
                     this.spendingConditionRegistry.address,
                     this.stateTransitionVerifier.address,
                     this.txFinalizationVerifier.address,

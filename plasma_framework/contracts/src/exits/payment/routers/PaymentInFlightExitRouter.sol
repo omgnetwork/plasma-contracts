@@ -12,7 +12,6 @@ import "../controllers/PaymentChallengeIFEOutputSpent.sol";
 import "../controllers/PaymentDeleteInFlightExit.sol";
 import "../controllers/PaymentProcessInFlightExit.sol";
 import "../../registries/SpendingConditionRegistry.sol";
-import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../interfaces/IStateTransitionVerifier.sol";
 import "../../interfaces/ITxFinalizationVerifier.sol";
 import "../../utils/BondSize.sol";

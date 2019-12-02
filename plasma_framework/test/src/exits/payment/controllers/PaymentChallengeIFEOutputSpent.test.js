@@ -1,6 +1,4 @@
 const ExitId = artifacts.require('ExitIdWrapper');
-const OutputGuardHandler = artifacts.require('ExpectedOutputGuardHandler');
-const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry');
 const PaymentInFlightExitRouter = artifacts.require('PaymentInFlightExitRouterMock');
 const PaymentStartInFlightExit = artifacts.require('PaymentStartInFlightExit');
 const PaymentPiggybackInFlightExit = artifacts.require('PaymentPiggybackInFlightExit');
@@ -142,14 +140,6 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
         };
 
         beforeEach(async () => {
-            this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
-            const expectedOutputGuardHandler = await OutputGuardHandler.new();
-            await expectedOutputGuardHandler.mockIsValid(true);
-            await expectedOutputGuardHandler.mockGetExitTarget(alice);
-            await this.outputGuardHandlerRegistry.registerOutputGuardHandler(
-                OUTPUT_TYPE_ONE, expectedOutputGuardHandler.address,
-            );
-
             this.framework = await SpyPlasmaFramework.new(
                 MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
             );
@@ -171,7 +161,6 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
                 this.framework.address,
                 VAULT_ID.ETH,
                 VAULT_ID.ERC20,
-                this.outputGuardHandlerRegistry.address,
                 this.spendingConditionRegistry.address,
                 this.stateTransitionVerifier.address,
                 this.txFinalizationVerifier.address,
@@ -190,11 +179,9 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
             await this.framework.setBlock(BLOCK_NUM, args.blockRoot, 0);
             await this.exitGame.setInFlightExit(args.exitId, args.inFlightExit);
 
-            const preimage = web3.utils.bytesToHex('preimage');
             this.challengeArgs = {
                 inFlightTx: args.inFlightTxBytes,
                 inFlightTxInclusionProof: args.inclusionProof,
-                outputGuardPreimage: preimage,
                 outputUtxoPos: buildUtxoPos(BLOCK_NUM, 0, 0),
                 challengingTx: args.challengingTxBytes,
                 challengingTxInputIndex: 0,
