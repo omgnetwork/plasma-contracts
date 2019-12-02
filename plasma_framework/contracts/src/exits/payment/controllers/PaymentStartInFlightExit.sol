@@ -128,7 +128,7 @@ library PaymentStartInFlightExit {
         PaymentInFlightExitRouterArgs.StartExitArgs memory args
     )
         private
-        view
+        pure
         returns (StartExitData memory)
     {
         StartExitData memory exitData;
@@ -239,9 +239,6 @@ library PaymentStartInFlightExit {
 
     function verifyInputTransactionIsStandardFinalized(StartExitData memory exitData) private view {
         for (uint i = 0; i < exitData.inputTxs.length; i++) {
-            uint16 outputIndex = exitData.inputUtxosPos[i].outputIndex();
-            WireTransaction.Output memory output = WireTransaction.getOutput(exitData.inputTxs[i], outputIndex);
-
             uint8 protocol = exitData.controller.framework.protocols(WireTransaction.getTransactionType(exitData.inputTxs[i]));
 
             // TODO: move the simplified MVP verifier

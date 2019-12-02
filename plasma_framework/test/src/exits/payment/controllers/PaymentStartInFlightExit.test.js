@@ -286,6 +286,24 @@ contract.only('PaymentStartInFlightExit', ([_, alice, richFather, carol]) => {
                     { from: alice, value: this.startIFEBondSize.toString() },
                 );
             });
+
+            it('should be able to start by non input or output owner', async () => {
+                const { logs } = await this.exitGame.startInFlightExit(
+                    this.args,
+                    { from: richFather, value: this.startIFEBondSize.toString() },
+                );
+
+                const expectedIfeHash = web3.utils.sha3(this.args.inFlightTx);
+
+                await expectEvent.inLogs(
+                    logs,
+                    'InFlightExitStarted',
+                    {
+                        initiator: richFather,
+                        txHash: expectedIfeHash,
+                    },
+                );
+            });
         });
 
         describe('when in-flight exit start is called but failed', () => {
