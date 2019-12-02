@@ -2,7 +2,6 @@ pragma solidity 0.5.11;
 pragma experimental ABIEncoderV2;
 
 import "../PaymentTransactionModel.sol";
-import "../outputs/PaymentOutputModel.sol";
 import "../../utils/UtxoPosLib.sol";
 
 /**
@@ -84,7 +83,7 @@ library PaymentEip712Lib {
         }
 
         // Pad empty value to output array
-        PaymentOutputModel.Output[] memory outputs = new PaymentOutputModel.Output[](MAX_OUTPUT_NUM);
+        WireTransaction.Output[] memory outputs = new WireTransaction.Output[](MAX_OUTPUT_NUM);
         for (uint i = 0; i < _tx.outputs.length; i++) {
             outputs[i] = _tx.outputs[i];
         }
@@ -119,7 +118,7 @@ library PaymentEip712Lib {
         ));
     }
 
-    function _hashOutput(PaymentOutputModel.Output memory _output)
+    function _hashOutput(WireTransaction.Output memory _output)
         private
         pure
         returns (bytes32)

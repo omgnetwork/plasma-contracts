@@ -111,12 +111,12 @@ library PaymentChallengeIFEOutputSpent {
         view
     {
         UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(args.outputUtxoPos);
-        uint256 challengingTxType = WireTransaction.getTransactionType(args.challengingTx);
-        WireTransaction.Output memory output = WireTransaction.getOutput(args.challengingTx, utxoPos.outputIndex());
+        WireTransaction.Transaction memory challengingTx = WireTransaction.decode(args.challengingTx);
+        WireTransaction.Output memory output = WireTransaction.getOutput(challengingTx, utxoPos.outputIndex());
 
         ISpendingCondition condition = controller.spendingConditionRegistry.spendingConditions(
             output.outputType,
-            challengingTxType
+            challengingTx.txType
         );
         require(address(condition) != address(0), "Spending condition contract not found");
 

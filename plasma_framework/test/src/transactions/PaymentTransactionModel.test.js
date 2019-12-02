@@ -9,10 +9,8 @@ const PaymentTransactionModelMock = artifacts.require('PaymentTransactionModelMo
 const OUTPUT_GUARD = `0x${Array(40).fill(1).join('')}`;
 const EMPTY_BYTES32 = `0x${Array(64).fill(0).join('')}`;
 const OUTPUT = new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, 100, OUTPUT_GUARD, constants.ZERO_ADDRESS);
-const NULL_OUTPUT_GUARD = `0x${Array(40).fill(0).join('')}`;
-const NULL_OUTPUT = new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, 0, NULL_OUTPUT_GUARD, constants.ZERO_ADDRESS);
 
-contract('PaymentTransactionModel', () => {
+contract('PaymentTransactionModel', ([alice]) => {
     const MAX_INPUT_NUM = 4;
     const MAX_OUTPUT_NUM = 4;
 
@@ -135,6 +133,38 @@ contract('PaymentTransactionModel', () => {
         );
         const encoded = web3.utils.bytesToHex(transaction.rlpEncoded());
         await expectRevert(this.test.decode(encoded), 'Output amount must not be 0');
+    });
+
+    describe('decodeOutput', () => {
+        it('should decode output', async () => {
+            const expected = new PaymentTransactionOutput(
+                OUTPUT_TYPE.PAYMENT, 100, OUTPUT_GUARD, constants.ZERO_ADDRESS,
+            );
+            const encoded = web3.utils.bytesToHex(rlp.encode(expected.formatForRlpEncoding()));
+
+            const output = await this.test.decodeOutput(encoded);
+            const actual = PaymentTransactionOutput.parseFromContractOutput(output);
+
+            expect(JSON.stringify(actual)).to.equal(JSON.stringify(expected));
+        });
+
+        it('should fail when output has less than 4 items', async () => {
+            const encoded = web3.utils.bytesToHex(rlp.encode([0, 0, 0]));
+            await expectRevert(this.test.decodeOutput(encoded), 'Output must have 4 items');
+        });
+
+        it('should fail when output has more than 4 items', async () => {
+            const encoded = web3.utils.bytesToHex(rlp.encode([0, 0, 0, 0, 0]));
+            await expectRevert(this.test.decodeOutput(encoded), 'Output must have 4 items');
+        });
+    });
+
+    describe('owner', () => {
+        it('should parse the owner address from output guard when output guard holds the owner info directly', async () => {
+            expect(await this.test.getOutputOwner(
+                OUTPUT_TYPE.PAYMENT, alice, constants.ZERO_ADDRESS, 100,
+            )).to.equal(alice);
+        });
     });
 });
 

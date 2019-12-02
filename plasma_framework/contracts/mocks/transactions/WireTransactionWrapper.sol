@@ -6,11 +6,12 @@ import "../../src/transactions/WireTransaction.sol";
 contract WireTransactionWrapper {
 
     function getOutput(bytes memory transaction, uint16 outputIndex) public pure returns (WireTransaction.Output memory) {
-        WireTransaction.Output memory output = WireTransaction.getOutput(transaction, outputIndex);
-        return output;
+        WireTransaction.Transaction memory wtx = WireTransaction.decode(transaction);
+        return WireTransaction.getOutput(wtx, outputIndex);
     }
 
     function getTransactionType(bytes memory transaction) public pure returns (uint256) {
-        return WireTransaction.getTransactionType(transaction);
+        WireTransaction.Transaction memory wtx = WireTransaction.decode(transaction);
+        return wtx.txType;
     }
 }

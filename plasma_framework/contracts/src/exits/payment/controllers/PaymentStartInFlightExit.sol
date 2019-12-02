@@ -17,14 +17,12 @@ import "../../../utils/Merkle.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
 import "../../../transactions/WireTransaction.sol";
-import "../../../transactions/outputs/PaymentOutputModel.sol";
 
 library PaymentStartInFlightExit {
     using ExitableTimestamp for ExitableTimestamp.Calculator;
     using IsDeposit for IsDeposit.Predicate;
     using UtxoPosLib for UtxoPosLib.UtxoPos;
     using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
-    using PaymentOutputModel for PaymentOutputModel.Output;
 
     uint256 constant public MAX_INPUT_NUM = 4;
 
@@ -234,7 +232,10 @@ library PaymentStartInFlightExit {
     function verifyInputsSpent(StartExitData memory exitData) private view {
         for (uint16 i = 0; i < exitData.inputTxs.length; i++) {
             uint16 outputIndex = exitData.inputUtxosPos[i].outputIndex();
-            WireTransaction.Output memory output = WireTransaction.getOutput(exitData.inputTxs[i], outputIndex);
+            WireTransaction.Output memory output = WireTransaction.getOutput(
+                WireTransaction.decode(exitData.inputTxs[i]),
+                outputIndex
+            );
 
             ISpendingCondition condition = exitData.controller.spendingConditionRegistry.spendingConditions(
                 output.outputType, exitData.controller.supportedTxType
@@ -300,7 +301,10 @@ library PaymentStartInFlightExit {
     {
         for (uint i = 0; i < exitData.inputTxs.length; i++) {
             uint16 outputIndex = exitData.inputUtxosPos[i].outputIndex();
-            WireTransaction.Output memory output = WireTransaction.getOutput(exitData.inputTxs[i], outputIndex);
+            WireTransaction.Output memory output = WireTransaction.getOutput(
+                WireTransaction.decode(exitData.inputTxs[i]),
+                outputIndex
+            );
 
             ife.inputs[i].outputId = exitData.outputIds[i];
             ife.inputs[i].exitTarget = address(uint160(output.outputGuard));
@@ -318,7 +322,7 @@ library PaymentStartInFlightExit {
         for (uint i = 0; i < exitData.inFlightTx.outputs.length; i++) {
             // deposit transaction can't be in-flight exited
             bytes32 outputId = OutputId.computeNormalOutputId(exitData.inFlightTxRaw, i);
-            PaymentOutputModel.Output memory output = exitData.inFlightTx.outputs[i];
+            WireTransaction.Output memory output = exitData.inFlightTx.outputs[i];
 
             ife.outputs[i].outputId = outputId;
             // Exit target is not set as output guard preimage may not be available for caller

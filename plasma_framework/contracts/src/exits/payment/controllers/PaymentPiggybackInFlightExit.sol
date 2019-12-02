@@ -8,7 +8,6 @@ import "../../utils/ExitableTimestamp.sol";
 import "../../utils/ExitId.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../framework/interfaces/IExitProcessor.sol";
-import "../../../transactions/outputs/PaymentOutputModel.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
 import "../../../utils/IsDeposit.sol";
 import "../../../utils/UtxoPosLib.sol";
@@ -18,7 +17,6 @@ library PaymentPiggybackInFlightExit {
     using IsDeposit for IsDeposit.Predicate;
     using ExitableTimestamp for ExitableTimestamp.Calculator;
     using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
-    using PaymentOutputModel for PaymentOutputModel.Output;
 
     uint8 constant public MAX_INPUT_NUM = 4;
     uint8 constant public MAX_OUTPUT_NUM = 4;
@@ -136,8 +134,8 @@ library PaymentPiggybackInFlightExit {
         // TODO: move this to start IFE, as we are removing the mechanism of using output guard preimage.
         // For inputs, exit target is set during start inFlight exit.
         // For outputs, since output preimage data is held by the output owners, these must be retrieved on piggyback.
-        PaymentOutputModel.Output memory output = PaymentTransactionModel.decode(args.inFlightTx).outputs[args.outputIndex];
-        address payable exitTarget = output.owner();
+        WireTransaction.Output memory output = PaymentTransactionModel.decode(args.inFlightTx).outputs[args.outputIndex];
+        address payable exitTarget = PaymentTransactionModel.getOutputOwner(output);
         require(exitTarget == msg.sender, "Can be called only by the exit target");
 
         if (isFirstPiggybackOfTheToken(exit, withdrawData.token)) {

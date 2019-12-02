@@ -6,7 +6,6 @@ import "../payment/PaymentExitDataModel.sol";
 import "../../utils/UtxoPosLib.sol";
 import "../../transactions/WireTransaction.sol";
 import "../../transactions/PaymentTransactionModel.sol";
-import "../../transactions/outputs/PaymentOutputModel.sol";
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
@@ -36,7 +35,10 @@ contract PaymentTransactionStateTransitionVerifier {
         WireTransaction.Output[] memory inputs = new WireTransaction.Output[](inputTxs.length);
         for (uint i = 0; i < inputTxs.length; i++) {
             uint16 outputIndex = outputIndexOfInputTxs[i];
-            WireTransaction.Output memory output = WireTransaction.getOutput(inputTxs[i], outputIndex);
+            WireTransaction.Output memory output = WireTransaction.getOutput(
+                WireTransaction.decode(inputTxs[i]),
+                outputIndex
+            );
             inputs[i] = output;
         }
 
@@ -45,9 +47,9 @@ contract PaymentTransactionStateTransitionVerifier {
         for (uint i = 0; i < transaction.outputs.length; i++) {
             outputs[i] = WireTransaction.Output(
                     transaction.outputs[i].outputType,
-                    transaction.outputs[i].amount,
                     transaction.outputs[i].outputGuard,
-                    transaction.outputs[i].token
+                    transaction.outputs[i].token,
+                    transaction.outputs[i].amount
                 );
         }
 

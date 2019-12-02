@@ -32,11 +32,10 @@ contract('WireTransaction', () => {
 
         it('should decode custom transaction output that fulfills wire transaction format', async () => {
             const encoded = rlp.encode([
-                0,
+                1,
                 [],
-                [[OUTPUT_TYPE, OUTPUT_GUARD, constants.ZERO_ADDRESS, AMOUNT]],
+                [[OUTPUT_TYPE, OUTPUT_GUARD, constants.ZERO_ADDRESS, AMOUNT, 'Extra stuff']],
                 EMPTY_BYTES32,
-                [],
             ]);
             const actual = await this.test.getOutput(encoded, 0);
 
@@ -63,10 +62,15 @@ contract('WireTransaction', () => {
 
         it('should decode type of custom transaction that fulfills wire transaction format', async () => {
             const encoded = web3.utils.bytesToHex(
-                rlp.encode([0, [], [[OUTPUT_TYPE, AMOUNT, OUTPUT_GUARD, constants.ZERO_ADDRESS]], EMPTY_BYTES32, []]),
+                rlp.encode([
+                    1,
+                    [],
+                    [[OUTPUT_TYPE, AMOUNT, OUTPUT_GUARD, constants.ZERO_ADDRESS]],
+                    [EMPTY_BYTES32, 'Extra stuff'],
+                ]),
             );
             const actual = await this.test.getTransactionType(encoded);
-            expect(new BN(actual)).to.be.bignumber.equal(new BN(0));
+            expect(new BN(actual)).to.be.bignumber.equal(new BN(1));
         });
     });
 });

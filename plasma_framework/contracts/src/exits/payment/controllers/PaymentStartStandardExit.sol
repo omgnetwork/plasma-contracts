@@ -8,7 +8,6 @@ import "../../utils/ExitId.sol";
 import "../../utils/OutputId.sol";
 import "../../utils/MoreVpFinalization.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
-import "../../../transactions/outputs/PaymentOutputModel.sol";
 import "../../../utils/IsDeposit.sol";
 import "../../../utils/UtxoPosLib.sol";
 import "../../../framework/PlasmaFramework.sol";
@@ -17,7 +16,6 @@ import "../../utils/ExitableTimestamp.sol";
 library PaymentStartStandardExit {
     using ExitableTimestamp for ExitableTimestamp.Calculator;
     using IsDeposit for IsDeposit.Predicate;
-    using PaymentOutputModel for PaymentOutputModel.Output;
     using UtxoPosLib for UtxoPosLib.UtxoPos;
 
     struct Controller {
@@ -38,7 +36,7 @@ library PaymentStartStandardExit {
         PaymentStandardExitRouterArgs.StartStandardExitArgs args;
         UtxoPosLib.UtxoPos utxoPos;
         PaymentTransactionModel.Transaction outputTx;
-        PaymentOutputModel.Output output;
+        WireTransaction.Output output;
         uint160 exitId;
         bool isTxDeposit;
         uint256 txBlockTimeStamp;
@@ -108,7 +106,7 @@ library PaymentStartStandardExit {
     {
         UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(args.utxoPos);
         PaymentTransactionModel.Transaction memory outputTx = PaymentTransactionModel.decode(args.rlpOutputTx);
-        PaymentOutputModel.Output memory output = outputTx.outputs[utxoPos.outputIndex()];
+        WireTransaction.Output memory output = outputTx.outputs[utxoPos.outputIndex()];
         bool isTxDeposit = controller.isDeposit.test(utxoPos.blockNum());
         uint160 exitId = ExitId.getStandardExitId(isTxDeposit, args.rlpOutputTx, utxoPos);
         (, uint256 blockTimestamp) = controller.framework.blocks(utxoPos.blockNum());
@@ -141,7 +139,7 @@ library PaymentStartStandardExit {
         require(data.outputTx.txType == data.controller.supportedTxType, "Unsupported transaction type of the exit game");
         require(data.txBlockTimeStamp != 0, "There is no block for the position");
 
-        require(data.output.owner() == msg.sender, "Only output owner can start an exit");
+        require(PaymentTransactionModel.getOutputOwner(data.output) == msg.sender, "Only output owner can start an exit");
 
         require(isStandardFinalized(data), "The transaction must be standard finalized");
         PaymentExitDataModel.StandardExit memory exit = exitMap.exits[data.exitId];

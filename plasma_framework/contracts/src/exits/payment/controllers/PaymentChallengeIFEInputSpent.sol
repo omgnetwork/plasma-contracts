@@ -135,11 +135,11 @@ library PaymentChallengeIFEInputSpent {
     }
 
     function verifySpendingCondition(ChallengeIFEData memory data) private view {
-        uint256 challengingTxType = WireTransaction.getTransactionType(data.args.challengingTx);
-        WireTransaction.Output memory output = WireTransaction.getOutput(data.args.challengingTx, data.args.challengingTxInputIndex);
+        WireTransaction.Transaction memory challengingTx = WireTransaction.decode(data.args.challengingTx);
+        WireTransaction.Output memory output = WireTransaction.getOutput(challengingTx, data.args.challengingTxInputIndex);
 
         ISpendingCondition condition = data.controller.spendingConditionRegistry.spendingConditions(
-            output.outputType, challengingTxType
+            output.outputType, challengingTx.txType
         );
         require(address(condition) != address(0), "Spending condition contract not found");
 

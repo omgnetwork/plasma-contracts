@@ -4,46 +4,80 @@ import "../utils/RLPReader.sol";
 
 /**
  * @title WireTransaction
- * @dev Utility functions for working with transactions in wire format, assuming our transactions have specified data structure limitations
- *      We assume that the current transaction structure supports transactions related to payment and DEX.
- *      Alternatively, it's possible to upgrade to a new ExitGame, using either an alternative transaction data structure, or interfaces
+ * @notice WireTransaction is a generic transaction format that makes few assumptions about the
+ * content of the transaction. At minimum a transaction must:
+ * - Be a list of 4 items: [txType, inputs, outputs, txData]
+ * - `txType` must be a uint not equal to zero
+ * - inputs must be a list
+ * - outputs must be a list
+ * - no assumptions are made about `txData`. Note that `txData` can be a list.
+ *
+ * It is expected that most transaction types will have similar outputs, so convenience methods for
+ * decoding outputs are provided. However, transactions types are free to extend this output format
+ * with extra data.
  */
 library WireTransaction {
+
+    uint8 constant private TX_NUM_ITEMS = 4;
 
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;
 
+    struct Transaction {
+        uint256 txType;
+        RLPReader.RLPItem[] inputs;
+        RLPReader.RLPItem[] outputs;
+        RLPReader.RLPItem txData;
+    }
+
     struct Output {
         uint256 outputType;
-        uint256 amount;
         bytes20 outputGuard;
         address token;
+        uint256 amount;
     }
 
     /**
-    * @dev Returns output for transaction in wire format
-    * Outputs is a field on the second index that should be a list with the following first three elements: amount, output guard, token
+    * @dev Decodes an RLP encoded transaction into the generic format.
     */
-    function getOutput(bytes memory transaction, uint16 outputIndex) internal pure returns (Output memory) {
+    function decode(bytes memory transaction) internal pure returns (Transaction memory) {
         RLPReader.RLPItem[] memory rlpTx = transaction.toRlpItem().toList();
-        RLPReader.RLPItem[] memory outputs = rlpTx[2].toList();
-        require(outputIndex < outputs.length, "Output index out of bounds");
+        require(rlpTx.length == TX_NUM_ITEMS, "Invalid encoding of transaction");
+        uint txType = rlpTx[0].toUint();
+        require(txType > 0, "Transaction type must not be 0");
 
-        RLPReader.RLPItem[] memory output = outputs[outputIndex].toList();
-        uint256 outputType = output[0].toUint();
-        bytes20 outputGuard = bytes20(output[1].toAddress());
-        address token = output[2].toAddress();
-        uint256 amount = output[3].toUint();
-
-        return Output(outputType, amount, outputGuard, token);
+        return Transaction({
+            txType: txType,
+            inputs: rlpTx[1].toList(),
+            outputs: rlpTx[2].toList(),
+            txData: rlpTx[3]
+        });
     }
 
     /**
-    * @dev Returns a transaction type for transaction, in wire format
-    * Transaction type is the value of the first field in RLP-encoded list
+    * @dev Returns the output at a specific index in the wire format transaction
     */
-    function getTransactionType(bytes memory transaction) internal pure returns (uint256) {
-        RLPReader.RLPItem[] memory rlpTx = transaction.toRlpItem().toList();
-        return rlpTx[0].toUint();
+    function getOutput(Transaction memory transaction, uint16 outputIndex) internal pure returns (Output memory) {
+        require(outputIndex < transaction.outputs.length, "Output index out of bounds");
+        return decodeOutput(transaction.outputs[outputIndex].toList());
+    }
+
+    /**
+    * @dev Decodes an RLPItem to an output
+    * Each Output is a list with (at least) the following first four elements: outputType, outputGuard, token, amount
+    */
+    function decodeOutput(RLPReader.RLPItem[] memory outputRlpList) internal pure returns (Output memory) {
+        require(outputRlpList.length >= 4, "Output must have at least 4 items");
+
+        Output memory output = Output({
+            outputType: outputRlpList[0].toUint(),
+            outputGuard: bytes20(outputRlpList[1].toAddress()),
+            token: outputRlpList[2].toAddress(),
+            amount: outputRlpList[3].toUint()
+        });
+
+        require(output.outputType > 0, "Output type must not be 0");
+
+        return output;
     }
 }
