@@ -143,7 +143,6 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
                         utxoPos: this.depositUtxoPos,
                         rlpOutputTx: this.depositTx,
                         outputType: OUTPUT_TYPE_PAYMENT,
-                        outputGuardPreimage: EMPTY_BYTES,
                         outputTxInclusionProof: this.merkleProofForDepositTx,
                     };
                     await this.exitGame.startStandardExit(
@@ -220,7 +219,6 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
                         utxoPos: this.transferUtxoPos,
                         rlpOutputTx: this.transferTx,
                         outputType: OUTPUT_TYPE_PAYMENT,
-                        outputGuardPreimage: EMPTY_BYTES,
                         outputTxInclusionProof: this.merkleProofForTransferTx,
                     };
 
@@ -271,7 +269,6 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
                         utxoPos: this.depositUtxoPos,
                         rlpOutputTx: this.depositTx,
                         outputType: OUTPUT_TYPE_PAYMENT,
-                        outputGuardPreimage: EMPTY_BYTES,
                         outputTxInclusionProof: this.merkleProofForDepositTx,
                     };
 
@@ -301,7 +298,6 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
                             inputIndex: 0,
                             witness: signature,
                             spendingConditionOptionalArgs: EMPTY_BYTES,
-                            outputGuardPreimage: EMPTY_BYTES,
                             challengeTxPos: 0,
                             challengeTxInclusionProof: EMPTY_BYTES,
                             challengeTxConfirmSig: EMPTY_BYTES,
@@ -409,7 +405,6 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
                             utxoPos: this.depositUtxoPos,
                             rlpOutputTx: this.depositTx,
                             outputType: OUTPUT_TYPE_PAYMENT,
-                            outputGuardPreimage: EMPTY_BYTES,
                             outputTxInclusionProof: this.merkleProofForDepositTx,
                         };
 
