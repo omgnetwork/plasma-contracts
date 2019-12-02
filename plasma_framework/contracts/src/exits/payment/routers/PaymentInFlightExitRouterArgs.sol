@@ -51,7 +51,6 @@ library PaymentInFlightExitRouterArgs {
      * @param inFlightTxInputIndex Index of shared input for transactions in flight
      * @param competingTx RLP-encoded competing transaction
      * @param competingTxInputIndex Index of shared input in competing transaction
-     * @param outputGuardPreimage (Optional) Output guard preimage of the shared input
      * @param competingTxPos (Optional) Position of competing transaction in the chain, if included
      * @param competingTxInclusionProof (Optional) Merkle proofs showing that the competing transaction was contained in chain
      * @param competingTxWitness Witness for competing transaction
@@ -65,7 +64,6 @@ library PaymentInFlightExitRouterArgs {
         uint16 inFlightTxInputIndex;
         bytes competingTx;
         uint16 competingTxInputIndex;
-        bytes outputGuardPreimage;
         uint256 competingTxPos;
         bytes competingTxInclusionProof;
         bytes competingTxWitness;

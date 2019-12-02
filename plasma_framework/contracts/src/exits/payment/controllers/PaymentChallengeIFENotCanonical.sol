@@ -4,12 +4,9 @@ pragma experimental ABIEncoderV2;
 import "../PaymentExitDataModel.sol";
 import "../PaymentInFlightExitModelUtils.sol";
 import "../routers/PaymentInFlightExitRouterArgs.sol";
-import "../../interfaces/IOutputGuardHandler.sol";
 import "../../interfaces/ISpendingCondition.sol";
 import "../../interfaces/ITxFinalizationVerifier.sol";
-import "../../models/OutputGuardModel.sol";
 import "../../models/TxFinalizationModel.sol";
-import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../registries/SpendingConditionRegistry.sol";
 import "../../utils/ExitId.sol";
 import "../../utils/OutputId.sol";
@@ -32,7 +29,6 @@ library PaymentChallengeIFENotCanonical {
         PlasmaFramework framework;
         IsDeposit.Predicate isDeposit;
         SpendingConditionRegistry spendingConditionRegistry;
-        OutputGuardHandlerRegistry outputGuardHandlerRegistry;
         ITxFinalizationVerifier txFinalizationVerifier;
         uint256 supportedTxType;
     }
@@ -56,7 +52,7 @@ library PaymentChallengeIFENotCanonical {
     function buildController(
         PlasmaFramework framework,
         SpendingConditionRegistry spendingConditionRegistry,
-        OutputGuardHandlerRegistry outputGuardHandlerRegistry,
+        
         ITxFinalizationVerifier txFinalizationVerifier,
         uint256 supportedTxType
     )
@@ -68,7 +64,6 @@ library PaymentChallengeIFENotCanonical {
             framework: framework,
             isDeposit: IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL()),
             spendingConditionRegistry: spendingConditionRegistry,
-            outputGuardHandlerRegistry: outputGuardHandlerRegistry,
             txFinalizationVerifier: txFinalizationVerifier,
             supportedTxType: supportedTxType
         });
@@ -130,7 +125,7 @@ library PaymentChallengeIFENotCanonical {
         require(isSpentByCompetingTx, "Competing input spending condition is not met");
 
         // Determine the position of the competing transaction
-        uint256 competitorPosition = verifyCompetingTxFinalized(self, args, output);
+        uint256 competitorPosition = verifyCompetingTxFinalized(self, args);
 
         require(
             ife.oldestCompetitorPosition == 0 || ife.oldestCompetitorPosition > competitorPosition,
@@ -206,8 +201,7 @@ library PaymentChallengeIFENotCanonical {
 
     function verifyCompetingTxFinalized(
         Controller memory self,
-        PaymentInFlightExitRouterArgs.ChallengeCanonicityArgs memory args,
-        WireTransaction.Output memory output
+        PaymentInFlightExitRouterArgs.ChallengeCanonicityArgs memory args
     )
         private
         view
@@ -224,23 +218,15 @@ library PaymentChallengeIFENotCanonical {
             // skip the verifier.isProtocolFinalized() for MoreVP since it only needs to check the existence of tx.
             require(protocol == Protocol.MORE_VP(), "Competing tx without position must be a MoreVP tx");
         } else {
-            IOutputGuardHandler outputGuardHandler = self.outputGuardHandlerRegistry.outputGuardHandlers(output.outputType);
-            require(address(outputGuardHandler) != address(0), "Failed to retrieve the outputGuardHandler of the output type");
-
-            OutputGuardModel.Data memory outputGuardData = OutputGuardModel.Data({
-                guard: output.outputGuard,
-                preimage: args.outputGuardPreimage
-            });
-            require(outputGuardHandler.isValid(outputGuardData), "Output guard information is invalid");
-
+            // TODO: move to simplified verifier
             TxFinalizationModel.Data memory finalizationData = TxFinalizationModel.Data({
                 framework: self.framework,
                 protocol: protocol,
                 txBytes: args.competingTx,
                 txPos: competingTxUtxoPos.txPos(),
                 inclusionProof: args.competingTxInclusionProof,
-                confirmSig: args.competingTxConfirmSig,
-                confirmSigAddress: outputGuardHandler.getConfirmSigAddress(outputGuardData)
+                confirmSig: bytes(""),
+                confirmSigAddress: address(0)
             });
             require(self.txFinalizationVerifier.isStandardFinalized(finalizationData), "Failed to verify the position of competing tx");
 
