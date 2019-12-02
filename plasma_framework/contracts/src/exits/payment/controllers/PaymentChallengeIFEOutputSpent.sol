@@ -4,13 +4,10 @@ pragma experimental ABIEncoderV2;
 import "../PaymentExitDataModel.sol";
 import "../PaymentInFlightExitModelUtils.sol";
 import "../routers/PaymentInFlightExitRouterArgs.sol";
-import "../../interfaces/IOutputGuardHandler.sol";
 import "../../interfaces/ISpendingCondition.sol";
 import "../../interfaces/ITxFinalizationVerifier.sol";
-import "../../models/OutputGuardModel.sol";
 import "../../models/TxFinalizationModel.sol";
 import "../../registries/SpendingConditionRegistry.sol";
-import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../utils/ExitId.sol";
 import "../../../utils/Merkle.sol";
 import "../../../utils/SafeEthTransfer.sol";
@@ -26,7 +23,6 @@ library PaymentChallengeIFEOutputSpent {
     struct Controller {
         PlasmaFramework framework;
         SpendingConditionRegistry spendingConditionRegistry;
-        OutputGuardHandlerRegistry outputGuardHandlerRegistry;
         ITxFinalizationVerifier txFinalizationVerifier;
         uint256 safeGasStipend;
     }

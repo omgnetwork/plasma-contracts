@@ -166,7 +166,6 @@ contract PaymentInFlightExitRouter is
         challengeInputSpentController = PaymentChallengeIFEInputSpent.buildController(
             args.framework,
             args.spendingConditionRegistry,
-            args.outputGuardHandlerRegistry,
             args.txFinalizationVerifier,
             args.safeGasStipend
         );
@@ -174,7 +173,6 @@ contract PaymentInFlightExitRouter is
         challengeOutputSpentController = PaymentChallengeIFEOutputSpent.Controller(
             args.framework,
             args.spendingConditionRegistry,
-            args.outputGuardHandlerRegistry,
             args.txFinalizationVerifier,
             args.safeGasStipend
         );
