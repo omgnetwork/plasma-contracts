@@ -286,10 +286,11 @@ class PlasmaFramework:
     def standardExitBond(self):
         return self.payment_exit_game.startStandardExitBondSize()
 
-    def exits(self, exit_ids):
-        return self.payment_exit_game.standardExits(exit_ids)
     def inFlightExitBond(self):
         return self.payment_exit_game.startIFEBondSize()
+
+    def exits(self, exit_id):
+        return self.payment_exit_game.standardExits([exit_id])
 
     def inFlightExits(self, exit_id):
         return self.payment_exit_game.inFlightExits(exit_id)
