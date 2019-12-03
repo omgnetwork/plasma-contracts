@@ -20,7 +20,7 @@ const {
 const { expect } = require('chai');
 
 const {
-    OUTPUT_TYPE, PROTOCOL, TX_TYPE, VAULT_ID, SAFE_GAS_STIPEND,
+    OUTPUT_TYPE, PROTOCOL, TX_TYPE, VAULT_ID, DUMMY_INPUT_1, SAFE_GAS_STIPEND,
 } = require('../../../../helpers/constants.js');
 const { MerkleTree } = require('../../../../helpers/merkle.js');
 const { buildUtxoPos, utxoPosToTxPos } = require('../../../../helpers/positions.js');
@@ -57,7 +57,7 @@ contract('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
             outputGuardPreimage = EMPTY_BYTES,
         ) => {
             const output = new PaymentTransactionOutput(outputType, amount, owner, ETH);
-            const txObj = new PaymentTransaction(txType, [0], [output]);
+            const txObj = new PaymentTransaction(txType, [DUMMY_INPUT_1], [output]);
             const tx = web3.utils.bytesToHex(txObj.rlpEncoded());
 
             const outputIndex = 0;
@@ -151,7 +151,7 @@ contract('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
                 this.exitGame.startStandardExit(
                     args, { from: outputOwner, value: this.startStandardExitBondSize },
                 ),
-                'Should not exit with amount 0',
+                'Output amount must not be 0',
             );
         });
 

@@ -11,7 +11,7 @@ const { expect } = require('chai');
 const { PaymentTransaction, PaymentTransactionOutput } = require('../../helpers/transaction.js');
 const { spentOnGas } = require('../../helpers/utils.js');
 const {
-    PROTOCOL, OUTPUT_TYPE, TX_TYPE, SAFE_GAS_STIPEND,
+    PROTOCOL, OUTPUT_TYPE, TX_TYPE, SAFE_GAS_STIPEND, DUMMY_INPUT_1,
 } = require('../../helpers/constants.js');
 const Testlang = require('../../helpers/testlang.js');
 
@@ -149,7 +149,7 @@ contract('EthVault', ([_, authority, maintainer, alice]) => {
                 const output = new PaymentTransactionOutput(
                     OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, constants.ZERO_ADDRESS,
                 );
-                const deposit = new PaymentTransaction(123, [0], [output]);
+                const deposit = new PaymentTransaction(123, [DUMMY_INPUT_1], [output]);
 
                 await expectRevert(
                     this.ethVault.deposit(deposit.rlpEncoded(), { from: alice, value: DEPOSIT_VALUE }),
@@ -161,7 +161,7 @@ contract('EthVault', ([_, authority, maintainer, alice]) => {
                 const output = new PaymentTransactionOutput(
                     OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, constants.ZERO_ADDRESS,
                 );
-                const deposit = new PaymentTransaction(1, [0], [output]);
+                const deposit = new PaymentTransaction(1, [DUMMY_INPUT_1], [output]);
 
                 await expectRevert(
                     this.ethVault.deposit(deposit.rlpEncoded(), { from: alice, value: DEPOSIT_VALUE }),

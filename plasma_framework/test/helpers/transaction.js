@@ -1,10 +1,6 @@
 const rlp = require('rlp');
 const { BN } = require('openzeppelin-test-helpers');
-const { EMPTY_BYTES_32, OUTPUT_TYPE } = require('../helpers/constants.js');
-
-const TransactionTypes = {
-    PLASMA_DEPOSIT: 1,
-};
+const { EMPTY_BYTES_32, TX_TYPE } = require('../helpers/constants.js');
 
 class WireTransactionOutput {
     constructor(type, amount, outputGuard, token) {
@@ -45,11 +41,21 @@ class WireTransaction {
     rlpEncoded() {
         const tx = [this.transactionType];
 
-        tx.push(this.inputs);
+        tx.push(WireTransaction.formatInputsForRlpEncoding(this.inputs));
         tx.push(WireTransaction.formatForRlpEncoding(this.outputs));
         tx.push(this.metaData);
 
         return rlp.encode(tx);
+    }
+
+    static formatInputsForRlpEncoding(items) {
+        return items.map((item) => {
+            if (Number.isInteger(item) || item instanceof Number || item instanceof BN) {
+                const hex = web3.utils.numberToHex(item);
+                return `0x${hex.replace('0x', '').padStart(64, '0')}`;
+            }
+            return item;
+        });
     }
 
     static formatForRlpEncoding(items) {
@@ -65,7 +71,7 @@ class PaymentTransaction extends WireTransaction {}
 
 class PlasmaDepositTransaction extends PaymentTransaction {
     constructor(output, metaData = EMPTY_BYTES_32) {
-        super(TransactionTypes.PLASMA_DEPOSIT, [], [output], metaData);
+        super(TX_TYPE.PAYMENT, [], [output], metaData);
     }
 }
 

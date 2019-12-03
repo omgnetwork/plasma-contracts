@@ -22,7 +22,7 @@ contract('RLP invalid tests', () => {
             } else if (testName.includes('stringListInvalidEncodedItemLength')) {
                 await expectRevert(this.rlp.decodeList(encoded), 'Invalid decoded length of RLP item found during counting items in a list');
             } else if (testName.includes('shortStringInvalidEncodedLength')) {
-                await expectRevert(this.rlp.decodeUint(encoded), 'Decoded length is greater than input data');
+                await expectRevert(this.rlp.decodeUint(encoded), 'Decoded item length must be equal to the input data length');
             } else if (testName.includes('wrongEmptyString')) {
                 await expectRevert(this.rlp.decodeUint(encoded), 'Item length must be between 1 and 33 bytes');
                 await expectRevert(this.rlp.decodeList(encoded), 'Item is not a list');
@@ -31,19 +31,25 @@ contract('RLP invalid tests', () => {
             } else if (testName.includes('invalidList')) {
                 await expectRevert(this.rlp.decodeList(encoded), 'Item is not a list');
             } else if (testName.includes('wrongSizeList')) {
-                await expectRevert(this.rlp.decodeList(encoded), 'Invalid RLP encoding');
+                await expectRevert(this.rlp.decodeList(encoded), 'Invalid length for a long list');
             } else if (testName.includes('bytesShouldBeSingleByte')) {
-                await expectRevert(this.rlp.decodeUint(encoded), 'Invalid RLP encoding');
-            } else if (testName.includes('leadingZerosInLongLengthArray2')) {
-                await expectRevert(this.rlp.decodeBytes32(encoded), 'Invalid RLP encoding');
+                await expectRevert(this.rlp.decodeUint(encoded), 'Invalid short string encoding');
+            } else if (testName.includes('leadingZerosInLongLengthArray')) {
+                await expectRevert(this.rlp.decodeString(encoded), 'Invalid leading zeros in length of the length for a long string');
             } else if (testName.includes('leadingZerosInLongLengthList')) {
-                await expectRevert(this.rlp.decodeList(encoded), 'Invalid RLP encoding');
+                await expectRevert(this.rlp.decodeList(encoded), 'Invalid leading zeros in length of the length for a long list');
             } else if (testName.includes('nonOptimalLongLengthList')) {
-                await expectRevert(this.rlp.decodeList(encoded), 'Invalid RLP encoding');
+                await expectRevert(this.rlp.decodeList(encoded), 'Invalid length for a long list');
             } else if (testName.includes('nonOptimalLongLengthArray')) {
-                await expectRevert(this.rlp.decodeString(encoded), 'Invalid RLP encoding');
+                await expectRevert(this.rlp.decodeString(encoded), 'Invalid length for a long string');
             } else if (testName.includes('longstringInvalidEncodedLength')) {
-                await expectRevert(this.rlp.decodePayloadOffset(encoded), 'Decoded RLPItem payload length is invalid');
+                await expectRevert(this.rlp.decodeString(encoded), 'Decoded RLP length is invalid');
+            } else if (testName.includes('incorrectLengthInArray')) {
+                await expectRevert(this.rlp.decodeString(encoded), 'Invalid leading zeros in length of the length for a long string');
+            } else if (testName.includes('UInt')) {
+                await expectRevert(this.rlp.decodeUint(encoded), 'Leading zeros are invalid');
+            } else if (testName.includes('emptyLonglist')) {
+                await expectRevert(this.rlp.decodeList(encoded), 'Decoded RLP length for list is invalid');
             }
         });
     });

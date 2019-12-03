@@ -45,3 +45,6 @@ coverage.json
 
 # pytest-xprocess
 .xprocess/
+
+#tenderly config 
+tenderly.yaml

@@ -4,14 +4,12 @@ const { MerkleTree } = require('./merkle.js');
 const { buildUtxoPos } = require('./positions.js');
 const { buildOutputGuard, isDeposit, getOutputId } = require('./utils.js');
 const { PaymentTransactionOutput, PaymentTransaction, PlasmaDepositTransaction } = require('./transaction.js');
-const { EMPTY_BYTES } = require('./constants.js');
+const { EMPTY_BYTES, DUMMY_INPUT_1, DUMMY_INPUT_2 } = require('./constants.js');
 
 const ETH = constants.ZERO_ADDRESS;
 const IFE_TX_TYPE = 1;
 const WITNESS_LENGTH_IN_BYTES = 65;
 const IN_FLIGHT_TX_WITNESS_BYTES = web3.utils.bytesToHex('a'.repeat(WITNESS_LENGTH_IN_BYTES));
-const DUMMY_INPUT_1 = '0x0000000000000000000000000000000000000000000000000000000000000001';
-const DUMMY_INPUT_2 = '0x0000000000000000000000000000000000000000000000000000000000000002';
 const MERKLE_TREE_HEIGHT = 3;
 
 /**
