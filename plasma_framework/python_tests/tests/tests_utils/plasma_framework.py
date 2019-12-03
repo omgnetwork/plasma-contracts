@@ -109,7 +109,7 @@ class PlasmaFramework:
 
         libs, libs_map = self._deploy_libraries(libs, get_contract, maintainer)
 
-        paymet_exit_game_args = (
+        payment_exit_game_args = (
             self.plasma_framework.address,
             self.eth_vault_id,
             self.erc20_vault_id,
@@ -120,7 +120,7 @@ class PlasmaFramework:
         )
         payment_exit_game = get_contract("PaymentExitGame",
                                          sender=maintainer,
-                                         args=(paymet_exit_game_args,),
+                                         args=(payment_exit_game_args,),
                                          libraries=libs_map)
 
         return payment_exit_game
