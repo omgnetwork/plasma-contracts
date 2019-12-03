@@ -188,8 +188,31 @@ class PlasmaFramework:
     def startFeeExit(self, token, amount):
         raise NotImplementedError
 
-    def startInFlightExit(self, in_flight_tx, input_txs, input_txs_inclusion_proofs, in_flight_tx_sigs):
-        raise NotImplementedError
+    def startInFlightExit(self,
+                          in_flight_tx,
+                          input_txs,
+                          input_txs_inclusion_proofs,
+                          in_flight_tx_sigs,
+                          input_utxos_pos,
+                          **kwargs):
+
+        in_flight_tx_witnesses = in_flight_tx_sigs
+
+        # The following arguments are to be used in the future
+        output_guard_preimages_for_inputs = [EMPTY_BYTES] * len(input_utxos_pos)
+        input_tx_confirm_sigs = [EMPTY_BYTES] * len(input_utxos_pos)
+        input_spending_cond_args = [EMPTY_BYTES] * len(input_utxos_pos)
+
+        args = [in_flight_tx,
+                input_txs,
+                input_utxos_pos,
+                output_guard_preimages_for_inputs,
+                input_txs_inclusion_proofs,
+                input_tx_confirm_sigs,
+                in_flight_tx_witnesses,
+                input_spending_cond_args]
+
+        self.payment_exit_game.startInFlightExit(args, **kwargs)
 
     def piggybackInFlightExit(self, in_flight_tx, output_index):
         raise NotImplementedError
@@ -225,7 +248,7 @@ class PlasmaFramework:
         return self.plasma_framework.processExits(vaultId, token, top_exit_id, exits_to_process)
 
     def getInFlightExitId(self, tx):
-        raise NotImplementedError
+        return self.payment_exit_game.getInFlightExitId(tx)
 
     def getStandardExitId(self, tx_bytes, utxo_pos):
         blknum, _, _ = decode_utxo_id(utxo_pos)
@@ -265,6 +288,11 @@ class PlasmaFramework:
 
     def exits(self, exit_ids):
         return self.payment_exit_game.standardExits(exit_ids)
+    def inFlightExitBond(self):
+        return self.payment_exit_game.startIFEBondSize()
+
+    def inFlightExits(self, exit_id):
+        return self.payment_exit_game.inFlightExits(exit_id)
 
     # additional convenience proxies (not taken from RootChain) #
 
