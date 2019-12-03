@@ -14,7 +14,6 @@ module.exports = {
             host: process.env.ETH_CLIENT_HOST || '127.0.0.1',
             port: process.env.ETH_CLIENT_PORT || 8545,
             from: process.env.DEPLOYER_ADDRESS,
-            gas: 10000000,
             network_id: '*',
         },
         // Remote means that the remote client does not possess the private keys.
