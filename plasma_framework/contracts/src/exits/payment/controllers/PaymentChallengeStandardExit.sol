@@ -104,7 +104,7 @@ library PaymentChallengeStandardExit {
         uint256 challengeTxType = WireTransaction.getTransactionType(data.args.challengeTx);
         uint8 protocol = data.controller.framework.protocols(challengeTxType);
 
-        //TODO: simplify tx finalizeion to be MoreVP only
+        //TODO: simplify tx finalization to be MoreVP only
         TxFinalizationModel.Data memory finalizationData = TxFinalizationModel.Data({
             framework: data.controller.framework,
             protocol: protocol,
