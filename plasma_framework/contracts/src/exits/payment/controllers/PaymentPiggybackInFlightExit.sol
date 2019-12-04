@@ -4,9 +4,6 @@ pragma experimental ABIEncoderV2;
 import "../PaymentExitDataModel.sol";
 import "../PaymentInFlightExitModelUtils.sol";
 import "../routers/PaymentInFlightExitRouterArgs.sol";
-import "../../models/OutputGuardModel.sol";
-import "../../interfaces/IOutputGuardHandler.sol";
-import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../utils/ExitableTimestamp.sol";
 import "../../utils/ExitId.sol";
 import "../../../framework/PlasmaFramework.sol";
@@ -31,7 +28,6 @@ library PaymentPiggybackInFlightExit {
         IsDeposit.Predicate isDeposit;
         ExitableTimestamp.Calculator exitableTimestampCalculator;
         IExitProcessor exitProcessor;
-        OutputGuardHandlerRegistry outputGuardHandlerRegistry;
         uint256 minExitPeriod;
         uint256 ethVaultId;
         uint256 erc20VaultId;
@@ -56,7 +52,6 @@ library PaymentPiggybackInFlightExit {
     function buildController(
         PlasmaFramework framework,
         IExitProcessor exitProcessor,
-        OutputGuardHandlerRegistry outputGuardHandlerRegistry,
         uint256 ethVaultId,
         uint256 erc20VaultId
     )
@@ -69,7 +64,6 @@ library PaymentPiggybackInFlightExit {
             isDeposit: IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL()),
             exitableTimestampCalculator: ExitableTimestamp.Calculator(framework.minExitPeriod()),
             exitProcessor: exitProcessor,
-            outputGuardHandlerRegistry: outputGuardHandlerRegistry,
             minExitPeriod: framework.minExitPeriod(),
             ethVaultId: ethVaultId,
             erc20VaultId: erc20VaultId
@@ -139,10 +133,11 @@ library PaymentPiggybackInFlightExit {
 
         PaymentExitDataModel.WithdrawData storage withdrawData = exit.outputs[args.outputIndex];
 
+        // TODO: move this to start IFE, as we are removing the mechanism of using output guard preimage.
         // For inputs, exit target is set during start inFlight exit.
         // For outputs, since output preimage data is held by the output owners, these must be retrieved on piggyback.
         PaymentOutputModel.Output memory output = PaymentTransactionModel.decode(args.inFlightTx).outputs[args.outputIndex];
-        address payable exitTarget = getExitTargetOfOutput(self, output.outputGuard, output.outputType, args.outputGuardPreimage);
+        address payable exitTarget = output.owner();
         require(exitTarget == msg.sender, "Can be called only by the exit target");
 
         if (isFirstPiggybackOfTheToken(exit, withdrawData.token)) {
@@ -179,31 +174,6 @@ library PaymentPiggybackInFlightExit {
         }
 
         controller.framework.enqueue(vaultId, token, exitableAt, utxoPos.txPos(), exitId, controller.exitProcessor);
-    }
-
-    function getExitTargetOfOutput(
-        Controller memory controller,
-        bytes20 outputGuard,
-        uint256 outputType,
-        bytes memory outputGuardPreimage
-    )
-        private
-        view
-        returns (address payable)
-    {
-        OutputGuardModel.Data memory outputGuardData = OutputGuardModel.Data({
-            guard: outputGuard,
-            preimage: outputGuardPreimage
-        });
-        IOutputGuardHandler handler = controller.outputGuardHandlerRegistry
-                                                .outputGuardHandlers(outputType);
-
-        require(address(handler) != address(0),
-            "No outputGuardHandler is registered for the output type");
-
-        require(handler.isValid(outputGuardData),
-                "Some output guard information is invalid");
-        return handler.getExitTarget(outputGuardData);
     }
 
     function isFirstPiggybackOfTheToken(ExitModel.InFlightExit memory ife, address token)

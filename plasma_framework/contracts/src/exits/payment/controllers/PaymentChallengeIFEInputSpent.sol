@@ -4,13 +4,10 @@ pragma experimental ABIEncoderV2;
 import "../PaymentExitDataModel.sol";
 import "../PaymentInFlightExitModelUtils.sol";
 import "../routers/PaymentInFlightExitRouterArgs.sol";
-import "../../interfaces/IOutputGuardHandler.sol";
 import "../../interfaces/ISpendingCondition.sol";
 import "../../interfaces/ITxFinalizationVerifier.sol";
-import "../../models/OutputGuardModel.sol";
 import "../../models/TxFinalizationModel.sol";
 import "../../registries/SpendingConditionRegistry.sol";
-import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../utils/ExitId.sol";
 import "../../utils/OutputId.sol";
 import "../../../utils/IsDeposit.sol";
@@ -30,7 +27,6 @@ library PaymentChallengeIFEInputSpent {
         PlasmaFramework framework;
         IsDeposit.Predicate isDeposit;
         SpendingConditionRegistry spendingConditionRegistry;
-        OutputGuardHandlerRegistry outputGuardHandlerRegistry;
         ITxFinalizationVerifier txFinalizationVerifier;
         uint256 safeGasStipend;
     }
@@ -57,7 +53,6 @@ library PaymentChallengeIFEInputSpent {
     function buildController(
         PlasmaFramework framework,
         SpendingConditionRegistry spendingConditionRegistry,
-        OutputGuardHandlerRegistry outputGuardHandlerRegistry,
         ITxFinalizationVerifier txFinalizationVerifier,
         uint256 safeGasStipend
     )
@@ -69,7 +64,6 @@ library PaymentChallengeIFEInputSpent {
             framework: framework,
             isDeposit: IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL()),
             spendingConditionRegistry: spendingConditionRegistry,
-            outputGuardHandlerRegistry: outputGuardHandlerRegistry,
             txFinalizationVerifier: txFinalizationVerifier,
             safeGasStipend: safeGasStipend
         });

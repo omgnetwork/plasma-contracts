@@ -1,25 +1,24 @@
-const PlasmaFramework = artifacts.require('PlasmaFramework');
-const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry');
-const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry');
-const PaymentTransactionStateTransitionVerifier = artifacts.require('PaymentTransactionStateTransitionVerifier');
-const TxFinalizationVerifier = artifacts.require('TxFinalizationVerifier');
+const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
+const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
+const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
 const PaymentStandardExitRouter = artifacts.require('PaymentStandardExitRouterMock');
 const PaymentChallengeStandardExit = artifacts.require('PaymentChallengeStandardExit');
 const PaymentProcessStandardExit = artifacts.require('PaymentProcessStandardExit');
 const PaymentStartStandardExit = artifacts.require('PaymentStartStandardExit');
 
-const { expectRevert } = require('openzeppelin-test-helpers');
+const { expectRevert, constants } = require('openzeppelin-test-helpers');
 
-const config = require('../../../../config.js');
+const { VAULT_ID, TX_TYPE, SAFE_GAS_STIPEND } = require('../../../helpers/constants.js');
 
 contract('PaymentStandardExitRouter', () => {
-    before('get deployed contracts and link libraries', async () => {
-        const plasmaFramework = await PlasmaFramework.deployed();
-        const outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.deployed();
-        const spendingConditionRegistry = await SpendingConditionRegistry.deployed();
-        const txVerifier = await TxFinalizationVerifier.deployed();
-        const stateTransitionVerifier = await PaymentTransactionStateTransitionVerifier.deployed();
+    const MIN_EXIT_PERIOD = 1000;
+    const INITIAL_IMMUNE_VAULTS_NUM = 1;
+    const INITIAL_IMMUNE_EXIT_GAME_NUM = 1;
+    const DUMMY_SPENDING_CONDITION_REGISTRY = constants.ZERO_ADDRESS;
+    const DUMMY_TX_FINALIZATION_VERIFIER = constants.ZERO_ADDRESS;
+    const DUMMY_STATE_TRANSITION_VERIFIER = constants.ZERO_ADDRESS;
 
+    before('deploy and link with controller lib', async () => {
         const startStandardExit = await PaymentStartStandardExit.new();
         const challengeStandardExit = await PaymentChallengeStandardExit.new();
         const processStandardExit = await PaymentProcessStandardExit.new();
@@ -27,35 +26,50 @@ contract('PaymentStandardExitRouter', () => {
         await PaymentStandardExitRouter.link('PaymentStartStandardExit', startStandardExit.address);
         await PaymentStandardExitRouter.link('PaymentChallengeStandardExit', challengeStandardExit.address);
         await PaymentStandardExitRouter.link('PaymentProcessStandardExit', processStandardExit.address);
+    });
 
-        this.exitGameArgs = {
-            framework: plasmaFramework.address,
-            outputGuardHandlerRegistry: outputGuardHandlerRegistry.address,
-            spendingConditionRegistry: spendingConditionRegistry.address,
-            stateTransitionVerifier: stateTransitionVerifier.address,
-            txFinalizationVerifier: txVerifier.address,
-            supportTxType: config.registerKeys.txTypes.payment,
-            safeGasStipend: config.frameworks.safeGasStipend.v1,
-        };
+    beforeEach('prepare contracts', async () => {
+        this.framework = await SpyPlasmaFramework.new(
+            MIN_EXIT_PERIOD, INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
+        );
+        this.ethVault = await SpyEthVault.new(this.framework.address);
+        this.erc20Vault = await SpyErc20Vault.new(this.framework.address);
     });
 
     it('should fail when being deployed with unset ETH vault', async () => {
-        const notRegisteredEthVaultId = config.registerKeys.vaultId.eth + 10;
-        this.exitGameArgs.ethVaultId = notRegisteredEthVaultId;
-        this.exitGameArgs.erc20VaultId = config.registerKeys.vaultId.erc20;
+        await this.framework.registerVault(VAULT_ID.ERC20, this.erc20Vault.address);
+        const exitGameArgs = [
+            this.framework.address,
+            VAULT_ID.ETH,
+            VAULT_ID.ERC20,
+            DUMMY_SPENDING_CONDITION_REGISTRY,
+            DUMMY_STATE_TRANSITION_VERIFIER,
+            DUMMY_TX_FINALIZATION_VERIFIER,
+            TX_TYPE.PAYMENT,
+            SAFE_GAS_STIPEND,
+        ];
+
         await expectRevert(
-            PaymentStandardExitRouter.new(this.exitGameArgs),
+            PaymentStandardExitRouter.new(exitGameArgs),
             'Invalid ETH vault',
         );
     });
 
     it('should fail when being deployed with unset ERC20 vault', async () => {
-        const notRegisteredErc20VaultId = config.registerKeys.vaultId.erc20 + 10;
-        this.exitGameArgs.ethVaultId = config.registerKeys.vaultId.eth;
-        this.exitGameArgs.erc20VaultId = notRegisteredErc20VaultId;
+        await this.framework.registerVault(VAULT_ID.ETH, this.ethVault.address);
+        const exitGameArgs = [
+            this.framework.address,
+            VAULT_ID.ETH,
+            VAULT_ID.ERC20,
+            DUMMY_SPENDING_CONDITION_REGISTRY,
+            DUMMY_STATE_TRANSITION_VERIFIER,
+            DUMMY_TX_FINALIZATION_VERIFIER,
+            TX_TYPE.PAYMENT,
+            SAFE_GAS_STIPEND,
+        ];
 
         await expectRevert(
-            PaymentStandardExitRouter.new(this.exitGameArgs),
+            PaymentStandardExitRouter.new(exitGameArgs),
             'Invalid ERC20 vault',
         );
     });

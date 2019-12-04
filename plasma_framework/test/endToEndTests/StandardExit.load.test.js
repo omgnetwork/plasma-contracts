@@ -77,7 +77,6 @@ contract('StandardExit getter Load Test', ([_deployer, _maintainer, richFather])
                             utxoPos: this.depositUtxoPos[i],
                             rlpOutputTx: this.depositTx[i],
                             outputType: OUTPUT_TYPE_PAYMENT,
-                            outputGuardPreimage: EMPTY_BYTES,
                             outputTxInclusionProof: this.merkleProofForDepositTx[i],
                         };
                         startExits.push(this.exitGame.startStandardExit(args,

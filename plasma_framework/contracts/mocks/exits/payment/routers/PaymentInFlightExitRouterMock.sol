@@ -6,7 +6,6 @@ import "../../../../src/exits/payment/routers/PaymentInFlightExitRouter.sol";
 import "../../../../src/exits/payment/routers/PaymentInFlightExitRouterArgs.sol";
 import "../../../../src/framework/PlasmaFramework.sol";
 import "../../../../src/exits/interfaces/IStateTransitionVerifier.sol";
-import "../../../../src/exits/registries/OutputGuardHandlerRegistry.sol";
 import "../../../../src/exits/payment/PaymentInFlightExitModelUtils.sol";
 
 import "../../../../src/utils/FailFastReentrancyGuard.sol";

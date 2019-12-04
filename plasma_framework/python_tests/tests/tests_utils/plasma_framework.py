@@ -31,7 +31,6 @@ class PlasmaFramework:
 
         self._setup_deposit_verifiers(get_contract, maintainer)
         self._setup_vaults(get_contract, maintainer)
-        self._setup_output_guards(get_contract, maintainer)
         self._setup_spending_conditions(get_contract, maintainer)
         self._setup_state_verifiers(get_contract, maintainer)
         self._setup_exit_games(get_contract, maintainer)
@@ -81,16 +80,6 @@ class PlasmaFramework:
 
         _register_spending_condition("PaymentOutputToPaymentTxCondition", TxOutputTypes.PAYMENT, TxTypes.PAYMENT)
 
-    def _setup_output_guards(self, get_contract, maintainer):
-        self.output_guard_registry = get_contract("OutputGuardHandlerRegistry", sender=maintainer)
-
-        self.payment_output_guard = get_contract("PaymentOutputGuardHandler", args=(TxOutputTypes.PAYMENT.value,),
-                                                 sender=maintainer)
-
-        self.output_guard_registry.registerOutputGuardHandler(TxOutputTypes.PAYMENT.value,
-                                                              self.payment_output_guard.address,
-                                                              **{'from': maintainer.address})
-
     def _setup_state_verifiers(self, get_contract, maintainer):
         self.payment_state_verifier = get_contract('PaymentTransactionStateTransitionVerifier', sender=maintainer)
         self.tx_finalization_verifier = get_contract('TxFinalizationVerifier', sender=maintainer)
@@ -124,7 +113,6 @@ class PlasmaFramework:
             self.plasma_framework.address,
             self.eth_vault_id,
             self.erc20_vault_id,
-            self.output_guard_registry.address,
             self.spending_condition_registry.address,
             self.payment_state_verifier.address,
             self.tx_finalization_verifier.address,
@@ -176,7 +164,7 @@ class PlasmaFramework:
         return self.erc20_vault.deposit(deposit_tx, **kwargs)
 
     def startStandardExit(self, utxo_pos, output_tx, output_tx_inclusion_proof, **kwargs):
-        args = (utxo_pos, output_tx, b'', output_tx_inclusion_proof)
+        args = (utxo_pos, output_tx, output_tx_inclusion_proof)
         return self.payment_exit_game.startStandardExit(args, **kwargs)
 
     def challengeStandardExit(self,
@@ -189,13 +177,12 @@ class PlasmaFramework:
 
         # The following arguments are to be used in the future
         spending_condition_optional_args = EMPTY_BYTES
-        output_guard_preimage = EMPTY_BYTES
         challenge_tx_pos = 0
         challenge_tx_inclusion_proof = EMPTY_BYTES
 
         witness = challenge_tx_sig
         args = (standard_exit_id, exiting_tx, challenge_tx, input_index, witness, spending_condition_optional_args,
-                output_guard_preimage, challenge_tx_pos, challenge_tx_inclusion_proof, challenge_tx_sig)
+                challenge_tx_pos, challenge_tx_inclusion_proof, challenge_tx_sig)
 
         return self.payment_exit_game.challengeStandardExit(args, **kwargs)
 

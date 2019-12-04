@@ -1,5 +1,4 @@
 const ExitIdWrapper = artifacts.require('ExitIdWrapper');
-const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry');
 const PaymentChallengeIFENotCanonical = artifacts.require('PaymentChallengeIFENotCanonical');
 const PaymentChallengeIFEInputSpent = artifacts.require('PaymentChallengeIFEInputSpent');
 const PaymentChallengeIFEOutputSpent = artifacts.require('PaymentChallengeIFEOutputSpent');
@@ -76,14 +75,12 @@ contract('PaymentInFlightExitRouter', ([_, bondOwner, inputOwner, outputOwner]) 
         await this.framework.registerVault(VAULT_ID.ETH, ethVault.address);
         await this.framework.registerVault(VAULT_ID.ERC20, erc20Vault.address);
 
-        this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
         const spendingConditionRegistry = await SpendingConditionRegistry.new();
 
         const exitArgs = [
             this.framework.address,
             VAULT_ID.ETH,
             VAULT_ID.ERC20,
-            this.outputGuardHandlerRegistry.address,
             spendingConditionRegistry.address,
             this.stateTransitionVerifier.address,
             this.txFinalizationVerifier.address,
@@ -105,8 +102,7 @@ contract('PaymentInFlightExitRouter', ([_, bondOwner, inputOwner, outputOwner]) 
          * */
         const buildIFE = async () => {
             const outputAmount = 499;
-            const outputGuard = outputOwner;
-            const output1 = new PaymentTransactionOutput(OUTPUT_TYPE.ONE, outputAmount, outputGuard, ETH);
+            const output1 = new PaymentTransactionOutput(OUTPUT_TYPE.ONE, outputAmount, outputOwner, ETH);
 
             const inFlightTx = new PaymentTransaction(1, [buildUtxoPos(BLOCK_NUMBER, 0, 0)], [output1]);
             const rlpInFlighTxBytes = web3.utils.bytesToHex(inFlightTx.rlpEncoded());

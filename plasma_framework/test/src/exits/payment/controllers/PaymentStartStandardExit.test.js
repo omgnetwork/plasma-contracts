@@ -1,8 +1,6 @@
 const ExitableTimestamp = artifacts.require('ExitableTimestampWrapper');
 const ExitId = artifacts.require('ExitIdWrapper');
-const ExpectedOutputGuardHandler = artifacts.require('ExpectedOutputGuardHandler');
 const IsDeposit = artifacts.require('IsDepositWrapper');
-const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry');
 const PaymentChallengeStandardExit = artifacts.require('PaymentChallengeStandardExit');
 const PaymentProcessStandardExit = artifacts.require('PaymentProcessStandardExit');
 const PaymentStandardExitRouter = artifacts.require('PaymentStandardExitRouterMock');
@@ -54,7 +52,6 @@ contract('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
             amount, owner, blockNum,
             txType = TX_TYPE.PAYMENT,
             outputType = OUTPUT_TYPE.PAYMENT,
-            outputGuardPreimage = EMPTY_BYTES,
         ) => {
             const output = new PaymentTransactionOutput(outputType, amount, owner, ETH);
             const txObj = new PaymentTransaction(txType, [DUMMY_INPUT_1], [output]);
@@ -68,7 +65,6 @@ contract('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
             const args = {
                 utxoPos,
                 rlpOutputTx: tx,
-                outputGuardPreimage,
                 outputTxInclusionProof: merkleProof,
             };
 
@@ -99,12 +95,6 @@ contract('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
             await this.framework.registerVault(VAULT_ID.ERC20, erc20Vault.address);
 
             const spendingConditionRegistry = await SpendingConditionRegistry.new();
-            this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
-
-            const handler = await ExpectedOutputGuardHandler.new();
-            await handler.mockIsValid(true);
-            await handler.mockGetExitTarget(outputOwner);
-            await this.outputGuardHandlerRegistry.registerOutputGuardHandler(OUTPUT_TYPE.PAYMENT, handler.address);
 
             const txFinalizationVerifier = await TxFinalizationVerifier.new();
             const stateTransitionVerifier = await StateTransitionVerifierMock.new();
@@ -113,7 +103,6 @@ contract('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
                 this.framework.address,
                 VAULT_ID.ETH,
                 VAULT_ID.ERC20,
-                this.outputGuardHandlerRegistry.address,
                 spendingConditionRegistry.address,
                 stateTransitionVerifier.address,
                 txFinalizationVerifier.address,
@@ -197,45 +186,7 @@ contract('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
             );
         });
 
-        it('should fail when output guard handler is not registered with the output type', async () => {
-            const nonRegisteredOutputType = 2;
-
-            const { args, merkleTree } = buildTestData(
-                this.dummyAmount, outputOwner, this.dummyBlockNum, TX_TYPE.PAYMENT, nonRegisteredOutputType,
-            );
-
-            await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, this.dummyBlockTimestamp);
-
-            await expectRevert(
-                this.exitGame.startStandardExit(
-                    args, { from: outputOwner, value: this.startStandardExitBondSize },
-                ),
-                'Failed to get the output guard handler for the output type',
-            );
-        });
-
-        it('should fail when some of the output guard information (guard, pre-image) is not valid', async () => {
-            // register with handler that returns false when checking output guard information
-            const expectedValid = false;
-            const testOutputType = 2;
-            const handler = await ExpectedOutputGuardHandler.new(expectedValid, outputOwner);
-            await this.outputGuardHandlerRegistry.registerOutputGuardHandler(testOutputType, handler.address);
-
-            const { args, merkleTree } = buildTestData(
-                this.dummyAmount, outputOwner, this.dummyBlockNum, TX_TYPE.PAYMENT, testOutputType,
-            );
-
-            await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, this.dummyBlockTimestamp);
-
-            await expectRevert(
-                this.exitGame.startStandardExit(
-                    args, { from: outputOwner, value: this.startStandardExitBondSize },
-                ),
-                'Some output guard information is invalid',
-            );
-        });
-
-        it('should fail when not initiated by the exit target', async () => {
+        it('should fail when not initiated by the output owner', async () => {
             const { args, merkleTree } = buildTestData(this.dummyAmount, outputOwner, this.dummyBlockNum);
 
             await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, this.dummyBlockTimestamp);
@@ -244,7 +195,7 @@ contract('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
                 this.exitGame.startStandardExit(
                     args, { from: nonOutputOwner, value: this.startStandardExitBondSize },
                 ),
-                'Only exit target can start an exit',
+                'Only output owner can start an exit',
             );
         });
 

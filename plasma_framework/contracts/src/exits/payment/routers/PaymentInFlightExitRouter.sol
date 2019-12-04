@@ -12,7 +12,6 @@ import "../controllers/PaymentChallengeIFEOutputSpent.sol";
 import "../controllers/PaymentDeleteInFlightExit.sol";
 import "../controllers/PaymentProcessInFlightExit.sol";
 import "../../registries/SpendingConditionRegistry.sol";
-import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../interfaces/IStateTransitionVerifier.sol";
 import "../../interfaces/ITxFinalizationVerifier.sol";
 import "../../utils/BondSize.sol";
@@ -142,7 +141,6 @@ contract PaymentInFlightExitRouter is
 
         startInFlightExitController = PaymentStartInFlightExit.buildController(
             args.framework,
-            args.outputGuardHandlerRegistry,
             args.spendingConditionRegistry,
             args.stateTransitionVerifier,
             args.txFinalizationVerifier,
@@ -152,7 +150,6 @@ contract PaymentInFlightExitRouter is
         piggybackInFlightExitController = PaymentPiggybackInFlightExit.buildController(
             args.framework,
             this,
-            args.outputGuardHandlerRegistry,
             args.ethVaultId,
             args.erc20VaultId
         );
@@ -160,7 +157,6 @@ contract PaymentInFlightExitRouter is
         challengeCanonicityController = PaymentChallengeIFENotCanonical.buildController(
             args.framework,
             args.spendingConditionRegistry,
-            args.outputGuardHandlerRegistry,
             args.txFinalizationVerifier,
             args.supportTxType
         );
@@ -168,7 +164,6 @@ contract PaymentInFlightExitRouter is
         challengeInputSpentController = PaymentChallengeIFEInputSpent.buildController(
             args.framework,
             args.spendingConditionRegistry,
-            args.outputGuardHandlerRegistry,
             args.txFinalizationVerifier,
             args.safeGasStipend
         );
@@ -176,7 +171,6 @@ contract PaymentInFlightExitRouter is
         challengeOutputSpentController = PaymentChallengeIFEOutputSpent.Controller(
             args.framework,
             args.spendingConditionRegistry,
-            args.outputGuardHandlerRegistry,
             args.txFinalizationVerifier,
             args.safeGasStipend
         );

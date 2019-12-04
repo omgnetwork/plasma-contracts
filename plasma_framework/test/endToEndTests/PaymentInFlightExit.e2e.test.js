@@ -105,7 +105,6 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                         const inputTxs = [this.depositTx];
                         const inputTxTypes = [TX_TYPE_PAYMENT];
                         const inputUtxosPos = [this.depositUtxoPos];
-                        const outputGuardPreimagesForInputs = [EMPTY_BYTES];
                         const inputTxsInclusionProofs = [this.merkleProofForDepositTx];
                         const inputTxsConfirmSigs = [EMPTY_BYTES];
 
@@ -117,7 +116,6 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                             inputTxs,
                             inputTxTypes,
                             inputUtxosPos,
-                            outputGuardPreimagesForInputs,
                             inputTxsInclusionProofs,
                             inputTxsConfirmSigs,
                             inFlightTxWitnesses: [signature],
@@ -138,7 +136,6 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                             const args = {
                                 inFlightTx: this.inFlightTxRaw,
                                 outputIndex: this.exitingOutputIndex,
-                                outputGuardPreimage: EMPTY_BYTES,
                             };
 
                             this.piggybackTx = await this.exitGame.piggybackInFlightExitOnOutput(
@@ -256,7 +253,6 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                     inputTxs,
                                     inputTxTypes,
                                     inputUtxosPos,
-                                    outputGuardPreimagesForInputs: [EMPTY_BYTES, EMPTY_BYTES],
                                     inputTxsInclusionProofs,
                                     inputTxsConfirmSigs: [EMPTY_BYTES, EMPTY_BYTES],
                                     inFlightTxWitnesses: [this.signatureTx1, this.signatureTx1],
@@ -275,7 +271,6 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                     const args = {
                                         inFlightTx: this.tx1RlpEncoded,
                                         outputIndex: exitingOutputIndex,
-                                        outputGuardPreimage: EMPTY_BYTES,
                                     };
 
                                     await this.exitGame.piggybackInFlightExitOnOutput(
@@ -293,7 +288,6 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                             inFlightTxInputIndex: 0,
                                             competingTx: web3.utils.bytesToHex(this.tx2.rlpEncoded()),
                                             competingTxInputIndex: 0,
-                                            outputGuardPreimage: EMPTY_BYTES,
                                             competingTxPos: 0,
                                             competingTxInclusionProof: EMPTY_BYTES,
                                             competingTxWitness: this.signatureTx2,
@@ -435,7 +429,6 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                     inputTxs: [this.outputBData.depositTx],
                                     inputTxTypes: [TX_TYPE_PAYMENT],
                                     inputUtxosPos: [this.outputBData.depositUtxoPos],
-                                    outputGuardPreimagesForInputs: [EMPTY_BYTES],
                                     inputTxsInclusionProofs: [this.outputBData.depositInclusionProof],
                                     inputTxsConfirmSigs: [EMPTY_BYTES],
                                     inFlightTxWitnesses: [this.signatureBobTx2],
@@ -465,7 +458,6 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                         inputTxs,
                                         inputTxTypes,
                                         inputUtxosPos,
-                                        outputGuardPreimagesForInputs: [EMPTY_BYTES, EMPTY_BYTES],
                                         inputTxsInclusionProofs,
                                         inputTxsConfirmSigs: [EMPTY_BYTES, EMPTY_BYTES],
                                         inFlightTxWitnesses: [this.signatureAliceTx1, this.signatureBobTx1],
@@ -487,7 +479,6 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                             inFlightTxInputIndex: 1,
                                             competingTx: web3.utils.bytesToHex(this.tx2.rlpEncoded()),
                                             competingTxInputIndex: 0,
-                                            outputGuardPreimage: EMPTY_BYTES,
                                             competingTxPos: 0,
                                             competingTxInclusionProof: EMPTY_BYTES,
                                             competingTxWitness: this.signatureBobTx2,
@@ -504,7 +495,6 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                             inFlightTxInputIndex: 0,
                                             competingTx: web3.utils.bytesToHex(this.tx1.rlpEncoded()),
                                             competingTxInputIndex: 1,
-                                            outputGuardPreimage: EMPTY_BYTES,
                                             competingTxPos: 0,
                                             competingTxInclusionProof: EMPTY_BYTES,
                                             competingTxWitness: this.signatureBobTx1,
@@ -548,7 +538,6 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                                 const piggybackOutputArgs = {
                                                     inFlightTx: web3.utils.bytesToHex(this.tx2.rlpEncoded()),
                                                     outputIndex: 0,
-                                                    outputGuardPreimage: EMPTY_BYTES,
                                                 };
                                                 await this.exitGame.piggybackInFlightExitOnOutput(
                                                     piggybackOutputArgs,

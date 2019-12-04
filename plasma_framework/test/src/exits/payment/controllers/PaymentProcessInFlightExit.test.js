@@ -2,7 +2,6 @@
 
 const Attacker = artifacts.require('FallbackFunctionFailAttacker');
 const ERC20Mintable = artifacts.require('ERC20Mintable');
-const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry');
 const PaymentChallengeIFENotCanonical = artifacts.require('PaymentChallengeIFENotCanonical');
 const PaymentChallengeIFEInputSpent = artifacts.require('PaymentChallengeIFEInputSpent');
 const PaymentChallengeIFEOutputSpent = artifacts.require('PaymentChallengeIFEOutputSpent');
@@ -154,14 +153,12 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
             await this.framework.registerVault(VAULT_ID.ETH, this.ethVault.address);
             await this.framework.registerVault(VAULT_ID.ERC20, this.erc20Vault.address);
 
-            this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
             const spendingConditionRegistry = await SpendingConditionRegistry.new();
 
             const exitGameArgs = [
                 this.framework.address,
                 VAULT_ID.ETH,
                 VAULT_ID.ERC20,
-                this.outputGuardHandlerRegistry.address,
                 spendingConditionRegistry.address,
                 this.stateTransitionVerifier.address,
                 this.txFinalizationVerifier.address,

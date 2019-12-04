@@ -1,13 +1,11 @@
 /* eslint-disable no-console */
 
-const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry');
 const PaymentExitGame = artifacts.require('PaymentExitGame');
 const PaymentChallengeStandardExit = artifacts.require('PaymentChallengeStandardExit');
 const PaymentChallengeIFENotCanonical = artifacts.require('PaymentChallengeIFENotCanonical');
 const PaymentChallengeIFEInputSpent = artifacts.require('PaymentChallengeIFEInputSpent');
 const PaymentChallengeIFEOutputSpent = artifacts.require('PaymentChallengeIFEOutputSpent');
 const PaymentDeleteInFlightExit = artifacts.require('PaymentDeleteInFlightExit');
-const PaymentOutputGuardHandler = artifacts.require('PaymentOutputGuardHandler');
 const PaymentOutputToPaymentTxCondition = artifacts.require('PaymentOutputToPaymentTxCondition');
 const PaymentStartInFlightExit = artifacts.require('PaymentStartInFlightExit');
 const PaymentStartStandardExit = artifacts.require('PaymentStartStandardExit');
@@ -76,9 +74,6 @@ module.exports = async (
 
     // deploy exit game
 
-    await deployer.deploy(OutputGuardHandlerRegistry);
-    const outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.deployed();
-
     await deployer.deploy(SpendingConditionRegistry);
     const spendingConditionRegistry = await SpendingConditionRegistry.deployed();
 
@@ -94,7 +89,6 @@ module.exports = async (
         plasmaFramework.address,
         config.registerKeys.vaultId.eth,
         config.registerKeys.vaultId.erc20,
-        outputGuardHandlerRegistry.address,
         spendingConditionRegistry.address,
         stateVerifier.address,
         txFinalizationVerifier.address,
@@ -102,14 +96,6 @@ module.exports = async (
         config.frameworks.safeGasStipend.v1,
     ];
     const paymentExitGame = await deployer.deploy(PaymentExitGame, paymentExitGameArgs);
-
-    // handle output guard handler
-    await deployer.deploy(PaymentOutputGuardHandler, PAYMENT_OUTPUT_TYPE);
-    const paymentOutputGuardHandler = await PaymentOutputGuardHandler.deployed();
-    await outputGuardHandlerRegistry.registerOutputGuardHandler(
-        PAYMENT_OUTPUT_TYPE, paymentOutputGuardHandler.address,
-    );
-    await outputGuardHandlerRegistry.renounceOwnership();
 
     // handle spending condition
     await deployer.deploy(

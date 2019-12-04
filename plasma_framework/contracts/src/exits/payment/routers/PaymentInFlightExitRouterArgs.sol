@@ -6,7 +6,6 @@ library PaymentInFlightExitRouterArgs {
     * @param inFlightTx RLP encoded in-flight transaction.
     * @param inputTxs Transactions that created the inputs to the in-flight transaction. In the same order as in-flight transaction inputs.
     * @param inputUtxosPos Utxos that represent in-flight transaction inputs. In the same order as input transactions.
-    * @param outputGuardPreimagesForInputs (Optional) Output guard pre-images for in-flight transaction inputs. Length must always match that of the inputTxs
     * @param inputTxsInclusionProofs Merkle proofs that show the input-creating transactions are valid. In the same order as input transactions.
     * @param inputTxsConfirmSigs (Optional) Confirm signatures for the input txs. Should be empty bytes if the input tx is MoreVP. Length must always match that of the inputTxs
     * @param inFlightTxWitnesses Witnesses for in-flight transaction. In the same order as input transactions.
@@ -16,7 +15,6 @@ library PaymentInFlightExitRouterArgs {
         bytes inFlightTx;
         bytes[] inputTxs;
         uint256[] inputUtxosPos;
-        bytes[] outputGuardPreimagesForInputs;
         bytes[] inputTxsInclusionProofs;
         bytes[] inputTxsConfirmSigs;
         bytes[] inFlightTxWitnesses;
@@ -37,12 +35,10 @@ library PaymentInFlightExitRouterArgs {
     * @notice Wraps arguments for piggybackInFlightExit
     * @param inFlightTx RLP-encoded in-flight transaction
     * @param outputIndex Index of the output to piggyback on
-    * @param outputGuardPreimage (Optional) The original data (preimage) for the outputguard
     */
     struct PiggybackInFlightExitOnOutputArgs {
         bytes inFlightTx;
         uint16 outputIndex;
-        bytes outputGuardPreimage;
     }
 
     /**
@@ -53,7 +49,6 @@ library PaymentInFlightExitRouterArgs {
      * @param inFlightTxInputIndex Index of shared input for transactions in flight
      * @param competingTx RLP-encoded competing transaction
      * @param competingTxInputIndex Index of shared input in competing transaction
-     * @param outputGuardPreimage (Optional) Output guard preimage of the shared input
      * @param competingTxPos (Optional) Position of competing transaction in the chain, if included
      * @param competingTxInclusionProof (Optional) Merkle proofs showing that the competing transaction was contained in chain
      * @param competingTxWitness Witness for competing transaction
@@ -67,7 +62,6 @@ library PaymentInFlightExitRouterArgs {
         uint16 inFlightTxInputIndex;
         bytes competingTx;
         uint16 competingTxInputIndex;
-        bytes outputGuardPreimage;
         uint256 competingTxPos;
         bytes competingTxInclusionProof;
         bytes competingTxWitness;

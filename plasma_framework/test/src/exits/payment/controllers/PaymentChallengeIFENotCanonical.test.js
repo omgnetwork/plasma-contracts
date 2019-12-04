@@ -1,8 +1,6 @@
 const ExitableTimestamp = artifacts.require('ExitableTimestampWrapper');
 const ExitId = artifacts.require('ExitIdWrapper');
-const ExpectedOutputGuardHandler = artifacts.require('ExpectedOutputGuardHandler');
 const IsDeposit = artifacts.require('IsDepositWrapper');
-const OutputGuardHandlerRegistry = artifacts.require('OutputGuardHandlerRegistry');
 const OutputId = artifacts.require('OutputIdWrapper');
 const PaymentInFlightExitRouter = artifacts.require('PaymentInFlightExitRouterMock');
 const PaymentStartInFlightExit = artifacts.require('PaymentStartInFlightExit');
@@ -28,7 +26,6 @@ const { expect } = require('chai');
 const {
     PROTOCOL, OUTPUT_TYPE, VAULT_ID, SAFE_GAS_STIPEND, EMPTY_BYTES_32,
 } = require('../../../../helpers/constants.js');
-const { buildOutputGuard } = require('../../../../helpers/utils.js');
 const { buildUtxoPos, UtxoPos } = require('../../../../helpers/positions.js');
 const {
     PaymentTransactionOutput, PaymentTransaction, PlasmaDepositTransaction,
@@ -54,7 +51,6 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
     const INPUT_UTXO_POS = new UtxoPos(buildUtxoPos(INPUT_TX_BLOCK_NUM, 0, 0));
     const INPUT_DEPOSIT_UTXO_POS = new UtxoPos(buildUtxoPos(INPUT_TX_BLOCK_NUM + 1, 0, 0));
     const COMPETING_TX_BLOCK_NUM = 2000;
-    const DUMMY_OUTPUT_GUARD = web3.utils.utf8ToHex('dummy output guard for shared input');
     const DUMMY_CONFIRM_SIG = web3.utils.utf8ToHex('dummy confirm sig for shared input');
     const DUMMY_SPENDING_CONDITION_OPTIONAL_ARGS = web3.utils.utf8ToHex('dummy spending condition optional args');
 
@@ -69,7 +65,7 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
 
     const createDepositInputTransaction = (outputType) => {
         const output = new PaymentTransactionOutput(
-            outputType, TEST_IFE_INPUT_AMOUNT, buildOutputGuard(inputOwner), ETH,
+            outputType, TEST_IFE_INPUT_AMOUNT, inputOwner, ETH,
         );
         const deposit = new PlasmaDepositTransaction(output);
 
@@ -78,7 +74,7 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
 
     const createCompetitorTransaction = (outputType, competingTxType) => {
         const output = new PaymentTransactionOutput(
-            outputType, TEST_COMPETING_TX_OUTPUT_AMOUNT, buildOutputGuard(competitorOwner), ETH,
+            outputType, TEST_COMPETING_TX_OUTPUT_AMOUNT, competitorOwner, ETH,
         );
         const competingTx = new PaymentTransaction(competingTxType, [INPUT_UTXO_POS.utxoPos], [output]);
         const competingTxPos = new UtxoPos(buildUtxoPos(COMPETING_TX_BLOCK_NUM, 0, 0));
@@ -127,7 +123,6 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
                 inFlightTxInputIndex: 0,
                 competingTx,
                 competingTxInputIndex: 0,
-                outputGuardPreimage: DUMMY_OUTPUT_GUARD,
                 competingTxPos: competingTxPos.utxoPos,
                 competingTxInclusionProof: inclusionProof,
                 competingTxWitness,
@@ -235,13 +230,11 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
         await this.framework.registerVault(VAULT_ID.ERC20, erc20Vault.address);
 
         this.spendingConditionRegistry = await SpendingConditionRegistry.new();
-        this.outputGuardHandlerRegistry = await OutputGuardHandlerRegistry.new();
 
         const exitGameArgs = [
             this.framework.address,
             VAULT_ID.ETH,
             VAULT_ID.ERC20,
-            this.outputGuardHandlerRegistry.address,
             this.spendingConditionRegistry.address,
             this.stateTransitionVerifier.address,
             this.txFinalizationVerifier.address,
@@ -251,13 +244,6 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
         this.exitGame = await PaymentInFlightExitRouter.new(exitGameArgs);
 
         this.framework.registerExitGame(IFE_TX_TYPE, this.exitGame.address, PROTOCOL.MORE_VP);
-
-        this.outputGuardHandler = await ExpectedOutputGuardHandler.new();
-        await this.outputGuardHandler.mockIsValid(true);
-        await this.outputGuardHandler.mockGetConfirmSigAddress(constants.ZERO_ADDRESS);
-        await this.outputGuardHandlerRegistry.registerOutputGuardHandler(
-            OUTPUT_TYPE.PAYMENT, this.outputGuardHandler.address,
-        );
 
         this.condition = await SpendingConditionMock.new();
         await this.condition.mockResult(true);
@@ -441,14 +427,6 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
                 );
             });
 
-            it('fails when output guard information is not valid', async () => {
-                await this.outputGuardHandler.mockIsValid(false);
-                await expectRevert(
-                    this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: challenger }),
-                    'Output guard information is invalid',
-                );
-            });
-
             it('fails when competing tx is younger than already known competitor', async () => {
                 // challenge ife as previously
                 await this.framework.setBlock(
@@ -513,30 +491,6 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
                     },
                 );
             });
-        });
-    });
-
-    describe('challenge in-flight exit non-canonical', () => {
-        beforeEach('set in-flight exit', async () => {
-            const unregisteredOutputType = 2;
-            await setInFlightExit(unregisteredOutputType, true);
-
-            await this.spendingConditionRegistry.registerSpendingCondition(
-                unregisteredOutputType, IFE_TX_TYPE, this.condition.address,
-            );
-        });
-
-        it('fails when there is no output guard handler matching output type', async () => {
-            await this.framework.setBlock(
-                this.competingTxBlock.blockNum,
-                this.competingTxBlock.blockHash,
-                this.competingTxBlock.blockTimestamp,
-            );
-
-            await expectRevert(
-                this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: challenger }),
-                'Failed to retrieve the outputGuardHandler of the output type',
-            );
         });
     });
 

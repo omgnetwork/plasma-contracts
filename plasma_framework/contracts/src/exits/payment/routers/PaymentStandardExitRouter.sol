@@ -9,7 +9,6 @@ import "../controllers/PaymentProcessStandardExit.sol";
 import "../controllers/PaymentChallengeStandardExit.sol";
 import "../../interfaces/ITxFinalizationVerifier.sol";
 import "../../registries/SpendingConditionRegistry.sol";
-import "../../registries/OutputGuardHandlerRegistry.sol";
 import "../../utils/BondSize.sol";
 import "../../../vaults/EthVault.sol";
 import "../../../vaults/Erc20Vault.sol";
@@ -83,7 +82,6 @@ contract PaymentStandardExitRouter is
         startStandardExitController = PaymentStartStandardExit.buildController(
             this,
             args.framework,
-            args.outputGuardHandlerRegistry,
             args.txFinalizationVerifier,
             args.ethVaultId,
             args.erc20VaultId,
@@ -93,7 +91,6 @@ contract PaymentStandardExitRouter is
         challengeStandardExitController = PaymentChallengeStandardExit.buildController(
             args.framework,
             args.spendingConditionRegistry,
-            args.outputGuardHandlerRegistry,
             args.txFinalizationVerifier,
             args.safeGasStipend
         );
