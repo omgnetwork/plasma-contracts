@@ -35,7 +35,6 @@ contract('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week in seconds
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
     const INITIAL_IMMUNE_EXIT_GAME_NUM = 1;
-    const EMPTY_BYTES = '0x0000000000000000000000000000000000000000000000000000000000000000000000';
 
     before('deploy and link with controller lib', async () => {
         const startStandardExit = await PaymentStartStandardExit.new();

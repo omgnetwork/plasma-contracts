@@ -17,7 +17,8 @@ const {
 const { expect } = require('chai');
 
 const {
-    TX_TYPE, OUTPUT_TYPE, PROTOCOL, EMPTY_BYTES_32, VAULT_ID, DUMMY_INPUT_1, SAFE_GAS_STIPEND,
+    TX_TYPE, OUTPUT_TYPE, PROTOCOL, EMPTY_BYTES,
+    VAULT_ID, DUMMY_INPUT_1, SAFE_GAS_STIPEND,
 } = require('../../../../helpers/constants.js');
 const { buildUtxoPos, UtxoPos } = require('../../../../helpers/positions.js');
 const {
@@ -61,10 +62,6 @@ contract('PaymentChallengeStandardExit', ([_, alice, bob]) => {
                 challengeTx,
                 inputIndex: 0,
                 witness: web3.utils.utf8ToHex('dummy witness'),
-                spendingConditionOptionalArgs: web3.utils.utf8ToHex('dummy optional args'),
-                challengeTxPos: 0,
-                challengeTxInclusionProof: EMPTY_BYTES_32,
-                challengeTxConfirmSig: web3.utils.utf8ToHex('dummy confirm sig'),
             };
         };
 
@@ -157,12 +154,12 @@ contract('PaymentChallengeStandardExit', ([_, alice, bob]) => {
                 );
             });
 
-            it('should fail when TxFinalizationVerifier reverts while checking whether challenge tx is protocol finalized', async () => {
+            it('should fail when try to challenge with a tx that is not of MoreVP protocol', async () => {
                 const dummyExitGame = await PaymentStandardExitRouter.new(this.exitGameArgs);
 
                 const args = getTestInputArgs(OUTPUT_TYPE.PAYMENT, alice);
 
-                // the test data is only setup for MoreVp, MVP would fail for inclusion proof + confirm sig check
+                // the test data is only setup for MoreVp, MVP would fail
                 const mvpTxType = 999;
                 await this.framework.registerExitGame(mvpTxType, dummyExitGame.address, PROTOCOL.MVP);
 
@@ -176,7 +173,7 @@ contract('PaymentChallengeStandardExit', ([_, alice, bob]) => {
 
                 await expectRevert(
                     this.exitGame.challengeStandardExit(args),
-                    'MVP is not yet supported',
+                    'This exit game implementation only accept challenge tx with MoreVP protocol',
                 );
             });
 
@@ -234,7 +231,7 @@ contract('PaymentChallengeStandardExit', ([_, alice, bob]) => {
                     spendingTx: args.challengeTx,
                     inputIndex: args.inputIndex,
                     witness: args.witness,
-                    optionalArgs: args.spendingConditionOptionalArgs,
+                    optionalArgs: EMPTY_BYTES,
                 };
 
                 // would revert if called without the expected data

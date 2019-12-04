@@ -4,13 +4,13 @@ pragma experimental ABIEncoderV2;
 import "../PaymentExitDataModel.sol";
 import "../routers/PaymentStandardExitRouterArgs.sol";
 import "../../interfaces/ISpendingCondition.sol";
-import "../../interfaces/ITxFinalizationVerifier.sol";
-import "../../models/TxFinalizationModel.sol";
 import "../../registries/SpendingConditionRegistry.sol";
+import "../../utils/MoreVpFinalization.sol";
 import "../../utils/OutputId.sol";
 import "../../../vaults/EthVault.sol";
 import "../../../vaults/Erc20Vault.sol";
 import "../../../framework/PlasmaFramework.sol";
+import "../../../framework/Protocol.sol";
 import "../../../utils/IsDeposit.sol";
 import "../../../utils/SafeEthTransfer.sol";
 import "../../../utils/UtxoPosLib.sol";
@@ -26,7 +26,6 @@ library PaymentChallengeStandardExit {
         PlasmaFramework framework;
         IsDeposit.Predicate isDeposit;
         SpendingConditionRegistry spendingConditionRegistry;
-        ITxFinalizationVerifier txFinalizationVerifier;
         uint256 safeGasStipend;
     }
 
@@ -50,7 +49,6 @@ library PaymentChallengeStandardExit {
     function buildController(
         PlasmaFramework framework,
         SpendingConditionRegistry spendingConditionRegistry,
-        ITxFinalizationVerifier txFinalizationVerifier,
         uint256 safeGasStipend
     )
         public
@@ -61,7 +59,6 @@ library PaymentChallengeStandardExit {
             framework: framework,
             isDeposit: IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL()),
             spendingConditionRegistry: spendingConditionRegistry,
-            txFinalizationVerifier: txFinalizationVerifier,
             safeGasStipend: safeGasStipend
         });
     }
@@ -100,24 +97,23 @@ library PaymentChallengeStandardExit {
         require(data.exitData.exitable == true, "The exit does not exist");
     }
 
+    /**
+     * @dev This implementation only accepts MoreVP tx to be the challenge tx for simplicity.
+     *      see: https://github.com/omisego/plasma-contracts/issues/501
+     */
     function verifyChallengeTxProtocolFinalized(ChallengeStandardExitData memory data) private view {
         uint256 challengeTxType = WireTransaction.getTransactionType(data.args.challengeTx);
         uint8 protocol = data.controller.framework.protocols(challengeTxType);
 
-        //TODO: simplify tx finalization to be MoreVP only
-        TxFinalizationModel.Data memory finalizationData = TxFinalizationModel.Data({
-            framework: data.controller.framework,
-            protocol: protocol,
-            txBytes: data.args.challengeTx,
-            txPos: TxPosLib.TxPos(data.args.challengeTxPos),
-            inclusionProof: data.args.challengeTxInclusionProof,
-            confirmSig: bytes(""),
-            confirmSigAddress: address(0)
-        });
-        require(data.controller.txFinalizationVerifier.isProtocolFinalized(finalizationData),
+        require(protocol == Protocol.MORE_VP(),
+                "This exit game implementation only accept challenge tx with MoreVP protocol");
+        require(MoreVpFinalization.isProtocolFinalized(data.args.challengeTx),
                 "Challenge transaction is not protocol finalized");
     }
 
+    /**
+     * @dev This implementation _always_ stub empty bytes for the optional args.
+     */
     function verifySpendingCondition(ChallengeStandardExitData memory data) private view {
         PaymentStandardExitRouterArgs.ChallengeStandardExitArgs memory args = data.args;
 
@@ -136,6 +132,7 @@ library PaymentChallengeStandardExit {
                 ? OutputId.computeDepositOutputId(args.exitingTx, utxoPos.outputIndex(), utxoPos.value)
                 : OutputId.computeNormalOutputId(args.exitingTx, utxoPos.outputIndex());
         require(outputId == data.exitData.outputId, "Invalid exiting tx causing outputId mismatch");
+
         bool isSpentByChallengeTx = condition.verify(
             args.exitingTx,
             utxoPos.outputIndex(),
@@ -143,7 +140,7 @@ library PaymentChallengeStandardExit {
             args.challengeTx,
             args.inputIndex,
             args.witness,
-            args.spendingConditionOptionalArgs
+            bytes("") // optional args of spending condition
         );
         require(isSpentByChallengeTx, "Spending condition failed");
     }
