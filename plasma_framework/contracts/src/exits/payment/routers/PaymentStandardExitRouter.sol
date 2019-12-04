@@ -82,7 +82,6 @@ contract PaymentStandardExitRouter is
         startStandardExitController = PaymentStartStandardExit.buildController(
             this,
             args.framework,
-            args.txFinalizationVerifier,
             args.ethVaultId,
             args.erc20VaultId,
             args.supportTxType
