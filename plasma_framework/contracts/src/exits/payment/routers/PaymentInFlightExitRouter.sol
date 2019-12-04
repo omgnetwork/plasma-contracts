@@ -143,7 +143,6 @@ contract PaymentInFlightExitRouter is
             args.framework,
             args.spendingConditionRegistry,
             args.stateTransitionVerifier,
-            args.txFinalizationVerifier,
             args.supportTxType
         );
 

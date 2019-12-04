@@ -26,12 +26,12 @@ library MoreVpFinalization {
         view
         returns (bool)
     {
+        (bytes32 root,) = framework.blocks(txPos.blockNum());
+        require(root != bytes32(""), "Failed to get the root hash of the block num");
+
         if (inclusionProof.length == 0) {
             return false;
         }
-
-        (bytes32 root,) = framework.blocks(txPos.blockNum());
-        require(root != bytes32(""), "Failed to get the root hash of the block num");
 
         return Merkle.checkMembership(
             txBytes, txPos.txIndex(), root, inclusionProof
