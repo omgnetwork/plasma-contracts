@@ -5,11 +5,10 @@ import "../PaymentExitDataModel.sol";
 import "../PaymentInFlightExitModelUtils.sol";
 import "../routers/PaymentInFlightExitRouterArgs.sol";
 import "../../interfaces/ISpendingCondition.sol";
-import "../../interfaces/ITxFinalizationVerifier.sol";
-import "../../models/TxFinalizationModel.sol";
 import "../../registries/SpendingConditionRegistry.sol";
 import "../../utils/ExitId.sol";
 import "../../utils/OutputId.sol";
+import "../../utils/MoreVpFinalization.sol";
 import "../../../utils/UtxoPosLib.sol";
 import "../../../utils/Merkle.sol";
 import "../../../utils/IsDeposit.sol";
@@ -29,7 +28,6 @@ library PaymentChallengeIFENotCanonical {
         PlasmaFramework framework;
         IsDeposit.Predicate isDeposit;
         SpendingConditionRegistry spendingConditionRegistry;
-        ITxFinalizationVerifier txFinalizationVerifier;
         uint256 supportedTxType;
     }
 
@@ -52,8 +50,6 @@ library PaymentChallengeIFENotCanonical {
     function buildController(
         PlasmaFramework framework,
         SpendingConditionRegistry spendingConditionRegistry,
-        
-        ITxFinalizationVerifier txFinalizationVerifier,
         uint256 supportedTxType
     )
         public
@@ -64,7 +60,6 @@ library PaymentChallengeIFENotCanonical {
             framework: framework,
             isDeposit: IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL()),
             spendingConditionRegistry: spendingConditionRegistry,
-            txFinalizationVerifier: txFinalizationVerifier,
             supportedTxType: supportedTxType
         });
     }
@@ -113,6 +108,8 @@ library PaymentChallengeIFENotCanonical {
             output.outputType, self.supportedTxType
         );
         require(address(condition) != address(0), "Spending condition contract not found");
+
+        // stub optional args with empty bytes
         bool isSpentByCompetingTx = condition.verify(
             args.inputTx,
             inputUtxoPos.outputIndex(),
@@ -120,7 +117,7 @@ library PaymentChallengeIFENotCanonical {
             args.competingTx,
             args.competingTxInputIndex,
             args.competingTxWitness,
-            args.competingTxSpendingConditionOptionalArgs
+            bytes("") // optional args
         );
         require(isSpentByCompetingTx, "Competing input spending condition is not met");
 
@@ -214,22 +211,16 @@ library PaymentChallengeIFENotCanonical {
         uint256 competingTxType = WireTransaction.getTransactionType(args.competingTx);
         uint8 protocol = self.framework.protocols(competingTxType);
 
-        if (args.competingTxPos == 0) {
-            // skip the verifier.isProtocolFinalized() for MoreVP since it only needs to check the existence of tx.
-            require(protocol == Protocol.MORE_VP(), "Competing tx without position must be a MoreVP tx");
-        } else {
-            // TODO: move to simplified verifier
-            TxFinalizationModel.Data memory finalizationData = TxFinalizationModel.Data({
-                framework: self.framework,
-                protocol: protocol,
-                txBytes: args.competingTx,
-                txPos: competingTxUtxoPos.txPos(),
-                inclusionProof: args.competingTxInclusionProof,
-                confirmSig: bytes(""),
-                confirmSigAddress: address(0)
-            });
-            require(self.txFinalizationVerifier.isStandardFinalized(finalizationData), "Failed to verify the position of competing tx");
+        require(protocol == Protocol.MORE_VP(), "This exit game only allows MoreVP tx as competing tx");
 
+        if (args.competingTxPos != 0) {
+            bool isStandardFinalized = MoreVpFinalization.isStandardFinalized(
+                self.framework,
+                args.competingTx,
+                competingTxUtxoPos.txPos(),
+                args.competingTxInclusionProof
+            );
+            require(isStandardFinalized, "Failed to verify the position of competing tx (not standard finalized)");
             competitorPosition = competingTxUtxoPos.value;
         }
         return competitorPosition;

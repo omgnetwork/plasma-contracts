@@ -32,7 +32,7 @@ const {
     buildValidIfeStartArgs, buildIfeStartArgs, createInputTransaction, createDepositTransaction, createInFlightTx,
 } = require('../../../../helpers/ife.js');
 
-contract.only('PaymentStartInFlightExit', ([_, alice, richFather, carol]) => {
+contract('PaymentStartInFlightExit', ([_, alice, richFather, carol]) => {
     const CHILD_BLOCK_INTERVAL = 1000;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week in seconds
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;

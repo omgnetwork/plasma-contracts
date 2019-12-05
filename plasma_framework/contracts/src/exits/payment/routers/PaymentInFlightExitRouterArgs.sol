@@ -48,8 +48,6 @@ library PaymentInFlightExitRouterArgs {
      * @param competingTxPos (Optional) Position of competing transaction in the chain, if included
      * @param competingTxInclusionProof (Optional) Merkle proofs showing that the competing transaction was contained in chain
      * @param competingTxWitness Witness for competing transaction
-     * @param competingTxConfirmSig (Optional) Confirm signature, if competing tx is of MVP protocol
-     * @param competingTxSpendingConditionOptionalArgs (Optional) Additional arguments for the spending condition
      */
     struct ChallengeCanonicityArgs {
         bytes inputTx;
@@ -61,8 +59,6 @@ library PaymentInFlightExitRouterArgs {
         uint256 competingTxPos;
         bytes competingTxInclusionProof;
         bytes competingTxWitness;
-        bytes competingTxConfirmSig;
-        bytes competingTxSpendingConditionOptionalArgs;
     }
 
     /**

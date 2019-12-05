@@ -156,7 +156,6 @@ contract PaymentInFlightExitRouter is
         challengeCanonicityController = PaymentChallengeIFENotCanonical.buildController(
             args.framework,
             args.spendingConditionRegistry,
-            args.txFinalizationVerifier,
             args.supportTxType
         );
 
