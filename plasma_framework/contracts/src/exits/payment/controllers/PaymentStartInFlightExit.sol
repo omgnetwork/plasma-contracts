@@ -221,13 +221,13 @@ library PaymentStartInFlightExit {
 
     function verifyInputTransactionIsStandardFinalized(StartExitData memory exitData) private view {
         for (uint i = 0; i < exitData.inputTxs.length; i++) {
-            bool isStandardFinalize = MoreVpFinalization.isStandardFinalized(
+            bool isStandardFinalized = MoreVpFinalization.isStandardFinalized(
                 exitData.controller.framework,
                 exitData.inputTxs[i],
                 exitData.inputUtxosPos[i].txPos(),
                 exitData.inputTxsInclusionProofs[i]
             );
-            require(isStandardFinalize, "Input transaction is not standard finalized");
+            require(isStandardFinalized, "Input transaction is not standard finalized");
         }
     }
 
