@@ -29,7 +29,7 @@ const {
     PROTOCOL, TX_TYPE, VAULT_ID, DUMMY_INPUT_1, SAFE_GAS_STIPEND, EMPTY_BYTES_32,
 } = require('../../../../helpers/constants.js');
 
-contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
+contract.only('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
     const DUMMY_IFE_BOND_SIZE = 31415926535; // wei
     const PIGGYBACK_BOND = 31415926535;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
@@ -168,8 +168,10 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
                 SAFE_GAS_STIPEND,
             ];
             this.exitGame = await PaymentInFlightExitRouter.new(exitGameArgs);
-
             await this.framework.registerExitGame(TX_TYPE.PAYMENT, this.exitGame.address, PROTOCOL.MORE_VP);
+
+            const dummyExitGame = await PaymentInFlightExitRouter.new(exitGameArgs);
+            await this.framework.registerExitGame(OTHER_TX_TYPE, dummyExitGame.address, PROTOCOL.MORE_VP);
 
             this.piggybackBondSize = await this.exitGame.piggybackBondSize();
             this.exitGame.depositFundForTest({ from: alice, value: this.piggybackBondSize.toString() });
@@ -188,15 +190,6 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
                 challengingTxWitness: web3.utils.sha3('sig'),
                 spendingConditionOptionalArgs: web3.utils.bytesToHex(''),
             };
-        });
-
-        it('should fail when paying out piggyback bond fails', async () => {
-            const attacker = await Attacker.new();
-
-            await expectRevert(
-                this.exitGame.challengeInFlightExitOutputSpent(this.challengeArgs, { from: attacker.address }),
-                'SafeEthTransfer: failed to transfer ETH',
-            );
         });
 
         it('should emit event when challenge is successful', async () => {
@@ -228,6 +221,15 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
             expect(challengerPostBalance).to.be.bignumber.equal(expectedPostBalance);
         });
 
+        it('should fail when paying out piggyback bond fails', async () => {
+            const attacker = await Attacker.new();
+
+            await expectRevert(
+                this.exitGame.challengeInFlightExitOutputSpent(this.challengeArgs, { from: attacker.address }),
+                'SafeEthTransfer: failed to transfer ETH',
+            );
+        });
+
         it('should not allow to challenge output exit successfully for the second time', async () => {
             await this.exitGame.challengeInFlightExitOutputSpent(
                 this.challengeArgs, { from: bob },
@@ -254,11 +256,19 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
             );
         });
 
-        it('should fail when in-flight transaction is not included in Plasma', async () => {
-            this.challengeArgs.inFlightTxInclusionProof = web3.utils.bytesToHex('a'.repeat(512));
+        it('should fail when challenging tx is not of MoreVP protocol', async () => {
+            const nonMoreVPTxType = 987;
+            const dummyExitGame = await ExitId.new(); // only need a dummy contract address
+            this.framework.registerExitGame(nonMoreVPTxType, dummyExitGame.address, PROTOCOL.MVP);
+
+            const outputId = computeNormalOutputId(this.challengeArgs.inFlightTx, 0);
+            const challengingTxOutput = new PaymentTransactionOutput(OUTPUT_TYPE_ONE, AMOUNT, alice, ETH);
+            const challengingTx = new PaymentTransaction(nonMoreVPTxType, [outputId], [challengingTxOutput]);
+
+            this.challengeArgs.challengingTx = web3.utils.bytesToHex(challengingTx.rlpEncoded());
             await expectRevert(
                 this.exitGame.challengeInFlightExitOutputSpent(this.challengeArgs, { from: bob }),
-                'In-flight transaction not finalized',
+                'MoreVpFinalization: not a MoreVP protocol tx',
             );
         });
 
