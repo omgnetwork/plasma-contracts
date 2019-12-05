@@ -173,7 +173,7 @@ contract('PaymentChallengeStandardExit', ([_, alice, bob]) => {
 
                 await expectRevert(
                     this.exitGame.challengeStandardExit(args),
-                    'This exit game implementation only accept challenge tx with MoreVP protocol',
+                    'MoreVpFinalization: not a MoreVP protocol tx',
                 );
             });
 

@@ -97,18 +97,9 @@ library PaymentChallengeStandardExit {
         require(data.exitData.exitable == true, "The exit does not exist");
     }
 
-    /**
-     * @dev This implementation only accepts MoreVP tx to be the challenge tx for simplicity.
-     *      see: https://github.com/omisego/plasma-contracts/issues/501
-     */
     function verifyChallengeTxProtocolFinalized(ChallengeStandardExitData memory data) private view {
-        uint256 challengeTxType = WireTransaction.getTransactionType(data.args.challengeTx);
-        uint8 protocol = data.controller.framework.protocols(challengeTxType);
-
-        require(protocol == Protocol.MORE_VP(),
-                "This exit game implementation only accept challenge tx with MoreVP protocol");
-        require(MoreVpFinalization.isProtocolFinalized(data.args.challengeTx),
-                "Challenge transaction is not protocol finalized");
+        bool isProtocolFinalized = MoreVpFinalization.isProtocolFinalized(data.controller.framework, data.args.challengeTx);
+        require(isProtocolFinalized, "Challenge transaction is not protocol finalized");
     }
 
     /**

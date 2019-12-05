@@ -386,7 +386,7 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
 
                 await expectRevert(
                     this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: challenger }),
-                    'Failed to verify the position of competing tx (not standard finalized)',
+                    'Competing tx is not standard finalized with the given tx position',
                 );
             });
 
@@ -510,7 +510,7 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
             this.challengeArgs.competingTxPos = 0;
             await expectRevert(
                 this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: challenger }),
-                'This exit game only allows MoreVP tx as competing tx',
+                'MoreVpFinalization: not a MoreVP protocol tx',
             );
         });
 
@@ -523,7 +523,7 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
 
             await expectRevert(
                 this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: challenger }),
-                'This exit game only allows MoreVP tx as competing tx',
+                'MoreVpFinalization: not a MoreVP protocol tx',
             );
         });
     });

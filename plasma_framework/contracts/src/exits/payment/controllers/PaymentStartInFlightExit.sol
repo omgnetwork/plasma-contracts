@@ -221,8 +221,6 @@ library PaymentStartInFlightExit {
 
     function verifyInputTransactionIsStandardFinalized(StartExitData memory exitData) private view {
         for (uint i = 0; i < exitData.inputTxs.length; i++) {
-            uint8 protocol = exitData.controller.framework.protocols(WireTransaction.getTransactionType(exitData.inputTxs[i]));
-            require(protocol == Protocol.MORE_VP(), "This exit game only support input tx of MoreVP protocol");
             bool isStandardFinalize = MoreVpFinalization.isStandardFinalized(
                 exitData.controller.framework,
                 exitData.inputTxs[i],

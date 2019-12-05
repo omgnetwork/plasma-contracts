@@ -207,20 +207,21 @@ library PaymentChallengeIFENotCanonical {
         // default to infinite low priority position
         uint256 competitorPosition = ~uint256(0);
 
-        UtxoPosLib.UtxoPos memory competingTxUtxoPos = UtxoPosLib.UtxoPos(args.competingTxPos);
-        uint256 competingTxType = WireTransaction.getTransactionType(args.competingTx);
-        uint8 protocol = self.framework.protocols(competingTxType);
-
-        require(protocol == Protocol.MORE_VP(), "This exit game only allows MoreVP tx as competing tx");
-
-        if (args.competingTxPos != 0) {
+        if (args.competingTxPos == 0) {
+            bool isProtocolFinalized = MoreVpFinalization.isProtocolFinalized(
+                self.framework,
+                args.competingTx
+            );
+            require(isProtocolFinalized, "Competing tx is not protocol finalized when competing tx position is not given");
+        } else {
+            UtxoPosLib.UtxoPos memory competingTxUtxoPos = UtxoPosLib.UtxoPos(args.competingTxPos);
             bool isStandardFinalized = MoreVpFinalization.isStandardFinalized(
                 self.framework,
                 args.competingTx,
                 competingTxUtxoPos.txPos(),
                 args.competingTxInclusionProof
             );
-            require(isStandardFinalized, "Failed to verify the position of competing tx (not standard finalized)");
+            require(isStandardFinalized, "Competing tx is not standard finalized with the given tx position");
             competitorPosition = competingTxUtxoPos.value;
         }
         return competitorPosition;

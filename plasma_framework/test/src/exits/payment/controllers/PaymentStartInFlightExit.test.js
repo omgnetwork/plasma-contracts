@@ -458,7 +458,7 @@ contract('PaymentStartInFlightExit', ([_, alice, richFather, carol]) => {
 
                 await expectRevert(
                     this.exitGame.startInFlightExit(args, { from: alice, value: this.startIFEBondSize.toString() }),
-                    'This exit game only support input tx of MoreVP protocol',
+                    'MoreVpFinalization: not a MoreVP protocol tx',
                 );
             });
 

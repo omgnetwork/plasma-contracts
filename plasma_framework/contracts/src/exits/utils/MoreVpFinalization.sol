@@ -5,9 +5,11 @@ import "../../framework/PlasmaFramework.sol";
 import "../../framework/Protocol.sol";
 import "../../utils/Merkle.sol";
 import "../../utils/TxPosLib.sol";
+import "../../transactions/WireTransaction.sol";
 
 /**
  * @notice Library to check finalization for MoreVP protocol
+ * @dev This library assumes that the tx is of the WireTransaction format
  */
 library MoreVpFinalization {
     using TxPosLib for TxPosLib.TxPos;
@@ -26,6 +28,10 @@ library MoreVpFinalization {
         view
         returns (bool)
     {
+        uint256 txType = WireTransaction.getTransactionType(txBytes);
+        uint8 protocol = framework.protocols(txType);
+        require(protocol == Protocol.MORE_VP(), "MoreVpFinalization: not a MoreVP protocol tx");
+        
         (bytes32 root,) = framework.blocks(txPos.blockNum());
         require(root != bytes32(""), "Failed to get the root hash of the block num");
 
@@ -42,7 +48,18 @@ library MoreVpFinalization {
     * @notice Checks whether a transaction is "protocol finalized"
     *         For MoreVP, since it allows in-flight tx, so only checks for the existence of the transaction
     */
-    function isProtocolFinalized(bytes memory txBytes) internal pure returns (bool) {
+    function isProtocolFinalized(
+        PlasmaFramework framework,
+        bytes memory txBytes
+    )
+        internal
+        view
+        returns (bool) 
+    {
+        uint256 txType = WireTransaction.getTransactionType(txBytes);
+        uint8 protocol = framework.protocols(txType);
+        require(protocol == Protocol.MORE_VP(), "MoreVpFinalization: not a MoreVP protocol tx");
+
         return txBytes.length > 0;
     }
 }
