@@ -12,8 +12,6 @@ struct Controller {
  contract PlasmaFramework framework,
  struct IsDeposit.Predicate isDeposit,
  contract SpendingConditionRegistry spendingConditionRegistry,
- contract OutputGuardHandlerRegistry outputGuardHandlerRegistry,
- contract ITxFinalizationVerifier txFinalizationVerifier,
  uint256 safeGasStipend
 }
 ```
@@ -36,7 +34,7 @@ event InFlightExitInputBlocked(address indexed challenger, bytes32 indexed txHas
 
 ## Functions
 
-- [buildController(PlasmaFramework framework, SpendingConditionRegistry spendingConditionRegistry, OutputGuardHandlerRegistry outputGuardHandlerRegistry, ITxFinalizationVerifier txFinalizationVerifier, uint256 safeGasStipend)](#buildcontroller)
+- [buildController(PlasmaFramework framework, SpendingConditionRegistry spendingConditionRegistry, uint256 safeGasStipend)](#buildcontroller)
 - [run(struct PaymentChallengeIFEInputSpent.Controller self, struct PaymentExitDataModel.InFlightExitMap inFlightExitMap, struct PaymentInFlightExitRouterArgs.ChallengeInputSpentArgs args)](#run)
 - [verifySpentInputEqualsIFEInput(struct PaymentChallengeIFEInputSpent.ChallengeIFEData data)](#verifyspentinputequalsifeinput)
 - [verifyChallengingTransactionProtocolFinalized(struct PaymentChallengeIFEInputSpent.ChallengeIFEData data)](#verifychallengingtransactionprotocolfinalized)
@@ -47,7 +45,7 @@ event InFlightExitInputBlocked(address indexed challenger, bytes32 indexed txHas
 Function that builds the controller struct
 
 ```js
-function buildController(PlasmaFramework framework, SpendingConditionRegistry spendingConditionRegistry, OutputGuardHandlerRegistry outputGuardHandlerRegistry, ITxFinalizationVerifier txFinalizationVerifier, uint256 safeGasStipend) public view
+function buildController(PlasmaFramework framework, SpendingConditionRegistry spendingConditionRegistry, uint256 safeGasStipend) public view
 returns(struct PaymentChallengeIFEInputSpent.Controller)
 ```
 
@@ -61,8 +59,6 @@ Controller struct of PaymentChallengeIFEInputSpent
 | ------------- |------------- | -----|
 | framework | PlasmaFramework |  | 
 | spendingConditionRegistry | SpendingConditionRegistry |  | 
-| outputGuardHandlerRegistry | OutputGuardHandlerRegistry |  | 
-| txFinalizationVerifier | ITxFinalizationVerifier |  | 
 | safeGasStipend | uint256 |  | 
 
 ### run
@@ -140,18 +136,15 @@ function verifySpendingCondition(struct PaymentChallengeIFEInputSpent.ChallengeI
 * [IErc20DepositVerifier](IErc20DepositVerifier.md)
 * [IEthDepositVerifier](IEthDepositVerifier.md)
 * [IExitProcessor](IExitProcessor.md)
-* [IOutputGuardHandler](IOutputGuardHandler.md)
 * [IsDeposit](IsDeposit.md)
 * [ISpendingCondition](ISpendingCondition.md)
 * [IStateTransitionVerifier](IStateTransitionVerifier.md)
-* [ITxFinalizationVerifier](ITxFinalizationVerifier.md)
 * [Math](Math.md)
 * [Merkle](Merkle.md)
 * [Migrations](Migrations.md)
+* [MoreVpFinalization](MoreVpFinalization.md)
 * [OnlyFromAddress](OnlyFromAddress.md)
 * [OnlyWithValue](OnlyWithValue.md)
-* [OutputGuardHandlerRegistry](OutputGuardHandlerRegistry.md)
-* [OutputGuardModel](OutputGuardModel.md)
 * [OutputId](OutputId.md)
 * [Ownable](Ownable.md)
 * [PaymentChallengeIFEInputSpent](PaymentChallengeIFEInputSpent.md)
@@ -166,7 +159,6 @@ function verifySpendingCondition(struct PaymentChallengeIFEInputSpent.ChallengeI
 * [PaymentInFlightExitModelUtils](PaymentInFlightExitModelUtils.md)
 * [PaymentInFlightExitRouter](PaymentInFlightExitRouter.md)
 * [PaymentInFlightExitRouterArgs](PaymentInFlightExitRouterArgs.md)
-* [PaymentOutputGuardHandler](PaymentOutputGuardHandler.md)
 * [PaymentOutputModel](PaymentOutputModel.md)
 * [PaymentOutputToPaymentTxCondition](PaymentOutputToPaymentTxCondition.md)
 * [PaymentPiggybackInFlightExit](PaymentPiggybackInFlightExit.md)
@@ -187,8 +179,6 @@ function verifySpendingCondition(struct PaymentChallengeIFEInputSpent.ChallengeI
 * [SafeEthTransfer](SafeEthTransfer.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)
-* [TxFinalizationModel](TxFinalizationModel.md)
-* [TxFinalizationVerifier](TxFinalizationVerifier.md)
 * [TxPosLib](TxPosLib.md)
 * [UtxoPosLib](UtxoPosLib.md)
 * [Vault](Vault.md)

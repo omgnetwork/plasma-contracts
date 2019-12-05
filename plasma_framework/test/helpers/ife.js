@@ -16,7 +16,6 @@ const MERKLE_TREE_HEIGHT = 3;
  * This returns a setup with the two inputs and one output.
  * First input would be of output type 1 and the second of output type 2.
  * All input txs and the in-flight exit tx would be same tx type: 1.
- * This assumes the tx type would be using MoreVP so the confirm sig provided in this setup would be EMPTY_BYTES.
  * (protocol setting is on the framework side)
  */
 function buildValidIfeStartArgs(
@@ -73,20 +72,14 @@ function buildIfeStartArgs([inputTx1, inputTx2], inputUtxosPos, inFlightTx) {
 
     const inFlightTxRaw = web3.utils.bytesToHex(inFlightTx.rlpEncoded());
 
-    const inputTxsConfirmSigs = [EMPTY_BYTES, EMPTY_BYTES];
-
     const inFlightTxWitnesses = [IN_FLIGHT_TX_WITNESS_BYTES, IN_FLIGHT_TX_WITNESS_BYTES];
-
-    const inputSpendingConditionOptionalArgs = [EMPTY_BYTES, EMPTY_BYTES];
 
     const args = {
         inFlightTx: inFlightTxRaw,
         inputTxs,
         inputUtxosPos,
         inputTxsInclusionProofs,
-        inputTxsConfirmSigs,
         inFlightTxWitnesses,
-        inputSpendingConditionOptionalArgs,
     };
 
     const inputTxsBlockRoot1 = merkleTree1.root;

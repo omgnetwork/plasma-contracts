@@ -12,7 +12,6 @@ const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const StateTransitionVerifierMock = artifacts.require('StateTransitionVerifierMock');
 const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
-const TxFinalizationVerifier = artifacts.require('TxFinalizationVerifier');
 
 const {
     BN, constants, expectEvent, expectRevert, time,
@@ -63,8 +62,6 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
         this.exitIdHelper = await ExitIdWrapper.new();
         this.stateTransitionVerifier = await StateTransitionVerifierMock.new();
         await this.stateTransitionVerifier.mockResult(true);
-
-        this.txFinalizationVerifier = await TxFinalizationVerifier.new();
     });
 
     beforeEach(async () => {
@@ -86,7 +83,6 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
             VAULT_ID.ERC20,
             spendingConditionRegistry.address,
             this.stateTransitionVerifier.address,
-            this.txFinalizationVerifier.address,
             PAYMENT_TX_TYPE,
             SAFE_GAS_STIPEND,
         ];

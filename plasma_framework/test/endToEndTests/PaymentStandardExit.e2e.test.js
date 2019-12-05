@@ -297,10 +297,6 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
                             challengeTx: this.transferTx,
                             inputIndex: 0,
                             witness: signature,
-                            spendingConditionOptionalArgs: EMPTY_BYTES,
-                            challengeTxPos: 0,
-                            challengeTxInclusionProof: EMPTY_BYTES,
-                            challengeTxConfirmSig: EMPTY_BYTES,
                         };
 
                         this.bobBalanceBeforeChallenge = new BN(await web3.eth.getBalance(bob));

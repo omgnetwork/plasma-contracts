@@ -13,8 +13,6 @@ struct Controller {
  contract PlasmaFramework framework,
  struct IsDeposit.Predicate isDeposit,
  struct ExitableTimestamp.Calculator exitableTimestampCalculator,
- contract OutputGuardHandlerRegistry outputGuardHandlerRegistry,
- contract ITxFinalizationVerifier txFinalizationVerifier,
  uint256 ethVaultId,
  uint256 erc20VaultId,
  uint256 supportedTxType
@@ -30,13 +28,10 @@ struct StartStandardExitData {
  struct UtxoPosLib.UtxoPos utxoPos,
  struct PaymentTransactionModel.Transaction outputTx,
  struct PaymentOutputModel.Output output,
- contract IOutputGuardHandler outputGuardHandler,
- struct OutputGuardModel.Data outputGuardData,
  uint160 exitId,
  bool isTxDeposit,
  uint256 txBlockTimeStamp,
- bytes32 outputId,
- struct TxFinalizationModel.Data finalizationData
+ bytes32 outputId
 }
 ```
 
@@ -48,10 +43,11 @@ event ExitStarted(address indexed owner, uint160  exitId);
 
 ## Functions
 
-- [buildController(IExitProcessor exitProcessor, PlasmaFramework framework, OutputGuardHandlerRegistry outputGuardHandlerRegistry, ITxFinalizationVerifier txFinalizationVerifier, uint256 ethVaultId, uint256 erc20VaultId, uint256 supportedTxType)](#buildcontroller)
+- [buildController(IExitProcessor exitProcessor, PlasmaFramework framework, uint256 ethVaultId, uint256 erc20VaultId, uint256 supportedTxType)](#buildcontroller)
 - [run(struct PaymentStartStandardExit.Controller self, struct PaymentExitDataModel.StandardExitMap exitMap, struct PaymentStandardExitRouterArgs.StartStandardExitArgs args)](#run)
 - [setupStartStandardExitData(struct PaymentStartStandardExit.Controller controller, struct PaymentStandardExitRouterArgs.StartStandardExitArgs args)](#setupstartstandardexitdata)
 - [verifyStartStandardExitData(struct PaymentStartStandardExit.Controller self, struct PaymentStartStandardExit.StartStandardExitData data, struct PaymentExitDataModel.StandardExitMap exitMap)](#verifystartstandardexitdata)
+- [isStandardFinalized(struct PaymentStartStandardExit.StartStandardExitData data)](#isstandardfinalized)
 - [saveStandardExitData(struct PaymentStartStandardExit.StartStandardExitData data, struct PaymentExitDataModel.StandardExitMap exitMap)](#savestandardexitdata)
 - [enqueueStandardExit(struct PaymentStartStandardExit.StartStandardExitData data)](#enqueuestandardexit)
 
@@ -60,7 +56,7 @@ event ExitStarted(address indexed owner, uint160  exitId);
 Function that builds the controller struct
 
 ```js
-function buildController(IExitProcessor exitProcessor, PlasmaFramework framework, OutputGuardHandlerRegistry outputGuardHandlerRegistry, ITxFinalizationVerifier txFinalizationVerifier, uint256 ethVaultId, uint256 erc20VaultId, uint256 supportedTxType) public view
+function buildController(IExitProcessor exitProcessor, PlasmaFramework framework, uint256 ethVaultId, uint256 erc20VaultId, uint256 supportedTxType) public view
 returns(struct PaymentStartStandardExit.Controller)
 ```
 
@@ -74,8 +70,6 @@ Controller struct of PaymentStartStandardExit
 | ------------- |------------- | -----|
 | exitProcessor | IExitProcessor |  | 
 | framework | PlasmaFramework |  | 
-| outputGuardHandlerRegistry | OutputGuardHandlerRegistry |  | 
-| txFinalizationVerifier | ITxFinalizationVerifier |  | 
 | ethVaultId | uint256 |  | 
 | erc20VaultId | uint256 |  | 
 | supportedTxType | uint256 |  | 
@@ -123,6 +117,19 @@ function verifyStartStandardExitData(struct PaymentStartStandardExit.Controller 
 | self | struct PaymentStartStandardExit.Controller |  | 
 | data | struct PaymentStartStandardExit.StartStandardExitData |  | 
 | exitMap | struct PaymentExitDataModel.StandardExitMap |  | 
+
+### isStandardFinalized
+
+```js
+function isStandardFinalized(struct PaymentStartStandardExit.StartStandardExitData data) private view
+returns(bool)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| data | struct PaymentStartStandardExit.StartStandardExitData |  | 
 
 ### saveStandardExitData
 
@@ -172,18 +179,15 @@ function enqueueStandardExit(struct PaymentStartStandardExit.StartStandardExitDa
 * [IErc20DepositVerifier](IErc20DepositVerifier.md)
 * [IEthDepositVerifier](IEthDepositVerifier.md)
 * [IExitProcessor](IExitProcessor.md)
-* [IOutputGuardHandler](IOutputGuardHandler.md)
 * [IsDeposit](IsDeposit.md)
 * [ISpendingCondition](ISpendingCondition.md)
 * [IStateTransitionVerifier](IStateTransitionVerifier.md)
-* [ITxFinalizationVerifier](ITxFinalizationVerifier.md)
 * [Math](Math.md)
 * [Merkle](Merkle.md)
 * [Migrations](Migrations.md)
+* [MoreVpFinalization](MoreVpFinalization.md)
 * [OnlyFromAddress](OnlyFromAddress.md)
 * [OnlyWithValue](OnlyWithValue.md)
-* [OutputGuardHandlerRegistry](OutputGuardHandlerRegistry.md)
-* [OutputGuardModel](OutputGuardModel.md)
 * [OutputId](OutputId.md)
 * [Ownable](Ownable.md)
 * [PaymentChallengeIFEInputSpent](PaymentChallengeIFEInputSpent.md)
@@ -198,7 +202,6 @@ function enqueueStandardExit(struct PaymentStartStandardExit.StartStandardExitDa
 * [PaymentInFlightExitModelUtils](PaymentInFlightExitModelUtils.md)
 * [PaymentInFlightExitRouter](PaymentInFlightExitRouter.md)
 * [PaymentInFlightExitRouterArgs](PaymentInFlightExitRouterArgs.md)
-* [PaymentOutputGuardHandler](PaymentOutputGuardHandler.md)
 * [PaymentOutputModel](PaymentOutputModel.md)
 * [PaymentOutputToPaymentTxCondition](PaymentOutputToPaymentTxCondition.md)
 * [PaymentPiggybackInFlightExit](PaymentPiggybackInFlightExit.md)
@@ -219,8 +222,6 @@ function enqueueStandardExit(struct PaymentStartStandardExit.StartStandardExitDa
 * [SafeEthTransfer](SafeEthTransfer.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)
-* [TxFinalizationModel](TxFinalizationModel.md)
-* [TxFinalizationVerifier](TxFinalizationVerifier.md)
 * [TxPosLib](TxPosLib.md)
 * [UtxoPosLib](UtxoPosLib.md)
 * [Vault](Vault.md)

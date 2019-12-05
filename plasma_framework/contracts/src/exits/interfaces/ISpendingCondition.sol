@@ -15,7 +15,6 @@ interface ISpendingCondition {
      * @param spendingTx Spending transaction, in bytes
      * @param inputIndex The input index of the spending tx that points to the output
      * @param witness The witness data of the spending condition
-     * @param optionalArgs Optional data for the spending condition (for example, output guard preimage)
      */
     function verify(
         bytes calldata inputTx,
@@ -23,7 +22,6 @@ interface ISpendingCondition {
         uint256 inputTxPos,
         bytes calldata spendingTx,
         uint16 inputIndex,
-        bytes calldata witness,
-        bytes calldata optionalArgs
+        bytes calldata witness
     ) external view returns (bool);
 }

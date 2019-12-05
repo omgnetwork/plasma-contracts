@@ -15,7 +15,6 @@ const StateTransitionVerifierMock = artifacts.require('StateTransitionVerifierMo
 const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
-const TxFinalizationVerifier = artifacts.require('TxFinalizationVerifier');
 
 const {
     BN, constants, expectEvent, expectRevert, time,
@@ -24,8 +23,9 @@ const { expect } = require('chai');
 
 const { buildUtxoPos, UtxoPos } = require('../../../../helpers/positions.js');
 const { computeNormalOutputId, spentOnGas } = require('../../../../helpers/utils.js');
+const { PaymentTransactionOutput, PaymentTransaction } = require('../../../../helpers/transaction.js');
 const {
-    PROTOCOL, VAULT_ID, DUMMY_INPUT_1, SAFE_GAS_STIPEND,
+    PROTOCOL, VAULT_ID, DUMMY_INPUT_1, SAFE_GAS_STIPEND, ETH,
 } = require('../../../../helpers/constants.js');
 const {
     buildValidIfeStartArgs, buildIfeStartArgs, createInputTransaction, createDepositTransaction, createInFlightTx,
@@ -126,15 +126,12 @@ contract('PaymentStartInFlightExit', ([_, alice, richFather, carol]) => {
                 this.stateTransitionVerifier = await StateTransitionVerifierMock.new();
                 await this.stateTransitionVerifier.mockResult(true);
 
-                this.txFinalizationVerifier = await TxFinalizationVerifier.new();
-
                 const exitGameArgs = [
                     this.framework.address,
                     VAULT_ID.ETH,
                     VAULT_ID.ERC20,
                     this.spendingConditionRegistry.address,
                     this.stateTransitionVerifier.address,
-                    this.txFinalizationVerifier.address,
                     IFE_TX_TYPE,
                     SAFE_GAS_STIPEND,
                 ];
@@ -320,15 +317,12 @@ contract('PaymentStartInFlightExit', ([_, alice, richFather, carol]) => {
                 this.stateTransitionVerifier = await StateTransitionVerifierMock.new();
                 await this.stateTransitionVerifier.mockResult(true);
 
-                this.txFinalizationVerifier = await TxFinalizationVerifier.new();
-
                 const exitGameArgs = [
                     this.framework.address,
                     VAULT_ID.ETH,
                     VAULT_ID.ERC20,
                     this.spendingConditionRegistry.address,
                     this.stateTransitionVerifier.address,
-                    this.txFinalizationVerifier.address,
                     IFE_TX_TYPE,
                     SAFE_GAS_STIPEND,
                 ];
@@ -386,7 +380,7 @@ contract('PaymentStartInFlightExit', ([_, alice, richFather, carol]) => {
                 );
             });
 
-            it('should fail when in-flight transaction is an invalid state transistion', async () => {
+            it('should fail when in-flight transaction is an invalid state transition', async () => {
                 const {
                     args,
                     inputTxsBlockRoot1,
@@ -431,6 +425,33 @@ contract('PaymentStartInFlightExit', ([_, alice, richFather, carol]) => {
                 await expectRevert(
                     this.exitGame.startInFlightExit(args, { from: alice, value: this.startIFEBondSize.toString() }),
                     'Failing on purpose',
+                );
+            });
+
+            it('should fail when any of input transactions is not of MoreVP protocol', async () => {
+                const nonMoreVpTxType = 999;
+
+                // using any contract address for dummy game register
+                const dummyExitGame = await ExitId.new();
+                await this.framework.registerExitGame(nonMoreVpTxType, dummyExitGame.address, PROTOCOL.MVP);
+
+                const {
+                    args,
+                } = buildValidIfeStartArgs(
+                    AMOUNT,
+                    [alice, bob, carol],
+                    [OUTPUT_TYPE_ONE, OUTPUT_TYPE_ONE, OUTPUT_TYPE_ONE],
+                    BLOCK_NUMBER,
+                    DEPOSIT_BLOCK_NUMBER,
+                );
+
+                const output = new PaymentTransactionOutput(OUTPUT_TYPE_ONE, AMOUNT, alice, ETH);
+                const nonMoreVpTx = new PaymentTransaction(nonMoreVpTxType, [], [output]);
+                args.inputTxs[0] = web3.utils.bytesToHex(nonMoreVpTx.rlpEncoded());
+
+                await expectRevert(
+                    this.exitGame.startInFlightExit(args, { from: alice, value: this.startIFEBondSize.toString() }),
+                    'MoreVpFinalization: not a MoreVP protocol tx',
                 );
             });
 
@@ -632,52 +653,6 @@ contract('PaymentStartInFlightExit', ([_, alice, richFather, carol]) => {
                 await expectRevert(
                     this.exitGame.startInFlightExit(args, { from: alice, value: this.startIFEBondSize.toString() }),
                     'Number of input transactions does not match number of in-flight transaction inputs',
-                );
-            });
-
-            it('should fail when number of confirm sigs of input txs does not match in-flight transactions number of inputs', async () => {
-                const {
-                    args,
-                    inputTxsBlockRoot1,
-                    inputTxsBlockRoot2,
-                } = buildValidIfeStartArgs(
-                    AMOUNT,
-                    [alice, bob, carol],
-                    [OUTPUT_TYPE_ONE, OUTPUT_TYPE_ONE, OUTPUT_TYPE_ONE],
-                    BLOCK_NUMBER,
-                    DEPOSIT_BLOCK_NUMBER,
-                );
-                await registerSpendingConditionTrue(this.spendingConditionRegistry);
-                await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot1, 0);
-                await this.framework.setBlock(DEPOSIT_BLOCK_NUMBER, inputTxsBlockRoot2, 0);
-                args.inputTxsConfirmSigs = [];
-
-                await expectRevert(
-                    this.exitGame.startInFlightExit(args, { from: alice, value: this.startIFEBondSize.toString() }),
-                    'Number of input transactions confirm sigs does not match the number of in-flight transaction inputs',
-                );
-            });
-
-            it('should fail when number of input spending condition optional args does not match in-flight transactions number of inputs', async () => {
-                const {
-                    args,
-                    inputTxsBlockRoot1,
-                    inputTxsBlockRoot2,
-                } = buildValidIfeStartArgs(
-                    AMOUNT,
-                    [alice, bob, carol],
-                    [OUTPUT_TYPE_ONE, OUTPUT_TYPE_ONE, OUTPUT_TYPE_ONE],
-                    BLOCK_NUMBER,
-                    DEPOSIT_BLOCK_NUMBER,
-                );
-                await registerSpendingConditionTrue(this.spendingConditionRegistry);
-                await this.framework.setBlock(BLOCK_NUMBER, inputTxsBlockRoot1, 0);
-                await this.framework.setBlock(DEPOSIT_BLOCK_NUMBER, inputTxsBlockRoot2, 0);
-                args.inputSpendingConditionOptionalArgs = [];
-
-                await expectRevert(
-                    this.exitGame.startInFlightExit(args, { from: alice, value: this.startIFEBondSize.toString() }),
-                    'Number of input spending condition optional args does not match the number of in-flight transaction inputs',
                 );
             });
 

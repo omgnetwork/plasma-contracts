@@ -15,7 +15,6 @@ const StateTransitionVerifierMock = artifacts.require('StateTransitionVerifierMo
 const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
-const TxFinalizationVerifier = artifacts.require('TxFinalizationVerifier');
 
 const { expect } = require('chai');
 const { expectEvent, time } = require('openzeppelin-test-helpers');
@@ -69,8 +68,6 @@ contract('PaymentExitGame - Update Bond', () => {
 
         this.stateTransitionVerifier = await StateTransitionVerifierMock.new();
         await this.stateTransitionVerifier.mockResult(true);
-
-        this.txFinalizationVerifier = await TxFinalizationVerifier.new();
     });
 
     describe('updateStartStandardExitBondSize', () => {
@@ -81,7 +78,6 @@ contract('PaymentExitGame - Update Bond', () => {
                 VAULT_ID.ERC20,
                 this.spendingConditionRegistry.address,
                 this.stateTransitionVerifier.address,
-                this.txFinalizationVerifier.address,
                 TX_TYPE.PAYMENT,
                 SAFE_GAS_STIPEND,
             ];
@@ -117,7 +113,6 @@ contract('PaymentExitGame - Update Bond', () => {
                 VAULT_ID.ERC20,
                 this.spendingConditionRegistry.address,
                 this.stateTransitionVerifier.address,
-                this.txFinalizationVerifier.address,
                 TX_TYPE.PAYMENT,
                 SAFE_GAS_STIPEND,
             ];
@@ -153,7 +148,6 @@ contract('PaymentExitGame - Update Bond', () => {
                 VAULT_ID.ERC20,
                 this.spendingConditionRegistry.address,
                 this.stateTransitionVerifier.address,
-                this.txFinalizationVerifier.address,
                 TX_TYPE.PAYMENT,
                 SAFE_GAS_STIPEND,
             ];

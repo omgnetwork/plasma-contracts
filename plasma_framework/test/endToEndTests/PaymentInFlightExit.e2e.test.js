@@ -106,7 +106,6 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                         const inputTxTypes = [TX_TYPE_PAYMENT];
                         const inputUtxosPos = [this.depositUtxoPos];
                         const inputTxsInclusionProofs = [this.merkleProofForDepositTx];
-                        const inputTxsConfirmSigs = [EMPTY_BYTES];
 
                         const txHash = hashTx(this.inFlightTx, this.framework.address);
                         const signature = sign(txHash, alicePrivateKey);
@@ -117,9 +116,7 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                             inputTxTypes,
                             inputUtxosPos,
                             inputTxsInclusionProofs,
-                            inputTxsConfirmSigs,
                             inFlightTxWitnesses: [signature],
-                            inputSpendingConditionOptionalArgs: [EMPTY_BYTES],
                         };
 
                         await this.exitGame.startInFlightExit(
@@ -254,9 +251,7 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                     inputTxTypes,
                                     inputUtxosPos,
                                     inputTxsInclusionProofs,
-                                    inputTxsConfirmSigs: [EMPTY_BYTES, EMPTY_BYTES],
                                     inFlightTxWitnesses: [this.signatureTx1, this.signatureTx1],
-                                    inputSpendingConditionOptionalArgs: [EMPTY_BYTES, EMPTY_BYTES],
                                 };
 
                                 await this.exitGame.startInFlightExit(
@@ -291,8 +286,6 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                             competingTxPos: 0,
                                             competingTxInclusionProof: EMPTY_BYTES,
                                             competingTxWitness: this.signatureTx2,
-                                            competingTxConfirmSig: EMPTY_BYTES,
-                                            competingTxSpendingConditionOptionalArgs: EMPTY_BYTES,
                                         };
 
                                         await this.exitGame.challengeInFlightExitNotCanonical(
@@ -430,9 +423,7 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                     inputTxTypes: [TX_TYPE_PAYMENT],
                                     inputUtxosPos: [this.outputBData.depositUtxoPos],
                                     inputTxsInclusionProofs: [this.outputBData.depositInclusionProof],
-                                    inputTxsConfirmSigs: [EMPTY_BYTES],
                                     inFlightTxWitnesses: [this.signatureBobTx2],
-                                    inputSpendingConditionOptionalArgs: [EMPTY_BYTES],
                                 };
 
                                 await this.exitGame.startInFlightExit(
@@ -459,9 +450,7 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                         inputTxTypes,
                                         inputUtxosPos,
                                         inputTxsInclusionProofs,
-                                        inputTxsConfirmSigs: [EMPTY_BYTES, EMPTY_BYTES],
                                         inFlightTxWitnesses: [this.signatureAliceTx1, this.signatureBobTx1],
-                                        inputSpendingConditionOptionalArgs: [EMPTY_BYTES, EMPTY_BYTES],
                                     };
 
                                     await this.exitGame.startInFlightExit(
@@ -482,8 +471,6 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                             competingTxPos: 0,
                                             competingTxInclusionProof: EMPTY_BYTES,
                                             competingTxWitness: this.signatureBobTx2,
-                                            competingTxConfirmSig: EMPTY_BYTES,
-                                            competingTxSpendingConditionOptionalArgs: EMPTY_BYTES,
                                         };
 
                                         await this.exitGame.challengeInFlightExitNotCanonical(argsTx1);
@@ -498,8 +485,6 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                             competingTxPos: 0,
                                             competingTxInclusionProof: EMPTY_BYTES,
                                             competingTxWitness: this.signatureBobTx1,
-                                            competingTxConfirmSig: EMPTY_BYTES,
-                                            competingTxSpendingConditionOptionalArgs: EMPTY_BYTES,
                                         };
 
                                         await this.exitGame.challengeInFlightExitNotCanonical(argsTx2);

@@ -6,12 +6,11 @@ import "../PaymentInFlightExitModelUtils.sol";
 import "../routers/PaymentInFlightExitRouterArgs.sol";
 import "../../interfaces/ISpendingCondition.sol";
 import "../../interfaces/IStateTransitionVerifier.sol";
-import "../../interfaces/ITxFinalizationVerifier.sol";
-import "../../models/TxFinalizationModel.sol";
 import "../../registries/SpendingConditionRegistry.sol";
 import "../../utils/ExitableTimestamp.sol";
 import "../../utils/ExitId.sol";
 import "../../utils/OutputId.sol";
+import "../../utils/MoreVpFinalization.sol";
 import "../../../utils/IsDeposit.sol";
 import "../../../utils/UtxoPosLib.sol";
 import "../../../utils/Merkle.sol";
@@ -38,7 +37,6 @@ library PaymentStartInFlightExit {
         ExitableTimestamp.Calculator exitTimestampCalculator;
         SpendingConditionRegistry spendingConditionRegistry;
         IStateTransitionVerifier transitionVerifier;
-        ITxFinalizationVerifier txFinalizationVerifier;
         uint256 supportedTxType;
     }
 
@@ -57,9 +55,7 @@ library PaymentStartInFlightExit {
      * @param inputTxs Input transactions as bytes
      * @param inputUtxosPos Postions of input utxos coded as integers
      * @param inputTxsInclusionProofs Merkle proofs for input transactions
-     * @param inputTxsConfirmSigs Confirm signatures for the input txs
      * @param inFlightTxWitnesses Witnesses for in-flight transactions
-     * @param inputSpendingConditionOptionalArgs Optional args for the spending condition, used for checking inputs
      * @param outputIds Output IDs for input transactions.
      */
     struct StartExitData {
@@ -71,9 +67,7 @@ library PaymentStartInFlightExit {
         bytes[] inputTxs;
         UtxoPosLib.UtxoPos[] inputUtxosPos;
         bytes[] inputTxsInclusionProofs;
-        bytes[] inputTxsConfirmSigs;
         bytes[] inFlightTxWitnesses;
-        bytes[] inputSpendingConditionOptionalArgs;
         bytes32[] outputIds;
     }
 
@@ -85,7 +79,6 @@ library PaymentStartInFlightExit {
         PlasmaFramework framework,
         SpendingConditionRegistry spendingConditionRegistry,
         IStateTransitionVerifier transitionVerifier,
-        ITxFinalizationVerifier txFinalizationVerifier,
         uint256 supportedTxType
     )
         public
@@ -98,7 +91,6 @@ library PaymentStartInFlightExit {
             exitTimestampCalculator: ExitableTimestamp.Calculator(framework.minExitPeriod()),
             spendingConditionRegistry: spendingConditionRegistry,
             transitionVerifier: transitionVerifier,
-            txFinalizationVerifier: txFinalizationVerifier,
             supportedTxType: supportedTxType
         });
     }
@@ -140,9 +132,7 @@ library PaymentStartInFlightExit {
         exitData.inputTxs = args.inputTxs;
         exitData.inputUtxosPos = decodeInputTxsPositions(args.inputUtxosPos);
         exitData.inputTxsInclusionProofs = args.inputTxsInclusionProofs;
-        exitData.inputTxsConfirmSigs = args.inputTxsConfirmSigs;
         exitData.inFlightTxWitnesses = args.inFlightTxWitnesses;
-        exitData.inputSpendingConditionOptionalArgs = args.inputSpendingConditionOptionalArgs;
         exitData.outputIds = getOutputIds(controller, exitData.inputTxs, exitData.inputUtxosPos);
         return exitData;
     }
@@ -217,14 +207,6 @@ library PaymentStartInFlightExit {
             exitData.inFlightTxWitnesses.length == exitData.inFlightTx.inputs.length,
             "Number of input transaction witnesses does not match the number of in-flight transaction inputs"
         );
-        require(
-            exitData.inputTxsConfirmSigs.length == exitData.inFlightTx.inputs.length,
-            "Number of input transactions confirm sigs does not match the number of in-flight transaction inputs"
-        );
-        require(
-            exitData.inputSpendingConditionOptionalArgs.length == exitData.inFlightTx.inputs.length,
-            "Number of input spending condition optional args does not match the number of in-flight transaction inputs"
-        );
     }
 
     function verifyNoInputSpentMoreThanOnce(PaymentTransactionModel.Transaction memory inFlightTx) private pure {
@@ -239,20 +221,13 @@ library PaymentStartInFlightExit {
 
     function verifyInputTransactionIsStandardFinalized(StartExitData memory exitData) private view {
         for (uint i = 0; i < exitData.inputTxs.length; i++) {
-            uint8 protocol = exitData.controller.framework.protocols(WireTransaction.getTransactionType(exitData.inputTxs[i]));
-
-            // TODO: move the simplified MVP verifier
-            TxFinalizationModel.Data memory finalizationData = TxFinalizationModel.Data({
-                framework: exitData.controller.framework,
-                protocol: protocol,
-                txBytes: exitData.inputTxs[i],
-                txPos: exitData.inputUtxosPos[i].txPos(),
-                inclusionProof: exitData.inputTxsInclusionProofs[i],
-                confirmSig: bytes(""),
-                confirmSigAddress: address(0)
-            });
-            require(exitData.controller.txFinalizationVerifier.isStandardFinalized(finalizationData),
-                    "Input transaction is not standard finalized");
+            bool isStandardFinalized = MoreVpFinalization.isStandardFinalized(
+                exitData.controller.framework,
+                exitData.inputTxs[i],
+                exitData.inputUtxosPos[i].txPos(),
+                exitData.inputTxsInclusionProofs[i]
+            );
+            require(isStandardFinalized, "Input transaction is not standard finalized");
         }
     }
 
@@ -273,8 +248,7 @@ library PaymentStartInFlightExit {
                 exitData.inputUtxosPos[i].txPos().value,
                 exitData.inFlightTxRaw,
                 i,
-                exitData.inFlightTxWitnesses[i],
-                exitData.inputSpendingConditionOptionalArgs[i]
+                exitData.inFlightTxWitnesses[i]
             );
             require(isSpentByInFlightTx, "Spending condition failed");
         }

@@ -1,28 +1,23 @@
-# IsDeposit.sol
+# MoreVpFinalization.sol
 
-View Source: [contracts/src/utils/IsDeposit.sol](../../contracts/src/utils/IsDeposit.sol)
+View Source: [contracts/src/exits/utils/MoreVpFinalization.sol](../../contracts/src/exits/utils/MoreVpFinalization.sol)
 
-**IsDeposit**
+**MoreVpFinalization**
 
-## Structs
-### Predicate
-
-```js
-struct Predicate {
- uint256 childBlockInterval
-}
-```
+Library to check finalization for MoreVP protocol
 
 ## Functions
 
-- [test(struct IsDeposit.Predicate _predicate, uint256 _blockNum)](#test)
+- [isStandardFinalized(PlasmaFramework framework, bytes txBytes, struct TxPosLib.TxPos txPos, bytes inclusionProof)](#isstandardfinalized)
+- [isProtocolFinalized(PlasmaFramework framework, bytes txBytes)](#isprotocolfinalized)
 
-### test
+### isStandardFinalized
 
-Tests whether the given block number belongs to a deposit block
+Checks whether a transaction is "standard finalized".
+        For MoreVP, it means the transaction should be included in a plasma block.
 
 ```js
-function test(struct IsDeposit.Predicate _predicate, uint256 _blockNum) internal pure
+function isStandardFinalized(PlasmaFramework framework, bytes txBytes, struct TxPosLib.TxPos txPos, bytes inclusionProof) internal view
 returns(bool)
 ```
 
@@ -30,8 +25,27 @@ returns(bool)
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| _predicate | struct IsDeposit.Predicate |  | 
-| _blockNum | uint256 |  | 
+| framework | PlasmaFramework |  | 
+| txBytes | bytes |  | 
+| txPos | struct TxPosLib.TxPos |  | 
+| inclusionProof | bytes |  | 
+
+### isProtocolFinalized
+
+Checks whether a transaction is "protocol finalized"
+        For MoreVP, since it allows in-flight tx, so only checks for the existence of the transaction
+
+```js
+function isProtocolFinalized(PlasmaFramework framework, bytes txBytes) internal view
+returns(bool)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| framework | PlasmaFramework |  | 
+| txBytes | bytes |  | 
 
 ## Contracts
 

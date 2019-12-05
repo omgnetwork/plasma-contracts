@@ -8,7 +8,6 @@ const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
 const StateTransitionVerifierMock = artifacts.require('StateTransitionVerifierMock');
-const TxFinalizationVerifier = artifacts.require('TxFinalizationVerifier');
 const Attacker = artifacts.require('FallbackFunctionFailAttacker');
 
 const {
@@ -17,7 +16,8 @@ const {
 const { expect } = require('chai');
 
 const {
-    TX_TYPE, OUTPUT_TYPE, PROTOCOL, EMPTY_BYTES_32, VAULT_ID, DUMMY_INPUT_1, SAFE_GAS_STIPEND,
+    TX_TYPE, OUTPUT_TYPE, PROTOCOL, VAULT_ID,
+    DUMMY_INPUT_1, SAFE_GAS_STIPEND,
 } = require('../../../../helpers/constants.js');
 const { buildUtxoPos, UtxoPos } = require('../../../../helpers/positions.js');
 const {
@@ -61,10 +61,6 @@ contract('PaymentChallengeStandardExit', ([_, alice, bob]) => {
                 challengeTx,
                 inputIndex: 0,
                 witness: web3.utils.utf8ToHex('dummy witness'),
-                spendingConditionOptionalArgs: web3.utils.utf8ToHex('dummy optional args'),
-                challengeTxPos: 0,
-                challengeTxInclusionProof: EMPTY_BYTES_32,
-                challengeTxConfirmSig: web3.utils.utf8ToHex('dummy confirm sig'),
             };
         };
 
@@ -94,7 +90,6 @@ contract('PaymentChallengeStandardExit', ([_, alice, bob]) => {
             // lets the spending condition pass by default
             await this.spendingCondition.mockResult(true);
 
-            this.txFinalizationVerifier = await TxFinalizationVerifier.new();
             const stateTransitionVerifier = await StateTransitionVerifierMock.new();
 
             this.exitGameArgs = [
@@ -103,7 +98,6 @@ contract('PaymentChallengeStandardExit', ([_, alice, bob]) => {
                 VAULT_ID.ERC20,
                 this.spendingConditionRegistry.address,
                 stateTransitionVerifier.address,
-                this.txFinalizationVerifier.address,
                 TX_TYPE.PAYMENT,
                 SAFE_GAS_STIPEND,
             ];
@@ -157,12 +151,12 @@ contract('PaymentChallengeStandardExit', ([_, alice, bob]) => {
                 );
             });
 
-            it('should fail when TxFinalizationVerifier reverts while checking whether challenge tx is protocol finalized', async () => {
+            it('should fail when try to challenge with a tx that is not of MoreVP protocol', async () => {
                 const dummyExitGame = await PaymentStandardExitRouter.new(this.exitGameArgs);
 
                 const args = getTestInputArgs(OUTPUT_TYPE.PAYMENT, alice);
 
-                // the test data is only setup for MoreVp, MVP would fail for inclusion proof + confirm sig check
+                // the test data is only setup for MoreVp, MVP would fail
                 const mvpTxType = 999;
                 await this.framework.registerExitGame(mvpTxType, dummyExitGame.address, PROTOCOL.MVP);
 
@@ -176,7 +170,7 @@ contract('PaymentChallengeStandardExit', ([_, alice, bob]) => {
 
                 await expectRevert(
                     this.exitGame.challengeStandardExit(args),
-                    'MVP is not yet supported',
+                    'MoreVpFinalization: not a MoreVP protocol tx',
                 );
             });
 
@@ -234,7 +228,6 @@ contract('PaymentChallengeStandardExit', ([_, alice, bob]) => {
                     spendingTx: args.challengeTx,
                     inputIndex: args.inputIndex,
                     witness: args.witness,
-                    optionalArgs: args.spendingConditionOptionalArgs,
                 };
 
                 // would revert if called without the expected data

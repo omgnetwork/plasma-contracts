@@ -15,7 +15,6 @@ contract('PaymentStandardExitRouter', () => {
     const INITIAL_IMMUNE_VAULTS_NUM = 1;
     const INITIAL_IMMUNE_EXIT_GAME_NUM = 1;
     const DUMMY_SPENDING_CONDITION_REGISTRY = constants.ZERO_ADDRESS;
-    const DUMMY_TX_FINALIZATION_VERIFIER = constants.ZERO_ADDRESS;
     const DUMMY_STATE_TRANSITION_VERIFIER = constants.ZERO_ADDRESS;
 
     before('deploy and link with controller lib', async () => {
@@ -44,7 +43,6 @@ contract('PaymentStandardExitRouter', () => {
             VAULT_ID.ERC20,
             DUMMY_SPENDING_CONDITION_REGISTRY,
             DUMMY_STATE_TRANSITION_VERIFIER,
-            DUMMY_TX_FINALIZATION_VERIFIER,
             TX_TYPE.PAYMENT,
             SAFE_GAS_STIPEND,
         ];
@@ -63,7 +61,6 @@ contract('PaymentStandardExitRouter', () => {
             VAULT_ID.ERC20,
             DUMMY_SPENDING_CONDITION_REGISTRY,
             DUMMY_STATE_TRANSITION_VERIFIER,
-            DUMMY_TX_FINALIZATION_VERIFIER,
             TX_TYPE.PAYMENT,
             SAFE_GAS_STIPEND,
         ];

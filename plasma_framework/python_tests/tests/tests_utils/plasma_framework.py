@@ -82,7 +82,6 @@ class PlasmaFramework:
 
     def _setup_state_verifiers(self, get_contract, maintainer):
         self.payment_state_verifier = get_contract('PaymentTransactionStateTransitionVerifier', sender=maintainer)
-        self.tx_finalization_verifier = get_contract('TxFinalizationVerifier', sender=maintainer)
 
     def _setup_exit_games(self, get_contract, maintainer):
         self.payment_exit_game = self._get_payment_exit_game(get_contract, maintainer)
@@ -115,7 +114,6 @@ class PlasmaFramework:
             self.erc20_vault_id,
             self.spending_condition_registry.address,
             self.payment_state_verifier.address,
-            self.tx_finalization_verifier.address,
             TxTypes.PAYMENT.value,
             SAFE_GAS_STIPEND,
         )

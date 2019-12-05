@@ -16,7 +16,6 @@ const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
 const StateTransitionVerifierMock = artifacts.require('StateTransitionVerifierMock');
-const TxFinalizationVerifier = artifacts.require('TxFinalizationVerifier');
 
 const {
     BN, constants, expectEvent, expectRevert, time,
@@ -51,8 +50,6 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
     const INPUT_UTXO_POS = new UtxoPos(buildUtxoPos(INPUT_TX_BLOCK_NUM, 0, 0));
     const INPUT_DEPOSIT_UTXO_POS = new UtxoPos(buildUtxoPos(INPUT_TX_BLOCK_NUM + 1, 0, 0));
     const COMPETING_TX_BLOCK_NUM = 2000;
-    const DUMMY_CONFIRM_SIG = web3.utils.utf8ToHex('dummy confirm sig for shared input');
-    const DUMMY_SPENDING_CONDITION_OPTIONAL_ARGS = web3.utils.utf8ToHex('dummy spending condition optional args');
 
     const createInputTransaction = (outputType) => {
         const output = new PaymentTransactionOutput(outputType, TEST_IFE_INPUT_AMOUNT, inputOwner, ETH);
@@ -126,8 +123,6 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
                 competingTxPos: competingTxPos.utxoPos,
                 competingTxInclusionProof: inclusionProof,
                 competingTxWitness,
-                competingTxConfirmSig: DUMMY_CONFIRM_SIG,
-                competingTxSpendingConditionOptionalArgs: DUMMY_SPENDING_CONDITION_OPTIONAL_ARGS,
             },
             block: {
                 blockHash, blockNum, blockTimestamp,
@@ -216,7 +211,6 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
         this.exitableHelper = await ExitableTimestamp.new(MIN_EXIT_PERIOD);
         this.stateTransitionVerifier = await StateTransitionVerifierMock.new();
         await this.stateTransitionVerifier.mockResult(true);
-        this.txFinalizationVerifier = await TxFinalizationVerifier.new();
     });
 
     beforeEach('deploy framework', async () => {
@@ -237,7 +231,6 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
             VAULT_ID.ERC20,
             this.spendingConditionRegistry.address,
             this.stateTransitionVerifier.address,
-            this.txFinalizationVerifier.address,
             IFE_TX_TYPE,
             SAFE_GAS_STIPEND,
         ];
@@ -252,9 +245,9 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
         );
     });
 
-    const setInFlightExit = async (outputType, nonDepositInputTx, competingTxType = IFE_TX_TYPE) => {
+    const setInFlightExit = async (outputType, isInputTxDeposit, competingTxType = IFE_TX_TYPE) => {
         const { exitId, inFlightTx, inFlightExitData } = await buildInFlightExitData(
-            this.exitIdHelper, this.outputIdHelper, outputType, nonDepositInputTx,
+            this.exitIdHelper, this.outputIdHelper, outputType, isInputTxDeposit,
         );
         await this.exitGame.setInFlightExit(exitId, inFlightExitData);
         this.inFlightTx = inFlightTx;
@@ -262,7 +255,7 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
 
         const {
             args: cArgs, block, decodedCompetingTx,
-        } = buildValidNoncanonicalChallengeArgs(inFlightTx, outputType, nonDepositInputTx, competingTxType);
+        } = buildValidNoncanonicalChallengeArgs(inFlightTx, outputType, isInputTxDeposit, competingTxType);
 
         this.challengeArgs = cArgs;
         this.competingTx = decodedCompetingTx;
@@ -275,10 +268,11 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
 
     describe('challenge in-flight exit non-canonical', () => {
         beforeEach('set in-flight exit', async () => {
+            // override the global IFE test data
             await setInFlightExit(OUTPUT_TYPE.PAYMENT, true);
         });
 
-        it('should successfuly challenge when transaction that created input tx is a deposit', async () => {
+        it('should successfully challenge when transaction that created input tx is a deposit', async () => {
             await this.framework.setBlock(
                 this.competingTxBlock.blockNum,
                 this.competingTxBlock.blockHash,
@@ -389,7 +383,7 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
 
                 await expectRevert(
                     this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: challenger }),
-                    'Failed to verify the position of competing tx',
+                    'Competing tx is not standard finalized with the given tx position',
                 );
             });
 
@@ -494,13 +488,16 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
         });
     });
 
-    describe('challenge in-flight exit non-canonical', () => {
-        beforeEach('set in-flight exit', async () => {
+    describe('challenge in-flight exit non-canonical with non MoreVP tx', () => {
+        beforeEach('setup MVP protocol tx type', async () => {
             const otherTxType = 3;
+            const dummyExitGame = await OutputId.new(); // any contract would work
+            this.framework.registerExitGame(otherTxType, dummyExitGame.address, PROTOCOL.MVP);
+
             await setInFlightExit(OUTPUT_TYPE.PAYMENT, true, otherTxType);
         });
 
-        it('fails when competing tx without position is not a MoreVP transaction', async () => {
+        it('fails when competing tx position is not in a block', async () => {
             await this.framework.setBlock(
                 this.competingTxBlock.blockNum,
                 this.competingTxBlock.blockHash,
@@ -510,7 +507,20 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
             this.challengeArgs.competingTxPos = 0;
             await expectRevert(
                 this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: challenger }),
-                'Competing tx without position must be a MoreVP tx',
+                'MoreVpFinalization: not a MoreVP protocol tx',
+            );
+        });
+
+        it('fails when competing tx is included in a block', async () => {
+            await this.framework.setBlock(
+                this.competingTxBlock.blockNum,
+                this.competingTxBlock.blockHash,
+                this.competingTxBlock.blockTimestamp,
+            );
+
+            await expectRevert(
+                this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: challenger }),
+                'MoreVpFinalization: not a MoreVP protocol tx',
             );
         });
     });

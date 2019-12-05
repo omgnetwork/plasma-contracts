@@ -17,7 +17,6 @@ contract SpendingConditionMock is ISpendingCondition {
         bytes spendingTx;
         uint16 inputIndex;
         bytes witness;
-        bytes optionalArgs;
     }
 
     /** mock what would "verify()" returns */
@@ -42,8 +41,7 @@ contract SpendingConditionMock is ISpendingCondition {
         uint256 inputTxPos,
         bytes calldata spendingTx,
         uint16 inputIndex,
-        bytes calldata witness,
-        bytes calldata optionalArgs
+        bytes calldata witness
     )
         external
         view
@@ -61,7 +59,6 @@ contract SpendingConditionMock is ISpendingCondition {
             require(keccak256(expectedArgs.spendingTx) == keccak256(spendingTx), "spending tx not as expected");
             require(expectedArgs.inputIndex == inputIndex, "input index not as expected");
             require(keccak256(expectedArgs.witness) == keccak256(witness), "witness not as expected");
-            require(keccak256(expectedArgs.optionalArgs) == keccak256(optionalArgs), "optional args not as expected");
         }
         return expectedResult;
     }
