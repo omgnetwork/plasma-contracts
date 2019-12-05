@@ -84,6 +84,7 @@ library PaymentInFlightExitRouterArgs {
      /**
      * @notice Wraps arguments for challenging in-flight transaction output exit
      * @param inFlightTx RLP-encoded in-flight transaction
+     * @param inFlightTxInclusionProof Proof that an in-flight transaction is included in Plasma
      * @param outputUtxoPos UTXO position of challenged output
      * @param challengingTx RLP-encoded challenging transaction
      * @param challengingTxInputIndex Input index of challenged output in a challenging transaction
@@ -91,6 +92,7 @@ library PaymentInFlightExitRouterArgs {
      */
     struct ChallengeOutputSpent {
         bytes inFlightTx;
+        bytes inFlightTxInclusionProof;
         uint256 outputUtxoPos;
         bytes challengingTx;
         uint16 challengingTxInputIndex;

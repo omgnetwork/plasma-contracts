@@ -56,6 +56,7 @@ library PaymentChallengeIFEOutputSpent {
             "Output is not piggybacked"
         );
 
+        verifyInFlightTransactionStandardFinalized(controller, args);
         verifyChallengingTransactionProtocolFinalized(controller, args);
         verifyChallengingTransactionSpendsOutput(controller, args);
 
@@ -65,6 +66,24 @@ library PaymentChallengeIFEOutputSpent {
         SafeEthTransfer.transferRevertOnError(msg.sender, piggybackBondSize, controller.safeGasStipend);
 
         emit InFlightExitOutputBlocked(msg.sender, keccak256(args.inFlightTx), outputIndex);
+    }
+
+    function verifyInFlightTransactionStandardFinalized(
+        Controller memory controller,
+        PaymentInFlightExitRouterArgs.ChallengeOutputSpent memory args
+    )
+        private
+        view
+    {
+        UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(args.outputUtxoPos);
+        bool isStandardFinalized = MoreVpFinalization.isStandardFinalized(
+            controller.framework,
+            args.inFlightTx,
+            utxoPos.txPos(),
+            args.inFlightTxInclusionProof
+        );
+
+        require(isStandardFinalized, "In-flight transaction must be standard finalized to be able to spend");
     }
 
     function verifyChallengingTransactionProtocolFinalized(

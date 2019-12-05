@@ -28,7 +28,7 @@ const {
     PROTOCOL, TX_TYPE, VAULT_ID, DUMMY_INPUT_1, SAFE_GAS_STIPEND, EMPTY_BYTES_32,
 } = require('../../../../helpers/constants.js');
 
-contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
+contract.only('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
     const DUMMY_IFE_BOND_SIZE = 31415926535; // wei
     const PIGGYBACK_BOND = 31415926535;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
@@ -179,6 +179,7 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
 
             this.challengeArgs = {
                 inFlightTx: args.inFlightTxBytes,
+                inFlightTxInclusionProof: args.inclusionProof,
                 outputUtxoPos: buildUtxoPos(BLOCK_NUM, 0, 0),
                 challengingTx: args.challengingTxBytes,
                 challengingTxInputIndex: 0,
@@ -263,6 +264,14 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
             await expectRevert(
                 this.exitGame.challengeInFlightExitOutputSpent(this.challengeArgs, { from: bob }),
                 'MoreVpFinalization: not a MoreVP protocol tx',
+            );
+        });
+
+        it('should fail when in-flight transaction is not included in Plasma', async () => {
+            this.challengeArgs.inFlightTxInclusionProof = web3.utils.bytesToHex('a'.repeat(512));
+            await expectRevert(
+                this.exitGame.challengeInFlightExitOutputSpent(this.challengeArgs, { from: bob }),
+                'In-flight transaction must be standard finalized (included in Plasma) to be able to spend',
             );
         });
 
