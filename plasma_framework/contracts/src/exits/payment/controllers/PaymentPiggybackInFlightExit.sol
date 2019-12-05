@@ -134,7 +134,7 @@ library PaymentPiggybackInFlightExit {
         // TODO: move this to start IFE, as we are removing the mechanism of using output guard preimage.
         // For inputs, exit target is set during start inFlight exit.
         // For outputs, since output preimage data is held by the output owners, these must be retrieved on piggyback.
-        WireTransaction.Output memory output = PaymentTransactionModel.decode(args.inFlightTx).outputs[args.outputIndex];
+        GenericTransaction.Output memory output = PaymentTransactionModel.decode(args.inFlightTx).outputs[args.outputIndex];
         address payable exitTarget = PaymentTransactionModel.getOutputOwner(output);
         require(exitTarget == msg.sender, "Can be called only by the exit target");
 

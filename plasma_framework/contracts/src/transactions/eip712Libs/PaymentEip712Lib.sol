@@ -83,7 +83,7 @@ library PaymentEip712Lib {
         }
 
         // Pad empty value to output array
-        WireTransaction.Output[] memory outputs = new WireTransaction.Output[](MAX_OUTPUT_NUM);
+        GenericTransaction.Output[] memory outputs = new GenericTransaction.Output[](MAX_OUTPUT_NUM);
         for (uint i = 0; i < _tx.outputs.length; i++) {
             outputs[i] = _tx.outputs[i];
         }
@@ -118,7 +118,7 @@ library PaymentEip712Lib {
         ));
     }
 
-    function _hashOutput(WireTransaction.Output memory _output)
+    function _hashOutput(GenericTransaction.Output memory _output)
         private
         pure
         returns (bytes32)

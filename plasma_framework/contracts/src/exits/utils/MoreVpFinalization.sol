@@ -5,11 +5,11 @@ import "../../framework/PlasmaFramework.sol";
 import "../../framework/Protocol.sol";
 import "../../utils/Merkle.sol";
 import "../../utils/TxPosLib.sol";
-import "../../transactions/WireTransaction.sol";
+import "../../transactions/GenericTransaction.sol";
 
 /**
  * @notice Library to check finalization for MoreVP protocol
- * @dev This library assumes that the tx is of the WireTransaction format
+ * @dev This library assumes that the tx is of the GenericTransaction format
  */
 library MoreVpFinalization {
     using TxPosLib for TxPosLib.TxPos;
@@ -28,8 +28,8 @@ library MoreVpFinalization {
         view
         returns (bool)
     {
-        WireTransaction.Transaction memory wtx = WireTransaction.decode(txBytes);
-        uint8 protocol = framework.protocols(wtx.txType);
+        GenericTransaction.Transaction memory genericTx = GenericTransaction.decode(txBytes);
+        uint8 protocol = framework.protocols(genericTx.txType);
         require(protocol == Protocol.MORE_VP(), "MoreVpFinalization: not a MoreVP protocol tx");
 
         (bytes32 root,) = framework.blocks(txPos.blockNum());
@@ -60,8 +60,8 @@ library MoreVpFinalization {
             return false;
         }
 
-        WireTransaction.Transaction memory wtx = WireTransaction.decode(txBytes);
-        uint8 protocol = framework.protocols(wtx.txType);
+        GenericTransaction.Transaction memory genericTx = GenericTransaction.decode(txBytes);
+        uint8 protocol = framework.protocols(genericTx.txType);
         require(protocol == Protocol.MORE_VP(), "MoreVpFinalization: not a MoreVP protocol tx");
 
         return true;

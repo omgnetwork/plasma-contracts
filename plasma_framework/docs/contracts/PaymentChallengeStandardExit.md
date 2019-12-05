@@ -22,7 +22,8 @@ struct Controller {
 struct ChallengeStandardExitData {
  struct PaymentChallengeStandardExit.Controller controller,
  struct PaymentStandardExitRouterArgs.ChallengeStandardExitArgs args,
- struct PaymentExitDataModel.StandardExit exitData
+ struct PaymentExitDataModel.StandardExit exitData,
+ uint256 challengeTxType
 }
 ```
 
@@ -132,6 +133,7 @@ function verifySpendingCondition(struct PaymentChallengeStandardExit.ChallengeSt
 * [ExitId](ExitId.md)
 * [ExitPriority](ExitPriority.md)
 * [FailFastReentrancyGuard](FailFastReentrancyGuard.md)
+* [GenericTransaction](GenericTransaction.md)
 * [IERC20](IERC20.md)
 * [IErc20DepositVerifier](IErc20DepositVerifier.md)
 * [IEthDepositVerifier](IEthDepositVerifier.md)
@@ -159,7 +161,6 @@ function verifySpendingCondition(struct PaymentChallengeStandardExit.ChallengeSt
 * [PaymentInFlightExitModelUtils](PaymentInFlightExitModelUtils.md)
 * [PaymentInFlightExitRouter](PaymentInFlightExitRouter.md)
 * [PaymentInFlightExitRouterArgs](PaymentInFlightExitRouterArgs.md)
-* [PaymentOutputModel](PaymentOutputModel.md)
 * [PaymentOutputToPaymentTxCondition](PaymentOutputToPaymentTxCondition.md)
 * [PaymentPiggybackInFlightExit](PaymentPiggybackInFlightExit.md)
 * [PaymentProcessInFlightExit](PaymentProcessInFlightExit.md)
@@ -183,4 +184,3 @@ function verifySpendingCondition(struct PaymentChallengeStandardExit.ChallengeSt
 * [UtxoPosLib](UtxoPosLib.md)
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)
-* [WireTransaction](WireTransaction.md)

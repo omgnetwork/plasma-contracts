@@ -42,7 +42,7 @@ bytes32 internal constant EMPTY_OUTPUT_HASH;
 - [hashTx(struct PaymentEip712Lib.Constants _eip712, struct PaymentTransactionModel.Transaction _tx)](#hashtx)
 - [_hashTx(struct PaymentTransactionModel.Transaction _tx)](#_hashtx)
 - [_hashInput(bytes32 _input)](#_hashinput)
-- [_hashOutput(struct PaymentOutputModel.Output _output)](#_hashoutput)
+- [_hashOutput(struct GenericTransaction.Output _output)](#_hashoutput)
 
 ### initConstants
 
@@ -100,7 +100,7 @@ returns(bytes32)
 ### _hashOutput
 
 ```js
-function _hashOutput(struct PaymentOutputModel.Output _output) private pure
+function _hashOutput(struct GenericTransaction.Output _output) private pure
 returns(bytes32)
 ```
 
@@ -108,7 +108,7 @@ returns(bytes32)
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| _output | struct PaymentOutputModel.Output |  | 
+| _output | struct GenericTransaction.Output |  | 
 
 ## Contracts
 
@@ -129,6 +129,7 @@ returns(bytes32)
 * [ExitId](ExitId.md)
 * [ExitPriority](ExitPriority.md)
 * [FailFastReentrancyGuard](FailFastReentrancyGuard.md)
+* [GenericTransaction](GenericTransaction.md)
 * [IERC20](IERC20.md)
 * [IErc20DepositVerifier](IErc20DepositVerifier.md)
 * [IEthDepositVerifier](IEthDepositVerifier.md)
@@ -156,7 +157,6 @@ returns(bytes32)
 * [PaymentInFlightExitModelUtils](PaymentInFlightExitModelUtils.md)
 * [PaymentInFlightExitRouter](PaymentInFlightExitRouter.md)
 * [PaymentInFlightExitRouterArgs](PaymentInFlightExitRouterArgs.md)
-* [PaymentOutputModel](PaymentOutputModel.md)
 * [PaymentOutputToPaymentTxCondition](PaymentOutputToPaymentTxCondition.md)
 * [PaymentPiggybackInFlightExit](PaymentPiggybackInFlightExit.md)
 * [PaymentProcessInFlightExit](PaymentProcessInFlightExit.md)
@@ -180,4 +180,3 @@ returns(bytes32)
 * [UtxoPosLib](UtxoPosLib.md)
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)
-* [WireTransaction](WireTransaction.md)

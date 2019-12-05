@@ -36,7 +36,7 @@ library PaymentStartStandardExit {
         PaymentStandardExitRouterArgs.StartStandardExitArgs args;
         UtxoPosLib.UtxoPos utxoPos;
         PaymentTransactionModel.Transaction outputTx;
-        WireTransaction.Output output;
+        GenericTransaction.Output output;
         uint160 exitId;
         bool isTxDeposit;
         uint256 txBlockTimeStamp;
@@ -106,7 +106,7 @@ library PaymentStartStandardExit {
     {
         UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(args.utxoPos);
         PaymentTransactionModel.Transaction memory outputTx = PaymentTransactionModel.decode(args.rlpOutputTx);
-        WireTransaction.Output memory output = outputTx.outputs[utxoPos.outputIndex()];
+        GenericTransaction.Output memory output = outputTx.outputs[utxoPos.outputIndex()];
         bool isTxDeposit = controller.isDeposit.test(utxoPos.blockNum());
         uint160 exitId = ExitId.getStandardExitId(isTxDeposit, args.rlpOutputTx, utxoPos);
         (, uint256 blockTimestamp) = controller.framework.blocks(utxoPos.blockNum());

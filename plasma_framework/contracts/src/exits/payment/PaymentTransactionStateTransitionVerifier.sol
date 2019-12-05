@@ -4,7 +4,7 @@ pragma experimental ABIEncoderV2;
 import "../interfaces/IStateTransitionVerifier.sol";
 import "../payment/PaymentExitDataModel.sol";
 import "../../utils/UtxoPosLib.sol";
-import "../../transactions/WireTransaction.sol";
+import "../../transactions/GenericTransaction.sol";
 import "../../transactions/PaymentTransactionModel.sol";
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
@@ -32,20 +32,20 @@ contract PaymentTransactionStateTransitionVerifier {
             return false;
         }
 
-        WireTransaction.Output[] memory inputs = new WireTransaction.Output[](inputTxs.length);
+        GenericTransaction.Output[] memory inputs = new GenericTransaction.Output[](inputTxs.length);
         for (uint i = 0; i < inputTxs.length; i++) {
             uint16 outputIndex = outputIndexOfInputTxs[i];
-            WireTransaction.Output memory output = WireTransaction.getOutput(
-                WireTransaction.decode(inputTxs[i]),
+            GenericTransaction.Output memory output = GenericTransaction.getOutput(
+                GenericTransaction.decode(inputTxs[i]),
                 outputIndex
             );
             inputs[i] = output;
         }
 
         PaymentTransactionModel.Transaction memory transaction = PaymentTransactionModel.decode(txBytes);
-        WireTransaction.Output[] memory outputs = new WireTransaction.Output[](transaction.outputs.length);
+        GenericTransaction.Output[] memory outputs = new GenericTransaction.Output[](transaction.outputs.length);
         for (uint i = 0; i < transaction.outputs.length; i++) {
-            outputs[i] = WireTransaction.Output(
+            outputs[i] = GenericTransaction.Output(
                     transaction.outputs[i].outputType,
                     transaction.outputs[i].outputGuard,
                     transaction.outputs[i].token,
@@ -57,8 +57,8 @@ contract PaymentTransactionStateTransitionVerifier {
     }
 
     function _isCorrectStateTransition(
-        WireTransaction.Output[] memory inputs,
-        WireTransaction.Output[] memory outputs
+        GenericTransaction.Output[] memory inputs,
+        GenericTransaction.Output[] memory outputs
     )
         private
         pure
@@ -68,8 +68,8 @@ contract PaymentTransactionStateTransitionVerifier {
         uint i = 0;
         while (correctTransition && i < outputs.length) {
             address token = outputs[i].token;
-            WireTransaction.Output[] memory inputsForToken = filterWithToken(inputs, token);
-            WireTransaction.Output[] memory outputsForToken = filterWithToken(outputs, token);
+            GenericTransaction.Output[] memory inputsForToken = filterWithToken(inputs, token);
+            GenericTransaction.Output[] memory outputsForToken = filterWithToken(outputs, token);
 
             correctTransition = isCorrectSpend(inputsForToken, outputsForToken);
             i += 1;
@@ -78,12 +78,12 @@ contract PaymentTransactionStateTransitionVerifier {
     }
 
     function filterWithToken(
-        WireTransaction.Output[] memory outputs,
+        GenericTransaction.Output[] memory outputs,
         address token
     )
         private
         pure
-        returns (WireTransaction.Output[] memory)
+        returns (GenericTransaction.Output[] memory)
     {
         // Required for calculating the size of the filtered array
         uint256 arraySize = 0;
@@ -93,7 +93,7 @@ contract PaymentTransactionStateTransitionVerifier {
             }
         }
 
-        WireTransaction.Output[] memory outputsWithToken = new WireTransaction.Output[](arraySize);
+        GenericTransaction.Output[] memory outputsWithToken = new GenericTransaction.Output[](arraySize);
         uint j = 0;
         for (uint i = 0; i < outputs.length; ++i) {
             if (outputs[i].token == token) {
@@ -106,8 +106,8 @@ contract PaymentTransactionStateTransitionVerifier {
     }
 
     function isCorrectSpend(
-        WireTransaction.Output[] memory inputs,
-        WireTransaction.Output[] memory outputs
+        GenericTransaction.Output[] memory inputs,
+        GenericTransaction.Output[] memory outputs
     )
         internal
         pure
@@ -118,7 +118,7 @@ contract PaymentTransactionStateTransitionVerifier {
         return amountIn >= amountOut;
     }
 
-    function sumAmounts(WireTransaction.Output[] memory outputs) private pure returns (uint256) {
+    function sumAmounts(GenericTransaction.Output[] memory outputs) private pure returns (uint256) {
         uint256 amount = 0;
         for (uint i = 0; i < outputs.length; i++) {
             amount = amount.add(outputs[i].amount);

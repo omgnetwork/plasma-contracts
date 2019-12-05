@@ -4,9 +4,9 @@ const { BN, constants, expectRevert } = require('openzeppelin-test-helpers');
 
 const { PaymentTransaction, PaymentTransactionOutput } = require('../../helpers/transaction.js');
 
-const WireTransaction = artifacts.require('WireTransactionWrapper.sol');
+const GenericTransaction = artifacts.require('GenericTransactionWrapper.sol');
 
-contract('WireTransaction', () => {
+contract('GenericTransaction', () => {
     const OUTPUT_GUARD = `0x${Array(40).fill(1).join('')}`;
     const EMPTY_BYTES32 = `0x${Array(64).fill(0).join('')}`;
     const AMOUNT = 100;
@@ -14,7 +14,7 @@ contract('WireTransaction', () => {
     const OUTPUT_TYPE = 1;
 
     before(async () => {
-        this.test = await WireTransaction.new();
+        this.test = await GenericTransaction.new();
         const output = new PaymentTransactionOutput(OUTPUT_TYPE, AMOUNT, OUTPUT_GUARD, constants.ZERO_ADDRESS);
         const transaction = new PaymentTransaction(TX_TYPE, [EMPTY_BYTES32], [output, output], EMPTY_BYTES32);
         this.paymentTransaction = web3.utils.bytesToHex(transaction.rlpEncoded());
@@ -30,7 +30,7 @@ contract('WireTransaction', () => {
             expect(actual.token).to.equal(constants.ZERO_ADDRESS);
         });
 
-        it('should decode custom transaction output that fulfills wire transaction format', async () => {
+        it('should decode custom transaction output that fulfills generic transaction format', async () => {
             const encoded = rlp.encode([
                 1,
                 [],
@@ -60,7 +60,7 @@ contract('WireTransaction', () => {
             expect(new BN(actual)).to.be.bignumber.equal(new BN(TX_TYPE));
         });
 
-        it('should decode type of custom transaction that fulfills wire transaction format', async () => {
+        it('should decode type of custom transaction that fulfills generic transaction format', async () => {
             const encoded = web3.utils.bytesToHex(
                 rlp.encode([
                     1,

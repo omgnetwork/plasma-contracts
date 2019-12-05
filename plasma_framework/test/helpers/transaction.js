@@ -2,7 +2,7 @@ const rlp = require('rlp');
 const { BN } = require('openzeppelin-test-helpers');
 const { EMPTY_BYTES_32, TX_TYPE } = require('../helpers/constants.js');
 
-class WireTransactionOutput {
+class GenericTransactionOutput {
     constructor(type, amount, outputGuard, token) {
         this.outputType = type;
         this.outputGuard = outputGuard;
@@ -24,13 +24,13 @@ class WireTransactionOutput {
     static parseFromContractOutput(output) {
         const amount = parseInt(output.amount, 10);
         const outputType = parseInt(output.outputType, 10);
-        return new WireTransactionOutput(outputType, amount, output.outputGuard, output.token);
+        return new GenericTransactionOutput(outputType, amount, output.outputGuard, output.token);
     }
 }
 
-class PaymentTransactionOutput extends WireTransactionOutput {}
+class PaymentTransactionOutput extends GenericTransactionOutput {}
 
-class WireTransaction {
+class GenericTransaction {
     constructor(transactionType, inputs, outputs, metaData = EMPTY_BYTES_32) {
         this.transactionType = transactionType;
         this.inputs = inputs;
@@ -41,8 +41,8 @@ class WireTransaction {
     rlpEncoded() {
         const tx = [this.transactionType];
 
-        tx.push(WireTransaction.formatInputsForRlpEncoding(this.inputs));
-        tx.push(WireTransaction.formatForRlpEncoding(this.outputs));
+        tx.push(GenericTransaction.formatInputsForRlpEncoding(this.inputs));
+        tx.push(GenericTransaction.formatForRlpEncoding(this.outputs));
         tx.push(this.metaData);
 
         return rlp.encode(tx);
@@ -67,7 +67,7 @@ class WireTransaction {
     }
 }
 
-class PaymentTransaction extends WireTransaction {}
+class PaymentTransaction extends GenericTransaction {}
 
 class PlasmaDepositTransaction extends PaymentTransaction {
     constructor(output, metaData = EMPTY_BYTES_32) {
@@ -79,6 +79,6 @@ module.exports = {
     PaymentTransaction,
     PlasmaDepositTransaction,
     PaymentTransactionOutput,
-    WireTransaction,
-    WireTransactionOutput,
+    GenericTransaction,
+    GenericTransactionOutput,
 };

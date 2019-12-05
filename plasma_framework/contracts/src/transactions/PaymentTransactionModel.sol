@@ -1,7 +1,7 @@
 pragma solidity 0.5.11;
 pragma experimental ABIEncoderV2;
 
-import "./WireTransaction.sol";
+import "./GenericTransaction.sol";
 import "../utils/AddressPayable.sol";
 import "../utils/RLPReader.sol";
 
@@ -18,7 +18,7 @@ library PaymentTransactionModel {
     struct Transaction {
         uint256 txType;
         bytes32[] inputs;
-        WireTransaction.Output[] outputs;
+        GenericTransaction.Output[] outputs;
         bytes32 metaData;
     }
 
@@ -39,11 +39,11 @@ library PaymentTransactionModel {
      * @return A decoded PaymentTransaction struct
      */
     function decode(bytes memory _tx) internal pure returns (PaymentTransactionModel.Transaction memory) {
-        WireTransaction.Transaction memory btx = WireTransaction.decode(_tx);
-        return decodeFromWire(btx);
+        GenericTransaction.Transaction memory btx = GenericTransaction.decode(_tx);
+        return fromGeneric(btx);
     }
 
-    function decodeFromWire(WireTransaction.Transaction memory btx) internal pure returns (PaymentTransactionModel.Transaction memory) {
+    function fromGeneric(GenericTransaction.Transaction memory btx) internal pure returns (PaymentTransactionModel.Transaction memory) {
         require(btx.inputs.length <= MAX_INPUT_NUM, "Transaction inputs num exceeds limit");
         require(btx.outputs.length <= MAX_OUTPUT_NUM, "Transaction outputs num exceeds limit");
 
@@ -55,7 +55,7 @@ library PaymentTransactionModel {
             inputs[i] = input;
         }
 
-        WireTransaction.Output[] memory outputs = new WireTransaction.Output[](btx.outputs.length);
+        GenericTransaction.Output[] memory outputs = new GenericTransaction.Output[](btx.outputs.length);
         for (uint i = 0; i < btx.outputs.length; i++) {
             outputs[i] = decodeOutput(btx.outputs[i]);
         }
@@ -65,10 +65,10 @@ library PaymentTransactionModel {
         return Transaction({txType: btx.txType, inputs: inputs, outputs: outputs, metaData: metaData});
     }
 
-    function decodeOutput(RLPReader.RLPItem memory output) internal pure returns (WireTransaction.Output memory) {
+    function decodeOutput(RLPReader.RLPItem memory output) internal pure returns (GenericTransaction.Output memory) {
         RLPReader.RLPItem[] memory outputRlpList = output.toList();
         require(outputRlpList.length == 4, "Output must have 4 items");
-        WireTransaction.Output memory decodedOutput = WireTransaction.decodeOutput(outputRlpList);
+        GenericTransaction.Output memory decodedOutput = GenericTransaction.decodeOutput(outputRlpList);
         require(decodedOutput.amount != 0, "Output amount must not be 0");
         return decodedOutput;
     }
@@ -79,7 +79,7 @@ library PaymentTransactionModel {
      * @dev It's possible that 'outputGuard' can be a hash of preimage that holds the owner information,
      *       but this should not and cannot be handled here.
      */
-    function getOutputOwner(WireTransaction.Output memory _output) internal pure returns (address payable) {
+    function getOutputOwner(GenericTransaction.Output memory _output) internal pure returns (address payable) {
         return AddressPayable.convert(address(_output.outputGuard));
     }
 }

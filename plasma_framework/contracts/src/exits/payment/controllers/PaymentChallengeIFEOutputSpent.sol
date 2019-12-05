@@ -11,7 +11,7 @@ import "../../utils/MoreVpFinalization.sol";
 import "../../../utils/Merkle.sol";
 import "../../../utils/SafeEthTransfer.sol";
 import "../../../utils/UtxoPosLib.sol";
-import "../../../transactions/WireTransaction.sol";
+import "../../../transactions/GenericTransaction.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
 
@@ -111,8 +111,8 @@ library PaymentChallengeIFEOutputSpent {
         view
     {
         UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(args.outputUtxoPos);
-        WireTransaction.Transaction memory challengingTx = WireTransaction.decode(args.challengingTx);
-        WireTransaction.Output memory output = WireTransaction.getOutput(challengingTx, utxoPos.outputIndex());
+        GenericTransaction.Transaction memory challengingTx = GenericTransaction.decode(args.challengingTx);
+        GenericTransaction.Output memory output = GenericTransaction.getOutput(challengingTx, utxoPos.outputIndex());
 
         ISpendingCondition condition = controller.spendingConditionRegistry.spendingConditions(
             output.outputType,

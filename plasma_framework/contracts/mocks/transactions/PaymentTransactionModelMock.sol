@@ -10,12 +10,12 @@ contract PaymentTransactionModelMock {
         return PaymentTransactionModel.decode(transaction);
     }
 
-    function decodeOutput(bytes memory output) public pure returns (WireTransaction.Output memory) {
+    function decodeOutput(bytes memory output) public pure returns (GenericTransaction.Output memory) {
         return PaymentTransactionModel.decodeOutput(output.toRlpItem());
     }
 
     function getOutputOwner(uint256 outputType, address owner, address token, uint256 amount) public pure returns (address payable) {
-        WireTransaction.Output memory output = WireTransaction.Output({
+        GenericTransaction.Output memory output = GenericTransaction.Output({
             outputType: outputType,
             outputGuard: bytes20(owner),
             token: token,

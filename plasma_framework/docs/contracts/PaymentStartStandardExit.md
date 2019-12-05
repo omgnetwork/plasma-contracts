@@ -27,7 +27,7 @@ struct StartStandardExitData {
  struct PaymentStandardExitRouterArgs.StartStandardExitArgs args,
  struct UtxoPosLib.UtxoPos utxoPos,
  struct PaymentTransactionModel.Transaction outputTx,
- struct PaymentOutputModel.Output output,
+ struct GenericTransaction.Output output,
  uint160 exitId,
  bool isTxDeposit,
  uint256 txBlockTimeStamp,
@@ -175,6 +175,7 @@ function enqueueStandardExit(struct PaymentStartStandardExit.StartStandardExitDa
 * [ExitId](ExitId.md)
 * [ExitPriority](ExitPriority.md)
 * [FailFastReentrancyGuard](FailFastReentrancyGuard.md)
+* [GenericTransaction](GenericTransaction.md)
 * [IERC20](IERC20.md)
 * [IErc20DepositVerifier](IErc20DepositVerifier.md)
 * [IEthDepositVerifier](IEthDepositVerifier.md)
@@ -202,7 +203,6 @@ function enqueueStandardExit(struct PaymentStartStandardExit.StartStandardExitDa
 * [PaymentInFlightExitModelUtils](PaymentInFlightExitModelUtils.md)
 * [PaymentInFlightExitRouter](PaymentInFlightExitRouter.md)
 * [PaymentInFlightExitRouterArgs](PaymentInFlightExitRouterArgs.md)
-* [PaymentOutputModel](PaymentOutputModel.md)
 * [PaymentOutputToPaymentTxCondition](PaymentOutputToPaymentTxCondition.md)
 * [PaymentPiggybackInFlightExit](PaymentPiggybackInFlightExit.md)
 * [PaymentProcessInFlightExit](PaymentProcessInFlightExit.md)
@@ -226,4 +226,3 @@ function enqueueStandardExit(struct PaymentStartStandardExit.StartStandardExitDa
 * [UtxoPosLib](UtxoPosLib.md)
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)
-* [WireTransaction](WireTransaction.md)

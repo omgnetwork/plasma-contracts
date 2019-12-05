@@ -15,7 +15,7 @@ import "../../../utils/IsDeposit.sol";
 import "../../../utils/SafeEthTransfer.sol";
 import "../../../utils/UtxoPosLib.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
-import "../../../transactions/WireTransaction.sol";
+import "../../../transactions/GenericTransaction.sol";
 
 library PaymentChallengeStandardExit {
     using UtxoPosLib for UtxoPosLib.UtxoPos;
@@ -77,7 +77,7 @@ library PaymentChallengeStandardExit {
     )
         public
     {
-        WireTransaction.Transaction memory challengeTx = WireTransaction.decode(args.challengeTx);
+        GenericTransaction.Transaction memory challengeTx = GenericTransaction.decode(args.challengeTx);
 
         ChallengeStandardExitData memory data = ChallengeStandardExitData({
             controller: self,
@@ -111,7 +111,7 @@ library PaymentChallengeStandardExit {
         PaymentStandardExitRouterArgs.ChallengeStandardExitArgs memory args = data.args;
 
         UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(data.exitData.utxoPos);
-        WireTransaction.Output memory output = PaymentTransactionModel
+        GenericTransaction.Output memory output = PaymentTransactionModel
             .decode(args.exitingTx)
             .outputs[utxoPos.outputIndex()];
 

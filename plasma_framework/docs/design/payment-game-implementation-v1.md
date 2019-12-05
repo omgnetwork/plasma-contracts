@@ -30,7 +30,7 @@ struct Output {
 1. The `outputs` field is an array of `Output` struct representing payment output information. There are a maximum of four outputs allowed. 
 1. `metaData` field is a `bytes32` field that can be used to add extra data to the transaction. It should contain `0x0` if the transaction does not have extra data.
 
-Output has four elements that fulfil the current `WireTransactionOutput`:
+Output has four elements that fulfil the current `GenericTransaction.Output`:
 1. `outputType` represents the type of output. Each transaction type is tied to one or more output types. In Payment transaction V1, there is only one output type. The output type is used to decide, eg. which spending condition to use. Also, output type is bound to the input type. Currently the only output type that requires the spending tx's input to be using `utxoPos`. Potentially there can be output type deciding to be pointed by `outputId` instead in the future.
 1. `outputGuard` is the field that represents the authentication data of the output. Its value must always be the same as the `owner` address of the output in the first version of Payment Transaction. For instance, if the output belongs to Alice, then the value of `outputGuard` equals Alice's address.
 1. `token` is the ERC20 token contract address that represents the transferred asset. For `ETH`, it uses `address(0)`.

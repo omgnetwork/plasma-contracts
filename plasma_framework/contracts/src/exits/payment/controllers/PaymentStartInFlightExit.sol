@@ -16,7 +16,7 @@ import "../../../utils/UtxoPosLib.sol";
 import "../../../utils/Merkle.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
-import "../../../transactions/WireTransaction.sol";
+import "../../../transactions/GenericTransaction.sol";
 
 library PaymentStartInFlightExit {
     using ExitableTimestamp for ExitableTimestamp.Calculator;
@@ -232,8 +232,8 @@ library PaymentStartInFlightExit {
     function verifyInputsSpent(StartExitData memory exitData) private view {
         for (uint16 i = 0; i < exitData.inputTxs.length; i++) {
             uint16 outputIndex = exitData.inputUtxosPos[i].outputIndex();
-            WireTransaction.Output memory output = WireTransaction.getOutput(
-                WireTransaction.decode(exitData.inputTxs[i]),
+            GenericTransaction.Output memory output = GenericTransaction.getOutput(
+                GenericTransaction.decode(exitData.inputTxs[i]),
                 outputIndex
             );
 
@@ -301,8 +301,8 @@ library PaymentStartInFlightExit {
     {
         for (uint i = 0; i < exitData.inputTxs.length; i++) {
             uint16 outputIndex = exitData.inputUtxosPos[i].outputIndex();
-            WireTransaction.Output memory output = WireTransaction.getOutput(
-                WireTransaction.decode(exitData.inputTxs[i]),
+            GenericTransaction.Output memory output = GenericTransaction.getOutput(
+                GenericTransaction.decode(exitData.inputTxs[i]),
                 outputIndex
             );
 
@@ -322,7 +322,7 @@ library PaymentStartInFlightExit {
         for (uint i = 0; i < exitData.inFlightTx.outputs.length; i++) {
             // deposit transaction can't be in-flight exited
             bytes32 outputId = OutputId.computeNormalOutputId(exitData.inFlightTxRaw, i);
-            WireTransaction.Output memory output = exitData.inFlightTx.outputs[i];
+            GenericTransaction.Output memory output = exitData.inFlightTx.outputs[i];
 
             ife.outputs[i].outputId = outputId;
             // Exit target is not set as output guard preimage may not be available for caller

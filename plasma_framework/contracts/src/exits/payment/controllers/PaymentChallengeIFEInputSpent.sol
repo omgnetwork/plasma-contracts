@@ -15,7 +15,7 @@ import "../../../utils/SafeEthTransfer.sol";
 import "../../../utils/UtxoPosLib.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
-import "../../../transactions/WireTransaction.sol";
+import "../../../transactions/GenericTransaction.sol";
 
 library PaymentChallengeIFEInputSpent {
     using UtxoPosLib for UtxoPosLib.UtxoPos;
@@ -135,8 +135,8 @@ library PaymentChallengeIFEInputSpent {
     }
 
     function verifySpendingCondition(ChallengeIFEData memory data) private view {
-        WireTransaction.Transaction memory challengingTx = WireTransaction.decode(data.args.challengingTx);
-        WireTransaction.Output memory output = WireTransaction.getOutput(challengingTx, data.args.challengingTxInputIndex);
+        GenericTransaction.Transaction memory challengingTx = GenericTransaction.decode(data.args.challengingTx);
+        GenericTransaction.Output memory output = GenericTransaction.getOutput(challengingTx, data.args.challengingTxInputIndex);
 
         ISpendingCondition condition = data.controller.spendingConditionRegistry.spendingConditions(
             output.outputType, challengingTx.txType

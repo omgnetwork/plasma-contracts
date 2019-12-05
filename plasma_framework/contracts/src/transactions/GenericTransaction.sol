@@ -3,8 +3,8 @@ pragma solidity 0.5.11;
 import "../utils/RLPReader.sol";
 
 /**
- * @title WireTransaction
- * @notice WireTransaction is a generic transaction format that makes few assumptions about the
+ * @title GenericTransaction
+ * @notice GenericTransaction is a generic transaction format that makes few assumptions about the
  * content of the transaction. At minimum a transaction must:
  * - Be a list of 4 items: [txType, inputs, outputs, txData]
  * - `txType` must be a uint not equal to zero
@@ -16,7 +16,7 @@ import "../utils/RLPReader.sol";
  * decoding outputs are provided. However, transactions types are free to extend this output format
  * with extra data.
  */
-library WireTransaction {
+library GenericTransaction {
 
     uint8 constant private TX_NUM_ITEMS = 4;
 
@@ -55,7 +55,7 @@ library WireTransaction {
     }
 
     /**
-    * @dev Returns the output at a specific index in the wire format transaction
+    * @dev Returns the output at a specific index in the transaction
     */
     function getOutput(Transaction memory transaction, uint16 outputIndex) internal pure returns (Output memory) {
         require(outputIndex < transaction.outputs.length, "Output index out of bounds");

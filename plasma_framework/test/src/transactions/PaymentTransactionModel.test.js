@@ -78,13 +78,13 @@ contract('PaymentTransactionModel', ([alice]) => {
     it('should fail when transaction does not contain metadata', async () => {
         const transaction = new PaymentTransaction(TX_TYPE.PAYMENT, [DUMMY_INPUT_1], [OUTPUT, OUTPUT], EMPTY_BYTES32);
 
-        const wireFormat = [
+        const genericFormat = [
             transaction.transactionType,
             transaction.inputs,
             PaymentTransaction.formatForRlpEncoding(transaction.outputs),
         ];
 
-        const encoded = web3.utils.bytesToHex(rlp.encode(wireFormat));
+        const encoded = web3.utils.bytesToHex(rlp.encode(genericFormat));
 
         await expectRevert(
             this.test.decode(encoded),

@@ -13,7 +13,7 @@ Data structure and its decode function for Payment transaction
 struct Transaction {
  uint256 txType,
  bytes32[] inputs,
- struct PaymentOutputModel.Output[] outputs,
+ struct GenericTransaction.Output[] outputs,
  bytes32 metaData
 }
 ```
@@ -22,18 +22,17 @@ struct Transaction {
 **Constants & Variables**
 
 ```js
-//public members
 uint8 public constant MAX_INPUT_NUM;
 uint8 public constant MAX_OUTPUT_NUM;
-
-//private members
-uint8 private constant ENCODED_LENGTH;
 
 ```
 
 ## Functions
 
 - [decode(bytes _tx)](#decode)
+- [fromGeneric(struct GenericTransaction.Transaction btx)](#fromgeneric)
+- [decodeOutput(struct RLPReader.RLPItem output)](#decodeoutput)
+- [getOutputOwner(struct GenericTransaction.Output _output)](#getoutputowner)
 
 ### decode
 
@@ -47,6 +46,48 @@ returns(struct PaymentTransactionModel.Transaction)
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
 | _tx | bytes |  | 
+
+### fromGeneric
+
+```js
+function fromGeneric(struct GenericTransaction.Transaction btx) internal pure
+returns(struct PaymentTransactionModel.Transaction)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| btx | struct GenericTransaction.Transaction |  | 
+
+### decodeOutput
+
+```js
+function decodeOutput(struct RLPReader.RLPItem output) internal pure
+returns(struct GenericTransaction.Output)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| output | struct RLPReader.RLPItem |  | 
+
+### getOutputOwner
+
+Retrieve the 'owner' from the output, assuming the
+        'outputGuard' field directly holds the owner's address
+
+```js
+function getOutputOwner(struct GenericTransaction.Output _output) internal pure
+returns(address payable)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| _output | struct GenericTransaction.Output |  | 
 
 ## Contracts
 
@@ -67,6 +108,7 @@ returns(struct PaymentTransactionModel.Transaction)
 * [ExitId](ExitId.md)
 * [ExitPriority](ExitPriority.md)
 * [FailFastReentrancyGuard](FailFastReentrancyGuard.md)
+* [GenericTransaction](GenericTransaction.md)
 * [IERC20](IERC20.md)
 * [IErc20DepositVerifier](IErc20DepositVerifier.md)
 * [IEthDepositVerifier](IEthDepositVerifier.md)
@@ -94,7 +136,6 @@ returns(struct PaymentTransactionModel.Transaction)
 * [PaymentInFlightExitModelUtils](PaymentInFlightExitModelUtils.md)
 * [PaymentInFlightExitRouter](PaymentInFlightExitRouter.md)
 * [PaymentInFlightExitRouterArgs](PaymentInFlightExitRouterArgs.md)
-* [PaymentOutputModel](PaymentOutputModel.md)
 * [PaymentOutputToPaymentTxCondition](PaymentOutputToPaymentTxCondition.md)
 * [PaymentPiggybackInFlightExit](PaymentPiggybackInFlightExit.md)
 * [PaymentProcessInFlightExit](PaymentProcessInFlightExit.md)
@@ -118,4 +159,3 @@ returns(struct PaymentTransactionModel.Transaction)
 * [UtxoPosLib](UtxoPosLib.md)
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)
-* [WireTransaction](WireTransaction.md)

@@ -1,62 +1,103 @@
-# WireTransaction (WireTransaction.sol)
+# GenericTransaction (GenericTransaction.sol)
 
-View Source: [contracts/src/transactions/WireTransaction.sol](../../contracts/src/transactions/WireTransaction.sol)
+View Source: [contracts/src/transactions/GenericTransaction.sol](../../contracts/src/transactions/GenericTransaction.sol)
 
-**WireTransaction**
+**GenericTransaction**
 
-Utility functions for working with transactions in wire format, assuming our transactions have specified data structure limitations
-     We assume that the current transaction structure supports transactions related to payment and DEX.
-     Alternatively, it's possible to upgrade to a new ExitGame, using either an alternative transaction data structure, or interfaces
+GenericTransaction is a generic transaction format that makes few assumptions about the
+content of the transaction. At minimum a transaction must:
+- Be a list of 4 items: [txType, inputs, outputs, txData]
+- `txType` must be a uint not equal to zero
+- inputs must be a list
+- outputs must be a list
+- no assumptions are made about `txData`. Note that `txData` can be a list.
+ * It is expected that most transaction types will have similar outputs, so convenience methods for
+decoding outputs are provided. However, transactions types are free to extend this output format
+with extra data.
 
 ## Structs
+### Transaction
+
+```js
+struct Transaction {
+ uint256 txType,
+ struct RLPReader.RLPItem[] inputs,
+ struct RLPReader.RLPItem[] outputs,
+ struct RLPReader.RLPItem txData
+}
+```
+
 ### Output
 
 ```js
 struct Output {
  uint256 outputType,
- uint256 amount,
  bytes20 outputGuard,
- address token
+ address token,
+ uint256 amount
 }
+```
+
+## Contract Members
+**Constants & Variables**
+
+```js
+uint8 private constant TX_NUM_ITEMS;
+
 ```
 
 ## Functions
 
-- [getOutput(bytes transaction, uint16 outputIndex)](#getoutput)
-- [getTransactionType(bytes transaction)](#gettransactiontype)
+- [decode(bytes transaction)](#decode)
+- [getOutput(struct GenericTransaction.Transaction transaction, uint16 outputIndex)](#getoutput)
+- [decodeOutput(struct RLPReader.RLPItem[] outputRlpList)](#decodeoutput)
+
+### decode
+
+Decodes an RLP encoded transaction into the generic format.
+
+```js
+function decode(bytes transaction) internal pure
+returns(struct GenericTransaction.Transaction)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| transaction | bytes |  | 
 
 ### getOutput
 
-Returns output for transaction in wire format
-Outputs is a field on the second index that should be a list with the following first three elements: amount, output guard, token
+Returns the output at a specific index in the transaction
 
 ```js
-function getOutput(bytes transaction, uint16 outputIndex) internal pure
-returns(struct WireTransaction.Output)
+function getOutput(struct GenericTransaction.Transaction transaction, uint16 outputIndex) internal pure
+returns(struct GenericTransaction.Output)
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| transaction | bytes |  | 
+| transaction | struct GenericTransaction.Transaction |  | 
 | outputIndex | uint16 |  | 
 
-### getTransactionType
+### decodeOutput
 
-Returns a transaction type for transaction, in wire format
-Transaction type is the value of the first field in RLP-encoded list
+Decodes an RLPItem to an output
+Each Output is a list with (at least) the following first four elements: outputType, outputGuard, token, amount
 
 ```js
-function getTransactionType(bytes transaction) internal pure
-returns(uint256)
+function decodeOutput(struct RLPReader.RLPItem[] outputRlpList) internal pure
+returns(struct GenericTransaction.Output)
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| transaction | bytes |  | 
+| outputRlpList | struct RLPReader.RLPItem[] |  | 
 
 ## Contracts
 
@@ -77,6 +118,7 @@ returns(uint256)
 * [ExitId](ExitId.md)
 * [ExitPriority](ExitPriority.md)
 * [FailFastReentrancyGuard](FailFastReentrancyGuard.md)
+* [GenericTransaction](GenericTransaction.md)
 * [IERC20](IERC20.md)
 * [IErc20DepositVerifier](IErc20DepositVerifier.md)
 * [IEthDepositVerifier](IEthDepositVerifier.md)
@@ -104,7 +146,6 @@ returns(uint256)
 * [PaymentInFlightExitModelUtils](PaymentInFlightExitModelUtils.md)
 * [PaymentInFlightExitRouter](PaymentInFlightExitRouter.md)
 * [PaymentInFlightExitRouterArgs](PaymentInFlightExitRouterArgs.md)
-* [PaymentOutputModel](PaymentOutputModel.md)
 * [PaymentOutputToPaymentTxCondition](PaymentOutputToPaymentTxCondition.md)
 * [PaymentPiggybackInFlightExit](PaymentPiggybackInFlightExit.md)
 * [PaymentProcessInFlightExit](PaymentProcessInFlightExit.md)
@@ -128,4 +169,3 @@ returns(uint256)
 * [UtxoPosLib](UtxoPosLib.md)
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)
-* [WireTransaction](WireTransaction.md)

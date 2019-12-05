@@ -9,10 +9,10 @@ Verifies state transitions for payment transaction
 ## Functions
 
 - [isCorrectStateTransition(bytes txBytes, bytes[] inputTxs, uint16[] outputIndexOfInputTxs)](#iscorrectstatetransition)
-- [_isCorrectStateTransition(struct WireTransaction.Output[] inputs, struct WireTransaction.Output[] outputs)](#_iscorrectstatetransition)
-- [filterWithToken(struct WireTransaction.Output[] outputs, address token)](#filterwithtoken)
-- [isCorrectSpend(struct WireTransaction.Output[] inputs, struct WireTransaction.Output[] outputs)](#iscorrectspend)
-- [sumAmounts(struct WireTransaction.Output[] outputs)](#sumamounts)
+- [_isCorrectStateTransition(struct GenericTransaction.Output[] inputs, struct GenericTransaction.Output[] outputs)](#_iscorrectstatetransition)
+- [filterWithToken(struct GenericTransaction.Output[] outputs, address token)](#filterwithtoken)
+- [isCorrectSpend(struct GenericTransaction.Output[] inputs, struct GenericTransaction.Output[] outputs)](#iscorrectspend)
+- [sumAmounts(struct GenericTransaction.Output[] outputs)](#sumamounts)
 
 ### isCorrectStateTransition
 
@@ -34,7 +34,7 @@ returns(bool)
 ### _isCorrectStateTransition
 
 ```js
-function _isCorrectStateTransition(struct WireTransaction.Output[] inputs, struct WireTransaction.Output[] outputs) private pure
+function _isCorrectStateTransition(struct GenericTransaction.Output[] inputs, struct GenericTransaction.Output[] outputs) private pure
 returns(bool)
 ```
 
@@ -42,27 +42,27 @@ returns(bool)
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| inputs | struct WireTransaction.Output[] |  | 
-| outputs | struct WireTransaction.Output[] |  | 
+| inputs | struct GenericTransaction.Output[] |  | 
+| outputs | struct GenericTransaction.Output[] |  | 
 
 ### filterWithToken
 
 ```js
-function filterWithToken(struct WireTransaction.Output[] outputs, address token) private pure
-returns(struct WireTransaction.Output[])
+function filterWithToken(struct GenericTransaction.Output[] outputs, address token) private pure
+returns(struct GenericTransaction.Output[])
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| outputs | struct WireTransaction.Output[] |  | 
+| outputs | struct GenericTransaction.Output[] |  | 
 | token | address |  | 
 
 ### isCorrectSpend
 
 ```js
-function isCorrectSpend(struct WireTransaction.Output[] inputs, struct WireTransaction.Output[] outputs) internal pure
+function isCorrectSpend(struct GenericTransaction.Output[] inputs, struct GenericTransaction.Output[] outputs) internal pure
 returns(bool)
 ```
 
@@ -70,13 +70,13 @@ returns(bool)
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| inputs | struct WireTransaction.Output[] |  | 
-| outputs | struct WireTransaction.Output[] |  | 
+| inputs | struct GenericTransaction.Output[] |  | 
+| outputs | struct GenericTransaction.Output[] |  | 
 
 ### sumAmounts
 
 ```js
-function sumAmounts(struct WireTransaction.Output[] outputs) private pure
+function sumAmounts(struct GenericTransaction.Output[] outputs) private pure
 returns(uint256)
 ```
 
@@ -84,7 +84,7 @@ returns(uint256)
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| outputs | struct WireTransaction.Output[] |  | 
+| outputs | struct GenericTransaction.Output[] |  | 
 
 ## Contracts
 
@@ -105,6 +105,7 @@ returns(uint256)
 * [ExitId](ExitId.md)
 * [ExitPriority](ExitPriority.md)
 * [FailFastReentrancyGuard](FailFastReentrancyGuard.md)
+* [GenericTransaction](GenericTransaction.md)
 * [IERC20](IERC20.md)
 * [IErc20DepositVerifier](IErc20DepositVerifier.md)
 * [IEthDepositVerifier](IEthDepositVerifier.md)
@@ -132,7 +133,6 @@ returns(uint256)
 * [PaymentInFlightExitModelUtils](PaymentInFlightExitModelUtils.md)
 * [PaymentInFlightExitRouter](PaymentInFlightExitRouter.md)
 * [PaymentInFlightExitRouterArgs](PaymentInFlightExitRouterArgs.md)
-* [PaymentOutputModel](PaymentOutputModel.md)
 * [PaymentOutputToPaymentTxCondition](PaymentOutputToPaymentTxCondition.md)
 * [PaymentPiggybackInFlightExit](PaymentPiggybackInFlightExit.md)
 * [PaymentProcessInFlightExit](PaymentProcessInFlightExit.md)
@@ -156,4 +156,3 @@ returns(uint256)
 * [UtxoPosLib](UtxoPosLib.md)
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)
-* [WireTransaction](WireTransaction.md)
