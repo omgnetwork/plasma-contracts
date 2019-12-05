@@ -13,7 +13,6 @@ const StateTransitionVerifierMock = artifacts.require('StateTransitionVerifierMo
 const ExitId = artifacts.require('ExitIdWrapper');
 const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
-const TxFinalizationVerifier = artifacts.require('TxFinalizationVerifier');
 const Attacker = artifacts.require('FallbackFunctionFailAttacker');
 
 const {
@@ -62,8 +61,6 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
 
         this.stateTransitionVerifier = await StateTransitionVerifierMock.new();
         await this.stateTransitionVerifier.mockResult(true);
-
-        this.txFinalizationVerifier = await TxFinalizationVerifier.new();
     });
 
     describe('challenge in-flight exit input spent', () => {
@@ -186,7 +183,6 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                 VAULT_ID.ERC20,
                 this.spendingConditionRegistry.address,
                 this.stateTransitionVerifier.address,
-                this.txFinalizationVerifier.address,
                 TX_TYPE.PAYMENT,
                 SAFE_GAS_STIPEND,
             ];
@@ -231,7 +227,6 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                 challengingTxWitness: web3.utils.utf8ToHex('dummy witness'),
                 inputTx: this.inputTx.txBytes,
                 inputUtxoPos: this.inputTx.utxoPos,
-                spendingConditionOptionalArgs: EMPTY_BYTES,
             };
         });
 

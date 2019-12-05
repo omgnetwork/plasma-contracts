@@ -16,7 +16,6 @@ const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
 const StateTransitionVerifierMock = artifacts.require('StateTransitionVerifierMock');
-const TxFinalizationVerifier = artifacts.require('TxFinalizationVerifier');
 
 const {
     BN, constants, expectEvent, expectRevert, time,
@@ -212,7 +211,6 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
         this.exitableHelper = await ExitableTimestamp.new(MIN_EXIT_PERIOD);
         this.stateTransitionVerifier = await StateTransitionVerifierMock.new();
         await this.stateTransitionVerifier.mockResult(true);
-        this.txFinalizationVerifier = await TxFinalizationVerifier.new();
     });
 
     beforeEach('deploy framework', async () => {
@@ -233,7 +231,6 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
             VAULT_ID.ERC20,
             this.spendingConditionRegistry.address,
             this.stateTransitionVerifier.address,
-            this.txFinalizationVerifier.address,
             IFE_TX_TYPE,
             SAFE_GAS_STIPEND,
         ];

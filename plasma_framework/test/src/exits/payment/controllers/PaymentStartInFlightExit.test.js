@@ -15,7 +15,6 @@ const StateTransitionVerifierMock = artifacts.require('StateTransitionVerifierMo
 const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
-const TxFinalizationVerifier = artifacts.require('TxFinalizationVerifier');
 
 const {
     BN, constants, expectEvent, expectRevert, time,
@@ -127,15 +126,12 @@ contract('PaymentStartInFlightExit', ([_, alice, richFather, carol]) => {
                 this.stateTransitionVerifier = await StateTransitionVerifierMock.new();
                 await this.stateTransitionVerifier.mockResult(true);
 
-                this.txFinalizationVerifier = await TxFinalizationVerifier.new();
-
                 const exitGameArgs = [
                     this.framework.address,
                     VAULT_ID.ETH,
                     VAULT_ID.ERC20,
                     this.spendingConditionRegistry.address,
                     this.stateTransitionVerifier.address,
-                    this.txFinalizationVerifier.address,
                     IFE_TX_TYPE,
                     SAFE_GAS_STIPEND,
                 ];
@@ -321,15 +317,12 @@ contract('PaymentStartInFlightExit', ([_, alice, richFather, carol]) => {
                 this.stateTransitionVerifier = await StateTransitionVerifierMock.new();
                 await this.stateTransitionVerifier.mockResult(true);
 
-                this.txFinalizationVerifier = await TxFinalizationVerifier.new();
-
                 const exitGameArgs = [
                     this.framework.address,
                     VAULT_ID.ETH,
                     VAULT_ID.ERC20,
                     this.spendingConditionRegistry.address,
                     this.stateTransitionVerifier.address,
-                    this.txFinalizationVerifier.address,
                     IFE_TX_TYPE,
                     SAFE_GAS_STIPEND,
                 ];
@@ -439,8 +432,8 @@ contract('PaymentStartInFlightExit', ([_, alice, richFather, carol]) => {
                 const nonMoreVpTxType = 999;
 
                 // using any contract address for dummy game register
-                const dummyExitGame = this.txFinalizationVerifier.address;
-                await this.framework.registerExitGame(nonMoreVpTxType, dummyExitGame, PROTOCOL.MVP);
+                const dummyExitGame = await ExitId.new();
+                await this.framework.registerExitGame(nonMoreVpTxType, dummyExitGame.address, PROTOCOL.MVP);
 
                 const {
                     args,

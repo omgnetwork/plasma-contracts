@@ -13,7 +13,6 @@ const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
 const StateTransitionVerifierMock = artifacts.require('StateTransitionVerifierMock');
-const TxFinalizationVerifier = artifacts.require('TxFinalizationVerifier');
 const Attacker = artifacts.require('FallbackFunctionFailAttacker');
 
 const {
@@ -29,7 +28,7 @@ const {
     PROTOCOL, TX_TYPE, VAULT_ID, DUMMY_INPUT_1, SAFE_GAS_STIPEND, EMPTY_BYTES_32,
 } = require('../../../../helpers/constants.js');
 
-contract.only('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
+contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
     const DUMMY_IFE_BOND_SIZE = 31415926535; // wei
     const PIGGYBACK_BOND = 31415926535;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
@@ -73,8 +72,6 @@ contract.only('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
         this.exitIdHelper = await ExitId.new();
         this.stateTransitionVerifier = await StateTransitionVerifierMock.new();
         await this.stateTransitionVerifier.mockResult(true);
-
-        this.txFinalizationVerifier = await TxFinalizationVerifier.new();
     });
 
 
@@ -163,7 +160,6 @@ contract.only('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
                 VAULT_ID.ERC20,
                 this.spendingConditionRegistry.address,
                 this.stateTransitionVerifier.address,
-                this.txFinalizationVerifier.address,
                 IFE_TX_TYPE,
                 SAFE_GAS_STIPEND,
             ];
@@ -183,12 +179,10 @@ contract.only('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
 
             this.challengeArgs = {
                 inFlightTx: args.inFlightTxBytes,
-                inFlightTxInclusionProof: args.inclusionProof,
                 outputUtxoPos: buildUtxoPos(BLOCK_NUM, 0, 0),
                 challengingTx: args.challengingTxBytes,
                 challengingTxInputIndex: 0,
                 challengingTxWitness: web3.utils.sha3('sig'),
-                spendingConditionOptionalArgs: web3.utils.bytesToHex(''),
             };
         });
 

@@ -8,7 +8,6 @@ const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
 const StateTransitionVerifierMock = artifacts.require('StateTransitionVerifierMock');
-const TxFinalizationVerifier = artifacts.require('TxFinalizationVerifier');
 const Attacker = artifacts.require('FallbackFunctionFailAttacker');
 
 const {
@@ -91,7 +90,6 @@ contract('PaymentChallengeStandardExit', ([_, alice, bob]) => {
             // lets the spending condition pass by default
             await this.spendingCondition.mockResult(true);
 
-            this.txFinalizationVerifier = await TxFinalizationVerifier.new();
             const stateTransitionVerifier = await StateTransitionVerifierMock.new();
 
             this.exitGameArgs = [
@@ -100,7 +98,6 @@ contract('PaymentChallengeStandardExit', ([_, alice, bob]) => {
                 VAULT_ID.ERC20,
                 this.spendingConditionRegistry.address,
                 stateTransitionVerifier.address,
-                this.txFinalizationVerifier.address,
                 TX_TYPE.PAYMENT,
                 SAFE_GAS_STIPEND,
             ];

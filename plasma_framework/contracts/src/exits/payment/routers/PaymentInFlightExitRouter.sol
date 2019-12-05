@@ -13,7 +13,6 @@ import "../controllers/PaymentDeleteInFlightExit.sol";
 import "../controllers/PaymentProcessInFlightExit.sol";
 import "../../registries/SpendingConditionRegistry.sol";
 import "../../interfaces/IStateTransitionVerifier.sol";
-import "../../interfaces/ITxFinalizationVerifier.sol";
 import "../../utils/BondSize.sol";
 import "../../../utils/FailFastReentrancyGuard.sol";
 import "../../../utils/OnlyFromAddress.sol";
