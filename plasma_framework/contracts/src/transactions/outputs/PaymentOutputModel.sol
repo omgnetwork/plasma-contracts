@@ -2,7 +2,6 @@ pragma solidity 0.5.11;
 pragma experimental ABIEncoderV2;
 
 import "../../utils/RLPReader.sol";
-import "../../utils/AddressPayable.sol";
 
 /**
  * @notice Data structure and its decode function for payment output
@@ -25,7 +24,7 @@ library PaymentOutputModel {
      *       but this should not and cannot be handled here.
      */
     function owner(Output memory _output) internal pure returns (address payable) {
-        return AddressPayable.convert(address(uint160(_output.outputGuard)));
+        return address(uint160(_output.outputGuard));
     }
 
     function decode(RLPReader.RLPItem memory encoded) internal pure returns (Output memory) {
