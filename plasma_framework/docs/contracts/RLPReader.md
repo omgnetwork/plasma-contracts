@@ -34,9 +34,9 @@ uint8 internal constant WORD_SIZE;
 - [isList(struct RLPReader.RLPItem item)](#islist)
 - [toAddress(struct RLPReader.RLPItem item)](#toaddress)
 - [toUint(struct RLPReader.RLPItem item)](#touint)
+- [toBytes32(struct RLPReader.RLPItem item)](#tobytes32)
 - [countEncodedItems(struct RLPReader.RLPItem item)](#countencodeditems)
-- [decodeItemLengthUnsafe(uint256 memPtr)](#decodeitemlengthunsafe)
-- [decodePayloadOffset(struct RLPReader.RLPItem item)](#decodepayloadoffset)
+- [decodeLengthAndOffset(uint256 memPtr)](#decodelengthandoffset)
 
 ### toRlpItem
 
@@ -49,7 +49,7 @@ returns(struct RLPReader.RLPItem)
 
 **Returns**
 
-The decoded RLPItem
+An RLPItem
 
 **Arguments**
 
@@ -78,18 +78,26 @@ A list of RLPItems
 
 ### isList
 
+Check whether the RLPItem is either a list
+
 ```js
 function isList(struct RLPReader.RLPItem item) internal pure
 returns(bool)
 ```
 
+**Returns**
+
+A boolean whether the RLPItem is a list
+
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| item | struct RLPReader.RLPItem |  | 
+| item | struct RLPReader.RLPItem | RLP encoded list in bytes | 
 
 ### toAddress
+
+Create an address from a RLPItem
 
 ```js
 function toAddress(struct RLPReader.RLPItem item) internal pure
@@ -100,15 +108,30 @@ returns(address)
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| item | struct RLPReader.RLPItem |  | 
+| item | struct RLPReader.RLPItem | RLPItem | 
 
 ### toUint
 
-Create a uint256 from a RLPItem
+Create a uint256 from a RLPItem. Leading zeros are invalid.
 
 ```js
 function toUint(struct RLPReader.RLPItem item) internal pure
 returns(uint256)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| item | struct RLPReader.RLPItem | RLPItem | 
+
+### toBytes32
+
+Create a bytes32 from a RLPItem
+
+```js
+function toBytes32(struct RLPReader.RLPItem item) internal pure
+returns(bytes32)
 ```
 
 **Arguments**
@@ -136,43 +159,24 @@ The number of items in a inside an RLP encoded list
 | ------------- |------------- | -----|
 | item | struct RLPReader.RLPItem | RLPItem | 
 
-### decodeItemLengthUnsafe
+### decodeLengthAndOffset
 
-Decodes the RLPItems length from a bytes array.
+Decodes the RLPItem's length and offset.
 
 ```js
-function decodeItemLengthUnsafe(uint256 memPtr) internal pure
-returns(uint256)
+function decodeLengthAndOffset(uint256 memPtr) internal pure
+returns(uint256, uint256)
 ```
 
 **Returns**
 
-The encoded RLPItem length
+The length of the RLPItem (including the length field) and the offset of the payload
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
 | memPtr | uint256 | Pointer to the dynamic bytes array in memory | 
-
-### decodePayloadOffset
-
-Decode the length of the RLPItem payload length
-
-```js
-function decodePayloadOffset(struct RLPReader.RLPItem item) internal pure
-returns(uint256)
-```
-
-**Returns**
-
-Length of the RLPItem payload length
-
-**Arguments**
-
-| Name        | Type           | Description  |
-| ------------- |------------- | -----|
-| item | struct RLPReader.RLPItem | RLPItem | 
 
 ## Contracts
 
@@ -197,18 +201,15 @@ Length of the RLPItem payload length
 * [IErc20DepositVerifier](IErc20DepositVerifier.md)
 * [IEthDepositVerifier](IEthDepositVerifier.md)
 * [IExitProcessor](IExitProcessor.md)
-* [IOutputGuardHandler](IOutputGuardHandler.md)
 * [IsDeposit](IsDeposit.md)
 * [ISpendingCondition](ISpendingCondition.md)
 * [IStateTransitionVerifier](IStateTransitionVerifier.md)
-* [ITxFinalizationVerifier](ITxFinalizationVerifier.md)
 * [Math](Math.md)
 * [Merkle](Merkle.md)
 * [Migrations](Migrations.md)
+* [MoreVpFinalization](MoreVpFinalization.md)
 * [OnlyFromAddress](OnlyFromAddress.md)
 * [OnlyWithValue](OnlyWithValue.md)
-* [OutputGuardHandlerRegistry](OutputGuardHandlerRegistry.md)
-* [OutputGuardModel](OutputGuardModel.md)
 * [OutputId](OutputId.md)
 * [Ownable](Ownable.md)
 * [PaymentChallengeIFEInputSpent](PaymentChallengeIFEInputSpent.md)
@@ -223,7 +224,6 @@ Length of the RLPItem payload length
 * [PaymentInFlightExitModelUtils](PaymentInFlightExitModelUtils.md)
 * [PaymentInFlightExitRouter](PaymentInFlightExitRouter.md)
 * [PaymentInFlightExitRouterArgs](PaymentInFlightExitRouterArgs.md)
-* [PaymentOutputGuardHandler](PaymentOutputGuardHandler.md)
 * [PaymentOutputModel](PaymentOutputModel.md)
 * [PaymentOutputToPaymentTxCondition](PaymentOutputToPaymentTxCondition.md)
 * [PaymentPiggybackInFlightExit](PaymentPiggybackInFlightExit.md)
@@ -244,8 +244,6 @@ Length of the RLPItem payload length
 * [SafeEthTransfer](SafeEthTransfer.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)
-* [TxFinalizationModel](TxFinalizationModel.md)
-* [TxFinalizationVerifier](TxFinalizationVerifier.md)
 * [TxPosLib](TxPosLib.md)
 * [UtxoPosLib](UtxoPosLib.md)
 * [Vault](Vault.md)

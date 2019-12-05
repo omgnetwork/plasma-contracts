@@ -12,8 +12,6 @@ struct Controller {
  contract PlasmaFramework framework,
  struct IsDeposit.Predicate isDeposit,
  contract SpendingConditionRegistry spendingConditionRegistry,
- contract OutputGuardHandlerRegistry outputGuardHandlerRegistry,
- contract ITxFinalizationVerifier txFinalizationVerifier,
  uint256 supportedTxType
 }
 ```
@@ -27,18 +25,18 @@ event InFlightExitChallengeResponded(address indexed challenger, bytes32 indexed
 
 ## Functions
 
-- [buildController(PlasmaFramework framework, SpendingConditionRegistry spendingConditionRegistry, OutputGuardHandlerRegistry outputGuardHandlerRegistry, ITxFinalizationVerifier txFinalizationVerifier, uint256 supportedTxType)](#buildcontroller)
+- [buildController(PlasmaFramework framework, SpendingConditionRegistry spendingConditionRegistry, uint256 supportedTxType)](#buildcontroller)
 - [challenge(struct PaymentChallengeIFENotCanonical.Controller self, struct PaymentExitDataModel.InFlightExitMap inFlightExitMap, struct PaymentInFlightExitRouterArgs.ChallengeCanonicityArgs args)](#challenge)
 - [respond(struct PaymentChallengeIFENotCanonical.Controller self, struct PaymentExitDataModel.InFlightExitMap inFlightExitMap, bytes inFlightTx, uint256 inFlightTxPos, bytes inFlightTxInclusionProof)](#respond)
 - [verifyAndDeterminePositionOfTransactionIncludedInBlock(bytes txbytes, struct UtxoPosLib.UtxoPos utxoPos, bytes32 root, bytes inclusionProof)](#verifyanddeterminepositionoftransactionincludedinblock)
-- [verifyCompetingTxFinalized(struct PaymentChallengeIFENotCanonical.Controller self, struct PaymentInFlightExitRouterArgs.ChallengeCanonicityArgs args, struct WireTransaction.Output output)](#verifycompetingtxfinalized)
+- [verifyCompetingTxFinalized(struct PaymentChallengeIFENotCanonical.Controller self, struct PaymentInFlightExitRouterArgs.ChallengeCanonicityArgs args)](#verifycompetingtxfinalized)
 
 ### buildController
 
 Function that builds the controller struct
 
 ```js
-function buildController(PlasmaFramework framework, SpendingConditionRegistry spendingConditionRegistry, OutputGuardHandlerRegistry outputGuardHandlerRegistry, ITxFinalizationVerifier txFinalizationVerifier, uint256 supportedTxType) public view
+function buildController(PlasmaFramework framework, SpendingConditionRegistry spendingConditionRegistry, uint256 supportedTxType) public view
 returns(struct PaymentChallengeIFENotCanonical.Controller)
 ```
 
@@ -52,8 +50,6 @@ Controller struct of PaymentChallengeIFENotCanonical
 | ------------- |------------- | -----|
 | framework | PlasmaFramework |  | 
 | spendingConditionRegistry | SpendingConditionRegistry |  | 
-| outputGuardHandlerRegistry | OutputGuardHandlerRegistry |  | 
-| txFinalizationVerifier | ITxFinalizationVerifier |  | 
 | supportedTxType | uint256 |  | 
 
 ### challenge
@@ -109,7 +105,7 @@ returns(uint256)
 ### verifyCompetingTxFinalized
 
 ```js
-function verifyCompetingTxFinalized(struct PaymentChallengeIFENotCanonical.Controller self, struct PaymentInFlightExitRouterArgs.ChallengeCanonicityArgs args, struct WireTransaction.Output output) private view
+function verifyCompetingTxFinalized(struct PaymentChallengeIFENotCanonical.Controller self, struct PaymentInFlightExitRouterArgs.ChallengeCanonicityArgs args) private view
 returns(uint256)
 ```
 
@@ -119,7 +115,6 @@ returns(uint256)
 | ------------- |------------- | -----|
 | self | struct PaymentChallengeIFENotCanonical.Controller |  | 
 | args | struct PaymentInFlightExitRouterArgs.ChallengeCanonicityArgs |  | 
-| output | struct WireTransaction.Output |  | 
 
 ## Contracts
 
@@ -144,18 +139,15 @@ returns(uint256)
 * [IErc20DepositVerifier](IErc20DepositVerifier.md)
 * [IEthDepositVerifier](IEthDepositVerifier.md)
 * [IExitProcessor](IExitProcessor.md)
-* [IOutputGuardHandler](IOutputGuardHandler.md)
 * [IsDeposit](IsDeposit.md)
 * [ISpendingCondition](ISpendingCondition.md)
 * [IStateTransitionVerifier](IStateTransitionVerifier.md)
-* [ITxFinalizationVerifier](ITxFinalizationVerifier.md)
 * [Math](Math.md)
 * [Merkle](Merkle.md)
 * [Migrations](Migrations.md)
+* [MoreVpFinalization](MoreVpFinalization.md)
 * [OnlyFromAddress](OnlyFromAddress.md)
 * [OnlyWithValue](OnlyWithValue.md)
-* [OutputGuardHandlerRegistry](OutputGuardHandlerRegistry.md)
-* [OutputGuardModel](OutputGuardModel.md)
 * [OutputId](OutputId.md)
 * [Ownable](Ownable.md)
 * [PaymentChallengeIFEInputSpent](PaymentChallengeIFEInputSpent.md)
@@ -170,7 +162,6 @@ returns(uint256)
 * [PaymentInFlightExitModelUtils](PaymentInFlightExitModelUtils.md)
 * [PaymentInFlightExitRouter](PaymentInFlightExitRouter.md)
 * [PaymentInFlightExitRouterArgs](PaymentInFlightExitRouterArgs.md)
-* [PaymentOutputGuardHandler](PaymentOutputGuardHandler.md)
 * [PaymentOutputModel](PaymentOutputModel.md)
 * [PaymentOutputToPaymentTxCondition](PaymentOutputToPaymentTxCondition.md)
 * [PaymentPiggybackInFlightExit](PaymentPiggybackInFlightExit.md)
@@ -191,8 +182,6 @@ returns(uint256)
 * [SafeEthTransfer](SafeEthTransfer.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)
-* [TxFinalizationModel](TxFinalizationModel.md)
-* [TxFinalizationVerifier](TxFinalizationVerifier.md)
 * [TxPosLib](TxPosLib.md)
 * [UtxoPosLib](UtxoPosLib.md)
 * [Vault](Vault.md)
