@@ -17,7 +17,7 @@ library ExitId {
 
     /**
      * @notice Given transaction bytes and UTXO position, returns its exit ID
-     * @dev Computation of a depost ID is different to any other tx because txBytes of a deposit tx can be a non-unique value
+     * @dev Computation of a deposit ID is different to any other tx because txBytes of a deposit tx can be a non-unique value
      * @notice Output index must be within range 0 - 255
      * @param _isDeposit Defines whether the tx for the exitId is a deposit tx
      * @param _txBytes Transaction bytes
