@@ -99,7 +99,9 @@ library PaymentChallengeStandardExit {
 
     function verifyChallengeTxProtocolFinalized(ChallengeStandardExitData memory data) private view {
         bool isProtocolFinalized = MoreVpFinalization.isProtocolFinalized(data.controller.framework, data.args.challengeTx);
-        require(isProtocolFinalized, "Challenge transaction is not protocol finalized");
+        // MoreVP protocol finalization would only return false only when tx does not exists.
+        // Should fail already in early stages (eg. decode)
+        assert(isProtocolFinalized);
     }
 
     /**

@@ -70,7 +70,6 @@ library PaymentInFlightExitRouterArgs {
      * @param challengingTxWitness Witness for challenging transactions
      * @param inputTx RLP-encoded input transaction
      * @param inputUtxoPos UTXO position of input transaction's output
-     * @param spendingConditionOptionalArgs (Optional) Additional arguments for the spending condition of the input transaction
      */
     struct ChallengeInputSpentArgs {
         bytes inFlightTx;
@@ -80,7 +79,6 @@ library PaymentInFlightExitRouterArgs {
         bytes challengingTxWitness;
         bytes inputTx;
         uint256 inputUtxoPos;
-        bytes spendingConditionOptionalArgs;
     }
 
      /**

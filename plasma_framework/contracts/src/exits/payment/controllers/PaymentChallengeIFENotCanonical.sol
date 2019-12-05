@@ -212,7 +212,9 @@ library PaymentChallengeIFENotCanonical {
                 self.framework,
                 args.competingTx
             );
-            require(isProtocolFinalized, "Competing tx is not protocol finalized when competing tx position is not given");
+            // MoreVP protocol finalization would only return false only when tx does not exists.
+            // Should fail already in early stages (eg. decode)
+            assert(isProtocolFinalized);
         } else {
             UtxoPosLib.UtxoPos memory competingTxUtxoPos = UtxoPosLib.UtxoPos(args.competingTxPos);
             bool isStandardFinalized = MoreVpFinalization.isStandardFinalized(

@@ -162,7 +162,6 @@ contract PaymentInFlightExitRouter is
         challengeInputSpentController = PaymentChallengeIFEInputSpent.buildController(
             args.framework,
             args.spendingConditionRegistry,
-            args.txFinalizationVerifier,
             args.safeGasStipend
         );
 

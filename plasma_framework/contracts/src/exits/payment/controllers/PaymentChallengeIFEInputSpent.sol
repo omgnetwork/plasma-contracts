@@ -5,11 +5,10 @@ import "../PaymentExitDataModel.sol";
 import "../PaymentInFlightExitModelUtils.sol";
 import "../routers/PaymentInFlightExitRouterArgs.sol";
 import "../../interfaces/ISpendingCondition.sol";
-import "../../interfaces/ITxFinalizationVerifier.sol";
-import "../../models/TxFinalizationModel.sol";
 import "../../registries/SpendingConditionRegistry.sol";
 import "../../utils/ExitId.sol";
 import "../../utils/OutputId.sol";
+import "../../utils/MoreVpFinalization.sol";
 import "../../../utils/IsDeposit.sol";
 import "../../../utils/Merkle.sol";
 import "../../../utils/SafeEthTransfer.sol";
@@ -27,7 +26,6 @@ library PaymentChallengeIFEInputSpent {
         PlasmaFramework framework;
         IsDeposit.Predicate isDeposit;
         SpendingConditionRegistry spendingConditionRegistry;
-        ITxFinalizationVerifier txFinalizationVerifier;
         uint256 safeGasStipend;
     }
 
@@ -53,7 +51,6 @@ library PaymentChallengeIFEInputSpent {
     function buildController(
         PlasmaFramework framework,
         SpendingConditionRegistry spendingConditionRegistry,
-        ITxFinalizationVerifier txFinalizationVerifier,
         uint256 safeGasStipend
     )
         public
@@ -64,7 +61,6 @@ library PaymentChallengeIFEInputSpent {
             framework: framework,
             isDeposit: IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL()),
             spendingConditionRegistry: spendingConditionRegistry,
-            txFinalizationVerifier: txFinalizationVerifier,
             safeGasStipend: safeGasStipend
         });
     }
@@ -128,14 +124,14 @@ library PaymentChallengeIFEInputSpent {
         private
         view
     {
-        TxFinalizationModel.Data memory finalizationData = TxFinalizationModel.moreVpData(
+        bool isProtocolFinalized = MoreVpFinalization.isProtocolFinalized(
             data.controller.framework,
-            data.args.challengingTx,
-            TxPosLib.TxPos(0),
-            bytes("")
+            data.args.challengingTx
         );
 
-        require(data.controller.txFinalizationVerifier.isProtocolFinalized(finalizationData), "Challenging transaction not finalized");
+        // MoreVP protocol finalization would only return false only when tx does not exists.
+        // Should fail already in early stages (eg. decode)
+        assert(isProtocolFinalized);
     }
 
     function verifySpendingCondition(ChallengeIFEData memory data) private view {
@@ -156,7 +152,7 @@ library PaymentChallengeIFEInputSpent {
             data.args.challengingTx,
             data.args.challengingTxInputIndex,
             data.args.challengingTxWitness,
-            data.args.spendingConditionOptionalArgs
+            bytes("") // stub optional args with empty bytes
         );
         require(isSpent, "Spending condition failed");
     }

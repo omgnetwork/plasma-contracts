@@ -348,6 +348,22 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                 );
             });
 
+            it('should fail when challenging tx is not of MoreVP protocol', async () => {
+                const newTxType = 999;
+                const dummyExitGameForNewTxType = await ExitId.new();
+                this.framework.registerExitGame(newTxType, dummyExitGameForNewTxType.address, PROTOCOL.MVP);
+
+                const outputId = computeNormalOutputId(this.challengeArgs.inputTx, 0);
+                const challengingTxOutput = new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, 123, alice, ETH);
+                const challengingTx = new PaymentTransaction(newTxType, [outputId], [challengingTxOutput]);
+
+                this.challengeArgs.challengingTx = web3.utils.bytesToHex(challengingTx.rlpEncoded());
+                await expectRevert(
+                    this.exitGame.challengeInFlightExitInputSpent(this.challengeArgs, { from: challenger }),
+                    'MoreVpFinalization: not a MoreVP protocol tx',
+                );
+            });
+
             it('should fail when the spent input is not the same as piggybacked input', async () => {
                 // create a different input tx
                 const anotherTx = createInputTransaction(
@@ -365,9 +381,13 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
             });
 
             it('should fail when spending condition for given output is not registered', async () => {
+                const newTxType = 999;
+                const dummyExitGameForNewTxType = await ExitId.new();
+                this.framework.registerExitGame(newTxType, dummyExitGameForNewTxType.address, PROTOCOL.MORE_VP);
+
                 const outputId = computeNormalOutputId(this.challengeArgs.inputTx, 0);
                 const challengingTxOutput = new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, 123, alice, ETH);
-                const challengingTx = new PaymentTransaction(23, [outputId], [challengingTxOutput]);
+                const challengingTx = new PaymentTransaction(newTxType, [outputId], [challengingTxOutput]);
 
                 this.challengeArgs.challengingTx = web3.utils.bytesToHex(challengingTx.rlpEncoded());
                 await expectRevert(
