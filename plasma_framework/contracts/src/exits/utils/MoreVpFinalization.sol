@@ -56,10 +56,14 @@ library MoreVpFinalization {
         view
         returns (bool) 
     {
+        if (txBytes.length == 0) {
+            return false;
+        }
+
         uint256 txType = WireTransaction.getTransactionType(txBytes);
         uint8 protocol = framework.protocols(txType);
         require(protocol == Protocol.MORE_VP(), "MoreVpFinalization: not a MoreVP protocol tx");
 
-        return txBytes.length > 0;
+        return true;
     }
 }
