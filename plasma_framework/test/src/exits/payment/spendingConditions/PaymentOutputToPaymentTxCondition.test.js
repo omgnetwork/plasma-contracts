@@ -66,7 +66,6 @@ contract('PaymentOutputToPaymentTxCondition', ([richFather, bob]) => {
                 spendingTxBytes,
                 inputIndex,
                 signature,
-                optionalArgs: EMPTY_BYTES,
             };
 
             return {
@@ -90,7 +89,6 @@ contract('PaymentOutputToPaymentTxCondition', ([richFather, bob]) => {
                     args.spendingTxBytes,
                     args.inputIndex,
                     args.signature,
-                    args.optionalArgs,
                 ),
                 'Input tx is an unsupported payment tx type',
             );
@@ -111,7 +109,6 @@ contract('PaymentOutputToPaymentTxCondition', ([richFather, bob]) => {
                     args.spendingTxBytes,
                     args.inputIndex,
                     args.signature,
-                    args.optionalArgs,
                 ),
                 'The spending tx is an unsupported payment tx type',
             );
@@ -130,7 +127,6 @@ contract('PaymentOutputToPaymentTxCondition', ([richFather, bob]) => {
                     args.spendingTxBytes,
                     args.inputIndex,
                     args.signature,
-                    args.optionalArgs,
                 ),
                 'Spending tx points to the incorrect output UTXO position',
             );
@@ -149,7 +145,6 @@ contract('PaymentOutputToPaymentTxCondition', ([richFather, bob]) => {
                     args.spendingTxBytes,
                     args.inputIndex,
                     wrongSignature,
-                    args.optionalArgs,
                 ),
                 'Failed to recover the signer from the signature',
             );
@@ -170,7 +165,6 @@ contract('PaymentOutputToPaymentTxCondition', ([richFather, bob]) => {
                     args.spendingTxBytes,
                     args.inputIndex,
                     wrongSignature,
-                    args.optionalArgs,
                 ),
                 'Tx in not signed correctly',
             );
@@ -186,7 +180,6 @@ contract('PaymentOutputToPaymentTxCondition', ([richFather, bob]) => {
                 args.spendingTxBytes,
                 args.inputIndex,
                 args.signature,
-                args.optionalArgs,
             );
             expect(result).to.be.true;
         });

@@ -83,7 +83,7 @@ library PaymentChallengeIFEOutputSpent {
             args.inFlightTxInclusionProof
         );
 
-        require(isStandardFinalized, "In-flight transaction must be standard finalized to be able to spend");
+        require(isStandardFinalized, "In-flight transaction must be standard finalized (included in Plasma) to be able to spend");
     }
 
     function verifyChallengingTransactionProtocolFinalized(
@@ -126,8 +126,7 @@ library PaymentChallengeIFEOutputSpent {
             utxoPos.txPos().value,
             args.challengingTx,
             args.challengingTxInputIndex,
-            args.challengingTxWitness,
-            bytes("") // stub optional args with empty bytes
+            args.challengingTxWitness
         );
 
         require(isSpentBySpendingTx, "Challenging transaction does not spend the output");

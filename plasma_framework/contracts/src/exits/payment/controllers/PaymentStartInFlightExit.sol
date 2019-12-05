@@ -248,8 +248,7 @@ library PaymentStartInFlightExit {
                 exitData.inputUtxosPos[i].txPos().value,
                 exitData.inFlightTxRaw,
                 i,
-                exitData.inFlightTxWitnesses[i],
-                bytes("") // stub empty bytes for 'optionalArgs'
+                exitData.inFlightTxWitnesses[i]
             );
             require(isSpentByInFlightTx, "Spending condition failed");
         }

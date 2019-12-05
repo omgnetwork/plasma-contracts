@@ -104,9 +104,6 @@ library PaymentChallengeStandardExit {
         assert(isProtocolFinalized);
     }
 
-    /**
-     * @dev This implementation _always_ stub empty bytes for the optional args.
-     */
     function verifySpendingCondition(ChallengeStandardExitData memory data) private view {
         PaymentStandardExitRouterArgs.ChallengeStandardExitArgs memory args = data.args;
 
@@ -132,8 +129,7 @@ library PaymentChallengeStandardExit {
             utxoPos.txPos().value,
             args.challengeTx,
             args.inputIndex,
-            args.witness,
-            bytes("") // optional args of spending condition
+            args.witness
         );
         require(isSpentByChallengeTx, "Spending condition failed");
     }

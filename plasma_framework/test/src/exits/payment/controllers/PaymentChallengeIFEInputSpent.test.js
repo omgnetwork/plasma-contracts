@@ -20,8 +20,8 @@ const {
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 const {
-    TX_TYPE, OUTPUT_TYPE, EMPTY_BYTES, CHILD_BLOCK_INTERVAL,
-    VAULT_ID, PROTOCOL, SAFE_GAS_STIPEND, EMPTY_BYTES_32,
+    TX_TYPE, OUTPUT_TYPE, CHILD_BLOCK_INTERVAL, VAULT_ID,
+    PROTOCOL, SAFE_GAS_STIPEND, EMPTY_BYTES_32,
 } = require('../../../../helpers/constants.js');
 const { buildUtxoPos } = require('../../../../helpers/positions.js');
 const { createInputTransaction, createInFlightTx } = require('../../../../helpers/ife.js');

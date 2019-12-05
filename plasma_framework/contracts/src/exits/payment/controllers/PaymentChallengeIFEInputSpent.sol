@@ -151,8 +151,7 @@ library PaymentChallengeIFEInputSpent {
             inputUtxoPos.txPos().value,
             data.args.challengingTx,
             data.args.challengingTxInputIndex,
-            data.args.challengingTxWitness,
-            bytes("") // stub optional args with empty bytes
+            data.args.challengingTxWitness
         );
         require(isSpent, "Spending condition failed");
     }

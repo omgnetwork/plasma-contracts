@@ -16,8 +16,8 @@ const {
 const { expect } = require('chai');
 
 const {
-    TX_TYPE, OUTPUT_TYPE, PROTOCOL, EMPTY_BYTES,
-    VAULT_ID, DUMMY_INPUT_1, SAFE_GAS_STIPEND,
+    TX_TYPE, OUTPUT_TYPE, PROTOCOL, VAULT_ID,
+    DUMMY_INPUT_1, SAFE_GAS_STIPEND,
 } = require('../../../../helpers/constants.js');
 const { buildUtxoPos, UtxoPos } = require('../../../../helpers/positions.js');
 const {
@@ -228,7 +228,6 @@ contract('PaymentChallengeStandardExit', ([_, alice, bob]) => {
                     spendingTx: args.challengeTx,
                     inputIndex: args.inputIndex,
                     witness: args.witness,
-                    optionalArgs: EMPTY_BYTES,
                 };
 
                 // would revert if called without the expected data

@@ -116,8 +116,7 @@ library PaymentChallengeIFENotCanonical {
             inputUtxoPos.txPos().value,
             args.competingTx,
             args.competingTxInputIndex,
-            args.competingTxWitness,
-            bytes("") // optional args
+            args.competingTxWitness
         );
         require(isSpentByCompetingTx, "Competing input spending condition is not met");
 
