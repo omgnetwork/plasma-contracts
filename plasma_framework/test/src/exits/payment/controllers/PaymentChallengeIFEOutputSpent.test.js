@@ -13,7 +13,6 @@ const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
 const StateTransitionVerifierMock = artifacts.require('StateTransitionVerifierMock');
-const TxFinalizationVerifier = artifacts.require('TxFinalizationVerifier');
 const Attacker = artifacts.require('FallbackFunctionFailAttacker');
 
 const {
@@ -73,8 +72,6 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
         this.exitIdHelper = await ExitId.new();
         this.stateTransitionVerifier = await StateTransitionVerifierMock.new();
         await this.stateTransitionVerifier.mockResult(true);
-
-        this.txFinalizationVerifier = await TxFinalizationVerifier.new();
     });
 
 
@@ -163,13 +160,14 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
                 VAULT_ID.ERC20,
                 this.spendingConditionRegistry.address,
                 this.stateTransitionVerifier.address,
-                this.txFinalizationVerifier.address,
                 IFE_TX_TYPE,
                 SAFE_GAS_STIPEND,
             ];
             this.exitGame = await PaymentInFlightExitRouter.new(exitGameArgs);
-
             await this.framework.registerExitGame(TX_TYPE.PAYMENT, this.exitGame.address, PROTOCOL.MORE_VP);
+
+            const dummyExitGame = await PaymentInFlightExitRouter.new(exitGameArgs);
+            await this.framework.registerExitGame(OTHER_TX_TYPE, dummyExitGame.address, PROTOCOL.MORE_VP);
 
             this.piggybackBondSize = await this.exitGame.piggybackBondSize();
             this.exitGame.depositFundForTest({ from: alice, value: this.piggybackBondSize.toString() });
@@ -186,17 +184,7 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
                 challengingTx: args.challengingTxBytes,
                 challengingTxInputIndex: 0,
                 challengingTxWitness: web3.utils.sha3('sig'),
-                spendingConditionOptionalArgs: web3.utils.bytesToHex(''),
             };
-        });
-
-        it('should fail when paying out piggyback bond fails', async () => {
-            const attacker = await Attacker.new();
-
-            await expectRevert(
-                this.exitGame.challengeInFlightExitOutputSpent(this.challengeArgs, { from: attacker.address }),
-                'SafeEthTransfer: failed to transfer ETH',
-            );
         });
 
         it('should emit event when challenge is successful', async () => {
@@ -228,6 +216,15 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
             expect(challengerPostBalance).to.be.bignumber.equal(expectedPostBalance);
         });
 
+        it('should fail when paying out piggyback bond fails', async () => {
+            const attacker = await Attacker.new();
+
+            await expectRevert(
+                this.exitGame.challengeInFlightExitOutputSpent(this.challengeArgs, { from: attacker.address }),
+                'SafeEthTransfer: failed to transfer ETH',
+            );
+        });
+
         it('should not allow to challenge output exit successfully for the second time', async () => {
             await this.exitGame.challengeInFlightExitOutputSpent(
                 this.challengeArgs, { from: bob },
@@ -254,11 +251,27 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
             );
         });
 
+        it('should fail when challenging tx is not of MoreVP protocol', async () => {
+            const nonMoreVPTxType = 987;
+            const dummyExitGame = await ExitId.new(); // only need a dummy contract address
+            this.framework.registerExitGame(nonMoreVPTxType, dummyExitGame.address, PROTOCOL.MVP);
+
+            const outputId = computeNormalOutputId(this.challengeArgs.inFlightTx, 0);
+            const challengingTxOutput = new PaymentTransactionOutput(OUTPUT_TYPE_ONE, AMOUNT, alice, ETH);
+            const challengingTx = new PaymentTransaction(nonMoreVPTxType, [outputId], [challengingTxOutput]);
+
+            this.challengeArgs.challengingTx = web3.utils.bytesToHex(challengingTx.rlpEncoded());
+            await expectRevert(
+                this.exitGame.challengeInFlightExitOutputSpent(this.challengeArgs, { from: bob }),
+                'MoreVpFinalization: not a MoreVP protocol tx',
+            );
+        });
+
         it('should fail when in-flight transaction is not included in Plasma', async () => {
             this.challengeArgs.inFlightTxInclusionProof = web3.utils.bytesToHex('a'.repeat(512));
             await expectRevert(
                 this.exitGame.challengeInFlightExitOutputSpent(this.challengeArgs, { from: bob }),
-                'In-flight transaction not finalized',
+                'In-flight transaction must be standard finalized (included in Plasma) to be able to spend',
             );
         });
 

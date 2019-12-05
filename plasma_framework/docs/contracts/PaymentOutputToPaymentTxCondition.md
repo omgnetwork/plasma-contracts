@@ -19,7 +19,7 @@ struct PaymentEip712Lib.Constants internal eip712;
 ## Functions
 
 - [(address framework, uint256 inputTxType, uint256 spendingTxType)](#)
-- [verify(bytes inputTxBytes, uint16 outputIndex, uint256 inputTxPos, bytes spendingTxBytes, uint16 inputIndex, bytes signature, bytes )](#verify)
+- [verify(bytes inputTxBytes, uint16 outputIndex, uint256 inputTxPos, bytes spendingTxBytes, uint16 inputIndex, bytes signature)](#verify)
 
 ### 
 
@@ -45,7 +45,7 @@ function (address framework, uint256 inputTxType, uint256 spendingTxType) public
 Verifies the spending condition
 
 ```js
-function verify(bytes inputTxBytes, uint16 outputIndex, uint256 inputTxPos, bytes spendingTxBytes, uint16 inputIndex, bytes signature, bytes ) external view
+function verify(bytes inputTxBytes, uint16 outputIndex, uint256 inputTxPos, bytes spendingTxBytes, uint16 inputIndex, bytes signature) external view
 returns(bool)
 ```
 
@@ -59,7 +59,6 @@ returns(bool)
 | spendingTxBytes | bytes | Spending transaction, in bytes | 
 | inputIndex | uint16 | Input index of the spending tx that points to the output | 
 | signature | bytes | Signature of the output owner | 
-|  | bytes | inputTxBytes Encoded input transaction, in bytes | 
 
 ## Contracts
 
@@ -84,18 +83,15 @@ returns(bool)
 * [IErc20DepositVerifier](IErc20DepositVerifier.md)
 * [IEthDepositVerifier](IEthDepositVerifier.md)
 * [IExitProcessor](IExitProcessor.md)
-* [IOutputGuardHandler](IOutputGuardHandler.md)
 * [IsDeposit](IsDeposit.md)
 * [ISpendingCondition](ISpendingCondition.md)
 * [IStateTransitionVerifier](IStateTransitionVerifier.md)
-* [ITxFinalizationVerifier](ITxFinalizationVerifier.md)
 * [Math](Math.md)
 * [Merkle](Merkle.md)
 * [Migrations](Migrations.md)
+* [MoreVpFinalization](MoreVpFinalization.md)
 * [OnlyFromAddress](OnlyFromAddress.md)
 * [OnlyWithValue](OnlyWithValue.md)
-* [OutputGuardHandlerRegistry](OutputGuardHandlerRegistry.md)
-* [OutputGuardModel](OutputGuardModel.md)
 * [OutputId](OutputId.md)
 * [Ownable](Ownable.md)
 * [PaymentChallengeIFEInputSpent](PaymentChallengeIFEInputSpent.md)
@@ -110,7 +106,6 @@ returns(bool)
 * [PaymentInFlightExitModelUtils](PaymentInFlightExitModelUtils.md)
 * [PaymentInFlightExitRouter](PaymentInFlightExitRouter.md)
 * [PaymentInFlightExitRouterArgs](PaymentInFlightExitRouterArgs.md)
-* [PaymentOutputGuardHandler](PaymentOutputGuardHandler.md)
 * [PaymentOutputModel](PaymentOutputModel.md)
 * [PaymentOutputToPaymentTxCondition](PaymentOutputToPaymentTxCondition.md)
 * [PaymentPiggybackInFlightExit](PaymentPiggybackInFlightExit.md)
@@ -131,8 +126,6 @@ returns(bool)
 * [SafeEthTransfer](SafeEthTransfer.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)
-* [TxFinalizationModel](TxFinalizationModel.md)
-* [TxFinalizationVerifier](TxFinalizationVerifier.md)
 * [TxPosLib](TxPosLib.md)
 * [UtxoPosLib](UtxoPosLib.md)
 * [Vault](Vault.md)

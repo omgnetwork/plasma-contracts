@@ -13,7 +13,6 @@ struct Controller {
  struct IsDeposit.Predicate isDeposit,
  struct ExitableTimestamp.Calculator exitableTimestampCalculator,
  contract IExitProcessor exitProcessor,
- contract OutputGuardHandlerRegistry outputGuardHandlerRegistry,
  uint256 minExitPeriod,
  uint256 ethVaultId,
  uint256 erc20VaultId
@@ -38,11 +37,10 @@ event InFlightExitOutputPiggybacked(address indexed exitTarget, bytes32 indexed 
 
 ## Functions
 
-- [buildController(PlasmaFramework framework, IExitProcessor exitProcessor, OutputGuardHandlerRegistry outputGuardHandlerRegistry, uint256 ethVaultId, uint256 erc20VaultId)](#buildcontroller)
+- [buildController(PlasmaFramework framework, IExitProcessor exitProcessor, uint256 ethVaultId, uint256 erc20VaultId)](#buildcontroller)
 - [piggybackInput(struct PaymentPiggybackInFlightExit.Controller self, struct PaymentExitDataModel.InFlightExitMap inFlightExitMap, struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnInputArgs args)](#piggybackinput)
 - [piggybackOutput(struct PaymentPiggybackInFlightExit.Controller self, struct PaymentExitDataModel.InFlightExitMap inFlightExitMap, struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnOutputArgs args)](#piggybackoutput)
 - [enqueue(struct PaymentPiggybackInFlightExit.Controller controller, address token, struct UtxoPosLib.UtxoPos utxoPos, uint160 exitId)](#enqueue)
-- [getExitTargetOfOutput(struct PaymentPiggybackInFlightExit.Controller controller, bytes20 outputGuard, uint256 outputType, bytes outputGuardPreimage)](#getexittargetofoutput)
 - [isFirstPiggybackOfTheToken(struct PaymentExitDataModel.InFlightExit ife, address token)](#isfirstpiggybackofthetoken)
 
 ### buildController
@@ -50,7 +48,7 @@ event InFlightExitOutputPiggybacked(address indexed exitTarget, bytes32 indexed 
 Function that builds the controller struct
 
 ```js
-function buildController(PlasmaFramework framework, IExitProcessor exitProcessor, OutputGuardHandlerRegistry outputGuardHandlerRegistry, uint256 ethVaultId, uint256 erc20VaultId) public view
+function buildController(PlasmaFramework framework, IExitProcessor exitProcessor, uint256 ethVaultId, uint256 erc20VaultId) public view
 returns(struct PaymentPiggybackInFlightExit.Controller)
 ```
 
@@ -64,7 +62,6 @@ Controller struct of PaymentPiggybackInFlightExit
 | ------------- |------------- | -----|
 | framework | PlasmaFramework |  | 
 | exitProcessor | IExitProcessor |  | 
-| outputGuardHandlerRegistry | OutputGuardHandlerRegistry |  | 
 | ethVaultId | uint256 |  | 
 | erc20VaultId | uint256 |  | 
 
@@ -115,22 +112,6 @@ function enqueue(struct PaymentPiggybackInFlightExit.Controller controller, addr
 | utxoPos | struct UtxoPosLib.UtxoPos |  | 
 | exitId | uint160 |  | 
 
-### getExitTargetOfOutput
-
-```js
-function getExitTargetOfOutput(struct PaymentPiggybackInFlightExit.Controller controller, bytes20 outputGuard, uint256 outputType, bytes outputGuardPreimage) private view
-returns(address payable)
-```
-
-**Arguments**
-
-| Name        | Type           | Description  |
-| ------------- |------------- | -----|
-| controller | struct PaymentPiggybackInFlightExit.Controller |  | 
-| outputGuard | bytes20 |  | 
-| outputType | uint256 |  | 
-| outputGuardPreimage | bytes |  | 
-
 ### isFirstPiggybackOfTheToken
 
 ```js
@@ -168,18 +149,15 @@ returns(bool)
 * [IErc20DepositVerifier](IErc20DepositVerifier.md)
 * [IEthDepositVerifier](IEthDepositVerifier.md)
 * [IExitProcessor](IExitProcessor.md)
-* [IOutputGuardHandler](IOutputGuardHandler.md)
 * [IsDeposit](IsDeposit.md)
 * [ISpendingCondition](ISpendingCondition.md)
 * [IStateTransitionVerifier](IStateTransitionVerifier.md)
-* [ITxFinalizationVerifier](ITxFinalizationVerifier.md)
 * [Math](Math.md)
 * [Merkle](Merkle.md)
 * [Migrations](Migrations.md)
+* [MoreVpFinalization](MoreVpFinalization.md)
 * [OnlyFromAddress](OnlyFromAddress.md)
 * [OnlyWithValue](OnlyWithValue.md)
-* [OutputGuardHandlerRegistry](OutputGuardHandlerRegistry.md)
-* [OutputGuardModel](OutputGuardModel.md)
 * [OutputId](OutputId.md)
 * [Ownable](Ownable.md)
 * [PaymentChallengeIFEInputSpent](PaymentChallengeIFEInputSpent.md)
@@ -194,7 +172,6 @@ returns(bool)
 * [PaymentInFlightExitModelUtils](PaymentInFlightExitModelUtils.md)
 * [PaymentInFlightExitRouter](PaymentInFlightExitRouter.md)
 * [PaymentInFlightExitRouterArgs](PaymentInFlightExitRouterArgs.md)
-* [PaymentOutputGuardHandler](PaymentOutputGuardHandler.md)
 * [PaymentOutputModel](PaymentOutputModel.md)
 * [PaymentOutputToPaymentTxCondition](PaymentOutputToPaymentTxCondition.md)
 * [PaymentPiggybackInFlightExit](PaymentPiggybackInFlightExit.md)
@@ -215,8 +192,6 @@ returns(bool)
 * [SafeEthTransfer](SafeEthTransfer.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)
-* [TxFinalizationModel](TxFinalizationModel.md)
-* [TxFinalizationVerifier](TxFinalizationVerifier.md)
 * [TxPosLib](TxPosLib.md)
 * [UtxoPosLib](UtxoPosLib.md)
 * [Vault](Vault.md)

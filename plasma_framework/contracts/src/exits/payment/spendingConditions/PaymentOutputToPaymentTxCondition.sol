@@ -43,8 +43,7 @@ contract PaymentOutputToPaymentTxCondition is ISpendingCondition {
         uint256 inputTxPos,
         bytes calldata spendingTxBytes,
         uint16 inputIndex,
-        bytes calldata signature,
-        bytes calldata /*optionalArgs*/
+        bytes calldata signature
     )
         external
         view

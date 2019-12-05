@@ -11,8 +11,6 @@ View Source: [contracts/src/exits/payment/controllers/PaymentChallengeIFEOutputS
 struct Controller {
  contract PlasmaFramework framework,
  contract SpendingConditionRegistry spendingConditionRegistry,
- contract OutputGuardHandlerRegistry outputGuardHandlerRegistry,
- contract ITxFinalizationVerifier txFinalizationVerifier,
  uint256 safeGasStipend
 }
 ```
@@ -27,6 +25,7 @@ event InFlightExitOutputBlocked(address indexed challenger, bytes32 indexed txHa
 
 - [run(struct PaymentChallengeIFEOutputSpent.Controller controller, struct PaymentExitDataModel.InFlightExitMap inFlightExitMap, struct PaymentInFlightExitRouterArgs.ChallengeOutputSpent args)](#run)
 - [verifyInFlightTransactionStandardFinalized(struct PaymentChallengeIFEOutputSpent.Controller controller, struct PaymentInFlightExitRouterArgs.ChallengeOutputSpent args)](#verifyinflighttransactionstandardfinalized)
+- [verifyChallengingTransactionProtocolFinalized(struct PaymentChallengeIFEOutputSpent.Controller controller, struct PaymentInFlightExitRouterArgs.ChallengeOutputSpent args)](#verifychallengingtransactionprotocolfinalized)
 - [verifyChallengingTransactionSpendsOutput(struct PaymentChallengeIFEOutputSpent.Controller controller, struct PaymentInFlightExitRouterArgs.ChallengeOutputSpent args)](#verifychallengingtransactionspendsoutput)
 
 ### run
@@ -49,6 +48,19 @@ function run(struct PaymentChallengeIFEOutputSpent.Controller controller, struct
 
 ```js
 function verifyInFlightTransactionStandardFinalized(struct PaymentChallengeIFEOutputSpent.Controller controller, struct PaymentInFlightExitRouterArgs.ChallengeOutputSpent args) private view
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| controller | struct PaymentChallengeIFEOutputSpent.Controller |  | 
+| args | struct PaymentInFlightExitRouterArgs.ChallengeOutputSpent |  | 
+
+### verifyChallengingTransactionProtocolFinalized
+
+```js
+function verifyChallengingTransactionProtocolFinalized(struct PaymentChallengeIFEOutputSpent.Controller controller, struct PaymentInFlightExitRouterArgs.ChallengeOutputSpent args) private view
 ```
 
 **Arguments**
@@ -94,18 +106,15 @@ function verifyChallengingTransactionSpendsOutput(struct PaymentChallengeIFEOutp
 * [IErc20DepositVerifier](IErc20DepositVerifier.md)
 * [IEthDepositVerifier](IEthDepositVerifier.md)
 * [IExitProcessor](IExitProcessor.md)
-* [IOutputGuardHandler](IOutputGuardHandler.md)
 * [IsDeposit](IsDeposit.md)
 * [ISpendingCondition](ISpendingCondition.md)
 * [IStateTransitionVerifier](IStateTransitionVerifier.md)
-* [ITxFinalizationVerifier](ITxFinalizationVerifier.md)
 * [Math](Math.md)
 * [Merkle](Merkle.md)
 * [Migrations](Migrations.md)
+* [MoreVpFinalization](MoreVpFinalization.md)
 * [OnlyFromAddress](OnlyFromAddress.md)
 * [OnlyWithValue](OnlyWithValue.md)
-* [OutputGuardHandlerRegistry](OutputGuardHandlerRegistry.md)
-* [OutputGuardModel](OutputGuardModel.md)
 * [OutputId](OutputId.md)
 * [Ownable](Ownable.md)
 * [PaymentChallengeIFEInputSpent](PaymentChallengeIFEInputSpent.md)
@@ -120,7 +129,6 @@ function verifyChallengingTransactionSpendsOutput(struct PaymentChallengeIFEOutp
 * [PaymentInFlightExitModelUtils](PaymentInFlightExitModelUtils.md)
 * [PaymentInFlightExitRouter](PaymentInFlightExitRouter.md)
 * [PaymentInFlightExitRouterArgs](PaymentInFlightExitRouterArgs.md)
-* [PaymentOutputGuardHandler](PaymentOutputGuardHandler.md)
 * [PaymentOutputModel](PaymentOutputModel.md)
 * [PaymentOutputToPaymentTxCondition](PaymentOutputToPaymentTxCondition.md)
 * [PaymentPiggybackInFlightExit](PaymentPiggybackInFlightExit.md)
@@ -141,8 +149,6 @@ function verifyChallengingTransactionSpendsOutput(struct PaymentChallengeIFEOutp
 * [SafeEthTransfer](SafeEthTransfer.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)
-* [TxFinalizationModel](TxFinalizationModel.md)
-* [TxFinalizationVerifier](TxFinalizationVerifier.md)
 * [TxPosLib](TxPosLib.md)
 * [UtxoPosLib](UtxoPosLib.md)
 * [Vault](Vault.md)

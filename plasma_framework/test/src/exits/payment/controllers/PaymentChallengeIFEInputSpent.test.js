@@ -13,7 +13,6 @@ const StateTransitionVerifierMock = artifacts.require('StateTransitionVerifierMo
 const ExitId = artifacts.require('ExitIdWrapper');
 const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
-const TxFinalizationVerifier = artifacts.require('TxFinalizationVerifier');
 const Attacker = artifacts.require('FallbackFunctionFailAttacker');
 
 const {
@@ -21,8 +20,8 @@ const {
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 const {
-    TX_TYPE, OUTPUT_TYPE, EMPTY_BYTES, CHILD_BLOCK_INTERVAL,
-    VAULT_ID, PROTOCOL, SAFE_GAS_STIPEND, EMPTY_BYTES_32,
+    TX_TYPE, OUTPUT_TYPE, CHILD_BLOCK_INTERVAL, VAULT_ID,
+    PROTOCOL, SAFE_GAS_STIPEND, EMPTY_BYTES_32,
 } = require('../../../../helpers/constants.js');
 const { buildUtxoPos } = require('../../../../helpers/positions.js');
 const { createInputTransaction, createInFlightTx } = require('../../../../helpers/ife.js');
@@ -62,8 +61,6 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
 
         this.stateTransitionVerifier = await StateTransitionVerifierMock.new();
         await this.stateTransitionVerifier.mockResult(true);
-
-        this.txFinalizationVerifier = await TxFinalizationVerifier.new();
     });
 
     describe('challenge in-flight exit input spent', () => {
@@ -186,7 +183,6 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                 VAULT_ID.ERC20,
                 this.spendingConditionRegistry.address,
                 this.stateTransitionVerifier.address,
-                this.txFinalizationVerifier.address,
                 TX_TYPE.PAYMENT,
                 SAFE_GAS_STIPEND,
             ];
@@ -231,7 +227,6 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                 challengingTxWitness: web3.utils.utf8ToHex('dummy witness'),
                 inputTx: this.inputTx.txBytes,
                 inputUtxoPos: this.inputTx.utxoPos,
-                spendingConditionOptionalArgs: EMPTY_BYTES,
             };
         });
 
@@ -348,6 +343,22 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                 );
             });
 
+            it('should fail when challenging tx is not of MoreVP protocol', async () => {
+                const newTxType = 999;
+                const dummyExitGameForNewTxType = await ExitId.new();
+                this.framework.registerExitGame(newTxType, dummyExitGameForNewTxType.address, PROTOCOL.MVP);
+
+                const outputId = computeNormalOutputId(this.challengeArgs.inputTx, 0);
+                const challengingTxOutput = new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, 123, alice, ETH);
+                const challengingTx = new PaymentTransaction(newTxType, [outputId], [challengingTxOutput]);
+
+                this.challengeArgs.challengingTx = web3.utils.bytesToHex(challengingTx.rlpEncoded());
+                await expectRevert(
+                    this.exitGame.challengeInFlightExitInputSpent(this.challengeArgs, { from: challenger }),
+                    'MoreVpFinalization: not a MoreVP protocol tx',
+                );
+            });
+
             it('should fail when the spent input is not the same as piggybacked input', async () => {
                 // create a different input tx
                 const anotherTx = createInputTransaction(
@@ -365,9 +376,13 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
             });
 
             it('should fail when spending condition for given output is not registered', async () => {
+                const newTxType = 999;
+                const dummyExitGameForNewTxType = await ExitId.new();
+                this.framework.registerExitGame(newTxType, dummyExitGameForNewTxType.address, PROTOCOL.MORE_VP);
+
                 const outputId = computeNormalOutputId(this.challengeArgs.inputTx, 0);
                 const challengingTxOutput = new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, 123, alice, ETH);
-                const challengingTx = new PaymentTransaction(23, [outputId], [challengingTxOutput]);
+                const challengingTx = new PaymentTransaction(newTxType, [outputId], [challengingTxOutput]);
 
                 this.challengeArgs.challengingTx = web3.utils.bytesToHex(challengingTx.rlpEncoded());
                 await expectRevert(

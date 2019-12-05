@@ -8,7 +8,6 @@ const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
 const StateTransitionVerifierMock = artifacts.require('StateTransitionVerifierMock');
-const TxFinalizationVerifier = artifacts.require('TxFinalizationVerifier');
 const Attacker = artifacts.require('FallbackFunctionFailAttacker');
 
 const {
@@ -18,7 +17,7 @@ const { expect } = require('chai');
 
 const { buildUtxoPos } = require('../../../../helpers/positions.js');
 const {
-    EMPTY_BYTES_32, PROTOCOL, VAULT_ID, TX_TYPE, SAFE_GAS_STIPEND,
+    PROTOCOL, VAULT_ID, TX_TYPE, SAFE_GAS_STIPEND,
 } = require('../../../../helpers/constants.js');
 
 contract('PaymentStandardExitRouter', ([_, alice]) => {
@@ -52,7 +51,6 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
             await this.framework.registerVault(VAULT_ID.ERC20, erc20Vault.address);
 
             const spendingConditionRegistry = await SpendingConditionRegistry.new();
-            const txFinalizationVerifier = await TxFinalizationVerifier.new();
             const stateTransitionVerifier = await StateTransitionVerifierMock.new();
 
             const exitGameArgs = [
@@ -61,7 +59,6 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
                 VAULT_ID.ERC20,
                 spendingConditionRegistry.address,
                 stateTransitionVerifier.address,
-                txFinalizationVerifier.address,
                 TX_TYPE.PAYMENT,
                 SAFE_GAS_STIPEND,
             ];

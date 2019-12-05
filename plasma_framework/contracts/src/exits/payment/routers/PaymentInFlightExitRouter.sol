@@ -13,7 +13,6 @@ import "../controllers/PaymentDeleteInFlightExit.sol";
 import "../controllers/PaymentProcessInFlightExit.sol";
 import "../../registries/SpendingConditionRegistry.sol";
 import "../../interfaces/IStateTransitionVerifier.sol";
-import "../../interfaces/ITxFinalizationVerifier.sol";
 import "../../utils/BondSize.sol";
 import "../../../utils/FailFastReentrancyGuard.sol";
 import "../../../utils/OnlyFromAddress.sol";
@@ -143,7 +142,6 @@ contract PaymentInFlightExitRouter is
             args.framework,
             args.spendingConditionRegistry,
             args.stateTransitionVerifier,
-            args.txFinalizationVerifier,
             args.supportTxType
         );
 
@@ -157,21 +155,18 @@ contract PaymentInFlightExitRouter is
         challengeCanonicityController = PaymentChallengeIFENotCanonical.buildController(
             args.framework,
             args.spendingConditionRegistry,
-            args.txFinalizationVerifier,
             args.supportTxType
         );
 
         challengeInputSpentController = PaymentChallengeIFEInputSpent.buildController(
             args.framework,
             args.spendingConditionRegistry,
-            args.txFinalizationVerifier,
             args.safeGasStipend
         );
 
         challengeOutputSpentController = PaymentChallengeIFEOutputSpent.Controller(
             args.framework,
             args.spendingConditionRegistry,
-            args.txFinalizationVerifier,
             args.safeGasStipend
         );
 

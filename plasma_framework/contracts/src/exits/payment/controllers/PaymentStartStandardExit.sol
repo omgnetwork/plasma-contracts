@@ -3,11 +3,10 @@ pragma experimental ABIEncoderV2;
 
 import "../PaymentExitDataModel.sol";
 import "../routers/PaymentStandardExitRouterArgs.sol";
-import "../../interfaces/ITxFinalizationVerifier.sol";
-import "../../models/TxFinalizationModel.sol";
 import "../../utils/ExitableTimestamp.sol";
 import "../../utils/ExitId.sol";
 import "../../utils/OutputId.sol";
+import "../../utils/MoreVpFinalization.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
 import "../../../transactions/outputs/PaymentOutputModel.sol";
 import "../../../utils/IsDeposit.sol";
@@ -26,7 +25,6 @@ library PaymentStartStandardExit {
         PlasmaFramework framework;
         IsDeposit.Predicate isDeposit;
         ExitableTimestamp.Calculator exitableTimestampCalculator;
-        ITxFinalizationVerifier txFinalizationVerifier;
         uint256 ethVaultId;
         uint256 erc20VaultId;
         uint256 supportedTxType;
@@ -45,7 +43,6 @@ library PaymentStartStandardExit {
         bool isTxDeposit;
         uint256 txBlockTimeStamp;
         bytes32 outputId;
-        TxFinalizationModel.Data finalizationData;
     }
 
     event ExitStarted(
@@ -60,7 +57,6 @@ library PaymentStartStandardExit {
     function buildController(
         IExitProcessor exitProcessor,
         PlasmaFramework framework,
-        ITxFinalizationVerifier txFinalizationVerifier,
         uint256 ethVaultId,
         uint256 erc20VaultId,
         uint256 supportedTxType
@@ -74,7 +70,6 @@ library PaymentStartStandardExit {
             framework: framework,
             isDeposit: IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL()),
             exitableTimestampCalculator: ExitableTimestamp.Calculator(framework.minExitPeriod()),
-            txFinalizationVerifier: txFinalizationVerifier,
             ethVaultId: ethVaultId,
             erc20VaultId: erc20VaultId,
             supportedTxType: supportedTxType
@@ -118,13 +113,6 @@ library PaymentStartStandardExit {
         uint160 exitId = ExitId.getStandardExitId(isTxDeposit, args.rlpOutputTx, utxoPos);
         (, uint256 blockTimestamp) = controller.framework.blocks(utxoPos.blockNum());
 
-        TxFinalizationModel.Data memory finalizationData = TxFinalizationModel.moreVpData(
-            controller.framework,
-            args.rlpOutputTx,
-            utxoPos.txPos(),
-            args.outputTxInclusionProof
-        );
-
         bytes32 outputId = isTxDeposit
             ? OutputId.computeDepositOutputId(args.rlpOutputTx, utxoPos.outputIndex(), utxoPos.value)
             : OutputId.computeNormalOutputId(args.rlpOutputTx, utxoPos.outputIndex());
@@ -138,8 +126,7 @@ library PaymentStartStandardExit {
             exitId: exitId,
             isTxDeposit: isTxDeposit,
             txBlockTimeStamp: blockTimestamp,
-            outputId: outputId,
-            finalizationData: finalizationData
+            outputId: outputId
         });
     }
 
@@ -156,11 +143,24 @@ library PaymentStartStandardExit {
 
         require(data.output.owner() == msg.sender, "Only output owner can start an exit");
 
-        require(data.controller.txFinalizationVerifier.isStandardFinalized(data.finalizationData), "The transaction must be standard finalized");
+        require(isStandardFinalized(data), "The transaction must be standard finalized");
         PaymentExitDataModel.StandardExit memory exit = exitMap.exits[data.exitId];
         require(exit.amount == 0, "Exit has already started");
 
         require(self.framework.isOutputSpent(data.outputId) == false, "Output is already spent");
+    }
+
+    function isStandardFinalized(StartStandardExitData memory data)
+        private
+        view
+        returns (bool)
+    {
+        return MoreVpFinalization.isStandardFinalized(
+            data.controller.framework,
+            data.args.rlpOutputTx,
+            data.utxoPos.txPos(),
+            data.args.outputTxInclusionProof
+        );
     }
 
     function saveStandardExitData(

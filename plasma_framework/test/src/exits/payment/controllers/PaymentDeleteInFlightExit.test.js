@@ -12,7 +12,6 @@ const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const StateTransitionVerifierMock = artifacts.require('StateTransitionVerifierMock');
 const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
-const TxFinalizationVerifier = artifacts.require('TxFinalizationVerifier');
 
 const {
     BN, constants, expectEvent, expectRevert, time,
@@ -25,7 +24,7 @@ const {
     PROTOCOL, TX_TYPE, VAULT_ID, SAFE_GAS_STIPEND,
 } = require('../../../../helpers/constants.js');
 
-contract('PaymentInFlightExitRouter', ([_, bondOwner, inputOwner, outputOwner]) => {
+contract('PaymentDeleteInFlightExit', ([_, bondOwner, inputOwner, outputOwner]) => {
     const ETH = constants.ZERO_ADDRESS;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week in seconds
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
@@ -60,8 +59,6 @@ contract('PaymentInFlightExitRouter', ([_, bondOwner, inputOwner, outputOwner]) 
         this.exitIdHelper = await ExitIdWrapper.new();
         this.stateTransitionVerifier = await StateTransitionVerifierMock.new();
         await this.stateTransitionVerifier.mockResult(true);
-
-        this.txFinalizationVerifier = await TxFinalizationVerifier.new();
     });
 
     beforeEach(async () => {
@@ -83,7 +80,6 @@ contract('PaymentInFlightExitRouter', ([_, bondOwner, inputOwner, outputOwner]) 
             VAULT_ID.ERC20,
             spendingConditionRegistry.address,
             this.stateTransitionVerifier.address,
-            this.txFinalizationVerifier.address,
             PAYMENT_TX_TYPE,
             SAFE_GAS_STIPEND,
         ];

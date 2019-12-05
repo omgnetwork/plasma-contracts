@@ -5,10 +5,9 @@ import "../PaymentExitDataModel.sol";
 import "../PaymentInFlightExitModelUtils.sol";
 import "../routers/PaymentInFlightExitRouterArgs.sol";
 import "../../interfaces/ISpendingCondition.sol";
-import "../../interfaces/ITxFinalizationVerifier.sol";
-import "../../models/TxFinalizationModel.sol";
 import "../../registries/SpendingConditionRegistry.sol";
 import "../../utils/ExitId.sol";
+import "../../utils/MoreVpFinalization.sol";
 import "../../../utils/Merkle.sol";
 import "../../../utils/SafeEthTransfer.sol";
 import "../../../utils/UtxoPosLib.sol";
@@ -23,7 +22,6 @@ library PaymentChallengeIFEOutputSpent {
     struct Controller {
         PlasmaFramework framework;
         SpendingConditionRegistry spendingConditionRegistry;
-        ITxFinalizationVerifier txFinalizationVerifier;
         uint256 safeGasStipend;
     }
 
@@ -59,6 +57,7 @@ library PaymentChallengeIFEOutputSpent {
         );
 
         verifyInFlightTransactionStandardFinalized(controller, args);
+        verifyChallengingTransactionProtocolFinalized(controller, args);
         verifyChallengingTransactionSpendsOutput(controller, args);
 
         ife.clearOutputPiggybacked(outputIndex);
@@ -77,14 +76,31 @@ library PaymentChallengeIFEOutputSpent {
         view
     {
         UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(args.outputUtxoPos);
-        TxFinalizationModel.Data memory finalizationData = TxFinalizationModel.moreVpData(
+        bool isStandardFinalized = MoreVpFinalization.isStandardFinalized(
             controller.framework,
             args.inFlightTx,
             utxoPos.txPos(),
             args.inFlightTxInclusionProof
         );
 
-        require(controller.txFinalizationVerifier.isStandardFinalized(finalizationData), "In-flight transaction not finalized");
+        require(isStandardFinalized, "In-flight transaction must be standard finalized (included in Plasma) to be able to spend");
+    }
+
+    function verifyChallengingTransactionProtocolFinalized(
+        Controller memory controller,
+        PaymentInFlightExitRouterArgs.ChallengeOutputSpent memory args
+    )
+        private
+        view
+    {
+        bool isProtocolFinalized = MoreVpFinalization.isProtocolFinalized(
+            controller.framework,
+            args.challengingTx
+        );
+
+        // MoreVP protocol finalization would only return false only when tx does not exists.
+        // Should fail already in early stages (eg. decode)
+        assert(isProtocolFinalized);
     }
 
     function verifyChallengingTransactionSpendsOutput(
@@ -110,8 +126,7 @@ library PaymentChallengeIFEOutputSpent {
             utxoPos.txPos().value,
             args.challengingTx,
             args.challengingTxInputIndex,
-            args.challengingTxWitness,
-            args.spendingConditionOptionalArgs
+            args.challengingTxWitness
         );
 
         require(isSpentBySpendingTx, "Challenging transaction does not spend the output");

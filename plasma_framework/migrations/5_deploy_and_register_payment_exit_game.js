@@ -15,7 +15,6 @@ const PaymentProcessStandardExit = artifacts.require('PaymentProcessStandardExit
 const PaymentProcessInFlightExit = artifacts.require('PaymentProcessInFlightExit');
 const PlasmaFramework = artifacts.require('PlasmaFramework');
 const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry');
-const TxFinalizationVerifier = artifacts.require('TxFinalizationVerifier');
 
 const config = require('../config.js');
 
@@ -80,9 +79,6 @@ module.exports = async (
     await deployer.deploy(PaymentTransactionStateTransitionVerifier);
     const stateVerifier = await PaymentTransactionStateTransitionVerifier.deployed();
 
-    await deployer.deploy(TxFinalizationVerifier);
-    const txFinalizationVerifier = await TxFinalizationVerifier.deployed();
-
     const plasmaFramework = await PlasmaFramework.deployed();
 
     const paymentExitGameArgs = [
@@ -91,7 +87,6 @@ module.exports = async (
         config.registerKeys.vaultId.erc20,
         spendingConditionRegistry.address,
         stateVerifier.address,
-        txFinalizationVerifier.address,
         PAYMENT_TX_TYPE,
         config.frameworks.safeGasStipend.v1,
     ];
