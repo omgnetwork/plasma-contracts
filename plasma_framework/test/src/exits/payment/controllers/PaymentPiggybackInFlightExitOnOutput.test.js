@@ -131,13 +131,13 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
                 }, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData],
                 outputs: [{
                     outputId: web3.utils.sha3('dummy output id'),
-                    exitTarget: constants.ZERO_ADDRESS, // would not be set during start IFE
+                    exitTarget: outputOwner,
                     token: ETH,
                     amount: outputAmount1,
                     piggybackBondSize: 0,
                 }, {
                     outputId: web3.utils.sha3('dummy output id'),
-                    exitTarget: constants.ZERO_ADDRESS, // would not be set during start IFE
+                    exitTarget: outputOwner,
                     token: ETH,
                     amount: outputAmount2,
                     piggybackBondSize: 0,
