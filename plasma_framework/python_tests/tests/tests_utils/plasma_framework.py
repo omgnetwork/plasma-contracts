@@ -79,6 +79,7 @@ class PlasmaFramework:
             )
 
         _register_spending_condition("PaymentOutputToPaymentTxCondition", TxOutputTypes.PAYMENT, TxTypes.PAYMENT)
+        self.spending_condition_registry.renounceOwnership(**{'from': maintainer.address})
 
     def _setup_state_verifiers(self, get_contract, maintainer):
         self.payment_state_verifier = get_contract('PaymentTransactionStateTransitionVerifier', sender=maintainer)
