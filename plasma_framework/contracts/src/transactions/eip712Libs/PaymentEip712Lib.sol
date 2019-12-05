@@ -16,9 +16,6 @@ import "../../utils/UtxoPosLib.sol";
 library PaymentEip712Lib {
     using UtxoPosLib for UtxoPosLib.UtxoPos;
 
-    uint8 constant public MAX_INPUT_NUM = 4;
-    uint8 constant public MAX_OUTPUT_NUM = 4;
-
     bytes2 constant internal EIP191_PREFIX = "\x19\x01";
 
     bytes32 constant internal EIP712_DOMAIN_HASH = keccak256(
@@ -78,13 +75,13 @@ library PaymentEip712Lib {
         returns (bytes32)
     {
         // Pad empty value to input array
-        bytes32[] memory inputs = new bytes32[](MAX_INPUT_NUM);
+        bytes32[] memory inputs = new bytes32[](PaymentTransactionModel.MAX_INPUT_NUM());
         for (uint i = 0; i < _tx.inputs.length; i++) {
             inputs[i] = _tx.inputs[i];
         }
 
         // Pad empty value to output array
-        PaymentOutputModel.Output[] memory outputs = new PaymentOutputModel.Output[](MAX_OUTPUT_NUM);
+        PaymentOutputModel.Output[] memory outputs = new PaymentOutputModel.Output[](PaymentTransactionModel.MAX_OUTPUT_NUM());
         for (uint i = 0; i < _tx.outputs.length; i++) {
             outputs[i] = _tx.outputs[i];
         }

@@ -26,8 +26,6 @@ library PaymentStartInFlightExit {
     using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
     using PaymentOutputModel for PaymentOutputModel.Output;
 
-    uint256 constant public MAX_INPUT_NUM = 4;
-
     /**
      * @dev supportedTxType enables code reuse in different Payment Tx versions
      */
@@ -138,7 +136,7 @@ library PaymentStartInFlightExit {
     }
 
     function decodeInputTxsPositions(uint256[] memory inputUtxosPos) private pure returns (UtxoPosLib.UtxoPos[] memory) {
-        require(inputUtxosPos.length <= MAX_INPUT_NUM, "Too many transactions provided");
+        require(inputUtxosPos.length <= PaymentTransactionModel.MAX_INPUT_NUM(), "Too many transactions provided");
 
         UtxoPosLib.UtxoPos[] memory utxosPos = new UtxoPosLib.UtxoPos[](inputUtxosPos.length);
         for (uint i = 0; i < inputUtxosPos.length; i++) {

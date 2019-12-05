@@ -12,10 +12,20 @@ library PaymentTransactionModel {
     using RLPReader for RLPReader.RLPItem;
     using PaymentOutputModel for PaymentOutputModel.Output;
 
-    uint8 constant public MAX_INPUT_NUM = 4;
-    uint8 constant public MAX_OUTPUT_NUM = 4;
+    uint8 constant private _MAX_INPUT_NUM = 4;
+    uint8 constant private _MAX_OUTPUT_NUM = 4;
 
     uint8 constant private ENCODED_LENGTH = 4;
+
+    // solhint-disable-next-line func-name-mixedcase
+    function MAX_INPUT_NUM() internal pure returns (uint8) {
+        return _MAX_INPUT_NUM;
+    }
+
+    // solhint-disable-next-line func-name-mixedcase
+    function MAX_OUTPUT_NUM() internal pure returns (uint8) {
+        return _MAX_OUTPUT_NUM;
+    }
 
     struct Transaction {
         uint256 txType;
@@ -45,10 +55,10 @@ library PaymentTransactionModel {
         require(rlpTx.length == ENCODED_LENGTH, "Invalid encoding of transaction");
 
         RLPReader.RLPItem[] memory rlpInputs = rlpTx[1].toList();
-        require(rlpInputs.length <= MAX_INPUT_NUM, "Transaction inputs num exceeds limit");
+        require(rlpInputs.length <= _MAX_INPUT_NUM, "Transaction inputs num exceeds limit");
 
         RLPReader.RLPItem[] memory rlpOutputs = rlpTx[2].toList();
-        require(rlpOutputs.length <= MAX_OUTPUT_NUM, "Transaction outputs num exceeds limit");
+        require(rlpOutputs.length <= _MAX_OUTPUT_NUM, "Transaction outputs num exceeds limit");
 
         uint txType = rlpTx[0].toUint();
         require(txType > 0, "Transaction type must not be 0");
