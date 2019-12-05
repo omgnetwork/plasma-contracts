@@ -109,7 +109,6 @@ library PaymentChallengeIFENotCanonical {
         );
         require(address(condition) != address(0), "Spending condition contract not found");
 
-        // stub optional args with empty bytes
         bool isSpentByCompetingTx = condition.verify(
             args.inputTx,
             inputUtxoPos.outputIndex(),
