@@ -10,7 +10,7 @@ const config = require('../../config.js');
 
 const {
     PaymentTransactionOutput, PaymentTransaction, FeeTransaction,
-    FeeBlockNumOutput, FungibleTransactionOutput,
+    FeeBlockNumOutput, FeeClaimOutput,
 } = require('../helpers/transaction.js');
 const { sign } = require('../helpers/sign.js');
 const { hashTx } = require('../helpers/paymentEip712.js');
@@ -71,7 +71,7 @@ contract('PlasmaFramework - Fee Claim', ([_, _maintainer, authority, richFather]
             beforeEach(async () => {
                 const nextBlockNum = (await this.framework.nextChildBlock()).toNumber();
                 const feeOutputs = [
-                    new FungibleTransactionOutput(FEE_OUTPUT_TYPE, FEE_AMOUNT, operatorFeeAddress, ETH),
+                    new FeeClaimOutput(FEE_OUTPUT_TYPE, FEE_AMOUNT, operatorFeeAddress, ETH),
                     new FeeBlockNumOutput(FEE_NONCE_OUTPUT_TYPE, nextBlockNum),
                 ];
 
@@ -95,7 +95,7 @@ contract('PlasmaFramework - Fee Claim', ([_, _maintainer, authority, richFather]
                 beforeEach(async () => {
                     const nextBlockNum = (await this.framework.nextChildBlock()).toNumber();
                     const feeOutputs = [
-                        new FungibleTransactionOutput(FEE_OUTPUT_TYPE, FEE_AMOUNT, operatorFeeAddress, ETH),
+                        new FeeClaimOutput(FEE_OUTPUT_TYPE, FEE_AMOUNT, operatorFeeAddress, ETH),
                         new FeeBlockNumOutput(FEE_NONCE_OUTPUT_TYPE, nextBlockNum),
                     ];
 

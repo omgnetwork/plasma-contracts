@@ -84,6 +84,8 @@ class PlasmaDepositTransaction extends PaymentTransaction {
     }
 }
 
+class FeeClaimOutput extends FungibleTransactionOutput {}
+
 class FeeBlockNumOutput {
     constructor(type, blockNum) {
         this.outputType = type;
@@ -117,5 +119,6 @@ module.exports = {
     GenericTransaction,
     FungibleTransactionOutput,
     FeeTransaction,
+    FeeClaimOutput,
     FeeBlockNumOutput,
 };

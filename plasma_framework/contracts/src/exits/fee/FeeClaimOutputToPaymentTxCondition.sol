@@ -8,18 +8,15 @@ import "../../framework/PlasmaFramework.sol";
 import "../../transactions/PaymentTransactionModel.sol";
 import "../../transactions/GenericTransaction.sol";
 import "../../transactions/eip712Libs/PaymentEip712Lib.sol";
-import "../../utils/IsDeposit.sol";
 import "../../utils/UtxoPosLib.sol";
 
 contract FeeClaimOutputToPaymentTxCondition is ISpendingCondition {
     using PaymentEip712Lib for PaymentEip712Lib.Constants;
     using UtxoPosLib for UtxoPosLib.UtxoPos;
-    using IsDeposit for IsDeposit.Predicate;
 
     uint256 public feeTxType;
     uint256 public feeClaimOutputType;
     uint256 public paymentTxType;
-    IsDeposit.Predicate public isDeposit;
     PaymentEip712Lib.Constants internal eip712;
 
     constructor(
@@ -34,7 +31,6 @@ contract FeeClaimOutputToPaymentTxCondition is ISpendingCondition {
         feeTxType = _feeTxType;
         feeClaimOutputType = _feeClaimOutputType;
         paymentTxType = _paymentTxType;
-        isDeposit = IsDeposit.Predicate(_framework.CHILD_BLOCK_INTERVAL());
     }
 
     /**
@@ -79,7 +75,7 @@ contract FeeClaimOutputToPaymentTxCondition is ISpendingCondition {
         address owner = address(feeClaimOutput.outputGuard);
         address signer = ECDSA.recover(eip712.hashTx(paymentTx), signature);
         require(signer != address(0), "Failed to recover the signer from the signature");
-        require(owner == signer, "Tx in not signed correctly");
+        require(owner == signer, "Tx is not signed correctly");
 
         return true;
     }

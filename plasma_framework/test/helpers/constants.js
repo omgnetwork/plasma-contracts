@@ -5,10 +5,14 @@ const PROTOCOL = {
 
 const TX_TYPE = {
     PAYMENT: 1,
+    PAYMENT_V2: 2,
+    FEE: 3,
 };
 
 const OUTPUT_TYPE = {
     PAYMENT: 1,
+    FEE_CLAIM: 2,
+    FEE_BLOCK_NUM: 3,
 };
 
 const EMPTY_BYTES = '0x';
