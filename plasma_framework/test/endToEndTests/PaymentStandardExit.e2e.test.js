@@ -141,7 +141,6 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
                     const args = {
                         utxoPos: this.depositUtxoPos,
                         rlpOutputTx: this.depositTx,
-                        outputType: OUTPUT_TYPE_PAYMENT,
                         outputTxInclusionProof: this.merkleProofForDepositTx,
                     };
                     await this.exitGame.startStandardExit(
@@ -217,7 +216,6 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
                     const args = {
                         utxoPos: this.transferUtxoPos,
                         rlpOutputTx: this.transferTx,
-                        outputType: OUTPUT_TYPE_PAYMENT,
                         outputTxInclusionProof: this.merkleProofForTransferTx,
                     };
 
@@ -267,7 +265,6 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
                     this.startStandardExitArgs = {
                         utxoPos: this.depositUtxoPos,
                         rlpOutputTx: this.depositTx,
-                        outputType: OUTPUT_TYPE_PAYMENT,
                         outputTxInclusionProof: this.merkleProofForDepositTx,
                     };
 
@@ -399,7 +396,6 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
                         const args = {
                             utxoPos: this.depositUtxoPos,
                             rlpOutputTx: this.depositTx,
-                            outputType: OUTPUT_TYPE_PAYMENT,
                             outputTxInclusionProof: this.merkleProofForDepositTx,
                         };
 

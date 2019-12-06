@@ -31,10 +31,11 @@ class FungibleTransactionOutput {
 class PaymentTransactionOutput extends FungibleTransactionOutput {}
 
 class GenericTransaction {
-    constructor(transactionType, inputs, outputs, metaData = EMPTY_BYTES_32) {
+    constructor(transactionType, inputs, outputs, txData = 0, metaData = EMPTY_BYTES_32) {
         this.transactionType = transactionType;
         this.inputs = inputs;
         this.outputs = outputs;
+        this.txData = txData;
         this.metaData = metaData;
     }
 
@@ -43,7 +44,7 @@ class GenericTransaction {
 
         tx.push(GenericTransaction.formatInputsForRlpEncoding(this.inputs));
         tx.push(GenericTransaction.formatOutputsForRlpEncoding(this.outputs));
-        tx.push(0); // txData must be 0
+        tx.push(GenericTransaction.formatTxDataRlpEncoding(this.txData));
         tx.push(this.metaData);
 
         return rlp.encode(tx);
@@ -63,6 +64,13 @@ class GenericTransaction {
         return items.map(item => item.formatForRlpEncoding());
     }
 
+    static formatTxDataRlpEncoding(item) {
+        if (typeof item === 'string') {
+            return item;
+        }
+        return item.formatForRlpEncoding();
+    }
+
     isDeposit() {
         return this.inputs === [];
     }
@@ -76,10 +84,38 @@ class PlasmaDepositTransaction extends PaymentTransaction {
     }
 }
 
+class FeeBlockNumOutput {
+    constructor(type, blockNum) {
+        this.outputType = type;
+        this.blockNum = blockNum;
+    }
+
+    formatForRlpEncoding() {
+        return [this.outputType, this.nonce];
+    }
+
+    rlpEncoded() {
+        return rlp.encode(this.formatForRlpEncoding());
+    }
+}
+
+
+/**
+ * Fee Transaction is not really following the full rule of GenericTransaction.
+ * It diverges in the output data structure by having two output data structures:
+ * 1. GenericTransactionOutput
+ * 2. FeeBlockNumOutput
+ *
+ * However, high level wise it still follows the order of (txType, inputs, outputs, metaData)
+ */
+class FeeTransaction extends GenericTransaction {}
+
 module.exports = {
     PaymentTransaction,
     PlasmaDepositTransaction,
     PaymentTransactionOutput,
     GenericTransaction,
     FungibleTransactionOutput,
+    FeeTransaction,
+    FeeBlockNumOutput,
 };
