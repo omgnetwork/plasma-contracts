@@ -22,9 +22,11 @@ const development = {
         txTypes: {
             payment: 1,
             paymentV2: 2,
+            fee: 3,
         },
         outputTypes: {
             payment: 1,
+            feeClaim: 2,
         },
         vaultId: {
             eth: 1,
