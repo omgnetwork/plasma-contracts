@@ -1,7 +1,6 @@
 const { constants } = require('openzeppelin-test-helpers');
 const { UtxoPos } = require('./positions.js');
 
-const EMPTY_BYTES32 = '0x0000000000000000000000000000000000000000000000000000000000000000';
 const EMPTY_BYTES20 = '0x0000000000000000000000000000000000000000';
 
 const EIP191_PREFIX = '0x1901';
@@ -67,8 +66,8 @@ const hashTx = (tx, verifyingContract) => {
         outputs.length > 1 ? outputs[1] : HASH_EMPTY_OUTPUT,
         outputs.length > 2 ? outputs[2] : HASH_EMPTY_OUTPUT,
         outputs.length > 3 ? outputs[3] : HASH_EMPTY_OUTPUT,
-        tx.txData || 0,
-        tx.metaData || EMPTY_BYTES32,
+        tx.txData,
+        tx.metaData,
     ]));
 
     return web3.utils.soliditySha3(
