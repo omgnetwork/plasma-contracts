@@ -43,7 +43,7 @@ library GenericTransaction {
     function decode(bytes memory transaction) internal pure returns (Transaction memory) {
         RLPReader.RLPItem[] memory rlpTx = transaction.toRlpItem().toList();
         require(rlpTx.length == TX_NUM_ITEMS, "Invalid encoding of transaction");
-        uint txType = rlpTx[0].toUint();
+        uint256 txType = rlpTx[0].toUint();
         require(txType > 0, "Transaction type must not be 0");
 
         return Transaction({
