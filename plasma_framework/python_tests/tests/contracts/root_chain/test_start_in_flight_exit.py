@@ -248,7 +248,7 @@ def test_start_in_flight_exit_cancelling_standard_exits_from_inputs(testlang, nu
         assert testlang.get_standard_exit(deposit_ids[i]) == [owners[i].address, amount, deposit_ids[i], False]
 
 
-@pytest.mark.skip("TODO: remove test when such scenarion is covered by a test that processes exits")
+@pytest.mark.skip("TODO: remove test when such scenario is covered by a test that processes exits")
 @pytest.mark.parametrize("num_inputs", [1, 2, 3, 4])
 def test_start_in_flight_exit_with_finalized_standard_exits_from_inputs_flags_exit(testlang, num_inputs):
     # exit cross-spend test, case 2
