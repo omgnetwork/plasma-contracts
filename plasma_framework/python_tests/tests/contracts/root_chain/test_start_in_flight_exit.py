@@ -2,6 +2,7 @@ import pytest
 from eth_tester.exceptions import TransactionFailed
 from plasma_core.constants import NULL_ADDRESS, NULL_ADDRESS_HEX, MIN_EXIT_PERIOD
 
+ETH_ADDRESS_HEX = NULL_ADDRESS_HEX
 
 @pytest.mark.parametrize("num_inputs", [1, 2, 3, 4])
 def test_start_in_flight_exit_should_succeed(testlang, num_inputs):
@@ -27,7 +28,7 @@ def test_start_in_flight_exit_should_succeed(testlang, num_inputs):
     for i in range(0, num_inputs):
         input_info = in_flight_exit.get_input(i)
         assert input_info.exit_target == owners[i].address
-        assert input_info.token == NULL_ADDRESS_HEX
+        assert input_info.token == ETH_ADDRESS_HEX
         assert input_info.amount == amount
 
     # Remaining inputs are still unset
@@ -93,7 +94,7 @@ def test_start_in_flight_exit_with_erc20_token_and_eth_should_succeed(testlang, 
     # Inputs are correctly set
     input_info = in_flight_exit.get_input(0)
     assert input_info.exit_target == owner.address
-    assert input_info.token == NULL_ADDRESS_HEX
+    assert input_info.token == ETH_ADDRESS_HEX
     assert input_info.amount == 100
 
     input_info = in_flight_exit.get_input(1)
