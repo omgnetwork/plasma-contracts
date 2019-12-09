@@ -41,7 +41,7 @@ contract('Erc20Vault', ([_, erc20Minter, authority, maintainer, alice]) => {
 
         this.erc20 = await ERC20Mintable.new({ from: erc20Minter });
         await this.erc20.mint(erc20Minter, INITIAL_SUPPLY, { from: erc20Minter });
-        await this.erc20.transfer(alice, DEPOSIT_VALUE, { from: erc20Minter });
+        await this.erc20.transfer(alice, DEPOSIT_VALUE * 10, { from: erc20Minter });
     };
 
     const setupAllContracts = async () => {
@@ -111,8 +111,31 @@ contract('Erc20Vault', ([_, erc20Minter, authority, maintainer, alice]) => {
                 expect(actualPostDepositBalance).to.be.bignumber.equal(expectedPostDepositBalance);
             });
 
+            it('should be able to deposit when approved balance is more than deposit value', async () => {
+                const preDepositBalance = await this.erc20.balanceOf(alice);
+
+                await this.erc20.approve(this.erc20Vault.address, DEPOSIT_VALUE + 1, { from: alice });
+                const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, this.erc20.address);
+                await this.erc20Vault.deposit(deposit, { from: alice });
+
+                const actualPostDepositBalance = new BN(await this.erc20.balanceOf(alice));
+                const expectedPostDepositBalance = (new BN(preDepositBalance)).sub(new BN(DEPOSIT_VALUE));
+
+                expect(actualPostDepositBalance).to.be.bignumber.equal(expectedPostDepositBalance);
+            });
+
             it('should not store a deposit when the tokens have not been approved', async () => {
                 const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, DEPOSIT_VALUE, alice, this.erc20.address);
+
+                await expectRevert(
+                    this.erc20Vault.deposit(deposit, { from: alice }),
+                    'Tokens have not been approved',
+                );
+            });
+
+            it('should not store a deposit when the tokens have not been approved enough value', async () => {
+                const notEnoughValue = DEPOSIT_VALUE - 1;
+                const deposit = Testlang.deposit(OUTPUT_TYPE.PAYMENT, notEnoughValue, alice, this.erc20.address);
 
                 await expectRevert(
                     this.erc20Vault.deposit(deposit, { from: alice }),

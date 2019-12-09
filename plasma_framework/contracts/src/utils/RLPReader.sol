@@ -8,7 +8,7 @@
  *      - Moved utility functions necessary to run some of the tests to the RLPMock.sol
 */
 
-pragma solidity ^0.5.0;
+pragma solidity 0.5.11;
 
 library RLPReader {
     uint8 constant internal STRING_SHORT_START = 0x80;

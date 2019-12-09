@@ -81,17 +81,6 @@ module.exports = async (
 
     const plasmaFramework = await PlasmaFramework.deployed();
 
-    const paymentExitGameArgs = [
-        plasmaFramework.address,
-        config.registerKeys.vaultId.eth,
-        config.registerKeys.vaultId.erc20,
-        spendingConditionRegistry.address,
-        stateVerifier.address,
-        PAYMENT_TX_TYPE,
-        config.frameworks.safeGasStipend.v1,
-    ];
-    const paymentExitGame = await deployer.deploy(PaymentExitGame, paymentExitGameArgs);
-
     // handle spending condition
     await deployer.deploy(
         PaymentOutputToPaymentTxCondition,
@@ -119,6 +108,17 @@ module.exports = async (
         PAYMENT_OUTPUT_TYPE, PAYMENT_V2_TX_TYPE, paymentToPaymentV2Condition.address,
     );
     await spendingConditionRegistry.renounceOwnership();
+
+    const paymentExitGameArgs = [
+        plasmaFramework.address,
+        config.registerKeys.vaultId.eth,
+        config.registerKeys.vaultId.erc20,
+        spendingConditionRegistry.address,
+        stateVerifier.address,
+        PAYMENT_TX_TYPE,
+        config.frameworks.safeGasStipend.v1,
+    ];
+    const paymentExitGame = await deployer.deploy(PaymentExitGame, paymentExitGameArgs);
 
     // register the exit game to framework
     await plasmaFramework.registerExitGame(

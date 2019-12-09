@@ -4,12 +4,10 @@ pragma experimental ABIEncoderV2;
 import "../PaymentExitDataModel.sol";
 import "../PaymentInFlightExitModelUtils.sol";
 import "../../../utils/SafeEthTransfer.sol";
+import "../../../transactions/PaymentTransactionModel.sol";
 
 library PaymentDeleteInFlightExit {
     using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
-
-    uint8 constant public MAX_INPUT_NUM = 4;
-    uint8 constant public MAX_OUTPUT_NUM = 4;
 
     struct Controller {
         uint256 minExitPeriod;
@@ -46,13 +44,13 @@ library PaymentDeleteInFlightExit {
         pure
         returns (bool)
     {
-        for (uint16 i = 0; i < MAX_INPUT_NUM; i++) {
+        for (uint16 i = 0; i < PaymentTransactionModel.MAX_INPUT_NUM(); i++) {
             if (ife.isInputPiggybacked(i)) {
                 return true;
             }
         }
 
-        for (uint16 i = 0; i < MAX_OUTPUT_NUM; i++) {
+        for (uint16 i = 0; i < PaymentTransactionModel.MAX_OUTPUT_NUM(); i++) {
             if (ife.isOutputPiggybacked(i)) {
                 return true;
             }

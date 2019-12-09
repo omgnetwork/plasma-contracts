@@ -1,6 +1,6 @@
 pragma solidity 0.5.11;
 
-import "../framework/PlasmaFramework.sol";
+import "../framework/ExitGameController.sol";
 
 /**
  * @notice Reentrancy guard that fails immediately when a reentrace occurs
@@ -11,9 +11,9 @@ contract FailFastReentrancyGuard {
     /**
      * @dev Prevents reentrant calls by using a mutex.
      */
-    modifier nonReentrant(PlasmaFramework framework) {
-        framework.activateNonReentrant();
+    modifier nonReentrant(ExitGameController exitGameController) {
+        exitGameController.activateNonReentrant();
         _;
-        framework.deactivateNonReentrant();
+        exitGameController.deactivateNonReentrant();
     }
 }
