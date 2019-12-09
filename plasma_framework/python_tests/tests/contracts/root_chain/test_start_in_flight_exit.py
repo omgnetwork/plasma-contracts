@@ -1,9 +1,8 @@
 import pytest
-from eth_utils import to_canonical_address
 from eth_tester.exceptions import TransactionFailed
 from plasma_core.constants import NULL_ADDRESS, NULL_ADDRESS_HEX, MIN_EXIT_PERIOD
 
-pytestmark = pytest.mark.skip("WIP: moving tests to plasma framework")
+ETH_ADDRESS_HEX = NULL_ADDRESS_HEX
 
 
 @pytest.mark.parametrize("num_inputs", [1, 2, 3, 4])
@@ -29,14 +28,14 @@ def test_start_in_flight_exit_should_succeed(testlang, num_inputs):
     # Inputs are correctly set
     for i in range(0, num_inputs):
         input_info = in_flight_exit.get_input(i)
-        assert input_info.owner == to_canonical_address(owners[i].address)
-        assert input_info.token == NULL_ADDRESS
+        assert input_info.exit_target == owners[i].address
+        assert input_info.token == ETH_ADDRESS_HEX
         assert input_info.amount == amount
 
     # Remaining inputs are still unset
     for i in range(num_inputs, 4):
         input_info = in_flight_exit.get_input(i)
-        assert input_info.owner == NULL_ADDRESS
+        assert input_info.exit_target == NULL_ADDRESS_HEX
         assert input_info.amount == 0
 
 
@@ -63,14 +62,14 @@ def test_start_in_flight_exit_with_erc20_tokens_should_succeed(testlang, token, 
     # Inputs are correctly set
     for i in range(0, num_inputs):
         input_info = in_flight_exit.get_input(i)
-        assert input_info.owner == to_canonical_address(owners[i].address)
-        assert input_info.token == to_canonical_address(token.address)
+        assert input_info.exit_target == owners[i].address
+        assert input_info.token == token.address
         assert input_info.amount == amount
 
     # Remaining inputs are still unset
     for i in range(num_inputs, 4):
         input_info = in_flight_exit.get_input(i)
-        assert input_info.owner == NULL_ADDRESS
+        assert input_info.exit_target == NULL_ADDRESS_HEX
         assert input_info.amount == 0
 
 
@@ -95,19 +94,19 @@ def test_start_in_flight_exit_with_erc20_token_and_eth_should_succeed(testlang, 
 
     # Inputs are correctly set
     input_info = in_flight_exit.get_input(0)
-    assert input_info.owner == to_canonical_address(owner.address)
-    assert input_info.token == NULL_ADDRESS
+    assert input_info.exit_target == owner.address
+    assert input_info.token == ETH_ADDRESS_HEX
     assert input_info.amount == 100
 
     input_info = in_flight_exit.get_input(1)
-    assert input_info.owner == to_canonical_address(owner.address)
-    assert input_info.token == to_canonical_address(token.address)
+    assert input_info.exit_target == owner.address
+    assert input_info.token == token.address
     assert input_info.amount == 110
 
     # Remaining inputs are still unset
     for i in range(2, 4):
         input_info = in_flight_exit.get_input(i)
-        assert input_info.owner == NULL_ADDRESS
+        assert input_info.exit_target == NULL_ADDRESS_HEX
         assert input_info.amount == 0
 
 
@@ -167,12 +166,12 @@ def test_start_in_flight_exit_invalid_proof_should_fail(testlang):
     deposit_id = testlang.deposit(owner, amount)
     spend_id = testlang.spend_utxo([deposit_id], [owner])
 
-    proofs = b''
-    (encoded_spend, encoded_inputs, _, signatures) = testlang.get_in_flight_exit_info(spend_id)
+    proofs = [b'']
+    (encoded_spend, encoded_inputs, input_pos, _, signatures) = testlang.get_in_flight_exit_info(spend_id)
     bond = testlang.root_chain.inFlightExitBond()
 
     with pytest.raises(TransactionFailed):
-        testlang.root_chain.startInFlightExit(encoded_spend, encoded_inputs, proofs, signatures, value=bond)
+        testlang.root_chain.startInFlightExit(encoded_spend, encoded_inputs, proofs, signatures, input_pos, value=bond)
 
 
 def test_start_in_flight_exit_twice_should_fail(testlang):
@@ -188,6 +187,7 @@ def test_start_in_flight_exit_twice_should_fail(testlang):
         testlang.start_in_flight_exit(spend_id)
 
 
+@pytest.mark.skip("Involves piggybacking")
 def test_start_finalized_in_flight_exit_once_more_should_fail(testlang):
     owner, amount = testlang.accounts[0], 100
     deposit_id = testlang.deposit(owner, amount)
@@ -218,6 +218,7 @@ def test_start_in_flight_exit_invalid_outputs_should_fail(testlang):
         testlang.start_in_flight_exit(spend_id)
 
 
+@pytest.mark.skip("TODO: remove test when such scenarion is covered by a test that processes exits")
 @pytest.mark.parametrize("num_inputs", [1, 2, 3, 4])
 def test_start_in_flight_exit_cancelling_standard_exits_from_inputs(testlang, num_inputs):
     # exit cross-spend test, case 1
@@ -235,7 +236,7 @@ def test_start_in_flight_exit_cancelling_standard_exits_from_inputs(testlang, nu
         testlang.start_standard_exit(deposit_ids[i], owners[i])
 
     for i in range(0, num_inputs):
-        assert testlang.get_standard_exit(deposit_ids[i]) == [owners[i].address, NULL_ADDRESS_HEX, 100]
+        assert testlang.get_standard_exit(deposit_ids[i]) == [owners[i].address, 100, deposit_ids[i], True]
 
     challenger = testlang.accounts[5]
     balance = testlang.get_balance(challenger)
@@ -246,9 +247,10 @@ def test_start_in_flight_exit_cancelling_standard_exits_from_inputs(testlang, nu
 
     # Standard exits are correctly challenged
     for i in range(0, num_inputs):
-        assert testlang.get_standard_exit(deposit_ids[i]) == [NULL_ADDRESS_HEX, NULL_ADDRESS_HEX, 0]
+        assert testlang.get_standard_exit(deposit_ids[i]) == [owners[i].address, amount, deposit_ids[i], False]
 
 
+@pytest.mark.skip("TODO: remove test when such scenario is covered by a test that processes exits")
 @pytest.mark.parametrize("num_inputs", [1, 2, 3, 4])
 def test_start_in_flight_exit_with_finalized_standard_exits_from_inputs_flags_exit(testlang, num_inputs):
     # exit cross-spend test, case 2
@@ -266,18 +268,18 @@ def test_start_in_flight_exit_with_finalized_standard_exits_from_inputs_flags_ex
         testlang.start_standard_exit(deposit_ids[i], owners[i])
 
     for i in range(0, num_inputs):
-        assert testlang.get_standard_exit(deposit_ids[i]) == [owners[i].address, NULL_ADDRESS_HEX, 100]
+        assert testlang.get_standard_exit(deposit_ids[i]) == [owners[i].address, amount, deposit_ids[i], True]
 
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
-    testlang.process_exits(NULL_ADDRESS, 0, 10)
+    testlang.process_exits(testlang.root_chain.eth_vault_id, NULL_ADDRESS, 0, 10)
 
     challenger = testlang.accounts[5]
     testlang.start_in_flight_exit(spend_id, sender=challenger)
     exit_id = testlang.get_in_flight_exit_id(spend_id)
-    [ife_start_timestamp, _, _, _, _] = testlang.root_chain.inFlightExits(exit_id)
+    is_canonical, *_ = testlang.root_chain.inFlightExits(exit_id)
 
-    # IFE is marked as SpentInput
-    assert testlang.root_chain.flagged(ife_start_timestamp)
+    # IFE is marked as non-canonical
+    assert not is_canonical
 
 
 def test_start_in_flight_exit_spending_the_same_input_twice_should_fail(testlang):
@@ -294,11 +296,10 @@ def test_start_in_flight_exit_spending_the_same_input_twice_should_fail(testlang
 
 
 def test_start_in_flight_exit_with_four_different_tokens_should_succeed(testlang, get_contract):
-
     owner, amount, tokens_no = testlang.accounts[0], 100, 4
 
-    tokens = [get_contract('MintableToken') for _ in range(tokens_no)]
-    deposits = [testlang.deposit_token(owner, tokens[i], amount)for i in range(tokens_no)]
+    tokens = [get_contract('ERC20Mintable') for _ in range(tokens_no)]
+    deposits = [testlang.deposit_token(owner, tokens[i], amount) for i in range(tokens_no)]
     outputs = [(owner.address, tokens[i].address, amount) for i in range(4)]
     spend_id = testlang.spend_utxo(deposits, [owner] * tokens_no, outputs)
 
@@ -307,6 +308,5 @@ def test_start_in_flight_exit_with_four_different_tokens_should_succeed(testlang
     in_flight_exit = testlang.get_in_flight_exit(spend_id)
 
     assert in_flight_exit.bond_owner == owner.address
-
 
 # TODO: add test_start_in_flight_exit_with_holes_in_inputs_should_fail
