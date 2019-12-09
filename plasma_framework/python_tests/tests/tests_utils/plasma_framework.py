@@ -174,14 +174,12 @@ class PlasmaFramework:
                               **kwargs):
         """ NOTICE: ALD takes more obligatory arguments (exiting_tx) in comparison to the RootChain contract """
 
-        # The following arguments are to be used in the future
-        spending_condition_optional_args = EMPTY_BYTES
-        challenge_tx_pos = 0
-        challenge_tx_inclusion_proof = EMPTY_BYTES
-
         witness = challenge_tx_sig
-        args = (standard_exit_id, exiting_tx, challenge_tx, input_index, witness, spending_condition_optional_args,
-                challenge_tx_pos, challenge_tx_inclusion_proof, challenge_tx_sig)
+        args = (standard_exit_id,
+                exiting_tx,
+                challenge_tx,
+                input_index,
+                witness)
 
         return self.payment_exit_game.challengeStandardExit(args, **kwargs)
 
@@ -198,19 +196,11 @@ class PlasmaFramework:
 
         in_flight_tx_witnesses = in_flight_tx_sigs
 
-        # The following arguments are to be used in the future
-        output_guard_preimages_for_inputs = [EMPTY_BYTES] * len(input_utxos_pos)
-        input_tx_confirm_sigs = [EMPTY_BYTES] * len(input_utxos_pos)
-        input_spending_cond_args = [EMPTY_BYTES] * len(input_utxos_pos)
-
         args = [in_flight_tx,
                 input_txs,
                 input_utxos_pos,
-                output_guard_preimages_for_inputs,
                 input_txs_inclusion_proofs,
-                input_tx_confirm_sigs,
-                in_flight_tx_witnesses,
-                input_spending_cond_args]
+                in_flight_tx_witnesses]
 
         self.payment_exit_game.startInFlightExit(args, **kwargs)
 
