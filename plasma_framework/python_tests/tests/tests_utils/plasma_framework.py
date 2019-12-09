@@ -1,7 +1,7 @@
 import enum
 
-from plasma_core.constants import CHILD_BLOCK_INTERVAL
-from plasma_core.transaction import TxOutputTypes, TxTypes
+from plasma_core.constants import CHILD_BLOCK_INTERVAL, EMPTY_BYTES
+from plasma_core.transaction import TxOutputTypes, TxTypes, Transaction
 from plasma_core.utils.transactions import decode_utxo_id
 from plasma_core.utils.exit_priority import parse_exit_priority
 from .constants import EXIT_PERIOD, INITIAL_IMMUNE_EXIT_GAMES, INITIAL_IMMUNE_VAULTS, SAFE_GAS_STIPEND
@@ -204,8 +204,13 @@ class PlasmaFramework:
 
         self.payment_exit_game.startInFlightExit(args, **kwargs)
 
-    def piggybackInFlightExit(self, in_flight_tx, output_index):
-        raise NotImplementedError
+    def piggybackInFlightExit(self, in_flight_tx, output_index, **kwargs):
+        if output_index < Transaction.NUM_TXOS:
+            args = (in_flight_tx, output_index)
+            self.payment_exit_game.piggybackInFlightExitOnInput(args, **kwargs)
+        else:
+            args = (in_flight_tx, output_index - 4, EMPTY_BYTES)
+            self.payment_exit_game.piggybackInFlightExitOnOutput(args, **kwargs)
 
     def challengeInFlightExitNotCanonical(self, in_flight_tx,
                                           in_flight_tx_input_index,
@@ -278,6 +283,9 @@ class PlasmaFramework:
 
     def inFlightExitBond(self):
         return self.payment_exit_game.startIFEBondSize()
+
+    def piggybackBond(self):
+        return self.payment_exit_game.piggybackBondSize()
 
     def exits(self, exit_id):
         return self.payment_exit_game.standardExits([exit_id])

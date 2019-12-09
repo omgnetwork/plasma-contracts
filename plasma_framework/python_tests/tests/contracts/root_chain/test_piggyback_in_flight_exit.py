@@ -3,8 +3,6 @@ from eth_tester.exceptions import TransactionFailed
 from plasma_core.constants import MIN_EXIT_PERIOD, NULL_ADDRESS
 from plasma_core.utils.transactions import decode_utxo_id, encode_utxo_id
 
-pytestmark = pytest.mark.skip("WIP: moving tests to plasma framework")
-
 
 @pytest.mark.parametrize("num_inputs", [1, 2, 3, 4])
 def test_piggyback_in_flight_exit_valid_input_owner_should_succeed(testlang, num_inputs):
@@ -118,6 +116,7 @@ def test_piggyback_in_flight_exit_twice_should_fail(testlang):
         testlang.piggyback_in_flight_exit_input(spend_id, input_index, owner)
 
 
+@pytest.mark.skip("TODO: SE <> IFE interaction - tests should probably be deleted")
 @pytest.mark.parametrize("num_outputs", [1, 2, 3, 4])
 def test_piggyback_in_flight_exit_output_with_preexisting_standard_exit_should_fail(testlang, num_outputs):
     # exit cross-spend test, case 5
@@ -145,6 +144,7 @@ def test_piggyback_in_flight_exit_output_with_preexisting_standard_exit_should_f
     assert not in_flight_exit.output_piggybacked(num_outputs - 1)
 
 
+@pytest.mark.skip("TODO: SE <> IFE interaction - tests should probably be deleted")
 @pytest.mark.parametrize("num_outputs", [1, 2, 3, 4])
 def test_piggyback_in_flight_exit_output_with_preexisting_finalized_standard_exit_should_fail(testlang, num_outputs):
     # exit cross-spend test, case 6
@@ -176,7 +176,8 @@ def test_piggyback_in_flight_exit_output_with_preexisting_finalized_standard_exi
 
 
 @pytest.mark.parametrize("output", [0, 4])
-def test_piggybacking_an_output_of_unsupported_token_should_fail(testlang, token, output):
+def test_piggybacking_an_output_of_unsupported_token_should_fail(testlang, no_exit_queue_token, output):
+    token = no_exit_queue_token
     owner, amount = testlang.accounts[0], 100
     deposit_id = testlang.deposit_token(owner, token, amount)
     spend_id = testlang.spend_utxo([deposit_id], [owner], [(owner.address, token.address, amount)])
