@@ -4,6 +4,7 @@ from plasma_core.constants import NULL_ADDRESS, NULL_ADDRESS_HEX, MIN_EXIT_PERIO
 
 ETH_ADDRESS_HEX = NULL_ADDRESS_HEX
 
+
 @pytest.mark.parametrize("num_inputs", [1, 2, 3, 4])
 def test_start_in_flight_exit_should_succeed(testlang, num_inputs):
     amount = 100

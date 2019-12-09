@@ -1,6 +1,6 @@
 import enum
 
-from plasma_core.constants import CHILD_BLOCK_INTERVAL, EMPTY_BYTES
+from plasma_core.constants import CHILD_BLOCK_INTERVAL
 from plasma_core.transaction import TxOutputTypes, TxTypes
 from plasma_core.utils.transactions import decode_utxo_id
 from plasma_core.utils.exit_priority import parse_exit_priority
