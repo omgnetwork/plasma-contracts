@@ -93,7 +93,7 @@ class FeeBlockNumOutput {
     }
 
     formatForRlpEncoding() {
-        return [this.outputType, this.nonce];
+        return [this.outputType, this.blockNum];
     }
 
     rlpEncoded() {
