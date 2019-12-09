@@ -34,7 +34,6 @@ function processExit(uint160 exitId, uint256 vaultId, address token) external no
 ## Contracts
 
 * [Address](Address.md)
-* [AddressPayable](AddressPayable.md)
 * [Bits](Bits.md)
 * [BlockController](BlockController.md)
 * [BlockModel](BlockModel.md)
