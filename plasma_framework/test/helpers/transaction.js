@@ -2,7 +2,7 @@ const rlp = require('rlp');
 const { BN } = require('openzeppelin-test-helpers');
 const { EMPTY_BYTES_32, TX_TYPE } = require('../helpers/constants.js');
 
-class GenericTransactionOutput {
+class FungibleTransactionOutput {
     constructor(type, amount, outputGuard, token) {
         this.outputType = type;
         this.outputGuard = outputGuard;
@@ -12,9 +12,9 @@ class GenericTransactionOutput {
 
     formatForRlpEncoding() {
         if (this.amount instanceof BN) {
-            return [this.outputType, this.outputGuard, this.token, web3.utils.numberToHex(this.amount)];
+            return [this.outputType, [this.outputGuard, this.token, web3.utils.numberToHex(this.amount)]];
         }
-        return [this.outputType, this.outputGuard, this.token, this.amount];
+        return [this.outputType, [this.outputGuard, this.token, this.amount]];
     }
 
     rlpEncoded() {
@@ -24,11 +24,11 @@ class GenericTransactionOutput {
     static parseFromContractOutput(output) {
         const amount = parseInt(output.amount, 10);
         const outputType = parseInt(output.outputType, 10);
-        return new GenericTransactionOutput(outputType, amount, output.outputGuard, output.token);
+        return new FungibleTransactionOutput(outputType, amount, output.outputGuard, output.token);
     }
 }
 
-class PaymentTransactionOutput extends GenericTransactionOutput {}
+class PaymentTransactionOutput extends FungibleTransactionOutput {}
 
 class GenericTransaction {
     constructor(transactionType, inputs, outputs, metaData = EMPTY_BYTES_32) {
@@ -42,7 +42,7 @@ class GenericTransaction {
         const tx = [this.transactionType];
 
         tx.push(GenericTransaction.formatInputsForRlpEncoding(this.inputs));
-        tx.push(GenericTransaction.formatForRlpEncoding(this.outputs));
+        tx.push(GenericTransaction.formatOutputsForRlpEncoding(this.outputs));
         tx.push(this.metaData);
 
         return rlp.encode(tx);
@@ -58,7 +58,7 @@ class GenericTransaction {
         });
     }
 
-    static formatForRlpEncoding(items) {
+    static formatOutputsForRlpEncoding(items) {
         return items.map(item => item.formatForRlpEncoding());
     }
 
@@ -80,5 +80,5 @@ module.exports = {
     PlasmaDepositTransaction,
     PaymentTransactionOutput,
     GenericTransaction,
-    GenericTransactionOutput,
+    FungibleTransactionOutput,
 };

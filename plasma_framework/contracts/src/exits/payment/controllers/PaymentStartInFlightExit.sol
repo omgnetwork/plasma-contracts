@@ -301,7 +301,7 @@ library PaymentStartInFlightExit {
     {
         for (uint i = 0; i < exitData.inputTxs.length; i++) {
             uint16 outputIndex = exitData.inputUtxosPos[i].outputIndex();
-            GenericTransaction.Output memory output = GenericTransaction.getOutput(
+            FungibleTokenOutputModel.Output memory output = FungibleTokenOutputModel.getOutput(
                 GenericTransaction.decode(exitData.inputTxs[i]),
                 outputIndex
             );
@@ -322,7 +322,7 @@ library PaymentStartInFlightExit {
         for (uint i = 0; i < exitData.inFlightTx.outputs.length; i++) {
             // deposit transaction can't be in-flight exited
             bytes32 outputId = OutputId.computeNormalOutputId(exitData.inFlightTxRaw, i);
-            GenericTransaction.Output memory output = exitData.inFlightTx.outputs[i];
+            FungibleTokenOutputModel.Output memory output = exitData.inFlightTx.outputs[i];
 
             ife.outputs[i].outputId = outputId;
             // Exit target is not set as output guard preimage may not be available for caller

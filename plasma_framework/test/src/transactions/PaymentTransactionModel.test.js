@@ -1,14 +1,14 @@
 const rlp = require('rlp');
 const { expect } = require('chai');
 const { constants, expectRevert } = require('openzeppelin-test-helpers');
-const { PaymentTransaction, PaymentTransactionOutput } = require('../../helpers/transaction.js');
+const { PaymentTransaction, FungibleTransactionOutput } = require('../../helpers/transaction.js');
 const { TX_TYPE, OUTPUT_TYPE, DUMMY_INPUT_1 } = require('../../helpers/constants.js');
 
 const PaymentTransactionModelMock = artifacts.require('PaymentTransactionModelMock');
 
 const OUTPUT_GUARD = `0x${Array(40).fill(1).join('')}`;
 const EMPTY_BYTES32 = `0x${Array(64).fill(0).join('')}`;
-const OUTPUT = new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, 100, OUTPUT_GUARD, constants.ZERO_ADDRESS);
+const OUTPUT = new FungibleTransactionOutput(OUTPUT_TYPE.PAYMENT, 100, OUTPUT_GUARD, constants.ZERO_ADDRESS);
 
 contract('PaymentTransactionModel', ([alice]) => {
     const MAX_INPUT_NUM = 4;
@@ -81,7 +81,7 @@ contract('PaymentTransactionModel', ([alice]) => {
         const genericFormat = [
             transaction.transactionType,
             transaction.inputs,
-            PaymentTransaction.formatForRlpEncoding(transaction.outputs),
+            PaymentTransaction.formatOutputsForRlpEncoding(transaction.outputs),
         ];
 
         const encoded = web3.utils.bytesToHex(rlp.encode(genericFormat));
@@ -116,7 +116,7 @@ contract('PaymentTransactionModel', ([alice]) => {
     });
 
     it('should fail when an output type is zero', async () => {
-        const zeroOutputType = new PaymentTransactionOutput(0, 100, OUTPUT_GUARD, constants.ZERO_ADDRESS);
+        const zeroOutputType = new FungibleTransactionOutput(0, 100, OUTPUT_GUARD, constants.ZERO_ADDRESS);
         const transaction = new PaymentTransaction(
             TX_TYPE.PAYMENT, [DUMMY_INPUT_1], [OUTPUT, zeroOutputType], EMPTY_BYTES32,
         );
@@ -125,7 +125,7 @@ contract('PaymentTransactionModel', ([alice]) => {
     });
 
     it('should fail when an output amount is zero', async () => {
-        const zeroOutputAmount = new PaymentTransactionOutput(
+        const zeroOutputAmount = new FungibleTransactionOutput(
             OUTPUT_TYPE.PAYMENT, 0, OUTPUT_GUARD, constants.ZERO_ADDRESS,
         );
         const transaction = new PaymentTransaction(
@@ -133,30 +133,6 @@ contract('PaymentTransactionModel', ([alice]) => {
         );
         const encoded = web3.utils.bytesToHex(transaction.rlpEncoded());
         await expectRevert(this.test.decode(encoded), 'Output amount must not be 0');
-    });
-
-    describe('decodeOutput', () => {
-        it('should decode output', async () => {
-            const expected = new PaymentTransactionOutput(
-                OUTPUT_TYPE.PAYMENT, 100, OUTPUT_GUARD, constants.ZERO_ADDRESS,
-            );
-            const encoded = web3.utils.bytesToHex(rlp.encode(expected.formatForRlpEncoding()));
-
-            const output = await this.test.decodeOutput(encoded);
-            const actual = PaymentTransactionOutput.parseFromContractOutput(output);
-
-            expect(JSON.stringify(actual)).to.equal(JSON.stringify(expected));
-        });
-
-        it('should fail when output has less than 4 items', async () => {
-            const encoded = web3.utils.bytesToHex(rlp.encode([0, 0, 0]));
-            await expectRevert(this.test.decodeOutput(encoded), 'Output must have 4 items');
-        });
-
-        it('should fail when output has more than 4 items', async () => {
-            const encoded = web3.utils.bytesToHex(rlp.encode([0, 0, 0, 0, 0]));
-            await expectRevert(this.test.decodeOutput(encoded), 'Output must have 4 items');
-        });
     });
 
     describe('owner', () => {
@@ -173,5 +149,5 @@ function parseInputs(inputs) {
 }
 
 function parseOutputs(outputs) {
-    return outputs.map(PaymentTransactionOutput.parseFromContractOutput);
+    return outputs.map(FungibleTransactionOutput.parseFromContractOutput);
 }

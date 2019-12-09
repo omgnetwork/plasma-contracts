@@ -111,7 +111,7 @@ library PaymentChallengeStandardExit {
         PaymentStandardExitRouterArgs.ChallengeStandardExitArgs memory args = data.args;
 
         UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(data.exitData.utxoPos);
-        GenericTransaction.Output memory output = PaymentTransactionModel
+        FungibleTokenOutputModel.Output memory output = PaymentTransactionModel
             .decode(args.exitingTx)
             .outputs[utxoPos.outputIndex()];
 

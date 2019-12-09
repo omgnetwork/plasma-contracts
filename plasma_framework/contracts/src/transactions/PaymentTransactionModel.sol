@@ -1,7 +1,7 @@
 pragma solidity 0.5.11;
 pragma experimental ABIEncoderV2;
 
-import "./GenericTransaction.sol";
+import "./FungibleTokenOutputModel.sol";
 import "../utils/AddressPayable.sol";
 import "../utils/RLPReader.sol";
 
@@ -18,7 +18,7 @@ library PaymentTransactionModel {
     struct Transaction {
         uint256 txType;
         bytes32[] inputs;
-        GenericTransaction.Output[] outputs;
+        FungibleTokenOutputModel.Output[] outputs;
         bytes32 metaData;
     }
 
@@ -30,10 +30,9 @@ library PaymentTransactionModel {
      *      - Each `input` is a 32 byte long array
      *      - An `input` may not be all zeros
      *      - `outputs` is an list of 0 to 4 elements
+     *      - Each `output` is a list of 2 elements: [`outputType`, `data`]
      *      - `output.outputType` must be an integer value with no leading zeros
-     *      - `output.outputGuard` is a 20 byte long array
-     *      - `output.token` is a 20 byte long array
-     *      - `output.amount` must be an integer value with no leading zeros
+     *      - See FungibleTokenOutputModel for deatils on `output.data` encoding.
      *      - An `output` may not be null; A null output is one whose amount is zero
      * @param _tx An RLP-encoded transaction
      * @return A decoded PaymentTransaction struct
@@ -47,21 +46,24 @@ library PaymentTransactionModel {
      * @param genericTx A GenericTransaction.Transaction struct
      * @return A PaymentTransaction.Transaction struct
      */
-    function fromGeneric(GenericTransaction.Transaction memory genericTx) internal pure returns (PaymentTransactionModel.Transaction memory) {
+    function fromGeneric(GenericTransaction.Transaction memory genericTx)
+        internal
+        pure
+        returns (PaymentTransactionModel.Transaction memory)
+    {
         require(genericTx.inputs.length <= MAX_INPUT_NUM, "Transaction inputs num exceeds limit");
         require(genericTx.outputs.length <= MAX_OUTPUT_NUM, "Transaction outputs num exceeds limit");
 
         bytes32[] memory inputs = new bytes32[](genericTx.inputs.length);
         for (uint i = 0; i < genericTx.inputs.length; i++) {
             bytes32 input = genericTx.inputs[i].toBytes32();
-            // Disallow null inputs
             require(uint256(input) != 0, "Null input not allowed");
             inputs[i] = input;
         }
 
-        GenericTransaction.Output[] memory outputs = new GenericTransaction.Output[](genericTx.outputs.length);
+        FungibleTokenOutputModel.Output[] memory outputs = new FungibleTokenOutputModel.Output[](genericTx.outputs.length);
         for (uint i = 0; i < genericTx.outputs.length; i++) {
-            outputs[i] = decodeOutput(genericTx.outputs[i]);
+            outputs[i] = FungibleTokenOutputModel.decodeOutput(genericTx.outputs[i]);
         }
 
         bytes32 metaData = genericTx.txData.toBytes32();
@@ -70,23 +72,10 @@ library PaymentTransactionModel {
     }
 
     /**
-     * @notice Decodes a transaction output
-     * @param output The RLP encoded output
-     * @return The decoded GenericTransaction.Output struct
-     */
-    function decodeOutput(RLPReader.RLPItem memory output) internal pure returns (GenericTransaction.Output memory) {
-        RLPReader.RLPItem[] memory outputRlpList = output.toList();
-        require(outputRlpList.length == 4, "Output must have 4 items");
-        GenericTransaction.Output memory decodedOutput = GenericTransaction.decodeOutput(outputRlpList);
-        require(decodedOutput.amount != 0, "Output amount must not be 0");
-        return decodedOutput;
-    }
-
-    /**
      * @notice Retrieve the 'owner' from the output, assuming the
      *         'outputGuard' field directly holds the owner's address
      */
-    function getOutputOwner(GenericTransaction.Output memory _output) internal pure returns (address payable) {
-        return AddressPayable.convert(address(_output.outputGuard));
+    function getOutputOwner(FungibleTokenOutputModel.Output memory output) internal pure returns (address payable) {
+        return AddressPayable.convert(address(output.outputGuard));
     }
 }
