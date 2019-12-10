@@ -51,7 +51,7 @@ contract('GenericTransaction', () => {
             );
         });
 
-        it('should fail when type is 0', async () => {
+        it('should fail when tx type is 0', async () => {
             const invalidTx = rlp.encode([
                 0,
                 ['input0', 'input2'],
