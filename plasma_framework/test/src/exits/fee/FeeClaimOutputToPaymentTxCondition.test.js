@@ -89,7 +89,7 @@ contract('FeeClaimOutputToPaymentTxCondition', ([richFather, bob]) => {
             );
         });
 
-        it('should fail when fee tx type does not match', async () => {
+        it('should fail when fee tx is not with the expected tx type', async () => {
             const { args } = getTestData();
             const mismatchFeeTxType = 999;
             const conditionWithDifferentTxType = await FeeClaimOutputToPaymentTxCondition.new(
@@ -105,11 +105,11 @@ contract('FeeClaimOutputToPaymentTxCondition', ([richFather, bob]) => {
                     args.inputIndex,
                     args.signature,
                 ),
-                'Fee tx is not with the expected tx type',
+                'Unexpected tx type for fee transaction',
             );
         });
 
-        it('should fail when fee claim output type does not match', async () => {
+        it('should fail when fee claim output is not with the expected output type', async () => {
             const { args } = getTestData();
             const mismatchFeeClaimOutputType = 999;
             const conditionWithDifferentTxType = await FeeClaimOutputToPaymentTxCondition.new(
@@ -125,11 +125,11 @@ contract('FeeClaimOutputToPaymentTxCondition', ([richFather, bob]) => {
                     args.inputIndex,
                     args.signature,
                 ),
-                'Fee claim output is not with the expected output type',
+                'Unexpected output type for fee claim output',
             );
         });
 
-        it('should fail when payment tx type does not match', async () => {
+        it('should fail when payment tx is not with the expected tx type', async () => {
             const { args } = getTestData();
             const mismatchPaymentTxType = 999;
             const conditionWithDifferentTxType = await FeeClaimOutputToPaymentTxCondition.new(
@@ -145,7 +145,7 @@ contract('FeeClaimOutputToPaymentTxCondition', ([richFather, bob]) => {
                     args.inputIndex,
                     args.signature,
                 ),
-                'The payment tx is not with the expected tx type',
+                'Unexpected tx type for payment transaction',
             );
         });
 

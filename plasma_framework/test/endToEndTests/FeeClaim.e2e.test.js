@@ -64,14 +64,6 @@ contract('PlasmaFramework - Fee Claim', ([_, _maintainer, authority, richFather,
             this.framework.addExitQueue(config.registerKeys.vaultId.eth, ETH);
         });
 
-        describe('And then first fee collected when Alice transfer to Bob', () => {
-            describe('And then second fee collected when Alice transfer to Carol', () => {
-                describe('When operator spends the fee outputs to Payment transaction', () => {
-
-                });
-            });
-        });
-
         describe('When Alice deposits ETH to the plasma', () => {
             let alicePlasmaBalance;
             let aliceDepositUtxoPos;
@@ -86,7 +78,7 @@ contract('PlasmaFramework - Fee Claim', ([_, _maintainer, authority, richFather,
                 return this.ethVault.deposit(depositTx, { from: alice, value: DEPOSIT_VALUE });
             });
 
-            describe('When Alice transfer to Bob, fee is implicitly collected', () => {
+            describe('When Alice transfers to Bob, fee is implicitly collected', () => {
                 let aliceBalanceUtxoPosAfterTransferToBob;
                 let aliceTransferToBobTxBytes;
 
@@ -138,7 +130,7 @@ contract('PlasmaFramework - Fee Claim', ([_, _maintainer, authority, richFather,
                         await this.framework.submitBlock(merkleTree.root, { from: authority });
                     });
 
-                    describe('When Alice transfer to Carol, fee is implicitly collected', () => {
+                    describe('When Alice transfers to Carol, fee is implicitly collected', () => {
                         let aliceTransferToCarolTxBytes;
 
                         before(async () => {

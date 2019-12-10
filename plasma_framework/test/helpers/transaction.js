@@ -103,7 +103,7 @@ class FeeBlockNumOutput {
 
 
 /**
- * Fee Transaction is not really following the full rule of GenericTransaction.
+ * Fee Transaction does not follows Generic Transaction format.
  * It diverges in the output data structure by having two output data structures:
  * 1. GenericTransactionOutput
  * 2. FeeBlockNumOutput

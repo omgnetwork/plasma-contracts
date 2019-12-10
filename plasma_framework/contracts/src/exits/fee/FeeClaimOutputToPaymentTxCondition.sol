@@ -35,8 +35,8 @@ contract FeeClaimOutputToPaymentTxCondition is ISpendingCondition {
 
     /**
      * @dev This implementation checks signature for spending fee claim output. It should be signed with the owner signature.
-     *      The fee claim output that is spendable would be following GenericTransaction Output format.
-     * @param feeTxBytes Encoded fee transaction, in bytes
+     *      The fee claim output that is spendable follows Fungible Token Output format.
+     * @param feeTxBytes Encoded fee transaction
      * @param feeClaimOutputIndex Output index of the fee claim output
      * @param feeTxPos The tx position of the fee tx
      * @param paymentTxBytes Payment transaction (in bytes) that spends the fee claim output
@@ -56,15 +56,15 @@ contract FeeClaimOutputToPaymentTxCondition is ISpendingCondition {
         returns (bool)
     {
         require(feeClaimOutputIndex == 0, "Fee claim output must be the first output of fee tx");
-        
+
         GenericTransaction.Transaction memory feeTx = GenericTransaction.decode(feeTxBytes);
         GenericTransaction.Output memory feeClaimOutput = GenericTransaction.getOutput(feeTx, feeClaimOutputIndex);
 
-        require(feeTx.txType == feeTxType, "Fee tx is not with the expected tx type");
-        require(feeClaimOutput.outputType == feeClaimOutputType, "Fee claim output is not with the expected output type");
+        require(feeTx.txType == feeTxType, "Unexpected tx type for fee transaction");
+        require(feeClaimOutput.outputType == feeClaimOutputType, "Unexpected output type for fee claim output");
 
         PaymentTransactionModel.Transaction memory paymentTx = PaymentTransactionModel.decode(paymentTxBytes);
-        require(paymentTx.txType == paymentTxType, "The payment tx is not with the expected tx type");
+        require(paymentTx.txType == paymentTxType, "Unexpected tx type for payment transaction");
 
         UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.build(TxPosLib.TxPos(feeTxPos), feeClaimOutputIndex);
         require(
