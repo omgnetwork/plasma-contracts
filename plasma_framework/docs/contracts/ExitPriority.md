@@ -6,7 +6,7 @@ View Source: [contracts/src/framework/utils/ExitPriority.sol](../../contracts/sr
 
 ## Functions
 
-- [computePriority(uint64 exitableAt, struct TxPosLib.TxPos txPos, uint160 exitId)](#computepriority)
+- [computePriority(uint64 exitableAt, struct UtxoPosLib.UtxoPos txPos, uint160 exitId)](#computepriority)
 - [parseExitableAt(uint256 priority)](#parseexitableat)
 - [parseExitId(uint256 priority)](#parseexitid)
 
@@ -15,7 +15,7 @@ View Source: [contracts/src/framework/utils/ExitPriority.sol](../../contracts/sr
 Detailed explanation on field lengths can be found at https://github.com/omisego/plasma-contracts/pull/303#discussion_r328850572
 
 ```js
-function computePriority(uint64 exitableAt, struct TxPosLib.TxPos txPos, uint160 exitId) internal pure
+function computePriority(uint64 exitableAt, struct UtxoPosLib.UtxoPos txPos, uint160 exitId) internal pure
 returns(uint256)
 ```
 
@@ -32,7 +32,7 @@ An exit priority
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
 | exitableAt | uint64 |  | 
-| txPos | struct TxPosLib.TxPos |  | 
+| txPos | struct UtxoPosLib.UtxoPos |  | 
 | exitId | uint160 | Unique exit identifier | 
 
 ### parseExitableAt
@@ -64,7 +64,6 @@ returns(uint160)
 ## Contracts
 
 * [Address](Address.md)
-* [AddressPayable](AddressPayable.md)
 * [Bits](Bits.md)
 * [BlockController](BlockController.md)
 * [BlockModel](BlockModel.md)
@@ -127,7 +126,6 @@ returns(uint160)
 * [SafeEthTransfer](SafeEthTransfer.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)
-* [TxPosLib](TxPosLib.md)
 * [UtxoPosLib](UtxoPosLib.md)
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)

@@ -8,7 +8,7 @@ Library to check finalization for MoreVP protocol
 
 ## Functions
 
-- [isStandardFinalized(PlasmaFramework framework, bytes txBytes, struct TxPosLib.TxPos txPos, bytes inclusionProof)](#isstandardfinalized)
+- [isStandardFinalized(PlasmaFramework framework, bytes txBytes, struct UtxoPosLib.UtxoPos txPos, bytes inclusionProof)](#isstandardfinalized)
 - [isProtocolFinalized(PlasmaFramework framework, bytes txBytes)](#isprotocolfinalized)
 
 ### isStandardFinalized
@@ -17,7 +17,7 @@ Checks whether a transaction is "standard finalized".
         For MoreVP, it means the transaction should be included in a plasma block.
 
 ```js
-function isStandardFinalized(PlasmaFramework framework, bytes txBytes, struct TxPosLib.TxPos txPos, bytes inclusionProof) internal view
+function isStandardFinalized(PlasmaFramework framework, bytes txBytes, struct UtxoPosLib.UtxoPos txPos, bytes inclusionProof) internal view
 returns(bool)
 ```
 
@@ -27,7 +27,7 @@ returns(bool)
 | ------------- |------------- | -----|
 | framework | PlasmaFramework |  | 
 | txBytes | bytes |  | 
-| txPos | struct TxPosLib.TxPos |  | 
+| txPos | struct UtxoPosLib.UtxoPos |  | 
 | inclusionProof | bytes |  | 
 
 ### isProtocolFinalized
@@ -50,7 +50,6 @@ returns(bool)
 ## Contracts
 
 * [Address](Address.md)
-* [AddressPayable](AddressPayable.md)
 * [Bits](Bits.md)
 * [BlockController](BlockController.md)
 * [BlockModel](BlockModel.md)
@@ -113,7 +112,6 @@ returns(bool)
 * [SafeEthTransfer](SafeEthTransfer.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)
-* [TxPosLib](TxPosLib.md)
 * [UtxoPosLib](UtxoPosLib.md)
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)

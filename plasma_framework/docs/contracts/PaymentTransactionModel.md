@@ -22,18 +22,41 @@ struct Transaction {
 **Constants & Variables**
 
 ```js
-//public members
-uint8 public constant MAX_INPUT_NUM;
-uint8 public constant MAX_OUTPUT_NUM;
-
-//private members
+uint8 private constant _MAX_INPUT_NUM;
+uint8 private constant _MAX_OUTPUT_NUM;
 uint8 private constant ENCODED_LENGTH;
 
 ```
 
 ## Functions
 
+- [MAX_INPUT_NUM()](#max_input_num)
+- [MAX_OUTPUT_NUM()](#max_output_num)
 - [decode(bytes _tx)](#decode)
+
+### MAX_INPUT_NUM
+
+```js
+function MAX_INPUT_NUM() internal pure
+returns(uint8)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+
+### MAX_OUTPUT_NUM
+
+```js
+function MAX_OUTPUT_NUM() internal pure
+returns(uint8)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
 
 ### decode
 
@@ -51,7 +74,6 @@ returns(struct PaymentTransactionModel.Transaction)
 ## Contracts
 
 * [Address](Address.md)
-* [AddressPayable](AddressPayable.md)
 * [Bits](Bits.md)
 * [BlockController](BlockController.md)
 * [BlockModel](BlockModel.md)
@@ -114,7 +136,6 @@ returns(struct PaymentTransactionModel.Transaction)
 * [SafeEthTransfer](SafeEthTransfer.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)
-* [TxPosLib](TxPosLib.md)
 * [UtxoPosLib](UtxoPosLib.md)
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)

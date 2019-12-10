@@ -18,21 +18,20 @@ Reentrancy guard that fails immediately when a reentrace occurs
 Prevents reentrant calls by using a mutex.
 
 ```js
-modifier nonReentrant(PlasmaFramework framework) internal
+modifier nonReentrant(ExitGameController exitGameController) internal
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| framework | PlasmaFramework |  | 
+| exitGameController | ExitGameController |  | 
 
 ## Functions
 
 ## Contracts
 
 * [Address](Address.md)
-* [AddressPayable](AddressPayable.md)
 * [Bits](Bits.md)
 * [BlockController](BlockController.md)
 * [BlockModel](BlockModel.md)
@@ -95,7 +94,6 @@ modifier nonReentrant(PlasmaFramework framework) internal
 * [SafeEthTransfer](SafeEthTransfer.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)
-* [TxPosLib](TxPosLib.md)
 * [UtxoPosLib](UtxoPosLib.md)
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)

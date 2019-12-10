@@ -26,18 +26,19 @@ uint256 internal constant TX_OFFSET;
 
 ## Functions
 
-- [build(struct TxPosLib.TxPos txPos, uint16 outputIndex)](#build)
+- [build(uint256 txPos, uint16 outputIndex)](#build)
 - [blockNum(struct UtxoPosLib.UtxoPos _utxoPos)](#blocknum)
 - [txIndex(struct UtxoPosLib.UtxoPos _utxoPos)](#txindex)
 - [outputIndex(struct UtxoPosLib.UtxoPos _utxoPos)](#outputindex)
 - [txPos(struct UtxoPosLib.UtxoPos _utxoPos)](#txpos)
+- [getTxPostionForExitPriority(struct UtxoPosLib.UtxoPos _utxoPos)](#gettxpostionforexitpriority)
 
 ### build
 
 Returns the UTXO struct for a given txPos and outputIndex
 
 ```js
-function build(struct TxPosLib.TxPos txPos, uint16 outputIndex) internal pure
+function build(uint256 txPos, uint16 outputIndex) internal pure
 returns(struct UtxoPosLib.UtxoPos)
 ```
 
@@ -49,7 +50,7 @@ UtxoPos of the relevant value
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| txPos | struct TxPosLib.TxPos | Transaction position | 
+| txPos | uint256 | Transaction position - utxo of zero index output | 
 | outputIndex | uint16 | Transaction index of the output | 
 
 ### blockNum
@@ -111,16 +112,35 @@ Index of the output
 
 ### txPos
 
-Returns the transaction position of a given UTXO position
+Returns transaction position which is a utxo position of zero index output
 
 ```js
 function txPos(struct UtxoPosLib.UtxoPos _utxoPos) internal pure
-returns(struct TxPosLib.TxPos)
+returns(struct UtxoPosLib.UtxoPos)
 ```
 
 **Returns**
 
-Position of the transaction
+Identifier of the transaction
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| _utxoPos | struct UtxoPosLib.UtxoPos | UTXO position identifier for the output | 
+
+### getTxPostionForExitPriority
+
+Used for calculating exit priority
+
+```js
+function getTxPostionForExitPriority(struct UtxoPosLib.UtxoPos _utxoPos) internal pure
+returns(uint256)
+```
+
+**Returns**
+
+Identifier of the transaction
 
 **Arguments**
 
@@ -131,7 +151,6 @@ Position of the transaction
 ## Contracts
 
 * [Address](Address.md)
-* [AddressPayable](AddressPayable.md)
 * [Bits](Bits.md)
 * [BlockController](BlockController.md)
 * [BlockModel](BlockModel.md)
@@ -194,7 +213,6 @@ Position of the transaction
 * [SafeEthTransfer](SafeEthTransfer.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)
-* [TxPosLib](TxPosLib.md)
 * [UtxoPosLib](UtxoPosLib.md)
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)
