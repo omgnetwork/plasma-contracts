@@ -6,6 +6,8 @@ import "../../src/utils/UtxoPosLib.sol";
 import "../../src/framework/models/BlockModel.sol";
 
 contract SpyPlasmaFrameworkForExitGame is PlasmaFramework {
+    using UtxoPosLib for UtxoPosLib.UtxoPos;
+
     uint256 public enqueuedCount = 0;
     mapping (uint256 => BlockModel.Block) public blocks;
 
@@ -42,7 +44,7 @@ contract SpyPlasmaFrameworkForExitGame is PlasmaFramework {
             _vaultId,
             _token,
             _exitableAt,
-            _txPos.value,
+            _txPos.getTxPostionForExitPriority(),
             _exitId,
             address(_exitProcessor)
         );

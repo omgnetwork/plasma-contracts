@@ -26,7 +26,7 @@ library UtxoPosLib {
         pure
         returns (UtxoPos memory)
     {
-        require(txPos % TX_OFFSET == 0, "Invalid txo position");
+        require(txPos % TX_OFFSET == 0, "Invalid transaction position");
         return UtxoPos(txPos.add(outputIndex));
     }
 

@@ -14,7 +14,7 @@ contract('UtxoPosLib', () => {
         const BLOCK_OFFSET = 1000000000;
         const TX_OFFSET = 10000;
         this.utxoPos = this.blockNumber * BLOCK_OFFSET + this.txIndex * TX_OFFSET + this.outputIndex;
-        this.txPos = Math.floor(this.utxoPos / TX_OFFSET);
+        this.txPos = this.utxoPos - this.outputIndex;
     });
 
     describe('build', () => {
@@ -23,9 +23,9 @@ contract('UtxoPosLib', () => {
             expect(new BN(result.value)).to.be.bignumber.equal(new BN(this.utxoPos));
         });
 
-        it('should revert when there is an overflow', async () => {
-            const txPos = (new BN(2)).pow(new BN(255));
-            await expectRevert(this.contract.build(txPos, this.outputIndex), 'SafeMath: multiplication overflow');
+        it('should revert when tx pos is not a position of zero index output', async () => {
+            const txPos = this.txPos + 1;
+            await expectRevert(this.contract.build(txPos, this.outputIndex), 'Invalid transaction position');
         });
     });
 

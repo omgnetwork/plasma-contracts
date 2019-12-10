@@ -19,7 +19,7 @@ const {
 const { expect } = require('chai');
 
 const { calculateNormalExitable } = require('../../../../helpers/exitable.js');
-const { buildUtxoPos, utxoPosToTxPos } = require('../../../../helpers/positions.js');
+const { buildUtxoPos, txPostionForExitPriority } = require('../../../../helpers/positions.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../../helpers/transaction.js');
 const {
     PROTOCOL, TX_TYPE, VAULT_ID, SAFE_GAS_STIPEND, EMPTY_BYTES_32,
@@ -302,7 +302,7 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
                         vaultId: new BN(VAULT_ID.ETH),
                         token: ETH,
                         exitableAt: new BN(exitableAt),
-                        txPos: new BN(utxoPosToTxPos(INFLIGHT_EXIT_YOUNGEST_INPUT_POSITION)),
+                        txPos: new BN(txPostionForExitPriority(INFLIGHT_EXIT_YOUNGEST_INPUT_POSITION)),
                         exitProcessor: this.exitGame.address,
                         exitId: this.testData.exitId,
                     },
