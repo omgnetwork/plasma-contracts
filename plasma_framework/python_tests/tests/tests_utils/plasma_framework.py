@@ -1,6 +1,6 @@
 import enum
 
-from plasma_core.constants import CHILD_BLOCK_INTERVAL, EMPTY_BYTES
+from plasma_core.constants import CHILD_BLOCK_INTERVAL
 from plasma_core.transaction import TxOutputTypes, TxTypes
 from plasma_core.utils.transactions import decode_utxo_id
 from plasma_core.utils.exit_priority import parse_exit_priority
@@ -79,6 +79,7 @@ class PlasmaFramework:
             )
 
         _register_spending_condition("PaymentOutputToPaymentTxCondition", TxOutputTypes.PAYMENT, TxTypes.PAYMENT)
+        self.spending_condition_registry.renounceOwnership(**{'from': maintainer.address})
 
     def _setup_state_verifiers(self, get_contract, maintainer):
         self.payment_state_verifier = get_contract('PaymentTransactionStateTransitionVerifier', sender=maintainer)
@@ -108,7 +109,7 @@ class PlasmaFramework:
 
         libs, libs_map = self._deploy_libraries(libs, get_contract, maintainer)
 
-        paymet_exit_game_args = (
+        payment_exit_game_args = (
             self.plasma_framework.address,
             self.eth_vault_id,
             self.erc20_vault_id,
@@ -119,7 +120,7 @@ class PlasmaFramework:
         )
         payment_exit_game = get_contract("PaymentExitGame",
                                          sender=maintainer,
-                                         args=(paymet_exit_game_args,),
+                                         args=(payment_exit_game_args,),
                                          libraries=libs_map)
 
         return payment_exit_game
@@ -173,22 +174,35 @@ class PlasmaFramework:
                               **kwargs):
         """ NOTICE: ALD takes more obligatory arguments (exiting_tx) in comparison to the RootChain contract """
 
-        # The following arguments are to be used in the future
-        spending_condition_optional_args = EMPTY_BYTES
-        challenge_tx_pos = 0
-        challenge_tx_inclusion_proof = EMPTY_BYTES
-
         witness = challenge_tx_sig
-        args = (standard_exit_id, exiting_tx, challenge_tx, input_index, witness, spending_condition_optional_args,
-                challenge_tx_pos, challenge_tx_inclusion_proof, challenge_tx_sig)
+        args = (standard_exit_id,
+                exiting_tx,
+                challenge_tx,
+                input_index,
+                witness)
 
         return self.payment_exit_game.challengeStandardExit(args, **kwargs)
 
     def startFeeExit(self, token, amount):
         raise NotImplementedError
 
-    def startInFlightExit(self, in_flight_tx, input_txs, input_txs_inclusion_proofs, in_flight_tx_sigs):
-        raise NotImplementedError
+    def startInFlightExit(self,
+                          in_flight_tx,
+                          input_txs,
+                          input_txs_inclusion_proofs,
+                          in_flight_tx_sigs,
+                          input_utxos_pos,
+                          **kwargs):
+
+        in_flight_tx_witnesses = in_flight_tx_sigs
+
+        args = [in_flight_tx,
+                input_txs,
+                input_utxos_pos,
+                input_txs_inclusion_proofs,
+                in_flight_tx_witnesses]
+
+        self.payment_exit_game.startInFlightExit(args, **kwargs)
 
     def piggybackInFlightExit(self, in_flight_tx, output_index):
         raise NotImplementedError
@@ -224,7 +238,7 @@ class PlasmaFramework:
         return self.plasma_framework.processExits(vaultId, token, top_exit_id, exits_to_process)
 
     def getInFlightExitId(self, tx):
-        raise NotImplementedError
+        return self.payment_exit_game.getInFlightExitId(tx)
 
     def getStandardExitId(self, tx_bytes, utxo_pos):
         blknum, _, _ = decode_utxo_id(utxo_pos)
@@ -262,8 +276,14 @@ class PlasmaFramework:
     def standardExitBond(self):
         return self.payment_exit_game.startStandardExitBondSize()
 
-    def exits(self, exit_ids):
-        return self.payment_exit_game.standardExits(exit_ids)
+    def inFlightExitBond(self):
+        return self.payment_exit_game.startIFEBondSize()
+
+    def exits(self, exit_id):
+        return self.payment_exit_game.standardExits([exit_id])
+
+    def inFlightExits(self, exit_id):
+        return self.payment_exit_game.inFlightExits(exit_id)
 
     # additional convenience proxies (not taken from RootChain) #
 

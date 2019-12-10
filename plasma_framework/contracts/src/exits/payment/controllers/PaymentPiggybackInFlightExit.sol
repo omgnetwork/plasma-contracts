@@ -18,9 +18,6 @@ library PaymentPiggybackInFlightExit {
     using ExitableTimestamp for ExitableTimestamp.Calculator;
     using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
 
-    uint8 constant public MAX_INPUT_NUM = 4;
-    uint8 constant public MAX_OUTPUT_NUM = 4;
-
     struct Controller {
         PlasmaFramework framework;
         IsDeposit.Predicate isDeposit;
@@ -179,13 +176,13 @@ library PaymentPiggybackInFlightExit {
         pure
         returns (bool)
     {
-        for (uint i = 0; i < MAX_INPUT_NUM; i++) {
+        for (uint i = 0; i < PaymentTransactionModel.MAX_INPUT_NUM(); i++) {
             if (ife.isInputPiggybacked(uint16(i)) && ife.inputs[i].token == token) {
                 return false;
             }
         }
 
-        for (uint i = 0; i < MAX_OUTPUT_NUM; i++) {
+        for (uint i = 0; i < PaymentTransactionModel.MAX_OUTPUT_NUM(); i++) {
             if (ife.isOutputPiggybacked(uint16(i)) && ife.outputs[i].token == token) {
                 return false;
             }

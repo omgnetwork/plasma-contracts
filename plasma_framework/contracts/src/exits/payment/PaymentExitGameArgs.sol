@@ -12,7 +12,7 @@ library PaymentExitGameArgs {
      * @param spendingConditionRegistry the spendingConditionRegistry that can provide spending condition implementation by types
      * @param stateTransitionVerifier state transition verifier predicate contract that checks the transaction correctness
      * @param supportTxType the tx type of this exit game is using
-     * @param safeGasStipend a gas amount limit when tranferring Eth to protect from attack with draining gas
+     * @param safeGasStipend a gas amount limit when transferring Eth to protect from attack with draining gas
      */
     struct Args {
         PlasmaFramework framework;

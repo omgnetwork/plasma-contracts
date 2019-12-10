@@ -84,4 +84,23 @@ contract('RLP', () => {
         const decoded = await this.test.decodeList(encoded);
         expect(decoded.length).is.equal(array.length);
     });
+
+    it('should fail to decode a list as a uint', async () => {
+        const encoded = rlp.encode([1]);
+        await expectRevert(this.test.decodeUint(encoded), 'Item must not be a list');
+    });
+
+    it('should fail to decode a list as an address', async () => {
+        // A 19 byte buffer in a list will be a 21 byte RLP item, similar to an address
+        const bytes19List = [Buffer.alloc(19, 1)];
+        const encoded = web3.utils.bytesToHex(rlp.encode(bytes19List));
+        await expectRevert(this.test.decodeAddress(encoded), 'Item must not be a list');
+    });
+
+    it('should fail to decode a list as an bytes32', async () => {
+        // A 31 byte buffer in a list will be a 33 byte RLP item, similar to a bytes32
+        const bytes31List = [Buffer.alloc(31, 1)];
+        const encoded = web3.utils.bytesToHex(rlp.encode(bytes31List));
+        await expectRevert(this.test.decodeBytes32(encoded), 'Item must not be a list');
+    });
 });

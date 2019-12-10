@@ -8,7 +8,7 @@
  *      - Moved utility functions necessary to run some of the tests to the RLPMock.sol
 */
 
-pragma solidity ^0.5.0;
+pragma solidity 0.5.11;
 
 library RLPReader {
     uint8 constant internal STRING_SHORT_START = 0x80;
@@ -91,6 +91,7 @@ library RLPReader {
      */
     function toAddress(RLPItem memory item) internal pure returns (address) {
         require(item.len == 21, "Item length must be 21");
+        require(!isList(item), "Item must not be a list");
 
         (uint256 itemLen, uint256 offset) = decodeLengthAndOffset(item.memPtr);
         require(itemLen == 21, "Decoded item length must be 21");
@@ -114,6 +115,7 @@ library RLPReader {
      */
     function toUint(RLPItem memory item) internal pure returns (uint256) {
         require(item.len > 0 && item.len <= 33, "Item length must be between 1 and 33 bytes");
+        require(!isList(item), "Item must not be a list");
         (uint256 itemLen, uint256 offset) = decodeLengthAndOffset(item.memPtr);
         require(itemLen == item.len, "Decoded item length must be equal to the input data length");
 
@@ -148,6 +150,7 @@ library RLPReader {
     function toBytes32(RLPItem memory item) internal pure returns (bytes32) {
         // 1 byte for the length prefix
         require(item.len == 33, "Item length must be 33");
+        require(!isList(item), "Item must not be a list");
 
         (uint256 itemLen, uint256 offset) = decodeLengthAndOffset(item.memPtr);
         require(itemLen == 33, "Decoded item length must be 33");

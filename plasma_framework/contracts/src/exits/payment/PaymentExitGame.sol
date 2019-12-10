@@ -5,6 +5,7 @@ import "./PaymentExitGameArgs.sol";
 import "./routers/PaymentStandardExitRouter.sol";
 import "./routers/PaymentInFlightExitRouter.sol";
 import "../utils/ExitId.sol";
+import "../registries/SpendingConditionRegistry.sol";
 import "../../framework/interfaces/IExitProcessor.sol";
 import "../../framework/PlasmaFramework.sol";
 import "../../utils/OnlyFromAddress.sol";
@@ -24,6 +25,9 @@ contract PaymentExitGame is IExitProcessor, OnlyFromAddress, PaymentStandardExit
         PaymentInFlightExitRouter(args)
     {
         plasmaFramework = args.framework;
+
+        // makes sure that the spending condition has already renounced ownership
+        require(args.spendingConditionRegistry.owner() == address(0), "Spending condition registry ownership needs to be renounced");
     }
 
     /**

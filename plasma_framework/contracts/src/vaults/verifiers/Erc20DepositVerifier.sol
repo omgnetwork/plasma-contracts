@@ -46,7 +46,7 @@ contract Erc20DepositVerifier is IErc20DepositVerifier {
         require(depositorsAddress == sender, "Depositor's address must match sender's address");
 
         IERC20 erc20 = IERC20(decodedTx.outputs[0].token);
-        require(erc20.allowance(depositorsAddress, vault) == decodedTx.outputs[0].amount, "Tokens have not been approved");
+        require(erc20.allowance(depositorsAddress, vault) >= decodedTx.outputs[0].amount, "Tokens have not been approved");
 
         return (depositorsAddress, decodedTx.outputs[0].token, decodedTx.outputs[0].amount);
     }

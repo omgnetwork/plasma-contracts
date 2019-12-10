@@ -2,7 +2,6 @@ pragma solidity 0.5.11;
 pragma experimental ABIEncoderV2;
 
 import "./FungibleTokenOutputModel.sol";
-import "../utils/AddressPayable.sol";
 import "../utils/RLPReader.sol";
 
 /**
@@ -12,8 +11,20 @@ library PaymentTransactionModel {
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;
 
-    uint8 constant public MAX_INPUT_NUM = 4;
-    uint8 constant public MAX_OUTPUT_NUM = 4;
+    uint8 constant private _MAX_INPUT_NUM = 4;
+    uint8 constant private _MAX_OUTPUT_NUM = 4;
+
+    uint8 constant private ENCODED_LENGTH = 4;
+
+    // solhint-disable-next-line func-name-mixedcase
+    function MAX_INPUT_NUM() internal pure returns (uint8) {
+        return _MAX_INPUT_NUM;
+    }
+
+    // solhint-disable-next-line func-name-mixedcase
+    function MAX_OUTPUT_NUM() internal pure returns (uint8) {
+        return _MAX_OUTPUT_NUM;
+    }
 
     struct Transaction {
         uint256 txType;
@@ -51,8 +62,8 @@ library PaymentTransactionModel {
         pure
         returns (PaymentTransactionModel.Transaction memory)
     {
-        require(genericTx.inputs.length <= MAX_INPUT_NUM, "Transaction inputs num exceeds limit");
-        require(genericTx.outputs.length <= MAX_OUTPUT_NUM, "Transaction outputs num exceeds limit");
+        require(genericTx.inputs.length <= _MAX_INPUT_NUM, "Transaction inputs num exceeds limit");
+        require(genericTx.outputs.length <= _MAX_OUTPUT_NUM, "Transaction outputs num exceeds limit");
 
         bytes32[] memory inputs = new bytes32[](genericTx.inputs.length);
         for (uint i = 0; i < genericTx.inputs.length; i++) {
@@ -76,6 +87,6 @@ library PaymentTransactionModel {
      *         'outputGuard' field directly holds the owner's address
      */
     function getOutputOwner(FungibleTokenOutputModel.Output memory output) internal pure returns (address payable) {
-        return AddressPayable.convert(address(output.outputGuard));
+        return address(uint160(output.outputGuard));
     }
 }
