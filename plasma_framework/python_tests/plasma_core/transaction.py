@@ -2,7 +2,7 @@ import enum
 
 import rlp
 from eth_utils import address, keccak
-from rlp.sedes import big_endian_int, CountableList, Binary
+from rlp.sedes import big_endian_int, CountableList, Binary, List
 
 from plasma_core.constants import NULL_SIGNATURE, NULL_ADDRESS, EMPTY_METADATA
 from plasma_core.utils.eip712_struct_hash import hash_struct
@@ -50,6 +50,25 @@ class TransactionOutput(rlp.Serializable):
         token = address.to_canonical_address(token)
         amount = amount
         super().__init__(output_type, output_guard, token, amount)
+
+    @classmethod
+    def serialize(cls, obj):
+        sedes_list = List([
+            big_endian_int, 
+            List([Binary.fixed_length(20), Binary.fixed_length(20), big_endian_int])
+        ])
+
+        tx_elems = [
+            obj.output_type,
+            [
+                obj.output_guard,
+                obj.token,
+                obj.amount
+            ]
+        ]
+
+        tx_sedes = rlp.sedes.List(sedes_list)
+        return tx_sedes.serialize(tx_elems)
 
 
 class Transaction(rlp.Serializable):
