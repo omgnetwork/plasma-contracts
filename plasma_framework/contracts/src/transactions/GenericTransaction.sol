@@ -72,7 +72,6 @@ library GenericTransaction {
 
     /**
     * @dev Decodes an RLPItem to an output
-    * Each Output is a list with (at least) the following first four elements: outputType, outputGuard, token, amount
     */
     function decodeOutput(RLPReader.RLPItem memory encodedOutput)
         internal

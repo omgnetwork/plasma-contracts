@@ -43,6 +43,7 @@ library FungibleTokenOutputModel {
         });
 
         require(outputData.amount != 0, "Output amount must not be 0");
+        require(outputData.outputGuard != bytes20(0), "Output outputGuard must not be 0");
         return outputData;
     }
 
