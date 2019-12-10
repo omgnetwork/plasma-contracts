@@ -54,7 +54,7 @@ class TransactionOutput(rlp.Serializable):
     @classmethod
     def serialize(cls, obj):
         sedes_list = List([
-            big_endian_int, 
+            big_endian_int,
             List([Binary.fixed_length(20), Binary.fixed_length(20), big_endian_int])
         ])
 
