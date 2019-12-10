@@ -1,6 +1,6 @@
 import enum
 
-from plasma_core.constants import CHILD_BLOCK_INTERVAL, EMPTY_BYTES
+from plasma_core.constants import CHILD_BLOCK_INTERVAL, EMPTY_BYTES, NULL_ADDRESS
 from plasma_core.transaction import TxOutputTypes, TxTypes, Transaction
 from plasma_core.utils.transactions import decode_utxo_id
 from plasma_core.utils.exit_priority import parse_exit_priority
@@ -239,8 +239,14 @@ class PlasmaFramework:
                                          spending_tx_sig):
         raise NotImplementedError
 
-    def processExits(self, vaultId, token, top_exit_id, exits_to_process):
-        return self.plasma_framework.processExits(vaultId, token, top_exit_id, exits_to_process)
+    def processExits(self, token, top_exit_id, exits_to_process, vault_id=None):
+        if vault_id is None:
+            if token == NULL_ADDRESS:
+                vault_id = self.eth_vault_id
+            else:
+                vault_id = self.erc20_vault_id
+
+        return self.plasma_framework.processExits(vault_id, token, top_exit_id, exits_to_process)
 
     def getInFlightExitId(self, tx):
         return self.payment_exit_game.getInFlightExitId(tx)

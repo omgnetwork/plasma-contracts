@@ -302,13 +302,7 @@ class TestingLanguage:
             vault_id (int): Id of the vault that funds the exit
         """
 
-        if not vault_id:
-            if token == NULL_ADDRESS:
-                vault_id = self.root_chain.eth_vault_id
-            else:
-                vault_id = self.root_chain.erc20_vault_id
-
-        return self.root_chain.processExits(vault_id, token, exit_id, count, **kwargs)
+        return self.root_chain.processExits(token, exit_id, count, vault_id, **kwargs)
 
     def get_challenge_proof(self, utxo_id, spend_id):
         """Returns information required to submit a challenge.
