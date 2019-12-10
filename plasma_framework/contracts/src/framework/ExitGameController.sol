@@ -5,7 +5,7 @@ import "./interfaces/IExitProcessor.sol";
 import "./registries/ExitGameRegistry.sol";
 import "./utils/PriorityQueue.sol";
 import "./utils/ExitPriority.sol";
-import "../utils/TxPosLib.sol";
+import "../utils/UtxoPosLib.sol";
 
 /**
  * @notice Controls the logic and functions for ExitGame to interact with the PlasmaFramework
@@ -116,7 +116,7 @@ contract ExitGameController is ExitGameRegistry {
         uint256 vaultId,
         address token,
         uint64 exitableAt,
-        TxPosLib.TxPos calldata txPos,
+        UtxoPosLib.UtxoPos calldata txPos,
         uint160 exitId,
         IExitProcessor exitProcessor
     )

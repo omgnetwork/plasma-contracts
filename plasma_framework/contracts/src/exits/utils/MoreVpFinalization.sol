@@ -4,7 +4,7 @@ pragma experimental ABIEncoderV2;
 import "../../framework/PlasmaFramework.sol";
 import "../../framework/Protocol.sol";
 import "../../utils/Merkle.sol";
-import "../../utils/TxPosLib.sol";
+import "../../utils/UtxoPosLib.sol";
 import "../../transactions/WireTransaction.sol";
 
 /**
@@ -12,7 +12,7 @@ import "../../transactions/WireTransaction.sol";
  * @dev This library assumes that the tx is of the WireTransaction format
  */
 library MoreVpFinalization {
-    using TxPosLib for TxPosLib.TxPos;
+    using UtxoPosLib for UtxoPosLib.UtxoPos;
 
     /**
     * @notice Checks whether a transaction is "standard finalized".
@@ -21,7 +21,7 @@ library MoreVpFinalization {
     function isStandardFinalized(
         PlasmaFramework framework,
         bytes memory txBytes,
-        TxPosLib.TxPos memory txPos,
+        UtxoPosLib.UtxoPos memory txPos,
         bytes memory inclusionProof
     )
         internal
@@ -31,7 +31,7 @@ library MoreVpFinalization {
         uint256 txType = WireTransaction.getTransactionType(txBytes);
         uint8 protocol = framework.protocols(txType);
         require(protocol == Protocol.MORE_VP(), "MoreVpFinalization: not a MoreVP protocol tx");
-        
+
         (bytes32 root,) = framework.blocks(txPos.blockNum());
         require(root != bytes32(""), "Failed to get the root hash of the block num");
 
@@ -54,7 +54,7 @@ library MoreVpFinalization {
     )
         internal
         view
-        returns (bool) 
+        returns (bool)
     {
         if (txBytes.length == 0) {
             return false;

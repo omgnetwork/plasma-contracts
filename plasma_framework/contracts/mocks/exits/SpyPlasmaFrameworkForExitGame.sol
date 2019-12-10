@@ -2,7 +2,7 @@ pragma solidity 0.5.11;
 pragma experimental ABIEncoderV2;
 
 import "../../src/framework/PlasmaFramework.sol";
-import "../../src/utils/TxPosLib.sol";
+import "../../src/utils/UtxoPosLib.sol";
 import "../../src/framework/models/BlockModel.sol";
 
 contract SpyPlasmaFrameworkForExitGame is PlasmaFramework {
@@ -30,7 +30,7 @@ contract SpyPlasmaFrameworkForExitGame is PlasmaFramework {
         uint256 _vaultId,
         address _token,
         uint64 _exitableAt,
-        TxPosLib.TxPos calldata _txPos,
+        UtxoPosLib.UtxoPos calldata _txPos,
         uint160 _exitId,
         IExitProcessor _exitProcessor
     )

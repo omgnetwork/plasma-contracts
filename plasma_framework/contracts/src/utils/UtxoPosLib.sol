@@ -1,7 +1,5 @@
 pragma solidity 0.5.11;
 
-import "./TxPosLib.sol";
-
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 /**
@@ -19,16 +17,17 @@ library UtxoPosLib {
 
     /**
      * @notice Returns the UTXO struct for a given txPos and outputIndex
-     * @param txPos Transaction position
+     * @param txPos Transaction position - utxo of zero index output
      * @param outputIndex Transaction index of the output
      * @return UtxoPos of the relevant value
      */
-    function build(TxPosLib.TxPos memory txPos, uint16 outputIndex)
+    function build(uint256 txPos, uint16 outputIndex)
         internal
         pure
         returns (UtxoPos memory)
     {
-        return UtxoPos(txPos.value.mul(TX_OFFSET).add(outputIndex));
+        require(txPos % TX_OFFSET == 0, "Invalid txo position");
+        return UtxoPos(txPos.add(outputIndex));
     }
 
     /**
@@ -71,15 +70,29 @@ library UtxoPosLib {
     }
 
     /**
-     * @notice Returns the transaction position of a given UTXO position
+     * @notice Returns transaction position which is a utxo position of zero index output
      * @param _utxoPos UTXO position identifier for the output
-     * @return Position of the transaction
+     * @return Identifier of the transaction
      */
     function txPos(UtxoPos memory _utxoPos)
         internal
         pure
-        returns (TxPosLib.TxPos memory)
+        returns (UtxoPos memory)
     {
-        return TxPosLib.TxPos(_utxoPos.value / TX_OFFSET);
+        uint16 oindex = outputIndex(_utxoPos);
+        return UtxoPos(_utxoPos.value.sub(oindex));
+    }
+
+     /**
+     * @notice Used for calculating exit priority
+     * @param _utxoPos UTXO position identifier for the output
+     * @return Identifier of the transaction
+     */
+    function getTxPostionForExitPriority(UtxoPos memory _utxoPos)
+        internal
+        pure
+        returns (uint256)
+    {
+        return _utxoPos.value / TX_OFFSET;
     }
 }
