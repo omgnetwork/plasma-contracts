@@ -8,14 +8,12 @@ import "../../utils/ExitId.sol";
 import "../../utils/OutputId.sol";
 import "../../utils/MoreVpFinalization.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
-import "../../../transactions/outputs/PaymentOutputModel.sol";
 import "../../../utils/UtxoPosLib.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../utils/ExitableTimestamp.sol";
 
 library PaymentStartStandardExit {
     using ExitableTimestamp for ExitableTimestamp.Calculator;
-    using PaymentOutputModel for PaymentOutputModel.Output;
     using UtxoPosLib for UtxoPosLib.UtxoPos;
 
     struct Controller {
