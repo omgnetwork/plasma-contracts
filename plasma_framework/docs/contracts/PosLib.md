@@ -1,138 +1,155 @@
-# IERC20.sol
+# PosLib.sol
 
-View Source: [openzeppelin-solidity/contracts/token/ERC20/IERC20.sol](../../openzeppelin-solidity/contracts/token/ERC20/IERC20.sol)
+View Source: [contracts/src/utils/PosLib.sol](../../contracts/src/utils/PosLib.sol)
 
-**IERC20**
+**PosLib**
 
-Interface of the ERC20 standard as defined in the EIP. Does not include
-the optional functions; to access them see `ERC20Detailed`.
+UTXO position = (blockNumber * BLOCK_OFFSET + txIndex * TX_OFFSET + outputIndex).
+TX position = (blockNumber * BLOCK_OFFSET + txIndex * TX_OFFSET)
 
-**Events**
+## Structs
+### Position
 
 ```js
-event Transfer(address indexed from, address indexed to, uint256  value);
-event Approval(address indexed owner, address indexed spender, uint256  value);
+struct Position {
+ uint256 blockNum,
+ uint256 txIndex,
+ uint16 outputIndex
+}
+```
+
+## Contract Members
+**Constants & Variables**
+
+```js
+uint256 internal constant BLOCK_OFFSET;
+uint256 internal constant TX_OFFSET;
+
 ```
 
 ## Functions
 
-- [totalSupply()](#totalsupply)
-- [balanceOf(address account)](#balanceof)
-- [transfer(address recipient, uint256 amount)](#transfer)
-- [allowance(address owner, address spender)](#allowance)
-- [approve(address spender, uint256 amount)](#approve)
-- [transferFrom(address sender, address recipient, uint256 amount)](#transferfrom)
+- [buildPositionFromTxPosAndOutputIndex(uint256 txPos, uint16 outputIndex)](#buildpositionfromtxposandoutputindex)
+- [txPos(struct PosLib.Position pos)](#txpos)
+- [getTxPostionForExitPriority(struct PosLib.Position pos)](#gettxpostionforexitpriority)
+- [encode(struct PosLib.Position pos)](#encode)
+- [encodePackedTxPos(struct PosLib.Position pos)](#encodepackedtxpos)
+- [decode(uint256 pos)](#decode)
 
-### totalSupply
+### buildPositionFromTxPosAndOutputIndex
 
-Returns the amount of tokens in existence.
+Returns the UTXO position for a given transaction position and output index
 
 ```js
-function totalSupply() external view
+function buildPositionFromTxPosAndOutputIndex(uint256 txPos, uint16 outputIndex) internal pure
+returns(struct PosLib.Position)
+```
+
+**Returns**
+
+utxo position
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| txPos | uint256 | Transaction position - utxo position of zero index output | 
+| outputIndex | uint16 | Index of the output | 
+
+### txPos
+
+Returns transaction position which is an utxo position of zero index output
+
+```js
+function txPos(struct PosLib.Position pos) internal pure
+returns(struct PosLib.Position)
+```
+
+**Returns**
+
+Position of a transaction
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| pos | struct PosLib.Position | UTXO position of the output | 
+
+### getTxPostionForExitPriority
+
+Used for calculating exit priority
+
+```js
+function getTxPostionForExitPriority(struct PosLib.Position pos) internal pure
 returns(uint256)
 ```
 
+**Returns**
+
+Identifier of the transaction
+
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
+| pos | struct PosLib.Position | UTXO position for the output | 
 
-### balanceOf
+### encode
 
-Returns the amount of tokens owned by `account`.
+Encodes a position
 
 ```js
-function balanceOf(address account) external view
+function encode(struct PosLib.Position pos) internal pure
 returns(uint256)
 ```
 
-**Arguments**
+**Returns**
 
-| Name        | Type           | Description  |
-| ------------- |------------- | -----|
-| account | address |  | 
-
-### transfer
-
-Moves `amount` tokens from the caller's account to `recipient`.
-     * Returns a boolean value indicating whether the operation succeeded.
-     * Emits a `Transfer` event.
-
-```js
-function transfer(address recipient, uint256 amount) external nonpayable
-returns(bool)
-```
+Position encoded as an integer
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| recipient | address |  | 
-| amount | uint256 |  | 
+| pos | struct PosLib.Position | Position | 
 
-### allowance
+### encodePackedTxPos
 
-Returns the remaining number of tokens that `spender` will be
-allowed to spend on behalf of `owner` through `transferFrom`. This is
-zero by default.
-     * This value changes when `approve` or `transferFrom` are called.
+Encodes a transaction position
 
 ```js
-function allowance(address owner, address spender) external view
+function encodePackedTxPos(struct PosLib.Position pos) internal pure
 returns(uint256)
 ```
 
+**Returns**
+
+Position encoded as an integer
+
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| owner | address |  | 
-| spender | address |  | 
+| pos | struct PosLib.Position | Transaction position | 
 
-### approve
+### decode
 
-Sets `amount` as the allowance of `spender` over the caller's tokens.
-     * Returns a boolean value indicating whether the operation succeeded.
-     * > Beware that changing an allowance with this method brings the risk
-that someone may use both the old and the new allowance by unfortunate
-transaction ordering. One possible solution to mitigate this race
-condition is to first reduce the spender's allowance to 0 and set the
-desired value afterwards:
-https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
-     * Emits an `Approval` event.
+Decodes a position from an integer value
 
 ```js
-function approve(address spender, uint256 amount) external nonpayable
-returns(bool)
+function decode(uint256 pos) internal pure
+returns(struct PosLib.Position)
 ```
+
+**Returns**
+
+Position
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| spender | address |  | 
-| amount | uint256 |  | 
-
-### transferFrom
-
-Moves `amount` tokens from `sender` to `recipient` using the
-allowance mechanism. `amount` is then deducted from the caller's
-allowance.
-     * Returns a boolean value indicating whether the operation succeeded.
-     * Emits a `Transfer` event.
-
-```js
-function transferFrom(address sender, address recipient, uint256 amount) external nonpayable
-returns(bool)
-```
-
-**Arguments**
-
-| Name        | Type           | Description  |
-| ------------- |------------- | -----|
-| sender | address |  | 
-| recipient | address |  | 
-| amount | uint256 |  | 
+| pos | uint256 | Encoded position | 
 
 ## Contracts
 

@@ -28,7 +28,7 @@ event InFlightExitChallengeResponded(address indexed challenger, bytes32 indexed
 - [buildController(PlasmaFramework framework, SpendingConditionRegistry spendingConditionRegistry, uint256 supportedTxType)](#buildcontroller)
 - [challenge(struct PaymentChallengeIFENotCanonical.Controller self, struct PaymentExitDataModel.InFlightExitMap inFlightExitMap, struct PaymentInFlightExitRouterArgs.ChallengeCanonicityArgs args)](#challenge)
 - [respond(struct PaymentChallengeIFENotCanonical.Controller self, struct PaymentExitDataModel.InFlightExitMap inFlightExitMap, bytes inFlightTx, uint256 inFlightTxPos, bytes inFlightTxInclusionProof)](#respond)
-- [verifyAndDeterminePositionOfTransactionIncludedInBlock(bytes txbytes, struct UtxoPosLib.UtxoPos utxoPos, bytes32 root, bytes inclusionProof)](#verifyanddeterminepositionoftransactionincludedinblock)
+- [verifyAndDeterminePositionOfTransactionIncludedInBlock(bytes txbytes, struct PosLib.Position utxoPos, bytes32 root, bytes inclusionProof)](#verifyanddeterminepositionoftransactionincludedinblock)
 - [verifyCompetingTxFinalized(struct PaymentChallengeIFENotCanonical.Controller self, struct PaymentInFlightExitRouterArgs.ChallengeCanonicityArgs args)](#verifycompetingtxfinalized)
 
 ### buildController
@@ -89,7 +89,7 @@ function respond(struct PaymentChallengeIFENotCanonical.Controller self, struct 
 ### verifyAndDeterminePositionOfTransactionIncludedInBlock
 
 ```js
-function verifyAndDeterminePositionOfTransactionIncludedInBlock(bytes txbytes, struct UtxoPosLib.UtxoPos utxoPos, bytes32 root, bytes inclusionProof) private pure
+function verifyAndDeterminePositionOfTransactionIncludedInBlock(bytes txbytes, struct PosLib.Position utxoPos, bytes32 root, bytes inclusionProof) private pure
 returns(uint256)
 ```
 
@@ -98,7 +98,7 @@ returns(uint256)
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
 | txbytes | bytes |  | 
-| utxoPos | struct UtxoPosLib.UtxoPos |  | 
+| utxoPos | struct PosLib.Position |  | 
 | root | bytes32 |  | 
 | inclusionProof | bytes |  | 
 
@@ -173,6 +173,7 @@ returns(uint256)
 * [PaymentTransactionModel](PaymentTransactionModel.md)
 * [PaymentTransactionStateTransitionVerifier](PaymentTransactionStateTransitionVerifier.md)
 * [PlasmaFramework](PlasmaFramework.md)
+* [PosLib](PosLib.md)
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
@@ -181,7 +182,6 @@ returns(uint256)
 * [SafeEthTransfer](SafeEthTransfer.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)
-* [UtxoPosLib](UtxoPosLib.md)
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)
 * [WireTransaction](WireTransaction.md)

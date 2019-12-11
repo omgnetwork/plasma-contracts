@@ -8,7 +8,7 @@ Library to check finalization for MoreVP protocol
 
 ## Functions
 
-- [isStandardFinalized(PlasmaFramework framework, bytes txBytes, struct UtxoPosLib.UtxoPos txPos, bytes inclusionProof)](#isstandardfinalized)
+- [isStandardFinalized(PlasmaFramework framework, bytes txBytes, struct PosLib.Position txPos, bytes inclusionProof)](#isstandardfinalized)
 - [isProtocolFinalized(PlasmaFramework framework, bytes txBytes)](#isprotocolfinalized)
 
 ### isStandardFinalized
@@ -17,7 +17,7 @@ Checks whether a transaction is "standard finalized".
         For MoreVP, it means the transaction should be included in a plasma block.
 
 ```js
-function isStandardFinalized(PlasmaFramework framework, bytes txBytes, struct UtxoPosLib.UtxoPos txPos, bytes inclusionProof) internal view
+function isStandardFinalized(PlasmaFramework framework, bytes txBytes, struct PosLib.Position txPos, bytes inclusionProof) internal view
 returns(bool)
 ```
 
@@ -27,7 +27,7 @@ returns(bool)
 | ------------- |------------- | -----|
 | framework | PlasmaFramework |  | 
 | txBytes | bytes |  | 
-| txPos | struct UtxoPosLib.UtxoPos |  | 
+| txPos | struct PosLib.Position |  | 
 | inclusionProof | bytes |  | 
 
 ### isProtocolFinalized
@@ -104,6 +104,7 @@ returns(bool)
 * [PaymentTransactionModel](PaymentTransactionModel.md)
 * [PaymentTransactionStateTransitionVerifier](PaymentTransactionStateTransitionVerifier.md)
 * [PlasmaFramework](PlasmaFramework.md)
+* [PosLib](PosLib.md)
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
@@ -112,7 +113,6 @@ returns(bool)
 * [SafeEthTransfer](SafeEthTransfer.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)
-* [UtxoPosLib](UtxoPosLib.md)
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)
 * [WireTransaction](WireTransaction.md)

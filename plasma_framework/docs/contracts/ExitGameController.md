@@ -58,7 +58,7 @@ modifier nonReentrant() internal
 - [deactivateNonReentrant()](#deactivatenonreentrant)
 - [hasExitQueue(uint256 vaultId, address token)](#hasexitqueue)
 - [addExitQueue(uint256 vaultId, address token)](#addexitqueue)
-- [enqueue(uint256 vaultId, address token, uint64 exitableAt, struct UtxoPosLib.UtxoPos txPos, uint160 exitId, IExitProcessor exitProcessor)](#enqueue)
+- [enqueue(uint256 vaultId, address token, uint64 exitableAt, struct PosLib.Position txPos, uint160 exitId, IExitProcessor exitProcessor)](#enqueue)
 - [processExits(uint256 vaultId, address token, uint160 topExitId, uint256 maxExitsToProcess)](#processexits)
 - [isAnyOutputsSpent(bytes32[] _outputIds)](#isanyoutputsspent)
 - [batchFlagOutputsSpent(bytes32[] _outputIds)](#batchflagoutputsspent)
@@ -148,7 +148,7 @@ Enqueue exits from exit game contracts is a function that places the exit into t
         priority queue to enforce the priority of exit during 'processExits'
 
 ```js
-function enqueue(uint256 vaultId, address token, uint64 exitableAt, struct UtxoPosLib.UtxoPos txPos, uint160 exitId, IExitProcessor exitProcessor) external nonpayable onlyFromNonQuarantinedExitGame 
+function enqueue(uint256 vaultId, address token, uint64 exitableAt, struct PosLib.Position txPos, uint160 exitId, IExitProcessor exitProcessor) external nonpayable onlyFromNonQuarantinedExitGame 
 returns(uint256)
 ```
 
@@ -163,7 +163,7 @@ A unique priority number computed for the exit
 | vaultId | uint256 | Vault ID of the vault that stores exiting funds | 
 | token | address | Token for the exit | 
 | exitableAt | uint64 | The earliest time a specified exit can be processed | 
-| txPos | struct UtxoPosLib.UtxoPos | Transaction position for the exit priority. For SE it should be the exit tx, for IFE it should be the youngest input tx position. | 
+| txPos | struct PosLib.Position | Transaction position for the exit priority. For SE it should be the exit tx, for IFE it should be the youngest input tx position. | 
 | exitId | uint160 | ID used by the exit processor contract to determine how to process the exit | 
 | exitProcessor | IExitProcessor | The exit processor contract, called during "processExits" | 
 
@@ -329,6 +329,7 @@ returns(bool)
 * [PaymentTransactionModel](PaymentTransactionModel.md)
 * [PaymentTransactionStateTransitionVerifier](PaymentTransactionStateTransitionVerifier.md)
 * [PlasmaFramework](PlasmaFramework.md)
+* [PosLib](PosLib.md)
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
@@ -337,7 +338,6 @@ returns(bool)
 * [SafeEthTransfer](SafeEthTransfer.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)
-* [UtxoPosLib](UtxoPosLib.md)
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)
 * [WireTransaction](WireTransaction.md)

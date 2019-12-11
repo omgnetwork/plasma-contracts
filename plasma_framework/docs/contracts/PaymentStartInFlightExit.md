@@ -28,7 +28,7 @@ struct StartExitData {
  struct PaymentTransactionModel.Transaction inFlightTx,
  bytes32 inFlightTxHash,
  bytes[] inputTxs,
- struct UtxoPosLib.UtxoPos[] inputUtxosPos,
+ struct PosLib.Position[] inputUtxosPos,
  bytes[] inputTxsInclusionProofs,
  bytes[] inFlightTxWitnesses,
  bytes32[] outputIds
@@ -47,7 +47,7 @@ event InFlightExitStarted(address indexed initiator, bytes32 indexed txHash);
 - [run(struct PaymentStartInFlightExit.Controller self, struct PaymentExitDataModel.InFlightExitMap inFlightExitMap, struct PaymentInFlightExitRouterArgs.StartExitArgs args)](#run)
 - [createStartExitData(struct PaymentStartInFlightExit.Controller controller, struct PaymentInFlightExitRouterArgs.StartExitArgs args)](#createstartexitdata)
 - [decodeInputTxsPositions(uint256[] inputUtxosPos)](#decodeinputtxspositions)
-- [getOutputIds(struct PaymentStartInFlightExit.Controller controller, bytes[] inputTxs, struct UtxoPosLib.UtxoPos[] utxoPos)](#getoutputids)
+- [getOutputIds(struct PaymentStartInFlightExit.Controller controller, bytes[] inputTxs, struct PosLib.Position[] utxoPos)](#getoutputids)
 - [verifyStart(struct PaymentStartInFlightExit.StartExitData exitData, struct PaymentExitDataModel.InFlightExitMap inFlightExitMap)](#verifystart)
 - [verifyExitNotStarted(uint160 exitId, struct PaymentExitDataModel.InFlightExitMap inFlightExitMap)](#verifyexitnotstarted)
 - [verifyInFlightTxType(struct PaymentStartInFlightExit.StartExitData exitData)](#verifyinflighttxtype)
@@ -57,7 +57,7 @@ event InFlightExitStarted(address indexed initiator, bytes32 indexed txHash);
 - [verifyInputsSpent(struct PaymentStartInFlightExit.StartExitData exitData)](#verifyinputsspent)
 - [verifyStateTransition(struct PaymentStartInFlightExit.StartExitData exitData)](#verifystatetransition)
 - [startExit(struct PaymentStartInFlightExit.StartExitData startExitData, struct PaymentExitDataModel.InFlightExitMap inFlightExitMap)](#startexit)
-- [getYoungestInputUtxoPosition(struct UtxoPosLib.UtxoPos[] inputUtxosPos)](#getyoungestinpututxoposition)
+- [getYoungestInputUtxoPosition(struct PosLib.Position[] inputUtxosPos)](#getyoungestinpututxoposition)
 - [setInFlightExitInputs(struct PaymentExitDataModel.InFlightExit ife, struct PaymentStartInFlightExit.StartExitData exitData)](#setinflightexitinputs)
 - [setInFlightExitOutputs(struct PaymentExitDataModel.InFlightExit ife, struct PaymentStartInFlightExit.StartExitData exitData)](#setinflightexitoutputs)
 
@@ -117,7 +117,7 @@ returns(struct PaymentStartInFlightExit.StartExitData)
 
 ```js
 function decodeInputTxsPositions(uint256[] inputUtxosPos) private pure
-returns(struct UtxoPosLib.UtxoPos[])
+returns(struct PosLib.Position[])
 ```
 
 **Arguments**
@@ -129,7 +129,7 @@ returns(struct UtxoPosLib.UtxoPos[])
 ### getOutputIds
 
 ```js
-function getOutputIds(struct PaymentStartInFlightExit.Controller controller, bytes[] inputTxs, struct UtxoPosLib.UtxoPos[] utxoPos) private pure
+function getOutputIds(struct PaymentStartInFlightExit.Controller controller, bytes[] inputTxs, struct PosLib.Position[] utxoPos) private pure
 returns(bytes32[])
 ```
 
@@ -139,7 +139,7 @@ returns(bytes32[])
 | ------------- |------------- | -----|
 | controller | struct PaymentStartInFlightExit.Controller |  | 
 | inputTxs | bytes[] |  | 
-| utxoPos | struct UtxoPosLib.UtxoPos[] |  | 
+| utxoPos | struct PosLib.Position[] |  | 
 
 ### verifyStart
 
@@ -255,7 +255,7 @@ function startExit(struct PaymentStartInFlightExit.StartExitData startExitData, 
 ### getYoungestInputUtxoPosition
 
 ```js
-function getYoungestInputUtxoPosition(struct UtxoPosLib.UtxoPos[] inputUtxosPos) private pure
+function getYoungestInputUtxoPosition(struct PosLib.Position[] inputUtxosPos) private pure
 returns(uint256)
 ```
 
@@ -263,7 +263,7 @@ returns(uint256)
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| inputUtxosPos | struct UtxoPosLib.UtxoPos[] |  | 
+| inputUtxosPos | struct PosLib.Position[] |  | 
 
 ### setInFlightExitInputs
 
@@ -348,6 +348,7 @@ function setInFlightExitOutputs(struct PaymentExitDataModel.InFlightExit ife, st
 * [PaymentTransactionModel](PaymentTransactionModel.md)
 * [PaymentTransactionStateTransitionVerifier](PaymentTransactionStateTransitionVerifier.md)
 * [PlasmaFramework](PlasmaFramework.md)
+* [PosLib](PosLib.md)
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
@@ -356,7 +357,6 @@ function setInFlightExitOutputs(struct PaymentExitDataModel.InFlightExit ife, st
 * [SafeEthTransfer](SafeEthTransfer.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)
-* [UtxoPosLib](UtxoPosLib.md)
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)
 * [WireTransaction](WireTransaction.md)
