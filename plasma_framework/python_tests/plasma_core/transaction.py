@@ -77,6 +77,7 @@ class Transaction(rlp.Serializable):
         ('tx_type', big_endian_int),
         ('inputs', CountableList(Binary.fixed_length(32), NUM_TXOS)),
         ('outputs', CountableList(TransactionOutput, NUM_TXOS)),
+        ('tx_data', big_endian_int),
         ('metadata', Binary.fixed_length(32))
     )
 
@@ -84,6 +85,7 @@ class Transaction(rlp.Serializable):
                  tx_type=TxTypes.PAYMENT,
                  inputs=None,
                  outputs=None,
+                 tx_data=0,
                  metadata=None,
                  signatures=None,
                  signers=None):
@@ -105,7 +107,7 @@ class Transaction(rlp.Serializable):
         inputs = [TransactionInput(*i) for i in inputs]
         outputs = [TransactionOutput(*o) for o in outputs]
 
-        super().__init__(tx_type.value, inputs, outputs, metadata)
+        super().__init__(tx_type.value, inputs, outputs, tx_data, metadata)
 
         self.signatures = signatures[:]
         self._signers = signers[:]
@@ -135,6 +137,7 @@ class Transaction(rlp.Serializable):
             obj.tx_type,
             [i.utxo_id for i in obj.inputs],
             obj.outputs,
+            obj.tx_data,
             obj.metadata
         ]
 

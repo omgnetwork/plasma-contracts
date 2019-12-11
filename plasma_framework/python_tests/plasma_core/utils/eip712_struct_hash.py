@@ -43,6 +43,7 @@ class Transaction(EIP712Struct):
     output1 = Output
     output2 = Output
     output3 = Output
+    txData = Uint(256)
     metadata = Bytes(32)
 
 
@@ -60,6 +61,7 @@ def struct_tx_from_tx(tx):
         output1=outputs[1],
         output2=outputs[2],
         output3=outputs[3],
+        txData=tx.tx_data,
         metadata=tx.metadata,
     )
 
