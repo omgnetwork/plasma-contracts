@@ -13,13 +13,13 @@ import "../../../framework/PlasmaFramework.sol";
 import "../../../framework/Protocol.sol";
 import "../../../utils/IsDeposit.sol";
 import "../../../utils/SafeEthTransfer.sol";
-import "../../../utils/UtxoPosLib.sol";
+import "../../../utils/PosLib.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
 import "../../../transactions/WireTransaction.sol";
 import "../../../transactions/outputs/PaymentOutputModel.sol";
 
 library PaymentChallengeStandardExit {
-    using UtxoPosLib for UtxoPosLib.UtxoPos;
+    using PosLib for PosLib.Position;
     using IsDeposit for IsDeposit.Predicate;
 
     struct Controller {
@@ -107,7 +107,7 @@ library PaymentChallengeStandardExit {
     function verifySpendingCondition(ChallengeStandardExitData memory data) private view {
         PaymentStandardExitRouterArgs.ChallengeStandardExitArgs memory args = data.args;
 
-        UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(data.exitData.utxoPos);
+        PosLib.Position memory utxoPos = PosLib.Position(data.exitData.utxoPos);
         PaymentOutputModel.Output memory output = PaymentTransactionModel
             .decode(args.exitingTx)
             .outputs[utxoPos.outputIndex()];

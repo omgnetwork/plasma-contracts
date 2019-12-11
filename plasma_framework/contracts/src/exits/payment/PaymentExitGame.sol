@@ -51,7 +51,7 @@ contract PaymentExitGame is IExitProcessor, OnlyFromAddress, PaymentStandardExit
         pure
         returns (uint160)
     {
-        UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(_utxoPos);
+        PosLib.Position memory utxoPos = PosLib.Position(_utxoPos);
         return ExitId.getStandardExitId(_isDeposit, _txBytes, utxoPos);
     }
 

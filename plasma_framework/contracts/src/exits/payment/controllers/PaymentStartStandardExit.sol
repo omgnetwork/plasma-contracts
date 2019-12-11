@@ -10,7 +10,7 @@ import "../../utils/MoreVpFinalization.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
 import "../../../transactions/outputs/PaymentOutputModel.sol";
 import "../../../utils/IsDeposit.sol";
-import "../../../utils/UtxoPosLib.sol";
+import "../../../utils/PosLib.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../utils/ExitableTimestamp.sol";
 
@@ -18,7 +18,7 @@ library PaymentStartStandardExit {
     using ExitableTimestamp for ExitableTimestamp.Calculator;
     using IsDeposit for IsDeposit.Predicate;
     using PaymentOutputModel for PaymentOutputModel.Output;
-    using UtxoPosLib for UtxoPosLib.UtxoPos;
+    using PosLib for PosLib.Position;
 
     struct Controller {
         IExitProcessor exitProcessor;
@@ -36,7 +36,7 @@ library PaymentStartStandardExit {
     struct StartStandardExitData {
         Controller controller;
         PaymentStandardExitRouterArgs.StartStandardExitArgs args;
-        UtxoPosLib.UtxoPos utxoPos;
+        PosLib.Position utxoPos;
         PaymentTransactionModel.Transaction outputTx;
         PaymentOutputModel.Output output;
         uint160 exitId;
@@ -106,7 +106,7 @@ library PaymentStartStandardExit {
         view
         returns (StartStandardExitData memory)
     {
-        UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(args.utxoPos);
+        PosLib.Position memory utxoPos = PosLib.Position(args.utxoPos);
         PaymentTransactionModel.Transaction memory outputTx = PaymentTransactionModel.decode(args.rlpOutputTx);
         PaymentOutputModel.Output memory output = outputTx.outputs[utxoPos.outputIndex()];
         bool isTxDeposit = controller.isDeposit.test(utxoPos.blockNum());

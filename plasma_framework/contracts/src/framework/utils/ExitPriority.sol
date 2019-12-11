@@ -1,10 +1,10 @@
 pragma solidity 0.5.11;
 
-import "../../utils/UtxoPosLib.sol";
+import "../../utils/PosLib.sol";
 
 library ExitPriority {
 
-    using UtxoPosLib for UtxoPosLib.UtxoPos;
+    using PosLib for PosLib.Position;
 
     /**
      * @dev Returns an exit priority for a given UTXO position and a unique ID.
@@ -18,7 +18,7 @@ library ExitPriority {
      *   54 bits  - blknum * CHILD_BLOCK_INTERVAL * 10^5 + txindex; 54 bits represent all transactions for 85 years. We are assuming CHILD_BLOCK_INTERVAL = 1000.
      *   160 bits - exit id
      */
-    function computePriority(uint64 exitableAt, UtxoPosLib.UtxoPos memory txPos, uint160 exitId)
+    function computePriority(uint64 exitableAt, PosLib.Position memory txPos, uint160 exitId)
         internal
         pure
         returns (uint256)

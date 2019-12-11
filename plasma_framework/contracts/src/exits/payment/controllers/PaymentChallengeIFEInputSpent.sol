@@ -12,13 +12,13 @@ import "../../utils/MoreVpFinalization.sol";
 import "../../../utils/IsDeposit.sol";
 import "../../../utils/Merkle.sol";
 import "../../../utils/SafeEthTransfer.sol";
-import "../../../utils/UtxoPosLib.sol";
+import "../../../utils/PosLib.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
 import "../../../transactions/WireTransaction.sol";
 
 library PaymentChallengeIFEInputSpent {
-    using UtxoPosLib for UtxoPosLib.UtxoPos;
+    using PosLib for PosLib.Position;
     using IsDeposit for IsDeposit.Predicate;
     using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
 
@@ -112,7 +112,7 @@ library PaymentChallengeIFEInputSpent {
     function verifySpentInputEqualsIFEInput(ChallengeIFEData memory data) private pure {
         bytes32 ifeInputOutputId = data.ife.inputs[data.args.inFlightTxInputIndex].outputId;
 
-        UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(data.args.inputUtxoPos);
+        PosLib.Position memory utxoPos = PosLib.Position(data.args.inputUtxoPos);
         bytes32 challengingTxInputOutputId = data.controller.isDeposit.test(utxoPos.blockNum())
                 ? OutputId.computeDepositOutputId(data.args.inputTx, utxoPos.outputIndex(), utxoPos.value)
                 : OutputId.computeNormalOutputId(data.args.inputTx, utxoPos.outputIndex());
@@ -143,7 +143,7 @@ library PaymentChallengeIFEInputSpent {
         );
         require(address(condition) != address(0), "Spending condition contract not found");
 
-        UtxoPosLib.UtxoPos memory inputUtxoPos = UtxoPosLib.UtxoPos(data.args.inputUtxoPos);
+        PosLib.Position memory inputUtxoPos = PosLib.Position(data.args.inputUtxoPos);
 
         bool isSpent = condition.verify(
             data.args.inputTx,

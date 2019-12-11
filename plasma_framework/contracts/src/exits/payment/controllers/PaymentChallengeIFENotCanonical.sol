@@ -9,7 +9,7 @@ import "../../registries/SpendingConditionRegistry.sol";
 import "../../utils/ExitId.sol";
 import "../../utils/OutputId.sol";
 import "../../utils/MoreVpFinalization.sol";
-import "../../../utils/UtxoPosLib.sol";
+import "../../../utils/PosLib.sol";
 import "../../../utils/Merkle.sol";
 import "../../../utils/IsDeposit.sol";
 import "../../../framework/PlasmaFramework.sol";
@@ -17,7 +17,7 @@ import "../../../transactions/PaymentTransactionModel.sol";
 import "../../../transactions/WireTransaction.sol";
 
 library PaymentChallengeIFENotCanonical {
-    using UtxoPosLib for UtxoPosLib.UtxoPos;
+    using PosLib for PosLib.Position;
     using IsDeposit for IsDeposit.Predicate;
     using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
 
@@ -91,7 +91,7 @@ library PaymentChallengeIFENotCanonical {
         );
 
 
-        UtxoPosLib.UtxoPos memory inputUtxoPos = UtxoPosLib.UtxoPos(args.inputUtxoPos);
+        PosLib.Position memory inputUtxoPos = PosLib.Position(args.inputUtxoPos);
 
         bytes32 outputId;
         if (self.isDeposit.test(inputUtxoPos.blockNum())) {
@@ -162,7 +162,7 @@ library PaymentChallengeIFENotCanonical {
             ife.oldestCompetitorPosition > inFlightTxPos,
             "In-flight transaction must be older than competitors to respond to non-canonical challenge");
 
-        UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(inFlightTxPos);
+        PosLib.Position memory utxoPos = PosLib.Position(inFlightTxPos);
         (bytes32 root, ) = self.framework.blocks(utxoPos.blockNum());
         require(root != bytes32(""), "Failed to get the block root hash of the UTXO position");
 
@@ -178,7 +178,7 @@ library PaymentChallengeIFENotCanonical {
 
     function verifyAndDeterminePositionOfTransactionIncludedInBlock(
         bytes memory txbytes,
-        UtxoPosLib.UtxoPos memory utxoPos,
+        PosLib.Position memory utxoPos,
         bytes32 root,
         bytes memory inclusionProof
     )
@@ -214,7 +214,7 @@ library PaymentChallengeIFENotCanonical {
             // Should fail already in early stages (eg. decode)
             assert(isProtocolFinalized);
         } else {
-            UtxoPosLib.UtxoPos memory competingTxUtxoPos = UtxoPosLib.UtxoPos(args.competingTxPos);
+            PosLib.Position memory competingTxUtxoPos = PosLib.Position(args.competingTxPos);
             bool isStandardFinalized = MoreVpFinalization.isStandardFinalized(
                 self.framework,
                 args.competingTx,

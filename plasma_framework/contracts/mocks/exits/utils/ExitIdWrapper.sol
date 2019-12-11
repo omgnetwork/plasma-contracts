@@ -1,6 +1,6 @@
 pragma solidity 0.5.11;
 
-import "../../../src/utils/UtxoPosLib.sol";
+import "../../../src/utils/PosLib.sol";
 import "../../../src/exits/utils/ExitId.sol";
 
 contract ExitIdWrapper {
@@ -13,7 +13,7 @@ contract ExitIdWrapper {
         pure
         returns (uint160)
     {
-        UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(_utxoPos);
+        PosLib.Position memory utxoPos = PosLib.Position(_utxoPos);
         return ExitId.getStandardExitId(_isDeposit, _txBytes, utxoPos);
     }
 

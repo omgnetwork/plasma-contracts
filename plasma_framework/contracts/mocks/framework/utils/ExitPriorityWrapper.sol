@@ -1,11 +1,11 @@
 pragma solidity 0.5.11;
 
 import "../../../src/framework/utils/ExitPriority.sol";
-import "../../../src/utils/UtxoPosLib.sol";
+import "../../../src/utils/PosLib.sol";
 
 contract ExitPriorityWrapper {
     function computePriority(uint64 exitableAt, uint256 txPos, uint160 exitId) public pure returns (uint256) {
-        return ExitPriority.computePriority(exitableAt, UtxoPosLib.UtxoPos(txPos), exitId);
+        return ExitPriority.computePriority(exitableAt, PosLib.Position(txPos), exitId);
     }
 
     function parseExitableAt(uint256 priority) public pure returns (uint64) {

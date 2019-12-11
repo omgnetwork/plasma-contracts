@@ -3,7 +3,7 @@ pragma solidity 0.5.11;
 import "openzeppelin-solidity/contracts/cryptography/ECDSA.sol";
 
 import "../../interfaces/ISpendingCondition.sol";
-import "../../../utils/UtxoPosLib.sol";
+import "../../../utils/PosLib.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
 import "../../../transactions/outputs/PaymentOutputModel.sol";
 import "../../../transactions/eip712Libs/PaymentEip712Lib.sol";
@@ -11,7 +11,7 @@ import "../../../transactions/eip712Libs/PaymentEip712Lib.sol";
 contract PaymentOutputToPaymentTxCondition is ISpendingCondition {
     using PaymentEip712Lib for PaymentEip712Lib.Constants;
     using PaymentOutputModel for PaymentOutputModel.Output;
-    using UtxoPosLib for UtxoPosLib.UtxoPos;
+    using PosLib for PosLib.Position;
 
     uint256 internal supportInputTxType;
     uint256 internal supportSpendingTxType;
@@ -54,7 +54,7 @@ contract PaymentOutputToPaymentTxCondition is ISpendingCondition {
         PaymentTransactionModel.Transaction memory spendingTx = PaymentTransactionModel.decode(spendingTxBytes);
         require(spendingTx.txType == supportSpendingTxType, "The spending tx is an unsupported payment tx type");
 
-        UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.build(inputTxPos, outputIndex);
+        PosLib.Position memory utxoPos = PosLib.build(inputTxPos, outputIndex);
         require(
             spendingTx.inputs[inputIndex] == bytes32(utxoPos.value),
             "Spending tx points to the incorrect output UTXO position"

@@ -1,4 +1,4 @@
-const UtxoPosLib = artifacts.require('UtxoPosLibWrapper');
+const UtxoPosLib = artifacts.require('PosLibWrapper');
 
 const { BN, expectRevert } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');

@@ -4,7 +4,7 @@ pragma experimental ABIEncoderV2;
 import "../../framework/PlasmaFramework.sol";
 import "../../framework/Protocol.sol";
 import "../../utils/Merkle.sol";
-import "../../utils/UtxoPosLib.sol";
+import "../../utils/PosLib.sol";
 import "../../transactions/WireTransaction.sol";
 
 /**
@@ -12,7 +12,7 @@ import "../../transactions/WireTransaction.sol";
  * @dev This library assumes that the tx is of the WireTransaction format
  */
 library MoreVpFinalization {
-    using UtxoPosLib for UtxoPosLib.UtxoPos;
+    using PosLib for PosLib.Position;
 
     /**
     * @notice Checks whether a transaction is "standard finalized".
@@ -21,7 +21,7 @@ library MoreVpFinalization {
     function isStandardFinalized(
         PlasmaFramework framework,
         bytes memory txBytes,
-        UtxoPosLib.UtxoPos memory txPos,
+        PosLib.Position memory txPos,
         bytes memory inclusionProof
     )
         internal

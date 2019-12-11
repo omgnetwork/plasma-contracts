@@ -11,10 +11,10 @@ import "../../../framework/interfaces/IExitProcessor.sol";
 import "../../../transactions/outputs/PaymentOutputModel.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
 import "../../../utils/IsDeposit.sol";
-import "../../../utils/UtxoPosLib.sol";
+import "../../../utils/PosLib.sol";
 
 library PaymentPiggybackInFlightExit {
-    using UtxoPosLib for UtxoPosLib.UtxoPos;
+    using PosLib for PosLib.Position;
     using IsDeposit for IsDeposit.Predicate;
     using ExitableTimestamp for ExitableTimestamp.Calculator;
     using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
@@ -97,7 +97,7 @@ library PaymentPiggybackInFlightExit {
         withdrawData.piggybackBondSize = msg.value;
 
         if (isFirstPiggybackOfTheToken(exit, withdrawData.token)) {
-            enqueue(self, withdrawData.token, UtxoPosLib.UtxoPos(exit.position), exitId);
+            enqueue(self, withdrawData.token, PosLib.Position(exit.position), exitId);
         }
 
         exit.setInputPiggybacked(args.inputIndex);
@@ -138,7 +138,7 @@ library PaymentPiggybackInFlightExit {
         require(exitTarget == msg.sender, "Can be called only by the exit target");
 
         if (isFirstPiggybackOfTheToken(exit, withdrawData.token)) {
-            enqueue(self, withdrawData.token, UtxoPosLib.UtxoPos(exit.position), exitId);
+            enqueue(self, withdrawData.token, PosLib.Position(exit.position), exitId);
         }
 
         // Exit target for outputs is set in piggyback instead of start in-flight exit
@@ -153,7 +153,7 @@ library PaymentPiggybackInFlightExit {
     function enqueue(
         Controller memory controller,
         address token,
-        UtxoPosLib.UtxoPos memory utxoPos,
+        PosLib.Position memory utxoPos,
         uint160 exitId
     )
         private

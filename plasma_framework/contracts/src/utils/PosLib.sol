@@ -4,11 +4,12 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 /**
  * @dev UTXO position = (blockNumber * BLOCK_OFFSET + txIndex * TX_OFFSET + outputIndex).
+ * TX position = (blockNumber * BLOCK_OFFSET + txIndex * TX_OFFSET)
  */
-library UtxoPosLib {
+library PosLib {
     using SafeMath for uint256;
 
-    struct UtxoPos {
+    struct Position {
         uint256 value;
     }
 
@@ -19,15 +20,15 @@ library UtxoPosLib {
      * @notice Returns the UTXO struct for a given txPos and outputIndex
      * @param txPos Transaction position - utxo of zero index output
      * @param outputIndex Transaction index of the output
-     * @return UtxoPos of the relevant value
+     * @return Position of the relevant value
      */
     function build(uint256 txPos, uint16 outputIndex)
         internal
         pure
-        returns (UtxoPos memory)
+        returns (Position memory)
     {
         require(txPos % TX_OFFSET == 0, "Invalid transaction position");
-        return UtxoPos(txPos.add(outputIndex));
+        return Position(txPos.add(outputIndex));
     }
 
     /**
@@ -35,7 +36,7 @@ library UtxoPosLib {
      * @param _utxoPos UTXO position identifier for the output
      * @return The block number of the output
      */
-    function blockNum(UtxoPos memory _utxoPos)
+    function blockNum(Position memory _utxoPos)
         internal
         pure
         returns (uint256)
@@ -48,7 +49,7 @@ library UtxoPosLib {
      * @param _utxoPos UTXO position identifier for the output
      * @return Transaction index of the output
      */
-    function txIndex(UtxoPos memory _utxoPos)
+    function txIndex(Position memory _utxoPos)
         internal
         pure
         returns (uint256)
@@ -61,7 +62,7 @@ library UtxoPosLib {
      * @param _utxoPos UTXO position identifier for the output
      * @return Index of the output
      */
-    function outputIndex(UtxoPos memory _utxoPos)
+    function outputIndex(Position memory _utxoPos)
         internal
         pure
         returns (uint16)
@@ -74,13 +75,13 @@ library UtxoPosLib {
      * @param _utxoPos UTXO position identifier for the output
      * @return Identifier of the transaction
      */
-    function txPos(UtxoPos memory _utxoPos)
+    function txPos(Position memory _utxoPos)
         internal
         pure
-        returns (UtxoPos memory)
+        returns (Position memory)
     {
         uint16 oindex = outputIndex(_utxoPos);
-        return UtxoPos(_utxoPos.value.sub(oindex));
+        return Position(_utxoPos.value.sub(oindex));
     }
 
      /**
@@ -88,7 +89,7 @@ library UtxoPosLib {
      * @param _utxoPos UTXO position identifier for the output
      * @return Identifier of the transaction
      */
-    function getTxPostionForExitPriority(UtxoPos memory _utxoPos)
+    function getTxPostionForExitPriority(Position memory _utxoPos)
         internal
         pure
         returns (uint256)

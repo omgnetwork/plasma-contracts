@@ -10,13 +10,13 @@ import "../../utils/ExitId.sol";
 import "../../utils/MoreVpFinalization.sol";
 import "../../../utils/Merkle.sol";
 import "../../../utils/SafeEthTransfer.sol";
-import "../../../utils/UtxoPosLib.sol";
+import "../../../utils/PosLib.sol";
 import "../../../transactions/WireTransaction.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
 
 library PaymentChallengeIFEOutputSpent {
-    using UtxoPosLib for UtxoPosLib.UtxoPos;
+    using PosLib for PosLib.Position;
     using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
 
     struct Controller {
@@ -49,8 +49,8 @@ library PaymentChallengeIFEOutputSpent {
         PaymentExitDataModel.InFlightExit storage ife = inFlightExitMap.exits[exitId];
         require(ife.exitStartTimestamp != 0, "In-flight exit does not exist");
 
-        UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(args.outputUtxoPos);
-        uint16 outputIndex = UtxoPosLib.outputIndex(utxoPos);
+        PosLib.Position memory utxoPos = PosLib.Position(args.outputUtxoPos);
+        uint16 outputIndex = PosLib.outputIndex(utxoPos);
         require(
             ife.isOutputPiggybacked(outputIndex),
             "Output is not piggybacked"
@@ -75,7 +75,7 @@ library PaymentChallengeIFEOutputSpent {
         private
         view
     {
-        UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(args.outputUtxoPos);
+        PosLib.Position memory utxoPos = PosLib.Position(args.outputUtxoPos);
         bool isStandardFinalized = MoreVpFinalization.isStandardFinalized(
             controller.framework,
             args.inFlightTx,
@@ -110,7 +110,7 @@ library PaymentChallengeIFEOutputSpent {
         private
         view
     {
-        UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(args.outputUtxoPos);
+        PosLib.Position memory utxoPos = PosLib.Position(args.outputUtxoPos);
         uint256 challengingTxType = WireTransaction.getTransactionType(args.challengingTx);
         WireTransaction.Output memory output = WireTransaction.getOutput(args.challengingTx, utxoPos.outputIndex());
 

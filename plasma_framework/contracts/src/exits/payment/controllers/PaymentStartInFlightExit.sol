@@ -12,7 +12,7 @@ import "../../utils/ExitId.sol";
 import "../../utils/OutputId.sol";
 import "../../utils/MoreVpFinalization.sol";
 import "../../../utils/IsDeposit.sol";
-import "../../../utils/UtxoPosLib.sol";
+import "../../../utils/PosLib.sol";
 import "../../../utils/Merkle.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
@@ -22,7 +22,7 @@ import "../../../transactions/outputs/PaymentOutputModel.sol";
 library PaymentStartInFlightExit {
     using ExitableTimestamp for ExitableTimestamp.Calculator;
     using IsDeposit for IsDeposit.Predicate;
-    using UtxoPosLib for UtxoPosLib.UtxoPos;
+    using PosLib for PosLib.Position;
     using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
     using PaymentOutputModel for PaymentOutputModel.Output;
 
@@ -63,7 +63,7 @@ library PaymentStartInFlightExit {
         PaymentTransactionModel.Transaction inFlightTx;
         bytes32 inFlightTxHash;
         bytes[] inputTxs;
-        UtxoPosLib.UtxoPos[] inputUtxosPos;
+        PosLib.Position[] inputUtxosPos;
         bytes[] inputTxsInclusionProofs;
         bytes[] inFlightTxWitnesses;
         bytes32[] outputIds;
@@ -135,17 +135,17 @@ library PaymentStartInFlightExit {
         return exitData;
     }
 
-    function decodeInputTxsPositions(uint256[] memory inputUtxosPos) private pure returns (UtxoPosLib.UtxoPos[] memory) {
+    function decodeInputTxsPositions(uint256[] memory inputUtxosPos) private pure returns (PosLib.Position[] memory) {
         require(inputUtxosPos.length <= PaymentTransactionModel.MAX_INPUT_NUM(), "Too many transactions provided");
 
-        UtxoPosLib.UtxoPos[] memory utxosPos = new UtxoPosLib.UtxoPos[](inputUtxosPos.length);
+        PosLib.Position[] memory utxosPos = new PosLib.Position[](inputUtxosPos.length);
         for (uint i = 0; i < inputUtxosPos.length; i++) {
-            utxosPos[i] = UtxoPosLib.UtxoPos(inputUtxosPos[i]);
+            utxosPos[i] = PosLib.Position(inputUtxosPos[i]);
         }
         return utxosPos;
     }
 
-    function getOutputIds(Controller memory controller, bytes[] memory inputTxs, UtxoPosLib.UtxoPos[] memory utxoPos)
+    function getOutputIds(Controller memory controller, bytes[] memory inputTxs, PosLib.Position[] memory utxoPos)
         private
         pure
         returns (bytes32[] memory)
@@ -280,7 +280,7 @@ library PaymentStartInFlightExit {
         setInFlightExitOutputs(ife, startExitData);
     }
 
-    function getYoungestInputUtxoPosition(UtxoPosLib.UtxoPos[] memory inputUtxosPos) private pure returns (uint256) {
+    function getYoungestInputUtxoPosition(PosLib.Position[] memory inputUtxosPos) private pure returns (uint256) {
         uint256 youngest = inputUtxosPos[0].value;
         for (uint i = 1; i < inputUtxosPos.length; i++) {
             if (inputUtxosPos[i].value > youngest) {

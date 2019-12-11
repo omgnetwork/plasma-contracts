@@ -1,10 +1,10 @@
 pragma solidity 0.5.11;
 
 import "../../utils/Bits.sol";
-import "../../utils/UtxoPosLib.sol";
+import "../../utils/PosLib.sol";
 
 library ExitId {
-    using UtxoPosLib for UtxoPosLib.UtxoPos;
+    using PosLib for PosLib.Position;
     using Bits for uint160;
     using Bits for uint256;
 
@@ -31,7 +31,7 @@ library ExitId {
     function getStandardExitId(
         bool _isDeposit,
         bytes memory _txBytes,
-        UtxoPosLib.UtxoPos memory _utxoPos
+        PosLib.Position memory _utxoPos
     )
         internal
         pure
