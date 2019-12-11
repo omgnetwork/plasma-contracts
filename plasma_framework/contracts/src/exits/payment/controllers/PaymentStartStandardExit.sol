@@ -8,20 +8,19 @@ import "../../utils/ExitId.sol";
 import "../../utils/OutputId.sol";
 import "../../utils/MoreVpFinalization.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
-import "../../../utils/IsDeposit.sol";
+import "../../../transactions/outputs/PaymentOutputModel.sol";
 import "../../../utils/UtxoPosLib.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../utils/ExitableTimestamp.sol";
 
 library PaymentStartStandardExit {
     using ExitableTimestamp for ExitableTimestamp.Calculator;
-    using IsDeposit for IsDeposit.Predicate;
+    using PaymentOutputModel for PaymentOutputModel.Output;
     using UtxoPosLib for UtxoPosLib.UtxoPos;
 
     struct Controller {
         IExitProcessor exitProcessor;
         PlasmaFramework framework;
-        IsDeposit.Predicate isDeposit;
         ExitableTimestamp.Calculator exitableTimestampCalculator;
         uint256 ethVaultId;
         uint256 erc20VaultId;
@@ -66,7 +65,6 @@ library PaymentStartStandardExit {
         return Controller({
             exitProcessor: exitProcessor,
             framework: framework,
-            isDeposit: IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL()),
             exitableTimestampCalculator: ExitableTimestamp.Calculator(framework.minExitPeriod()),
             ethVaultId: ethVaultId,
             erc20VaultId: erc20VaultId,
@@ -107,7 +105,7 @@ library PaymentStartStandardExit {
         UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(args.utxoPos);
         PaymentTransactionModel.Transaction memory outputTx = PaymentTransactionModel.decode(args.rlpOutputTx);
         FungibleTokenOutputModel.Output memory output = outputTx.outputs[utxoPos.outputIndex()];
-        bool isTxDeposit = controller.isDeposit.test(utxoPos.blockNum());
+        bool isTxDeposit = controller.framework.isDeposit(utxoPos.blockNum());
         uint160 exitId = ExitId.getStandardExitId(isTxDeposit, args.rlpOutputTx, utxoPos);
         (, uint256 blockTimestamp) = controller.framework.blocks(utxoPos.blockNum());
 

@@ -31,7 +31,6 @@ function verify(bytes depositTx, uint256 amount, address sender) external view
 ## Contracts
 
 * [Address](Address.md)
-* [AddressPayable](AddressPayable.md)
 * [Bits](Bits.md)
 * [BlockController](BlockController.md)
 * [BlockModel](BlockModel.md)

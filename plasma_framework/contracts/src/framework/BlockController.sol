@@ -106,4 +106,9 @@ contract BlockController is OnlyFromAddress, VaultRegistry {
     function nextDepositBlock() public view returns (uint256) {
         return nextChildBlock - childBlockInterval + nextDeposit;
     }
+
+    function isDeposit(uint256 blockNum) public view returns (bool) {
+        require(blocks[blockNum].timestamp != 0, "Block does not exist");
+        return blockNum % childBlockInterval != 0;
+    }
 }

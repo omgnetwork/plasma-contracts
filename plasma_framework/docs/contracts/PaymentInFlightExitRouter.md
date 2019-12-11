@@ -286,7 +286,6 @@ function updatePiggybackBondSize(uint128 newBondSize) public nonpayable onlyFrom
 ## Contracts
 
 * [Address](Address.md)
-* [AddressPayable](AddressPayable.md)
 * [Bits](Bits.md)
 * [BlockController](BlockController.md)
 * [BlockModel](BlockModel.md)

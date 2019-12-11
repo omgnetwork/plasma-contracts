@@ -22,17 +22,50 @@ struct Transaction {
 **Constants & Variables**
 
 ```js
-uint8 public constant MAX_INPUT_NUM;
-uint8 public constant MAX_OUTPUT_NUM;
+uint8 private constant _MAX_INPUT_NUM;
+uint8 private constant _MAX_OUTPUT_NUM;
+uint8 private constant ENCODED_LENGTH;
 
 ```
 
 ## Functions
 
-- [decode(bytes _tx)](#decode)
-- [fromGeneric(struct GenericTransaction.Transaction btx)](#fromgeneric)
-- [decodeOutput(struct RLPReader.RLPItem output)](#decodeoutput)
-- [getOutputOwner(struct GenericTransaction.Output _output)](#getoutputowner)
+- [PaymentTransactionModel.sol](#paymenttransactionmodelsol)
+  - [Structs](#structs)
+    - [Transaction](#transaction)
+  - [Contract Members](#contract-members)
+  - [Functions](#functions)
+    - [MAX_INPUT_NUM](#maxinputnum)
+    - [MAX_OUTPUT_NUM](#maxoutputnum)
+    - [decode](#decode)
+    - [fromGeneric](#fromgeneric)
+    - [decodeOutput](#decodeoutput)
+    - [getOutputOwner](#getoutputowner)
+  - [Contracts](#contracts)
+
+### MAX_INPUT_NUM
+
+```js
+function MAX_INPUT_NUM() internal pure
+returns(uint8)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+
+### MAX_OUTPUT_NUM
+
+```js
+function MAX_OUTPUT_NUM() internal pure
+returns(uint8)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
 
 ### decode
 
@@ -92,7 +125,6 @@ returns(address payable)
 ## Contracts
 
 * [Address](Address.md)
-* [AddressPayable](AddressPayable.md)
 * [Bits](Bits.md)
 * [BlockController](BlockController.md)
 * [BlockModel](BlockModel.md)

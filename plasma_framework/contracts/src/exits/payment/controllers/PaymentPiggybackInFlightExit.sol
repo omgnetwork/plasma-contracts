@@ -9,18 +9,15 @@ import "../../utils/ExitId.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../framework/interfaces/IExitProcessor.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
-import "../../../utils/IsDeposit.sol";
 import "../../../utils/UtxoPosLib.sol";
 
 library PaymentPiggybackInFlightExit {
     using UtxoPosLib for UtxoPosLib.UtxoPos;
-    using IsDeposit for IsDeposit.Predicate;
     using ExitableTimestamp for ExitableTimestamp.Calculator;
     using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
 
     struct Controller {
         PlasmaFramework framework;
-        IsDeposit.Predicate isDeposit;
         ExitableTimestamp.Calculator exitableTimestampCalculator;
         IExitProcessor exitProcessor;
         uint256 minExitPeriod;
@@ -56,7 +53,6 @@ library PaymentPiggybackInFlightExit {
     {
         return Controller({
             framework: framework,
-            isDeposit: IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL()),
             exitableTimestampCalculator: ExitableTimestamp.Calculator(framework.minExitPeriod()),
             exitProcessor: exitProcessor,
             minExitPeriod: framework.minExitPeriod(),

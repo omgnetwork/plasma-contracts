@@ -159,7 +159,6 @@ function enqueueStandardExit(struct PaymentStartStandardExit.StartStandardExitDa
 ## Contracts
 
 * [Address](Address.md)
-* [AddressPayable](AddressPayable.md)
 * [Bits](Bits.md)
 * [BlockController](BlockController.md)
 * [BlockModel](BlockModel.md)

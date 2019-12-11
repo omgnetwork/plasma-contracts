@@ -9,7 +9,6 @@ import "../../registries/SpendingConditionRegistry.sol";
 import "../../utils/ExitId.sol";
 import "../../utils/OutputId.sol";
 import "../../utils/MoreVpFinalization.sol";
-import "../../../utils/IsDeposit.sol";
 import "../../../utils/Merkle.sol";
 import "../../../utils/SafeEthTransfer.sol";
 import "../../../utils/UtxoPosLib.sol";
@@ -19,12 +18,10 @@ import "../../../transactions/GenericTransaction.sol";
 
 library PaymentChallengeIFEInputSpent {
     using UtxoPosLib for UtxoPosLib.UtxoPos;
-    using IsDeposit for IsDeposit.Predicate;
     using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
 
     struct Controller {
         PlasmaFramework framework;
-        IsDeposit.Predicate isDeposit;
         SpendingConditionRegistry spendingConditionRegistry;
         uint256 safeGasStipend;
     }
@@ -59,7 +56,6 @@ library PaymentChallengeIFEInputSpent {
     {
         return Controller({
             framework: framework,
-            isDeposit: IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL()),
             spendingConditionRegistry: spendingConditionRegistry,
             safeGasStipend: safeGasStipend
         });
@@ -109,11 +105,11 @@ library PaymentChallengeIFEInputSpent {
         emit InFlightExitInputBlocked(msg.sender, keccak256(args.inFlightTx), args.inFlightTxInputIndex);
     }
 
-    function verifySpentInputEqualsIFEInput(ChallengeIFEData memory data) private pure {
+    function verifySpentInputEqualsIFEInput(ChallengeIFEData memory data) private view {
         bytes32 ifeInputOutputId = data.ife.inputs[data.args.inFlightTxInputIndex].outputId;
 
         UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(data.args.inputUtxoPos);
-        bytes32 challengingTxInputOutputId = data.controller.isDeposit.test(utxoPos.blockNum())
+        bytes32 challengingTxInputOutputId = data.controller.framework.isDeposit(utxoPos.blockNum())
                 ? OutputId.computeDepositOutputId(data.args.inputTx, utxoPos.outputIndex(), utxoPos.value)
                 : OutputId.computeNormalOutputId(data.args.inputTx, utxoPos.outputIndex());
 

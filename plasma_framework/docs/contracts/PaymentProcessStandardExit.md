@@ -48,7 +48,6 @@ function run(struct PaymentProcessStandardExit.Controller self, struct PaymentEx
 ## Contracts
 
 * [Address](Address.md)
-* [AddressPayable](AddressPayable.md)
 * [Bits](Bits.md)
 * [BlockController](BlockController.md)
 * [BlockModel](BlockModel.md)

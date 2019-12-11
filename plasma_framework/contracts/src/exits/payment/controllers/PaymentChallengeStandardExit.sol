@@ -11,7 +11,6 @@ import "../../../vaults/EthVault.sol";
 import "../../../vaults/Erc20Vault.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../framework/Protocol.sol";
-import "../../../utils/IsDeposit.sol";
 import "../../../utils/SafeEthTransfer.sol";
 import "../../../utils/UtxoPosLib.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
@@ -19,11 +18,9 @@ import "../../../transactions/GenericTransaction.sol";
 
 library PaymentChallengeStandardExit {
     using UtxoPosLib for UtxoPosLib.UtxoPos;
-    using IsDeposit for IsDeposit.Predicate;
 
     struct Controller {
         PlasmaFramework framework;
-        IsDeposit.Predicate isDeposit;
         SpendingConditionRegistry spendingConditionRegistry;
         uint256 safeGasStipend;
     }
@@ -57,7 +54,6 @@ library PaymentChallengeStandardExit {
     {
         return Controller({
             framework: framework,
-            isDeposit: IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL()),
             spendingConditionRegistry: spendingConditionRegistry,
             safeGasStipend: safeGasStipend
         });
@@ -120,7 +116,7 @@ library PaymentChallengeStandardExit {
         );
         require(address(condition) != address(0), "Spending condition contract not found");
 
-        bytes32 outputId = data.controller.isDeposit.test(utxoPos.blockNum())
+        bytes32 outputId = data.controller.framework.isDeposit(utxoPos.blockNum())
                 ? OutputId.computeDepositOutputId(args.exitingTx, utxoPos.outputIndex(), utxoPos.value)
                 : OutputId.computeNormalOutputId(args.exitingTx, utxoPos.outputIndex());
         require(outputId == data.exitData.outputId, "Invalid exiting tx causing outputId mismatch");

@@ -20,11 +20,6 @@ struct Constants {
 **Constants & Variables**
 
 ```js
-//public members
-uint8 public constant MAX_INPUT_NUM;
-uint8 public constant MAX_OUTPUT_NUM;
-
-//internal members
 bytes2 internal constant EIP191_PREFIX;
 bytes32 internal constant EIP712_DOMAIN_HASH;
 bytes32 internal constant TX_TYPE_HASH;
@@ -113,7 +108,6 @@ returns(bytes32)
 ## Contracts
 
 * [Address](Address.md)
-* [AddressPayable](AddressPayable.md)
 * [Bits](Bits.md)
 * [BlockController](BlockController.md)
 * [BlockModel](BlockModel.md)

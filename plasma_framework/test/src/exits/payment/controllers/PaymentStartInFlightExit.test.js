@@ -1,6 +1,5 @@
 const ExitableTimestamp = artifacts.require('ExitableTimestampWrapper');
 const ExitId = artifacts.require('ExitIdWrapper');
-const IsDeposit = artifacts.require('IsDepositWrapper');
 const PaymentInFlightExitRouter = artifacts.require('PaymentInFlightExitRouterMock');
 const PaymentStartInFlightExit = artifacts.require('PaymentStartInFlightExit');
 const PaymentPiggybackInFlightExit = artifacts.require('PaymentPiggybackInFlightExit');
@@ -102,7 +101,6 @@ contract('PaymentStartInFlightExit', ([_, alice, richFather, carol]) => {
 
         before(async () => {
             this.exitIdHelper = await ExitId.new();
-            this.isDeposit = await IsDeposit.new(CHILD_BLOCK_INTERVAL);
             this.exitableHelper = await ExitableTimestamp.new(MIN_EXIT_PERIOD);
         });
 

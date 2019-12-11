@@ -88,7 +88,7 @@ def test_start_standard_exit_on_finalized_exit_should_fail(testlang, utxo):
     minimal_required_period = MIN_EXIT_PERIOD  # see tesuji blockchain design
     testlang.start_standard_exit(utxo.spend_id, utxo.owner)
     testlang.forward_timestamp(required_exit_period + minimal_required_period)
-    testlang.process_exits(testlang.root_chain.eth_vault_id, NULL_ADDRESS, 0, 100)
+    testlang.process_exits(NULL_ADDRESS, 0, 100)
 
     with pytest.raises(TransactionFailed):
         testlang.start_standard_exit(utxo.spend_id, utxo.owner)
@@ -125,7 +125,7 @@ def test_start_standard_exit_from_deposit_must_be_exitable_in_minimal_finalizati
 
     required_exit_period = MIN_EXIT_PERIOD  # see tesuji blockchain design
     testlang.forward_timestamp(required_exit_period + 1)
-    testlang.process_exits(testlang.root_chain.eth_vault_id, NULL_ADDRESS, 0, 1)
+    testlang.process_exits(NULL_ADDRESS, 0, 1)
 
     assert testlang.get_standard_exit(deposit_id) == [NULL_ADDRESS_HEX, 0, 0, False]
 

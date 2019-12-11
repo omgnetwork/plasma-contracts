@@ -44,7 +44,6 @@ True, if the leaf hash is in the Merkle tree; otherwise, False
 ## Contracts
 
 * [Address](Address.md)
-* [AddressPayable](AddressPayable.md)
 * [Bits](Bits.md)
 * [BlockController](BlockController.md)
 * [BlockModel](BlockModel.md)

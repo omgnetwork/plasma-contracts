@@ -36,7 +36,6 @@ Verified (owner, token, amount) of the deposit ERC20 token data
 ## Contracts
 
 * [Address](Address.md)
-* [AddressPayable](AddressPayable.md)
 * [Bits](Bits.md)
 * [BlockController](BlockController.md)
 * [BlockModel](BlockModel.md)

@@ -35,14 +35,6 @@ struct StartExitData {
 }
 ```
 
-## Contract Members
-**Constants & Variables**
-
-```js
-uint256 public constant MAX_INPUT_NUM;
-
-```
-
 **Events**
 
 ```js
@@ -302,7 +294,6 @@ function setInFlightExitOutputs(struct PaymentExitDataModel.InFlightExit ife, st
 ## Contracts
 
 * [Address](Address.md)
-* [AddressPayable](AddressPayable.md)
 * [Bits](Bits.md)
 * [BlockController](BlockController.md)
 * [BlockModel](BlockModel.md)

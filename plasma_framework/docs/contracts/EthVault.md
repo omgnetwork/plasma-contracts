@@ -74,7 +74,6 @@ function withdraw(address payable receiver, uint256 amount) external nonpayable 
 ## Contracts
 
 * [Address](Address.md)
-* [AddressPayable](AddressPayable.md)
 * [Bits](Bits.md)
 * [BlockController](BlockController.md)
 * [BlockModel](BlockModel.md)
