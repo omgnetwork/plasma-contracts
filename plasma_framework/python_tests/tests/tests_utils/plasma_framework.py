@@ -228,8 +228,24 @@ class PlasmaFramework:
                                         in_flight_tx_input_index,
                                         spending_tx,
                                         spending_tx_input_index,
-                                        spending_tx_sig):
-        raise NotImplementedError
+                                        spending_tx_sig,
+                                        input_tx,
+                                        input_tx_txo_pos,
+                                        **kwargs):
+
+        spending_tx_witness = spending_tx_sig
+
+        args = (
+            in_flight_tx,
+            in_flight_tx_input_index,
+            spending_tx,
+            spending_tx_input_index,
+            spending_tx_witness,
+            input_tx,
+            input_tx_txo_pos
+        )
+
+        self.payment_exit_game.challengeInFlightExitInputSpent(args, **kwargs)
 
     def challengeInFlightExitOutputSpent(self, in_flight_tx,
                                          in_flight_tx_output_pos,

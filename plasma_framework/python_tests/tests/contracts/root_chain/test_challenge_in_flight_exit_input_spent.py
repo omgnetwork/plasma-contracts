@@ -2,7 +2,6 @@ import pytest
 from eth_tester.exceptions import TransactionFailed
 from plasma_core.constants import NULL_ADDRESS
 
-pytestmark = pytest.mark.skip("WIP: moving tests to plasma framework")
 
 # should succeed even when phase 2 of in-flight exit is over
 @pytest.mark.parametrize("period", [1, 2, 4])
