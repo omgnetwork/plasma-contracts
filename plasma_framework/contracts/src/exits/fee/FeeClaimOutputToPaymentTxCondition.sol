@@ -5,8 +5,9 @@ import "openzeppelin-solidity/contracts/cryptography/ECDSA.sol";
 import "../interfaces/ISpendingCondition.sol";
 import "../utils/OutputId.sol";
 import "../../framework/PlasmaFramework.sol";
-import "../../transactions/PaymentTransactionModel.sol";
+import "../../transactions/FungibleTokenOutputModel.sol";
 import "../../transactions/GenericTransaction.sol";
+import "../../transactions/PaymentTransactionModel.sol";
 import "../../transactions/eip712Libs/PaymentEip712Lib.sol";
 import "../../utils/UtxoPosLib.sol";
 
@@ -58,7 +59,7 @@ contract FeeClaimOutputToPaymentTxCondition is ISpendingCondition {
         require(feeClaimOutputIndex == 0, "Fee claim output must be the first output of fee tx");
 
         GenericTransaction.Transaction memory feeTx = GenericTransaction.decode(feeTxBytes);
-        GenericTransaction.Output memory feeClaimOutput = GenericTransaction.getOutput(feeTx, feeClaimOutputIndex);
+        FungibleTokenOutputModel.Output memory feeClaimOutput = FungibleTokenOutputModel.getOutput(feeTx, feeClaimOutputIndex);
 
         require(feeTx.txType == feeTxType, "Unexpected tx type for fee transaction");
         require(feeClaimOutput.outputType == feeClaimOutputType, "Unexpected output type for fee claim output");
