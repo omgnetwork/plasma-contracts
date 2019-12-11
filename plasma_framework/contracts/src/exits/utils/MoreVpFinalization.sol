@@ -28,6 +28,7 @@ library MoreVpFinalization {
         view
         returns (bool)
     {
+        require(txPos.outputIndex == 0, "Invalid transaction position");
         uint256 txType = WireTransaction.getTransactionType(txBytes);
         uint8 protocol = framework.protocols(txType);
         require(protocol == Protocol.MORE_VP(), "MoreVpFinalization: not a MoreVP protocol tx");
