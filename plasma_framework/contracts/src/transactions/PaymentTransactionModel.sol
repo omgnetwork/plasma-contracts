@@ -30,6 +30,7 @@ library PaymentTransactionModel {
         uint256 txType;
         bytes32[] inputs;
         FungibleTokenOutputModel.Output[] outputs;
+        uint256 txData;
         bytes32 metaData;
     }
 
@@ -77,9 +78,16 @@ library PaymentTransactionModel {
             outputs[i] = FungibleTokenOutputModel.decodeOutput(genericTx.outputs[i]);
         }
 
-        bytes32 metaData = genericTx.txData.toBytes32();
+        // txData is unused, it must be 0
+        require(genericTx.txData.toUint() == 0, "txData must be 0");
 
-        return Transaction({txType: genericTx.txType, inputs: inputs, outputs: outputs, metaData: metaData});
+        return Transaction({
+            txType: genericTx.txType,
+            inputs: inputs,
+            outputs: outputs,
+            txData: 0,
+            metaData: genericTx.metaData
+        });
     }
 
     /**

@@ -51,7 +51,7 @@ contract('ExitId', () => {
             const dummyUtxoPos = 1000000000;
 
             expect(await this.contract.getStandardExitId(isDeposit, dummyTxBytes, dummyUtxoPos))
-                .to.be.bignumber.equal(new BN('218379750402493954077837124068720848361478695'));
+                .to.be.bignumber.equal(new BN('2618471380620942351245816409477262963327922870'));
         });
 
         it('should return distinct exit ids for deposits that differ only in utxo pos', async () => {
@@ -76,7 +76,7 @@ contract('ExitId', () => {
             const isDeposit = false;
             const dummyUtxoPos = 123;
             expect(await this.contract.getStandardExitId(isDeposit, dummyTxBytes, dummyUtxoPos))
-                .to.be.bignumber.equal(new BN('703065410624258885663253282674973904559442667203'));
+                .to.be.bignumber.equal(new BN('702208493532374679784918666435922091245195446034'));
         });
         it('should overflow when created a tx with more than 255 outputs', async () => {
             const output = new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, 100, OUTPUT_GUARD, constants.ZERO_ADDRESS);
@@ -106,7 +106,7 @@ contract('ExitId', () => {
             const transactionBytes = web3.utils.bytesToHex(transaction.rlpEncoded());
 
             expect(await this.contract.getInFlightExitId(transactionBytes))
-                .to.be.bignumber.equal(new BN('3714041198338543944693157644721287731896821443'));
+                .to.be.bignumber.equal(new BN('2857124106454338066358541405669474417649600274'));
         });
     });
 });

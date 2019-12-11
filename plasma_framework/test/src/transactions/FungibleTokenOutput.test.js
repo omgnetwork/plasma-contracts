@@ -106,6 +106,7 @@ contract('FungibleTokenOutputModel', () => {
                 TX_TYPE.PAYMENT,
                 [],
                 [expected.formatForRlpEncoding()],
+                0,
                 EMPTY_BYTES_32,
             ]);
 
@@ -122,6 +123,7 @@ contract('FungibleTokenOutputModel', () => {
                 TX_TYPE.PAYMENT,
                 [],
                 [[OUTPUT_TYPE.PAYMENT, 'Output data']],
+                0,
                 EMPTY_BYTES_32,
             ]);
             const outOfBoundsOutputIndex = 2;

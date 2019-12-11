@@ -15,6 +15,7 @@ contract('GenericTransaction', () => {
                 TX_TYPE.PAYMENT,
                 ['input0', 'input2'],
                 [[OUTPUT_TYPE.PAYMENT, 'Output data']],
+                0,
                 EMPTY_BYTES_32,
             ]);
 
@@ -27,6 +28,7 @@ contract('GenericTransaction', () => {
                 TX_TYPE.PAYMENT,
                 [],
                 [],
+                0,
                 EMPTY_BYTES_32,
             ]);
 
@@ -39,6 +41,7 @@ contract('GenericTransaction', () => {
                 TX_TYPE.PAYMENT,
                 ['input0', 'input2'],
                 [[42, 'single_field_only'], [123, ['first_field', 'second_field', ['more fields here']]]],
+                0,
                 EMPTY_BYTES_32,
             ]);
 
@@ -52,6 +55,7 @@ contract('GenericTransaction', () => {
                 ['input0', 'input2'],
                 [[OUTPUT_TYPE.PAYMENT, 'Output data']],
                 ['More data', 98765, ['lots', 'of', 'data']],
+                EMPTY_BYTES_32,
             ]);
 
             const decoded = await this.test.decode(encoded);
@@ -63,6 +67,7 @@ contract('GenericTransaction', () => {
                 TX_TYPE.PAYMENT,
                 ['input0', 'input2'],
                 [[OUTPUT_TYPE.PAYMENT, 'Output data']],
+                0,
             ]);
             await expectRevert(
                 this.test.decode(invalidTx),
@@ -75,6 +80,7 @@ contract('GenericTransaction', () => {
                 TX_TYPE.PAYMENT,
                 ['input0', 'input2'],
                 [[OUTPUT_TYPE.PAYMENT, 'Output data']],
+                0,
                 EMPTY_BYTES_32,
                 'Extra item',
             ]);
@@ -89,6 +95,7 @@ contract('GenericTransaction', () => {
                 0,
                 ['input0', 'input2'],
                 [[OUTPUT_TYPE.PAYMENT, 'Output data']],
+                0,
                 EMPTY_BYTES_32,
             ]);
             await expectRevert(
@@ -102,6 +109,7 @@ contract('GenericTransaction', () => {
                 TX_TYPE.PAYMENT,
                 ['input0', 'input2'],
                 [[0, 'Output data']],
+                0,
                 EMPTY_BYTES_32,
             ]);
             await expectRevert(
@@ -115,6 +123,7 @@ contract('GenericTransaction', () => {
                 TX_TYPE.PAYMENT,
                 ['input0', 'input2'],
                 [[OUTPUT_TYPE.PAYMENT]],
+                0,
                 EMPTY_BYTES_32,
             ]);
             await expectRevert(
@@ -128,6 +137,7 @@ contract('GenericTransaction', () => {
                 TX_TYPE.PAYMENT,
                 ['input0', 'input2'],
                 [[OUTPUT_TYPE.PAYMENT, 'Output data', 'More Output data']],
+                0,
                 EMPTY_BYTES_32,
             ]);
             await expectRevert(
@@ -141,6 +151,7 @@ contract('GenericTransaction', () => {
                 [TX_TYPE.PAYMENT],
                 ['input0', 'input2'],
                 [[OUTPUT_TYPE.PAYMENT, 'Output data']],
+                0,
                 EMPTY_BYTES_32,
             ]);
             await expectRevert(
@@ -154,6 +165,7 @@ contract('GenericTransaction', () => {
                 TX_TYPE.PAYMENT,
                 'input0',
                 [[OUTPUT_TYPE.PAYMENT, 'Output data']],
+                0,
                 EMPTY_BYTES_32,
             ]);
             await expectRevert(
@@ -162,16 +174,31 @@ contract('GenericTransaction', () => {
             );
         });
 
-        it('should fail when inputs is not a list', async () => {
+        it('should fail when ouputs is not a list of lists', async () => {
             const invalidTx = rlp.encode([
                 TX_TYPE.PAYMENT,
                 ['input0'],
                 [OUTPUT_TYPE.PAYMENT, 'Output data'],
+                0,
                 EMPTY_BYTES_32,
             ]);
             await expectRevert(
                 this.test.decode(invalidTx),
                 'Item is not a list',
+            );
+        });
+
+        it('should fail when metadata is not 32 bytes', async () => {
+            const invalidTx = rlp.encode([
+                TX_TYPE.PAYMENT,
+                ['input0'],
+                [[OUTPUT_TYPE.PAYMENT, 'Output data']],
+                0,
+                'random metadata',
+            ]);
+            await expectRevert(
+                this.test.decode(invalidTx),
+                'Item length must be 33',
             );
         });
     });
@@ -182,6 +209,7 @@ contract('GenericTransaction', () => {
                 TX_TYPE.PAYMENT,
                 ['input0', 'input2'],
                 [[OUTPUT_TYPE.PAYMENT, 'Output data']],
+                0,
                 EMPTY_BYTES_32,
             ]);
 
@@ -195,6 +223,7 @@ contract('GenericTransaction', () => {
                 TX_TYPE.PAYMENT,
                 ['input0', 'input2'],
                 [[OUTPUT_TYPE.PAYMENT, 'Output data']],
+                0,
                 EMPTY_BYTES_32,
             ]);
             const outOfBoundsOutputIndex = 2;

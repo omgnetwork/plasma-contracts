@@ -18,7 +18,7 @@ import "../utils/RLPReader.sol";
  */
 library GenericTransaction {
 
-    uint8 constant private TX_NUM_ITEMS = 4;
+    uint8 constant private TX_NUM_ITEMS = 5;
 
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;
@@ -28,6 +28,7 @@ library GenericTransaction {
         RLPReader.RLPItem[] inputs;
         Output[] outputs;
         RLPReader.RLPItem txData;
+        bytes32 metaData;
     }
 
     struct Output {
@@ -50,11 +51,14 @@ library GenericTransaction {
             outputs[i] = decodeOutput(outputList[i]);
         }
 
+        bytes32 metaData = rlpTx[4].toBytes32();
+
         return Transaction({
             txType: txType,
             inputs: rlpTx[1].toList(),
             outputs: outputs,
-            txData: rlpTx[3]
+            txData: rlpTx[3],
+            metaData: metaData
         });
     }
 

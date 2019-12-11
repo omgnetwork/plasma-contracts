@@ -2,12 +2,13 @@ const rlp = require('rlp');
 const { expect } = require('chai');
 const { constants, expectRevert } = require('openzeppelin-test-helpers');
 const { PaymentTransaction, FungibleTransactionOutput } = require('../../helpers/transaction.js');
-const { TX_TYPE, OUTPUT_TYPE, DUMMY_INPUT_1 } = require('../../helpers/constants.js');
+const {
+    TX_TYPE, OUTPUT_TYPE, DUMMY_INPUT_1, EMPTY_BYTES_32,
+} = require('../../helpers/constants.js');
 
 const PaymentTransactionModelMock = artifacts.require('PaymentTransactionModelMock');
 
 const OUTPUT_GUARD = `0x${Array(40).fill(1).join('')}`;
-const EMPTY_BYTES32 = `0x${Array(64).fill(0).join('')}`;
 const OUTPUT = new FungibleTransactionOutput(OUTPUT_TYPE.PAYMENT, 100, OUTPUT_GUARD, constants.ZERO_ADDRESS);
 
 contract('PaymentTransactionModel', ([alice]) => {
@@ -19,7 +20,7 @@ contract('PaymentTransactionModel', ([alice]) => {
     });
 
     it('should decode payment transaction', async () => {
-        const transaction = new PaymentTransaction(TX_TYPE.PAYMENT, [DUMMY_INPUT_1], [OUTPUT, OUTPUT], EMPTY_BYTES32);
+        const transaction = new PaymentTransaction(TX_TYPE.PAYMENT, [DUMMY_INPUT_1], [OUTPUT, OUTPUT], EMPTY_BYTES_32);
         const encoded = web3.utils.bytesToHex(transaction.rlpEncoded());
 
         const actual = await this.test.decode(encoded);
@@ -38,7 +39,7 @@ contract('PaymentTransactionModel', ([alice]) => {
             TX_TYPE.PAYMENT,
             [DUMMY_INPUT_1, DUMMY_INPUT_1, DUMMY_INPUT_1, DUMMY_INPUT_1],
             [OUTPUT, OUTPUT, OUTPUT, OUTPUT],
-            EMPTY_BYTES32,
+            EMPTY_BYTES_32,
         );
         const encoded = web3.utils.bytesToHex(transaction.rlpEncoded());
 
@@ -55,7 +56,7 @@ contract('PaymentTransactionModel', ([alice]) => {
 
     it('should fail when decoding transaction have more inputs than MAX_INPUT limit', async () => {
         const inputsExceedLimit = Array(MAX_INPUT_NUM + 1).fill(DUMMY_INPUT_1);
-        const transaction = new PaymentTransaction(TX_TYPE.PAYMENT, inputsExceedLimit, [], EMPTY_BYTES32);
+        const transaction = new PaymentTransaction(TX_TYPE.PAYMENT, inputsExceedLimit, [], EMPTY_BYTES_32);
         const encoded = web3.utils.bytesToHex(transaction.rlpEncoded());
 
         await expectRevert(
@@ -66,7 +67,7 @@ contract('PaymentTransactionModel', ([alice]) => {
 
     it('should fail when decoding transaction have more outputs than MAX_OUTPUT limit', async () => {
         const outputsExceedLimit = Array(MAX_OUTPUT_NUM + 1).fill(OUTPUT);
-        const transaction = new PaymentTransaction(TX_TYPE.PAYMENT, [DUMMY_INPUT_1], outputsExceedLimit, EMPTY_BYTES32);
+        const transaction = new PaymentTransaction(TX_TYPE.PAYMENT, [DUMMY_INPUT_1], outputsExceedLimit, EMPTY_BYTES_32);
         const encoded = web3.utils.bytesToHex(transaction.rlpEncoded());
 
         await expectRevert(
@@ -76,7 +77,7 @@ contract('PaymentTransactionModel', ([alice]) => {
     });
 
     it('should fail when transaction does not contain metadata', async () => {
-        const transaction = new PaymentTransaction(TX_TYPE.PAYMENT, [DUMMY_INPUT_1], [OUTPUT, OUTPUT], EMPTY_BYTES32);
+        const transaction = new PaymentTransaction(TX_TYPE.PAYMENT, [DUMMY_INPUT_1], [OUTPUT, OUTPUT], EMPTY_BYTES_32);
 
         const genericFormat = [
             transaction.transactionType,
@@ -103,14 +104,14 @@ contract('PaymentTransactionModel', ([alice]) => {
 
     it('should fail when the transaction contains a null input', async () => {
         const transaction = new PaymentTransaction(
-            TX_TYPE.PAYMENT, [DUMMY_INPUT_1, EMPTY_BYTES32], [OUTPUT, OUTPUT], EMPTY_BYTES32,
+            TX_TYPE.PAYMENT, [DUMMY_INPUT_1, EMPTY_BYTES_32], [OUTPUT, OUTPUT], EMPTY_BYTES_32,
         );
         const encoded = web3.utils.bytesToHex(transaction.rlpEncoded());
         await expectRevert(this.test.decode(encoded), 'Null input not allowed');
     });
 
     it('should fail when the transaction type is zero', async () => {
-        const transaction = new PaymentTransaction(0, [DUMMY_INPUT_1], [OUTPUT], EMPTY_BYTES32);
+        const transaction = new PaymentTransaction(0, [DUMMY_INPUT_1], [OUTPUT], EMPTY_BYTES_32);
         const encoded = web3.utils.bytesToHex(transaction.rlpEncoded());
         await expectRevert(this.test.decode(encoded), 'Transaction type must not be 0');
     });
@@ -118,7 +119,7 @@ contract('PaymentTransactionModel', ([alice]) => {
     it('should fail when an output type is zero', async () => {
         const zeroOutputType = new FungibleTransactionOutput(0, 100, OUTPUT_GUARD, constants.ZERO_ADDRESS);
         const transaction = new PaymentTransaction(
-            TX_TYPE.PAYMENT, [DUMMY_INPUT_1], [OUTPUT, zeroOutputType], EMPTY_BYTES32,
+            TX_TYPE.PAYMENT, [DUMMY_INPUT_1], [OUTPUT, zeroOutputType], EMPTY_BYTES_32,
         );
         const encoded = web3.utils.bytesToHex(transaction.rlpEncoded());
         await expectRevert(this.test.decode(encoded), 'Output type must not be 0');
@@ -129,10 +130,21 @@ contract('PaymentTransactionModel', ([alice]) => {
             OUTPUT_TYPE.PAYMENT, 0, OUTPUT_GUARD, constants.ZERO_ADDRESS,
         );
         const transaction = new PaymentTransaction(
-            TX_TYPE.PAYMENT, [DUMMY_INPUT_1], [OUTPUT, zeroOutputAmount], EMPTY_BYTES32,
+            TX_TYPE.PAYMENT, [DUMMY_INPUT_1], [OUTPUT, zeroOutputAmount], EMPTY_BYTES_32,
         );
         const encoded = web3.utils.bytesToHex(transaction.rlpEncoded());
         await expectRevert(this.test.decode(encoded), 'Output amount must not be 0');
+    });
+
+    it('should fail when txData is not zero', async () => {
+        const output = new FungibleTransactionOutput(
+            OUTPUT_TYPE.PAYMENT, 1, OUTPUT_GUARD, constants.ZERO_ADDRESS,
+        );
+        const encoded = rlp.encode([
+            TX_TYPE.PAYMENT, [], [output.formatForRlpEncoding()], 1, EMPTY_BYTES_32,
+        ]);
+
+        await expectRevert(this.test.decode(encoded), 'txData must be 0');
     });
 
     describe('owner', () => {

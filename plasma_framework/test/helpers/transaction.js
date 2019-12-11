@@ -43,6 +43,7 @@ class GenericTransaction {
 
         tx.push(GenericTransaction.formatInputsForRlpEncoding(this.inputs));
         tx.push(GenericTransaction.formatOutputsForRlpEncoding(this.outputs));
+        tx.push(0); // txData must be 0
         tx.push(this.metaData);
 
         return rlp.encode(tx);
