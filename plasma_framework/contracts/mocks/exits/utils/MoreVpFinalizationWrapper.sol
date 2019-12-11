@@ -17,7 +17,7 @@ contract MoreVpFinalizationWrapper {
         return MoreVpFinalization.isStandardFinalized(
             framework,
             txBytes,
-            PosLib.Position(txPos),
+            PosLib.decode(txPos),
             inclusionProof
         );
     }

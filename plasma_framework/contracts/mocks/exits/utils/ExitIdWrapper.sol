@@ -13,7 +13,7 @@ contract ExitIdWrapper {
         pure
         returns (uint160)
     {
-        PosLib.Position memory utxoPos = PosLib.Position(_utxoPos);
+        PosLib.Position memory utxoPos = PosLib.decode(_utxoPos);
         return ExitId.getStandardExitId(_isDeposit, _txBytes, utxoPos);
     }
 

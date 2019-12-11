@@ -107,10 +107,10 @@ library PaymentChallengeStandardExit {
     function verifySpendingCondition(ChallengeStandardExitData memory data) private view {
         PaymentStandardExitRouterArgs.ChallengeStandardExitArgs memory args = data.args;
 
-        PosLib.Position memory utxoPos = PosLib.Position(data.exitData.utxoPos);
+        PosLib.Position memory utxoPos = PosLib.decode(data.exitData.utxoPos);
         PaymentOutputModel.Output memory output = PaymentTransactionModel
             .decode(args.exitingTx)
-            .outputs[utxoPos.outputIndex()];
+            .outputs[utxoPos.outputIndex];
 
         uint256 challengeTxType = WireTransaction.getTransactionType(args.challengeTx);
         ISpendingCondition condition = data.controller.spendingConditionRegistry.spendingConditions(
@@ -118,15 +118,15 @@ library PaymentChallengeStandardExit {
         );
         require(address(condition) != address(0), "Spending condition contract not found");
 
-        bytes32 outputId = data.controller.isDeposit.test(utxoPos.blockNum())
-                ? OutputId.computeDepositOutputId(args.exitingTx, utxoPos.outputIndex(), utxoPos.value)
-                : OutputId.computeNormalOutputId(args.exitingTx, utxoPos.outputIndex());
+        bytes32 outputId = data.controller.isDeposit.test(utxoPos.blockNum)
+                ? OutputId.computeDepositOutputId(args.exitingTx, utxoPos.outputIndex, utxoPos.encode())
+                : OutputId.computeNormalOutputId(args.exitingTx, utxoPos.outputIndex);
         require(outputId == data.exitData.outputId, "Invalid exiting tx causing outputId mismatch");
 
         bool isSpentByChallengeTx = condition.verify(
             args.exitingTx,
-            utxoPos.outputIndex(),
-            utxoPos.txPos().value,
+            utxoPos.outputIndex,
+            utxoPos.encodePackedTxPos(),
             args.challengeTx,
             args.inputIndex,
             args.witness

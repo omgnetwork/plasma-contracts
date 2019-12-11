@@ -106,16 +106,16 @@ library PaymentStartStandardExit {
         view
         returns (StartStandardExitData memory)
     {
-        PosLib.Position memory utxoPos = PosLib.Position(args.utxoPos);
+        PosLib.Position memory utxoPos = PosLib.decode(args.utxoPos);
         PaymentTransactionModel.Transaction memory outputTx = PaymentTransactionModel.decode(args.rlpOutputTx);
-        PaymentOutputModel.Output memory output = outputTx.outputs[utxoPos.outputIndex()];
-        bool isTxDeposit = controller.isDeposit.test(utxoPos.blockNum());
+        PaymentOutputModel.Output memory output = outputTx.outputs[utxoPos.outputIndex];
+        bool isTxDeposit = controller.isDeposit.test(utxoPos.blockNum);
         uint160 exitId = ExitId.getStandardExitId(isTxDeposit, args.rlpOutputTx, utxoPos);
-        (, uint256 blockTimestamp) = controller.framework.blocks(utxoPos.blockNum());
+        (, uint256 blockTimestamp) = controller.framework.blocks(utxoPos.blockNum);
 
         bytes32 outputId = isTxDeposit
-            ? OutputId.computeDepositOutputId(args.rlpOutputTx, utxoPos.outputIndex(), utxoPos.value)
-            : OutputId.computeNormalOutputId(args.rlpOutputTx, utxoPos.outputIndex());
+            ? OutputId.computeDepositOutputId(args.rlpOutputTx, utxoPos.outputIndex, utxoPos.encode())
+            : OutputId.computeNormalOutputId(args.rlpOutputTx, utxoPos.outputIndex);
 
         return StartStandardExitData({
             controller: controller,
@@ -171,7 +171,7 @@ library PaymentStartStandardExit {
     {
         exitMap.exits[data.exitId] = PaymentExitDataModel.StandardExit({
             exitable: true,
-            utxoPos: data.utxoPos.value,
+            utxoPos: data.utxoPos.encode(),
             outputId: data.outputId,
             exitTarget: msg.sender,
             amount: data.output.amount,

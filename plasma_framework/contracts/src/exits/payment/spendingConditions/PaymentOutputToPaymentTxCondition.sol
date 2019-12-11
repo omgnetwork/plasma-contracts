@@ -54,9 +54,9 @@ contract PaymentOutputToPaymentTxCondition is ISpendingCondition {
         PaymentTransactionModel.Transaction memory spendingTx = PaymentTransactionModel.decode(spendingTxBytes);
         require(spendingTx.txType == supportSpendingTxType, "The spending tx is an unsupported payment tx type");
 
-        PosLib.Position memory utxoPos = PosLib.build(inputTxPos, outputIndex);
+        PosLib.Position memory utxoPos = PosLib.buildPositionFromTxPosAndOutputIndex(inputTxPos, outputIndex);
         require(
-            spendingTx.inputs[inputIndex] == bytes32(utxoPos.value),
+            spendingTx.inputs[inputIndex] == bytes32(utxoPos.encode()),
             "Spending tx points to the incorrect output UTXO position"
         );
 

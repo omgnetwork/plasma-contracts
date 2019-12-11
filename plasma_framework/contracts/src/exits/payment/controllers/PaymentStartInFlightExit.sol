@@ -140,7 +140,7 @@ library PaymentStartInFlightExit {
 
         PosLib.Position[] memory utxosPos = new PosLib.Position[](inputUtxosPos.length);
         for (uint i = 0; i < inputUtxosPos.length; i++) {
-            utxosPos[i] = PosLib.Position(inputUtxosPos[i]);
+            utxosPos[i] = PosLib.decode(inputUtxosPos[i]);
         }
         return utxosPos;
     }
@@ -153,10 +153,10 @@ library PaymentStartInFlightExit {
         require(inputTxs.length == utxoPos.length, "Number of input transactions does not match number of provided input utxos positions");
         bytes32[] memory outputIds = new bytes32[](inputTxs.length);
         for (uint i = 0; i < inputTxs.length; i++) {
-            bool isDepositTx = controller.isDeposit.test(utxoPos[i].blockNum());
+            bool isDepositTx = controller.isDeposit.test(utxoPos[i].blockNum);
             outputIds[i] = isDepositTx
-                ? OutputId.computeDepositOutputId(inputTxs[i], utxoPos[i].outputIndex(), utxoPos[i].value)
-                : OutputId.computeNormalOutputId(inputTxs[i], utxoPos[i].outputIndex());
+                ? OutputId.computeDepositOutputId(inputTxs[i], utxoPos[i].outputIndex, utxoPos[i].encode())
+                : OutputId.computeNormalOutputId(inputTxs[i], utxoPos[i].outputIndex);
         }
         return outputIds;
     }
@@ -231,7 +231,7 @@ library PaymentStartInFlightExit {
 
     function verifyInputsSpent(StartExitData memory exitData) private view {
         for (uint16 i = 0; i < exitData.inputTxs.length; i++) {
-            uint16 outputIndex = exitData.inputUtxosPos[i].outputIndex();
+            uint16 outputIndex = exitData.inputUtxosPos[i].outputIndex;
             WireTransaction.Output memory output = WireTransaction.getOutput(exitData.inputTxs[i], outputIndex);
 
             ISpendingCondition condition = exitData.controller.spendingConditionRegistry.spendingConditions(
@@ -242,8 +242,8 @@ library PaymentStartInFlightExit {
 
             bool isSpentByInFlightTx = condition.verify(
                 exitData.inputTxs[i],
-                exitData.inputUtxosPos[i].outputIndex(),
-                exitData.inputUtxosPos[i].txPos().value,
+                exitData.inputUtxosPos[i].outputIndex,
+                exitData.inputUtxosPos[i].encodePackedTxPos(),
                 exitData.inFlightTxRaw,
                 i,
                 exitData.inFlightTxWitnesses[i]
@@ -255,7 +255,7 @@ library PaymentStartInFlightExit {
     function verifyStateTransition(StartExitData memory exitData) private view {
         uint16[] memory outputIndexForInputTxs = new uint16[](exitData.inputTxs.length);
         for (uint i = 0; i < exitData.inFlightTx.inputs.length; i++) {
-            outputIndexForInputTxs[i] = exitData.inputUtxosPos[i].outputIndex();
+            outputIndexForInputTxs[i] = exitData.inputUtxosPos[i].outputIndex;
         }
 
         require(
@@ -281,10 +281,11 @@ library PaymentStartInFlightExit {
     }
 
     function getYoungestInputUtxoPosition(PosLib.Position[] memory inputUtxosPos) private pure returns (uint256) {
-        uint256 youngest = inputUtxosPos[0].value;
+        uint256 youngest = inputUtxosPos[0].encode();
         for (uint i = 1; i < inputUtxosPos.length; i++) {
-            if (inputUtxosPos[i].value > youngest) {
-                youngest = inputUtxosPos[i].value;
+            uint256 encodedUtxoPos = inputUtxosPos[i].encode();
+            if (encodedUtxoPos > youngest) {
+                youngest = encodedUtxoPos;
             }
         }
         return youngest;
@@ -297,7 +298,7 @@ library PaymentStartInFlightExit {
         private
     {
         for (uint i = 0; i < exitData.inputTxs.length; i++) {
-            uint16 outputIndex = exitData.inputUtxosPos[i].outputIndex();
+            uint16 outputIndex = exitData.inputUtxosPos[i].outputIndex;
             WireTransaction.Output memory output = WireTransaction.getOutput(exitData.inputTxs[i], outputIndex);
 
             ife.inputs[i].outputId = exitData.outputIds[i];

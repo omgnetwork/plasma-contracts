@@ -112,10 +112,10 @@ library PaymentChallengeIFEInputSpent {
     function verifySpentInputEqualsIFEInput(ChallengeIFEData memory data) private pure {
         bytes32 ifeInputOutputId = data.ife.inputs[data.args.inFlightTxInputIndex].outputId;
 
-        PosLib.Position memory utxoPos = PosLib.Position(data.args.inputUtxoPos);
-        bytes32 challengingTxInputOutputId = data.controller.isDeposit.test(utxoPos.blockNum())
-                ? OutputId.computeDepositOutputId(data.args.inputTx, utxoPos.outputIndex(), utxoPos.value)
-                : OutputId.computeNormalOutputId(data.args.inputTx, utxoPos.outputIndex());
+        PosLib.Position memory utxoPos = PosLib.decode(data.args.inputUtxoPos);
+        bytes32 challengingTxInputOutputId = data.controller.isDeposit.test(utxoPos.blockNum)
+                ? OutputId.computeDepositOutputId(data.args.inputTx, utxoPos.outputIndex, data.args.inputUtxoPos)
+                : OutputId.computeNormalOutputId(data.args.inputTx, utxoPos.outputIndex);
 
         require(ifeInputOutputId == challengingTxInputOutputId, "Spent input is not the same as piggybacked input");
     }
@@ -143,12 +143,12 @@ library PaymentChallengeIFEInputSpent {
         );
         require(address(condition) != address(0), "Spending condition contract not found");
 
-        PosLib.Position memory inputUtxoPos = PosLib.Position(data.args.inputUtxoPos);
+        PosLib.Position memory inputUtxoPos = PosLib.decode(data.args.inputUtxoPos);
 
         bool isSpent = condition.verify(
             data.args.inputTx,
-            inputUtxoPos.outputIndex(),
-            inputUtxoPos.txPos().value,
+            inputUtxoPos.outputIndex,
+            inputUtxoPos.encodePackedTxPos(),
             data.args.challengingTx,
             data.args.challengingTxInputIndex,
             data.args.challengingTxWitness

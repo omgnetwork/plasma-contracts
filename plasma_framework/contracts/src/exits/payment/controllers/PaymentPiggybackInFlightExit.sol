@@ -97,7 +97,7 @@ library PaymentPiggybackInFlightExit {
         withdrawData.piggybackBondSize = msg.value;
 
         if (isFirstPiggybackOfTheToken(exit, withdrawData.token)) {
-            enqueue(self, withdrawData.token, PosLib.Position(exit.position), exitId);
+            enqueue(self, withdrawData.token, PosLib.decode(exit.position), exitId);
         }
 
         exit.setInputPiggybacked(args.inputIndex);
@@ -138,7 +138,7 @@ library PaymentPiggybackInFlightExit {
         require(exitTarget == msg.sender, "Can be called only by the exit target");
 
         if (isFirstPiggybackOfTheToken(exit, withdrawData.token)) {
-            enqueue(self, withdrawData.token, PosLib.Position(exit.position), exitId);
+            enqueue(self, withdrawData.token, PosLib.decode(exit.position), exitId);
         }
 
         // Exit target for outputs is set in piggyback instead of start in-flight exit
@@ -158,7 +158,7 @@ library PaymentPiggybackInFlightExit {
     )
         private
     {
-        (, uint256 blockTimestamp) = controller.framework.blocks(utxoPos.blockNum());
+        (, uint256 blockTimestamp) = controller.framework.blocks(utxoPos.blockNum);
         require(blockTimestamp != 0, "There is no block for the exit position to enqueue");
 
         uint64 exitableAt = controller.exitableTimestampCalculator.calculateTxExitableTimestamp(now, blockTimestamp);

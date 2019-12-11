@@ -26,6 +26,6 @@ contract ReentrancyExitGame is IExitProcessor {
     function enqueue(uint256 _vaultId, address _token, uint64 _exitableAt, uint256 _txPos, uint160 _exitId, IExitProcessor _exitProcessor)
         public
     {
-        exitGameController.enqueue(_vaultId, _token, _exitableAt, PosLib.Position(_txPos), _exitId, _exitProcessor);
+        exitGameController.enqueue(_vaultId, _token, _exitableAt, PosLib.decode(_txPos), _exitId, _exitProcessor);
     }
 }

@@ -107,12 +107,12 @@ library PaymentEip712Lib {
             return EMPTY_INPUT_HASH;
         }
 
-        PosLib.Position memory utxo = PosLib.Position(inputUtxoValue);
+        PosLib.Position memory utxo = PosLib.decode(inputUtxoValue);
         return keccak256(abi.encode(
             INPUT_TYPE_HASH,
-            utxo.blockNum(),
-            utxo.txIndex(),
-            uint256(utxo.outputIndex())
+            utxo.blockNum,
+            utxo.txIndex,
+            uint256(utxo.outputIndex)
         ));
     }
 

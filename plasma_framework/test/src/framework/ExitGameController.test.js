@@ -83,13 +83,17 @@ contract('ExitGameController', () => {
         });
 
         it('rejects when not called from exit game contract', async () => {
-            const txPosStruct = { value: this.dummyExit.txPos };
+            const txPos = {
+                blockNum: 1000,
+                txIndex: 1,
+                outputIndex: 0,
+            };
             await expectRevert(
                 this.controller.enqueue(
                     VAULT_ID,
                     constants.ZERO_ADDRESS,
                     this.dummyExit.exitableAt,
-                    txPosStruct,
+                    txPos,
                     this.dummyExit.exitId,
                     this.dummyExit.exitProcessor,
                 ),

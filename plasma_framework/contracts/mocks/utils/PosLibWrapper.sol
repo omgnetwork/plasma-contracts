@@ -3,26 +3,42 @@ pragma experimental ABIEncoderV2;
 
 import "../../src/utils/PosLib.sol";
 
-contract UtxoPosLibWrapper {
+contract PosLibWrapper {
     using PosLib for PosLib.Position;
 
-    function build(uint256 txPos, uint16 outputIndex) public pure returns (PosLib.Position memory) {
-        return PosLib.build(txPos, outputIndex);
+    function buildPositionFromTxPosAndOutputIndex(uint256 txPos, uint16 outputIndex)
+        public
+        pure
+        returns (PosLib.Position memory)
+    {
+        return PosLib.buildPositionFromTxPosAndOutputIndex(txPos, outputIndex);
     }
 
-    function blockNum(uint256 _utxoPos) public pure returns (uint256) {
-        return PosLib.Position(_utxoPos).blockNum();
+    function txPos(PosLib.Position memory pos)
+        public
+        pure
+        returns (PosLib.Position memory)
+    {
+        return pos.txPos();
     }
 
-    function txIndex(uint256 _utxoPos) public pure returns (uint256) {
-        return PosLib.Position(_utxoPos).txIndex();
+    function getTxPostionForExitPriority(PosLib.Position memory pos)
+        public
+        pure
+        returns (uint256)
+    {
+        return pos.getTxPostionForExitPriority();
     }
 
-    function outputIndex(uint256 _utxoPos) public pure returns (uint16) {
-        return PosLib.Position(_utxoPos).outputIndex();
+    function encode(PosLib.Position memory pos) public pure returns (uint256) {
+        return pos.encode();
     }
 
-    function txPos(uint256 _utxoPos) public pure returns (PosLib.Position memory) {
-        return PosLib.Position(_utxoPos).txPos();
+    function encodePackedTxPos(PosLib.Position memory pos) public pure returns (uint256) {
+        return pos.encodePackedTxPos();
+    }
+
+    function decode(uint256 pos) public pure returns (PosLib.Position memory) {
+        return PosLib.decode(pos);
     }
 }

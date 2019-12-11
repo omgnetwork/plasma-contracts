@@ -90,19 +90,18 @@ library PaymentChallengeIFENotCanonical {
             "The competitor transaction is the same as transaction in-flight"
         );
 
-
-        PosLib.Position memory inputUtxoPos = PosLib.Position(args.inputUtxoPos);
+        PosLib.Position memory inputUtxoPos = PosLib.decode(args.inputUtxoPos);
 
         bytes32 outputId;
-        if (self.isDeposit.test(inputUtxoPos.blockNum())) {
-            outputId = OutputId.computeDepositOutputId(args.inputTx, inputUtxoPos.outputIndex(), inputUtxoPos.value);
+        if (self.isDeposit.test(inputUtxoPos.blockNum)) {
+            outputId = OutputId.computeDepositOutputId(args.inputTx, inputUtxoPos.outputIndex, args.inputUtxoPos);
         } else {
-            outputId = OutputId.computeNormalOutputId(args.inputTx, inputUtxoPos.outputIndex());
+            outputId = OutputId.computeNormalOutputId(args.inputTx, inputUtxoPos.outputIndex);
         }
         require(outputId == ife.inputs[args.inFlightTxInputIndex].outputId,
                 "Provided inputs data does not point to the same outputId from the in-flight exit");
 
-        WireTransaction.Output memory output = WireTransaction.getOutput(args.inputTx, inputUtxoPos.outputIndex());
+        WireTransaction.Output memory output = WireTransaction.getOutput(args.inputTx, inputUtxoPos.outputIndex);
 
         ISpendingCondition condition = self.spendingConditionRegistry.spendingConditions(
             output.outputType, self.supportedTxType
@@ -111,8 +110,8 @@ library PaymentChallengeIFENotCanonical {
 
         bool isSpentByCompetingTx = condition.verify(
             args.inputTx,
-            inputUtxoPos.outputIndex(),
-            inputUtxoPos.txPos().value,
+            inputUtxoPos.outputIndex,
+            inputUtxoPos.encodePackedTxPos(),
             args.competingTx,
             args.competingTxInputIndex,
             args.competingTxWitness
@@ -162,8 +161,8 @@ library PaymentChallengeIFENotCanonical {
             ife.oldestCompetitorPosition > inFlightTxPos,
             "In-flight transaction must be older than competitors to respond to non-canonical challenge");
 
-        PosLib.Position memory utxoPos = PosLib.Position(inFlightTxPos);
-        (bytes32 root, ) = self.framework.blocks(utxoPos.blockNum());
+        PosLib.Position memory utxoPos = PosLib.decode(inFlightTxPos);
+        (bytes32 root, ) = self.framework.blocks(utxoPos.blockNum);
         require(root != bytes32(""), "Failed to get the block root hash of the UTXO position");
 
         ife.oldestCompetitorPosition = verifyAndDeterminePositionOfTransactionIncludedInBlock(
@@ -184,14 +183,14 @@ library PaymentChallengeIFENotCanonical {
     )
         private
         pure
-        returns(uint256)
+        returns (uint256)
     {
         require(
-            Merkle.checkMembership(txbytes, utxoPos.txIndex(), root, inclusionProof),
+            Merkle.checkMembership(txbytes, utxoPos.txIndex, root, inclusionProof),
             "Transaction is not included in block of Plasma chain"
         );
 
-        return utxoPos.value;
+        return utxoPos.encode();
     }
 
     function verifyCompetingTxFinalized(
@@ -214,7 +213,7 @@ library PaymentChallengeIFENotCanonical {
             // Should fail already in early stages (eg. decode)
             assert(isProtocolFinalized);
         } else {
-            PosLib.Position memory competingTxUtxoPos = PosLib.Position(args.competingTxPos);
+            PosLib.Position memory competingTxUtxoPos = PosLib.decode(args.competingTxPos);
             bool isStandardFinalized = MoreVpFinalization.isStandardFinalized(
                 self.framework,
                 args.competingTx,
@@ -222,7 +221,7 @@ library PaymentChallengeIFENotCanonical {
                 args.competingTxInclusionProof
             );
             require(isStandardFinalized, "Competing tx is not standard finalized with the given tx position");
-            competitorPosition = competingTxUtxoPos.value;
+            competitorPosition = competingTxUtxoPos.encode();
         }
         return competitorPosition;
     }

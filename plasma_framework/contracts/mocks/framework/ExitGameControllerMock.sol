@@ -14,7 +14,7 @@ contract ExitGameControllerMock is ExitGameController {
     }
 
     /**
-     * override to make it non-abstract contract 
+     * override to make it non-abstract contract
      * this mock file set the user that deploys the contract as maintainer to simplify the test.
      */
     function getMaintainer() public view returns (address) {

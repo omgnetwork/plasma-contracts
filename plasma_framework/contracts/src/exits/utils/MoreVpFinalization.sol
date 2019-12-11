@@ -32,7 +32,7 @@ library MoreVpFinalization {
         uint8 protocol = framework.protocols(txType);
         require(protocol == Protocol.MORE_VP(), "MoreVpFinalization: not a MoreVP protocol tx");
 
-        (bytes32 root,) = framework.blocks(txPos.blockNum());
+        (bytes32 root,) = framework.blocks(txPos.blockNum);
         require(root != bytes32(""), "Failed to get the root hash of the block num");
 
         if (inclusionProof.length == 0) {
@@ -40,7 +40,7 @@ library MoreVpFinalization {
         }
 
         return Merkle.checkMembership(
-            txBytes, txPos.txIndex(), root, inclusionProof
+            txBytes, txPos.txIndex, root, inclusionProof
         );
     }
 

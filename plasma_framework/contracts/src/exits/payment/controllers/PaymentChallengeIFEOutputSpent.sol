@@ -49,8 +49,8 @@ library PaymentChallengeIFEOutputSpent {
         PaymentExitDataModel.InFlightExit storage ife = inFlightExitMap.exits[exitId];
         require(ife.exitStartTimestamp != 0, "In-flight exit does not exist");
 
-        PosLib.Position memory utxoPos = PosLib.Position(args.outputUtxoPos);
-        uint16 outputIndex = PosLib.outputIndex(utxoPos);
+        PosLib.Position memory utxoPos = PosLib.decode(args.outputUtxoPos);
+        uint16 outputIndex = utxoPos.outputIndex;
         require(
             ife.isOutputPiggybacked(outputIndex),
             "Output is not piggybacked"
@@ -75,7 +75,7 @@ library PaymentChallengeIFEOutputSpent {
         private
         view
     {
-        PosLib.Position memory utxoPos = PosLib.Position(args.outputUtxoPos);
+        PosLib.Position memory utxoPos = PosLib.decode(args.outputUtxoPos);
         bool isStandardFinalized = MoreVpFinalization.isStandardFinalized(
             controller.framework,
             args.inFlightTx,
@@ -110,9 +110,9 @@ library PaymentChallengeIFEOutputSpent {
         private
         view
     {
-        PosLib.Position memory utxoPos = PosLib.Position(args.outputUtxoPos);
+        PosLib.Position memory utxoPos = PosLib.decode(args.outputUtxoPos);
         uint256 challengingTxType = WireTransaction.getTransactionType(args.challengingTx);
-        WireTransaction.Output memory output = WireTransaction.getOutput(args.challengingTx, utxoPos.outputIndex());
+        WireTransaction.Output memory output = WireTransaction.getOutput(args.challengingTx, utxoPos.outputIndex);
 
         ISpendingCondition condition = controller.spendingConditionRegistry.spendingConditions(
             output.outputType,
@@ -122,8 +122,8 @@ library PaymentChallengeIFEOutputSpent {
 
         bool isSpentBySpendingTx = condition.verify(
             args.inFlightTx,
-            utxoPos.outputIndex(),
-            utxoPos.txPos().value,
+            utxoPos.outputIndex,
+            utxoPos.encodePackedTxPos(),
             args.challengingTx,
             args.challengingTxInputIndex,
             args.challengingTxWitness
