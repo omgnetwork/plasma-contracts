@@ -67,7 +67,9 @@ contract('PaymentTransactionModel', ([alice]) => {
 
     it('should fail when decoding transaction have more outputs than MAX_OUTPUT limit', async () => {
         const outputsExceedLimit = Array(MAX_OUTPUT_NUM + 1).fill(OUTPUT);
-        const transaction = new PaymentTransaction(TX_TYPE.PAYMENT, [DUMMY_INPUT_1], outputsExceedLimit, EMPTY_BYTES_32);
+        const transaction = new PaymentTransaction(
+            TX_TYPE.PAYMENT, [DUMMY_INPUT_1], outputsExceedLimit, EMPTY_BYTES_32,
+        );
         const encoded = web3.utils.bytesToHex(transaction.rlpEncoded());
 
         await expectRevert(
