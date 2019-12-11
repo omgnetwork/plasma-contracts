@@ -59,4 +59,11 @@ contract SpyPlasmaFrameworkForExitGame is PlasmaFramework {
     function setOutputSpent(bytes32 _outputId) external {
         isOutputSpent[_outputId] = true;
     }
+
+    /**
+     * Override to remove check that block exists
+     */
+    function isDeposit(uint256 blockNum) public view returns (bool) {
+        return blockNum % childBlockInterval != 0;
+    }
 }

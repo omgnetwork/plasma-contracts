@@ -23,11 +23,15 @@ contract BlockControllerMock is BlockController {
         maintainer = msg.sender;
     }
 
-    /** 
-     * override to make it non-abstract contract 
+    /**
+     * override to make it non-abstract contract
      * this mock file set the user that deploys the contract as maintainer to simplify the test.
      */
     function getMaintainer() public view returns (address) {
         return maintainer;
+    }
+
+    function setBlock(uint256 _blockNum, bytes32 _root, uint256 _timestamp) external {
+        blocks[_blockNum] = BlockModel.Block(_root, _timestamp);
     }
 }

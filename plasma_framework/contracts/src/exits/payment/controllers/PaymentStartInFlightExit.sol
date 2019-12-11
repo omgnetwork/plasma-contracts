@@ -11,7 +11,6 @@ import "../../utils/ExitableTimestamp.sol";
 import "../../utils/ExitId.sol";
 import "../../utils/OutputId.sol";
 import "../../utils/MoreVpFinalization.sol";
-import "../../../utils/IsDeposit.sol";
 import "../../../utils/UtxoPosLib.sol";
 import "../../../utils/Merkle.sol";
 import "../../../framework/PlasmaFramework.sol";
@@ -21,7 +20,6 @@ import "../../../transactions/outputs/PaymentOutputModel.sol";
 
 library PaymentStartInFlightExit {
     using ExitableTimestamp for ExitableTimestamp.Calculator;
-    using IsDeposit for IsDeposit.Predicate;
     using UtxoPosLib for UtxoPosLib.UtxoPos;
     using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
     using PaymentOutputModel for PaymentOutputModel.Output;
@@ -31,7 +29,6 @@ library PaymentStartInFlightExit {
      */
     struct Controller {
         PlasmaFramework framework;
-        IsDeposit.Predicate isDeposit;
         ExitableTimestamp.Calculator exitTimestampCalculator;
         SpendingConditionRegistry spendingConditionRegistry;
         IStateTransitionVerifier transitionVerifier;
@@ -85,7 +82,6 @@ library PaymentStartInFlightExit {
     {
         return Controller({
             framework: framework,
-            isDeposit: IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL()),
             exitTimestampCalculator: ExitableTimestamp.Calculator(framework.minExitPeriod()),
             spendingConditionRegistry: spendingConditionRegistry,
             transitionVerifier: transitionVerifier,
@@ -118,7 +114,7 @@ library PaymentStartInFlightExit {
         PaymentInFlightExitRouterArgs.StartExitArgs memory args
     )
         private
-        pure
+        view
         returns (StartExitData memory)
     {
         StartExitData memory exitData;
@@ -147,13 +143,13 @@ library PaymentStartInFlightExit {
 
     function getOutputIds(Controller memory controller, bytes[] memory inputTxs, UtxoPosLib.UtxoPos[] memory utxoPos)
         private
-        pure
+        view
         returns (bytes32[] memory)
     {
         require(inputTxs.length == utxoPos.length, "Number of input transactions does not match number of provided input utxos positions");
         bytes32[] memory outputIds = new bytes32[](inputTxs.length);
         for (uint i = 0; i < inputTxs.length; i++) {
-            bool isDepositTx = controller.isDeposit.test(utxoPos[i].blockNum());
+            bool isDepositTx = controller.framework.isDeposit(utxoPos[i].blockNum());
             outputIds[i] = isDepositTx
                 ? OutputId.computeDepositOutputId(inputTxs[i], utxoPos[i].outputIndex(), utxoPos[i].value)
                 : OutputId.computeNormalOutputId(inputTxs[i], utxoPos[i].outputIndex());
