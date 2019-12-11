@@ -6,7 +6,7 @@ import "../utils/RLPReader.sol";
  * @title GenericTransaction
  * @notice GenericTransaction is a generic transaction format that makes few assumptions about the
  * content of the transaction. A transaction must satisy the following requirements:
- * - It must be a list of 4 items: [txType, inputs, outputs, txData]
+ * - It must be a list of 5 items: [txType, inputs, outputs, txData, metaData]
  * - `txType` must be a uint not equal to zero
  * - inputs must be a list of RLP items.
  * - outputs must be a list of `Output`s
@@ -14,7 +14,7 @@ import "../utils/RLPReader.sol";
  * - `Output.outputType` must be a uint not equal to zero
  * - `Output.data` is an RLP item. It can be a list.
  * - no assumptions are made about `txData`. Note that `txData` can be a list.
- *
+ * - `metaData` must be 32 bytes long.
  */
 library GenericTransaction {
 
