@@ -11,14 +11,12 @@ import "../../utils/OutputId.sol";
 import "../../utils/MoreVpFinalization.sol";
 import "../../../utils/UtxoPosLib.sol";
 import "../../../utils/Merkle.sol";
-import "../../../utils/IsDeposit.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
 import "../../../transactions/WireTransaction.sol";
 
 library PaymentChallengeIFENotCanonical {
     using UtxoPosLib for UtxoPosLib.UtxoPos;
-    using IsDeposit for IsDeposit.Predicate;
     using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
 
     /**
@@ -26,7 +24,6 @@ library PaymentChallengeIFENotCanonical {
      */
     struct Controller {
         PlasmaFramework framework;
-        IsDeposit.Predicate isDeposit;
         SpendingConditionRegistry spendingConditionRegistry;
         uint256 supportedTxType;
     }
@@ -58,7 +55,6 @@ library PaymentChallengeIFENotCanonical {
     {
         return Controller({
             framework: framework,
-            isDeposit: IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL()),
             spendingConditionRegistry: spendingConditionRegistry,
             supportedTxType: supportedTxType
         });
@@ -94,7 +90,7 @@ library PaymentChallengeIFENotCanonical {
         UtxoPosLib.UtxoPos memory inputUtxoPos = UtxoPosLib.UtxoPos(args.inputUtxoPos);
 
         bytes32 outputId;
-        if (self.isDeposit.test(inputUtxoPos.blockNum())) {
+        if (self.framework.isDeposit(inputUtxoPos.blockNum())) {
             outputId = OutputId.computeDepositOutputId(args.inputTx, inputUtxoPos.outputIndex(), inputUtxoPos.value);
         } else {
             outputId = OutputId.computeNormalOutputId(args.inputTx, inputUtxoPos.outputIndex());
