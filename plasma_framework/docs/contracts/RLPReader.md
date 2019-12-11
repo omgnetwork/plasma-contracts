@@ -181,7 +181,6 @@ The length of the RLPItem (including the length field) and the offset of the pay
 ## Contracts
 
 * [Address](Address.md)
-* [AddressPayable](AddressPayable.md)
 * [Bits](Bits.md)
 * [BlockController](BlockController.md)
 * [BlockModel](BlockModel.md)

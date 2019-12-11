@@ -67,7 +67,6 @@ function withdraw(address payable receiver, address token, uint256 amount) exter
 ## Contracts
 
 * [Address](Address.md)
-* [AddressPayable](AddressPayable.md)
 * [Bits](Bits.md)
 * [BlockController](BlockController.md)
 * [BlockModel](BlockModel.md)
