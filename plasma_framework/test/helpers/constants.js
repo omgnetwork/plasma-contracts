@@ -12,7 +12,6 @@ const TX_TYPE = {
 const OUTPUT_TYPE = {
     PAYMENT: 1,
     FEE_CLAIM: 2,
-    FEE_BLOCK_NUM: 3,
 };
 
 const EMPTY_BYTES = '0x';

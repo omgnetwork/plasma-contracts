@@ -65,10 +65,10 @@ class GenericTransaction {
     }
 
     static formatTxDataRlpEncoding(item) {
-        if (typeof item === 'string') {
-            return item;
+        if (typeof item === 'object') {
+            return item.formatForRlpEncoding();
         }
-        return item.formatForRlpEncoding();
+        return item;
     }
 
     isDeposit() {
@@ -86,30 +86,6 @@ class PlasmaDepositTransaction extends PaymentTransaction {
 
 class FeeClaimOutput extends FungibleTransactionOutput {}
 
-class FeeBlockNumOutput {
-    constructor(type, blockNum) {
-        this.outputType = type;
-        this.blockNum = blockNum;
-    }
-
-    formatForRlpEncoding() {
-        return [this.outputType, this.blockNum];
-    }
-
-    rlpEncoded() {
-        return rlp.encode(this.formatForRlpEncoding());
-    }
-}
-
-
-/**
- * Fee Transaction does not follows Generic Transaction format.
- * It diverges in the output data structure by having two output data structures:
- * 1. GenericTransactionOutput
- * 2. FeeBlockNumOutput
- *
- * However, high level wise it still follows the order of (txType, inputs, outputs, metaData)
- */
 class FeeTransaction extends GenericTransaction {}
 
 module.exports = {
@@ -120,5 +96,4 @@ module.exports = {
     FungibleTransactionOutput,
     FeeTransaction,
     FeeClaimOutput,
-    FeeBlockNumOutput,
 };

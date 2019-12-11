@@ -10,8 +10,8 @@ const Testlang = require('../helpers/testlang.js');
 const config = require('../../config.js');
 
 const {
-    PaymentTransactionOutput, PaymentTransaction, FeeTransaction,
-    FeeBlockNumOutput, FeeClaimOutput,
+    PaymentTransactionOutput, PaymentTransaction,
+    FeeTransaction, FeeClaimOutput,
 } = require('../helpers/transaction.js');
 const { sign } = require('../helpers/sign.js');
 const { hashTx } = require('../helpers/paymentEip712.js');
@@ -27,7 +27,6 @@ contract('PlasmaFramework - Fee Claim', ([_, _maintainer, authority, richFather,
     const ETH = constants.ZERO_ADDRESS;
     const FEE_TX_TYPE = config.registerKeys.txTypes.fee;
     const FEE_OUTPUT_TYPE = config.registerKeys.outputTypes.feeClaim;
-    const FEE_NONCE_OUTPUT_TYPE = config.registerKeys.outputTypes.feeBlockNum;
     const FEE_AMOUNT = 1000;
     const MERKLE_TREE_DEPTH = 16;
     const PAYMENT_OUTPUT_TYPE = config.registerKeys.outputTypes.payment;
@@ -111,14 +110,13 @@ contract('PlasmaFramework - Fee Claim', ([_, _maintainer, authority, richFather,
                         const nextBlockNum = (await this.framework.nextChildBlock()).toNumber();
                         const feeOutputs = [
                             new FeeClaimOutput(FEE_OUTPUT_TYPE, FEE_AMOUNT, operatorFeeAddress, ETH),
-                            new FeeBlockNumOutput(FEE_NONCE_OUTPUT_TYPE, nextBlockNum),
                         ];
 
                         const outputIndex = 0;
                         const feeTxIndex = 1;
                         firstFeeClaimUtxoPos = buildUtxoPos(nextBlockNum, feeTxIndex, outputIndex);
 
-                        const firstFeeTx = new FeeTransaction(FEE_TX_TYPE, [], feeOutputs);
+                        const firstFeeTx = new FeeTransaction(FEE_TX_TYPE, [], feeOutputs, nextBlockNum);
                         firstFeeTxBytes = web3.utils.bytesToHex(firstFeeTx.rlpEncoded());
 
                         const merkleTree = new MerkleTree(
@@ -160,10 +158,9 @@ contract('PlasmaFramework - Fee Claim', ([_, _maintainer, authority, richFather,
                                 const nextBlockNum = (await this.framework.nextChildBlock()).toNumber();
                                 const feeOutputs = [
                                     new FeeClaimOutput(FEE_OUTPUT_TYPE, FEE_AMOUNT, operatorFeeAddress, ETH),
-                                    new FeeBlockNumOutput(FEE_NONCE_OUTPUT_TYPE, nextBlockNum),
                                 ];
 
-                                const secondFeeTx = new FeeTransaction(FEE_TX_TYPE, [], feeOutputs);
+                                const secondFeeTx = new FeeTransaction(FEE_TX_TYPE, [], feeOutputs, nextBlockNum);
                                 secondFeeTxBytes = web3.utils.bytesToHex(secondFeeTx.rlpEncoded());
 
                                 const outputIndex = 0;

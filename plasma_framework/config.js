@@ -29,7 +29,6 @@ const development = {
         outputTypes: {
             payment: 1,
             feeClaim: 2,
-            feeBlockNum: 3,
         },
         vaultId: {
             eth: 1,
