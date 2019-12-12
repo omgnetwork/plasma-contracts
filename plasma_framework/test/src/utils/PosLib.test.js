@@ -1,6 +1,6 @@
 const PosLib = artifacts.require('PosLibWrapper');
 
-const { BN, expectRevert } = require('openzeppelin-test-helpers');
+const { BN } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
 contract('PosLib', () => {

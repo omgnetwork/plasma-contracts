@@ -19,7 +19,7 @@ const {
     TX_TYPE, OUTPUT_TYPE, PROTOCOL, VAULT_ID,
     DUMMY_INPUT_1, SAFE_GAS_STIPEND,
 } = require('../../../../helpers/constants.js');
-const { buildUtxoPos, UtxoPos } = require('../../../../helpers/positions.js');
+const { buildUtxoPos } = require('../../../../helpers/positions.js');
 const {
     spentOnGas, computeNormalOutputId,
 } = require('../../../../helpers/utils.js');

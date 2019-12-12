@@ -113,7 +113,6 @@ contract('PaymentOutputToPaymentTxCondition', ([richFather, bob]) => {
         it('should fail when spending tx does not point to the utxo pos in input', async () => {
             const { args } = getTestData();
             const wrongUtxoPos = buildUtxoPos(9999, 999, 999);
-            const wrongTxPos = utxoPosToTxPos(wrongUtxoPos);
 
             await expectRevert(
                 this.condition.verify(
