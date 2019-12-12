@@ -36,6 +36,8 @@ Aside from the dependency of the path that a tx type can be spent, there are als
     txType: uint256
     inputs: [bytes32],
     outputs: [struct],
+    txData: undefined,
+    metaData: bytes32
 }
 ```
 
@@ -45,26 +47,37 @@ The second field `inputs` is a list of pointers that link to other outputs in pr
 
 The third field `outputs` is a list of `Output` structs that are further described in the below paragraph. 
 
-A transaction can have more fields than the three described above. Just the first three fields should follow this format.
+`txData` is undefined and left up to concrete transaction types to use if required. Note that `txData` can be a list, so it can be extended as uch as necessary.
 
-#### Output Format
+`metaData` is 32 bytes long.
 
+#### Generic Output Format
+A Generic output only defines the outputType and leaves the outputData to be defined by the concrete transactions.
 ```
 {
     outputType: uint256,
+    outputData: struct
+}
+```
+
+#### Payment OutputData Format
+
+```
+{
     outputGuard: bytes20,
     token: address,
     amount: uint256,
 }
 ```
 
-The first field of the output is a `uint256` that holds the info of `outputType`. Second field is the `outputGuard` field that would hold `owner` related information. Third field is `token`, which is the `address` that represents the `ERC20` token. The Fourth field is `amount`, a `uint256` that holds the value of amount of an output.
+- The `outputGuard` field holds `owner` related information. 
+- The `token` field is the `address` that represents the `ERC20` token. 
+- The `amount` field is a `uint256` that holds the value of amount of an output.
 
 #### Current Payment Exit Game Implementation
 Current implementation of Payment Exit Game assumes all transactions of inputs and outputs would follow the format. Under this assumption and restriction, one can add new tx types as input or output to current Payment Exit Game implementation without the need to re-write it.
 
-We actually realize that current format of `GenericTransaction` has some limitation on adding feature. For example, if we want to add non fungible token support (ERC721 tokens), this data structure would be looking awkward to hold the information. Luckily, it is possible for us to change the format with new a Exit Game implementation design. However, it would mean an extra round of implementation and code audit.
-
 Previous discussions:
 - https://github.com/omisego/plasma-contracts/issues/236#issuecomment-546798910
 - https://github.com/omisego/plasma-contracts/issues/282#issuecomment-535429760
+- https://github.com/omisego/plasma-contracts/pull/502
