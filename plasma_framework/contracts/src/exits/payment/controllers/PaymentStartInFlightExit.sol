@@ -315,7 +315,7 @@ library PaymentStartInFlightExit {
             PaymentOutputModel.Output memory output = exitData.inFlightTx.outputs[i];
 
             ife.outputs[i].outputId = outputId;
-            // Exit target is not set as output guard preimage may not be available for caller
+            ife.outputs[i].exitTarget = address(uint160(output.outputGuard));
             ife.outputs[i].token = output.token;
             ife.outputs[i].amount = output.amount;
         }
