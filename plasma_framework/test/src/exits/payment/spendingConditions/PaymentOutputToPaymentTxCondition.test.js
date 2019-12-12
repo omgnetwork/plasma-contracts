@@ -3,10 +3,10 @@ const PaymentOutputToPaymentTxCondition = artifacts.require('PaymentOutputToPaym
 const { constants, expectRevert } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
-const { EMPTY_BYTES, OUTPUT_TYPE } = require('../../../../helpers/constants.js');
+const { OUTPUT_TYPE } = require('../../../../helpers/constants.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../../helpers/transaction.js');
 const { hashTx } = require('../../../../helpers/paymentEip712.js');
-const { buildUtxoPos, utxoPosToTxPos } = require('../../../../helpers/positions.js');
+const { buildUtxoPos } = require('../../../../helpers/positions.js');
 const { sign } = require('../../../../helpers/sign.js');
 
 contract('PaymentOutputToPaymentTxCondition', ([richFather, bob]) => {

@@ -17,7 +17,7 @@ function txPostionForExitPriority(utxoPos) {
     return Math.floor(utxoPos / TX_OFFSET);
 }
 
-class UtxoPos {
+class Position {
     constructor(utxoPos) {
         this.utxoPos = utxoPos;
         this.blockNum = Math.floor(this.utxoPos / BLOCK_OFFSET);
@@ -32,5 +32,5 @@ module.exports = {
     buildTxPos,
     utxoPosToTxPos,
     txPostionForExitPriority,
-    UtxoPos,
+    Position,
 };
