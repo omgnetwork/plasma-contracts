@@ -1,6 +1,5 @@
 const ExitableTimestamp = artifacts.require('ExitableTimestampWrapper');
 const ExitId = artifacts.require('ExitIdWrapper');
-const IsDeposit = artifacts.require('IsDepositWrapper');
 const PaymentChallengeStandardExit = artifacts.require('PaymentChallengeStandardExit');
 const PaymentProcessStandardExit = artifacts.require('PaymentProcessStandardExit');
 const PaymentStandardExitRouter = artifacts.require('PaymentStandardExitRouterMock');
@@ -73,7 +72,6 @@ contract('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
 
         before(async () => {
             this.exitIdHelper = await ExitId.new();
-            this.isDeposit = await IsDeposit.new(CHILD_BLOCK_INTERVAL);
             this.exitableHelper = await ExitableTimestamp.new(MIN_EXIT_PERIOD);
 
             this.dummyAmount = 1000;
@@ -299,7 +297,7 @@ contract('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
                 args, { from: outputOwner, value: this.startStandardExitBondSize },
             );
 
-            const isTxDeposit = await this.isDeposit.test(this.dummyBlockNum);
+            const isTxDeposit = await this.framework.isDeposit(this.dummyBlockNum);
             const exitId = await this.exitIdHelper.getStandardExitId(isTxDeposit, args.rlpOutputTx, args.utxoPos);
 
             const currentTimestamp = await time.latest();
@@ -324,7 +322,7 @@ contract('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
 
             await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, this.dummyBlockTimestamp);
 
-            const isTxDeposit = await this.isDeposit.test(this.dummyBlockNum);
+            const isTxDeposit = await this.framework.isDeposit(this.dummyBlockNum);
             const exitId = await this.exitIdHelper.getStandardExitId(isTxDeposit, args.rlpOutputTx, args.utxoPos);
             const { logs } = await this.exitGame.startStandardExit(
                 args, { from: outputOwner, value: this.startStandardExitBondSize },

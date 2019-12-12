@@ -4,14 +4,11 @@ import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 
 import "./IErc20DepositVerifier.sol";
 import {PaymentTransactionModel as DepositTx} from "../../transactions/PaymentTransactionModel.sol";
-import {PaymentOutputModel as DepositOutputModel} from "../../transactions/outputs/PaymentOutputModel.sol";
 
 /**
  * @notice Implementation of Erc20 deposit verifier using payment transaction as the deposit tx
  */
 contract Erc20DepositVerifier is IErc20DepositVerifier {
-    using DepositOutputModel for DepositOutputModel.Output;
-
     uint256 public depositTxType;
     uint256 public supportedOutputType;
 
@@ -45,7 +42,7 @@ contract Erc20DepositVerifier is IErc20DepositVerifier {
         require(decodedTx.outputs[0].token != address(0), "Invalid output currency (ETH)");
         require(decodedTx.outputs[0].outputType == supportedOutputType, "Invalid output type");
 
-        address depositorsAddress = decodedTx.outputs[0].owner();
+        address depositorsAddress = DepositTx.getOutputOwner(decodedTx.outputs[0]);
         require(depositorsAddress == sender, "Depositor's address must match sender's address");
 
         IERC20 erc20 = IERC20(decodedTx.outputs[0].token);

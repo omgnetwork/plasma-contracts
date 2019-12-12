@@ -11,7 +11,7 @@ import "../../utils/MoreVpFinalization.sol";
 import "../../../utils/Merkle.sol";
 import "../../../utils/SafeEthTransfer.sol";
 import "../../../utils/PosLib.sol";
-import "../../../transactions/WireTransaction.sol";
+import "../../../transactions/GenericTransaction.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
 
@@ -111,12 +111,12 @@ library PaymentChallengeIFEOutputSpent {
         view
     {
         PosLib.Position memory utxoPos = PosLib.decode(args.outputUtxoPos);
-        uint256 challengingTxType = WireTransaction.getTransactionType(args.challengingTx);
-        WireTransaction.Output memory output = WireTransaction.getOutput(args.challengingTx, utxoPos.outputIndex);
+        GenericTransaction.Transaction memory challengingTx = GenericTransaction.decode(args.challengingTx);
+        GenericTransaction.Output memory output = GenericTransaction.getOutput(challengingTx, utxoPos.outputIndex);
 
         ISpendingCondition condition = controller.spendingConditionRegistry.spendingConditions(
             output.outputType,
-            challengingTxType
+            challengingTx.txType
         );
         require(address(condition) != address(0), "Spending condition contract not found");
 

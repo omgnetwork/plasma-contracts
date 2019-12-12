@@ -11,20 +11,16 @@ import "../../../vaults/EthVault.sol";
 import "../../../vaults/Erc20Vault.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../framework/Protocol.sol";
-import "../../../utils/IsDeposit.sol";
 import "../../../utils/SafeEthTransfer.sol";
 import "../../../utils/PosLib.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
-import "../../../transactions/WireTransaction.sol";
-import "../../../transactions/outputs/PaymentOutputModel.sol";
+import "../../../transactions/GenericTransaction.sol";
 
 library PaymentChallengeStandardExit {
     using PosLib for PosLib.Position;
-    using IsDeposit for IsDeposit.Predicate;
 
     struct Controller {
         PlasmaFramework framework;
-        IsDeposit.Predicate isDeposit;
         SpendingConditionRegistry spendingConditionRegistry;
         uint256 safeGasStipend;
     }
@@ -40,6 +36,7 @@ library PaymentChallengeStandardExit {
         Controller controller;
         PaymentStandardExitRouterArgs.ChallengeStandardExitArgs args;
         PaymentExitDataModel.StandardExit exitData;
+        uint256 challengeTxType;
     }
 
     /**
@@ -57,7 +54,6 @@ library PaymentChallengeStandardExit {
     {
         return Controller({
             framework: framework,
-            isDeposit: IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL()),
             spendingConditionRegistry: spendingConditionRegistry,
             safeGasStipend: safeGasStipend
         });
@@ -77,10 +73,13 @@ library PaymentChallengeStandardExit {
     )
         public
     {
+        GenericTransaction.Transaction memory challengeTx = GenericTransaction.decode(args.challengeTx);
+
         ChallengeStandardExitData memory data = ChallengeStandardExitData({
             controller: self,
             args: args,
-            exitData: exitMap.exits[args.exitId]
+            exitData: exitMap.exits[args.exitId],
+            challengeTxType: challengeTx.txType
         });
         verifyChallengeExitExists(data);
         verifyChallengeTxProtocolFinalized(data);
@@ -108,17 +107,16 @@ library PaymentChallengeStandardExit {
         PaymentStandardExitRouterArgs.ChallengeStandardExitArgs memory args = data.args;
 
         PosLib.Position memory utxoPos = PosLib.decode(data.exitData.utxoPos);
-        PaymentOutputModel.Output memory output = PaymentTransactionModel
+        FungibleTokenOutputModel.Output memory output = PaymentTransactionModel
             .decode(args.exitingTx)
             .outputs[utxoPos.outputIndex];
 
-        uint256 challengeTxType = WireTransaction.getTransactionType(args.challengeTx);
         ISpendingCondition condition = data.controller.spendingConditionRegistry.spendingConditions(
-            output.outputType, challengeTxType
+            output.outputType, data.challengeTxType
         );
         require(address(condition) != address(0), "Spending condition contract not found");
 
-        bytes32 outputId = data.controller.isDeposit.test(utxoPos.blockNum)
+        bytes32 outputId = data.controller.framework.isDeposit(utxoPos.blockNum)
                 ? OutputId.computeDepositOutputId(args.exitingTx, utxoPos.outputIndex, utxoPos.encode())
                 : OutputId.computeNormalOutputId(args.exitingTx, utxoPos.outputIndex);
         require(outputId == data.exitData.outputId, "Invalid exiting tx causing outputId mismatch");

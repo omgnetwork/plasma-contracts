@@ -2,7 +2,6 @@ pragma solidity 0.5.11;
 pragma experimental ABIEncoderV2;
 
 import "../PaymentTransactionModel.sol";
-import "../outputs/PaymentOutputModel.sol";
 import "../../utils/PosLib.sol";
 
 /**
@@ -23,7 +22,7 @@ library PaymentEip712Lib {
     );
 
     bytes32 constant internal TX_TYPE_HASH = keccak256(
-        "Transaction(uint256 txType,Input input0,Input input1,Input input2,Input input3,Output output0,Output output1,Output output2,Output output3,bytes32 metadata)Input(uint256 blknum,uint256 txindex,uint256 oindex)Output(uint256 outputType,bytes20 outputGuard,address currency,uint256 amount)"
+        "Transaction(uint256 txType,Input input0,Input input1,Input input2,Input input3,Output output0,Output output1,Output output2,Output output3,uint256 txData,bytes32 metadata)Input(uint256 blknum,uint256 txindex,uint256 oindex)Output(uint256 outputType,bytes20 outputGuard,address currency,uint256 amount)"
     );
 
     bytes32 constant internal INPUT_TYPE_HASH = keccak256("Input(uint256 blknum,uint256 txindex,uint256 oindex)");
@@ -81,7 +80,7 @@ library PaymentEip712Lib {
         }
 
         // Pad empty value to output array
-        PaymentOutputModel.Output[] memory outputs = new PaymentOutputModel.Output[](PaymentTransactionModel.MAX_OUTPUT_NUM());
+        FungibleTokenOutputModel.Output[] memory outputs = new FungibleTokenOutputModel.Output[](PaymentTransactionModel.MAX_OUTPUT_NUM());
         for (uint i = 0; i < _tx.outputs.length; i++) {
             outputs[i] = _tx.outputs[i];
         }
@@ -97,6 +96,7 @@ library PaymentEip712Lib {
             _hashOutput(outputs[1]),
             _hashOutput(outputs[2]),
             _hashOutput(outputs[3]),
+            _tx.txData,
             _tx.metaData
         ));
     }
@@ -116,7 +116,7 @@ library PaymentEip712Lib {
         ));
     }
 
-    function _hashOutput(PaymentOutputModel.Output memory _output)
+    function _hashOutput(FungibleTokenOutputModel.Output memory _output)
         private
         pure
         returns (bytes32)

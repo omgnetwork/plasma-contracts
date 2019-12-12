@@ -9,22 +9,19 @@ import "../../registries/SpendingConditionRegistry.sol";
 import "../../utils/ExitId.sol";
 import "../../utils/OutputId.sol";
 import "../../utils/MoreVpFinalization.sol";
-import "../../../utils/IsDeposit.sol";
 import "../../../utils/Merkle.sol";
 import "../../../utils/SafeEthTransfer.sol";
 import "../../../utils/PosLib.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
-import "../../../transactions/WireTransaction.sol";
+import "../../../transactions/GenericTransaction.sol";
 
 library PaymentChallengeIFEInputSpent {
     using PosLib for PosLib.Position;
-    using IsDeposit for IsDeposit.Predicate;
     using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
 
     struct Controller {
         PlasmaFramework framework;
-        IsDeposit.Predicate isDeposit;
         SpendingConditionRegistry spendingConditionRegistry;
         uint256 safeGasStipend;
     }
@@ -59,7 +56,6 @@ library PaymentChallengeIFEInputSpent {
     {
         return Controller({
             framework: framework,
-            isDeposit: IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL()),
             spendingConditionRegistry: spendingConditionRegistry,
             safeGasStipend: safeGasStipend
         });
@@ -109,12 +105,12 @@ library PaymentChallengeIFEInputSpent {
         emit InFlightExitInputBlocked(msg.sender, keccak256(args.inFlightTx), args.inFlightTxInputIndex);
     }
 
-    function verifySpentInputEqualsIFEInput(ChallengeIFEData memory data) private pure {
+    function verifySpentInputEqualsIFEInput(ChallengeIFEData memory data) private view {
         bytes32 ifeInputOutputId = data.ife.inputs[data.args.inFlightTxInputIndex].outputId;
 
         PosLib.Position memory utxoPos = PosLib.decode(data.args.inputUtxoPos);
-        bytes32 challengingTxInputOutputId = data.controller.isDeposit.test(utxoPos.blockNum)
-                ? OutputId.computeDepositOutputId(data.args.inputTx, utxoPos.outputIndex, data.args.inputUtxoPos)
+        bytes32 challengingTxInputOutputId = data.controller.framework.isDeposit(utxoPos.blockNum)
+                ? OutputId.computeDepositOutputId(data.args.inputTx, utxoPos.outputIndex, utxoPos.encode())
                 : OutputId.computeNormalOutputId(data.args.inputTx, utxoPos.outputIndex);
 
         require(ifeInputOutputId == challengingTxInputOutputId, "Spent input is not the same as piggybacked input");
@@ -135,11 +131,11 @@ library PaymentChallengeIFEInputSpent {
     }
 
     function verifySpendingCondition(ChallengeIFEData memory data) private view {
-        uint256 challengingTxType = WireTransaction.getTransactionType(data.args.challengingTx);
-        WireTransaction.Output memory output = WireTransaction.getOutput(data.args.challengingTx, data.args.challengingTxInputIndex);
+        GenericTransaction.Transaction memory challengingTx = GenericTransaction.decode(data.args.challengingTx);
+        GenericTransaction.Output memory output = GenericTransaction.getOutput(challengingTx, data.args.challengingTxInputIndex);
 
         ISpendingCondition condition = data.controller.spendingConditionRegistry.spendingConditions(
-            output.outputType, challengingTxType
+            output.outputType, challengingTx.txType
         );
         require(address(condition) != address(0), "Spending condition contract not found");
 

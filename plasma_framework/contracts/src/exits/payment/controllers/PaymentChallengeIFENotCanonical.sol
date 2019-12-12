@@ -11,14 +11,12 @@ import "../../utils/OutputId.sol";
 import "../../utils/MoreVpFinalization.sol";
 import "../../../utils/PosLib.sol";
 import "../../../utils/Merkle.sol";
-import "../../../utils/IsDeposit.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
-import "../../../transactions/WireTransaction.sol";
+import "../../../transactions/GenericTransaction.sol";
 
 library PaymentChallengeIFENotCanonical {
     using PosLib for PosLib.Position;
-    using IsDeposit for IsDeposit.Predicate;
     using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
 
     /**
@@ -26,7 +24,6 @@ library PaymentChallengeIFENotCanonical {
      */
     struct Controller {
         PlasmaFramework framework;
-        IsDeposit.Predicate isDeposit;
         SpendingConditionRegistry spendingConditionRegistry;
         uint256 supportedTxType;
     }
@@ -58,7 +55,6 @@ library PaymentChallengeIFENotCanonical {
     {
         return Controller({
             framework: framework,
-            isDeposit: IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL()),
             spendingConditionRegistry: spendingConditionRegistry,
             supportedTxType: supportedTxType
         });
@@ -93,7 +89,7 @@ library PaymentChallengeIFENotCanonical {
         PosLib.Position memory inputUtxoPos = PosLib.decode(args.inputUtxoPos);
 
         bytes32 outputId;
-        if (self.isDeposit.test(inputUtxoPos.blockNum)) {
+        if (self.framework.isDeposit(inputUtxoPos.blockNum)) {
             outputId = OutputId.computeDepositOutputId(args.inputTx, inputUtxoPos.outputIndex, args.inputUtxoPos);
         } else {
             outputId = OutputId.computeNormalOutputId(args.inputTx, inputUtxoPos.outputIndex);
@@ -101,7 +97,10 @@ library PaymentChallengeIFENotCanonical {
         require(outputId == ife.inputs[args.inFlightTxInputIndex].outputId,
                 "Provided inputs data does not point to the same outputId from the in-flight exit");
 
-        WireTransaction.Output memory output = WireTransaction.getOutput(args.inputTx, inputUtxoPos.outputIndex);
+        GenericTransaction.Output memory output = GenericTransaction.getOutput(
+            GenericTransaction.decode(args.inputTx),
+            inputUtxoPos.outputIndex
+        );
 
         ISpendingCondition condition = self.spendingConditionRegistry.spendingConditions(
             output.outputType, self.supportedTxType

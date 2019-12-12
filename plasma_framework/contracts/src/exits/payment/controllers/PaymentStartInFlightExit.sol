@@ -11,27 +11,22 @@ import "../../utils/ExitableTimestamp.sol";
 import "../../utils/ExitId.sol";
 import "../../utils/OutputId.sol";
 import "../../utils/MoreVpFinalization.sol";
-import "../../../utils/IsDeposit.sol";
 import "../../../utils/PosLib.sol";
 import "../../../utils/Merkle.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
-import "../../../transactions/WireTransaction.sol";
-import "../../../transactions/outputs/PaymentOutputModel.sol";
+import "../../../transactions/GenericTransaction.sol";
 
 library PaymentStartInFlightExit {
     using ExitableTimestamp for ExitableTimestamp.Calculator;
-    using IsDeposit for IsDeposit.Predicate;
     using PosLib for PosLib.Position;
     using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
-    using PaymentOutputModel for PaymentOutputModel.Output;
 
     /**
      * @dev supportedTxType enables code reuse in different Payment Tx versions
      */
     struct Controller {
         PlasmaFramework framework;
-        IsDeposit.Predicate isDeposit;
         ExitableTimestamp.Calculator exitTimestampCalculator;
         SpendingConditionRegistry spendingConditionRegistry;
         IStateTransitionVerifier transitionVerifier;
@@ -85,7 +80,6 @@ library PaymentStartInFlightExit {
     {
         return Controller({
             framework: framework,
-            isDeposit: IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL()),
             exitTimestampCalculator: ExitableTimestamp.Calculator(framework.minExitPeriod()),
             spendingConditionRegistry: spendingConditionRegistry,
             transitionVerifier: transitionVerifier,
@@ -118,7 +112,7 @@ library PaymentStartInFlightExit {
         PaymentInFlightExitRouterArgs.StartExitArgs memory args
     )
         private
-        pure
+        view
         returns (StartExitData memory)
     {
         StartExitData memory exitData;
@@ -147,13 +141,13 @@ library PaymentStartInFlightExit {
 
     function getOutputIds(Controller memory controller, bytes[] memory inputTxs, PosLib.Position[] memory utxoPos)
         private
-        pure
+        view
         returns (bytes32[] memory)
     {
         require(inputTxs.length == utxoPos.length, "Number of input transactions does not match number of provided input utxos positions");
         bytes32[] memory outputIds = new bytes32[](inputTxs.length);
         for (uint i = 0; i < inputTxs.length; i++) {
-            bool isDepositTx = controller.isDeposit.test(utxoPos[i].blockNum);
+            bool isDepositTx = controller.framework.isDeposit(utxoPos[i].blockNum);
             outputIds[i] = isDepositTx
                 ? OutputId.computeDepositOutputId(inputTxs[i], utxoPos[i].outputIndex, utxoPos[i].encode())
                 : OutputId.computeNormalOutputId(inputTxs[i], utxoPos[i].outputIndex);
@@ -232,7 +226,10 @@ library PaymentStartInFlightExit {
     function verifyInputsSpent(StartExitData memory exitData) private view {
         for (uint16 i = 0; i < exitData.inputTxs.length; i++) {
             uint16 outputIndex = exitData.inputUtxosPos[i].outputIndex;
-            WireTransaction.Output memory output = WireTransaction.getOutput(exitData.inputTxs[i], outputIndex);
+            GenericTransaction.Output memory output = GenericTransaction.getOutput(
+                GenericTransaction.decode(exitData.inputTxs[i]),
+                outputIndex
+            );
 
             ISpendingCondition condition = exitData.controller.spendingConditionRegistry.spendingConditions(
                 output.outputType, exitData.controller.supportedTxType
@@ -298,7 +295,10 @@ library PaymentStartInFlightExit {
     {
         for (uint i = 0; i < exitData.inputTxs.length; i++) {
             uint16 outputIndex = exitData.inputUtxosPos[i].outputIndex;
-            WireTransaction.Output memory output = WireTransaction.getOutput(exitData.inputTxs[i], outputIndex);
+            FungibleTokenOutputModel.Output memory output = FungibleTokenOutputModel.getOutput(
+                GenericTransaction.decode(exitData.inputTxs[i]),
+                outputIndex
+            );
 
             ife.inputs[i].outputId = exitData.outputIds[i];
             ife.inputs[i].exitTarget = address(uint160(output.outputGuard));
@@ -316,10 +316,10 @@ library PaymentStartInFlightExit {
         for (uint i = 0; i < exitData.inFlightTx.outputs.length; i++) {
             // deposit transaction can't be in-flight exited
             bytes32 outputId = OutputId.computeNormalOutputId(exitData.inFlightTxRaw, i);
-            PaymentOutputModel.Output memory output = exitData.inFlightTx.outputs[i];
+            FungibleTokenOutputModel.Output memory output = exitData.inFlightTx.outputs[i];
 
             ife.outputs[i].outputId = outputId;
-            // Exit target is not set as output guard preimage may not be available for caller
+            ife.outputs[i].exitTarget = address(uint160(output.outputGuard));
             ife.outputs[i].token = output.token;
             ife.outputs[i].amount = output.amount;
         }

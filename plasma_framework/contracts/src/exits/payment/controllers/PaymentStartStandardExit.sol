@@ -8,22 +8,17 @@ import "../../utils/ExitId.sol";
 import "../../utils/OutputId.sol";
 import "../../utils/MoreVpFinalization.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
-import "../../../transactions/outputs/PaymentOutputModel.sol";
-import "../../../utils/IsDeposit.sol";
 import "../../../utils/PosLib.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../utils/ExitableTimestamp.sol";
 
 library PaymentStartStandardExit {
     using ExitableTimestamp for ExitableTimestamp.Calculator;
-    using IsDeposit for IsDeposit.Predicate;
-    using PaymentOutputModel for PaymentOutputModel.Output;
     using PosLib for PosLib.Position;
 
     struct Controller {
         IExitProcessor exitProcessor;
         PlasmaFramework framework;
-        IsDeposit.Predicate isDeposit;
         ExitableTimestamp.Calculator exitableTimestampCalculator;
         uint256 ethVaultId;
         uint256 erc20VaultId;
@@ -38,7 +33,7 @@ library PaymentStartStandardExit {
         PaymentStandardExitRouterArgs.StartStandardExitArgs args;
         PosLib.Position utxoPos;
         PaymentTransactionModel.Transaction outputTx;
-        PaymentOutputModel.Output output;
+        FungibleTokenOutputModel.Output output;
         uint160 exitId;
         bool isTxDeposit;
         uint256 txBlockTimeStamp;
@@ -68,7 +63,6 @@ library PaymentStartStandardExit {
         return Controller({
             exitProcessor: exitProcessor,
             framework: framework,
-            isDeposit: IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL()),
             exitableTimestampCalculator: ExitableTimestamp.Calculator(framework.minExitPeriod()),
             ethVaultId: ethVaultId,
             erc20VaultId: erc20VaultId,
@@ -108,8 +102,8 @@ library PaymentStartStandardExit {
     {
         PosLib.Position memory utxoPos = PosLib.decode(args.utxoPos);
         PaymentTransactionModel.Transaction memory outputTx = PaymentTransactionModel.decode(args.rlpOutputTx);
-        PaymentOutputModel.Output memory output = outputTx.outputs[utxoPos.outputIndex];
-        bool isTxDeposit = controller.isDeposit.test(utxoPos.blockNum);
+        FungibleTokenOutputModel.Output memory output = outputTx.outputs[utxoPos.outputIndex];
+        bool isTxDeposit = controller.framework.isDeposit(utxoPos.blockNum);
         uint160 exitId = ExitId.getStandardExitId(isTxDeposit, args.rlpOutputTx, utxoPos);
         (, uint256 blockTimestamp) = controller.framework.blocks(utxoPos.blockNum);
 
@@ -141,7 +135,7 @@ library PaymentStartStandardExit {
         require(data.outputTx.txType == data.controller.supportedTxType, "Unsupported transaction type of the exit game");
         require(data.txBlockTimeStamp != 0, "There is no block for the position");
 
-        require(data.output.owner() == msg.sender, "Only output owner can start an exit");
+        require(PaymentTransactionModel.getOutputOwner(data.output) == msg.sender, "Only output owner can start an exit");
 
         require(isStandardFinalized(data), "The transaction must be standard finalized");
         PaymentExitDataModel.StandardExit memory exit = exitMap.exits[data.exitId];

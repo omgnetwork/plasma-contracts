@@ -10,7 +10,6 @@ View Source: [contracts/src/exits/payment/controllers/PaymentChallengeStandardEx
 ```js
 struct Controller {
  contract PlasmaFramework framework,
- struct IsDeposit.Predicate isDeposit,
  contract SpendingConditionRegistry spendingConditionRegistry,
  uint256 safeGasStipend
 }
@@ -22,7 +21,8 @@ struct Controller {
 struct ChallengeStandardExitData {
  struct PaymentChallengeStandardExit.Controller controller,
  struct PaymentStandardExitRouterArgs.ChallengeStandardExitArgs args,
- struct PaymentExitDataModel.StandardExit exitData
+ struct PaymentExitDataModel.StandardExit exitData,
+ uint256 challengeTxType
 }
 ```
 
@@ -131,11 +131,12 @@ function verifySpendingCondition(struct PaymentChallengeStandardExit.ChallengeSt
 * [ExitId](ExitId.md)
 * [ExitPriority](ExitPriority.md)
 * [FailFastReentrancyGuard](FailFastReentrancyGuard.md)
+* [FungibleTokenOutputModel](FungibleTokenOutputModel.md)
+* [GenericTransaction](GenericTransaction.md)
 * [IERC20](IERC20.md)
 * [IErc20DepositVerifier](IErc20DepositVerifier.md)
 * [IEthDepositVerifier](IEthDepositVerifier.md)
 * [IExitProcessor](IExitProcessor.md)
-* [IsDeposit](IsDeposit.md)
 * [ISpendingCondition](ISpendingCondition.md)
 * [IStateTransitionVerifier](IStateTransitionVerifier.md)
 * [Math](Math.md)
@@ -158,7 +159,6 @@ function verifySpendingCondition(struct PaymentChallengeStandardExit.ChallengeSt
 * [PaymentInFlightExitModelUtils](PaymentInFlightExitModelUtils.md)
 * [PaymentInFlightExitRouter](PaymentInFlightExitRouter.md)
 * [PaymentInFlightExitRouterArgs](PaymentInFlightExitRouterArgs.md)
-* [PaymentOutputModel](PaymentOutputModel.md)
 * [PaymentOutputToPaymentTxCondition](PaymentOutputToPaymentTxCondition.md)
 * [PaymentPiggybackInFlightExit](PaymentPiggybackInFlightExit.md)
 * [PaymentProcessInFlightExit](PaymentProcessInFlightExit.md)
@@ -181,4 +181,3 @@ function verifySpendingCondition(struct PaymentChallengeStandardExit.ChallengeSt
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)
-* [WireTransaction](WireTransaction.md)

@@ -10,7 +10,6 @@ View Source: [contracts/src/exits/payment/controllers/PaymentStartInFlightExit.s
 ```js
 struct Controller {
  contract PlasmaFramework framework,
- struct IsDeposit.Predicate isDeposit,
  struct ExitableTimestamp.Calculator exitTimestampCalculator,
  contract SpendingConditionRegistry spendingConditionRegistry,
  contract IStateTransitionVerifier transitionVerifier,
@@ -102,7 +101,7 @@ function run(struct PaymentStartInFlightExit.Controller self, struct PaymentExit
 ### createStartExitData
 
 ```js
-function createStartExitData(struct PaymentStartInFlightExit.Controller controller, struct PaymentInFlightExitRouterArgs.StartExitArgs args) private pure
+function createStartExitData(struct PaymentStartInFlightExit.Controller controller, struct PaymentInFlightExitRouterArgs.StartExitArgs args) private view
 returns(struct PaymentStartInFlightExit.StartExitData)
 ```
 
@@ -129,7 +128,7 @@ returns(struct PosLib.Position[])
 ### getOutputIds
 
 ```js
-function getOutputIds(struct PaymentStartInFlightExit.Controller controller, bytes[] inputTxs, struct PosLib.Position[] utxoPos) private pure
+function getOutputIds(struct PaymentStartInFlightExit.Controller controller, bytes[] inputTxs, struct PosLib.Position[] utxoPos) private view
 returns(bytes32[])
 ```
 
@@ -309,11 +308,12 @@ function setInFlightExitOutputs(struct PaymentExitDataModel.InFlightExit ife, st
 * [ExitId](ExitId.md)
 * [ExitPriority](ExitPriority.md)
 * [FailFastReentrancyGuard](FailFastReentrancyGuard.md)
+* [FungibleTokenOutputModel](FungibleTokenOutputModel.md)
+* [GenericTransaction](GenericTransaction.md)
 * [IERC20](IERC20.md)
 * [IErc20DepositVerifier](IErc20DepositVerifier.md)
 * [IEthDepositVerifier](IEthDepositVerifier.md)
 * [IExitProcessor](IExitProcessor.md)
-* [IsDeposit](IsDeposit.md)
 * [ISpendingCondition](ISpendingCondition.md)
 * [IStateTransitionVerifier](IStateTransitionVerifier.md)
 * [Math](Math.md)
@@ -336,7 +336,6 @@ function setInFlightExitOutputs(struct PaymentExitDataModel.InFlightExit ife, st
 * [PaymentInFlightExitModelUtils](PaymentInFlightExitModelUtils.md)
 * [PaymentInFlightExitRouter](PaymentInFlightExitRouter.md)
 * [PaymentInFlightExitRouterArgs](PaymentInFlightExitRouterArgs.md)
-* [PaymentOutputModel](PaymentOutputModel.md)
 * [PaymentOutputToPaymentTxCondition](PaymentOutputToPaymentTxCondition.md)
 * [PaymentPiggybackInFlightExit](PaymentPiggybackInFlightExit.md)
 * [PaymentProcessInFlightExit](PaymentProcessInFlightExit.md)
@@ -359,4 +358,3 @@ function setInFlightExitOutputs(struct PaymentExitDataModel.InFlightExit ife, st
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)
-* [WireTransaction](WireTransaction.md)

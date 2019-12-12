@@ -5,12 +5,10 @@ import "openzeppelin-solidity/contracts/cryptography/ECDSA.sol";
 import "../../interfaces/ISpendingCondition.sol";
 import "../../../utils/PosLib.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
-import "../../../transactions/outputs/PaymentOutputModel.sol";
 import "../../../transactions/eip712Libs/PaymentEip712Lib.sol";
 
 contract PaymentOutputToPaymentTxCondition is ISpendingCondition {
     using PaymentEip712Lib for PaymentEip712Lib.Constants;
-    using PaymentOutputModel for PaymentOutputModel.Output;
     using PosLib for PosLib.Position;
 
     uint256 internal supportInputTxType;
@@ -58,7 +56,7 @@ contract PaymentOutputToPaymentTxCondition is ISpendingCondition {
         );
 
         PosLib.Position memory decodedUtxoPos = PosLib.decode(utxoPos);
-        address owner = inputTx.outputs[decodedUtxoPos.outputIndex].owner();
+        address owner = PaymentTransactionModel.getOutputOwner(inputTx.outputs[decodedUtxoPos.outputIndex]);
         address signer = ECDSA.recover(eip712.hashTx(spendingTx), signature);
         require(signer != address(0), "Failed to recover the signer from the signature");
         require(owner == signer, "Tx in not signed correctly");

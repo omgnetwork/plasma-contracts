@@ -2,7 +2,7 @@ import enum
 
 import rlp
 from eth_utils import address, keccak
-from rlp.sedes import big_endian_int, CountableList, Binary
+from rlp.sedes import big_endian_int, CountableList, Binary, List
 
 from plasma_core.constants import NULL_SIGNATURE, NULL_ADDRESS, EMPTY_METADATA
 from plasma_core.utils.eip712_struct_hash import hash_struct
@@ -51,6 +51,25 @@ class TransactionOutput(rlp.Serializable):
         amount = amount
         super().__init__(output_type, output_guard, token, amount)
 
+    @classmethod
+    def serialize(cls, obj):
+        sedes_list = List([
+            big_endian_int,
+            List([Binary.fixed_length(20), Binary.fixed_length(20), big_endian_int])
+        ])
+
+        tx_elems = [
+            obj.output_type,
+            [
+                obj.output_guard,
+                obj.token,
+                obj.amount
+            ]
+        ]
+
+        tx_sedes = rlp.sedes.List(sedes_list)
+        return tx_sedes.serialize(tx_elems)
+
 
 class Transaction(rlp.Serializable):
     NUM_TXOS = 4
@@ -58,6 +77,7 @@ class Transaction(rlp.Serializable):
         ('tx_type', big_endian_int),
         ('inputs', CountableList(Binary.fixed_length(32), NUM_TXOS)),
         ('outputs', CountableList(TransactionOutput, NUM_TXOS)),
+        ('tx_data', big_endian_int),
         ('metadata', Binary.fixed_length(32))
     )
 
@@ -65,6 +85,7 @@ class Transaction(rlp.Serializable):
                  tx_type=TxTypes.PAYMENT,
                  inputs=None,
                  outputs=None,
+                 tx_data=0,
                  metadata=None,
                  signatures=None,
                  signers=None):
@@ -86,7 +107,7 @@ class Transaction(rlp.Serializable):
         inputs = [TransactionInput(*i) for i in inputs]
         outputs = [TransactionOutput(*o) for o in outputs]
 
-        super().__init__(tx_type.value, inputs, outputs, metadata)
+        super().__init__(tx_type.value, inputs, outputs, tx_data, metadata)
 
         self.signatures = signatures[:]
         self._signers = signers[:]
@@ -116,6 +137,7 @@ class Transaction(rlp.Serializable):
             obj.tx_type,
             [i.utxo_id for i in obj.inputs],
             obj.outputs,
+            obj.tx_data,
             obj.metadata
         ]
 

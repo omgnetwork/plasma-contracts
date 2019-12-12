@@ -1,48 +1,106 @@
-# TxFinalizationModel.sol
+# GenericTransaction (GenericTransaction.sol)
 
-View Source: [contracts/src/exits/models/TxFinalizationModel.sol](../../contracts/src/exits/models/TxFinalizationModel.sol)
+View Source: [contracts/src/transactions/GenericTransaction.sol](../../contracts/src/transactions/GenericTransaction.sol)
 
-**TxFinalizationModel**
+**GenericTransaction**
+
+GenericTransaction is a generic transaction format that makes few assumptions about the
+content of the transaction. A transaction must satisy the following requirements:
+- It must be a list of 5 items: [txType, inputs, outputs, txData, metaData]
+- `txType` must be a uint not equal to zero
+- inputs must be a list of RLP items.
+- outputs must be a list of `Output`s
+- an `Output` is a list of 2 items: [outputType, data]
+- `Output.outputType` must be a uint not equal to zero
+- `Output.data` is an RLP item. It can be a list.
+- no assumptions are made about `txData`. Note that `txData` can be a list.
+- `metaData` must be 32 bytes long.
 
 ## Structs
-### Data
+### Transaction
 
 ```js
-struct Data {
- contract PlasmaFramework framework,
- uint8 protocol,
- bytes txBytes,
- struct TxPosLib.TxPos txPos,
- bytes inclusionProof,
- bytes confirmSig,
- address confirmSigAddress
+struct Transaction {
+ uint256 txType,
+ struct RLPReader.RLPItem[] inputs,
+ struct GenericTransaction.Output[] outputs,
+ struct RLPReader.RLPItem txData,
+ bytes32 metaData
 }
+```
+
+### Output
+
+```js
+struct Output {
+ uint256 outputType,
+ struct RLPReader.RLPItem data
+}
+```
+
+## Contract Members
+**Constants & Variables**
+
+```js
+uint8 private constant TX_NUM_ITEMS;
+
 ```
 
 ## Functions
 
-- [moreVpData(PlasmaFramework framework, bytes txBytes, struct TxPosLib.TxPos txPos, bytes inclusionProof)](#morevpdata)
+- [decode(bytes transaction)](#decode)
+- [getOutput(struct GenericTransaction.Transaction transaction, uint16 outputIndex)](#getoutput)
+- [decodeOutput(struct RLPReader.RLPItem encodedOutput)](#decodeoutput)
 
-### moreVpData
+### decode
+
+Decodes an RLP encoded transaction into the generic format.
 
 ```js
-function moreVpData(PlasmaFramework framework, bytes txBytes, struct TxPosLib.TxPos txPos, bytes inclusionProof) internal pure
-returns(struct TxFinalizationModel.Data)
+function decode(bytes transaction) internal pure
+returns(struct GenericTransaction.Transaction)
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| framework | PlasmaFramework |  | 
-| txBytes | bytes |  | 
-| txPos | struct TxPosLib.TxPos |  | 
-| inclusionProof | bytes |  | 
+| transaction | bytes |  | 
+
+### getOutput
+
+Returns the output at a specific index in the transaction
+
+```js
+function getOutput(struct GenericTransaction.Transaction transaction, uint16 outputIndex) internal pure
+returns(struct GenericTransaction.Output)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| transaction | struct GenericTransaction.Transaction |  | 
+| outputIndex | uint16 |  | 
+
+### decodeOutput
+
+Decodes an RLPItem to an output
+
+```js
+function decodeOutput(struct RLPReader.RLPItem encodedOutput) internal pure
+returns(struct GenericTransaction.Output)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| encodedOutput | struct RLPReader.RLPItem |  | 
 
 ## Contracts
 
 * [Address](Address.md)
-* [AddressPayable](AddressPayable.md)
 * [Bits](Bits.md)
 * [BlockController](BlockController.md)
 * [BlockModel](BlockModel.md)
@@ -58,22 +116,20 @@ returns(struct TxFinalizationModel.Data)
 * [ExitId](ExitId.md)
 * [ExitPriority](ExitPriority.md)
 * [FailFastReentrancyGuard](FailFastReentrancyGuard.md)
+* [FungibleTokenOutputModel](FungibleTokenOutputModel.md)
+* [GenericTransaction](GenericTransaction.md)
 * [IERC20](IERC20.md)
 * [IErc20DepositVerifier](IErc20DepositVerifier.md)
 * [IEthDepositVerifier](IEthDepositVerifier.md)
 * [IExitProcessor](IExitProcessor.md)
-* [IOutputGuardHandler](IOutputGuardHandler.md)
-* [IsDeposit](IsDeposit.md)
 * [ISpendingCondition](ISpendingCondition.md)
 * [IStateTransitionVerifier](IStateTransitionVerifier.md)
-* [ITxFinalizationVerifier](ITxFinalizationVerifier.md)
 * [Math](Math.md)
 * [Merkle](Merkle.md)
 * [Migrations](Migrations.md)
+* [MoreVpFinalization](MoreVpFinalization.md)
 * [OnlyFromAddress](OnlyFromAddress.md)
 * [OnlyWithValue](OnlyWithValue.md)
-* [OutputGuardHandlerRegistry](OutputGuardHandlerRegistry.md)
-* [OutputGuardModel](OutputGuardModel.md)
 * [OutputId](OutputId.md)
 * [Ownable](Ownable.md)
 * [PaymentChallengeIFEInputSpent](PaymentChallengeIFEInputSpent.md)
@@ -88,8 +144,6 @@ returns(struct TxFinalizationModel.Data)
 * [PaymentInFlightExitModelUtils](PaymentInFlightExitModelUtils.md)
 * [PaymentInFlightExitRouter](PaymentInFlightExitRouter.md)
 * [PaymentInFlightExitRouterArgs](PaymentInFlightExitRouterArgs.md)
-* [PaymentOutputGuardHandler](PaymentOutputGuardHandler.md)
-* [PaymentOutputModel](PaymentOutputModel.md)
 * [PaymentOutputToPaymentTxCondition](PaymentOutputToPaymentTxCondition.md)
 * [PaymentPiggybackInFlightExit](PaymentPiggybackInFlightExit.md)
 * [PaymentProcessInFlightExit](PaymentProcessInFlightExit.md)
@@ -101,6 +155,7 @@ returns(struct TxFinalizationModel.Data)
 * [PaymentTransactionModel](PaymentTransactionModel.md)
 * [PaymentTransactionStateTransitionVerifier](PaymentTransactionStateTransitionVerifier.md)
 * [PlasmaFramework](PlasmaFramework.md)
+* [PosLib](PosLib.md)
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
@@ -109,10 +164,5 @@ returns(struct TxFinalizationModel.Data)
 * [SafeEthTransfer](SafeEthTransfer.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)
-* [TxFinalizationModel](TxFinalizationModel.md)
-* [TxFinalizationVerifier](TxFinalizationVerifier.md)
-* [TxPosLib](TxPosLib.md)
-* [UtxoPosLib](UtxoPosLib.md)
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)
-* [WireTransaction](WireTransaction.md)

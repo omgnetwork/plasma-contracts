@@ -8,21 +8,16 @@ import "../../utils/ExitableTimestamp.sol";
 import "../../utils/ExitId.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../framework/interfaces/IExitProcessor.sol";
-import "../../../transactions/outputs/PaymentOutputModel.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
-import "../../../utils/IsDeposit.sol";
 import "../../../utils/PosLib.sol";
 
 library PaymentPiggybackInFlightExit {
     using PosLib for PosLib.Position;
-    using IsDeposit for IsDeposit.Predicate;
     using ExitableTimestamp for ExitableTimestamp.Calculator;
     using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
-    using PaymentOutputModel for PaymentOutputModel.Output;
 
     struct Controller {
         PlasmaFramework framework;
-        IsDeposit.Predicate isDeposit;
         ExitableTimestamp.Calculator exitableTimestampCalculator;
         IExitProcessor exitProcessor;
         uint256 minExitPeriod;
@@ -58,7 +53,6 @@ library PaymentPiggybackInFlightExit {
     {
         return Controller({
             framework: framework,
-            isDeposit: IsDeposit.Predicate(framework.CHILD_BLOCK_INTERVAL()),
             exitableTimestampCalculator: ExitableTimestamp.Calculator(framework.minExitPeriod()),
             exitProcessor: exitProcessor,
             minExitPeriod: framework.minExitPeriod(),
@@ -92,7 +86,6 @@ library PaymentPiggybackInFlightExit {
 
         PaymentExitDataModel.WithdrawData storage withdrawData = exit.inputs[args.inputIndex];
 
-        // In startInFlightExit, exitTarget for inputs are saved as this data is required to create the transaction
         require(withdrawData.exitTarget == msg.sender, "Can be called only by the exit target");
         withdrawData.piggybackBondSize = msg.value;
 
@@ -130,20 +123,12 @@ library PaymentPiggybackInFlightExit {
 
         PaymentExitDataModel.WithdrawData storage withdrawData = exit.outputs[args.outputIndex];
 
-        // TODO: move this to start IFE, as we are removing the mechanism of using output guard preimage.
-        // For inputs, exit target is set during start inFlight exit.
-        // For outputs, since output preimage data is held by the output owners, these must be retrieved on piggyback.
-        PaymentOutputModel.Output memory output = PaymentTransactionModel.decode(args.inFlightTx).outputs[args.outputIndex];
-        address payable exitTarget = output.owner();
-        require(exitTarget == msg.sender, "Can be called only by the exit target");
+        require(withdrawData.exitTarget == msg.sender, "Can be called only by the exit target");
+        withdrawData.piggybackBondSize = msg.value;
 
         if (isFirstPiggybackOfTheToken(exit, withdrawData.token)) {
             enqueue(self, withdrawData.token, PosLib.decode(exit.position), exitId);
         }
-
-        // Exit target for outputs is set in piggyback instead of start in-flight exit
-        withdrawData.exitTarget = exitTarget;
-        withdrawData.piggybackBondSize = msg.value;
 
         exit.setOutputPiggybacked(args.outputIndex);
 

@@ -213,4 +213,25 @@ contract('BlockController', ([maintainer, authority, other]) => {
             );
         });
     });
+
+    describe('isDeposit', () => {
+        beforeEach(setup);
+
+        it('should return false when it is not a deposit block', async () => {
+            await this.blockController.setBlock(this.childBlockInterval, this.dummyBlockHash, 1);
+            expect(await this.blockController.isDeposit(this.childBlockInterval)).to.be.false;
+        });
+
+        it('should return true when it is a deposit block', async () => {
+            await this.blockController.setBlock(1, this.dummyBlockHash, 1);
+            expect(await this.blockController.isDeposit(1)).to.be.true;
+        });
+
+        it('should revert if the block does not exist', async () => {
+            await expectRevert(
+                this.blockController.isDeposit(this.childBlockInterval),
+                'Block does not exist',
+            );
+        });
+    });
 });

@@ -69,42 +69,106 @@ ALD introduces the concepts of transaction type, and transcation output type. Ea
 
 
 
-## Transaction format
-Transactions follow the [Wire Transaction format](https://docs.google.com/document/d/1ETAO5ZUO7S_A8sXUK5cyAN6yMMotRDbJphAa2hPJIyU/edit).
+## Generic transaction format
+All Transactions follow the same basic format [GenericTransaction](../contracts/GenericTransaction.md) and can be extended. 
+GenericTransaction is based on [Wire Transaction format](https://docs.google.com/document/d/1ETAO5ZUO7S_A8sXUK5cyAN6yMMotRDbJphAa2hPJIyU/edit) but has diverged somewhat from the original design.
 
-Briefly, this is:
+A GenericTransaction is:
 
 ```
-transaction::= transactionType [input] [output] metadata [witness]
+transaction::= txType [input] [output] txData metaData [witness]
 ```
 
 Where 
 ```
-transactionType::= uint256
+txType ::= uint256
 input ::= outputId | outputPosition
 outputId ::= hash of the transaction that produced the output concatenated with the outputIndex
 outputPosition ::= 32 byte string that is (blockNumber * BLOCK_OFFSET + txIndex * TX_OFFSET + outputIndex)
-output ::= outputType outputGuard token amount
+output ::= outputType outputData
 outputType ::= uint256
-outputGuard ::= bytes20
-token ::= address
-amount ::= uint256
+outputData ::= undefined, to be defined by concrete transaction types
+txData ::= undefined, to be defined by concrete transaction types
+metaData ::= bytes32
 witness ::= bytes
 ```
 
- > ***Note**: Currently, the PlasmaFramework contract only partially follows the proposed Wire Transaction format; output type is implemented as `outputType outputGuard token amount` instead of `outputType outputGuard token vaultId standardSpecificData confirmAddress`.*
-
-The current implementation supports only the following transaction types:  `Payment` and `DEX` 
+The current implementation supports only the `Payment` transaction type.
 
 Support for additional transaction types, such as ERC721, is reserved for future development.
 
+## Payment transaction format
+Payment transactions are used to transfer fungible tokens, such as ETH and ERC20 tokens. A Payment transaction's output is as described in [FungibleTokenOutputModel](../contracts/FungibleTokenOutputModel.md)
 
+### Payment transaction RLP encoding
+A Payment transaction must be RLP encoded as follows:
+```
+[txType, inputs, outputs, txData, metaData]
+
+txType ::= uint256
+inputs ::= [input]
+input ::= bytes32
+outputs ::= [output]
+output ::= [outputType, outputData]
+outputType ::= uint256
+outputData ::= [outputGuard, token, amount]
+outputGuard ::= bytes20
+token ::= bytes20
+amount ::= uint256
+txData ::= uint256 (must be 0)
+metadata ::= bytes32
+```
+
+Example transaction with two inputs and two outputs:
+```
+[   
+    1,
+    [
+        "0x0000000000000000000011111111111111100001",
+        "0x0000000000000000000011111111111111100002",
+    ],
+    [
+        [
+            1,
+            [
+                "0xc5fdf4076b8f3a5357c5e395ab970b5b54098fef",
+                "0x0000000000000000000000000000000000000000",
+                100
+            ]
+        ],
+        [
+            1,
+            [
+                "0xc5fdf4076b8f3a5357c5e395ab970b5b54098fef",
+                "0x0000000000000000000000000000000000000000",
+                900
+            ]
+        ]
+    ],
+    0,
+    "0x0000000000000000000000000000000000000000000000000000000000000000"
+]
+```
+Note that:
+
+1. `txType` must not be `0`
+2. `inputs` must be a list
+3. `input` must be padded to 32 bytes long
+4. A null `input` (`"0x0...000"`) is invalid
+5. `outputs` must be a list
+6. `outputType` must not be `0`
+7. `outputData` must be a list containing 3 items
+8. `outputData.outputGuard` must be 20 bytes long
+9. A null `outputData.outputGuard` (`"0x0...000"`) is invalid
+10. An `outputData.amount` of `0` is invalid
+11. `txData` is unused and must be set to `0`
+12. `metadata` must be padded to 32 bytes long
 
 ## Deposit transactions
 Deposit transactions are special transactions that have no inputs. The transaction inputs should be encoded as an empty array. Deposit transactions are created by the vault contracts, and do not need to be explicitly submitted.
 
 
-## EIP-712 signing
+## Payment transction EIP-712 signing
 The **witness** field of a transaction contains the data that proves its inputs can be spent. For a standard payment transaction, this data is the signatures of the owners of the inputs. Transactions are signed using the [EIP-712](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-712.md) method.
 
 The EIP-712 typed data structure is as follows:
@@ -129,6 +193,7 @@ The EIP-712 typed data structure is as follows:
         { name: 'output1', type: 'Output' },
         { name: 'output2', type: 'Output' },
         { name: 'output3', type: 'Output' },
+        { name: 'txData', type: 'uint256' },
         { name: 'metadata', type: 'bytes32' }
     ],
     Input: [

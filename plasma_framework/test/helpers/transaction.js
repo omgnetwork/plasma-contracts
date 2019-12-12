@@ -2,7 +2,7 @@ const rlp = require('rlp');
 const { BN } = require('openzeppelin-test-helpers');
 const { EMPTY_BYTES_32, TX_TYPE } = require('../helpers/constants.js');
 
-class WireTransactionOutput {
+class FungibleTransactionOutput {
     constructor(type, amount, outputGuard, token) {
         this.outputType = type;
         this.outputGuard = outputGuard;
@@ -12,9 +12,9 @@ class WireTransactionOutput {
 
     formatForRlpEncoding() {
         if (this.amount instanceof BN) {
-            return [this.outputType, this.outputGuard, this.token, web3.utils.numberToHex(this.amount)];
+            return [this.outputType, [this.outputGuard, this.token, web3.utils.numberToHex(this.amount)]];
         }
-        return [this.outputType, this.outputGuard, this.token, this.amount];
+        return [this.outputType, [this.outputGuard, this.token, this.amount]];
     }
 
     rlpEncoded() {
@@ -24,13 +24,13 @@ class WireTransactionOutput {
     static parseFromContractOutput(output) {
         const amount = parseInt(output.amount, 10);
         const outputType = parseInt(output.outputType, 10);
-        return new WireTransactionOutput(outputType, amount, output.outputGuard, output.token);
+        return new FungibleTransactionOutput(outputType, amount, output.outputGuard, output.token);
     }
 }
 
-class PaymentTransactionOutput extends WireTransactionOutput {}
+class PaymentTransactionOutput extends FungibleTransactionOutput {}
 
-class WireTransaction {
+class GenericTransaction {
     constructor(transactionType, inputs, outputs, metaData = EMPTY_BYTES_32) {
         this.transactionType = transactionType;
         this.inputs = inputs;
@@ -41,8 +41,9 @@ class WireTransaction {
     rlpEncoded() {
         const tx = [this.transactionType];
 
-        tx.push(WireTransaction.formatInputsForRlpEncoding(this.inputs));
-        tx.push(WireTransaction.formatForRlpEncoding(this.outputs));
+        tx.push(GenericTransaction.formatInputsForRlpEncoding(this.inputs));
+        tx.push(GenericTransaction.formatOutputsForRlpEncoding(this.outputs));
+        tx.push(0); // txData must be 0
         tx.push(this.metaData);
 
         return rlp.encode(tx);
@@ -58,7 +59,7 @@ class WireTransaction {
         });
     }
 
-    static formatForRlpEncoding(items) {
+    static formatOutputsForRlpEncoding(items) {
         return items.map(item => item.formatForRlpEncoding());
     }
 
@@ -67,7 +68,7 @@ class WireTransaction {
     }
 }
 
-class PaymentTransaction extends WireTransaction {}
+class PaymentTransaction extends GenericTransaction {}
 
 class PlasmaDepositTransaction extends PaymentTransaction {
     constructor(output, metaData = EMPTY_BYTES_32) {
@@ -79,6 +80,6 @@ module.exports = {
     PaymentTransaction,
     PlasmaDepositTransaction,
     PaymentTransactionOutput,
-    WireTransaction,
-    WireTransactionOutput,
+    GenericTransaction,
+    FungibleTransactionOutput,
 };

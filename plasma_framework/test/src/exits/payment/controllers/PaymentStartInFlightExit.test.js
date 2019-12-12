@@ -1,6 +1,5 @@
 const ExitableTimestamp = artifacts.require('ExitableTimestampWrapper');
 const ExitId = artifacts.require('ExitIdWrapper');
-const IsDeposit = artifacts.require('IsDepositWrapper');
 const PaymentInFlightExitRouter = artifacts.require('PaymentInFlightExitRouterMock');
 const PaymentStartInFlightExit = artifacts.require('PaymentStartInFlightExit');
 const PaymentPiggybackInFlightExit = artifacts.require('PaymentPiggybackInFlightExit');
@@ -17,7 +16,7 @@ const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
 
 const {
-    BN, constants, expectEvent, expectRevert, time,
+    BN, expectEvent, expectRevert, time,
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
@@ -102,7 +101,6 @@ contract('PaymentStartInFlightExit', ([_, alice, richFather, carol]) => {
 
         before(async () => {
             this.exitIdHelper = await ExitId.new();
-            this.isDeposit = await IsDeposit.new(CHILD_BLOCK_INTERVAL);
             this.exitableHelper = await ExitableTimestamp.new(MIN_EXIT_PERIOD);
         });
 
@@ -220,7 +218,7 @@ contract('PaymentStartInFlightExit', ([_, alice, richFather, carol]) => {
                 expectWithdrawData(
                     output,
                     expectedOutputId,
-                    constants.ZERO_ADDRESS, // exit target for outputs is not stored when starting ife
+                    this.argsDecoded.inFlightTx.outputs[0].outputGuard,
                     this.argsDecoded.inFlightTx.outputs[0].amount,
                     this.argsDecoded.inFlightTx.outputs[0].token,
                 );

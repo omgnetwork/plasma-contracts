@@ -1,6 +1,5 @@
 const ExitableTimestamp = artifacts.require('ExitableTimestampWrapper');
 const ExitId = artifacts.require('ExitIdWrapper');
-const IsDeposit = artifacts.require('IsDepositWrapper');
 const OutputId = artifacts.require('OutputIdWrapper');
 const PaymentInFlightExitRouter = artifacts.require('PaymentInFlightExitRouterMock');
 const PaymentStartInFlightExit = artifacts.require('PaymentStartInFlightExit');
@@ -207,7 +206,6 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
     before('deploy helper contracts', async () => {
         this.exitIdHelper = await ExitId.new();
         this.outputIdHelper = await OutputId.new();
-        this.isDeposit = await IsDeposit.new(CHILD_BLOCK_INTERVAL);
         this.exitableHelper = await ExitableTimestamp.new(MIN_EXIT_PERIOD);
         this.stateTransitionVerifier = await StateTransitionVerifierMock.new();
         await this.stateTransitionVerifier.mockResult(true);
