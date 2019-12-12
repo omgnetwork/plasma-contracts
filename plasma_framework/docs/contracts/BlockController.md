@@ -36,6 +36,7 @@ event ChildChainActivated(address  authority);
 - [submitBlock(bytes32 _blockRoot)](#submitblock)
 - [submitDepositBlock(bytes32 _blockRoot)](#submitdepositblock)
 - [nextDepositBlock()](#nextdepositblock)
+- [isDeposit(uint256 blockNum)](#isdeposit)
 
 ### 
 
@@ -110,6 +111,19 @@ returns(uint256)
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
 
+### isDeposit
+
+```js
+function isDeposit(uint256 blockNum) public view
+returns(bool)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| blockNum | uint256 |  | 
+
 ## Contracts
 
 * [Address](Address.md)
@@ -128,11 +142,12 @@ returns(uint256)
 * [ExitId](ExitId.md)
 * [ExitPriority](ExitPriority.md)
 * [FailFastReentrancyGuard](FailFastReentrancyGuard.md)
+* [FungibleTokenOutputModel](FungibleTokenOutputModel.md)
+* [GenericTransaction](GenericTransaction.md)
 * [IERC20](IERC20.md)
 * [IErc20DepositVerifier](IErc20DepositVerifier.md)
 * [IEthDepositVerifier](IEthDepositVerifier.md)
 * [IExitProcessor](IExitProcessor.md)
-* [IsDeposit](IsDeposit.md)
 * [ISpendingCondition](ISpendingCondition.md)
 * [IStateTransitionVerifier](IStateTransitionVerifier.md)
 * [Math](Math.md)
@@ -155,7 +170,6 @@ returns(uint256)
 * [PaymentInFlightExitModelUtils](PaymentInFlightExitModelUtils.md)
 * [PaymentInFlightExitRouter](PaymentInFlightExitRouter.md)
 * [PaymentInFlightExitRouterArgs](PaymentInFlightExitRouterArgs.md)
-* [PaymentOutputModel](PaymentOutputModel.md)
 * [PaymentOutputToPaymentTxCondition](PaymentOutputToPaymentTxCondition.md)
 * [PaymentPiggybackInFlightExit](PaymentPiggybackInFlightExit.md)
 * [PaymentProcessInFlightExit](PaymentProcessInFlightExit.md)
@@ -179,4 +193,3 @@ returns(uint256)
 * [UtxoPosLib](UtxoPosLib.md)
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)
-* [WireTransaction](WireTransaction.md)

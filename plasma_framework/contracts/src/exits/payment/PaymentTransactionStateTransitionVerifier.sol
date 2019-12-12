@@ -4,9 +4,8 @@ pragma experimental ABIEncoderV2;
 import "../interfaces/IStateTransitionVerifier.sol";
 import "../payment/PaymentExitDataModel.sol";
 import "../../utils/UtxoPosLib.sol";
-import "../../transactions/WireTransaction.sol";
+import "../../transactions/FungibleTokenOutputModel.sol";
 import "../../transactions/PaymentTransactionModel.sol";
-import "../../transactions/outputs/PaymentOutputModel.sol";
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
@@ -33,21 +32,24 @@ contract PaymentTransactionStateTransitionVerifier {
             return false;
         }
 
-        WireTransaction.Output[] memory inputs = new WireTransaction.Output[](inputTxs.length);
+        FungibleTokenOutputModel.Output[] memory inputs = new FungibleTokenOutputModel.Output[](inputTxs.length);
         for (uint i = 0; i < inputTxs.length; i++) {
             uint16 outputIndex = outputIndexOfInputTxs[i];
-            WireTransaction.Output memory output = WireTransaction.getOutput(inputTxs[i], outputIndex);
+            FungibleTokenOutputModel.Output memory output = FungibleTokenOutputModel.getOutput(
+                GenericTransaction.decode(inputTxs[i]),
+                outputIndex
+            );
             inputs[i] = output;
         }
 
         PaymentTransactionModel.Transaction memory transaction = PaymentTransactionModel.decode(txBytes);
-        WireTransaction.Output[] memory outputs = new WireTransaction.Output[](transaction.outputs.length);
+        FungibleTokenOutputModel.Output[] memory outputs = new FungibleTokenOutputModel.Output[](transaction.outputs.length);
         for (uint i = 0; i < transaction.outputs.length; i++) {
-            outputs[i] = WireTransaction.Output(
+            outputs[i] = FungibleTokenOutputModel.Output(
                     transaction.outputs[i].outputType,
-                    transaction.outputs[i].amount,
                     transaction.outputs[i].outputGuard,
-                    transaction.outputs[i].token
+                    transaction.outputs[i].token,
+                    transaction.outputs[i].amount
                 );
         }
 
@@ -55,8 +57,8 @@ contract PaymentTransactionStateTransitionVerifier {
     }
 
     function _isCorrectStateTransition(
-        WireTransaction.Output[] memory inputs,
-        WireTransaction.Output[] memory outputs
+        FungibleTokenOutputModel.Output[] memory inputs,
+        FungibleTokenOutputModel.Output[] memory outputs
     )
         private
         pure
@@ -66,8 +68,8 @@ contract PaymentTransactionStateTransitionVerifier {
         uint i = 0;
         while (correctTransition && i < outputs.length) {
             address token = outputs[i].token;
-            WireTransaction.Output[] memory inputsForToken = filterWithToken(inputs, token);
-            WireTransaction.Output[] memory outputsForToken = filterWithToken(outputs, token);
+            FungibleTokenOutputModel.Output[] memory inputsForToken = filterWithToken(inputs, token);
+            FungibleTokenOutputModel.Output[] memory outputsForToken = filterWithToken(outputs, token);
 
             correctTransition = isCorrectSpend(inputsForToken, outputsForToken);
             i += 1;
@@ -76,12 +78,12 @@ contract PaymentTransactionStateTransitionVerifier {
     }
 
     function filterWithToken(
-        WireTransaction.Output[] memory outputs,
+        FungibleTokenOutputModel.Output[] memory outputs,
         address token
     )
         private
         pure
-        returns (WireTransaction.Output[] memory)
+        returns (FungibleTokenOutputModel.Output[] memory)
     {
         // Required for calculating the size of the filtered array
         uint256 arraySize = 0;
@@ -91,7 +93,7 @@ contract PaymentTransactionStateTransitionVerifier {
             }
         }
 
-        WireTransaction.Output[] memory outputsWithToken = new WireTransaction.Output[](arraySize);
+        FungibleTokenOutputModel.Output[] memory outputsWithToken = new FungibleTokenOutputModel.Output[](arraySize);
         uint j = 0;
         for (uint i = 0; i < outputs.length; ++i) {
             if (outputs[i].token == token) {
@@ -104,8 +106,8 @@ contract PaymentTransactionStateTransitionVerifier {
     }
 
     function isCorrectSpend(
-        WireTransaction.Output[] memory inputs,
-        WireTransaction.Output[] memory outputs
+        FungibleTokenOutputModel.Output[] memory inputs,
+        FungibleTokenOutputModel.Output[] memory outputs
     )
         internal
         pure
@@ -116,7 +118,7 @@ contract PaymentTransactionStateTransitionVerifier {
         return amountIn >= amountOut;
     }
 
-    function sumAmounts(WireTransaction.Output[] memory outputs) private pure returns (uint256) {
+    function sumAmounts(FungibleTokenOutputModel.Output[] memory outputs) private pure returns (uint256) {
         uint256 amount = 0;
         for (uint i = 0; i < outputs.length; i++) {
             amount = amount.add(outputs[i].amount);

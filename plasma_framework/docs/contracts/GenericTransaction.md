@@ -1,32 +1,102 @@
-# IEthDepositVerifier.sol
+# GenericTransaction (GenericTransaction.sol)
 
-View Source: [contracts/src/vaults/verifiers/IEthDepositVerifier.sol](../../contracts/src/vaults/verifiers/IEthDepositVerifier.sol)
+View Source: [contracts/src/transactions/GenericTransaction.sol](../../contracts/src/transactions/GenericTransaction.sol)
 
-**↘ Derived Contracts: [EthDepositVerifier](EthDepositVerifier.md)**
+**GenericTransaction**
 
-**IEthDepositVerifier**
+GenericTransaction is a generic transaction format that makes few assumptions about the
+content of the transaction. A transaction must satisy the following requirements:
+- It must be a list of 5 items: [txType, inputs, outputs, txData, metaData]
+- `txType` must be a uint not equal to zero
+- inputs must be a list of RLP items.
+- outputs must be a list of `Output`s
+- an `Output` is a list of 2 items: [outputType, data]
+- `Output.outputType` must be a uint not equal to zero
+- `Output.data` is an RLP item. It can be a list.
+- no assumptions are made about `txData`. Note that `txData` can be a list.
+- `metaData` must be 32 bytes long.
+
+## Structs
+### Transaction
+
+```js
+struct Transaction {
+ uint256 txType,
+ struct RLPReader.RLPItem[] inputs,
+ struct GenericTransaction.Output[] outputs,
+ struct RLPReader.RLPItem txData,
+ bytes32 metaData
+}
+```
+
+### Output
+
+```js
+struct Output {
+ uint256 outputType,
+ struct RLPReader.RLPItem data
+}
+```
+
+## Contract Members
+**Constants & Variables**
+
+```js
+uint8 private constant TX_NUM_ITEMS;
+
+```
 
 ## Functions
 
-- [verify(bytes depositTx, uint256 amount, address sender)](#verify)
+- [decode(bytes transaction)](#decode)
+- [getOutput(struct GenericTransaction.Transaction transaction, uint16 outputIndex)](#getoutput)
+- [decodeOutput(struct RLPReader.RLPItem encodedOutput)](#decodeoutput)
 
-### verify
+### decode
 
-⤿ Overridden Implementation(s): [EthDepositVerifier.verify](EthDepositVerifier.md#verify)
-
-Verifies a deposit transaction
+Decodes an RLP encoded transaction into the generic format.
 
 ```js
-function verify(bytes depositTx, uint256 amount, address sender) external view
+function decode(bytes transaction) internal pure
+returns(struct GenericTransaction.Transaction)
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| depositTx | bytes | The deposit transaction | 
-| amount | uint256 | The amount deposited | 
-| sender | address | The owner of the deposit transaction | 
+| transaction | bytes |  | 
+
+### getOutput
+
+Returns the output at a specific index in the transaction
+
+```js
+function getOutput(struct GenericTransaction.Transaction transaction, uint16 outputIndex) internal pure
+returns(struct GenericTransaction.Output)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| transaction | struct GenericTransaction.Transaction |  | 
+| outputIndex | uint16 |  | 
+
+### decodeOutput
+
+Decodes an RLPItem to an output
+
+```js
+function decodeOutput(struct RLPReader.RLPItem encodedOutput) internal pure
+returns(struct GenericTransaction.Output)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| encodedOutput | struct RLPReader.RLPItem |  | 
 
 ## Contracts
 

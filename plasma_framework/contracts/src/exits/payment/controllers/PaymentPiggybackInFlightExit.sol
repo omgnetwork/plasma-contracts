@@ -8,7 +8,6 @@ import "../../utils/ExitableTimestamp.sol";
 import "../../utils/ExitId.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../framework/interfaces/IExitProcessor.sol";
-import "../../../transactions/outputs/PaymentOutputModel.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
 import "../../../utils/UtxoPosLib.sol";
 
@@ -16,7 +15,6 @@ library PaymentPiggybackInFlightExit {
     using UtxoPosLib for UtxoPosLib.UtxoPos;
     using ExitableTimestamp for ExitableTimestamp.Calculator;
     using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
-    using PaymentOutputModel for PaymentOutputModel.Output;
 
     struct Controller {
         PlasmaFramework framework;

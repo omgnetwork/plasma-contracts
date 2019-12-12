@@ -10,7 +10,7 @@ In conclusion, one tx type does not only have dependencies on how the tx type ca
 
 ## Code design to keep things flexible with the tx type dependencies
 
-There are concepts that keep the system more flexible in situation when there is a need to add an extension. The `SpendingConditionRegistry` and `WireTransaction` are ways to abstract things further.
+There are concepts that keep the system more flexible in situation when there is a need to add an extension. The `SpendingConditionRegistry` and `GenericTransaction` are ways to abstract things further.
 
 ### Spending Condition Registry
 
@@ -25,7 +25,7 @@ The following figure is an example of how a spending condition registry is repre
 
 As you can see, the spending condition needs to take the input tx type into consideration as well. So a spending condition registry of `Payment Tx V2` still needs to register the path for `Payment Tx V1`. Same for V3, it requires all paths related to `O2` to be defined.
 
-### Wire Transaction Format
+### Generic Transaction Format
 
 Aside from the dependency of the path that a tx type can be spent, there are also data structure dependency. In order to be able to process a tx, it is necessary to decode the transaction first and thus the structure of the transaction need to be well defined.
 
@@ -39,7 +39,7 @@ Aside from the dependency of the path that a tx type can be spent, there are als
 }
 ```
 
-A `WireTransaction` has as its first field a numerical `txType` identifier. It is a `uint256` representing the type of the transaction.
+A `GenericTransaction` has as its first field a numerical `txType` identifier. It is a `uint256` representing the type of the transaction.
 
 The second field `inputs` is a list of pointers that link to other outputs in previous txs that are spent in current tx.  It is `bytes32` that maps to the block, tx index and output index that is referenced. 
 
@@ -63,7 +63,7 @@ The first field of the output is a `uint256` that holds the info of `outputType`
 #### Current Payment Exit Game Implementation
 Current implementation of Payment Exit Game assumes all transactions of inputs and outputs would follow the format. Under this assumption and restriction, one can add new tx types as input or output to current Payment Exit Game implementation without the need to re-write it.
 
-We actually realize that current format of `WireTransaction` has some limitation on adding feature. For example, if we want to add non fungible token support (ERC721 tokens), this data structure would be looking awkward to hold the information. Luckily, it is possible for us to change the format with new a Exit Game implementation design. However, it would mean an extra round of implementation and code audit.
+We actually realize that current format of `GenericTransaction` has some limitation on adding feature. For example, if we want to add non fungible token support (ERC721 tokens), this data structure would be looking awkward to hold the information. Luckily, it is possible for us to change the format with new a Exit Game implementation design. However, it would mean an extra round of implementation and code audit.
 
 Previous discussions:
 - https://github.com/omisego/plasma-contracts/issues/236#issuecomment-546798910

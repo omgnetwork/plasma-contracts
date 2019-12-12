@@ -10,7 +10,6 @@ View Source: [contracts/src/exits/payment/controllers/PaymentPiggybackInFlightEx
 ```js
 struct Controller {
  contract PlasmaFramework framework,
- struct IsDeposit.Predicate isDeposit,
  struct ExitableTimestamp.Calculator exitableTimestampCalculator,
  contract IExitProcessor exitProcessor,
  uint256 minExitPeriod,
@@ -135,11 +134,12 @@ returns(bool)
 * [ExitId](ExitId.md)
 * [ExitPriority](ExitPriority.md)
 * [FailFastReentrancyGuard](FailFastReentrancyGuard.md)
+* [FungibleTokenOutputModel](FungibleTokenOutputModel.md)
+* [GenericTransaction](GenericTransaction.md)
 * [IERC20](IERC20.md)
 * [IErc20DepositVerifier](IErc20DepositVerifier.md)
 * [IEthDepositVerifier](IEthDepositVerifier.md)
 * [IExitProcessor](IExitProcessor.md)
-* [IsDeposit](IsDeposit.md)
 * [ISpendingCondition](ISpendingCondition.md)
 * [IStateTransitionVerifier](IStateTransitionVerifier.md)
 * [Math](Math.md)
@@ -162,7 +162,6 @@ returns(bool)
 * [PaymentInFlightExitModelUtils](PaymentInFlightExitModelUtils.md)
 * [PaymentInFlightExitRouter](PaymentInFlightExitRouter.md)
 * [PaymentInFlightExitRouterArgs](PaymentInFlightExitRouterArgs.md)
-* [PaymentOutputModel](PaymentOutputModel.md)
 * [PaymentOutputToPaymentTxCondition](PaymentOutputToPaymentTxCondition.md)
 * [PaymentPiggybackInFlightExit](PaymentPiggybackInFlightExit.md)
 * [PaymentProcessInFlightExit](PaymentProcessInFlightExit.md)
@@ -186,4 +185,3 @@ returns(bool)
 * [UtxoPosLib](UtxoPosLib.md)
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)
-* [WireTransaction](WireTransaction.md)

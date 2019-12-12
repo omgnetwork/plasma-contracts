@@ -13,7 +13,8 @@ Data structure and its decode function for Payment transaction
 struct Transaction {
  uint256 txType,
  bytes32[] inputs,
- struct PaymentOutputModel.Output[] outputs,
+ struct FungibleTokenOutputModel.Output[] outputs,
+ uint256 txData,
  bytes32 metaData
 }
 ```
@@ -33,6 +34,8 @@ uint8 private constant ENCODED_LENGTH;
 - [MAX_INPUT_NUM()](#max_input_num)
 - [MAX_OUTPUT_NUM()](#max_output_num)
 - [decode(bytes _tx)](#decode)
+- [fromGeneric(struct GenericTransaction.Transaction genericTx)](#fromgeneric)
+- [getOutputOwner(struct FungibleTokenOutputModel.Output output)](#getoutputowner)
 
 ### MAX_INPUT_NUM
 
@@ -60,16 +63,67 @@ returns(uint8)
 
 ### decode
 
+Decodes a encoded byte array into a PaymentTransaction
+The following rules about the rlp-encoded transaction are enforced:
+     - `txType` must be an integer value with no leading zeros
+     - `inputs` is an list of 0 to 4 elements
+     - Each `input` is a 32 byte long array
+     - An `input` may not be all zeros
+     - `outputs` is an list of 0 to 4 elements
+     - Each `output` is a list of 2 elements: [`outputType`, `data`]
+     - `output.outputType` must be an integer value with no leading zeros
+     - See FungibleTokenOutputModel for deatils on `output.data` encoding.
+     - An `output` may not be null; A null output is one whose amount is zero
+
 ```js
 function decode(bytes _tx) internal pure
 returns(struct PaymentTransactionModel.Transaction)
+```
+
+**Returns**
+
+A decoded PaymentTransaction struct
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| _tx | bytes | An RLP-encoded transaction | 
+
+### fromGeneric
+
+Converts a GenericTransaction to a PaymentTransaction
+
+```js
+function fromGeneric(struct GenericTransaction.Transaction genericTx) internal pure
+returns(struct PaymentTransactionModel.Transaction)
+```
+
+**Returns**
+
+A PaymentTransaction.Transaction struct
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| genericTx | struct GenericTransaction.Transaction | A GenericTransaction.Transaction struct | 
+
+### getOutputOwner
+
+Retrieve the 'owner' from the output, assuming the
+        'outputGuard' field directly holds the owner's address
+
+```js
+function getOutputOwner(struct FungibleTokenOutputModel.Output output) internal pure
+returns(address payable)
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| _tx | bytes |  | 
+| output | struct FungibleTokenOutputModel.Output |  | 
 
 ## Contracts
 
@@ -89,11 +143,12 @@ returns(struct PaymentTransactionModel.Transaction)
 * [ExitId](ExitId.md)
 * [ExitPriority](ExitPriority.md)
 * [FailFastReentrancyGuard](FailFastReentrancyGuard.md)
+* [FungibleTokenOutputModel](FungibleTokenOutputModel.md)
+* [GenericTransaction](GenericTransaction.md)
 * [IERC20](IERC20.md)
 * [IErc20DepositVerifier](IErc20DepositVerifier.md)
 * [IEthDepositVerifier](IEthDepositVerifier.md)
 * [IExitProcessor](IExitProcessor.md)
-* [IsDeposit](IsDeposit.md)
 * [ISpendingCondition](ISpendingCondition.md)
 * [IStateTransitionVerifier](IStateTransitionVerifier.md)
 * [Math](Math.md)
@@ -116,7 +171,6 @@ returns(struct PaymentTransactionModel.Transaction)
 * [PaymentInFlightExitModelUtils](PaymentInFlightExitModelUtils.md)
 * [PaymentInFlightExitRouter](PaymentInFlightExitRouter.md)
 * [PaymentInFlightExitRouterArgs](PaymentInFlightExitRouterArgs.md)
-* [PaymentOutputModel](PaymentOutputModel.md)
 * [PaymentOutputToPaymentTxCondition](PaymentOutputToPaymentTxCondition.md)
 * [PaymentPiggybackInFlightExit](PaymentPiggybackInFlightExit.md)
 * [PaymentProcessInFlightExit](PaymentProcessInFlightExit.md)
@@ -140,4 +194,3 @@ returns(struct PaymentTransactionModel.Transaction)
 * [UtxoPosLib](UtxoPosLib.md)
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)
-* [WireTransaction](WireTransaction.md)

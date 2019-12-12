@@ -70,7 +70,7 @@ ALD introduces the concepts of transaction type, and transcation output type. Ea
 
 
 ## Transaction format
-Transactions follow the [Wire Transaction format](https://docs.google.com/document/d/1ETAO5ZUO7S_A8sXUK5cyAN6yMMotRDbJphAa2hPJIyU/edit).
+Transactions follow the [Generic Transaction format](https://docs.google.com/document/d/1ETAO5ZUO7S_A8sXUK5cyAN6yMMotRDbJphAa2hPJIyU/edit).
 
 Briefly, this is:
 
@@ -92,7 +92,7 @@ amount ::= uint256
 witness ::= bytes
 ```
 
- > ***Note**: Currently, the PlasmaFramework contract only partially follows the proposed Wire Transaction format; output type is implemented as `outputType outputGuard token amount` instead of `outputType outputGuard token vaultId standardSpecificData confirmAddress`.*
+ > ***Note**: Currently, the PlasmaFramework contract only partially follows the proposed Generic Transaction format; output type is implemented as `outputType outputGuard token amount` instead of `outputType outputGuard token vaultId standardSpecificData confirmAddress`.*
 
 The current implementation supports only the following transaction types:  `Payment` and `DEX` 
 

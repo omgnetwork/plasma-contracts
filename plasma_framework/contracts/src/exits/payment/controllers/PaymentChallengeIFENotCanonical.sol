@@ -13,7 +13,7 @@ import "../../../utils/UtxoPosLib.sol";
 import "../../../utils/Merkle.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
-import "../../../transactions/WireTransaction.sol";
+import "../../../transactions/GenericTransaction.sol";
 
 library PaymentChallengeIFENotCanonical {
     using UtxoPosLib for UtxoPosLib.UtxoPos;
@@ -98,7 +98,10 @@ library PaymentChallengeIFENotCanonical {
         require(outputId == ife.inputs[args.inFlightTxInputIndex].outputId,
                 "Provided inputs data does not point to the same outputId from the in-flight exit");
 
-        WireTransaction.Output memory output = WireTransaction.getOutput(args.inputTx, inputUtxoPos.outputIndex());
+        GenericTransaction.Output memory output = GenericTransaction.getOutput(
+            GenericTransaction.decode(args.inputTx),
+            inputUtxoPos.outputIndex()
+        );
 
         ISpendingCondition condition = self.spendingConditionRegistry.spendingConditions(
             output.outputType, self.supportedTxType

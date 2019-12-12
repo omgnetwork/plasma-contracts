@@ -14,7 +14,7 @@ import "../../../utils/SafeEthTransfer.sol";
 import "../../../utils/UtxoPosLib.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
-import "../../../transactions/WireTransaction.sol";
+import "../../../transactions/GenericTransaction.sol";
 
 library PaymentChallengeIFEInputSpent {
     using UtxoPosLib for UtxoPosLib.UtxoPos;
@@ -131,11 +131,11 @@ library PaymentChallengeIFEInputSpent {
     }
 
     function verifySpendingCondition(ChallengeIFEData memory data) private view {
-        uint256 challengingTxType = WireTransaction.getTransactionType(data.args.challengingTx);
-        WireTransaction.Output memory output = WireTransaction.getOutput(data.args.challengingTx, data.args.challengingTxInputIndex);
+        GenericTransaction.Transaction memory challengingTx = GenericTransaction.decode(data.args.challengingTx);
+        GenericTransaction.Output memory output = GenericTransaction.getOutput(challengingTx, data.args.challengingTxInputIndex);
 
         ISpendingCondition condition = data.controller.spendingConditionRegistry.spendingConditions(
-            output.outputType, challengingTxType
+            output.outputType, challengingTx.txType
         );
         require(address(condition) != address(0), "Spending condition contract not found");
 

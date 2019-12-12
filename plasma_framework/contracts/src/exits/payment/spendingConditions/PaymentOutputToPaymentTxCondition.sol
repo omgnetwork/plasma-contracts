@@ -6,12 +6,10 @@ import "../../interfaces/ISpendingCondition.sol";
 import "../../../utils/UtxoPosLib.sol";
 import "../../../utils/TxPosLib.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
-import "../../../transactions/outputs/PaymentOutputModel.sol";
 import "../../../transactions/eip712Libs/PaymentEip712Lib.sol";
 
 contract PaymentOutputToPaymentTxCondition is ISpendingCondition {
     using PaymentEip712Lib for PaymentEip712Lib.Constants;
-    using PaymentOutputModel for PaymentOutputModel.Output;
     using TxPosLib for TxPosLib.TxPos;
 
     uint256 internal supportInputTxType;
@@ -61,7 +59,7 @@ contract PaymentOutputToPaymentTxCondition is ISpendingCondition {
             "Spending tx points to the incorrect output UTXO position"
         );
 
-        address owner = inputTx.outputs[outputIndex].owner();
+        address owner = PaymentTransactionModel.getOutputOwner(inputTx.outputs[outputIndex]);
         address signer = ECDSA.recover(eip712.hashTx(spendingTx), signature);
         require(signer != address(0), "Failed to recover the signer from the signature");
         require(owner == signer, "Tx in not signed correctly");

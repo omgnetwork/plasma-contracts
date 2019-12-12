@@ -14,8 +14,7 @@ import "../../../framework/Protocol.sol";
 import "../../../utils/SafeEthTransfer.sol";
 import "../../../utils/UtxoPosLib.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
-import "../../../transactions/WireTransaction.sol";
-import "../../../transactions/outputs/PaymentOutputModel.sol";
+import "../../../transactions/GenericTransaction.sol";
 
 library PaymentChallengeStandardExit {
     using UtxoPosLib for UtxoPosLib.UtxoPos;
@@ -37,6 +36,7 @@ library PaymentChallengeStandardExit {
         Controller controller;
         PaymentStandardExitRouterArgs.ChallengeStandardExitArgs args;
         PaymentExitDataModel.StandardExit exitData;
+        uint256 challengeTxType;
     }
 
     /**
@@ -73,10 +73,13 @@ library PaymentChallengeStandardExit {
     )
         public
     {
+        GenericTransaction.Transaction memory challengeTx = GenericTransaction.decode(args.challengeTx);
+
         ChallengeStandardExitData memory data = ChallengeStandardExitData({
             controller: self,
             args: args,
-            exitData: exitMap.exits[args.exitId]
+            exitData: exitMap.exits[args.exitId],
+            challengeTxType: challengeTx.txType
         });
         verifyChallengeExitExists(data);
         verifyChallengeTxProtocolFinalized(data);
@@ -104,13 +107,12 @@ library PaymentChallengeStandardExit {
         PaymentStandardExitRouterArgs.ChallengeStandardExitArgs memory args = data.args;
 
         UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(data.exitData.utxoPos);
-        PaymentOutputModel.Output memory output = PaymentTransactionModel
+        FungibleTokenOutputModel.Output memory output = PaymentTransactionModel
             .decode(args.exitingTx)
             .outputs[utxoPos.outputIndex()];
 
-        uint256 challengeTxType = WireTransaction.getTransactionType(args.challengeTx);
         ISpendingCondition condition = data.controller.spendingConditionRegistry.spendingConditions(
-            output.outputType, challengeTxType
+            output.outputType, data.challengeTxType
         );
         require(address(condition) != address(0), "Spending condition contract not found");
 

@@ -15,14 +15,12 @@ import "../../../utils/UtxoPosLib.sol";
 import "../../../utils/Merkle.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
-import "../../../transactions/WireTransaction.sol";
-import "../../../transactions/outputs/PaymentOutputModel.sol";
+import "../../../transactions/GenericTransaction.sol";
 
 library PaymentStartInFlightExit {
     using ExitableTimestamp for ExitableTimestamp.Calculator;
     using UtxoPosLib for UtxoPosLib.UtxoPos;
     using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
-    using PaymentOutputModel for PaymentOutputModel.Output;
 
     /**
      * @dev supportedTxType enables code reuse in different Payment Tx versions
@@ -228,7 +226,10 @@ library PaymentStartInFlightExit {
     function verifyInputsSpent(StartExitData memory exitData) private view {
         for (uint16 i = 0; i < exitData.inputTxs.length; i++) {
             uint16 outputIndex = exitData.inputUtxosPos[i].outputIndex();
-            WireTransaction.Output memory output = WireTransaction.getOutput(exitData.inputTxs[i], outputIndex);
+            GenericTransaction.Output memory output = GenericTransaction.getOutput(
+                GenericTransaction.decode(exitData.inputTxs[i]),
+                outputIndex
+            );
 
             ISpendingCondition condition = exitData.controller.spendingConditionRegistry.spendingConditions(
                 output.outputType, exitData.controller.supportedTxType
@@ -294,7 +295,10 @@ library PaymentStartInFlightExit {
     {
         for (uint i = 0; i < exitData.inputTxs.length; i++) {
             uint16 outputIndex = exitData.inputUtxosPos[i].outputIndex();
-            WireTransaction.Output memory output = WireTransaction.getOutput(exitData.inputTxs[i], outputIndex);
+            FungibleTokenOutputModel.Output memory output = FungibleTokenOutputModel.getOutput(
+                GenericTransaction.decode(exitData.inputTxs[i]),
+                outputIndex
+            );
 
             ife.inputs[i].outputId = exitData.outputIds[i];
             ife.inputs[i].exitTarget = address(uint160(output.outputGuard));
@@ -312,7 +316,7 @@ library PaymentStartInFlightExit {
         for (uint i = 0; i < exitData.inFlightTx.outputs.length; i++) {
             // deposit transaction can't be in-flight exited
             bytes32 outputId = OutputId.computeNormalOutputId(exitData.inFlightTxRaw, i);
-            PaymentOutputModel.Output memory output = exitData.inFlightTx.outputs[i];
+            FungibleTokenOutputModel.Output memory output = exitData.inFlightTx.outputs[i];
 
             ife.outputs[i].outputId = outputId;
             ife.outputs[i].exitTarget = address(uint160(output.outputGuard));

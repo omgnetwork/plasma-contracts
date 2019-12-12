@@ -1,12 +1,10 @@
-# WireTransaction (WireTransaction.sol)
+# FungibleTokenOutputModel.sol
 
-View Source: [contracts/src/transactions/WireTransaction.sol](../../contracts/src/transactions/WireTransaction.sol)
+View Source: [contracts/src/transactions/FungibleTokenOutputModel.sol](../../contracts/src/transactions/FungibleTokenOutputModel.sol)
 
-**WireTransaction**
+**FungibleTokenOutputModel**
 
-Utility functions for working with transactions in wire format, assuming our transactions have specified data structure limitations
-     We assume that the current transaction structure supports transactions related to payment and DEX.
-     Alternatively, it's possible to upgrade to a new ExitGame, using either an alternative transaction data structure, or interfaces
+Data structure and its decode function for ouputs of fungible token transactions
 
 ## Structs
 ### Output
@@ -14,49 +12,56 @@ Utility functions for working with transactions in wire format, assuming our tra
 ```js
 struct Output {
  uint256 outputType,
- uint256 amount,
  bytes20 outputGuard,
- address token
+ address token,
+ uint256 amount
 }
 ```
 
 ## Functions
 
-- [getOutput(bytes transaction, uint16 outputIndex)](#getoutput)
-- [getTransactionType(bytes transaction)](#gettransactiontype)
+- [decodeOutput(struct GenericTransaction.Output genericOutput)](#decodeoutput)
+- [getOutput(struct GenericTransaction.Transaction transaction, uint16 outputIndex)](#getoutput)
+
+### decodeOutput
+
+Given a GenericTransaction.Output, decodes the `data` field.
+The data field is an RLP list that must satisy the following conditions:
+     - It must have 3 elements: [`outputGuard`, `token`, `amount`]
+     - `outputGuard` is a 20 byte long array
+     - `token` is a 20 byte long array
+     - `amount` must be an integer value with no leading zeros. It may not be zero.
+
+```js
+function decodeOutput(struct GenericTransaction.Output genericOutput) internal pure
+returns(struct FungibleTokenOutputModel.Output)
+```
+
+**Returns**
+
+A fully decoded FungibleTokenOutputModel.Output struct
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| genericOutput | struct GenericTransaction.Output | A GenericTransaction.Output | 
 
 ### getOutput
 
-Returns output for transaction in wire format
-Outputs is a field on the second index that should be a list with the following first three elements: amount, output guard, token
+Decodes and returns the output at a specific index in the transaction
 
 ```js
-function getOutput(bytes transaction, uint16 outputIndex) internal pure
-returns(struct WireTransaction.Output)
+function getOutput(struct GenericTransaction.Transaction transaction, uint16 outputIndex) internal pure
+returns(struct FungibleTokenOutputModel.Output)
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| transaction | bytes |  | 
+| transaction | struct GenericTransaction.Transaction |  | 
 | outputIndex | uint16 |  | 
-
-### getTransactionType
-
-Returns a transaction type for transaction, in wire format
-Transaction type is the value of the first field in RLP-encoded list
-
-```js
-function getTransactionType(bytes transaction) internal pure
-returns(uint256)
-```
-
-**Arguments**
-
-| Name        | Type           | Description  |
-| ------------- |------------- | -----|
-| transaction | bytes |  | 
 
 ## Contracts
 
@@ -76,11 +81,12 @@ returns(uint256)
 * [ExitId](ExitId.md)
 * [ExitPriority](ExitPriority.md)
 * [FailFastReentrancyGuard](FailFastReentrancyGuard.md)
+* [FungibleTokenOutputModel](FungibleTokenOutputModel.md)
+* [GenericTransaction](GenericTransaction.md)
 * [IERC20](IERC20.md)
 * [IErc20DepositVerifier](IErc20DepositVerifier.md)
 * [IEthDepositVerifier](IEthDepositVerifier.md)
 * [IExitProcessor](IExitProcessor.md)
-* [IsDeposit](IsDeposit.md)
 * [ISpendingCondition](ISpendingCondition.md)
 * [IStateTransitionVerifier](IStateTransitionVerifier.md)
 * [Math](Math.md)
@@ -103,7 +109,6 @@ returns(uint256)
 * [PaymentInFlightExitModelUtils](PaymentInFlightExitModelUtils.md)
 * [PaymentInFlightExitRouter](PaymentInFlightExitRouter.md)
 * [PaymentInFlightExitRouterArgs](PaymentInFlightExitRouterArgs.md)
-* [PaymentOutputModel](PaymentOutputModel.md)
 * [PaymentOutputToPaymentTxCondition](PaymentOutputToPaymentTxCondition.md)
 * [PaymentPiggybackInFlightExit](PaymentPiggybackInFlightExit.md)
 * [PaymentProcessInFlightExit](PaymentProcessInFlightExit.md)
@@ -127,4 +132,3 @@ returns(uint256)
 * [UtxoPosLib](UtxoPosLib.md)
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)
-* [WireTransaction](WireTransaction.md)

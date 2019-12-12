@@ -7,7 +7,7 @@ const { expectRevert } = require('openzeppelin-test-helpers');
 const { buildTxPos } = require('../../../helpers/positions.js');
 const { MerkleTree } = require('../../../helpers/merkle.js');
 const { PROTOCOL, EMPTY_BYTES } = require('../../../helpers/constants.js');
-const { WireTransaction } = require('../../../helpers/transaction.js');
+const { GenericTransaction } = require('../../../helpers/transaction.js');
 
 contract('MoreVpFinalization', () => {
     const MORE_VP_TX_TYPE = 1;
@@ -33,7 +33,7 @@ contract('MoreVpFinalization', () => {
         it('should revert when the tx type is not registered to the framework yet', async () => {
             const newTxType = 9878;
 
-            const tx = new WireTransaction(newTxType, [], []);
+            const tx = new GenericTransaction(newTxType, [], []);
             const txBytes = web3.utils.bytesToHex(tx.rlpEncoded());
 
             await expectRevert(
@@ -49,7 +49,7 @@ contract('MoreVpFinalization', () => {
 
         describe('Given MVP protocol', () => {
             beforeEach(async () => {
-                const tx = new WireTransaction(MVP_TX_TYPE, [], []);
+                const tx = new GenericTransaction(MVP_TX_TYPE, [], []);
 
                 this.txBytes = web3.utils.bytesToHex(tx.rlpEncoded());
                 this.txPos = buildTxPos(TEST_BLOCK_NUM, 0);
@@ -72,7 +72,7 @@ contract('MoreVpFinalization', () => {
 
         describe('Given MoreVP protocol', () => {
             beforeEach(async () => {
-                const tx = new WireTransaction(MORE_VP_TX_TYPE, [], []);
+                const tx = new GenericTransaction(MORE_VP_TX_TYPE, [], []);
 
                 this.txBytes = web3.utils.bytesToHex(tx.rlpEncoded());
                 this.txPos = buildTxPos(TEST_BLOCK_NUM, 0);
@@ -134,7 +134,7 @@ contract('MoreVpFinalization', () => {
     describe('isProtocolFinalized', () => {
         it('should revert when the tx type is not registered to the framework yet', async () => {
             const newTxType = 66666;
-            const tx = new WireTransaction(newTxType, [], []);
+            const tx = new GenericTransaction(newTxType, [], []);
             const txBytes = web3.utils.bytesToHex(tx.rlpEncoded());
 
             await expectRevert(
@@ -148,7 +148,7 @@ contract('MoreVpFinalization', () => {
 
         describe('Given MVP protocol', () => {
             beforeEach(async () => {
-                const tx = new WireTransaction(MVP_TX_TYPE, [], []);
+                const tx = new GenericTransaction(MVP_TX_TYPE, [], []);
                 this.txBytes = web3.utils.bytesToHex(tx.rlpEncoded());
             });
 
@@ -165,7 +165,7 @@ contract('MoreVpFinalization', () => {
 
         describe('Given MoreVP protocol', () => {
             it('should return true when tx exist', async () => {
-                const tx = new WireTransaction(MORE_VP_TX_TYPE, [], []);
+                const tx = new GenericTransaction(MORE_VP_TX_TYPE, [], []);
                 const txBytes = web3.utils.bytesToHex(tx.rlpEncoded());
 
                 const isProtocolFinalized = await this.test.isProtocolFinalized(

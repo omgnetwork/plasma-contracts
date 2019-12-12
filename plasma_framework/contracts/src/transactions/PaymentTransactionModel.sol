@@ -1,16 +1,15 @@
 pragma solidity 0.5.11;
+pragma experimental ABIEncoderV2;
 
-import "./outputs/PaymentOutputModel.sol";
+import "./FungibleTokenOutputModel.sol";
 import "../utils/RLPReader.sol";
 
 /**
  * @notice Data structure and its decode function for Payment transaction
  */
 library PaymentTransactionModel {
-
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;
-    using PaymentOutputModel for PaymentOutputModel.Output;
 
     uint8 constant private _MAX_INPUT_NUM = 4;
     uint8 constant private _MAX_OUTPUT_NUM = 4;
@@ -30,11 +29,12 @@ library PaymentTransactionModel {
     struct Transaction {
         uint256 txType;
         bytes32[] inputs;
-        PaymentOutputModel.Output[] outputs;
+        FungibleTokenOutputModel.Output[] outputs;
+        uint256 txData;
         bytes32 metaData;
     }
 
-    /*
+    /**
      * @notice Decodes a encoded byte array into a PaymentTransaction
      * The following rules about the rlp-encoded transaction are enforced:
      *      - `txType` must be an integer value with no leading zeros
@@ -42,45 +42,59 @@ library PaymentTransactionModel {
      *      - Each `input` is a 32 byte long array
      *      - An `input` may not be all zeros
      *      - `outputs` is an list of 0 to 4 elements
+     *      - Each `output` is a list of 2 elements: [`outputType`, `data`]
      *      - `output.outputType` must be an integer value with no leading zeros
-     *      - `output.outputGuard` is a 20 byte long array
-     *      - `output.token` is a 20 byte long array
-     *      - `output.amount` must be an integer value with no leading zeros
+     *      - See FungibleTokenOutputModel for deatils on `output.data` encoding.
      *      - An `output` may not be null; A null output is one whose amount is zero
-     * @param tx An RLP-encoded transaction
+     * @param _tx An RLP-encoded transaction
      * @return A decoded PaymentTransaction struct
      */
     function decode(bytes memory _tx) internal pure returns (PaymentTransactionModel.Transaction memory) {
-        RLPReader.RLPItem[] memory rlpTx = _tx.toRlpItem().toList();
-        require(rlpTx.length == ENCODED_LENGTH, "Invalid encoding of transaction");
+        return fromGeneric(GenericTransaction.decode(_tx));
+    }
 
-        RLPReader.RLPItem[] memory rlpInputs = rlpTx[1].toList();
-        require(rlpInputs.length <= _MAX_INPUT_NUM, "Transaction inputs num exceeds limit");
+    /**
+     * @notice Converts a GenericTransaction to a PaymentTransaction
+     * @param genericTx A GenericTransaction.Transaction struct
+     * @return A PaymentTransaction.Transaction struct
+     */
+    function fromGeneric(GenericTransaction.Transaction memory genericTx)
+        internal
+        pure
+        returns (PaymentTransactionModel.Transaction memory)
+    {
+        require(genericTx.inputs.length <= _MAX_INPUT_NUM, "Transaction inputs num exceeds limit");
+        require(genericTx.outputs.length <= _MAX_OUTPUT_NUM, "Transaction outputs num exceeds limit");
 
-        RLPReader.RLPItem[] memory rlpOutputs = rlpTx[2].toList();
-        require(rlpOutputs.length <= _MAX_OUTPUT_NUM, "Transaction outputs num exceeds limit");
-
-        uint txType = rlpTx[0].toUint();
-        require(txType > 0, "Transaction type must not be 0");
-
-        bytes32[] memory inputs = new bytes32[](rlpInputs.length);
-        for (uint i = 0; i < rlpInputs.length; i++) {
-            bytes32 input = rlpInputs[i].toBytes32();
-            // Disallow null inputs
+        bytes32[] memory inputs = new bytes32[](genericTx.inputs.length);
+        for (uint i = 0; i < genericTx.inputs.length; i++) {
+            bytes32 input = genericTx.inputs[i].toBytes32();
             require(uint256(input) != 0, "Null input not allowed");
             inputs[i] = input;
         }
 
-        PaymentOutputModel.Output[] memory outputs = new PaymentOutputModel.Output[](rlpOutputs.length);
-        for (uint i = 0; i < rlpOutputs.length; i++) {
-            PaymentOutputModel.Output memory output = PaymentOutputModel.decode(rlpOutputs[i]);
-            require(output.outputType != 0, "Output type must not be 0");
-            require(output.amount != 0, "Output amount must not be 0");
-            outputs[i] = output;
+        FungibleTokenOutputModel.Output[] memory outputs = new FungibleTokenOutputModel.Output[](genericTx.outputs.length);
+        for (uint i = 0; i < genericTx.outputs.length; i++) {
+            outputs[i] = FungibleTokenOutputModel.decodeOutput(genericTx.outputs[i]);
         }
 
-        bytes32 metaData = rlpTx[3].toBytes32();
+        // txData is unused, it must be 0
+        require(genericTx.txData.toUint() == 0, "txData must be 0");
 
-        return Transaction({txType: txType, inputs: inputs, outputs: outputs, metaData: metaData});
+        return Transaction({
+            txType: genericTx.txType,
+            inputs: inputs,
+            outputs: outputs,
+            txData: 0,
+            metaData: genericTx.metaData
+        });
+    }
+
+    /**
+     * @notice Retrieve the 'owner' from the output, assuming the
+     *         'outputGuard' field directly holds the owner's address
+     */
+    function getOutputOwner(FungibleTokenOutputModel.Output memory output) internal pure returns (address payable) {
+        return address(uint160(output.outputGuard));
     }
 }
