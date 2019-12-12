@@ -1,32 +1,67 @@
-# IEthDepositVerifier.sol
+# FungibleTokenOutputModel.sol
 
-View Source: [contracts/src/vaults/verifiers/IEthDepositVerifier.sol](../../contracts/src/vaults/verifiers/IEthDepositVerifier.sol)
+View Source: [contracts/src/transactions/FungibleTokenOutputModel.sol](../../contracts/src/transactions/FungibleTokenOutputModel.sol)
 
-**↘ Derived Contracts: [EthDepositVerifier](EthDepositVerifier.md)**
+**FungibleTokenOutputModel**
 
-**IEthDepositVerifier**
+Data structure and its decode function for ouputs of fungible token transactions
+
+## Structs
+### Output
+
+```js
+struct Output {
+ uint256 outputType,
+ bytes20 outputGuard,
+ address token,
+ uint256 amount
+}
+```
 
 ## Functions
 
-- [verify(bytes depositTx, uint256 amount, address sender)](#verify)
+- [decodeOutput(struct GenericTransaction.Output genericOutput)](#decodeoutput)
+- [getOutput(struct GenericTransaction.Transaction transaction, uint16 outputIndex)](#getoutput)
 
-### verify
+### decodeOutput
 
-⤿ Overridden Implementation(s): [EthDepositVerifier.verify](EthDepositVerifier.md#verify)
-
-Verifies a deposit transaction
+Given a GenericTransaction.Output, decodes the `data` field.
+The data field is an RLP list that must satisy the following conditions:
+     - It must have 3 elements: [`outputGuard`, `token`, `amount`]
+     - `outputGuard` is a 20 byte long array
+     - `token` is a 20 byte long array
+     - `amount` must be an integer value with no leading zeros. It may not be zero.
 
 ```js
-function verify(bytes depositTx, uint256 amount, address sender) external view
+function decodeOutput(struct GenericTransaction.Output genericOutput) internal pure
+returns(struct FungibleTokenOutputModel.Output)
+```
+
+**Returns**
+
+A fully decoded FungibleTokenOutputModel.Output struct
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| genericOutput | struct GenericTransaction.Output | A GenericTransaction.Output | 
+
+### getOutput
+
+Decodes and returns the output at a specific index in the transaction
+
+```js
+function getOutput(struct GenericTransaction.Transaction transaction, uint16 outputIndex) internal pure
+returns(struct FungibleTokenOutputModel.Output)
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| depositTx | bytes | The deposit transaction | 
-| amount | uint256 | The amount deposited | 
-| sender | address | The owner of the deposit transaction | 
+| transaction | struct GenericTransaction.Transaction |  | 
+| outputIndex | uint16 |  | 
 
 ## Contracts
 

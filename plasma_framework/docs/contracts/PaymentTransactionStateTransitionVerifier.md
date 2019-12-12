@@ -9,10 +9,10 @@ Verifies state transitions for payment transaction
 ## Functions
 
 - [isCorrectStateTransition(bytes txBytes, bytes[] inputTxs, uint16[] outputIndexOfInputTxs)](#iscorrectstatetransition)
-- [_isCorrectStateTransition(struct GenericTransaction.Output[] inputs, struct GenericTransaction.Output[] outputs)](#_iscorrectstatetransition)
-- [filterWithToken(struct GenericTransaction.Output[] outputs, address token)](#filterwithtoken)
-- [isCorrectSpend(struct GenericTransaction.Output[] inputs, struct GenericTransaction.Output[] outputs)](#iscorrectspend)
-- [sumAmounts(struct GenericTransaction.Output[] outputs)](#sumamounts)
+- [_isCorrectStateTransition(struct FungibleTokenOutputModel.Output[] inputs, struct FungibleTokenOutputModel.Output[] outputs)](#_iscorrectstatetransition)
+- [filterWithToken(struct FungibleTokenOutputModel.Output[] outputs, address token)](#filterwithtoken)
+- [isCorrectSpend(struct FungibleTokenOutputModel.Output[] inputs, struct FungibleTokenOutputModel.Output[] outputs)](#iscorrectspend)
+- [sumAmounts(struct FungibleTokenOutputModel.Output[] outputs)](#sumamounts)
 
 ### isCorrectStateTransition
 
@@ -34,7 +34,7 @@ returns(bool)
 ### _isCorrectStateTransition
 
 ```js
-function _isCorrectStateTransition(struct GenericTransaction.Output[] inputs, struct GenericTransaction.Output[] outputs) private pure
+function _isCorrectStateTransition(struct FungibleTokenOutputModel.Output[] inputs, struct FungibleTokenOutputModel.Output[] outputs) private pure
 returns(bool)
 ```
 
@@ -42,27 +42,27 @@ returns(bool)
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| inputs | struct GenericTransaction.Output[] |  | 
-| outputs | struct GenericTransaction.Output[] |  | 
+| inputs | struct FungibleTokenOutputModel.Output[] |  | 
+| outputs | struct FungibleTokenOutputModel.Output[] |  | 
 
 ### filterWithToken
 
 ```js
-function filterWithToken(struct GenericTransaction.Output[] outputs, address token) private pure
-returns(struct GenericTransaction.Output[])
+function filterWithToken(struct FungibleTokenOutputModel.Output[] outputs, address token) private pure
+returns(struct FungibleTokenOutputModel.Output[])
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| outputs | struct GenericTransaction.Output[] |  | 
+| outputs | struct FungibleTokenOutputModel.Output[] |  | 
 | token | address |  | 
 
 ### isCorrectSpend
 
 ```js
-function isCorrectSpend(struct GenericTransaction.Output[] inputs, struct GenericTransaction.Output[] outputs) internal pure
+function isCorrectSpend(struct FungibleTokenOutputModel.Output[] inputs, struct FungibleTokenOutputModel.Output[] outputs) internal pure
 returns(bool)
 ```
 
@@ -70,13 +70,13 @@ returns(bool)
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| inputs | struct GenericTransaction.Output[] |  | 
-| outputs | struct GenericTransaction.Output[] |  | 
+| inputs | struct FungibleTokenOutputModel.Output[] |  | 
+| outputs | struct FungibleTokenOutputModel.Output[] |  | 
 
 ### sumAmounts
 
 ```js
-function sumAmounts(struct GenericTransaction.Output[] outputs) private pure
+function sumAmounts(struct FungibleTokenOutputModel.Output[] outputs) private pure
 returns(uint256)
 ```
 
@@ -84,7 +84,7 @@ returns(uint256)
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| outputs | struct GenericTransaction.Output[] |  | 
+| outputs | struct FungibleTokenOutputModel.Output[] |  | 
 
 ## Contracts
 
@@ -104,12 +104,12 @@ returns(uint256)
 * [ExitId](ExitId.md)
 * [ExitPriority](ExitPriority.md)
 * [FailFastReentrancyGuard](FailFastReentrancyGuard.md)
+* [FungibleTokenOutputModel](FungibleTokenOutputModel.md)
 * [GenericTransaction](GenericTransaction.md)
 * [IERC20](IERC20.md)
 * [IErc20DepositVerifier](IErc20DepositVerifier.md)
 * [IEthDepositVerifier](IEthDepositVerifier.md)
 * [IExitProcessor](IExitProcessor.md)
-* [IsDeposit](IsDeposit.md)
 * [ISpendingCondition](ISpendingCondition.md)
 * [IStateTransitionVerifier](IStateTransitionVerifier.md)
 * [Math](Math.md)

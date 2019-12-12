@@ -11,7 +11,6 @@ View Source: [contracts/src/exits/payment/controllers/PaymentStartStandardExit.s
 struct Controller {
  contract IExitProcessor exitProcessor,
  contract PlasmaFramework framework,
- struct IsDeposit.Predicate isDeposit,
  struct ExitableTimestamp.Calculator exitableTimestampCalculator,
  uint256 ethVaultId,
  uint256 erc20VaultId,
@@ -27,7 +26,7 @@ struct StartStandardExitData {
  struct PaymentStandardExitRouterArgs.StartStandardExitArgs args,
  struct UtxoPosLib.UtxoPos utxoPos,
  struct PaymentTransactionModel.Transaction outputTx,
- struct GenericTransaction.Output output,
+ struct FungibleTokenOutputModel.Output output,
  uint160 exitId,
  bool isTxDeposit,
  uint256 txBlockTimeStamp,
@@ -174,12 +173,12 @@ function enqueueStandardExit(struct PaymentStartStandardExit.StartStandardExitDa
 * [ExitId](ExitId.md)
 * [ExitPriority](ExitPriority.md)
 * [FailFastReentrancyGuard](FailFastReentrancyGuard.md)
+* [FungibleTokenOutputModel](FungibleTokenOutputModel.md)
 * [GenericTransaction](GenericTransaction.md)
 * [IERC20](IERC20.md)
 * [IErc20DepositVerifier](IErc20DepositVerifier.md)
 * [IEthDepositVerifier](IEthDepositVerifier.md)
 * [IExitProcessor](IExitProcessor.md)
-* [IsDeposit](IsDeposit.md)
 * [ISpendingCondition](ISpendingCondition.md)
 * [IStateTransitionVerifier](IStateTransitionVerifier.md)
 * [Math](Math.md)

@@ -5,15 +5,16 @@ View Source: [contracts/src/transactions/GenericTransaction.sol](../../contracts
 **GenericTransaction**
 
 GenericTransaction is a generic transaction format that makes few assumptions about the
-content of the transaction. At minimum a transaction must:
-- Be a list of 4 items: [txType, inputs, outputs, txData]
+content of the transaction. A transaction must satisy the following requirements:
+- It must be a list of 5 items: [txType, inputs, outputs, txData, metaData]
 - `txType` must be a uint not equal to zero
-- inputs must be a list
-- outputs must be a list
+- inputs must be a list of RLP items.
+- outputs must be a list of `Output`s
+- an `Output` is a list of 2 items: [outputType, data]
+- `Output.outputType` must be a uint not equal to zero
+- `Output.data` is an RLP item. It can be a list.
 - no assumptions are made about `txData`. Note that `txData` can be a list.
- * It is expected that most transaction types will have similar outputs, so convenience methods for
-decoding outputs are provided. However, transactions types are free to extend this output format
-with extra data.
+- `metaData` must be 32 bytes long.
 
 ## Structs
 ### Transaction
@@ -22,8 +23,9 @@ with extra data.
 struct Transaction {
  uint256 txType,
  struct RLPReader.RLPItem[] inputs,
- struct RLPReader.RLPItem[] outputs,
- struct RLPReader.RLPItem txData
+ struct GenericTransaction.Output[] outputs,
+ struct RLPReader.RLPItem txData,
+ bytes32 metaData
 }
 ```
 
@@ -32,9 +34,7 @@ struct Transaction {
 ```js
 struct Output {
  uint256 outputType,
- bytes20 outputGuard,
- address token,
- uint256 amount
+ struct RLPReader.RLPItem data
 }
 ```
 
@@ -50,7 +50,7 @@ uint8 private constant TX_NUM_ITEMS;
 
 - [decode(bytes transaction)](#decode)
 - [getOutput(struct GenericTransaction.Transaction transaction, uint16 outputIndex)](#getoutput)
-- [decodeOutput(struct RLPReader.RLPItem[] outputRlpList)](#decodeoutput)
+- [decodeOutput(struct RLPReader.RLPItem encodedOutput)](#decodeoutput)
 
 ### decode
 
@@ -86,10 +86,9 @@ returns(struct GenericTransaction.Output)
 ### decodeOutput
 
 Decodes an RLPItem to an output
-Each Output is a list with (at least) the following first four elements: outputType, outputGuard, token, amount
 
 ```js
-function decodeOutput(struct RLPReader.RLPItem[] outputRlpList) internal pure
+function decodeOutput(struct RLPReader.RLPItem encodedOutput) internal pure
 returns(struct GenericTransaction.Output)
 ```
 
@@ -97,7 +96,7 @@ returns(struct GenericTransaction.Output)
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| outputRlpList | struct RLPReader.RLPItem[] |  | 
+| encodedOutput | struct RLPReader.RLPItem |  | 
 
 ## Contracts
 
@@ -117,12 +116,12 @@ returns(struct GenericTransaction.Output)
 * [ExitId](ExitId.md)
 * [ExitPriority](ExitPriority.md)
 * [FailFastReentrancyGuard](FailFastReentrancyGuard.md)
+* [FungibleTokenOutputModel](FungibleTokenOutputModel.md)
 * [GenericTransaction](GenericTransaction.md)
 * [IERC20](IERC20.md)
 * [IErc20DepositVerifier](IErc20DepositVerifier.md)
 * [IEthDepositVerifier](IEthDepositVerifier.md)
 * [IExitProcessor](IExitProcessor.md)
-* [IsDeposit](IsDeposit.md)
 * [ISpendingCondition](ISpendingCondition.md)
 * [IStateTransitionVerifier](IStateTransitionVerifier.md)
 * [Math](Math.md)

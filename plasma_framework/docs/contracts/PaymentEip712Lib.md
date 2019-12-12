@@ -37,7 +37,7 @@ bytes32 internal constant EMPTY_OUTPUT_HASH;
 - [hashTx(struct PaymentEip712Lib.Constants _eip712, struct PaymentTransactionModel.Transaction _tx)](#hashtx)
 - [_hashTx(struct PaymentTransactionModel.Transaction _tx)](#_hashtx)
 - [_hashInput(bytes32 _input)](#_hashinput)
-- [_hashOutput(struct GenericTransaction.Output _output)](#_hashoutput)
+- [_hashOutput(struct FungibleTokenOutputModel.Output _output)](#_hashoutput)
 
 ### initConstants
 
@@ -95,7 +95,7 @@ returns(bytes32)
 ### _hashOutput
 
 ```js
-function _hashOutput(struct GenericTransaction.Output _output) private pure
+function _hashOutput(struct FungibleTokenOutputModel.Output _output) private pure
 returns(bytes32)
 ```
 
@@ -103,7 +103,7 @@ returns(bytes32)
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| _output | struct GenericTransaction.Output |  | 
+| _output | struct FungibleTokenOutputModel.Output |  | 
 
 ## Contracts
 
@@ -123,12 +123,12 @@ returns(bytes32)
 * [ExitId](ExitId.md)
 * [ExitPriority](ExitPriority.md)
 * [FailFastReentrancyGuard](FailFastReentrancyGuard.md)
+* [FungibleTokenOutputModel](FungibleTokenOutputModel.md)
 * [GenericTransaction](GenericTransaction.md)
 * [IERC20](IERC20.md)
 * [IErc20DepositVerifier](IErc20DepositVerifier.md)
 * [IEthDepositVerifier](IEthDepositVerifier.md)
 * [IExitProcessor](IExitProcessor.md)
-* [IsDeposit](IsDeposit.md)
 * [ISpendingCondition](ISpendingCondition.md)
 * [IStateTransitionVerifier](IStateTransitionVerifier.md)
 * [Math](Math.md)

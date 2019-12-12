@@ -10,7 +10,6 @@ View Source: [contracts/src/exits/payment/controllers/PaymentChallengeIFEInputSp
 ```js
 struct Controller {
  contract PlasmaFramework framework,
- struct IsDeposit.Predicate isDeposit,
  contract SpendingConditionRegistry spendingConditionRegistry,
  uint256 safeGasStipend
 }
@@ -80,7 +79,7 @@ function run(struct PaymentChallengeIFEInputSpent.Controller self, struct Paymen
 ### verifySpentInputEqualsIFEInput
 
 ```js
-function verifySpentInputEqualsIFEInput(struct PaymentChallengeIFEInputSpent.ChallengeIFEData data) private pure
+function verifySpentInputEqualsIFEInput(struct PaymentChallengeIFEInputSpent.ChallengeIFEData data) private view
 ```
 
 **Arguments**
@@ -131,12 +130,12 @@ function verifySpendingCondition(struct PaymentChallengeIFEInputSpent.ChallengeI
 * [ExitId](ExitId.md)
 * [ExitPriority](ExitPriority.md)
 * [FailFastReentrancyGuard](FailFastReentrancyGuard.md)
+* [FungibleTokenOutputModel](FungibleTokenOutputModel.md)
 * [GenericTransaction](GenericTransaction.md)
 * [IERC20](IERC20.md)
 * [IErc20DepositVerifier](IErc20DepositVerifier.md)
 * [IEthDepositVerifier](IEthDepositVerifier.md)
 * [IExitProcessor](IExitProcessor.md)
-* [IsDeposit](IsDeposit.md)
 * [ISpendingCondition](ISpendingCondition.md)
 * [IStateTransitionVerifier](IStateTransitionVerifier.md)
 * [Math](Math.md)
