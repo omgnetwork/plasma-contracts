@@ -29,39 +29,17 @@ uint256 internal constant TX_OFFSET;
 
 ## Functions
 
-- [buildPositionFromTxPosAndOutputIndex(uint256 txPos, uint16 outputIndex)](#buildpositionfromtxposandoutputindex)
-- [txPos(struct PosLib.Position pos)](#txpos)
+- [toStrictTxPos(struct PosLib.Position pos)](#tostricttxpos)
 - [getTxPostionForExitPriority(struct PosLib.Position pos)](#gettxpostionforexitpriority)
 - [encode(struct PosLib.Position pos)](#encode)
-- [encodePackedTxPos(struct PosLib.Position pos)](#encodepackedtxpos)
 - [decode(uint256 pos)](#decode)
 
-### buildPositionFromTxPosAndOutputIndex
-
-Returns the UTXO position for a given transaction position and output index
-
-```js
-function buildPositionFromTxPosAndOutputIndex(uint256 txPos, uint16 outputIndex) internal pure
-returns(struct PosLib.Position)
-```
-
-**Returns**
-
-utxo position
-
-**Arguments**
-
-| Name        | Type           | Description  |
-| ------------- |------------- | -----|
-| txPos | uint256 | Transaction position - utxo position of zero index output | 
-| outputIndex | uint16 | Index of the output | 
-
-### txPos
+### toStrictTxPos
 
 Returns transaction position which is an utxo position of zero index output
 
 ```js
-function txPos(struct PosLib.Position pos) internal pure
+function toStrictTxPos(struct PosLib.Position pos) internal pure
 returns(struct PosLib.Position)
 ```
 
@@ -112,25 +90,6 @@ Position encoded as an integer
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
 | pos | struct PosLib.Position | Position | 
-
-### encodePackedTxPos
-
-Encodes a transaction position
-
-```js
-function encodePackedTxPos(struct PosLib.Position pos) internal pure
-returns(uint256)
-```
-
-**Returns**
-
-Position encoded as an integer
-
-**Arguments**
-
-| Name        | Type           | Description  |
-| ------------- |------------- | -----|
-| pos | struct PosLib.Position | Transaction position | 
 
 ### decode
 

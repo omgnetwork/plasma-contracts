@@ -10,7 +10,7 @@ Interface of the spending condition
 
 ## Functions
 
-- [verify(bytes inputTx, uint16 outputIndex, uint256 inputTxPos, bytes spendingTx, uint16 inputIndex, bytes witness)](#verify)
+- [verify(bytes inputTx, uint256 utxoPos, bytes spendingTx, uint16 inputIndex, bytes witness)](#verify)
 
 ### verify
 
@@ -19,7 +19,7 @@ Interface of the spending condition
 Verifies the spending condition
 
 ```js
-function verify(bytes inputTx, uint16 outputIndex, uint256 inputTxPos, bytes spendingTx, uint16 inputIndex, bytes witness) external view
+function verify(bytes inputTx, uint256 utxoPos, bytes spendingTx, uint16 inputIndex, bytes witness) external view
 returns(bool)
 ```
 
@@ -28,8 +28,7 @@ returns(bool)
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
 | inputTx | bytes | Encoded input transaction, in bytes | 
-| outputIndex | uint16 | The output index of the input transaction | 
-| inputTxPos | uint256 | The tx position of the input tx (0 if in-flight) | 
+| utxoPos | uint256 | Position of the utxo | 
 | spendingTx | bytes | Spending transaction, in bytes | 
 | inputIndex | uint16 | The input index of the spending tx that points to the output | 
 | witness | bytes | The witness data of the spending condition | 
