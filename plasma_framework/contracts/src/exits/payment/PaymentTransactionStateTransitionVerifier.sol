@@ -3,7 +3,6 @@ pragma experimental ABIEncoderV2;
 
 import "../interfaces/IStateTransitionVerifier.sol";
 import "../payment/PaymentExitDataModel.sol";
-import "../../utils/PosLib.sol";
 import "../../transactions/WireTransaction.sol";
 import "../../transactions/PaymentTransactionModel.sol";
 import "../../transactions/outputs/PaymentOutputModel.sol";

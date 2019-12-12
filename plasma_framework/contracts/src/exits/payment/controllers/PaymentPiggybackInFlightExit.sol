@@ -170,7 +170,7 @@ library PaymentPiggybackInFlightExit {
             vaultId = controller.erc20VaultId;
         }
 
-        controller.framework.enqueue(vaultId, token, exitableAt, utxoPos.txPos(), exitId, controller.exitProcessor);
+        controller.framework.enqueue(vaultId, token, exitableAt, utxoPos.toStrictTxPos(), exitId, controller.exitProcessor);
     }
 
     function isFirstPiggybackOfTheToken(ExitModel.InFlightExit memory ife, address token)

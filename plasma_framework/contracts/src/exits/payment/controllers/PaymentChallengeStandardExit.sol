@@ -125,8 +125,7 @@ library PaymentChallengeStandardExit {
 
         bool isSpentByChallengeTx = condition.verify(
             args.exitingTx,
-            utxoPos.outputIndex,
-            utxoPos.encodePackedTxPos(),
+            utxoPos.encode(),
             args.challengeTx,
             args.inputIndex,
             args.witness

@@ -19,26 +19,11 @@ library PosLib {
     uint256 constant internal TX_OFFSET = 10000;
 
     /**
-     * @notice Returns the UTXO position for a given transaction position and output index
-     * @param txPos Transaction position - utxo position of zero index output
-     * @param outputIndex Index of the output
-     * @return utxo position
-     */
-    function buildPositionFromTxPosAndOutputIndex(uint256 txPos, uint16 outputIndex)
-        internal
-        pure
-        returns (Position memory)
-    {
-        require(txPos % TX_OFFSET == 0, "Invalid transaction position");
-        return decode(txPos.add(outputIndex));
-    }
-
-    /**
      * @notice Returns transaction position which is an utxo position of zero index output
      * @param pos UTXO position of the output
      * @return Position of a transaction
      */
-    function txPos(Position memory pos)
+    function toStrictTxPos(Position memory pos)
         internal
         pure
         returns (Position memory)
@@ -65,17 +50,7 @@ library PosLib {
      * @return Position encoded as an integer
      */
     function encode(Position memory pos) internal pure returns (uint256) {
-        return pos.blockNum * BLOCK_OFFSET + pos.txIndex * TX_OFFSET + pos.outputIndex;
-    }
-
-    /**
-     * @notice Encodes a transaction position
-     * @param pos Transaction position
-     * @return Position encoded as an integer
-     */
-    function encodePackedTxPos(Position memory pos) internal pure returns (uint256) {
-        require(pos.outputIndex == 0, "Invalid transaction position");
-        return pos.blockNum * BLOCK_OFFSET + pos.txIndex * TX_OFFSET;
+        return pos.blockNum.mul(BLOCK_OFFSET).add(pos.txIndex.mul(TX_OFFSET)).add(pos.outputIndex);
     }
 
     /**

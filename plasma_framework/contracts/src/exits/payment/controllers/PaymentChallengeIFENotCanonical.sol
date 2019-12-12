@@ -110,8 +110,7 @@ library PaymentChallengeIFENotCanonical {
 
         bool isSpentByCompetingTx = condition.verify(
             args.inputTx,
-            inputUtxoPos.outputIndex,
-            inputUtxoPos.encodePackedTxPos(),
+            inputUtxoPos.encode(),
             args.competingTx,
             args.competingTxInputIndex,
             args.competingTxWitness
@@ -217,7 +216,7 @@ library PaymentChallengeIFENotCanonical {
             bool isStandardFinalized = MoreVpFinalization.isStandardFinalized(
                 self.framework,
                 args.competingTx,
-                competingTxUtxoPos.txPos(),
+                competingTxUtxoPos.toStrictTxPos(),
                 args.competingTxInclusionProof
             );
             require(isStandardFinalized, "Competing tx is not standard finalized with the given tx position");

@@ -30,16 +30,14 @@ contract PaymentOutputToPaymentTxCondition is ISpendingCondition {
     /**
      * @notice Verifies the spending condition
      * @param inputTxBytes Encoded input transaction, in bytes
-     * @param outputIndex Output index of the input transaction
-     * @param inputTxPos The tx position of the input tx (0 if in-flight)
+     * @param utxoPos Position of the utxo
      * @param spendingTxBytes Spending transaction, in bytes
      * @param inputIndex Input index of the spending tx that points to the output
      * @param signature Signature of the output owner
      */
     function verify(
         bytes calldata inputTxBytes,
-        uint16 outputIndex,
-        uint256 inputTxPos,
+        uint256 utxoPos,
         bytes calldata spendingTxBytes,
         uint16 inputIndex,
         bytes calldata signature
@@ -54,13 +52,13 @@ contract PaymentOutputToPaymentTxCondition is ISpendingCondition {
         PaymentTransactionModel.Transaction memory spendingTx = PaymentTransactionModel.decode(spendingTxBytes);
         require(spendingTx.txType == supportSpendingTxType, "The spending tx is an unsupported payment tx type");
 
-        PosLib.Position memory utxoPos = PosLib.buildPositionFromTxPosAndOutputIndex(inputTxPos, outputIndex);
         require(
-            spendingTx.inputs[inputIndex] == bytes32(utxoPos.encode()),
+            spendingTx.inputs[inputIndex] == bytes32(utxoPos),
             "Spending tx points to the incorrect output UTXO position"
         );
 
-        address owner = inputTx.outputs[outputIndex].owner();
+        PosLib.Position memory decodedUtxoPos = PosLib.decode(utxoPos);
+        address owner = inputTx.outputs[decodedUtxoPos.outputIndex].owner();
         address signer = ECDSA.recover(eip712.hashTx(spendingTx), signature);
         require(signer != address(0), "Failed to recover the signer from the signature");
         require(owner == signer, "Tx in not signed correctly");

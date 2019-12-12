@@ -158,7 +158,7 @@ library PaymentStartStandardExit {
         return MoreVpFinalization.isStandardFinalized(
             data.controller.framework,
             data.args.rlpOutputTx,
-            data.utxoPos.txPos(),
+            data.utxoPos.toStrictTxPos(),
             data.args.outputTxInclusionProof
         );
     }
@@ -198,7 +198,7 @@ library PaymentStartStandardExit {
         }
 
         data.controller.framework.enqueue(
-            vaultId, data.output.token, exitableAt, data.utxoPos.txPos(),
+            vaultId, data.output.token, exitableAt, data.utxoPos.toStrictTxPos(),
             data.exitId, data.controller.exitProcessor
         );
     }

@@ -223,8 +223,7 @@ contract('PaymentChallengeStandardExit', ([_, alice, bob]) => {
 
                 const expectedArgs = {
                     inputTx: args.exitingTx,
-                    outputIndex: (new UtxoPos(exitData.utxoPos)).outputIndex,
-                    inputTxPos: (new UtxoPos(exitData.utxoPos)).txPos,
+                    utxoPos: exitData.utxoPos,
                     spendingTx: args.challengeTx,
                     inputIndex: args.inputIndex,
                     witness: args.witness,

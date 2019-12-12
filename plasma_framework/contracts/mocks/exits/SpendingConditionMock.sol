@@ -12,8 +12,7 @@ contract SpendingConditionMock is ISpendingCondition {
 
     struct Args {
         bytes inputTx;
-        uint16 outputIndex;
-        uint256 inputTxPos;
+        uint256 utxoPos;
         bytes spendingTx;
         uint16 inputIndex;
         bytes witness;
@@ -37,8 +36,7 @@ contract SpendingConditionMock is ISpendingCondition {
     /** override */
     function verify(
         bytes calldata inputTx,
-        uint16 outputIndex,
-        uint256 inputTxPos,
+        uint256 utxoPos,
         bytes calldata spendingTx,
         uint16 inputIndex,
         bytes calldata witness
@@ -54,8 +52,7 @@ contract SpendingConditionMock is ISpendingCondition {
         // only run the check when "shouldVerifyArgumentEqauals" is called
         if (expectedArgs.inputTx.length > 0) {
             require(keccak256(expectedArgs.inputTx) == keccak256(inputTx), "input tx not as expected");
-            require(expectedArgs.outputIndex == outputIndex, "output index not as expected");
-            require(expectedArgs.inputTxPos == inputTxPos, "input tx pos not as expected");
+            require(expectedArgs.utxoPos == utxoPos, "utxoPos not as expected");
             require(keccak256(expectedArgs.spendingTx) == keccak256(spendingTx), "spending tx not as expected");
             require(expectedArgs.inputIndex == inputIndex, "input index not as expected");
             require(keccak256(expectedArgs.witness) == keccak256(witness), "witness not as expected");

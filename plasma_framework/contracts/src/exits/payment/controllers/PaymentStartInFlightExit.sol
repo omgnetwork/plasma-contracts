@@ -222,7 +222,7 @@ library PaymentStartInFlightExit {
             bool isStandardFinalized = MoreVpFinalization.isStandardFinalized(
                 exitData.controller.framework,
                 exitData.inputTxs[i],
-                exitData.inputUtxosPos[i].txPos(),
+                exitData.inputUtxosPos[i].toStrictTxPos(),
                 exitData.inputTxsInclusionProofs[i]
             );
             require(isStandardFinalized, "Input transaction is not standard finalized");
@@ -242,8 +242,7 @@ library PaymentStartInFlightExit {
 
             bool isSpentByInFlightTx = condition.verify(
                 exitData.inputTxs[i],
-                exitData.inputUtxosPos[i].outputIndex,
-                exitData.inputUtxosPos[i].encodePackedTxPos(),
+                exitData.inputUtxosPos[i].encode(),
                 exitData.inFlightTxRaw,
                 i,
                 exitData.inFlightTxWitnesses[i]

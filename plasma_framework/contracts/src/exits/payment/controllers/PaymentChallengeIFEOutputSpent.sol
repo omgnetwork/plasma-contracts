@@ -79,7 +79,7 @@ library PaymentChallengeIFEOutputSpent {
         bool isStandardFinalized = MoreVpFinalization.isStandardFinalized(
             controller.framework,
             args.inFlightTx,
-            utxoPos.txPos(),
+            utxoPos.toStrictTxPos(),
             args.inFlightTxInclusionProof
         );
 
@@ -122,8 +122,7 @@ library PaymentChallengeIFEOutputSpent {
 
         bool isSpentBySpendingTx = condition.verify(
             args.inFlightTx,
-            utxoPos.outputIndex,
-            utxoPos.encodePackedTxPos(),
+            utxoPos.encode(),
             args.challengingTx,
             args.challengingTxInputIndex,
             args.challengingTxWitness

@@ -6,20 +6,12 @@ import "../../src/utils/PosLib.sol";
 contract PosLibWrapper {
     using PosLib for PosLib.Position;
 
-    function buildPositionFromTxPosAndOutputIndex(uint256 txPos, uint16 outputIndex)
+    function toStrictTxPos(PosLib.Position memory pos)
         public
         pure
         returns (PosLib.Position memory)
     {
-        return PosLib.buildPositionFromTxPosAndOutputIndex(txPos, outputIndex);
-    }
-
-    function txPos(PosLib.Position memory pos)
-        public
-        pure
-        returns (PosLib.Position memory)
-    {
-        return pos.txPos();
+        return pos.toStrictTxPos();
     }
 
     function getTxPostionForExitPriority(PosLib.Position memory pos)
@@ -32,10 +24,6 @@ contract PosLibWrapper {
 
     function encode(PosLib.Position memory pos) public pure returns (uint256) {
         return pos.encode();
-    }
-
-    function encodePackedTxPos(PosLib.Position memory pos) public pure returns (uint256) {
-        return pos.encodePackedTxPos();
     }
 
     function decode(uint256 pos) public pure returns (PosLib.Position memory) {

@@ -24,23 +24,9 @@ contract('PosLib', () => {
         this.txPos = this.utxoPos - this.outputIndex;
     });
 
-    describe('buildPositionFromTxPosAndOutputIndex', () => {
-        it('should build the correct position from txPos and outputIndex', async () => {
-            const result = await this.contract.buildPositionFromTxPosAndOutputIndex(this.txPos, this.outputIndex);
-            expect(new BN(result.blockNumber)).to.be.bignumber.equal(new BN(this.blockNum));
-            expect(new BN(result.txIndex)).to.be.bignumber.equal(new BN(this.txIndex));
-            expect(new BN(result.outputIndex)).to.be.bignumber.equal(new BN(this.outputIndex));
-        });
-
-        it('should revert when tx pos is not a position of zero index output', async () => {
-            const txPos = this.txPos + 1;
-            await expectRevert(this.contract.buildPositionFromTxPosAndOutputIndex(txPos, this.outputIndex), 'Invalid transaction position');
-        });
-    });
-
-    describe('txPos', () => {
+    describe('toStrictTxPos', () => {
         it('should parse a correct tx position', async () => {
-            const txPos = await this.contract.txPos(this.position);
+            const txPos = await this.contract.toStrictTxPos(this.position);
             expect(new BN(txPos.blockNumber)).to.be.bignumber.equal(new BN(this.blockNum));
             expect(new BN(txPos.txIndex)).to.be.bignumber.equal(new BN(this.txIndex));
             expect(new BN(txPos.outputIndex)).to.be.bignumber.equal(new BN(0));
@@ -59,25 +45,6 @@ contract('PosLib', () => {
         it('should correctly encode a position', async () => {
             const result = await this.contract.encode(this.position);
             expect(result).to.be.bignumber.equal(new BN(this.utxoPos));
-        });
-    });
-
-    describe('encodePackedTxPos', () => {
-        it('should encode a tx position', async () => {
-            const txPos = {
-                blockNum: this.blockNumber,
-                txIndex: this.txIndex,
-                outputIndex: 0,
-            };
-            const result = await this.contract.encodePackedTxPos(txPos);
-            expect(result).to.be.bignumber.equal(new BN(this.txPos));
-        });
-
-        it('should fail when invalid position is provided as argument', async () => {
-            await expectRevert(
-                this.contract.encodePackedTxPos(this.position),
-                'Invalid transaction position',
-            );
         });
     });
 

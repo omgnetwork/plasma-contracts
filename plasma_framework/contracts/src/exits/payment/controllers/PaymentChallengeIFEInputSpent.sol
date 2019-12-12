@@ -147,8 +147,7 @@ library PaymentChallengeIFEInputSpent {
 
         bool isSpent = condition.verify(
             data.args.inputTx,
-            inputUtxoPos.outputIndex,
-            inputUtxoPos.encodePackedTxPos(),
+            inputUtxoPos.encode(),
             data.args.challengingTx,
             data.args.challengingTxInputIndex,
             data.args.challengingTxWitness
