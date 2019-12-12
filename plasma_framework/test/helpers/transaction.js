@@ -76,7 +76,11 @@ class GenericTransaction {
     }
 }
 
-class PaymentTransaction extends GenericTransaction {}
+class PaymentTransaction extends GenericTransaction {
+    constructor(transactionType, inputs, outputs, metaData = EMPTY_BYTES_32) {
+        super(transactionType, inputs, outputs, 0, metaData);
+    }
+}
 
 class PlasmaDepositTransaction extends PaymentTransaction {
     constructor(output, metaData = EMPTY_BYTES_32) {

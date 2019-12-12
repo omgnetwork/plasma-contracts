@@ -112,11 +112,16 @@ contract('PlasmaFramework - Fee Claim', ([_, _maintainer, authority, richFather,
                             new FeeClaimOutput(FEE_OUTPUT_TYPE, FEE_AMOUNT, operatorFeeAddress, ETH),
                         ];
 
+                        const nonce = web3.utils.sha3(web3.eth.abi.encodeParameters(
+                            ['uint256', 'address'],
+                            [nextBlockNum, ETH],
+                        ));
+
                         const outputIndex = 0;
                         const feeTxIndex = 1;
                         firstFeeClaimUtxoPos = buildUtxoPos(nextBlockNum, feeTxIndex, outputIndex);
 
-                        const firstFeeTx = new FeeTransaction(FEE_TX_TYPE, [], feeOutputs, nextBlockNum);
+                        const firstFeeTx = new FeeTransaction(FEE_TX_TYPE, [], feeOutputs, nonce);
                         firstFeeTxBytes = web3.utils.bytesToHex(firstFeeTx.rlpEncoded());
 
                         const merkleTree = new MerkleTree(
@@ -159,8 +164,12 @@ contract('PlasmaFramework - Fee Claim', ([_, _maintainer, authority, richFather,
                                 const feeOutputs = [
                                     new FeeClaimOutput(FEE_OUTPUT_TYPE, FEE_AMOUNT, operatorFeeAddress, ETH),
                                 ];
+                                const nonce = web3.utils.sha3(web3.eth.abi.encodeParameters(
+                                    ['uint256', 'address'],
+                                    [nextBlockNum, ETH],
+                                ));
 
-                                const secondFeeTx = new FeeTransaction(FEE_TX_TYPE, [], feeOutputs, nextBlockNum);
+                                const secondFeeTx = new FeeTransaction(FEE_TX_TYPE, [], feeOutputs, nonce);
                                 secondFeeTxBytes = web3.utils.bytesToHex(secondFeeTx.rlpEncoded());
 
                                 const outputIndex = 0;
