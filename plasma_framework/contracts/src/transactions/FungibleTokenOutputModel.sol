@@ -19,7 +19,7 @@ library FungibleTokenOutputModel {
 
     /**
      * @notice Given a GenericTransaction.Output, decodes the `data` field.
-     * The data field is an RLP list that must satisy the following conditions:
+     * The data field is an RLP list that must satisfy the following conditions:
      *      - It must have 3 elements: [`outputGuard`, `token`, `amount`]
      *      - `outputGuard` is a 20 byte long array
      *      - `token` is a 20 byte long array
