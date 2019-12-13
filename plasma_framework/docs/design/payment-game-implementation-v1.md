@@ -2,11 +2,10 @@
 
 This document is a short description of the interactions in the current Payment ExitGame implementation. Check the [ALD ExitGame definitions and properties doc](./ald-exit-game-definitions-and-properties.md) for more background on the terminologies used in this document.
 
-Payment transaction V1 is specified such that it only allows to have Payment transaction V1 as input and have both Payment transaction V1 and V2 as outputs. Specification of V2 is still undefined and a place holder at the moment. However, the spending condition of V1 to V2 is fulfilled if the output owner correctly signs the spending transaction.
+Payment transaction V1 is specified such that it allows to have Payment transaction V1 and Fee transaction as input and have both Payment transaction V1 and V2 as outputs. Specification of V2 is still undefined and a place holder at the moment. However, the spending condition of V1 to V2 is fulfilled if the output owner correctly signs the spending transaction.
 
 ## Transaction Data Structure
 
-In the first version of the Plasma Framework system, there is only one type of Payment Transaction.  It is defined as the following data structure:
 
 ```
 struct Transaction {
@@ -48,12 +47,12 @@ A `Transaction` can be further grouped into two different sub categories. They b
 ## Exit Game Properties of Payment Transaction V1
 
 ### Spending Condition
-There are only two spending conditions: Payment V1 -> Payment V1 and Payment V1 -> Payment V2. Both share the same main logic which is to verify that the signature of the output owner matches.
+There are three spending conditions: Payment V1 -> Payment V1, Fee -> Payment V1, and Payment V1 -> Payment V2. All of them more or less share the same main logic which is to verify that the signature of the output owner matches.
 
 ### Valid Spending Tx
-Since Payment V1 only have two cases that would be spending it: spending in Payment tx v1 and Payment tx v2, the cases is rather simple as both tx types shares mostly the same logic:
+Payment V1 only accepts MoreVP protocol txs as inputs, and the spending condition of fee tx is similar to payment tx. As a result, they have more or less the same validation logic:
 
-1. Needs to be protocol finalized: Payment tx is protocol finalized as long as the tx exists (MoreVP protocol).
+1. Needs to be protocol finalized: tx is protocol finalized as long as the tx exists (MoreVP protocol).
 1. Fulfils the spending condition of the input: Checks the signature of the output owner.
 
 ### State Transition
@@ -63,7 +62,7 @@ A valid state transition of Payment transaction V1 basically checks whether ther
 For a Payment transaction to be exitable on standard exit, it only needs to check whether the tx is in a plasma block or not (standard finalized), and the exiting output is part of the payment tx as specified.
 
 ### In-flight exitable
-1. All inputs of the exiting tx should be standard finalized. Since Payment tx v1 only accpets Payment tx v1 as inputs, it means that all input txs should be included in a plasma block
+1. All inputs of the exiting tx should be standard finalized. Since Payment tx v1 only accepts MoreVP protocol txs as inputs, it means that all input txs should be included in a plasma block
 1. The state transition of the tx is valid: No money is printed. So `sum of inputs >= sum of outputs` for each token
 1. All inputs fulfill the spending condition by checking the signature of input owner with the payment tx
 1. The transaction itself is Protocol finalized, which in MoreVP means the payment transaction exists

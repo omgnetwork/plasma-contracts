@@ -5,8 +5,10 @@ const env = process.env.DEPLOYMENT_ENV || 'development';
 const development = {
     frameworks: {
         minExitPeriod: process.env.MIN_EXIT_PERIOD || 60 * 10, // The minimum exit period for testing is 10 minutes.
-        initialImmuneVaults: 2, //  Allow 2 vaults (ETH and ERC20) to be used without going through quarantine.
-        initialImmuneExitGames: 1, // Allow 1 exit game (PaymentExitGame) to be used without going through quarantine.
+        //  Allow 2 vaults (ETH and ERC20) to be used without going through quarantine.
+        initialImmuneVaults: 2,
+        // Allow 2 exit games (PaymentExitGame, FeeExitGame) to be used without going through quarantine.
+        initialImmuneExitGames: 2,
         protocols: {
             mvp: 1,
             moreVp: 2,
@@ -22,9 +24,11 @@ const development = {
         txTypes: {
             payment: 1,
             paymentV2: 2,
+            fee: 3,
         },
         outputTypes: {
             payment: 1,
+            feeClaim: 2,
         },
         vaultId: {
             eth: 1,
