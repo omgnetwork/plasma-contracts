@@ -50,7 +50,7 @@ A `Transaction` can be further grouped into two different sub categories. They b
 There are three spending conditions: Payment V1 -> Payment V1, Fee -> Payment V1, and Payment V1 -> Payment V2. All of them more or less share the same main logic which is to verify that the signature of the output owner matches.
 
 ### Valid Spending Tx
-Since Payment V1 only have input of output txs with MoreVP protocol, also, spending condition of fee tx is similar with payment tx. As a result, they are with more or less the same logic:
+Payment V1 only accepts MoreVP protocol txs as inputs, and the spending condition of fee tx is similar to payment tx. As a result, they have more or less the same validation logic:
 
 1. Needs to be protocol finalized: tx is protocol finalized as long as the tx exists (MoreVP protocol).
 1. Fulfils the spending condition of the input: Checks the signature of the output owner.

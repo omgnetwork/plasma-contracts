@@ -13,7 +13,7 @@ const {
 
 contract('FeeClaimOutputToPaymentTxCondition', ([richFather, bob]) => {
     const ETH = constants.ZERO_ADDRESS;
-    const DUMMY_BLOCK_NUN = 123;
+    const DUMMY_NONCE = web3.utils.sha3('dummy nonce');
     const alicePrivateKey = '0x7151e5dab6f8e95b5436515b83f423c4df64fe4c6149f864daa209b26adb10ca';
     let alice;
 
@@ -41,7 +41,7 @@ contract('FeeClaimOutputToPaymentTxCondition', ([richFather, bob]) => {
             const feeOutputs = [
                 new FeeClaimOutput(OUTPUT_TYPE.FEE_CLAIM, 1000, alice, ETH),
             ];
-            const feeTx = new FeeTransaction(TX_TYPE.FEE, [buildUtxoPos(1000, 0, 0)], feeOutputs, DUMMY_BLOCK_NUN);
+            const feeTx = new FeeTransaction(TX_TYPE.FEE, [buildUtxoPos(1000, 0, 0)], feeOutputs, DUMMY_NONCE);
             const feeTxBytes = web3.utils.bytesToHex(feeTx.rlpEncoded());
 
             const feeClaimOutputIndex = 0;
