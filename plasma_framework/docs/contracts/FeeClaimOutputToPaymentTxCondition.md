@@ -1,50 +1,54 @@
-# PaymentDeleteInFlightExit.sol
+# FeeClaimOutputToPaymentTxCondition.sol
 
-View Source: [contracts/src/exits/payment/controllers/PaymentDeleteInFlightExit.sol](../../contracts/src/exits/payment/controllers/PaymentDeleteInFlightExit.sol)
+View Source: [contracts/src/exits/fee/FeeClaimOutputToPaymentTxCondition.sol](../../contracts/src/exits/fee/FeeClaimOutputToPaymentTxCondition.sol)
 
-**PaymentDeleteInFlightExit**
+**↗ Extends: [ISpendingCondition](ISpendingCondition.md)**
 
-## Structs
-### Controller
+**FeeClaimOutputToPaymentTxCondition**
 
-```js
-struct Controller {
- uint256 minExitPeriod,
- uint256 safeGasStipend
-}
-```
-
-**Events**
+## Contract Members
+**Constants & Variables**
 
 ```js
-event InFlightExitDeleted(uint160 indexed exitId);
+//public members
+uint256 public feeTxType;
+uint256 public feeClaimOutputType;
+uint256 public paymentTxType;
+
+//internal members
+struct PaymentEip712Lib.Constants internal eip712;
+
 ```
 
 ## Functions
 
-- [run(struct PaymentDeleteInFlightExit.Controller self, struct PaymentExitDataModel.InFlightExitMap exitMap, uint160 exitId)](#run)
-- [isPiggybacked(struct PaymentExitDataModel.InFlightExit ife)](#ispiggybacked)
+- [(PlasmaFramework _framework, uint256 _feeTxType, uint256 _feeClaimOutputType, uint256 _paymentTxType)](#)
+- [verify(bytes feeTxBytes, uint256 utxoPos, bytes paymentTxBytes, uint16 inputIndex, bytes signature)](#verify)
 
-### run
-
-Main logic function to delete the non piggybacked in-flight exit
+### 
 
 ```js
-function run(struct PaymentDeleteInFlightExit.Controller self, struct PaymentExitDataModel.InFlightExitMap exitMap, uint160 exitId) public nonpayable
+function (PlasmaFramework _framework, uint256 _feeTxType, uint256 _feeClaimOutputType, uint256 _paymentTxType) public nonpayable
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| self | struct PaymentDeleteInFlightExit.Controller |  | 
-| exitMap | struct PaymentExitDataModel.InFlightExitMap |  | 
-| exitId | uint160 | The exitId of the standard exit | 
+| _framework | PlasmaFramework |  | 
+| _feeTxType | uint256 |  | 
+| _feeClaimOutputType | uint256 |  | 
+| _paymentTxType | uint256 |  | 
 
-### isPiggybacked
+### verify
+
+⤾ overrides [ISpendingCondition.verify](ISpendingCondition.md#verify)
+
+This implementation checks signature for spending fee claim output. It should be signed with the owner signature.
+     The fee claim output that is spendable follows Fungible Token Output format.
 
 ```js
-function isPiggybacked(struct PaymentExitDataModel.InFlightExit ife) private pure
+function verify(bytes feeTxBytes, uint256 utxoPos, bytes paymentTxBytes, uint16 inputIndex, bytes signature) external view
 returns(bool)
 ```
 
@@ -52,7 +56,11 @@ returns(bool)
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| ife | struct PaymentExitDataModel.InFlightExit |  | 
+| feeTxBytes | bytes | Encoded fee transaction | 
+| utxoPos | uint256 | Position of the fee utxo | 
+| paymentTxBytes | bytes | Payment transaction (in bytes) that spends the fee claim output | 
+| inputIndex | uint16 | Input index of the payment tx that points to the fee claim output | 
+| signature | bytes | Signature of the owner of fee claiming output | 
 
 ## Contracts
 

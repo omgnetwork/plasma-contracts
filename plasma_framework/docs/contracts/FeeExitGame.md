@@ -1,58 +1,10 @@
-# PaymentDeleteInFlightExit.sol
+# FeeExitGame.sol
 
-View Source: [contracts/src/exits/payment/controllers/PaymentDeleteInFlightExit.sol](../../contracts/src/exits/payment/controllers/PaymentDeleteInFlightExit.sol)
+View Source: [contracts/src/exits/fee/FeeExitGame.sol](../../contracts/src/exits/fee/FeeExitGame.sol)
 
-**PaymentDeleteInFlightExit**
-
-## Structs
-### Controller
-
-```js
-struct Controller {
- uint256 minExitPeriod,
- uint256 safeGasStipend
-}
-```
-
-**Events**
-
-```js
-event InFlightExitDeleted(uint160 indexed exitId);
-```
+**FeeExitGame**
 
 ## Functions
-
-- [run(struct PaymentDeleteInFlightExit.Controller self, struct PaymentExitDataModel.InFlightExitMap exitMap, uint160 exitId)](#run)
-- [isPiggybacked(struct PaymentExitDataModel.InFlightExit ife)](#ispiggybacked)
-
-### run
-
-Main logic function to delete the non piggybacked in-flight exit
-
-```js
-function run(struct PaymentDeleteInFlightExit.Controller self, struct PaymentExitDataModel.InFlightExitMap exitMap, uint160 exitId) public nonpayable
-```
-
-**Arguments**
-
-| Name        | Type           | Description  |
-| ------------- |------------- | -----|
-| self | struct PaymentDeleteInFlightExit.Controller |  | 
-| exitMap | struct PaymentExitDataModel.InFlightExitMap |  | 
-| exitId | uint160 | The exitId of the standard exit | 
-
-### isPiggybacked
-
-```js
-function isPiggybacked(struct PaymentExitDataModel.InFlightExit ife) private pure
-returns(bool)
-```
-
-**Arguments**
-
-| Name        | Type           | Description  |
-| ------------- |------------- | -----|
-| ife | struct PaymentExitDataModel.InFlightExit |  | 
 
 ## Contracts
 

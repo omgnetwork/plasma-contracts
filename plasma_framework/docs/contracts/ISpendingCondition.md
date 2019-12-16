@@ -2,7 +2,7 @@
 
 View Source: [contracts/src/exits/interfaces/ISpendingCondition.sol](../../contracts/src/exits/interfaces/ISpendingCondition.sol)
 
-**↘ Derived Contracts: [PaymentOutputToPaymentTxCondition](PaymentOutputToPaymentTxCondition.md)**
+**↘ Derived Contracts: [FeeClaimOutputToPaymentTxCondition](FeeClaimOutputToPaymentTxCondition.md), [PaymentOutputToPaymentTxCondition](PaymentOutputToPaymentTxCondition.md)**
 
 **ISpendingCondition**
 
@@ -14,7 +14,7 @@ Interface of the spending condition
 
 ### verify
 
-⤿ Overridden Implementation(s): [PaymentOutputToPaymentTxCondition.verify](PaymentOutputToPaymentTxCondition.md#verify)
+⤿ Overridden Implementation(s): [FeeClaimOutputToPaymentTxCondition.verify](FeeClaimOutputToPaymentTxCondition.md#verify),[PaymentOutputToPaymentTxCondition.verify](PaymentOutputToPaymentTxCondition.md#verify)
 
 Verifies the spending condition
 
@@ -51,6 +51,8 @@ returns(bool)
 * [ExitId](ExitId.md)
 * [ExitPriority](ExitPriority.md)
 * [FailFastReentrancyGuard](FailFastReentrancyGuard.md)
+* [FeeClaimOutputToPaymentTxCondition](FeeClaimOutputToPaymentTxCondition.md)
+* [FeeExitGame](FeeExitGame.md)
 * [FungibleTokenOutputModel](FungibleTokenOutputModel.md)
 * [GenericTransaction](GenericTransaction.md)
 * [IERC20](IERC20.md)
