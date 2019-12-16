@@ -37,6 +37,7 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
     const ETH = constants.ZERO_ADDRESS;
     const INPUT_TX_AMOUNT = 123456;
     const BLOCK_NUMBER = 5000;
+    const OUTPUT_TYPE_INPUT_TX = 3;
 
     before('deploy and link with controller lib', async () => {
         const startInFlightExit = await PaymentStartInFlightExit.new();
@@ -71,7 +72,8 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                     buildUtxoPos(BLOCK_NUMBER - CHILD_BLOCK_INTERVAL, 4, 3),
                     buildUtxoPos(BLOCK_NUMBER - CHILD_BLOCK_INTERVAL, 10, 2),
                 ],
-                OUTPUT_TYPE.PAYMENT,
+                // different output type for an input tx to check if proper spending codition is used
+                OUTPUT_TYPE_INPUT_TX,
                 inputOwner,
                 INPUT_TX_AMOUNT,
             );
@@ -174,7 +176,7 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
             // lets the spending condition pass by default
             await this.spendingCondition.mockResult(true);
             await this.spendingConditionRegistry.registerSpendingCondition(
-                OUTPUT_TYPE.PAYMENT, TX_TYPE.PAYMENT, this.spendingCondition.address,
+                OUTPUT_TYPE_INPUT_TX, TX_TYPE.PAYMENT, this.spendingCondition.address,
             );
 
             const exitGameArgs = [
