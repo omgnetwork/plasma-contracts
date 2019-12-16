@@ -1,9 +1,10 @@
 const PosLib = artifacts.require('PosLibWrapper');
 
-const { BN } = require('openzeppelin-test-helpers');
+const { BN, expectRevert } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
 contract('PosLib', () => {
+    const BLOCK_OFFSET = 1000000000;
     const TX_OFFSET = 10000;
 
     before('setup contract and utxo pos values', async () => {
@@ -19,7 +20,6 @@ contract('PosLib', () => {
             outputIndex: this.outputIndex,
         };
 
-        const BLOCK_OFFSET = 1000000000;
         this.utxoPos = this.blockNumber * BLOCK_OFFSET + this.txIndex * TX_OFFSET + this.outputIndex;
         this.txPos = this.utxoPos - this.outputIndex;
     });
@@ -45,6 +45,43 @@ contract('PosLib', () => {
         it('should correctly encode a position', async () => {
             const result = await this.contract.encode(this.position);
             expect(result).to.be.bignumber.equal(new BN(this.utxoPos));
+        });
+
+        it('should fail when output index is too big', async () => {
+            const position = {
+                blockNum: this.blockNumber,
+                txIndex: this.txIndex,
+                outputIndex: 1000000,
+            };
+            await expectRevert(
+                this.contract.encode(position),
+                'Invalid output index',
+            );
+        });
+
+        it('should fail when transaction index is too big', async () => {
+            const position = {
+                blockNum: this.blockNumber,
+                txIndex: BLOCK_OFFSET,
+                outputIndex: this.outputIndex,
+            };
+            await expectRevert(
+                this.contract.encode(position),
+                'Invalid transaction index',
+            );
+        });
+
+        it('should fail when block number is too big', async () => {
+            const invalidBlockNum = '0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
+            const position = {
+                blockNum: invalidBlockNum,
+                txIndex: this.txIndex,
+                outputIndex: this.outputIndex,
+            };
+            await expectRevert(
+                this.contract.encode(position),
+                'SafeMath: ',
+            );
         });
     });
 

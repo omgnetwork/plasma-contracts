@@ -17,6 +17,7 @@ library PosLib {
 
     uint256 constant internal BLOCK_OFFSET = 1000000000;
     uint256 constant internal TX_OFFSET = 10000;
+    uint256 constant internal MAX_TX_INDEX = BLOCK_OFFSET / TX_OFFSET;
 
     /**
      * @notice Returns transaction position which is an utxo position of zero index output
@@ -50,6 +51,10 @@ library PosLib {
      * @return Position encoded as an integer
      */
     function encode(Position memory pos) internal pure returns (uint256) {
+        require(pos.outputIndex < TX_OFFSET, "Invalid output index");
+        require(pos.txIndex < MAX_TX_INDEX, "Invalid transaction index");
+
+        // SafeMath multiplication mitigates the issue of a proper block number value
         return pos.blockNum.mul(BLOCK_OFFSET).add(pos.txIndex.mul(TX_OFFSET)).add(pos.outputIndex);
     }
 
