@@ -9,14 +9,14 @@ import "../../registries/SpendingConditionRegistry.sol";
 import "../../utils/ExitId.sol";
 import "../../utils/OutputId.sol";
 import "../../utils/MoreVpFinalization.sol";
-import "../../../utils/UtxoPosLib.sol";
+import "../../../utils/PosLib.sol";
 import "../../../utils/Merkle.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
 import "../../../transactions/GenericTransaction.sol";
 
 library PaymentChallengeIFENotCanonical {
-    using UtxoPosLib for UtxoPosLib.UtxoPos;
+    using PosLib for PosLib.Position;
     using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
 
     /**
@@ -86,21 +86,20 @@ library PaymentChallengeIFENotCanonical {
             "The competitor transaction is the same as transaction in-flight"
         );
 
-
-        UtxoPosLib.UtxoPos memory inputUtxoPos = UtxoPosLib.UtxoPos(args.inputUtxoPos);
+        PosLib.Position memory inputUtxoPos = PosLib.decode(args.inputUtxoPos);
 
         bytes32 outputId;
-        if (self.framework.isDeposit(inputUtxoPos.blockNum())) {
-            outputId = OutputId.computeDepositOutputId(args.inputTx, inputUtxoPos.outputIndex(), inputUtxoPos.value);
+        if (self.framework.isDeposit(inputUtxoPos.blockNum)) {
+            outputId = OutputId.computeDepositOutputId(args.inputTx, inputUtxoPos.outputIndex, args.inputUtxoPos);
         } else {
-            outputId = OutputId.computeNormalOutputId(args.inputTx, inputUtxoPos.outputIndex());
+            outputId = OutputId.computeNormalOutputId(args.inputTx, inputUtxoPos.outputIndex);
         }
         require(outputId == ife.inputs[args.inFlightTxInputIndex].outputId,
                 "Provided inputs data does not point to the same outputId from the in-flight exit");
 
         GenericTransaction.Output memory output = GenericTransaction.getOutput(
             GenericTransaction.decode(args.inputTx),
-            inputUtxoPos.outputIndex()
+            inputUtxoPos.outputIndex
         );
 
         ISpendingCondition condition = self.spendingConditionRegistry.spendingConditions(
@@ -110,8 +109,7 @@ library PaymentChallengeIFENotCanonical {
 
         bool isSpentByCompetingTx = condition.verify(
             args.inputTx,
-            inputUtxoPos.outputIndex(),
-            inputUtxoPos.txPos().value,
+            inputUtxoPos.encode(),
             args.competingTx,
             args.competingTxInputIndex,
             args.competingTxWitness
@@ -161,8 +159,8 @@ library PaymentChallengeIFENotCanonical {
             ife.oldestCompetitorPosition > inFlightTxPos,
             "In-flight transaction must be older than competitors to respond to non-canonical challenge");
 
-        UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(inFlightTxPos);
-        (bytes32 root, ) = self.framework.blocks(utxoPos.blockNum());
+        PosLib.Position memory utxoPos = PosLib.decode(inFlightTxPos);
+        (bytes32 root, ) = self.framework.blocks(utxoPos.blockNum);
         require(root != bytes32(""), "Failed to get the block root hash of the UTXO position");
 
         ife.oldestCompetitorPosition = verifyAndDeterminePositionOfTransactionIncludedInBlock(
@@ -177,20 +175,20 @@ library PaymentChallengeIFENotCanonical {
 
     function verifyAndDeterminePositionOfTransactionIncludedInBlock(
         bytes memory txbytes,
-        UtxoPosLib.UtxoPos memory utxoPos,
+        PosLib.Position memory utxoPos,
         bytes32 root,
         bytes memory inclusionProof
     )
         private
         pure
-        returns(uint256)
+        returns (uint256)
     {
         require(
-            Merkle.checkMembership(txbytes, utxoPos.txIndex(), root, inclusionProof),
+            Merkle.checkMembership(txbytes, utxoPos.txIndex, root, inclusionProof),
             "Transaction is not included in block of Plasma chain"
         );
 
-        return utxoPos.value;
+        return utxoPos.encode();
     }
 
     function verifyCompetingTxFinalized(
@@ -213,15 +211,15 @@ library PaymentChallengeIFENotCanonical {
             // Should fail already in early stages (eg. decode)
             assert(isProtocolFinalized);
         } else {
-            UtxoPosLib.UtxoPos memory competingTxUtxoPos = UtxoPosLib.UtxoPos(args.competingTxPos);
+            PosLib.Position memory competingTxUtxoPos = PosLib.decode(args.competingTxPos);
             bool isStandardFinalized = MoreVpFinalization.isStandardFinalized(
                 self.framework,
                 args.competingTx,
-                competingTxUtxoPos.txPos(),
+                competingTxUtxoPos.toStrictTxPos(),
                 args.competingTxInclusionProof
             );
             require(isStandardFinalized, "Competing tx is not standard finalized with the given tx position");
-            competitorPosition = competingTxUtxoPos.value;
+            competitorPosition = competingTxUtxoPos.encode();
         }
         return competitorPosition;
     }

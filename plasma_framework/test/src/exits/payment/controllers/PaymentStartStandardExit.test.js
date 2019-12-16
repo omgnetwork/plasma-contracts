@@ -19,7 +19,7 @@ const {
     OUTPUT_TYPE, PROTOCOL, TX_TYPE, VAULT_ID, DUMMY_INPUT_1, SAFE_GAS_STIPEND,
 } = require('../../../../helpers/constants.js');
 const { MerkleTree } = require('../../../../helpers/merkle.js');
-const { buildUtxoPos, utxoPosToTxPos } = require('../../../../helpers/positions.js');
+const { buildUtxoPos, txPostionForExitPriority } = require('../../../../helpers/positions.js');
 const {
     computeDepositOutputId,
     computeNormalOutputId, spentOnGas,
@@ -310,7 +310,7 @@ contract('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
                 {
                     token: ETH,
                     exitableAt,
-                    txPos: new BN(utxoPosToTxPos(args.utxoPos)),
+                    txPos: new BN(txPostionForExitPriority(args.utxoPos)),
                     exitProcessor: this.exitGame.address,
                     exitId,
                 },

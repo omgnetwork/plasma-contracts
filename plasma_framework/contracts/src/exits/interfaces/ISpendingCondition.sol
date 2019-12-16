@@ -10,16 +10,14 @@ interface ISpendingCondition {
     /**
      * @notice Verifies the spending condition
      * @param inputTx Encoded input transaction, in bytes
-     * @param outputIndex The output index of the input transaction
-     * @param inputTxPos The tx position of the input tx (0 if in-flight)
+     * @param utxoPos Position of the utxo
      * @param spendingTx Spending transaction, in bytes
      * @param inputIndex The input index of the spending tx that points to the output
      * @param witness The witness data of the spending condition
      */
     function verify(
         bytes calldata inputTx,
-        uint16 outputIndex,
-        uint256 inputTxPos,
+        uint256 utxoPos,
         bytes calldata spendingTx,
         uint16 inputIndex,
         bytes calldata witness

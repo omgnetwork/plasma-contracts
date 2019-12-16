@@ -3,7 +3,7 @@ const PaymentTransactionStateTransitionVerifier = artifacts.require('PaymentTran
 const { BN, constants, expectRevert } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
-const { buildUtxoPos, UtxoPos } = require('../../../helpers/positions.js');
+const { buildUtxoPos, Position } = require('../../../helpers/positions.js');
 const { computeNormalOutputId } = require('../../../helpers/utils.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
 const { OUTPUT_TYPE } = require('../../../helpers/constants.js');
@@ -46,7 +46,7 @@ contract('PaymentTransactionStateTransitionVerifier', ([alice, bob]) => {
             const inputTxs = [inputTx1, inputTx2];
 
             const inputUtxosPos = [buildUtxoPos(BLOCK_NUM, 0, 0), buildUtxoPos(BLOCK_NUM, 1, 0)];
-            const outputIndexOfInputTxs = inputUtxosPos.map(utxo => new UtxoPos(utxo).outputIndex);
+            const outputIndexOfInputTxs = inputUtxosPos.map(utxo => new Position(utxo).outputIndex);
 
             const inFlightTx = createInFlightTx(inputTxs, inputUtxosPos, bob, AMOUNT);
             const args = buildArgs(inputTxs, outputIndexOfInputTxs, inFlightTx);
@@ -65,7 +65,7 @@ contract('PaymentTransactionStateTransitionVerifier', ([alice, bob]) => {
             const output2 = new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, invalidAmount, bob, ETH);
 
             const inFlightTx = new PaymentTransaction(IFE_TX_TYPE, inputs, [output1, output2]);
-            const outputIndexOfInputTxs = inputUtxosPos.map(utxo => new UtxoPos(utxo).outputIndex);
+            const outputIndexOfInputTxs = inputUtxosPos.map(utxo => new Position(utxo).outputIndex);
             const args = buildArgs([inputTx1, inputTx2], outputIndexOfInputTxs, inFlightTx);
 
             return args;
@@ -112,7 +112,7 @@ contract('PaymentTransactionStateTransitionVerifier', ([alice, bob]) => {
         function createInputsForInFlightTx(inputTxs, inputUtxosPos) {
             const inputs = [];
             for (let i = 0; i < inputTxs.length; i++) {
-                const inputUtxoPos = new UtxoPos(inputUtxosPos[i]);
+                const inputUtxoPos = new Position(inputUtxosPos[i]);
                 const inputTx = web3.utils.bytesToHex(inputTxs[i].rlpEncoded());
                 const outputId = computeNormalOutputId(inputTx, inputUtxoPos.outputIndex);
                 inputs.push(outputId);
@@ -129,7 +129,7 @@ contract('PaymentTransactionStateTransitionVerifier', ([alice, bob]) => {
                 inputUtxosPos.push(buildUtxoPos(BLOCK_NUM, i, 0));
             }
             const outputIds = createInputsForInFlightTx(inputTxs, inputUtxosPos);
-            const outputIndexOfInputTxs = inputUtxosPos.map(utxo => new UtxoPos(utxo).outputIndex);
+            const outputIndexOfInputTxs = inputUtxosPos.map(utxo => new Position(utxo).outputIndex);
 
             const outputs = [];
             for (let i = 0; i < numberOfOutputs; i++) {

@@ -8,13 +8,13 @@ import "../../utils/ExitId.sol";
 import "../../utils/OutputId.sol";
 import "../../utils/MoreVpFinalization.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
-import "../../../utils/UtxoPosLib.sol";
+import "../../../utils/PosLib.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../utils/ExitableTimestamp.sol";
 
 library PaymentStartStandardExit {
     using ExitableTimestamp for ExitableTimestamp.Calculator;
-    using UtxoPosLib for UtxoPosLib.UtxoPos;
+    using PosLib for PosLib.Position;
 
     struct Controller {
         IExitProcessor exitProcessor;
@@ -31,7 +31,7 @@ library PaymentStartStandardExit {
     struct StartStandardExitData {
         Controller controller;
         PaymentStandardExitRouterArgs.StartStandardExitArgs args;
-        UtxoPosLib.UtxoPos utxoPos;
+        PosLib.Position utxoPos;
         PaymentTransactionModel.Transaction outputTx;
         FungibleTokenOutputModel.Output output;
         uint160 exitId;
@@ -100,16 +100,16 @@ library PaymentStartStandardExit {
         view
         returns (StartStandardExitData memory)
     {
-        UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(args.utxoPos);
+        PosLib.Position memory utxoPos = PosLib.decode(args.utxoPos);
         PaymentTransactionModel.Transaction memory outputTx = PaymentTransactionModel.decode(args.rlpOutputTx);
-        FungibleTokenOutputModel.Output memory output = outputTx.outputs[utxoPos.outputIndex()];
-        bool isTxDeposit = controller.framework.isDeposit(utxoPos.blockNum());
+        FungibleTokenOutputModel.Output memory output = outputTx.outputs[utxoPos.outputIndex];
+        bool isTxDeposit = controller.framework.isDeposit(utxoPos.blockNum);
         uint160 exitId = ExitId.getStandardExitId(isTxDeposit, args.rlpOutputTx, utxoPos);
-        (, uint256 blockTimestamp) = controller.framework.blocks(utxoPos.blockNum());
+        (, uint256 blockTimestamp) = controller.framework.blocks(utxoPos.blockNum);
 
         bytes32 outputId = isTxDeposit
-            ? OutputId.computeDepositOutputId(args.rlpOutputTx, utxoPos.outputIndex(), utxoPos.value)
-            : OutputId.computeNormalOutputId(args.rlpOutputTx, utxoPos.outputIndex());
+            ? OutputId.computeDepositOutputId(args.rlpOutputTx, utxoPos.outputIndex, utxoPos.encode())
+            : OutputId.computeNormalOutputId(args.rlpOutputTx, utxoPos.outputIndex);
 
         return StartStandardExitData({
             controller: controller,
@@ -152,7 +152,7 @@ library PaymentStartStandardExit {
         return MoreVpFinalization.isStandardFinalized(
             data.controller.framework,
             data.args.rlpOutputTx,
-            data.utxoPos.txPos(),
+            data.utxoPos.toStrictTxPos(),
             data.args.outputTxInclusionProof
         );
     }
@@ -165,7 +165,7 @@ library PaymentStartStandardExit {
     {
         exitMap.exits[data.exitId] = PaymentExitDataModel.StandardExit({
             exitable: true,
-            utxoPos: data.utxoPos.value,
+            utxoPos: data.utxoPos.encode(),
             outputId: data.outputId,
             exitTarget: msg.sender,
             amount: data.output.amount,
@@ -192,7 +192,7 @@ library PaymentStartStandardExit {
         }
 
         data.controller.framework.enqueue(
-            vaultId, data.output.token, exitableAt, data.utxoPos.txPos(),
+            vaultId, data.output.token, exitableAt, data.utxoPos.toStrictTxPos(),
             data.exitId, data.controller.exitProcessor
         );
     }

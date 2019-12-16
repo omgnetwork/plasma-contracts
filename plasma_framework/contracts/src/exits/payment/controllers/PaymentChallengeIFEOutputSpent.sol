@@ -10,13 +10,13 @@ import "../../utils/ExitId.sol";
 import "../../utils/MoreVpFinalization.sol";
 import "../../../utils/Merkle.sol";
 import "../../../utils/SafeEthTransfer.sol";
-import "../../../utils/UtxoPosLib.sol";
+import "../../../utils/PosLib.sol";
 import "../../../transactions/GenericTransaction.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
 
 library PaymentChallengeIFEOutputSpent {
-    using UtxoPosLib for UtxoPosLib.UtxoPos;
+    using PosLib for PosLib.Position;
     using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
 
     struct Controller {
@@ -49,8 +49,8 @@ library PaymentChallengeIFEOutputSpent {
         PaymentExitDataModel.InFlightExit storage ife = inFlightExitMap.exits[exitId];
         require(ife.exitStartTimestamp != 0, "In-flight exit does not exist");
 
-        UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(args.outputUtxoPos);
-        uint16 outputIndex = UtxoPosLib.outputIndex(utxoPos);
+        PosLib.Position memory utxoPos = PosLib.decode(args.outputUtxoPos);
+        uint16 outputIndex = utxoPos.outputIndex;
         require(
             ife.isOutputPiggybacked(outputIndex),
             "Output is not piggybacked"
@@ -75,11 +75,11 @@ library PaymentChallengeIFEOutputSpent {
         private
         view
     {
-        UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(args.outputUtxoPos);
+        PosLib.Position memory utxoPos = PosLib.decode(args.outputUtxoPos);
         bool isStandardFinalized = MoreVpFinalization.isStandardFinalized(
             controller.framework,
             args.inFlightTx,
-            utxoPos.txPos(),
+            utxoPos.toStrictTxPos(),
             args.inFlightTxInclusionProof
         );
 
@@ -110,9 +110,9 @@ library PaymentChallengeIFEOutputSpent {
         private
         view
     {
-        UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(args.outputUtxoPos);
+        PosLib.Position memory utxoPos = PosLib.decode(args.outputUtxoPos);
         GenericTransaction.Transaction memory challengingTx = GenericTransaction.decode(args.challengingTx);
-        GenericTransaction.Output memory output = GenericTransaction.getOutput(challengingTx, utxoPos.outputIndex());
+        GenericTransaction.Output memory output = GenericTransaction.getOutput(challengingTx, utxoPos.outputIndex);
 
         ISpendingCondition condition = controller.spendingConditionRegistry.spendingConditions(
             output.outputType,
@@ -122,8 +122,7 @@ library PaymentChallengeIFEOutputSpent {
 
         bool isSpentBySpendingTx = condition.verify(
             args.inFlightTx,
-            utxoPos.outputIndex(),
-            utxoPos.txPos().value,
+            utxoPos.encode(),
             args.challengingTx,
             args.challengingTxInputIndex,
             args.challengingTxWitness

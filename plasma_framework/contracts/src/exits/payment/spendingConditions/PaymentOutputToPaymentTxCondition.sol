@@ -3,14 +3,13 @@ pragma solidity 0.5.11;
 import "openzeppelin-solidity/contracts/cryptography/ECDSA.sol";
 
 import "../../interfaces/ISpendingCondition.sol";
-import "../../../utils/UtxoPosLib.sol";
-import "../../../utils/TxPosLib.sol";
+import "../../../utils/PosLib.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
 import "../../../transactions/eip712Libs/PaymentEip712Lib.sol";
 
 contract PaymentOutputToPaymentTxCondition is ISpendingCondition {
     using PaymentEip712Lib for PaymentEip712Lib.Constants;
-    using TxPosLib for TxPosLib.TxPos;
+    using PosLib for PosLib.Position;
 
     uint256 internal supportInputTxType;
     uint256 internal supportSpendingTxType;
@@ -29,16 +28,14 @@ contract PaymentOutputToPaymentTxCondition is ISpendingCondition {
     /**
      * @notice Verifies the spending condition
      * @param inputTxBytes Encoded input transaction, in bytes
-     * @param outputIndex Output index of the input transaction
-     * @param inputTxPos The tx position of the input tx (0 if in-flight)
+     * @param utxoPos Position of the utxo
      * @param spendingTxBytes Spending transaction, in bytes
      * @param inputIndex Input index of the spending tx that points to the output
      * @param signature Signature of the output owner
      */
     function verify(
         bytes calldata inputTxBytes,
-        uint16 outputIndex,
-        uint256 inputTxPos,
+        uint256 utxoPos,
         bytes calldata spendingTxBytes,
         uint16 inputIndex,
         bytes calldata signature
@@ -53,13 +50,13 @@ contract PaymentOutputToPaymentTxCondition is ISpendingCondition {
         PaymentTransactionModel.Transaction memory spendingTx = PaymentTransactionModel.decode(spendingTxBytes);
         require(spendingTx.txType == supportSpendingTxType, "The spending tx is an unsupported payment tx type");
 
-        UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.build(TxPosLib.TxPos(inputTxPos), outputIndex);
         require(
-            spendingTx.inputs[inputIndex] == bytes32(utxoPos.value),
+            spendingTx.inputs[inputIndex] == bytes32(utxoPos),
             "Spending tx points to the incorrect output UTXO position"
         );
 
-        address owner = PaymentTransactionModel.getOutputOwner(inputTx.outputs[outputIndex]);
+        PosLib.Position memory decodedUtxoPos = PosLib.decode(utxoPos);
+        address owner = PaymentTransactionModel.getOutputOwner(inputTx.outputs[decodedUtxoPos.outputIndex]);
         address signer = ECDSA.recover(eip712.hashTx(spendingTx), signature);
         require(signer != address(0), "Failed to recover the signer from the signature");
         require(owner == signer, "Tx is not signed correctly");

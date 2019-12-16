@@ -11,7 +11,7 @@ import "../../utils/ExitableTimestamp.sol";
 import "../../utils/ExitId.sol";
 import "../../utils/OutputId.sol";
 import "../../utils/MoreVpFinalization.sol";
-import "../../../utils/UtxoPosLib.sol";
+import "../../../utils/PosLib.sol";
 import "../../../utils/Merkle.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
@@ -19,7 +19,7 @@ import "../../../transactions/GenericTransaction.sol";
 
 library PaymentStartInFlightExit {
     using ExitableTimestamp for ExitableTimestamp.Calculator;
-    using UtxoPosLib for UtxoPosLib.UtxoPos;
+    using PosLib for PosLib.Position;
     using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
 
     /**
@@ -58,7 +58,7 @@ library PaymentStartInFlightExit {
         PaymentTransactionModel.Transaction inFlightTx;
         bytes32 inFlightTxHash;
         bytes[] inputTxs;
-        UtxoPosLib.UtxoPos[] inputUtxosPos;
+        PosLib.Position[] inputUtxosPos;
         bytes[] inputTxsInclusionProofs;
         bytes[] inFlightTxWitnesses;
         bytes32[] outputIds;
@@ -129,17 +129,17 @@ library PaymentStartInFlightExit {
         return exitData;
     }
 
-    function decodeInputTxsPositions(uint256[] memory inputUtxosPos) private pure returns (UtxoPosLib.UtxoPos[] memory) {
+    function decodeInputTxsPositions(uint256[] memory inputUtxosPos) private pure returns (PosLib.Position[] memory) {
         require(inputUtxosPos.length <= PaymentTransactionModel.MAX_INPUT_NUM(), "Too many transactions provided");
 
-        UtxoPosLib.UtxoPos[] memory utxosPos = new UtxoPosLib.UtxoPos[](inputUtxosPos.length);
+        PosLib.Position[] memory utxosPos = new PosLib.Position[](inputUtxosPos.length);
         for (uint i = 0; i < inputUtxosPos.length; i++) {
-            utxosPos[i] = UtxoPosLib.UtxoPos(inputUtxosPos[i]);
+            utxosPos[i] = PosLib.decode(inputUtxosPos[i]);
         }
         return utxosPos;
     }
 
-    function getOutputIds(Controller memory controller, bytes[] memory inputTxs, UtxoPosLib.UtxoPos[] memory utxoPos)
+    function getOutputIds(Controller memory controller, bytes[] memory inputTxs, PosLib.Position[] memory utxoPos)
         private
         view
         returns (bytes32[] memory)
@@ -147,10 +147,10 @@ library PaymentStartInFlightExit {
         require(inputTxs.length == utxoPos.length, "Number of input transactions does not match number of provided input utxos positions");
         bytes32[] memory outputIds = new bytes32[](inputTxs.length);
         for (uint i = 0; i < inputTxs.length; i++) {
-            bool isDepositTx = controller.framework.isDeposit(utxoPos[i].blockNum());
+            bool isDepositTx = controller.framework.isDeposit(utxoPos[i].blockNum);
             outputIds[i] = isDepositTx
-                ? OutputId.computeDepositOutputId(inputTxs[i], utxoPos[i].outputIndex(), utxoPos[i].value)
-                : OutputId.computeNormalOutputId(inputTxs[i], utxoPos[i].outputIndex());
+                ? OutputId.computeDepositOutputId(inputTxs[i], utxoPos[i].outputIndex, utxoPos[i].encode())
+                : OutputId.computeNormalOutputId(inputTxs[i], utxoPos[i].outputIndex);
         }
         return outputIds;
     }
@@ -216,7 +216,7 @@ library PaymentStartInFlightExit {
             bool isStandardFinalized = MoreVpFinalization.isStandardFinalized(
                 exitData.controller.framework,
                 exitData.inputTxs[i],
-                exitData.inputUtxosPos[i].txPos(),
+                exitData.inputUtxosPos[i].toStrictTxPos(),
                 exitData.inputTxsInclusionProofs[i]
             );
             require(isStandardFinalized, "Input transaction is not standard finalized");
@@ -225,7 +225,7 @@ library PaymentStartInFlightExit {
 
     function verifyInputsSpent(StartExitData memory exitData) private view {
         for (uint16 i = 0; i < exitData.inputTxs.length; i++) {
-            uint16 outputIndex = exitData.inputUtxosPos[i].outputIndex();
+            uint16 outputIndex = exitData.inputUtxosPos[i].outputIndex;
             GenericTransaction.Output memory output = GenericTransaction.getOutput(
                 GenericTransaction.decode(exitData.inputTxs[i]),
                 outputIndex
@@ -239,8 +239,7 @@ library PaymentStartInFlightExit {
 
             bool isSpentByInFlightTx = condition.verify(
                 exitData.inputTxs[i],
-                exitData.inputUtxosPos[i].outputIndex(),
-                exitData.inputUtxosPos[i].txPos().value,
+                exitData.inputUtxosPos[i].encode(),
                 exitData.inFlightTxRaw,
                 i,
                 exitData.inFlightTxWitnesses[i]
@@ -252,7 +251,7 @@ library PaymentStartInFlightExit {
     function verifyStateTransition(StartExitData memory exitData) private view {
         uint16[] memory outputIndexForInputTxs = new uint16[](exitData.inputTxs.length);
         for (uint i = 0; i < exitData.inFlightTx.inputs.length; i++) {
-            outputIndexForInputTxs[i] = exitData.inputUtxosPos[i].outputIndex();
+            outputIndexForInputTxs[i] = exitData.inputUtxosPos[i].outputIndex;
         }
 
         require(
@@ -277,11 +276,12 @@ library PaymentStartInFlightExit {
         setInFlightExitOutputs(ife, startExitData);
     }
 
-    function getYoungestInputUtxoPosition(UtxoPosLib.UtxoPos[] memory inputUtxosPos) private pure returns (uint256) {
-        uint256 youngest = inputUtxosPos[0].value;
+    function getYoungestInputUtxoPosition(PosLib.Position[] memory inputUtxosPos) private pure returns (uint256) {
+        uint256 youngest = inputUtxosPos[0].encode();
         for (uint i = 1; i < inputUtxosPos.length; i++) {
-            if (inputUtxosPos[i].value > youngest) {
-                youngest = inputUtxosPos[i].value;
+            uint256 encodedUtxoPos = inputUtxosPos[i].encode();
+            if (encodedUtxoPos > youngest) {
+                youngest = encodedUtxoPos;
             }
         }
         return youngest;
@@ -294,7 +294,7 @@ library PaymentStartInFlightExit {
         private
     {
         for (uint i = 0; i < exitData.inputTxs.length; i++) {
-            uint16 outputIndex = exitData.inputUtxosPos[i].outputIndex();
+            uint16 outputIndex = exitData.inputUtxosPos[i].outputIndex;
             FungibleTokenOutputModel.Output memory output = FungibleTokenOutputModel.getOutput(
                 GenericTransaction.decode(exitData.inputTxs[i]),
                 outputIndex

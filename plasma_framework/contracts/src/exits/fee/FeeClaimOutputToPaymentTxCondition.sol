@@ -9,11 +9,11 @@ import "../../transactions/FungibleTokenOutputModel.sol";
 import "../../transactions/GenericTransaction.sol";
 import "../../transactions/PaymentTransactionModel.sol";
 import "../../transactions/eip712Libs/PaymentEip712Lib.sol";
-import "../../utils/UtxoPosLib.sol";
+import "../../utils/PosLib.sol";
 
 contract FeeClaimOutputToPaymentTxCondition is ISpendingCondition {
     using PaymentEip712Lib for PaymentEip712Lib.Constants;
-    using UtxoPosLib for UtxoPosLib.UtxoPos;
+    using PosLib for PosLib.Position;
 
     uint256 public feeTxType;
     uint256 public feeClaimOutputType;
@@ -38,16 +38,14 @@ contract FeeClaimOutputToPaymentTxCondition is ISpendingCondition {
      * @dev This implementation checks signature for spending fee claim output. It should be signed with the owner signature.
      *      The fee claim output that is spendable follows Fungible Token Output format.
      * @param feeTxBytes Encoded fee transaction
-     * @param feeClaimOutputIndex Output index of the fee claim output
-     * @param feeTxPos The tx position of the fee tx
+     * @param utxoPos Position of the fee utxo
      * @param paymentTxBytes Payment transaction (in bytes) that spends the fee claim output
      * @param inputIndex Input index of the payment tx that points to the fee claim output
      * @param signature Signature of the owner of fee claiming output
      */
     function verify(
         bytes calldata feeTxBytes,
-        uint16 feeClaimOutputIndex,
-        uint256 feeTxPos,
+        uint256 utxoPos,
         bytes calldata paymentTxBytes,
         uint16 inputIndex,
         bytes calldata signature
@@ -56,10 +54,11 @@ contract FeeClaimOutputToPaymentTxCondition is ISpendingCondition {
         view
         returns (bool)
     {
-        require(feeClaimOutputIndex == 0, "Fee claim output must be the first output of fee tx");
+        PosLib.Position memory decodedUtxoPos = PosLib.decode(utxoPos);
+        require(decodedUtxoPos.outputIndex == 0, "Fee claim output must be the first output of fee tx");
 
         GenericTransaction.Transaction memory feeTx = GenericTransaction.decode(feeTxBytes);
-        FungibleTokenOutputModel.Output memory feeClaimOutput = FungibleTokenOutputModel.getOutput(feeTx, feeClaimOutputIndex);
+        FungibleTokenOutputModel.Output memory feeClaimOutput = FungibleTokenOutputModel.getOutput(feeTx, decodedUtxoPos.outputIndex);
 
         require(feeTx.txType == feeTxType, "Unexpected tx type for fee transaction");
         require(feeClaimOutput.outputType == feeClaimOutputType, "Unexpected output type for fee claim output");
@@ -67,9 +66,8 @@ contract FeeClaimOutputToPaymentTxCondition is ISpendingCondition {
         PaymentTransactionModel.Transaction memory paymentTx = PaymentTransactionModel.decode(paymentTxBytes);
         require(paymentTx.txType == paymentTxType, "Unexpected tx type for payment transaction");
 
-        UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.build(TxPosLib.TxPos(feeTxPos), feeClaimOutputIndex);
         require(
-            paymentTx.inputs[inputIndex] == bytes32(utxoPos.value),
+            paymentTx.inputs[inputIndex] == bytes32(decodedUtxoPos.encode()),
             "Payment tx points to the incorrect output UTXO position of the fee claim output"
         );
 

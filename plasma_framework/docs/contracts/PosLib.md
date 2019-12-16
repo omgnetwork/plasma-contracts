@@ -1,37 +1,115 @@
-# IsDeposit.sol
+# PosLib.sol
 
-View Source: [contracts/src/utils/IsDeposit.sol](../../contracts/src/utils/IsDeposit.sol)
+View Source: [contracts/src/utils/PosLib.sol](../../contracts/src/utils/PosLib.sol)
 
-**IsDeposit**
+**PosLib**
+
+UTXO position = (blockNumber * BLOCK_OFFSET + txIndex * TX_OFFSET + outputIndex).
+TX position = (blockNumber * BLOCK_OFFSET + txIndex * TX_OFFSET)
 
 ## Structs
-### Predicate
+### Position
 
 ```js
-struct Predicate {
- uint256 childBlockInterval
+struct Position {
+ uint256 blockNum,
+ uint256 txIndex,
+ uint16 outputIndex
 }
+```
+
+## Contract Members
+**Constants & Variables**
+
+```js
+uint256 internal constant BLOCK_OFFSET;
+uint256 internal constant TX_OFFSET;
+uint256 internal constant MAX_TX_INDEX;
+
 ```
 
 ## Functions
 
-- [test(struct IsDeposit.Predicate _predicate, uint256 _blockNum)](#test)
+- [toStrictTxPos(struct PosLib.Position pos)](#tostricttxpos)
+- [getTxPostionForExitPriority(struct PosLib.Position pos)](#gettxpostionforexitpriority)
+- [encode(struct PosLib.Position pos)](#encode)
+- [decode(uint256 pos)](#decode)
 
-### test
+### toStrictTxPos
 
-Tests whether the given block number belongs to a deposit block
+Returns transaction position which is an utxo position of zero index output
 
 ```js
-function test(struct IsDeposit.Predicate _predicate, uint256 _blockNum) internal pure
-returns(bool)
+function toStrictTxPos(struct PosLib.Position pos) internal pure
+returns(struct PosLib.Position)
 ```
+
+**Returns**
+
+Position of a transaction
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| _predicate | struct IsDeposit.Predicate |  | 
-| _blockNum | uint256 |  | 
+| pos | struct PosLib.Position | UTXO position of the output | 
+
+### getTxPostionForExitPriority
+
+Used for calculating exit priority
+
+```js
+function getTxPostionForExitPriority(struct PosLib.Position pos) internal pure
+returns(uint256)
+```
+
+**Returns**
+
+Identifier of the transaction
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| pos | struct PosLib.Position | UTXO position for the output | 
+
+### encode
+
+Encodes a position
+
+```js
+function encode(struct PosLib.Position pos) internal pure
+returns(uint256)
+```
+
+**Returns**
+
+Position encoded as an integer
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| pos | struct PosLib.Position | Position | 
+
+### decode
+
+Decodes a position from an integer value
+
+```js
+function decode(uint256 pos) internal pure
+returns(struct PosLib.Position)
+```
+
+**Returns**
+
+Position
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| pos | uint256 | Encoded position | 
 
 ## Contracts
 
@@ -51,12 +129,14 @@ returns(bool)
 * [ExitId](ExitId.md)
 * [ExitPriority](ExitPriority.md)
 * [FailFastReentrancyGuard](FailFastReentrancyGuard.md)
+* [FeeClaimOutputToPaymentTxCondition](FeeClaimOutputToPaymentTxCondition.md)
+* [FeeExitGame](FeeExitGame.md)
+* [FungibleTokenOutputModel](FungibleTokenOutputModel.md)
 * [GenericTransaction](GenericTransaction.md)
 * [IERC20](IERC20.md)
 * [IErc20DepositVerifier](IErc20DepositVerifier.md)
 * [IEthDepositVerifier](IEthDepositVerifier.md)
 * [IExitProcessor](IExitProcessor.md)
-* [IsDeposit](IsDeposit.md)
 * [ISpendingCondition](ISpendingCondition.md)
 * [IStateTransitionVerifier](IStateTransitionVerifier.md)
 * [Math](Math.md)
@@ -90,6 +170,7 @@ returns(bool)
 * [PaymentTransactionModel](PaymentTransactionModel.md)
 * [PaymentTransactionStateTransitionVerifier](PaymentTransactionStateTransitionVerifier.md)
 * [PlasmaFramework](PlasmaFramework.md)
+* [PosLib](PosLib.md)
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
@@ -98,7 +179,5 @@ returns(bool)
 * [SafeEthTransfer](SafeEthTransfer.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)
-* [TxPosLib](TxPosLib.md)
-* [UtxoPosLib](UtxoPosLib.md)
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)

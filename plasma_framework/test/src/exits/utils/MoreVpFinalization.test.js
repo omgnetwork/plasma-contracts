@@ -30,6 +30,23 @@ contract('MoreVpFinalization', () => {
     });
 
     describe('isStandardFinalized', () => {
+        it('should revert for invalid transaction position', async () => {
+            const newTxType = 9878;
+
+            const tx = new GenericTransaction(newTxType, [], []);
+            const txBytes = web3.utils.bytesToHex(tx.rlpEncoded());
+
+            await expectRevert(
+                this.test.isStandardFinalized(
+                    this.framework.address,
+                    txBytes,
+                    1,
+                    EMPTY_BYTES,
+                ),
+                'Invalid transaction position',
+            );
+        });
+
         it('should revert when the tx type is not registered to the framework yet', async () => {
             const newTxType = 9878;
 

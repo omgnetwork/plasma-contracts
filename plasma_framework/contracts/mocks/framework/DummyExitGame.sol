@@ -6,7 +6,7 @@ import "../../src/framework/ExitGameController.sol";
 import "../../src/framework/interfaces/IExitProcessor.sol";
 import "../../src/vaults/Erc20Vault.sol";
 import "../../src/vaults/EthVault.sol";
-import "../../src/utils/TxPosLib.sol";
+import "../../src/utils/PosLib.sol";
 
 contract DummyExitGame is IExitProcessor {
     uint256 public priorityFromEnqueue;
@@ -44,7 +44,7 @@ contract DummyExitGame is IExitProcessor {
     function enqueue(uint256 _vaultId, address _token, uint64 _exitableAt, uint256 _txPos, uint160 _exitId, IExitProcessor _exitProcessor)
         public
     {
-        priorityFromEnqueue = exitGameController.enqueue(_vaultId, _token, _exitableAt, TxPosLib.TxPos(_txPos), _exitId, _exitProcessor);
+        priorityFromEnqueue = exitGameController.enqueue(_vaultId, _token, _exitableAt, PosLib.decode(_txPos), _exitId, _exitProcessor);
     }
 
     function proxyBatchFlagOutputsSpent(bytes32[] memory _outputIds) public {

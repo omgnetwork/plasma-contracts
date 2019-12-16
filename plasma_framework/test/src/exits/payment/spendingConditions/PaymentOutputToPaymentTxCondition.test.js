@@ -3,10 +3,10 @@ const PaymentOutputToPaymentTxCondition = artifacts.require('PaymentOutputToPaym
 const { constants, expectRevert } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
-const { EMPTY_BYTES, OUTPUT_TYPE } = require('../../../../helpers/constants.js');
+const { OUTPUT_TYPE } = require('../../../../helpers/constants.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../../helpers/transaction.js');
 const { hashTx } = require('../../../../helpers/paymentEip712.js');
-const { buildUtxoPos, utxoPosToTxPos } = require('../../../../helpers/positions.js');
+const { buildUtxoPos } = require('../../../../helpers/positions.js');
 const { sign } = require('../../../../helpers/sign.js');
 
 contract('PaymentOutputToPaymentTxCondition', ([richFather, bob]) => {
@@ -46,7 +46,6 @@ contract('PaymentOutputToPaymentTxCondition', ([richFather, bob]) => {
             const outputIndex = 0;
 
             const utxoPos = buildUtxoPos(2000, 0, outputIndex);
-            const inputTxPos = utxoPosToTxPos(utxoPos);
 
             const bobOutputGuard = bob;
             const outputInSpendingTx = new PaymentTransactionOutput(
@@ -61,8 +60,7 @@ contract('PaymentOutputToPaymentTxCondition', ([richFather, bob]) => {
 
             const args = {
                 inputTxBytes,
-                outputIndex,
-                inputTxPos,
+                utxoPos,
                 spendingTxBytes,
                 inputIndex,
                 signature,
@@ -84,8 +82,7 @@ contract('PaymentOutputToPaymentTxCondition', ([richFather, bob]) => {
             await expectRevert(
                 conditionWithDifferentTxType.verify(
                     args.inputTxBytes,
-                    args.outputIndex,
-                    args.inputTxPos,
+                    args.utxoPos,
                     args.spendingTxBytes,
                     args.inputIndex,
                     args.signature,
@@ -104,8 +101,7 @@ contract('PaymentOutputToPaymentTxCondition', ([richFather, bob]) => {
             await expectRevert(
                 conditionWithDifferentTxType.verify(
                     args.inputTxBytes,
-                    args.outputIndex,
-                    args.inputTxPos,
+                    args.utxoPos,
                     args.spendingTxBytes,
                     args.inputIndex,
                     args.signature,
@@ -117,13 +113,11 @@ contract('PaymentOutputToPaymentTxCondition', ([richFather, bob]) => {
         it('should fail when spending tx does not point to the utxo pos in input', async () => {
             const { args } = getTestData();
             const wrongUtxoPos = buildUtxoPos(9999, 999, 999);
-            const wrongTxPos = utxoPosToTxPos(wrongUtxoPos);
 
             await expectRevert(
                 this.condition.verify(
                     args.inputTxBytes,
-                    args.outputIndex,
-                    wrongTxPos,
+                    wrongUtxoPos,
                     args.spendingTxBytes,
                     args.inputIndex,
                     args.signature,
@@ -140,8 +134,7 @@ contract('PaymentOutputToPaymentTxCondition', ([richFather, bob]) => {
             await expectRevert(
                 this.condition.verify(
                     args.inputTxBytes,
-                    args.outputIndex,
-                    args.inputTxPos,
+                    args.utxoPos,
                     args.spendingTxBytes,
                     args.inputIndex,
                     wrongSignature,
@@ -160,8 +153,7 @@ contract('PaymentOutputToPaymentTxCondition', ([richFather, bob]) => {
             await expectRevert(
                 this.condition.verify(
                     args.inputTxBytes,
-                    args.outputIndex,
-                    args.inputTxPos,
+                    args.utxoPos,
                     args.spendingTxBytes,
                     args.inputIndex,
                     wrongSignature,
@@ -175,8 +167,7 @@ contract('PaymentOutputToPaymentTxCondition', ([richFather, bob]) => {
 
             const result = await this.condition.verify(
                 args.inputTxBytes,
-                args.outputIndex,
-                args.inputTxPos,
+                args.utxoPos,
                 args.spendingTxBytes,
                 args.inputIndex,
                 args.signature,

@@ -9,10 +9,10 @@ import "../../utils/ExitId.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../framework/interfaces/IExitProcessor.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
-import "../../../utils/UtxoPosLib.sol";
+import "../../../utils/PosLib.sol";
 
 library PaymentPiggybackInFlightExit {
-    using UtxoPosLib for UtxoPosLib.UtxoPos;
+    using PosLib for PosLib.Position;
     using ExitableTimestamp for ExitableTimestamp.Calculator;
     using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
 
@@ -90,7 +90,7 @@ library PaymentPiggybackInFlightExit {
         withdrawData.piggybackBondSize = msg.value;
 
         if (isFirstPiggybackOfTheToken(exit, withdrawData.token)) {
-            enqueue(self, withdrawData.token, UtxoPosLib.UtxoPos(exit.position), exitId);
+            enqueue(self, withdrawData.token, PosLib.decode(exit.position), exitId);
         }
 
         exit.setInputPiggybacked(args.inputIndex);
@@ -127,7 +127,7 @@ library PaymentPiggybackInFlightExit {
         withdrawData.piggybackBondSize = msg.value;
 
         if (isFirstPiggybackOfTheToken(exit, withdrawData.token)) {
-            enqueue(self, withdrawData.token, UtxoPosLib.UtxoPos(exit.position), exitId);
+            enqueue(self, withdrawData.token, PosLib.decode(exit.position), exitId);
         }
 
         exit.setOutputPiggybacked(args.outputIndex);
@@ -138,12 +138,12 @@ library PaymentPiggybackInFlightExit {
     function enqueue(
         Controller memory controller,
         address token,
-        UtxoPosLib.UtxoPos memory utxoPos,
+        PosLib.Position memory utxoPos,
         uint160 exitId
     )
         private
     {
-        (, uint256 blockTimestamp) = controller.framework.blocks(utxoPos.blockNum());
+        (, uint256 blockTimestamp) = controller.framework.blocks(utxoPos.blockNum);
         require(blockTimestamp != 0, "There is no block for the exit position to enqueue");
 
         uint64 exitableAt = controller.exitableTimestampCalculator.calculateTxExitableTimestamp(now, blockTimestamp);
@@ -155,7 +155,7 @@ library PaymentPiggybackInFlightExit {
             vaultId = controller.erc20VaultId;
         }
 
-        controller.framework.enqueue(vaultId, token, exitableAt, utxoPos.txPos(), exitId, controller.exitProcessor);
+        controller.framework.enqueue(vaultId, token, exitableAt, utxoPos.toStrictTxPos(), exitId, controller.exitProcessor);
     }
 
     function isFirstPiggybackOfTheToken(ExitModel.InFlightExit memory ife, address token)

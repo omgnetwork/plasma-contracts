@@ -8,7 +8,7 @@ Library to check finalization for MoreVP protocol
 
 ## Functions
 
-- [isStandardFinalized(PlasmaFramework framework, bytes txBytes, struct TxPosLib.TxPos txPos, bytes inclusionProof)](#isstandardfinalized)
+- [isStandardFinalized(PlasmaFramework framework, bytes txBytes, struct PosLib.Position txPos, bytes inclusionProof)](#isstandardfinalized)
 - [isProtocolFinalized(PlasmaFramework framework, bytes txBytes)](#isprotocolfinalized)
 
 ### isStandardFinalized
@@ -17,7 +17,7 @@ Checks whether a transaction is "standard finalized".
         For MoreVP, it means the transaction should be included in a plasma block.
 
 ```js
-function isStandardFinalized(PlasmaFramework framework, bytes txBytes, struct TxPosLib.TxPos txPos, bytes inclusionProof) internal view
+function isStandardFinalized(PlasmaFramework framework, bytes txBytes, struct PosLib.Position txPos, bytes inclusionProof) internal view
 returns(bool)
 ```
 
@@ -27,7 +27,7 @@ returns(bool)
 | ------------- |------------- | -----|
 | framework | PlasmaFramework |  | 
 | txBytes | bytes |  | 
-| txPos | struct TxPosLib.TxPos |  | 
+| txPos | struct PosLib.Position |  | 
 | inclusionProof | bytes |  | 
 
 ### isProtocolFinalized
@@ -65,6 +65,8 @@ returns(bool)
 * [ExitId](ExitId.md)
 * [ExitPriority](ExitPriority.md)
 * [FailFastReentrancyGuard](FailFastReentrancyGuard.md)
+* [FeeClaimOutputToPaymentTxCondition](FeeClaimOutputToPaymentTxCondition.md)
+* [FeeExitGame](FeeExitGame.md)
 * [FungibleTokenOutputModel](FungibleTokenOutputModel.md)
 * [GenericTransaction](GenericTransaction.md)
 * [IERC20](IERC20.md)
@@ -104,6 +106,7 @@ returns(bool)
 * [PaymentTransactionModel](PaymentTransactionModel.md)
 * [PaymentTransactionStateTransitionVerifier](PaymentTransactionStateTransitionVerifier.md)
 * [PlasmaFramework](PlasmaFramework.md)
+* [PosLib](PosLib.md)
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
@@ -112,7 +115,5 @@ returns(bool)
 * [SafeEthTransfer](SafeEthTransfer.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)
-* [TxPosLib](TxPosLib.md)
-* [UtxoPosLib](UtxoPosLib.md)
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)

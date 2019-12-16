@@ -1,4 +1,4 @@
-const { UtxoPos } = require('./positions.js');
+const { Position } = require('./positions.js');
 const { CHILD_BLOCK_INTERVAL } = require('./constants.js');
 
 async function spentOnGas(receipt) {
@@ -30,7 +30,7 @@ function computeNormalOutputId(txBytes, outputIndex) {
 }
 
 function getOutputId(txBytes, utxoPos) {
-    const inputUtxoPos = new UtxoPos(utxoPos);
+    const inputUtxoPos = new Position(utxoPos);
     const outputId = isDeposit(inputUtxoPos.blockNum)
         ? computeDepositOutputId(txBytes, inputUtxoPos.outputIndex, inputUtxoPos.utxoPos)
         : computeNormalOutputId(txBytes, inputUtxoPos.outputIndex);

@@ -2,7 +2,7 @@ pragma solidity 0.5.11;
 pragma experimental ABIEncoderV2;
 
 import "../PaymentTransactionModel.sol";
-import "../../utils/UtxoPosLib.sol";
+import "../../utils/PosLib.sol";
 
 /**
  * @title PaymentEip712Lib
@@ -13,7 +13,7 @@ import "../../utils/UtxoPosLib.sol";
  *      For more information, see https://github.com/omisego/plasma-contracts/issues/98#issuecomment-490792098
  */
 library PaymentEip712Lib {
-    using UtxoPosLib for UtxoPosLib.UtxoPos;
+    using PosLib for PosLib.Position;
 
     bytes2 constant internal EIP191_PREFIX = "\x19\x01";
 
@@ -107,12 +107,12 @@ library PaymentEip712Lib {
             return EMPTY_INPUT_HASH;
         }
 
-        UtxoPosLib.UtxoPos memory utxo = UtxoPosLib.UtxoPos(inputUtxoValue);
+        PosLib.Position memory utxo = PosLib.decode(inputUtxoValue);
         return keccak256(abi.encode(
             INPUT_TYPE_HASH,
-            utxo.blockNum(),
-            utxo.txIndex(),
-            uint256(utxo.outputIndex())
+            utxo.blockNum,
+            utxo.txIndex,
+            uint256(utxo.outputIndex)
         ));
     }
 

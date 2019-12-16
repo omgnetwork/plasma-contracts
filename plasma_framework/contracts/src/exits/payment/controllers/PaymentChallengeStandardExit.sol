@@ -12,12 +12,12 @@ import "../../../vaults/Erc20Vault.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../framework/Protocol.sol";
 import "../../../utils/SafeEthTransfer.sol";
-import "../../../utils/UtxoPosLib.sol";
+import "../../../utils/PosLib.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
 import "../../../transactions/GenericTransaction.sol";
 
 library PaymentChallengeStandardExit {
-    using UtxoPosLib for UtxoPosLib.UtxoPos;
+    using PosLib for PosLib.Position;
 
     struct Controller {
         PlasmaFramework framework;
@@ -106,25 +106,24 @@ library PaymentChallengeStandardExit {
     function verifySpendingCondition(ChallengeStandardExitData memory data) private view {
         PaymentStandardExitRouterArgs.ChallengeStandardExitArgs memory args = data.args;
 
-        UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(data.exitData.utxoPos);
+        PosLib.Position memory utxoPos = PosLib.decode(data.exitData.utxoPos);
         FungibleTokenOutputModel.Output memory output = PaymentTransactionModel
             .decode(args.exitingTx)
-            .outputs[utxoPos.outputIndex()];
+            .outputs[utxoPos.outputIndex];
 
         ISpendingCondition condition = data.controller.spendingConditionRegistry.spendingConditions(
             output.outputType, data.challengeTxType
         );
         require(address(condition) != address(0), "Spending condition contract not found");
 
-        bytes32 outputId = data.controller.framework.isDeposit(utxoPos.blockNum())
-                ? OutputId.computeDepositOutputId(args.exitingTx, utxoPos.outputIndex(), utxoPos.value)
-                : OutputId.computeNormalOutputId(args.exitingTx, utxoPos.outputIndex());
+        bytes32 outputId = data.controller.framework.isDeposit(utxoPos.blockNum)
+                ? OutputId.computeDepositOutputId(args.exitingTx, utxoPos.outputIndex, utxoPos.encode())
+                : OutputId.computeNormalOutputId(args.exitingTx, utxoPos.outputIndex);
         require(outputId == data.exitData.outputId, "Invalid exiting tx causing outputId mismatch");
 
         bool isSpentByChallengeTx = condition.verify(
             args.exitingTx,
-            utxoPos.outputIndex(),
-            utxoPos.txPos().value,
+            utxoPos.encode(),
             args.challengeTx,
             args.inputIndex,
             args.witness

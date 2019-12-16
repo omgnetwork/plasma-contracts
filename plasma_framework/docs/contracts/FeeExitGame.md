@@ -1,70 +1,14 @@
-# TxFinalizationVerifier.sol
+# FeeExitGame.sol
 
-View Source: [contracts/src/exits/utils/TxFinalizationVerifier.sol](../../contracts/src/exits/utils/TxFinalizationVerifier.sol)
+View Source: [contracts/src/exits/fee/FeeExitGame.sol](../../contracts/src/exits/fee/FeeExitGame.sol)
 
-**↗ Extends: [ITxFinalizationVerifier](ITxFinalizationVerifier.md)**
-
-**TxFinalizationVerifier**
-
-Contract that checks the tx finalization, currently only MoreVp functionality is implemented
+**FeeExitGame**
 
 ## Functions
-
-- [isStandardFinalized(struct TxFinalizationModel.Data data)](#isstandardfinalized)
-- [isProtocolFinalized(struct TxFinalizationModel.Data data)](#isprotocolfinalized)
-- [checkInclusionProof(struct TxFinalizationModel.Data data)](#checkinclusionproof)
-
-### isStandardFinalized
-
-⤾ overrides [ITxFinalizationVerifier.isStandardFinalized](ITxFinalizationVerifier.md#isstandardfinalized)
-
-Checks whether a transaction is "standard finalized"
-
-```js
-function isStandardFinalized(struct TxFinalizationModel.Data data) public view
-returns(bool)
-```
-
-**Arguments**
-
-| Name        | Type           | Description  |
-| ------------- |------------- | -----|
-| data | struct TxFinalizationModel.Data |  | 
-
-### isProtocolFinalized
-
-⤾ overrides [ITxFinalizationVerifier.isProtocolFinalized](ITxFinalizationVerifier.md#isprotocolfinalized)
-
-Checks whether a transaction is "protocol finalized"
-
-```js
-function isProtocolFinalized(struct TxFinalizationModel.Data data) public view
-returns(bool)
-```
-
-**Arguments**
-
-| Name        | Type           | Description  |
-| ------------- |------------- | -----|
-| data | struct TxFinalizationModel.Data |  | 
-
-### checkInclusionProof
-
-```js
-function checkInclusionProof(struct TxFinalizationModel.Data data) private view
-returns(bool)
-```
-
-**Arguments**
-
-| Name        | Type           | Description  |
-| ------------- |------------- | -----|
-| data | struct TxFinalizationModel.Data |  | 
 
 ## Contracts
 
 * [Address](Address.md)
-* [AddressPayable](AddressPayable.md)
 * [Bits](Bits.md)
 * [BlockController](BlockController.md)
 * [BlockModel](BlockModel.md)
@@ -80,22 +24,22 @@ returns(bool)
 * [ExitId](ExitId.md)
 * [ExitPriority](ExitPriority.md)
 * [FailFastReentrancyGuard](FailFastReentrancyGuard.md)
+* [FeeClaimOutputToPaymentTxCondition](FeeClaimOutputToPaymentTxCondition.md)
+* [FeeExitGame](FeeExitGame.md)
+* [FungibleTokenOutputModel](FungibleTokenOutputModel.md)
+* [GenericTransaction](GenericTransaction.md)
 * [IERC20](IERC20.md)
 * [IErc20DepositVerifier](IErc20DepositVerifier.md)
 * [IEthDepositVerifier](IEthDepositVerifier.md)
 * [IExitProcessor](IExitProcessor.md)
-* [IOutputGuardHandler](IOutputGuardHandler.md)
-* [IsDeposit](IsDeposit.md)
 * [ISpendingCondition](ISpendingCondition.md)
 * [IStateTransitionVerifier](IStateTransitionVerifier.md)
-* [ITxFinalizationVerifier](ITxFinalizationVerifier.md)
 * [Math](Math.md)
 * [Merkle](Merkle.md)
 * [Migrations](Migrations.md)
+* [MoreVpFinalization](MoreVpFinalization.md)
 * [OnlyFromAddress](OnlyFromAddress.md)
 * [OnlyWithValue](OnlyWithValue.md)
-* [OutputGuardHandlerRegistry](OutputGuardHandlerRegistry.md)
-* [OutputGuardModel](OutputGuardModel.md)
 * [OutputId](OutputId.md)
 * [Ownable](Ownable.md)
 * [PaymentChallengeIFEInputSpent](PaymentChallengeIFEInputSpent.md)
@@ -110,8 +54,6 @@ returns(bool)
 * [PaymentInFlightExitModelUtils](PaymentInFlightExitModelUtils.md)
 * [PaymentInFlightExitRouter](PaymentInFlightExitRouter.md)
 * [PaymentInFlightExitRouterArgs](PaymentInFlightExitRouterArgs.md)
-* [PaymentOutputGuardHandler](PaymentOutputGuardHandler.md)
-* [PaymentOutputModel](PaymentOutputModel.md)
 * [PaymentOutputToPaymentTxCondition](PaymentOutputToPaymentTxCondition.md)
 * [PaymentPiggybackInFlightExit](PaymentPiggybackInFlightExit.md)
 * [PaymentProcessInFlightExit](PaymentProcessInFlightExit.md)
@@ -123,6 +65,7 @@ returns(bool)
 * [PaymentTransactionModel](PaymentTransactionModel.md)
 * [PaymentTransactionStateTransitionVerifier](PaymentTransactionStateTransitionVerifier.md)
 * [PlasmaFramework](PlasmaFramework.md)
+* [PosLib](PosLib.md)
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
@@ -131,10 +74,5 @@ returns(bool)
 * [SafeEthTransfer](SafeEthTransfer.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)
-* [TxFinalizationModel](TxFinalizationModel.md)
-* [TxFinalizationVerifier](TxFinalizationVerifier.md)
-* [TxPosLib](TxPosLib.md)
-* [UtxoPosLib](UtxoPosLib.md)
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)
-* [WireTransaction](WireTransaction.md)

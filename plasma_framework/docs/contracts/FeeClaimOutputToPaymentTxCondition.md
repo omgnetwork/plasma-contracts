@@ -1,56 +1,66 @@
-# PaymentOutputModel.sol
+# FeeClaimOutputToPaymentTxCondition.sol
 
-View Source: [contracts/src/transactions/outputs/PaymentOutputModel.sol](../../contracts/src/transactions/outputs/PaymentOutputModel.sol)
+View Source: [contracts/src/exits/fee/FeeClaimOutputToPaymentTxCondition.sol](../../contracts/src/exits/fee/FeeClaimOutputToPaymentTxCondition.sol)
 
-**PaymentOutputModel**
+**↗ Extends: [ISpendingCondition](ISpendingCondition.md)**
 
-Data structure and its decode function for payment output
+**FeeClaimOutputToPaymentTxCondition**
 
-## Structs
-### Output
+## Contract Members
+**Constants & Variables**
 
 ```js
-struct Output {
- uint256 outputType,
- bytes20 outputGuard,
- address token,
- uint256 amount
-}
+//public members
+uint256 public feeTxType;
+uint256 public feeClaimOutputType;
+uint256 public paymentTxType;
+
+//internal members
+struct PaymentEip712Lib.Constants internal eip712;
+
 ```
 
 ## Functions
 
-- [owner(struct PaymentOutputModel.Output _output)](#owner)
-- [decode(struct RLPReader.RLPItem encoded)](#decode)
+- [(PlasmaFramework _framework, uint256 _feeTxType, uint256 _feeClaimOutputType, uint256 _paymentTxType)](#)
+- [verify(bytes feeTxBytes, uint256 utxoPos, bytes paymentTxBytes, uint16 inputIndex, bytes signature)](#verify)
 
-### owner
-
-Retrieve the 'owner' from the output, assuming the
-        'outputGuard' field directly holds the owner's address
+### 
 
 ```js
-function owner(struct PaymentOutputModel.Output _output) internal pure
-returns(address payable)
+function (PlasmaFramework _framework, uint256 _feeTxType, uint256 _feeClaimOutputType, uint256 _paymentTxType) public nonpayable
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| _output | struct PaymentOutputModel.Output |  | 
+| _framework | PlasmaFramework |  | 
+| _feeTxType | uint256 |  | 
+| _feeClaimOutputType | uint256 |  | 
+| _paymentTxType | uint256 |  | 
 
-### decode
+### verify
+
+⤾ overrides [ISpendingCondition.verify](ISpendingCondition.md#verify)
+
+This implementation checks signature for spending fee claim output. It should be signed with the owner signature.
+     The fee claim output that is spendable follows Fungible Token Output format.
 
 ```js
-function decode(struct RLPReader.RLPItem encoded) internal pure
-returns(struct PaymentOutputModel.Output)
+function verify(bytes feeTxBytes, uint256 utxoPos, bytes paymentTxBytes, uint16 inputIndex, bytes signature) external view
+returns(bool)
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| encoded | struct RLPReader.RLPItem |  | 
+| feeTxBytes | bytes | Encoded fee transaction | 
+| utxoPos | uint256 | Position of the fee utxo | 
+| paymentTxBytes | bytes | Payment transaction (in bytes) that spends the fee claim output | 
+| inputIndex | uint16 | Input index of the payment tx that points to the fee claim output | 
+| signature | bytes | Signature of the owner of fee claiming output | 
 
 ## Contracts
 
@@ -70,11 +80,14 @@ returns(struct PaymentOutputModel.Output)
 * [ExitId](ExitId.md)
 * [ExitPriority](ExitPriority.md)
 * [FailFastReentrancyGuard](FailFastReentrancyGuard.md)
+* [FeeClaimOutputToPaymentTxCondition](FeeClaimOutputToPaymentTxCondition.md)
+* [FeeExitGame](FeeExitGame.md)
+* [FungibleTokenOutputModel](FungibleTokenOutputModel.md)
+* [GenericTransaction](GenericTransaction.md)
 * [IERC20](IERC20.md)
 * [IErc20DepositVerifier](IErc20DepositVerifier.md)
 * [IEthDepositVerifier](IEthDepositVerifier.md)
 * [IExitProcessor](IExitProcessor.md)
-* [IsDeposit](IsDeposit.md)
 * [ISpendingCondition](ISpendingCondition.md)
 * [IStateTransitionVerifier](IStateTransitionVerifier.md)
 * [Math](Math.md)
@@ -97,7 +110,6 @@ returns(struct PaymentOutputModel.Output)
 * [PaymentInFlightExitModelUtils](PaymentInFlightExitModelUtils.md)
 * [PaymentInFlightExitRouter](PaymentInFlightExitRouter.md)
 * [PaymentInFlightExitRouterArgs](PaymentInFlightExitRouterArgs.md)
-* [PaymentOutputModel](PaymentOutputModel.md)
 * [PaymentOutputToPaymentTxCondition](PaymentOutputToPaymentTxCondition.md)
 * [PaymentPiggybackInFlightExit](PaymentPiggybackInFlightExit.md)
 * [PaymentProcessInFlightExit](PaymentProcessInFlightExit.md)
@@ -109,6 +121,7 @@ returns(struct PaymentOutputModel.Output)
 * [PaymentTransactionModel](PaymentTransactionModel.md)
 * [PaymentTransactionStateTransitionVerifier](PaymentTransactionStateTransitionVerifier.md)
 * [PlasmaFramework](PlasmaFramework.md)
+* [PosLib](PosLib.md)
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
@@ -117,8 +130,5 @@ returns(struct PaymentOutputModel.Output)
 * [SafeEthTransfer](SafeEthTransfer.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)
-* [TxPosLib](TxPosLib.md)
-* [UtxoPosLib](UtxoPosLib.md)
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)
-* [WireTransaction](WireTransaction.md)

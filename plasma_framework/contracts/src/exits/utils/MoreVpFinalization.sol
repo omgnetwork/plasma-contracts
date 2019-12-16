@@ -4,7 +4,7 @@ pragma experimental ABIEncoderV2;
 import "../../framework/PlasmaFramework.sol";
 import "../../framework/Protocol.sol";
 import "../../utils/Merkle.sol";
-import "../../utils/TxPosLib.sol";
+import "../../utils/PosLib.sol";
 import "../../transactions/GenericTransaction.sol";
 
 /**
@@ -12,7 +12,7 @@ import "../../transactions/GenericTransaction.sol";
  * @dev This library assumes that the tx is of the GenericTransaction format
  */
 library MoreVpFinalization {
-    using TxPosLib for TxPosLib.TxPos;
+    using PosLib for PosLib.Position;
 
     /**
     * @notice Checks whether a transaction is "standard finalized".
@@ -21,18 +21,19 @@ library MoreVpFinalization {
     function isStandardFinalized(
         PlasmaFramework framework,
         bytes memory txBytes,
-        TxPosLib.TxPos memory txPos,
+        PosLib.Position memory txPos,
         bytes memory inclusionProof
     )
         internal
         view
         returns (bool)
     {
+        require(txPos.outputIndex == 0, "Invalid transaction position");
         GenericTransaction.Transaction memory genericTx = GenericTransaction.decode(txBytes);
         uint8 protocol = framework.protocols(genericTx.txType);
         require(protocol == Protocol.MORE_VP(), "MoreVpFinalization: not a MoreVP protocol tx");
 
-        (bytes32 root,) = framework.blocks(txPos.blockNum());
+        (bytes32 root,) = framework.blocks(txPos.blockNum);
         require(root != bytes32(""), "Failed to get the root hash of the block num");
 
         if (inclusionProof.length == 0) {
@@ -40,7 +41,7 @@ library MoreVpFinalization {
         }
 
         return Merkle.checkMembership(
-            txBytes, txPos.txIndex(), root, inclusionProof
+            txBytes, txPos.txIndex, root, inclusionProof
         );
     }
 

@@ -26,7 +26,7 @@ struct Output {
 ### decodeOutput
 
 Given a GenericTransaction.Output, decodes the `data` field.
-The data field is an RLP list that must satisy the following conditions:
+The data field is an RLP list that must satisfy the following conditions:
      - It must have 3 elements: [`outputGuard`, `token`, `amount`]
      - `outputGuard` is a 20 byte long array
      - `token` is a 20 byte long array
@@ -81,6 +81,8 @@ returns(struct FungibleTokenOutputModel.Output)
 * [ExitId](ExitId.md)
 * [ExitPriority](ExitPriority.md)
 * [FailFastReentrancyGuard](FailFastReentrancyGuard.md)
+* [FeeClaimOutputToPaymentTxCondition](FeeClaimOutputToPaymentTxCondition.md)
+* [FeeExitGame](FeeExitGame.md)
 * [FungibleTokenOutputModel](FungibleTokenOutputModel.md)
 * [GenericTransaction](GenericTransaction.md)
 * [IERC20](IERC20.md)
@@ -120,6 +122,7 @@ returns(struct FungibleTokenOutputModel.Output)
 * [PaymentTransactionModel](PaymentTransactionModel.md)
 * [PaymentTransactionStateTransitionVerifier](PaymentTransactionStateTransitionVerifier.md)
 * [PlasmaFramework](PlasmaFramework.md)
+* [PosLib](PosLib.md)
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
@@ -128,7 +131,5 @@ returns(struct FungibleTokenOutputModel.Output)
 * [SafeEthTransfer](SafeEthTransfer.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)
-* [TxPosLib](TxPosLib.md)
-* [UtxoPosLib](UtxoPosLib.md)
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)

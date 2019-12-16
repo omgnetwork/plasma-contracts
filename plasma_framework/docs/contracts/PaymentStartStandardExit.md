@@ -24,7 +24,7 @@ struct Controller {
 struct StartStandardExitData {
  struct PaymentStartStandardExit.Controller controller,
  struct PaymentStandardExitRouterArgs.StartStandardExitArgs args,
- struct UtxoPosLib.UtxoPos utxoPos,
+ struct PosLib.Position utxoPos,
  struct PaymentTransactionModel.Transaction outputTx,
  struct FungibleTokenOutputModel.Output output,
  uint160 exitId,
@@ -173,6 +173,8 @@ function enqueueStandardExit(struct PaymentStartStandardExit.StartStandardExitDa
 * [ExitId](ExitId.md)
 * [ExitPriority](ExitPriority.md)
 * [FailFastReentrancyGuard](FailFastReentrancyGuard.md)
+* [FeeClaimOutputToPaymentTxCondition](FeeClaimOutputToPaymentTxCondition.md)
+* [FeeExitGame](FeeExitGame.md)
 * [FungibleTokenOutputModel](FungibleTokenOutputModel.md)
 * [GenericTransaction](GenericTransaction.md)
 * [IERC20](IERC20.md)
@@ -212,6 +214,7 @@ function enqueueStandardExit(struct PaymentStartStandardExit.StartStandardExitDa
 * [PaymentTransactionModel](PaymentTransactionModel.md)
 * [PaymentTransactionStateTransitionVerifier](PaymentTransactionStateTransitionVerifier.md)
 * [PlasmaFramework](PlasmaFramework.md)
+* [PosLib](PosLib.md)
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
@@ -220,7 +223,5 @@ function enqueueStandardExit(struct PaymentStartStandardExit.StartStandardExitDa
 * [SafeEthTransfer](SafeEthTransfer.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)
-* [TxPosLib](TxPosLib.md)
-* [UtxoPosLib](UtxoPosLib.md)
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)

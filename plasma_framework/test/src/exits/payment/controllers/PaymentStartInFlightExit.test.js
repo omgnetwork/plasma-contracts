@@ -20,7 +20,7 @@ const {
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
-const { buildUtxoPos, UtxoPos } = require('../../../../helpers/positions.js');
+const { buildUtxoPos, Position } = require('../../../../helpers/positions.js');
 const { computeNormalOutputId, spentOnGas } = require('../../../../helpers/utils.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../../helpers/transaction.js');
 const {
@@ -162,7 +162,7 @@ contract('PaymentStartInFlightExit', ([_, alice, richFather, carol]) => {
                 const expectedArgs = {
                     inFlightTx: this.args.inFlightTx,
                     inputTxs: this.args.inputTxs,
-                    outputIndexOfInputTxs: this.args.inputUtxosPos.map(utxo => new UtxoPos(utxo).outputIndex),
+                    outputIndexOfInputTxs: this.args.inputUtxosPos.map(utxo => new Position(utxo).outputIndex),
                 };
 
                 // test would fail if called with unexpected arguments

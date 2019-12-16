@@ -7,7 +7,7 @@ View Source: [contracts/src/exits/utils/ExitId.sol](../../contracts/src/exits/ut
 ## Functions
 
 - [isStandardExit(uint160 _exitId)](#isstandardexit)
-- [getStandardExitId(bool _isDeposit, bytes _txBytes, struct UtxoPosLib.UtxoPos _utxoPos)](#getstandardexitid)
+- [getStandardExitId(bool _isDeposit, bytes _txBytes, struct PosLib.Position _utxoPos)](#getstandardexitid)
 - [getInFlightExitId(bytes _txBytes)](#getinflightexitid)
 - [_computeStandardExitId(bytes32 _txhash, uint16 _outputIndex)](#_computestandardexitid)
 
@@ -31,7 +31,7 @@ returns(bool)
 Given transaction bytes and UTXO position, returns its exit ID
 
 ```js
-function getStandardExitId(bool _isDeposit, bytes _txBytes, struct UtxoPosLib.UtxoPos _utxoPos) internal pure
+function getStandardExitId(bool _isDeposit, bytes _txBytes, struct PosLib.Position _utxoPos) internal pure
 returns(uint160)
 ```
 
@@ -49,7 +49,7 @@ _standardExitId Unique ID of the standard exit
 | ------------- |------------- | -----|
 | _isDeposit | bool | Defines whether the tx for the exitId is a deposit tx | 
 | _txBytes | bytes | Transaction bytes | 
-| _utxoPos | struct UtxoPosLib.UtxoPos | UTXO position of the exiting output | 
+| _utxoPos | struct PosLib.Position | UTXO position of the exiting output | 
 
 ### getInFlightExitId
 
@@ -102,6 +102,8 @@ returns(uint160)
 * [ExitId](ExitId.md)
 * [ExitPriority](ExitPriority.md)
 * [FailFastReentrancyGuard](FailFastReentrancyGuard.md)
+* [FeeClaimOutputToPaymentTxCondition](FeeClaimOutputToPaymentTxCondition.md)
+* [FeeExitGame](FeeExitGame.md)
 * [FungibleTokenOutputModel](FungibleTokenOutputModel.md)
 * [GenericTransaction](GenericTransaction.md)
 * [IERC20](IERC20.md)
@@ -141,6 +143,7 @@ returns(uint160)
 * [PaymentTransactionModel](PaymentTransactionModel.md)
 * [PaymentTransactionStateTransitionVerifier](PaymentTransactionStateTransitionVerifier.md)
 * [PlasmaFramework](PlasmaFramework.md)
+* [PosLib](PosLib.md)
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
@@ -149,7 +152,5 @@ returns(uint160)
 * [SafeEthTransfer](SafeEthTransfer.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)
-* [TxPosLib](TxPosLib.md)
-* [UtxoPosLib](UtxoPosLib.md)
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)

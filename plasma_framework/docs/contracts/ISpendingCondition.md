@@ -2,7 +2,7 @@
 
 View Source: [contracts/src/exits/interfaces/ISpendingCondition.sol](../../contracts/src/exits/interfaces/ISpendingCondition.sol)
 
-**↘ Derived Contracts: [PaymentOutputToPaymentTxCondition](PaymentOutputToPaymentTxCondition.md)**
+**↘ Derived Contracts: [FeeClaimOutputToPaymentTxCondition](FeeClaimOutputToPaymentTxCondition.md), [PaymentOutputToPaymentTxCondition](PaymentOutputToPaymentTxCondition.md)**
 
 **ISpendingCondition**
 
@@ -10,16 +10,16 @@ Interface of the spending condition
 
 ## Functions
 
-- [verify(bytes inputTx, uint16 outputIndex, uint256 inputTxPos, bytes spendingTx, uint16 inputIndex, bytes witness)](#verify)
+- [verify(bytes inputTx, uint256 utxoPos, bytes spendingTx, uint16 inputIndex, bytes witness)](#verify)
 
 ### verify
 
-⤿ Overridden Implementation(s): [PaymentOutputToPaymentTxCondition.verify](PaymentOutputToPaymentTxCondition.md#verify)
+⤿ Overridden Implementation(s): [FeeClaimOutputToPaymentTxCondition.verify](FeeClaimOutputToPaymentTxCondition.md#verify),[PaymentOutputToPaymentTxCondition.verify](PaymentOutputToPaymentTxCondition.md#verify)
 
 Verifies the spending condition
 
 ```js
-function verify(bytes inputTx, uint16 outputIndex, uint256 inputTxPos, bytes spendingTx, uint16 inputIndex, bytes witness) external view
+function verify(bytes inputTx, uint256 utxoPos, bytes spendingTx, uint16 inputIndex, bytes witness) external view
 returns(bool)
 ```
 
@@ -28,8 +28,7 @@ returns(bool)
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
 | inputTx | bytes | Encoded input transaction, in bytes | 
-| outputIndex | uint16 | The output index of the input transaction | 
-| inputTxPos | uint256 | The tx position of the input tx (0 if in-flight) | 
+| utxoPos | uint256 | Position of the utxo | 
 | spendingTx | bytes | Spending transaction, in bytes | 
 | inputIndex | uint16 | The input index of the spending tx that points to the output | 
 | witness | bytes | The witness data of the spending condition | 
@@ -52,6 +51,8 @@ returns(bool)
 * [ExitId](ExitId.md)
 * [ExitPriority](ExitPriority.md)
 * [FailFastReentrancyGuard](FailFastReentrancyGuard.md)
+* [FeeClaimOutputToPaymentTxCondition](FeeClaimOutputToPaymentTxCondition.md)
+* [FeeExitGame](FeeExitGame.md)
 * [FungibleTokenOutputModel](FungibleTokenOutputModel.md)
 * [GenericTransaction](GenericTransaction.md)
 * [IERC20](IERC20.md)
@@ -91,6 +92,7 @@ returns(bool)
 * [PaymentTransactionModel](PaymentTransactionModel.md)
 * [PaymentTransactionStateTransitionVerifier](PaymentTransactionStateTransitionVerifier.md)
 * [PlasmaFramework](PlasmaFramework.md)
+* [PosLib](PosLib.md)
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
@@ -99,7 +101,5 @@ returns(bool)
 * [SafeEthTransfer](SafeEthTransfer.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)
-* [TxPosLib](TxPosLib.md)
-* [UtxoPosLib](UtxoPosLib.md)
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)

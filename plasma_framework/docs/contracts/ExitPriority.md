@@ -6,7 +6,7 @@ View Source: [contracts/src/framework/utils/ExitPriority.sol](../../contracts/sr
 
 ## Functions
 
-- [computePriority(uint64 exitableAt, struct TxPosLib.TxPos txPos, uint160 exitId)](#computepriority)
+- [computePriority(uint64 exitableAt, struct PosLib.Position txPos, uint160 exitId)](#computepriority)
 - [parseExitableAt(uint256 priority)](#parseexitableat)
 - [parseExitId(uint256 priority)](#parseexitid)
 
@@ -15,7 +15,7 @@ View Source: [contracts/src/framework/utils/ExitPriority.sol](../../contracts/sr
 Detailed explanation on field lengths can be found at https://github.com/omisego/plasma-contracts/pull/303#discussion_r328850572
 
 ```js
-function computePriority(uint64 exitableAt, struct TxPosLib.TxPos txPos, uint160 exitId) internal pure
+function computePriority(uint64 exitableAt, struct PosLib.Position txPos, uint160 exitId) internal pure
 returns(uint256)
 ```
 
@@ -32,7 +32,7 @@ An exit priority
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
 | exitableAt | uint64 |  | 
-| txPos | struct TxPosLib.TxPos |  | 
+| txPos | struct PosLib.Position |  | 
 | exitId | uint160 | Unique exit identifier | 
 
 ### parseExitableAt
@@ -79,6 +79,8 @@ returns(uint160)
 * [ExitId](ExitId.md)
 * [ExitPriority](ExitPriority.md)
 * [FailFastReentrancyGuard](FailFastReentrancyGuard.md)
+* [FeeClaimOutputToPaymentTxCondition](FeeClaimOutputToPaymentTxCondition.md)
+* [FeeExitGame](FeeExitGame.md)
 * [FungibleTokenOutputModel](FungibleTokenOutputModel.md)
 * [GenericTransaction](GenericTransaction.md)
 * [IERC20](IERC20.md)
@@ -118,6 +120,7 @@ returns(uint160)
 * [PaymentTransactionModel](PaymentTransactionModel.md)
 * [PaymentTransactionStateTransitionVerifier](PaymentTransactionStateTransitionVerifier.md)
 * [PlasmaFramework](PlasmaFramework.md)
+* [PosLib](PosLib.md)
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
@@ -126,7 +129,5 @@ returns(uint160)
 * [SafeEthTransfer](SafeEthTransfer.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)
-* [TxPosLib](TxPosLib.md)
-* [UtxoPosLib](UtxoPosLib.md)
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)

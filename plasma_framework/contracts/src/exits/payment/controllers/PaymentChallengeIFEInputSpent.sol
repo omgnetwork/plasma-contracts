@@ -11,13 +11,13 @@ import "../../utils/OutputId.sol";
 import "../../utils/MoreVpFinalization.sol";
 import "../../../utils/Merkle.sol";
 import "../../../utils/SafeEthTransfer.sol";
-import "../../../utils/UtxoPosLib.sol";
+import "../../../utils/PosLib.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
 import "../../../transactions/GenericTransaction.sol";
 
 library PaymentChallengeIFEInputSpent {
-    using UtxoPosLib for UtxoPosLib.UtxoPos;
+    using PosLib for PosLib.Position;
     using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
 
     struct Controller {
@@ -108,10 +108,10 @@ library PaymentChallengeIFEInputSpent {
     function verifySpentInputEqualsIFEInput(ChallengeIFEData memory data) private view {
         bytes32 ifeInputOutputId = data.ife.inputs[data.args.inFlightTxInputIndex].outputId;
 
-        UtxoPosLib.UtxoPos memory utxoPos = UtxoPosLib.UtxoPos(data.args.inputUtxoPos);
-        bytes32 challengingTxInputOutputId = data.controller.framework.isDeposit(utxoPos.blockNum())
-                ? OutputId.computeDepositOutputId(data.args.inputTx, utxoPos.outputIndex(), utxoPos.value)
-                : OutputId.computeNormalOutputId(data.args.inputTx, utxoPos.outputIndex());
+        PosLib.Position memory utxoPos = PosLib.decode(data.args.inputUtxoPos);
+        bytes32 challengingTxInputOutputId = data.controller.framework.isDeposit(utxoPos.blockNum)
+                ? OutputId.computeDepositOutputId(data.args.inputTx, utxoPos.outputIndex, utxoPos.encode())
+                : OutputId.computeNormalOutputId(data.args.inputTx, utxoPos.outputIndex);
 
         require(ifeInputOutputId == challengingTxInputOutputId, "Spent input is not the same as piggybacked input");
     }
@@ -139,12 +139,11 @@ library PaymentChallengeIFEInputSpent {
         );
         require(address(condition) != address(0), "Spending condition contract not found");
 
-        UtxoPosLib.UtxoPos memory inputUtxoPos = UtxoPosLib.UtxoPos(data.args.inputUtxoPos);
+        PosLib.Position memory inputUtxoPos = PosLib.decode(data.args.inputUtxoPos);
 
         bool isSpent = condition.verify(
             data.args.inputTx,
-            inputUtxoPos.outputIndex(),
-            inputUtxoPos.txPos().value,
+            inputUtxoPos.encode(),
             data.args.challengingTx,
             data.args.challengingTxInputIndex,
             data.args.challengingTxWitness

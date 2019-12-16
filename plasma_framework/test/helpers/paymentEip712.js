@@ -1,5 +1,5 @@
 const { constants } = require('openzeppelin-test-helpers');
-const { UtxoPos } = require('./positions.js');
+const { Position } = require('./positions.js');
 
 const EMPTY_BYTES20 = '0x0000000000000000000000000000000000000000';
 
@@ -11,7 +11,7 @@ const OUTPUT_TYPE_HASH = web3.utils.sha3('Output(uint256 outputType,bytes20 outp
 const SALT = '0xfad5c7f626d80f9256ef01929f3beb96e058b8b4b0e3fe52d84f054c0e2a7a83';
 
 const hashInput = (input) => {
-    const utxoPos = new UtxoPos(input);
+    const utxoPos = new Position(input);
 
     return web3.utils.sha3(web3.eth.abi.encodeParameters([
         'bytes32', 'uint256', 'uint256', 'uint256',

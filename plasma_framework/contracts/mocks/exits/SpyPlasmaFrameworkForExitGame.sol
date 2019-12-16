@@ -2,10 +2,12 @@ pragma solidity 0.5.11;
 pragma experimental ABIEncoderV2;
 
 import "../../src/framework/PlasmaFramework.sol";
-import "../../src/utils/TxPosLib.sol";
+import "../../src/utils/PosLib.sol";
 import "../../src/framework/models/BlockModel.sol";
 
 contract SpyPlasmaFrameworkForExitGame is PlasmaFramework {
+    using PosLib for PosLib.Position;
+
     uint256 public enqueuedCount = 0;
     mapping (uint256 => BlockModel.Block) public blocks;
 
@@ -30,7 +32,7 @@ contract SpyPlasmaFrameworkForExitGame is PlasmaFramework {
         uint256 _vaultId,
         address _token,
         uint64 _exitableAt,
-        TxPosLib.TxPos calldata _txPos,
+        PosLib.Position calldata _txPos,
         uint160 _exitId,
         IExitProcessor _exitProcessor
     )
@@ -42,7 +44,7 @@ contract SpyPlasmaFrameworkForExitGame is PlasmaFramework {
             _vaultId,
             _token,
             _exitableAt,
-            _txPos.value,
+            _txPos.getTxPostionForExitPriority(),
             _exitId,
             address(_exitProcessor)
         );

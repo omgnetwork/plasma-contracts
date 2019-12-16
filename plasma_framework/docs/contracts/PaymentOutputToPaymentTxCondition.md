@@ -19,7 +19,7 @@ struct PaymentEip712Lib.Constants internal eip712;
 ## Functions
 
 - [(address framework, uint256 inputTxType, uint256 spendingTxType)](#)
-- [verify(bytes inputTxBytes, uint16 outputIndex, uint256 inputTxPos, bytes spendingTxBytes, uint16 inputIndex, bytes signature)](#verify)
+- [verify(bytes inputTxBytes, uint256 utxoPos, bytes spendingTxBytes, uint16 inputIndex, bytes signature)](#verify)
 
 ### 
 
@@ -45,7 +45,7 @@ function (address framework, uint256 inputTxType, uint256 spendingTxType) public
 Verifies the spending condition
 
 ```js
-function verify(bytes inputTxBytes, uint16 outputIndex, uint256 inputTxPos, bytes spendingTxBytes, uint16 inputIndex, bytes signature) external view
+function verify(bytes inputTxBytes, uint256 utxoPos, bytes spendingTxBytes, uint16 inputIndex, bytes signature) external view
 returns(bool)
 ```
 
@@ -54,8 +54,7 @@ returns(bool)
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
 | inputTxBytes | bytes | Encoded input transaction, in bytes | 
-| outputIndex | uint16 | Output index of the input transaction | 
-| inputTxPos | uint256 | The tx position of the input tx (0 if in-flight) | 
+| utxoPos | uint256 | Position of the utxo | 
 | spendingTxBytes | bytes | Spending transaction, in bytes | 
 | inputIndex | uint16 | Input index of the spending tx that points to the output | 
 | signature | bytes | Signature of the output owner | 
@@ -78,6 +77,8 @@ returns(bool)
 * [ExitId](ExitId.md)
 * [ExitPriority](ExitPriority.md)
 * [FailFastReentrancyGuard](FailFastReentrancyGuard.md)
+* [FeeClaimOutputToPaymentTxCondition](FeeClaimOutputToPaymentTxCondition.md)
+* [FeeExitGame](FeeExitGame.md)
 * [FungibleTokenOutputModel](FungibleTokenOutputModel.md)
 * [GenericTransaction](GenericTransaction.md)
 * [IERC20](IERC20.md)
@@ -117,6 +118,7 @@ returns(bool)
 * [PaymentTransactionModel](PaymentTransactionModel.md)
 * [PaymentTransactionStateTransitionVerifier](PaymentTransactionStateTransitionVerifier.md)
 * [PlasmaFramework](PlasmaFramework.md)
+* [PosLib](PosLib.md)
 * [PriorityQueue](PriorityQueue.md)
 * [Protocol](Protocol.md)
 * [Quarantine](Quarantine.md)
@@ -125,7 +127,5 @@ returns(bool)
 * [SafeEthTransfer](SafeEthTransfer.md)
 * [SafeMath](SafeMath.md)
 * [SpendingConditionRegistry](SpendingConditionRegistry.md)
-* [TxPosLib](TxPosLib.md)
-* [UtxoPosLib](UtxoPosLib.md)
 * [Vault](Vault.md)
 * [VaultRegistry](VaultRegistry.md)

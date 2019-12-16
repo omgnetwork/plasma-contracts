@@ -24,7 +24,7 @@ const { expect } = require('chai');
 const {
     PROTOCOL, OUTPUT_TYPE, VAULT_ID, SAFE_GAS_STIPEND, EMPTY_BYTES_32,
 } = require('../../../../helpers/constants.js');
-const { buildUtxoPos, UtxoPos } = require('../../../../helpers/positions.js');
+const { buildUtxoPos, Position } = require('../../../../helpers/positions.js');
 const {
     PaymentTransactionOutput, PaymentTransaction, PlasmaDepositTransaction,
 } = require('../../../../helpers/transaction.js');
@@ -46,8 +46,8 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
     const TEST_IFE_OUTPUT_AMOUNT = 990;
     const TEST_COMPETING_TX_OUTPUT_AMOUNT = 990;
     const INPUT_TX_BLOCK_NUM = 1000;
-    const INPUT_UTXO_POS = new UtxoPos(buildUtxoPos(INPUT_TX_BLOCK_NUM, 0, 0));
-    const INPUT_DEPOSIT_UTXO_POS = new UtxoPos(buildUtxoPos(INPUT_TX_BLOCK_NUM + 1, 0, 0));
+    const INPUT_UTXO_POS = new Position(buildUtxoPos(INPUT_TX_BLOCK_NUM, 0, 0));
+    const INPUT_DEPOSIT_UTXO_POS = new Position(buildUtxoPos(INPUT_TX_BLOCK_NUM + 1, 0, 0));
     const COMPETING_TX_BLOCK_NUM = 2000;
 
     const createInputTransaction = (outputType) => {
@@ -73,7 +73,7 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
             outputType, TEST_COMPETING_TX_OUTPUT_AMOUNT, competitorOwner, ETH,
         );
         const competingTx = new PaymentTransaction(competingTxType, [INPUT_UTXO_POS.utxoPos], [output]);
-        const competingTxPos = new UtxoPos(buildUtxoPos(COMPETING_TX_BLOCK_NUM, 0, 0));
+        const competingTxPos = new Position(buildUtxoPos(COMPETING_TX_BLOCK_NUM, 0, 0));
 
         return {
             competingTx: web3.utils.bytesToHex(competingTx.rlpEncoded()),
@@ -538,9 +538,9 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
 
         describe('when successfully responded to non-canonical challenge', () => {
             beforeEach('include in-flight tx in a previous block', async () => {
-                const competitorTxPos = new UtxoPos(this.challengeArgs.competingTxPos);
+                const competitorTxPos = new Position(this.challengeArgs.competingTxPos);
                 const prevBlockNum = competitorTxPos.blockNum - 1000;
-                const blockBeforeCompetitorTxPos = new UtxoPos(buildUtxoPos(prevBlockNum, 0, 0));
+                const blockBeforeCompetitorTxPos = new Position(buildUtxoPos(prevBlockNum, 0, 0));
 
                 const { inclusionProof, blockHash } = createInclusionProof(
                     this.challengeArgs.inFlightTx, blockBeforeCompetitorTxPos,
@@ -614,9 +614,9 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
 
         describe('is unsuccessful and', () => {
             beforeEach('include in-flight tx in a previous block', async () => {
-                const competitorTxPos = new UtxoPos(this.challengeArgs.competingTxPos);
+                const competitorTxPos = new Position(this.challengeArgs.competingTxPos);
                 const prevBlockNum = competitorTxPos.blockNum - 1000;
-                const blockBeforeCompetitorTxPos = new UtxoPos(buildUtxoPos(prevBlockNum, 0, 0));
+                const blockBeforeCompetitorTxPos = new Position(buildUtxoPos(prevBlockNum, 0, 0));
 
                 const { inclusionProof, blockHash } = createInclusionProof(
                     this.challengeArgs.inFlightTx, blockBeforeCompetitorTxPos,
@@ -656,7 +656,7 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
             });
 
             it('fails when the block of the in-flight tx position does not exist', async () => {
-                const validIFEBlockNum = (new UtxoPos(this.inFlightTxPos)).blockNum;
+                const validIFEBlockNum = (new Position(this.inFlightTxPos)).blockNum;
                 const noBlockExistingPosition = buildUtxoPos(validIFEBlockNum - 1000, 0, 0);
                 await expectRevert(
                     this.exitGame.respondToNonCanonicalChallenge(
