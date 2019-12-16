@@ -158,7 +158,7 @@ contract('PaymentTransactionStateTransitionVerifier', ([alice, bob]) => {
 
         it('should verify transition for any combination of inputs / outputs numbers', async () => {
             for (let numberOfInputs = 1; numberOfInputs < MAX_INPUTS_OUTPUTS; numberOfInputs++) {
-                for (let numberOfOutputs = 0; numberOfOutputs < MAX_INPUTS_OUTPUTS; numberOfOutputs++) {
+                for (let numberOfOutputs = 1; numberOfOutputs < MAX_INPUTS_OUTPUTS; numberOfOutputs++) {
                     const args = createArgsForInputsOutputsNumberTest(numberOfInputs, numberOfOutputs);
                     /* eslint-disable no-await-in-loop */
                     const verificationResult = await this.verifier.isCorrectStateTransition(

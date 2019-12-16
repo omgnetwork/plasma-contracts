@@ -13,7 +13,7 @@ def test_piggyback_in_flight_exit_valid_input_owner_should_succeed(testlang, num
         owners.append(testlang.accounts[i])
         deposit_ids.append(testlang.deposit(owners[i], amount))
 
-    spend_id = testlang.spend_utxo(deposit_ids, owners)
+    spend_id = testlang.spend_utxo(deposit_ids, owners, outputs=[(owners[0].address, NULL_ADDRESS, amount)])
 
     testlang.start_in_flight_exit(spend_id)
 
@@ -45,7 +45,7 @@ def test_piggyback_in_flight_exit_valid_output_owner_should_succeed(testlang, nu
 def test_piggyback_in_flight_exit_invalid_owner_should_fail(testlang):
     owner_1, owner_2, amount = testlang.accounts[0], testlang.accounts[1], 100
     deposit_id = testlang.deposit(owner_1, amount)
-    spend_id = testlang.spend_utxo([deposit_id], [owner_1])
+    spend_id = testlang.spend_utxo([deposit_id], [owner_1], outputs=[(owner_1.address, NULL_ADDRESS, amount)])
 
     testlang.start_in_flight_exit(spend_id)
 
@@ -56,7 +56,7 @@ def test_piggyback_in_flight_exit_invalid_owner_should_fail(testlang):
 def test_piggyback_in_flight_exit_non_existent_exit_should_fail(testlang):
     owner, amount = testlang.accounts[0], 100
     deposit_id = testlang.deposit(owner, amount)
-    spend_id = testlang.spend_utxo([deposit_id], [owner])
+    spend_id = testlang.spend_utxo([deposit_id], [owner], outputs=[(owner.address, NULL_ADDRESS, amount)])
 
     with pytest.raises(TransactionFailed):
         testlang.piggyback_in_flight_exit_input(spend_id, 0, owner)
@@ -82,7 +82,7 @@ def test_piggyback_unpiggybacked_output_of_finalized_in_flight_exit_should_fail(
 def test_piggyback_in_flight_exit_wrong_period_should_fail(testlang):
     owner, amount = testlang.accounts[0], 100
     deposit_id = testlang.deposit(owner, amount)
-    spend_id = testlang.spend_utxo([deposit_id], [owner])
+    spend_id = testlang.spend_utxo([deposit_id], [owner], outputs=[(owner.address, NULL_ADDRESS, amount)])
 
     testlang.start_in_flight_exit(spend_id)
     testlang.forward_to_period(2)
@@ -94,7 +94,7 @@ def test_piggyback_in_flight_exit_wrong_period_should_fail(testlang):
 def test_piggyback_in_flight_exit_invalid_index_should_fail(testlang):
     owner, amount = testlang.accounts[0], 100
     deposit_id = testlang.deposit(owner, amount)
-    spend_id = testlang.spend_utxo([deposit_id], [owner])
+    spend_id = testlang.spend_utxo([deposit_id], [owner], outputs=[(owner.address, NULL_ADDRESS, amount)])
 
     testlang.start_in_flight_exit(spend_id)
 
@@ -105,7 +105,7 @@ def test_piggyback_in_flight_exit_invalid_index_should_fail(testlang):
 def test_piggyback_in_flight_exit_twice_should_fail(testlang):
     owner, amount = testlang.accounts[0], 100
     deposit_id = testlang.deposit(owner, amount)
-    spend_id = testlang.spend_utxo([deposit_id], [owner])
+    spend_id = testlang.spend_utxo([deposit_id], [owner], outputs=[(owner.address, NULL_ADDRESS, amount)])
 
     testlang.start_in_flight_exit(spend_id)
 

@@ -64,6 +64,7 @@ library PaymentTransactionModel {
         returns (PaymentTransactionModel.Transaction memory)
     {
         require(genericTx.inputs.length <= _MAX_INPUT_NUM, "Transaction inputs num exceeds limit");
+        require(genericTx.outputs.length != 0, "Transaction cannot have 0 outputs");
         require(genericTx.outputs.length <= _MAX_OUTPUT_NUM, "Transaction outputs num exceeds limit");
 
         bytes32[] memory inputs = new bytes32[](genericTx.inputs.length);
