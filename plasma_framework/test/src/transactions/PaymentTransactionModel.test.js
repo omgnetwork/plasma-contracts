@@ -149,6 +149,14 @@ contract('PaymentTransactionModel', ([alice]) => {
         await expectRevert(this.test.decode(encoded), 'txData must be 0');
     });
 
+    it('should fail when the transaction has no outputs', async () => {
+        const transaction = new PaymentTransaction(
+            TX_TYPE.PAYMENT, [DUMMY_INPUT_1], [], EMPTY_BYTES_32,
+        );
+        const encoded = web3.utils.bytesToHex(transaction.rlpEncoded());
+        await expectRevert(this.test.decode(encoded), 'Transaction cannot have 0 outputs');
+    });
+
     describe('owner', () => {
         it('should parse the owner address from output guard when output guard holds the owner info directly', async () => {
             expect(await this.test.getOutputOwner(
