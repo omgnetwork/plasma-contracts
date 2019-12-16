@@ -112,10 +112,12 @@ library PaymentChallengeIFEOutputSpent {
     {
         PosLib.Position memory utxoPos = PosLib.decode(args.outputUtxoPos);
         GenericTransaction.Transaction memory challengingTx = GenericTransaction.decode(args.challengingTx);
-        GenericTransaction.Output memory output = GenericTransaction.getOutput(challengingTx, utxoPos.outputIndex);
+
+        GenericTransaction.Transaction memory ifeTx = GenericTransaction.decode(args.inFlightTx);
+        GenericTransaction.Output memory ifeTxOutput = GenericTransaction.getOutput(ifeTx, utxoPos.outputIndex);
 
         ISpendingCondition condition = controller.spendingConditionRegistry.spendingConditions(
-            output.outputType,
+            ifeTxOutput.outputType,
             challengingTx.txType
         );
         require(address(condition) != address(0), "Spending condition contract not found");

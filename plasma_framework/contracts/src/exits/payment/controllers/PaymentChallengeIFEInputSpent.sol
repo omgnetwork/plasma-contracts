@@ -132,7 +132,9 @@ library PaymentChallengeIFEInputSpent {
 
     function verifySpendingCondition(ChallengeIFEData memory data) private view {
         GenericTransaction.Transaction memory challengingTx = GenericTransaction.decode(data.args.challengingTx);
-        GenericTransaction.Output memory output = GenericTransaction.getOutput(challengingTx, data.args.challengingTxInputIndex);
+
+        GenericTransaction.Transaction memory inputTx = GenericTransaction.decode(data.args.inputTx);
+        GenericTransaction.Output memory output = GenericTransaction.getOutput(inputTx, data.args.challengingTxInputIndex);
 
         ISpendingCondition condition = data.controller.spendingConditionRegistry.spendingConditions(
             output.outputType, challengingTx.txType
