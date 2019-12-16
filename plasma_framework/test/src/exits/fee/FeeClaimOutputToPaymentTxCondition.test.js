@@ -5,7 +5,7 @@ const { expect } = require('chai');
 
 const { TX_TYPE, OUTPUT_TYPE } = require('../../../helpers/constants.js');
 const { hashTx } = require('../../../helpers/paymentEip712.js');
-const { buildUtxoPos, utxoPosToTxPos } = require('../../../helpers/positions.js');
+const { buildUtxoPos } = require('../../../helpers/positions.js');
 const { sign } = require('../../../helpers/sign.js');
 const {
     PaymentTransactionOutput, PaymentTransaction, FeeTransaction, FeeClaimOutput,
@@ -46,7 +46,6 @@ contract('FeeClaimOutputToPaymentTxCondition', ([richFather, bob]) => {
 
             const feeClaimOutputIndex = 0;
             const utxoPos = buildUtxoPos(2000, 0, feeClaimOutputIndex);
-            const feeTxPos = utxoPosToTxPos(utxoPos);
 
 
             const paymentOutput = new PaymentTransactionOutput(
@@ -60,8 +59,7 @@ contract('FeeClaimOutputToPaymentTxCondition', ([richFather, bob]) => {
 
             const args = {
                 feeTxBytes,
-                feeClaimOutputIndex,
-                feeTxPos,
+                utxoPos,
                 paymentTxBytes,
                 inputIndex,
                 signature,
@@ -75,12 +73,12 @@ contract('FeeClaimOutputToPaymentTxCondition', ([richFather, bob]) => {
 
         it('should fail when fee claim output index is not 0', async () => {
             const { args } = getTestData();
+            const utxoPos = buildUtxoPos(2000, 0, 1);
 
             await expectRevert(
                 this.condition.verify(
                     args.feeTxBytes,
-                    1,
-                    args.feeTxPos,
+                    utxoPos,
                     args.paymentTxBytes,
                     args.inputIndex,
                     args.signature,
@@ -99,8 +97,7 @@ contract('FeeClaimOutputToPaymentTxCondition', ([richFather, bob]) => {
             await expectRevert(
                 conditionWithDifferentTxType.verify(
                     args.feeTxBytes,
-                    args.feeClaimOutputIndex,
-                    args.feeTxPos,
+                    args.utxoPos,
                     args.paymentTxBytes,
                     args.inputIndex,
                     args.signature,
@@ -119,8 +116,7 @@ contract('FeeClaimOutputToPaymentTxCondition', ([richFather, bob]) => {
             await expectRevert(
                 conditionWithDifferentTxType.verify(
                     args.feeTxBytes,
-                    args.feeClaimOutputIndex,
-                    args.feeTxPos,
+                    args.utxoPos,
                     args.paymentTxBytes,
                     args.inputIndex,
                     args.signature,
@@ -139,8 +135,7 @@ contract('FeeClaimOutputToPaymentTxCondition', ([richFather, bob]) => {
             await expectRevert(
                 conditionWithDifferentTxType.verify(
                     args.feeTxBytes,
-                    args.feeClaimOutputIndex,
-                    args.feeTxPos,
+                    args.utxoPos,
                     args.paymentTxBytes,
                     args.inputIndex,
                     args.signature,
@@ -151,14 +146,12 @@ contract('FeeClaimOutputToPaymentTxCondition', ([richFather, bob]) => {
 
         it('should fail when payment tx does not point to the fee claim output', async () => {
             const { args } = getTestData();
-            const wrongUtxoPos = buildUtxoPos(9999, 999, 999);
-            const wrongTxPos = utxoPosToTxPos(wrongUtxoPos);
+            const wrongUtxoPos = buildUtxoPos(9999, 999, 0);
 
             await expectRevert(
                 this.condition.verify(
                     args.feeTxBytes,
-                    args.feeClaimOutputIndex,
-                    wrongTxPos,
+                    wrongUtxoPos,
                     args.paymentTxBytes,
                     args.inputIndex,
                     args.signature,
@@ -175,8 +168,7 @@ contract('FeeClaimOutputToPaymentTxCondition', ([richFather, bob]) => {
             await expectRevert(
                 this.condition.verify(
                     args.feeTxBytes,
-                    args.feeClaimOutputIndex,
-                    args.feeTxPos,
+                    args.utxoPos,
                     args.paymentTxBytes,
                     args.inputIndex,
                     wrongSignature,
@@ -195,8 +187,7 @@ contract('FeeClaimOutputToPaymentTxCondition', ([richFather, bob]) => {
             await expectRevert(
                 this.condition.verify(
                     args.feeTxBytes,
-                    args.feeClaimOutputIndex,
-                    args.feeTxPos,
+                    args.utxoPos,
                     args.paymentTxBytes,
                     args.inputIndex,
                     wrongSignature,
@@ -210,8 +201,7 @@ contract('FeeClaimOutputToPaymentTxCondition', ([richFather, bob]) => {
 
             const result = await this.condition.verify(
                 args.feeTxBytes,
-                args.feeClaimOutputIndex,
-                args.feeTxPos,
+                args.utxoPos,
                 args.paymentTxBytes,
                 args.inputIndex,
                 args.signature,
