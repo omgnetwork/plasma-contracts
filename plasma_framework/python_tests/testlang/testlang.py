@@ -440,7 +440,7 @@ class TestingLanguage:
     @staticmethod
     def find_input_index(output_id, tx_b):
         tx_b_input_index = 0
-        for i in range(0, 4):
+        for i in range(len(tx_b.inputs)):
             tx_b_input = tx_b.inputs[i].identifier
             if tx_b_input == output_id:
                 tx_b_input_index = i

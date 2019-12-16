@@ -252,8 +252,20 @@ class PlasmaFramework:
                                          in_flight_tx_inclusion_proof,
                                          spending_tx,
                                          spending_tx_input_index,
-                                         spending_tx_sig):
-        raise NotImplementedError
+                                         spending_tx_sig,
+                                         **kwargs):
+
+        spending_tx_witness = spending_tx_sig
+
+        args = (
+            in_flight_tx,
+            in_flight_tx_inclusion_proof,
+            in_flight_tx_output_pos,
+            spending_tx,
+            spending_tx_input_index,
+            spending_tx_witness
+        )
+        self.payment_exit_game.challengeInFlightExitOutputSpent(args, **kwargs)
 
     def processExits(self, token, top_exit_id, exits_to_process, vault_id=None):
         if vault_id is None:
