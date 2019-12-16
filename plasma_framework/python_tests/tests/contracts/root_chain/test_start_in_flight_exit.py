@@ -14,7 +14,7 @@ def test_start_in_flight_exit_should_succeed(testlang, num_inputs):
         owners.append(testlang.accounts[i])
         deposit_ids.append(testlang.deposit(owners[i], amount))
 
-    spend_id = testlang.spend_utxo(deposit_ids, owners)
+    spend_id = testlang.spend_utxo(deposit_ids, owners, outputs=[(owners[0].address, NULL_ADDRESS, amount)])
 
     testlang.start_in_flight_exit(spend_id)
 
@@ -48,7 +48,7 @@ def test_start_in_flight_exit_with_erc20_tokens_should_succeed(testlang, token, 
         owners.append(testlang.accounts[i])
         deposit_ids.append(testlang.deposit_token(owners[i], token, amount))
 
-    spend_id = testlang.spend_utxo(deposit_ids, owners)
+    spend_id = testlang.spend_utxo(deposit_ids, owners, outputs=[(owners[0].address, token.address, amount)])
 
     testlang.start_in_flight_exit(spend_id)
 
@@ -137,7 +137,7 @@ def test_start_in_flight_exit_that_spends_more_than_value_of_inputs_should_fail(
 def test_start_in_flight_exit_invalid_signature_should_fail(testlang, token):
     owner_1, owner_2, amount = testlang.accounts[0], testlang.accounts[1], 100
     deposit_id = testlang.deposit_token(owner_1, token, amount)
-    spend_id = testlang.spend_utxo([deposit_id], [owner_2], force_invalid=True)
+    spend_id = testlang.spend_utxo([deposit_id], [owner_2], outputs=[(owner_1.address, token.address, amount)], force_invalid=True)
 
     with pytest.raises(TransactionFailed):
         testlang.start_in_flight_exit(spend_id)
@@ -146,7 +146,7 @@ def test_start_in_flight_exit_invalid_signature_should_fail(testlang, token):
 def test_start_in_flight_exit_invalid_bond_should_fail(testlang):
     owner, amount = testlang.accounts[0], 100
     deposit_id = testlang.deposit(owner, amount)
-    spend_id = testlang.spend_utxo([deposit_id], [owner])
+    spend_id = testlang.spend_utxo([deposit_id], [owner], outputs=[(owner.address, NULL_ADDRESS, amount)])
 
     with pytest.raises(TransactionFailed):
         testlang.start_in_flight_exit(spend_id, bond=0)
@@ -155,7 +155,7 @@ def test_start_in_flight_exit_invalid_bond_should_fail(testlang):
 def test_start_in_flight_exit_invalid_spend_should_fail(testlang):
     owner_1, owner_2, amount = testlang.accounts[0], testlang.accounts[1], 100
     deposit_id = testlang.deposit(owner_1, amount)
-    spend_id = testlang.spend_utxo([deposit_id], [owner_2], force_invalid=True)
+    spend_id = testlang.spend_utxo([deposit_id], [owner_2], outputs=[(owner_1.address, NULL_ADDRESS, amount)], force_invalid=True)
 
     with pytest.raises(TransactionFailed):
         testlang.start_in_flight_exit(spend_id)
@@ -164,7 +164,7 @@ def test_start_in_flight_exit_invalid_spend_should_fail(testlang):
 def test_start_in_flight_exit_invalid_proof_should_fail(testlang):
     owner, amount = testlang.accounts[0], 100
     deposit_id = testlang.deposit(owner, amount)
-    spend_id = testlang.spend_utxo([deposit_id], [owner])
+    spend_id = testlang.spend_utxo([deposit_id], [owner], outputs=[(owner.address, NULL_ADDRESS, amount)])
 
     proofs = [b'']
     (encoded_spend, encoded_inputs, input_pos, _, signatures) = testlang.get_in_flight_exit_info(spend_id)
@@ -177,7 +177,7 @@ def test_start_in_flight_exit_invalid_proof_should_fail(testlang):
 def test_start_in_flight_exit_twice_should_fail(testlang):
     owner, amount = testlang.accounts[0], 100
     deposit_id = testlang.deposit(owner, amount)
-    spend_id = testlang.spend_utxo([deposit_id], [owner])
+    spend_id = testlang.spend_utxo([deposit_id], [owner], outputs=[(owner.address, NULL_ADDRESS, amount)])
 
     # First time should succeed
     testlang.start_in_flight_exit(spend_id)
@@ -230,7 +230,7 @@ def test_start_in_flight_exit_cancelling_standard_exits_from_inputs(testlang, nu
         deposit_id = testlang.deposit(owners[i], amount)
         deposit_ids.append(deposit_id)
 
-    spend_id = testlang.spend_utxo(deposit_ids, owners)
+    spend_id = testlang.spend_utxo(deposit_ids, owners, outputs=[(owners[0].address, NULL_ADDRESS, amount)])
 
     for i in range(0, num_inputs):
         testlang.start_standard_exit(deposit_ids[i], owners[i])
@@ -262,7 +262,7 @@ def test_start_in_flight_exit_with_finalized_standard_exits_from_inputs_flags_ex
         deposit_id = testlang.deposit(owners[i], amount)
         deposit_ids.append(deposit_id)
 
-    spend_id = testlang.spend_utxo(deposit_ids, owners)
+    spend_id = testlang.spend_utxo(deposit_ids, owners, outputs=[(owners[0].address, NULL_ADDRESS, amount)])
 
     for i in range(0, num_inputs):
         testlang.start_standard_exit(deposit_ids[i], owners[i])
