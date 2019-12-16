@@ -28,7 +28,7 @@ contract ExitGameRegistry is OnlyFromAddress {
     constructor (uint256 _minExitPeriod, uint256 _initialImmuneExitGames)
         public
     {
-        _exitGameQuarantine.quarantinePeriod = 3 * _minExitPeriod;
+        _exitGameQuarantine.quarantinePeriod = 4 * _minExitPeriod;
         _exitGameQuarantine.immunitiesRemaining = _initialImmuneExitGames;
     }
 
