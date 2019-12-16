@@ -49,7 +49,7 @@ def test_challenge_standard_exit_invalid_spend_should_fail(testlang):
     owner_1, owner_2, amount = testlang.accounts[0], testlang.accounts[1], 100
     deposit_id = testlang.deposit(owner_1, amount)
     testlang.start_standard_exit(deposit_id, owner_1)
-    spend_id = testlang.spend_utxo([deposit_id], [owner_2], force_invalid=True)
+    spend_id = testlang.spend_utxo([deposit_id], [owner_2], outputs=[(owner_1.address, NULL_ADDRESS, amount)], force_invalid=True)
 
     with pytest.raises(TransactionFailed):
         testlang.challenge_standard_exit(deposit_id, spend_id)
@@ -61,7 +61,7 @@ def test_challenge_standard_exit_unrelated_spend_should_fail(testlang):
     testlang.start_standard_exit(deposit_id_1, owner)
 
     deposit_id_2 = testlang.deposit(owner, amount)
-    spend_id = testlang.spend_utxo([deposit_id_2], [owner])
+    spend_id = testlang.spend_utxo([deposit_id_2], [owner], outputs=[(owner.address, NULL_ADDRESS, amount)])
 
     with pytest.raises(TransactionFailed):
         testlang.challenge_standard_exit(deposit_id_1, spend_id, input_index=0)
@@ -74,7 +74,7 @@ def test_challenge_standard_exit_uninitialized_memory_and_zero_sig_should_fail(t
     deposit_id = testlang.deposit(owner, amount)
     deposit_tx = testlang.child_chain.get_transaction(deposit_id)
 
-    spend_id = testlang.spend_utxo([deposit_id], [owner])
+    spend_id = testlang.spend_utxo([deposit_id], [owner], outputs=[(owner.address, NULL_ADDRESS, amount)])
     spend_tx = testlang.child_chain.get_transaction(spend_id)
 
     with pytest.raises(TransactionFailed):
@@ -84,7 +84,7 @@ def test_challenge_standard_exit_uninitialized_memory_and_zero_sig_should_fail(t
 def test_challenge_standard_exit_not_started_should_fail(testlang):
     owner, amount = testlang.accounts[0], 100
     deposit_id = testlang.deposit(owner, amount)
-    spend_id = testlang.spend_utxo([deposit_id], [owner])
+    spend_id = testlang.spend_utxo([deposit_id], [owner], outputs=[(owner.address, NULL_ADDRESS, amount)])
 
     with pytest.raises(TransactionFailed):
         testlang.challenge_standard_exit(deposit_id, spend_id)
