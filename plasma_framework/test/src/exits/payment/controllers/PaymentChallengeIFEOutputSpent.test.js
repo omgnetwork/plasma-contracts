@@ -35,6 +35,7 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
     const INITIAL_IMMUNE_EXIT_GAME_NUM = 1;
     const OUTPUT_TYPE_ONE = 1;
+    const OUTPUT_TYPE_CHALLENGING_TX = 2;
     const IFE_TX_TYPE = 1;
     const OTHER_TX_TYPE = 2;
     const ETH = constants.ZERO_ADDRESS;
@@ -86,7 +87,8 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
             const inclusionProof = merkleTree.getInclusionProof(inFlightTxBytes);
 
             const outputId = computeNormalOutputId(inFlightTxBytes, 0);
-            const challengingTxOutput = new PaymentTransactionOutput(OUTPUT_TYPE_ONE, AMOUNT, alice, ETH);
+            // different output type for a challenging tx to check if proper spending codition is used
+            const challengingTxOutput = new PaymentTransactionOutput(OUTPUT_TYPE_CHALLENGING_TX, AMOUNT, alice, ETH);
             const challengingTx = new PaymentTransaction(IFE_TX_TYPE, [outputId], [challengingTxOutput]);
             const challengingTxBytes = web3.utils.bytesToHex(challengingTx.rlpEncoded());
 
