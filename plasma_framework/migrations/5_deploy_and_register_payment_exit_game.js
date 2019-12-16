@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 
+const FeeClaimOutputToPaymentTxCondition = artifacts.require('FeeClaimOutputToPaymentTxCondition');
 const PaymentExitGame = artifacts.require('PaymentExitGame');
 const PaymentChallengeStandardExit = artifacts.require('PaymentChallengeStandardExit');
 const PaymentChallengeIFENotCanonical = artifacts.require('PaymentChallengeIFENotCanonical');
@@ -25,8 +26,10 @@ module.exports = async (
     [deployerAddress, maintainerAddress, authorityAddress],
 ) => {
     const PAYMENT_OUTPUT_TYPE = config.registerKeys.outputTypes.payment;
+    const FEE_CLAIM_OUTPUT_TYPE = config.registerKeys.outputTypes.feeClaim;
     const PAYMENT_TX_TYPE = config.registerKeys.txTypes.payment;
     const PAYMENT_V2_TX_TYPE = config.registerKeys.txTypes.paymentV2;
+    const FEE_TX_TYPE = config.registerKeys.txTypes.fee;
 
     // deploy and link exit game controllers
 
@@ -98,6 +101,15 @@ module.exports = async (
     );
     const paymentToPaymentV2Condition = await PaymentOutputToPaymentTxCondition.deployed();
 
+    await deployer.deploy(
+        FeeClaimOutputToPaymentTxCondition,
+        plasmaFramework.address,
+        FEE_TX_TYPE,
+        FEE_CLAIM_OUTPUT_TYPE,
+        PAYMENT_TX_TYPE,
+    );
+    const feeClaimOutputToPaymentTxCondition = await FeeClaimOutputToPaymentTxCondition.deployed();
+
     console.log(`Registering paymentToPaymentCondition (${paymentToPaymentCondition.address}) to spendingConditionRegistry`);
     await spendingConditionRegistry.registerSpendingCondition(
         PAYMENT_OUTPUT_TYPE, PAYMENT_TX_TYPE, paymentToPaymentCondition.address,
@@ -106,6 +118,11 @@ module.exports = async (
     console.log(`Registering paymentToPaymentV2Condition (${paymentToPaymentV2Condition.address}) to spendingConditionRegistry`);
     await spendingConditionRegistry.registerSpendingCondition(
         PAYMENT_OUTPUT_TYPE, PAYMENT_V2_TX_TYPE, paymentToPaymentV2Condition.address,
+    );
+
+    console.log(`Registering feeClaimOutputToPaymentTxCondition (${feeClaimOutputToPaymentTxCondition.address}) to spendingConditionRegistry`);
+    await spendingConditionRegistry.registerSpendingCondition(
+        FEE_CLAIM_OUTPUT_TYPE, PAYMENT_TX_TYPE, feeClaimOutputToPaymentTxCondition.address,
     );
     await spendingConditionRegistry.renounceOwnership();
 

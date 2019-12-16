@@ -511,7 +511,7 @@ contract('ExitGameController', () => {
             );
 
             // bypass quarantined period
-            await time.increase(3 * MIN_EXIT_PERIOD + 1);
+            await time.increase(4 * MIN_EXIT_PERIOD + 1);
 
             await reentrancyExitGame.enqueue(
                 VAULT_ID,

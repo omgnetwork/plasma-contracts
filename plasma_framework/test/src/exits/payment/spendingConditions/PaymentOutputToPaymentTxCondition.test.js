@@ -158,7 +158,7 @@ contract('PaymentOutputToPaymentTxCondition', ([richFather, bob]) => {
                     args.inputIndex,
                     wrongSignature,
                 ),
-                'Tx in not signed correctly',
+                'Tx is not signed correctly',
             );
         });
 

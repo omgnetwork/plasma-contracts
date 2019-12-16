@@ -13,7 +13,6 @@ const {
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
-const { EMPTY_BYTES, SAFE_GAS_STIPEND } = require('../helpers/constants.js');
 const { MerkleTree } = require('../helpers/merkle.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../helpers/transaction.js');
 const {
@@ -142,7 +141,6 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
                     const args = {
                         utxoPos: this.depositUtxoPos,
                         rlpOutputTx: this.depositTx,
-                        outputType: OUTPUT_TYPE_PAYMENT,
                         outputTxInclusionProof: this.merkleProofForDepositTx,
                     };
                     await this.exitGame.startStandardExit(
@@ -218,7 +216,6 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
                     const args = {
                         utxoPos: this.transferUtxoPos,
                         rlpOutputTx: this.transferTx,
-                        outputType: OUTPUT_TYPE_PAYMENT,
                         outputTxInclusionProof: this.merkleProofForTransferTx,
                     };
 
@@ -268,7 +265,6 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
                     this.startStandardExitArgs = {
                         utxoPos: this.depositUtxoPos,
                         rlpOutputTx: this.depositTx,
-                        outputType: OUTPUT_TYPE_PAYMENT,
                         outputTxInclusionProof: this.merkleProofForDepositTx,
                     };
 
@@ -400,7 +396,6 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
                         const args = {
                             utxoPos: this.depositUtxoPos,
                             rlpOutputTx: this.depositTx,
-                            outputType: OUTPUT_TYPE_PAYMENT,
                             outputTxInclusionProof: this.merkleProofForDepositTx,
                         };
 

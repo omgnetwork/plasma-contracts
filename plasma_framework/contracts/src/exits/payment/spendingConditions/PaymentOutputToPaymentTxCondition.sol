@@ -59,7 +59,7 @@ contract PaymentOutputToPaymentTxCondition is ISpendingCondition {
         address owner = PaymentTransactionModel.getOutputOwner(inputTx.outputs[decodedUtxoPos.outputIndex]);
         address signer = ECDSA.recover(eip712.hashTx(spendingTx), signature);
         require(signer != address(0), "Failed to recover the signer from the signature");
-        require(owner == signer, "Tx in not signed correctly");
+        require(owner == signer, "Tx is not signed correctly");
 
         return true;
     }

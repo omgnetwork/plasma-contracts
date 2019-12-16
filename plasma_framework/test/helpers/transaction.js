@@ -31,10 +31,11 @@ class FungibleTransactionOutput {
 class PaymentTransactionOutput extends FungibleTransactionOutput {}
 
 class GenericTransaction {
-    constructor(transactionType, inputs, outputs, metaData = EMPTY_BYTES_32) {
+    constructor(transactionType, inputs, outputs, txData = 0, metaData = EMPTY_BYTES_32) {
         this.transactionType = transactionType;
         this.inputs = inputs;
         this.outputs = outputs;
+        this.txData = txData;
         this.metaData = metaData;
     }
 
@@ -43,7 +44,7 @@ class GenericTransaction {
 
         tx.push(GenericTransaction.formatInputsForRlpEncoding(this.inputs));
         tx.push(GenericTransaction.formatOutputsForRlpEncoding(this.outputs));
-        tx.push(0); // txData must be 0
+        tx.push(GenericTransaction.formatTxDataRlpEncoding(this.txData));
         tx.push(this.metaData);
 
         return rlp.encode(tx);
@@ -63,12 +64,23 @@ class GenericTransaction {
         return items.map(item => item.formatForRlpEncoding());
     }
 
+    static formatTxDataRlpEncoding(item) {
+        if (typeof item === 'object') {
+            return item.formatForRlpEncoding();
+        }
+        return item;
+    }
+
     isDeposit() {
         return this.inputs === [];
     }
 }
 
-class PaymentTransaction extends GenericTransaction {}
+class PaymentTransaction extends GenericTransaction {
+    constructor(transactionType, inputs, outputs, metaData = EMPTY_BYTES_32) {
+        super(transactionType, inputs, outputs, 0, metaData);
+    }
+}
 
 class PlasmaDepositTransaction extends PaymentTransaction {
     constructor(output, metaData = EMPTY_BYTES_32) {
@@ -76,10 +88,16 @@ class PlasmaDepositTransaction extends PaymentTransaction {
     }
 }
 
+class FeeClaimOutput extends FungibleTransactionOutput {}
+
+class FeeTransaction extends GenericTransaction {}
+
 module.exports = {
     PaymentTransaction,
     PlasmaDepositTransaction,
     PaymentTransactionOutput,
     GenericTransaction,
     FungibleTransactionOutput,
+    FeeTransaction,
+    FeeClaimOutput,
 };

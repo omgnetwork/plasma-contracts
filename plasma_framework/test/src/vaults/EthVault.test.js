@@ -267,7 +267,7 @@ contract('EthVault', ([_, authority, maintainer, alice]) => {
             });
 
             it('should succeed after quarantine period passes', async () => {
-                await time.increase(3 * MIN_EXIT_PERIOD + 1);
+                await time.increase(4 * MIN_EXIT_PERIOD + 1);
                 const { receipt } = await this.newExitGame.proxyEthWithdraw(alice, DEPOSIT_VALUE);
 
                 await expectEvent.inTransaction(
