@@ -49,7 +49,7 @@ library PaymentChallengeStandardExit {
         uint256 safeGasStipend
     )
         public
-        view
+        pure
         returns (Controller memory)
     {
         return Controller({
