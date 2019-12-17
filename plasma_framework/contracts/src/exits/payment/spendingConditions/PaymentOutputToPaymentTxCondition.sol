@@ -10,6 +10,7 @@ import "../../../transactions/eip712Libs/PaymentEip712Lib.sol";
 contract PaymentOutputToPaymentTxCondition is ISpendingCondition {
     using PaymentEip712Lib for PaymentEip712Lib.Constants;
     using PosLib for PosLib.Position;
+    using PaymentTransactionModel for PaymentTransactionModel.Transaction;
 
     uint256 internal supportInputTxType;
     uint256 internal supportSpendingTxType;
@@ -56,7 +57,7 @@ contract PaymentOutputToPaymentTxCondition is ISpendingCondition {
         );
 
         PosLib.Position memory decodedUtxoPos = PosLib.decode(utxoPos);
-        address owner = PaymentTransactionModel.getOutputOwner(inputTx.outputs[decodedUtxoPos.outputIndex]);
+        address owner = PaymentTransactionModel.getOutputOwner(inputTx.getOutput(decodedUtxoPos.outputIndex));
         address signer = ECDSA.recover(eip712.hashTx(spendingTx), signature);
         require(signer != address(0), "Failed to recover the signer from the signature");
         require(owner == signer, "Tx is not signed correctly");

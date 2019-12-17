@@ -48,7 +48,7 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
     const INPUT_TX_BLOCK_NUM = 1000;
     const INPUT_UTXO_POS = new Position(buildUtxoPos(INPUT_TX_BLOCK_NUM, 0, 0));
     const INPUT_DEPOSIT_UTXO_POS = new Position(buildUtxoPos(INPUT_TX_BLOCK_NUM + 1, 0, 0));
-    const COMPETING_TX_BLOCK_NUM = 2000;
+    const COMPETING_TX_BLOCK_NUM = 3000;
 
     const createInputTransaction = (outputType) => {
         const output = new PaymentTransactionOutput(outputType, TEST_IFE_INPUT_AMOUNT, inputOwner, ETH);
@@ -344,6 +344,15 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
         });
 
         describe('is unsuccessful and', () => {
+            it('fails when provided input index is bigger then number of in-flight transaction inputs', async () => {
+                this.challengeArgs.inFlightTxInputIndex = 1000;
+
+                await expectRevert(
+                    this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: challenger }),
+                    'Input index out of bounds',
+                );
+            });
+
             it('fails when competing tx is the same as in-flight one', async () => {
                 this.challengeArgs.competingTx = this.challengeArgs.inFlightTx;
 
@@ -652,6 +661,19 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
                         { from: ifeOwner },
                     ),
                     'In-flight transaction must be older than competitors to respond to non-canonical challenge',
+                );
+            });
+
+            it('fails when in-flight transaction position is 0', async () => {
+                const noBlockExistingPosition = buildUtxoPos(0, 0, 0);
+                await expectRevert(
+                    this.exitGame.respondToNonCanonicalChallenge(
+                        this.challengeArgs.inFlightTx,
+                        noBlockExistingPosition,
+                        this.inFlightTxInclusionProof,
+                        { from: ifeOwner },
+                    ),
+                    'In-flight transaction position must not be 0',
                 );
             });
 

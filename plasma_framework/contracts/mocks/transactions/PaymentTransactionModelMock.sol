@@ -19,4 +19,9 @@ contract PaymentTransactionModelMock {
         });
         return PaymentTransactionModel.getOutputOwner(output);
     }
+
+    function getOutput(bytes memory transaction, uint16 outputIndex) public pure returns (FungibleTokenOutputModel.Output memory) {
+        PaymentTransactionModel.Transaction memory decodedTx = PaymentTransactionModel.decode(transaction);
+        return PaymentTransactionModel.getOutput(decodedTx, outputIndex);
+    }
 }

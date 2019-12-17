@@ -18,6 +18,7 @@ import "../../../transactions/GenericTransaction.sol";
 
 library PaymentChallengeStandardExit {
     using PosLib for PosLib.Position;
+    using PaymentTransactionModel for PaymentTransactionModel.Transaction;
 
     struct Controller {
         PlasmaFramework framework;
@@ -109,7 +110,7 @@ library PaymentChallengeStandardExit {
         PosLib.Position memory utxoPos = PosLib.decode(data.exitData.utxoPos);
         FungibleTokenOutputModel.Output memory output = PaymentTransactionModel
             .decode(args.exitingTx)
-            .outputs[utxoPos.outputIndex];
+            .getOutput(utxoPos.outputIndex);
 
         ISpendingCondition condition = data.controller.spendingConditionRegistry.spendingConditions(
             output.outputType, data.challengeTxType
