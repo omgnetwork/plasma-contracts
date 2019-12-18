@@ -634,7 +634,7 @@ PaymentExitGame.piggybackInFlightExitOnOutput({
 Appropriate amount of ETH needs to be provided to cover the bond.
 
 ### Parameters
-This section describes the arguments in the function for starting an in-flight exit.
+This section describes the arguments in the function for piggybacking on an in-flight exit.
 
 #### inFlightTx (bytes)
 RLP encoded in-flight transaction.
@@ -659,6 +659,68 @@ PaymentExitGame.piggybackInFlightExitOnInput([
 PaymentExitGame.piggybackInFlightExitOnOutput([
   0xf87701e1a0000000000000000000000000000000000000000000000000000000003b9aca00f1f001ee947a809718aec76d8ac282a825be98e6ba4fc01fb89400000000000000000000000000000000000000008307a12080a00000000000000000000000000000000000000000000000000000000000000000,
   0
+])
+```
+
+### Challenging canonicity of an in-flight exit
+
+To challenge canonicity of an in-flight exit call
+```
+PaymentExitGame.challengeInFlightExitNotCanonical({
+    inputTx,
+    inputUtxosPos,
+    inFlightTx,
+    inFlightTxInputIndex,
+    competingTx,
+    competingTxInputIndex,
+    competingTxPos,
+    competingTxInclusionProof,
+    competingTxWitness
+})
+```
+
+### Parameters
+This section describes the arguments in the function for challenging canonicity of an in-flight exit.
+
+#### inputTx (bytes)
+Transaction that created input shared by in-flight transaction and its competitor.
+
+#### inFlightTx (bytes)
+RLP encoded in-flight transaction.
+
+#### inFlightTxInputIndex (uint16)
+Index of shared input in in-flight transaction.
+
+#### competingTx (bytes)
+RLP-encoded competing transaction that spends the shared input.
+
+#### competingTxInputIndex (uint16)
+Index of shared input in competing transaction
+
+#### competingTxPos (uint256)
+Transaction position of competing tx, which is utxo position of 0 indexed output.
+If competing transaction is not included in any Plasma block provide value `0`.
+
+#### competingTxInclusionProof (bytes)
+Merkle proof showing that the competing transaction is included in a Plasma block.
+Send empty bytes if competing transaction is not included in a Plasma block.
+
+#### competingTxWitness (bytes)
+Witness for competing transaction
+
+#### Example:
+
+```
+PaymentExitGame.challengeInFlightExitNotCanonical([
+  0xf85601c0f1f001ee949c7fc8601655b4e1ef395107217e6ed600f7ba48940000000000000000000000000000000000000000830f424080a00000000000000000000000000000000000000000000000000000000000000000,
+  2000000000,
+  0xf89901f842a00000000000000000000000000000000000000000000000000000000077359400a000000000000000000000000000000000000000000000000000000000b2d05e00f1f001ee947a809718aec76d8ac282a825be98e6ba4fc01fb89400000000000000000000000000000000000000008307a12080a00000000000000000000000000000000000000000000000000000000000000000,
+  0,
+  0xf87701e1a00000000000000000000000000000000000000000000000000000000077359400f1f001ee94821aea9a577a9b44299b9c15c88cf3087f3b55449400000000000000000000000000000000000000008307a12080a00000000000000000000000000000000000000000000000000000000000000000,
+  0,
+  0,
+  0x,
+  0xb5bb3fff130c206bb550e969964c673e53fd5f15edc9e20046ea504389bf7ba324b81adc8a91e01ef49384d86d71ae00b9ac092bf88156a67f1e202806b61a221c
 ])
 ```
 
