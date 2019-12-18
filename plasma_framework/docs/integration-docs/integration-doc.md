@@ -565,17 +565,58 @@ PlasmaFramework.processExits([
 ])
 ```
 
-**TODO:** Starting an In-flight Exit
+### Starting an in-flight exit
 
-**TODO:** Piggybacking on an In-flight Exit
+To start an in-flight exit, follow these steps:
 
-**TODO:** Challenging an In-flight Exit as non-canonical 
+1. Obtain `PaymentExitGame` address as described in [step 2 for starting a standard exit](#starting-a-standard-exit).
 
-**TODO:** Responding to an In-flight Exit non-canonical challenge 
+2. To retrieve the amount of ETH to cover the bond for starting in-flight exit, call the following function:
 
-**TODO:** Challenging an In-flight Exit input spent 
+```
+PaymentExitGame.startInFlightExitBondSize()
+```
 
-**TODO:** Challenging an In-flight Exit output spent 
+3. Call 
+```
+PaymentExitGame.startInflightExit({
+  inFlightTx,
+  inputTxs,
+  inputUtxosPos
+  inputTxsInclusionProofs,
+  inFlightTxWitnesses
+})
+```
+with appropriate amount of ETH to cover the bond.
+
+
+### Parameters
+This section describes the arguments in the function for starting an in-flight exit.
+
+#### inFlightTx (bytes)
+RLP encoded in-flight transaction.
+
+#### inputTxs (bytes[])
+RLP encoded transactions that created the inputs to the in-flight transaction. In the same order as in-flight transaction inputs.
+
+#### inputUtxosPos (uint256[])
+Utxo positions that represent in-flight transaction inputs. In the same order as input transactions.
+
+#### inputTxsInclusionProofs (bytes[])
+Merkle proofs that show the input-creating transactions are valid. In the same order as input transactions.
+
+#### inFlightTxWitnesses (bytes[])
+Witnesses for in-flight transaction. In the same order as input transactions. Depending on transaction types, these can be for example sginatures of input owners.
+
+#### Example:
+
+```
+PaymentExitGame.startInFlightExit([
+  0xf87701e1a0000000000000000000000000000000000000000000000000000000003b9aca00f1f001ee947a809718aec76d8ac282a825be98e6ba4fc01fb89400000000000000000000000000000000000000008307a12080a00000000000000000000000000000000000000000000000000000000000000000,[0xf85601c0f1f001ee949c7fc8601655b4e1ef395107217e6ed600f7ba48940000000000000000000000000000000000000000830f424080a00000000000000000000000000000000000000000000000000000000000000000],[0xf39a869f62e75cf5f0bf914688a6b289caf2049435d8e68c5c5e6d05e44913f34ed5c02d6d48c8932486c99d3ad999e5d8949dc3be3b3058cc2979690c3e3a621c792b14bf66f82af36f00f5fba7014fa0c1e2ff3c7c273bfe523c1acf67dc3f5fa080a686a5a0d05c3d4822fd54d632dc9cc04b1616046eba2ce499eb9af79f5eb949690a0404abf4cebafc7cfffa382191b7dd9e7df778581e6fb78efab35fd364c9d5dadad4569b6dd47f7feabafa3571f842434425548335ac6e690dd07168d8bc5b77979c1a6702334f529f5783f79e942fd2cd03f6e55ac2cf496e849fde9c446fab46a8d27db1e3100f275a777d385b44e3cbc045cabac9da36cae040ad516082324c96127cf29f4535eb5b7ebacfe2a1d6d3aab8ec0483d32079a859ff70f9215970a8beebb1c164c474e82438174c8eeb6fbc8cb4594b88c9448f1d40b09beaecac5b45db6e41434a122b695c5a85862d8eae40b3268f6f37e414337be38eba7ab5bbf303d01f4b7ae07fd73edc2f3be05e43948a34418a3272509c43c2811a821e5c982ba51874ac7dc9dd79a80cc2f05f6f664c9dbb2e454435137da06ce44de45532a56a3a7007a2d0c6b435f726f95104bfa6e707046fc154bae91898d03a1a0ac6f9b45e471646e2555ac79e3fe87eb1781e26f20500240c379274fe91096e60d1545a8045571fdab9b530d0d6e7e8746e78bf9f20f4e86f06],
+  [0x7876f3035bddd396f99ac58a5da145687e1dae2dff38d6c6e4fbdd76d548ed945ccc4b9e8226c87dbf8648cf09e8bd89926fdfb84e632b211e27a6a33f2882d01c]
+])
+```
+
 
 
 ## Exit game events
