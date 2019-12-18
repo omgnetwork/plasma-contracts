@@ -98,4 +98,13 @@ library PaymentTransactionModel {
     function getOutputOwner(FungibleTokenOutputModel.Output memory output) internal pure returns (address payable) {
         return address(uint160(output.outputGuard));
     }
+
+    /**
+     * @notice Gets output at provided index
+     *
+     */
+    function getOutput(Transaction memory transaction, uint16 outputIndex) internal pure returns (FungibleTokenOutputModel.Output memory) {
+        require(outputIndex < transaction.outputs.length, "Output index out of bounds");
+        return transaction.outputs[outputIndex];
+    }
 }

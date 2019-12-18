@@ -36,6 +36,7 @@ uint8 private constant ENCODED_LENGTH;
 - [decode(bytes _tx)](#decode)
 - [fromGeneric(struct GenericTransaction.Transaction genericTx)](#fromgeneric)
 - [getOutputOwner(struct FungibleTokenOutputModel.Output output)](#getoutputowner)
+- [getOutput(struct PaymentTransactionModel.Transaction transaction, uint16 outputIndex)](#getoutput)
 
 ### MAX_INPUT_NUM
 
@@ -124,6 +125,22 @@ returns(address payable)
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
 | output | struct FungibleTokenOutputModel.Output |  | 
+
+### getOutput
+
+Gets output at provided index
+
+```js
+function getOutput(struct PaymentTransactionModel.Transaction transaction, uint16 outputIndex) internal pure
+returns(struct FungibleTokenOutputModel.Output)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| transaction | struct PaymentTransactionModel.Transaction |  | 
+| outputIndex | uint16 |  | 
 
 ## Contracts
 

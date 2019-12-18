@@ -21,6 +21,7 @@ library PaymentStartInFlightExit {
     using ExitableTimestamp for ExitableTimestamp.Calculator;
     using PosLib for PosLib.Position;
     using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
+    using PaymentTransactionModel for PaymentTransactionModel.Transaction;
 
     /**
      * @dev supportedTxType enables code reuse in different Payment Tx versions
@@ -187,6 +188,7 @@ library PaymentStartInFlightExit {
     }
 
     function verifyNumberOfInputsMatchesNumberOfInFlightTransactionInputs(StartExitData memory exitData) private pure {
+        require(exitData.inputTxs.length != 0, "In-flight transaction must have inputs");
         require(
             exitData.inputTxs.length == exitData.inFlightTx.inputs.length,
             "Number of input transactions does not match number of in-flight transaction inputs"
@@ -313,10 +315,10 @@ library PaymentStartInFlightExit {
     )
         private
     {
-        for (uint i = 0; i < exitData.inFlightTx.outputs.length; i++) {
+        for (uint16 i = 0; i < exitData.inFlightTx.outputs.length; i++) {
             // deposit transaction can't be in-flight exited
             bytes32 outputId = OutputId.computeNormalOutputId(exitData.inFlightTxRaw, i);
-            FungibleTokenOutputModel.Output memory output = exitData.inFlightTx.outputs[i];
+            FungibleTokenOutputModel.Output memory output = exitData.inFlightTx.getOutput(i);
 
             ife.outputs[i].outputId = outputId;
             ife.outputs[i].exitTarget = address(uint160(output.outputGuard));

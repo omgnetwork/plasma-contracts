@@ -31,7 +31,6 @@ const {
 } = require('../../../../helpers/ife.js');
 
 contract('PaymentStartInFlightExit', ([_, alice, richFather, carol]) => {
-    const CHILD_BLOCK_INTERVAL = 1000;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week in seconds
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
     const INITIAL_IMMUNE_EXIT_GAME_NUM = 1;
@@ -605,7 +604,7 @@ contract('PaymentStartInFlightExit', ([_, alice, richFather, carol]) => {
 
                 await expectRevert(
                     this.exitGame.startInFlightExit(args, { from: alice, value: this.startIFEBondSize.toString() }),
-                    'Number of input transactions does not match number of in-flight transaction inputs',
+                    'In-flight transaction must have inputs.',
                 );
             });
 

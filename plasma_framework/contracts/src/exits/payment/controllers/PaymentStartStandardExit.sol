@@ -15,6 +15,7 @@ import "../../utils/ExitableTimestamp.sol";
 library PaymentStartStandardExit {
     using ExitableTimestamp for ExitableTimestamp.Calculator;
     using PosLib for PosLib.Position;
+    using PaymentTransactionModel for PaymentTransactionModel.Transaction;
 
     struct Controller {
         IExitProcessor exitProcessor;
@@ -102,7 +103,7 @@ library PaymentStartStandardExit {
     {
         PosLib.Position memory utxoPos = PosLib.decode(args.utxoPos);
         PaymentTransactionModel.Transaction memory outputTx = PaymentTransactionModel.decode(args.rlpOutputTx);
-        FungibleTokenOutputModel.Output memory output = outputTx.outputs[utxoPos.outputIndex];
+        FungibleTokenOutputModel.Output memory output = outputTx.getOutput(utxoPos.outputIndex);
         bool isTxDeposit = controller.framework.isDeposit(utxoPos.blockNum);
         uint160 exitId = ExitId.getStandardExitId(isTxDeposit, args.rlpOutputTx, utxoPos);
         (, uint256 blockTimestamp) = controller.framework.blocks(utxoPos.blockNum);
