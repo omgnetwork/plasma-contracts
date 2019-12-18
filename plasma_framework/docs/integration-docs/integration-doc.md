@@ -724,6 +724,39 @@ PaymentExitGame.challengeInFlightExitNotCanonical([
 ])
 ```
 
+### Responding to canonicity challenge
+
+To respond to a canonicity challenge call
+```
+PaymentExitGame.respondToNonCanonicalChallenge({
+    inFlightTx,
+    inFlightTxPos,
+    inFlightTxInclusionProof
+})
+```
+
+### Parameters
+This section describes the arguments in the function for responding to a canonicity challenge
+
+#### inFlightTx (bytes)
+RLP encoded transaction that is in-flight exiting
+
+#### inFlightTxPos (uint256)
+UTXO position of the in-flight exiting transaction, which is a position of 0 indexed output.
+
+#### inFlightTxInclusionProof (bytes)
+Proof that in-flight exiting transaction is included in a Plasma block.
+
+#### Example:
+
+```
+PaymentExitGame.respondToNonCanonicalChallenge([
+  0xf87701e1a0000000000000000000000000000000000000000000000000000000012a05f200f1f001ee947a809718aec76d8ac282a825be98e6ba4fc01fb89400000000000000000000000000000000000000008307a12080a00000000000000000000000000000000000000000000000000000000000000000,
+  1000000000000,
+  0xf39a869f62e75cf5f0bf914688a6b289caf2049435d8e68c5c5e6d05e44913f34ed5c02d6d48c8932486c99d3ad999e5d8949dc3be3b3058cc2979690c3e3a621c792b14bf66f82af36f00f5fba7014fa0c1e2ff3c7c273bfe523c1acf67dc3f5fa080a686a5a0d05c3d4822fd54d632dc9cc04b1616046eba2ce499eb9af79f5eb949690a0404abf4cebafc7cfffa382191b7dd9e7df778581e6fb78efab35fd364c9d5dadad4569b6dd47f7feabafa3571f842434425548335ac6e690dd07168d8bc5b77979c1a6702334f529f5783f79e942fd2cd03f6e55ac2cf496e849fde9c446fab46a8d27db1e3100f275a777d385b44e3cbc045cabac9da36cae040ad516082324c96127cf29f4535eb5b7ebacfe2a1d6d3aab8ec0483d32079a859ff70f9215970a8beebb1c164c474e82438174c8eeb6fbc8cb4594b88c9448f1d40b09beaecac5b45db6e41434a122b695c5a85862d8eae40b3268f6f37e414337be38eba7ab5bbf303d01f4b7ae07fd73edc2f3be05e43948a34418a3272509c43c2811a821e5c982ba51874ac7dc9dd79a80cc2f05f6f664c9dbb2e454435137da06ce44de45532a56a3a7007a2d0c6b435f726f95104bfa6e707046fc154bae91898d03a1a0ac6f9b45e471646e2555ac79e3fe87eb1781e26f20500240c379274fe91096e60d1545a8045571fdab9b530d0d6e7e8746e78bf9f20f4e86f06  
+])
+```
+
 ## Exit game events
 When listening for events related to the exit game, it's important to remember that there will be only one exit game per transaction type.
 
