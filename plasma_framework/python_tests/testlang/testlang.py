@@ -91,10 +91,6 @@ class InFlightExit:
         self.bond_size = bond_size
         self.oldest_competitor = oldest_competitor
 
-    @property
-    def challenge_flag_set(self):
-        return self.root_chain.flagged(self.exit_start_timestamp)
-
     def get_input(self, index):
         input_info = self.inputs.get(index)
         if not input_info:
@@ -452,9 +448,14 @@ class TestingLanguage:
         (in_flight_tx_input_index, competing_tx_input_index) = self.find_shared_input(in_flight_tx, competing_tx)
         proof = self.get_merkle_proof(competing_tx_id)
         signature = competing_tx.signatures[competing_tx_input_index]
+
+        shared_input_identifier = in_flight_tx.inputs[in_flight_tx_input_index].identifier
+        shared_input = self.child_chain.get_transaction(shared_input_identifier)
+
         self.root_chain.challengeInFlightExitNotCanonical(in_flight_tx.encoded, in_flight_tx_input_index,
                                                           competing_tx.encoded, competing_tx_input_index,
                                                           competing_tx_id, proof, signature,
+                                                          shared_input.encoded, shared_input_identifier,
                                                           **{'from': account.address})
 
     def respond_to_non_canonical_challenge(self, in_flight_tx_id, key):
