@@ -18,9 +18,9 @@ library PaymentInFlightExitRouterArgs {
     }
 
     /**
-    * @notice Wraps arguments for piggybackInFlightExit
+    * @notice Wraps arguments for piggybacking on in-flight transaction input exit
     * @param inFlightTx RLP-encoded in-flight transaction
-    * @param inputIndex Index of the input/output to piggyback on
+    * @param inputIndex Index of the input to piggyback on
     */
     struct PiggybackInFlightExitOnInputArgs {
         bytes inFlightTx;
@@ -28,7 +28,7 @@ library PaymentInFlightExitRouterArgs {
     }
 
     /**
-    * @notice Wraps arguments for piggybackInFlightExit
+    * @notice Wraps arguments for piggybacking on in-flight transaction output exit
     * @param inFlightTx RLP-encoded in-flight transaction
     * @param outputIndex Index of the output to piggyback on
     */

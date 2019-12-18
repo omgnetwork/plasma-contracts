@@ -571,11 +571,7 @@ To start an in-flight exit, follow these steps:
 
 1. Obtain `PaymentExitGame` address as described in [step 2 for starting a standard exit](#starting-a-standard-exit).
 
-2. To retrieve the amount of ETH to cover the bond for starting in-flight exit, call the following function:
-
-```
-PaymentExitGame.startInFlightExitBondSize()
-```
+2. Get the amount of ETH to cover the bond for starting in-flight exit as described [here](#in-flight-exit-bonds).
 
 3. Call 
 ```
@@ -617,7 +613,54 @@ PaymentExitGame.startInFlightExit([
 ])
 ```
 
+### Piggybacking on an in-flight exit input / output
 
+1. Get the amount of ETH to cover the bond for piggybacking in-flight exit as described [here](#in-flight-exit-bonds).
+
+2. To piggyback on in-flight exit input call:
+```
+PaymentExitGame.piggybackInFlightExitOnInput({
+  inFlightTx,
+  inputIndex
+})
+```
+To piggyback on in-flight exit output call:
+```
+PaymentExitGame.piggybackInFlightExitOnOutput({
+  inFlightTx,
+  outputIndex
+})
+```
+Appropriate amount of ETH needs to be provided to cover the bond.
+
+### Parameters
+This section describes the arguments in the function for starting an in-flight exit.
+
+#### inFlightTx (bytes)
+RLP encoded in-flight transaction.
+
+#### inputIndex (uint16)
+ndex of the input to piggyback on.
+
+#### outputIndex (uint16)
+Index of the output to piggyback on.
+
+
+#### Examples:
+
+```
+PaymentExitGame.piggybackInFlightExitOnInput([
+  0xf87701e1a0000000000000000000000000000000000000000000000000000000003b9aca00f1f001ee947a809718aec76d8ac282a825be98e6ba4fc01fb89400000000000000000000000000000000000000008307a12080a00000000000000000000000000000000000000000000000000000000000000000,
+  0
+])
+```
+
+```
+PaymentExitGame.piggybackInFlightExitOnOutput([
+  0xf87701e1a0000000000000000000000000000000000000000000000000000000003b9aca00f1f001ee947a809718aec76d8ac282a825be98e6ba4fc01fb89400000000000000000000000000000000000000008307a12080a00000000000000000000000000000000000000000000000000000000000000000,
+  0
+])
+```
 
 ## Exit game events
 When listening for events related to the exit game, it's important to remember that there will be only one exit game per transaction type.
