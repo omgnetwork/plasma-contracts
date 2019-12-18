@@ -587,7 +587,6 @@ with appropriate amount of ETH to cover the bond.
 
 
 ### Parameters
-This section describes the arguments in the function for starting an in-flight exit.
 
 #### inFlightTx (bytes)
 RLP encoded in-flight transaction.
@@ -634,7 +633,6 @@ PaymentExitGame.piggybackInFlightExitOnOutput({
 Appropriate amount of ETH needs to be provided to cover the bond.
 
 ### Parameters
-This section describes the arguments in the function for piggybacking on an in-flight exit.
 
 #### inFlightTx (bytes)
 RLP encoded in-flight transaction.
@@ -680,7 +678,6 @@ PaymentExitGame.challengeInFlightExitNotCanonical({
 ```
 
 ### Parameters
-This section describes the arguments in the function for challenging canonicity of an in-flight exit.
 
 #### inputTx (bytes)
 Transaction that created input shared by in-flight transaction and its competitor.
@@ -736,7 +733,6 @@ PaymentExitGame.respondToNonCanonicalChallenge({
 ```
 
 ### Parameters
-This section describes the arguments in the function for responding to a canonicity challenge
 
 #### inFlightTx (bytes)
 RLP encoded transaction that is in-flight exiting
@@ -773,7 +769,6 @@ PaymentExitGame.challengeInFlightExitInputSpent({
 ```
 
 ### Parameters
-This section describes the arguments in the function for responding to a canonicity challenge
 
 #### inFlightTx (bytes)
 RLP encoded in-flight transaction.
@@ -807,6 +802,53 @@ PaymentExitGame.challengeInFlightExitInputSpent([
   0xb5bb3fff130c206bb550e969964c673e53fd5f15edc9e20046ea504389bf7ba324b81adc8a91e01ef49384d86d71ae00b9ac092bf88156a67f1e202806b61a221c,
   0xf85601c0f1f001ee949c7fc8601655b4e1ef395107217e6ed600f7ba48940000000000000000000000000000000000000000830f424080a00000000000000000000000000000000000000000000000000000000000000000,
   2000000000
+])
+```
+
+### Challenging in-flight transaction output exit
+
+To challenge a piggyback on in-flight transaction output show that in-flight exit transaction is included in a Plasma block and a transaction that spends the output:
+```
+PaymentExitGame.challengeInFlightExitOutputSpent({
+    inFlightTx,
+    inFlightTxInclusionProof,
+    outputUtxoPos,
+    challengingTx,
+    challengingTxInputIndex,
+    challengingTxWitness
+})
+```
+
+### Parameters
+
+#### inFlightTx (bytes)
+RLP encoded in-flight exited transaction.
+
+#### inFlightTxInclusionProof (bytes)
+Proof that `inFlightTx` is included in a Plasma block.
+
+#### outputUtxoPos (uint256)
+UTXO position of exiting output.
+
+#### challengingTx (bytes)
+RLP encoded challenging transaction.
+
+#### challengingTxInputIndex (uint16)
+Input index of challenged output in a challenging transaction.
+
+#### challengingTxWitness (bytes)
+Witness for challenging transaction.
+
+#### Example:
+
+```
+PaymentExitGame.challengeInFlightExitOutputSpent([
+  0xf8a301e1a00000000000000000000000000000000000000000000000000000000000000001f85ced01eb94f17f52151ebef6c7334fad080c5704d77216b73294000000000000000000000000000000000000000001ed01eb94f17f52151ebef6c7334fad080c5704d77216b7329400000000000000000000000000000000000000000180a00000000000000000000000000000000000000000000000000000000000000000,
+  0xf39a869f62e75cf5f0bf914688a6b289caf2049435d8e68c5c5e6d05e44913f34ed5c02d6d48c8932486c99d3ad999e5d8949dc3be3b3058cc2979690c3e3a621c792b14bf66f82af36f00f5fba7014fa0c1e2ff3c7c273bfe523c1acf67dc3f,
+  1000000000000,
+  0xf87401e1a06e5de68fadce7ffe6ebf92546a4e6d4aedfa3c325929eebfa8dd1f8e6918c4b7eeed02eb94f17f52151ebef6c7334fad080c5704d77216b7329400000000000000000000000000000000000000000180a00000000000000000000000000000000000000000000000000000000000000000,
+  0,
+  0xb833e902b1f76a9ece793891fdae542c01b742ea83dfbfb721df1e82413fb5fc
 ])
 ```
 
