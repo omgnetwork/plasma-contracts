@@ -50,7 +50,7 @@ library PaymentChallengeIFENotCanonical {
         uint256 supportedTxType
     )
         public
-        view
+        pure
         returns (Controller memory)
     {
         return Controller({
