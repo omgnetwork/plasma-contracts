@@ -5,7 +5,7 @@ const path = require('path');
 const config = require('../config.js');
 
 const PlasmaFramework = artifacts.require('PlasmaFramework');
-
+const PaymentEip712LibMock = artifacts.require("PaymentEip712LibMock");
 module.exports = async (
     deployer,
     _,
@@ -16,16 +16,22 @@ module.exports = async (
     const ethVault = await plasmaFramework.vaults(config.registerKeys.vaultId.eth);
     const erc20Vault = await plasmaFramework.vaults(config.registerKeys.vaultId.erc20);
     const paymentExitGame = await plasmaFramework.exitGames(config.registerKeys.txTypes.payment);
-
-    const data = JSON.stringify({
+    contracts = {
         authority_address: `${authorityAddress}`.toLowerCase(),
         eth_vault: `${ethVault}`.toLowerCase(),
         erc20_vault: `${erc20Vault}`.toLowerCase(),
         payment_exit_game: `${paymentExitGame}`.toLowerCase(),
         plasma_framework_tx_hash: `${PlasmaFramework.network.transactionHash}`.toLowerCase(),
         plasma_framework: `${plasmaFramework.address}`.toLowerCase(),
-    });
-
+    }
+    // add development contracts if present
+    const mocks = process.env.MOCKS || false;
+    if (mocks) {
+        const paymentEip712LibMock = await PaymentEip712LibMock.deployed();
+        contracts.paymentEip712LibMock = `${paymentEip712LibMock.address}`.toLowerCase()
+    }
+    // make a json
+    const data = JSON.stringify(contracts);
     console.log(data);
 
     // Save to `output.json`
