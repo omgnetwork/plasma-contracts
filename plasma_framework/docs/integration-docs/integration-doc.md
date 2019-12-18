@@ -664,7 +664,7 @@ PaymentExitGame.piggybackInFlightExitOnOutput([
 
 ### Challenging canonicity of an in-flight exit
 
-To challenge canonicity of an in-flight exit call
+To challenge canonicity of an in-flight exit show a competing transaction:
 ```
 PaymentExitGame.challengeInFlightExitNotCanonical({
     inputTx,
@@ -726,7 +726,7 @@ PaymentExitGame.challengeInFlightExitNotCanonical([
 
 ### Responding to canonicity challenge
 
-To respond to a canonicity challenge call
+To respond to a canonicity challenge show that in-flight transaction is included in a Plasma block:
 ```
 PaymentExitGame.respondToNonCanonicalChallenge({
     inFlightTx,
@@ -754,6 +754,59 @@ PaymentExitGame.respondToNonCanonicalChallenge([
   0xf87701e1a0000000000000000000000000000000000000000000000000000000012a05f200f1f001ee947a809718aec76d8ac282a825be98e6ba4fc01fb89400000000000000000000000000000000000000008307a12080a00000000000000000000000000000000000000000000000000000000000000000,
   1000000000000,
   0xf39a869f62e75cf5f0bf914688a6b289caf2049435d8e68c5c5e6d05e44913f34ed5c02d6d48c8932486c99d3ad999e5d8949dc3be3b3058cc2979690c3e3a621c792b14bf66f82af36f00f5fba7014fa0c1e2ff3c7c273bfe523c1acf67dc3f5fa080a686a5a0d05c3d4822fd54d632dc9cc04b1616046eba2ce499eb9af79f5eb949690a0404abf4cebafc7cfffa382191b7dd9e7df778581e6fb78efab35fd364c9d5dadad4569b6dd47f7feabafa3571f842434425548335ac6e690dd07168d8bc5b77979c1a6702334f529f5783f79e942fd2cd03f6e55ac2cf496e849fde9c446fab46a8d27db1e3100f275a777d385b44e3cbc045cabac9da36cae040ad516082324c96127cf29f4535eb5b7ebacfe2a1d6d3aab8ec0483d32079a859ff70f9215970a8beebb1c164c474e82438174c8eeb6fbc8cb4594b88c9448f1d40b09beaecac5b45db6e41434a122b695c5a85862d8eae40b3268f6f37e414337be38eba7ab5bbf303d01f4b7ae07fd73edc2f3be05e43948a34418a3272509c43c2811a821e5c982ba51874ac7dc9dd79a80cc2f05f6f664c9dbb2e454435137da06ce44de45532a56a3a7007a2d0c6b435f726f95104bfa6e707046fc154bae91898d03a1a0ac6f9b45e471646e2555ac79e3fe87eb1781e26f20500240c379274fe91096e60d1545a8045571fdab9b530d0d6e7e8746e78bf9f20f4e86f06  
+])
+```
+
+### Challenging in-flight transaction input exit
+
+To challenge a piggyback on in-flight transaction input show a transaction that spends the same input as the in-flight transaction:
+```
+PaymentExitGame.challengeInFlightExitInputSpent({
+    inFlightTx,
+    inFlightTxInputIndex,
+    challengingTx,
+    challengingTxInputIndex,
+    challengingTxWitness,
+    inputTx,
+    inputUtxoPos
+})
+```
+
+### Parameters
+This section describes the arguments in the function for responding to a canonicity challenge
+
+#### inFlightTx (bytes)
+RLP encoded in-flight transaction.
+
+#### inFlightTxInputIndex (uint16)
+Index of spent input.
+
+#### challengingTx (bytes)
+RLP-encoded challenging transaction.
+
+#### challengingTxInputIndex (uint16)
+Index of spent input in a challenging transaction.
+
+#### challengingTxWitness (bytes)
+Witness for challenging transactions. For payment transaction it's a signature of input's owner.
+
+#### inputTx (bytes)
+RLP encoded input transaction.
+
+#### inputUtxoPos (uint256)
+ UTXO position of input transaction's output.
+
+#### Example:
+
+```
+PaymentExitGame.challengeInFlightExitInputSpent([
+  0xf89901f842a00000000000000000000000000000000000000000000000000000000077359400a000000000000000000000000000000000000000000000000000000000b2d05e00f1f001ee947a809718aec76d8ac282a825be98e6ba4fc01fb89400000000000000000000000000000000000000008307a12080a00000000000000000000000000000000000000000000000000000000000000000,
+  0,
+  0xf87701e1a00000000000000000000000000000000000000000000000000000000077359400f1f001ee94821aea9a577a9b44299b9c15c88cf3087f3b55449400000000000000000000000000000000000000008307a12080a00000000000000000000000000000000000000000000000000000000000000000,
+  0,
+  0xb5bb3fff130c206bb550e969964c673e53fd5f15edc9e20046ea504389bf7ba324b81adc8a91e01ef49384d86d71ae00b9ac092bf88156a67f1e202806b61a221c,
+  0xf85601c0f1f001ee949c7fc8601655b4e1ef395107217e6ed600f7ba48940000000000000000000000000000000000000000830f424080a00000000000000000000000000000000000000000000000000000000000000000,
+  2000000000
 ])
 ```
 

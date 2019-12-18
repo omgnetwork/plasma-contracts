@@ -325,7 +325,6 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                                     challengingTxWitness: this.signatureTx2,
                                                     inputTx: this.outputAData.depositTx,
                                                     inputUtxoPos: this.outputAData.depositUtxoPos,
-                                                    spendingConditionOptionalArgs: EMPTY_BYTES,
                                                 };
                                                 await this.exitGame.challengeInFlightExitInputSpent(
                                                     args,
