@@ -26,7 +26,7 @@ module.exports = async (
         plasma_framework: `${plasmaFramework.address}`.toLowerCase(),
     };
     // add development contracts if present
-    const deployTestContracts = process.env.deployTestContracts || false;
+    const deployTestContracts = process.env.DEPLOY_TEST_CONTRACTS || false;
     if (deployTestContracts) {
         const paymentEip712LibMock = await PaymentEip712LibMock.deployed();
         contracts.paymentEip712LibMock = `${paymentEip712LibMock.address}`.toLowerCase();
