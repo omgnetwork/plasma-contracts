@@ -298,11 +298,11 @@ There are two types of in-flight exit bonds:
 
 - In-flight exit bond for starting an in-flight exit
 ```
-    PlasmaFramework.startIFEBondSize()()
+    PlasmaFramework.startIFEBondSize()
 ```
 - In-flight exit bond for piggybacking on an in-flight exit's input or output:
 ```
-    PlasmaFramework.piggybackBondSize()()
+    PlasmaFramework.piggybackBondSize()
 ```
 
 
@@ -331,7 +331,6 @@ PaymentExitGame.startStandardExitBondSize()
 PaymentExitGame.startStandardExit({
   utxoPos,
   rlpOutputTx,
-  outputGuardPreimage
   outputTxInclusionProof,
 })
 ```
@@ -339,7 +338,7 @@ PaymentExitGame.startStandardExit({
 ### Parameters
 This section describes the parameters in the function for starting a standard exit.
 
-#### utxoPos (uint192)
+#### utxoPos (uint256)
 The position of the exiting output. The formula is as follows:
 
 ```
@@ -381,12 +380,6 @@ This example is a deposit transaction of 1,000,000,000,000,000 Wei, sent from ad
 
 This transaction must be RLP-encoded, using a library of your choice. Before RLP-encoding, ensure you decode the owner address, currency and metadata, from hexadecimal to bytes. Once the transaction is RLP-encoded, encode the result to hexadecimal.
 
-
-#### outputGuardPreimage (bytes)
-(Optional) The output guard preimage data. Send an empty bytes value. Example with Remix: `[]`
-
- > ***Note**: `outputGuardPreimage` is currently reserved for future development.*
-
 #### outputTxInclusionProof (bytes)
 A Merkle proof showing that the transaction was included. This Merkle proof, which is used to prove the inclusion of a specific hash in a Merkle tree, is a string containing each sibling hash for each level of the Merkle tree, concatenated together.
 
@@ -412,7 +405,6 @@ PlasmaFramework.addExitQueue(vaultId, tokenAddress)
 PaymentExitGame.startStandardExit([
   1600000000,
   0xf85801c0f4f3019441777dc7bdcc6b58be1c25eb3df7df52d1bfecbd94000000000000000000000000000000000000000087038d7ea4c68000a00000000000000000000000000000000000000000000000000000000000000000,
-  [],
   0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563633dc4d7da7256660a892f8f1604a44b5432649cc8ec5cb3ced4c4e6ac94dd1d890740a8eb06ce9be422cb8da5cdafc2b58c0a5e24036c578de2a433c828ff7d3b8ec09e026fdc305365dfc94e189a81b38c7597b3d941c279f042e8206e0bd8ecd50eee38e386bd62be9bedb990706951b65fe053bd9d8a521af753d139e2dadefff6d330bb5403f63b14f33b578274160de3a50df4efecf0e0db73bcdd3da5617bdd11f7c0a11f49db22f629387a12da7596f9d1704d7465177c63d88ec7d7292c23a9aa1d8bea7e2435e555a4a60e379a5a35f3f452bae60121073fb6eeade1cea92ed99acdcb045a6726b2f87107e8a61620a232cf4d7d5b5766b3952e107ad66c0a68c72cb89e4fb4303841966e4062a76ab97451e3b9fb526a5ceb7f82e026cc5a4aed3c22a58cbd3d2ac754c9352c5436f638042dca99034e836365163d04cffd8b46a874edf5cfae63077de85f849a660426697b06a829c70dd1409cad676aa337a485e4728a0b240d92b3ef7b3c372d06d189322bfd5f61f1e7203ea2fca4a49658f9fab7aa63289c91b7c7b6c832a6d0e69334ff5b0a3483d09dab4ebfd9cd7bca2505f7bef59cc1c12ecc708fff26ae4af19abe852afe9e20c8622def10d13dd169f550f578bda343d9717a138562e0093b380a1120789d53cf10,
 ])
 ```
@@ -438,12 +430,7 @@ PaymentExitGame.challengeStandardExit({
   exitingTx,
   challengeTx,
   inputIndex,
-  witness,
-  spendingConditionOptionalArgs,
-  outputGuardPreimage,
-  challengeTxPos,
-  challengeTxInclusionProof,
-  challengeTxConfirmSig,
+  witness
 });
 ```
 
@@ -465,36 +452,6 @@ Input index of exiting UTXO in the challenging transaction.
 #### witness (bytes)
 Data proving that exiting output was spent. A signature of exiting output owner on challenging transaction.
 
-#### spendingConditionOptionalArgs (bytes)
-(Optional) Additional data that is used to verify that output was spent. Send empty bytes.
-
-> ***Note**: `spendingConditionOptionalArgs` is currently reserved for future development.*
-
-#### outputGuardPreimage (bytes)
-(Optional) Output guard preimage data for the exiting output. For payment exit game send empty bytes.
-
-> ***Note**: `outputGuardPreimage` is currently reserved for future development.*
-
-#### challengeTxPos (uint256)
-(Optional) Transaction position of challenging transaction. Transaction position is
-
-```
-block number * the block offset (defaults: `1000000000`) + transaction position * transaction offset (defaults to `10000`)
-```
-Provide value zero when exiting a payment transaction.
-
-> ***Note**: `challengeTxPos` is currently reserved for future development.*
-
-#### challengeTxInclusionProof (bytes)
-(Optional) Inclusion proof for a challenging transaction that follows MVP protocol. For MoreVP send empty bytes.
-
-> ***Note**: `challengeTxInclusionProof` is currently reserved for future development.*
-
-#### challengeTxConfirmSig (bytes)
-(Optional) Confirmation signature for a challenging transaction that follows MVP protocol. For MoreVP send empty bytes.
-
-> ***Note**: `challengeTxConfirmSig` is currently reserved for future development.*
-
 #### Example:
 
 ```
@@ -503,12 +460,7 @@ PaymentExitGame.challengeStandardExit([
   0xf85401c0f0ef01949c7fc8601655b4e1ef395107217e6ed600f7ba48940000000000000000000000000000000000000000830f4240a00000000000000000000000000000000000000000000000000000000000000000,
   0xf88a01c685e9103fda00f85fee0194821aea9a577a9b44299b9c15c88cf3087f3b55449400000000000000000000000000000000000000008203e8ef01949c7fc8601655b4e1ef395107217e6ed600f7ba48940000000000000000000000000000000000000000830f3e58a00000000000000000000000000000000000000000000000000000000000000000,
   0,
-  0xc8fafc7490868b372863778cd2c7928c835e66c59d7bc44b912d14ca574732434f928004b680d9a231c3a688fe1c1f62bac47c663695c8287d779ff2658626c81b,
-  0x,
-  0x,
-  0,
-  0x,
-  0x
+  0xc8fafc7490868b372863778cd2c7928c835e66c59d7bc44b912d14ca574732434f928004b680d9a231c3a688fe1c1f62bac47c663695c8287d779ff2658626c81b
 ])
 ```
 
@@ -575,7 +527,7 @@ To start an in-flight exit, follow these steps:
 
 3. Call 
 ```
-PaymentExitGame.startInflightExit({
+PaymentExitGame.startInFlightExit({
   inFlightTx,
   inputTxs,
   inputUtxosPos
@@ -638,7 +590,7 @@ Appropriate amount of ETH needs to be provided to cover the bond.
 RLP encoded in-flight transaction.
 
 #### inputIndex (uint16)
-ndex of the input to piggyback on.
+Index of the input to piggyback on.
 
 #### outputIndex (uint16)
 Index of the output to piggyback on.

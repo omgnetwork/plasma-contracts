@@ -39,7 +39,7 @@ library PaymentInFlightExitRouterArgs {
 
     /**
      * @notice Wraps arguments for challenging non-canonical in-flight exits
-     * @param inputTx Transaction that created input shared by in-flight transaction and its competitor.
+     * @param inputTx Transaction that created input shared by in-flight transaction and its competitor
      * @param inputUtxoPos Position of input utxo
      * @param inFlightTx RLP-encoded in-flight transaction
      * @param inFlightTxInputIndex Index of shared input in in-flight transaction
