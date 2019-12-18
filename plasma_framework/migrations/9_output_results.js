@@ -6,6 +6,7 @@ const config = require('../config.js');
 
 const PlasmaFramework = artifacts.require('PlasmaFramework');
 const PaymentEip712LibMock = artifacts.require("PaymentEip712LibMock");
+const ERC20Mintable = artifacts.require("ERC20Mintable");
 module.exports = async (
     deployer,
     _,
@@ -25,10 +26,12 @@ module.exports = async (
         plasma_framework: `${plasmaFramework.address}`.toLowerCase(),
     }
     // add development contracts if present
-    const mocks = process.env.MOCKS || false;
-    if (mocks) {
+    const ex_dev = process.env.EX_DEV || false;
+    if (ex_dev) {
         const paymentEip712LibMock = await PaymentEip712LibMock.deployed();
         contracts.paymentEip712LibMock = `${paymentEip712LibMock.address}`.toLowerCase()
+        const erc20Mintable = await ERC20Mintable.deployed();
+        contracts.erc20Mintable = `${erc20Mintable.address}`.toLowerCase()
     }
     // make a json
     const data = JSON.stringify(contracts);
