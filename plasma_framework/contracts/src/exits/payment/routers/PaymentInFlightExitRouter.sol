@@ -250,8 +250,8 @@ contract PaymentInFlightExitRouter is
     /**
      * @notice Respond to a non-canonical challenge by providing its position and by proving its correctness
      * @param inFlightTx The RLP-encoded in-flight transaction
-     * @param inFlightTxPos UTXO position of the in-flight exiting transaction, which is a position of 0 indexed output
-     * @param inFlightTxInclusionProof Proof that in-flight exiting transaction is included in a Plasma block
+     * @param inFlightTxPos The position of the in-flight exiting transaction. The output index within the position is unused and should be set to 0
+     * @param inFlightTxInclusionProof Proof that the in-flight exiting transaction is included in a Plasma block
      */
     function respondToNonCanonicalChallenge(
         bytes memory inFlightTx,

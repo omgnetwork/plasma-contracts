@@ -553,7 +553,7 @@ Utxo positions that represent in-flight transaction inputs. In the same order as
 Merkle proofs that show the input-creating transactions are valid. In the same order as input transactions.
 
 #### inFlightTxWitnesses (bytes[])
-Witnesses for in-flight transaction. In the same order as input transactions. Depending on transaction types, these can be for example sginatures of input owners.
+Witnesses for in-flight transaction. In the same order as input transactions. Depends on transaction type, for example the signatures of input owners.
 
 #### Example:
 
@@ -632,7 +632,7 @@ PaymentExitGame.challengeInFlightExitNotCanonical({
 ### Parameters
 
 #### inputTx (bytes)
-Transaction that created input shared by in-flight transaction and its competitor.
+RLP encoded transaction that created the input shared by in-flight transaction and its competitor.
 
 #### inFlightTx (bytes)
 RLP encoded in-flight transaction.
@@ -647,7 +647,7 @@ RLP-encoded competing transaction that spends the shared input.
 Index of shared input in competing transaction
 
 #### competingTxPos (uint256)
-Transaction position of competing tx, which is utxo position of 0 indexed output.
+Transaction position of competing tx.
 If competing transaction is not included in any Plasma block provide value `0`.
 
 #### competingTxInclusionProof (bytes)
@@ -690,7 +690,7 @@ PaymentExitGame.respondToNonCanonicalChallenge({
 RLP encoded transaction that is in-flight exiting
 
 #### inFlightTxPos (uint256)
-UTXO position of the in-flight exiting transaction, which is a position of 0 indexed output.
+Transaction position of in-flight exiting transaction.
 
 #### inFlightTxInclusionProof (bytes)
 Proof that in-flight exiting transaction is included in a Plasma block.
@@ -726,13 +726,13 @@ PaymentExitGame.challengeInFlightExitInputSpent({
 RLP encoded in-flight transaction.
 
 #### inFlightTxInputIndex (uint16)
-Index of spent input.
+Index of spent input in the in-flight transaction.
 
 #### challengingTx (bytes)
 RLP-encoded challenging transaction.
 
 #### challengingTxInputIndex (uint16)
-Index of spent input in a challenging transaction.
+Index of spent input in the challenging transaction.
 
 #### challengingTxWitness (bytes)
 Witness for challenging transactions. For payment transaction it's a signature of input's owner.
@@ -759,7 +759,7 @@ PaymentExitGame.challengeInFlightExitInputSpent([
 
 ### Challenging in-flight transaction output exit
 
-To challenge a piggyback on in-flight transaction output show that in-flight exit transaction is included in a Plasma block and a transaction that spends the output:
+To challenge a piggyback on in-flight transaction output show that the in-flight exit transaction is included in a Plasma block and another transaction that spends the output:
 ```
 PaymentExitGame.challengeInFlightExitOutputSpent({
     inFlightTx,
@@ -774,7 +774,7 @@ PaymentExitGame.challengeInFlightExitOutputSpent({
 ### Parameters
 
 #### inFlightTx (bytes)
-RLP encoded in-flight exited transaction.
+RLP encoded in-flight exit transaction.
 
 #### inFlightTxInclusionProof (bytes)
 Proof that `inFlightTx` is included in a Plasma block.
@@ -786,7 +786,7 @@ UTXO position of exiting output.
 RLP encoded challenging transaction.
 
 #### challengingTxInputIndex (uint16)
-Input index of challenged output in a challenging transaction.
+Input index of challenged output in the challenging transaction.
 
 #### challengingTxWitness (bytes)
 Witness for challenging transaction.
