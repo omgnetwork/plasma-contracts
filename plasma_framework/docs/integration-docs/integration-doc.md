@@ -1036,4 +1036,140 @@ Exit games allow users to participate in ensuring the correctness of the system.
 ## Watchers
 Watchers monitor the network and send alerts so that users know when they need to react to events.
 
-**TODO: Description of all events that a Watcher should listen for, and how the user should react**
+### Event BlockSubmitted (emitted in PlasmaFramework contract)
+
+A new Plasma Block has been submitted. Watcher should fetch block data from child chain and verify that it matches block data published on Plasma chain.
+```
+event BlockSubmitted(
+    uint256 blockNumber
+);
+```
+
+Fetching block data from `PlasmaFramework`:
+```
+block = PlasmaFramework.blocks(blockNumber)
+```
+where block is:
+```
+struct Block {
+    bytes32 root; // root of Merkle Tree built from transactions
+    uint256 timestamp; // Ethereum block timestamp for Ethereum transaction that submitted the Plasma block
+}
+```
+
+### Event VaultRegistered (emitted in PlasmaFramework contract)
+
+A new vault has been registered. After a quarantine period, a vault can be used for managing funds: storing deposits and making withdrawals.
+```
+event VaultRegistered(
+    uint256 vaultId, // id of the vault in the Plasma Framework
+    address vaultAddress // address of the vault
+);
+```
+
+### Event SetDepositVerifierCalled (emitted in vault contracts)
+
+Chain maintainer chan change deposit verification for a vault by switching to a new deposit verifier, which is a contract that verifies validity of a Plasma deposit. Change of a verifier takes effect after 2 exit periods. User can inspect the source code of the new deposit verifier to examine whether it is safe to use. 
+```
+event VaultRegistered(
+    uint256 vaultId, // id of the vault in the Plasma Framework
+    address vaultAddress // address of the vault
+);
+```
+
+### Event DepositCreated (emitted in EthVault contract)
+
+After a successful deposit of ETH, `EthVault` contract emits `DepositCreated` event. This event notifies that deposited funds are available to spend.
+```
+event DepositCreated(
+    address indexed depositor, // address that deposited the funds
+    uint256 indexed blknum, // Plasma block number that contains the deposit
+    address indexed token, // ETH
+    uint256 amount // amount of ETH deposited
+);
+```
+
+### Event DepositCreated (emitted in Erc20Vault contract)
+
+After a successful deposit of ERC20 tokens, `Erc20Vault` contract emits `DepositCreated` event. This event notifies that deposited funds are available to spend.
+```
+event DepositCreated(
+    address indexed depositor, // address that deposited the funds
+    uint256 indexed blknum, // Plasma block number that contains the deposit
+    address indexed token, // deposited ERC20 token 
+    uint256 amount // amount of tokens deposited
+);
+```
+
+### Event EthWithdrawn (emitted in EthVault contract)
+
+After a successful withdawal of ETH, `EthVault` contract emits `EthWithdrawn` event. This event notifies that withdrawn funds are no longer available to spend on Plasma chain and have been transfered to the receiver.
+```
+event EthWithdrawn(
+    address indexed receiver, // address that receives the funds
+    uint256 amount // amount withdrawn
+);
+```
+
+### Event Erc20Withdrawn (emitted in Erc20Vault contract)
+
+After a successful withdawal of ERC20 tokens, `Erc20Vault` contract emits `Erc20Withdrawn` event. This event notifies that withdrawn funds are no longer available to spend on Plasma chain and have been transfered to the receiver.
+```
+event Erc20Withdrawn(
+    address indexed receiver, // address that receives the funds
+    address indexed token, // transferred ERC20 token
+    uint256 amount // amount withdrawn
+);
+```
+
+### Event WithdrawFailed (emitted in EthVault contract)
+
+If ETH withdrawal failed `EthVault` contract emits `WithdrawFailed` event. This event notifies that withdrawal, which is a result of an exit, failed. That event is a result of malicious user or vault not having enough funds, most probably result of an malicious attack.
+```
+event WithdrawFailed(
+    address indexed receiver, // address that is the target of the withdrawal
+    uint256 amount // exiting amount
+);
+```
+
+### Event ExitGameRegistered (emitted in PlasmaFramework contract)
+
+Event is emitted when maintainer registeres a new exit game. Registered exit game can be used after a quarantine period which is `4 * MIN_EXIT_PERIOD`.
+```
+event ExitGameRegistered(
+    uint256 txType, // transaction type handled by the registered exit gmae
+    address exitGameAddress, // address of the exit game contract
+    uint8 protocol // 1 for MVP, 2 for MORE_VP 
+);
+```
+
+### Event ExitQueueAdded (emitted in PlasmaFramework contract)
+
+Event is emitted when a user adds an exit queue. Exit queue stores all exits for given vaultId and token pair. Before exiting funds stored in a vault it is necessary to register an exit queue for that vault and exiting token.
+```
+event ExitQueueAdded(
+    uint256 vaultId, // id of the vault
+    address token // token
+);
+```
+
+### Event ExitQueued (emitted in PlasmaFramework contract)
+
+Event notifies that exit has been queued in an exit queue.
+```
+event ExitQueued(
+    uint160 indexed exitId, // id of the exit
+    uint256 priority // exit's priority
+);
+```
+
+### Event ProcessedExitsNum (emitted in PlasmaFramework contract)
+
+Event is emitted after exits have been processed.
+```
+event ProcessedExitsNum(
+    uint256 processedNum, // number of processed exits
+    uint256 vaultId, // vault id of the vault that stored the funds
+    address token // token that was withdrawn
+);
+```
