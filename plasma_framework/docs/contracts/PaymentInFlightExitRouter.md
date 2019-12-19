@@ -167,8 +167,8 @@ function respondToNonCanonicalChallenge(bytes inFlightTx, uint256 inFlightTxPos,
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
 | inFlightTx | bytes | The RLP-encoded in-flight transaction | 
-| inFlightTxPos | uint256 | The UTXO position of the in-flight exit. The outputIndex should be set to 0. | 
-| inFlightTxInclusionProof | bytes | Inclusion proof for the in-flight tx | 
+| inFlightTxPos | uint256 | UTXO position of the in-flight exiting transaction, which is a position of 0 indexed output | 
+| inFlightTxInclusionProof | bytes | Proof that in-flight exiting transaction is included in a Plasma block | 
 
 ### challengeInFlightExitInputSpent
 

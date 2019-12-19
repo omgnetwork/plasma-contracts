@@ -45,7 +45,7 @@ event ExitChallenged(uint256 indexed utxoPos);
 Function that builds the controller struct
 
 ```js
-function buildController(PlasmaFramework framework, SpendingConditionRegistry spendingConditionRegistry, uint256 safeGasStipend) public view
+function buildController(PlasmaFramework framework, SpendingConditionRegistry spendingConditionRegistry, uint256 safeGasStipend) public pure
 returns(struct PaymentChallengeStandardExit.Controller)
 ```
 
