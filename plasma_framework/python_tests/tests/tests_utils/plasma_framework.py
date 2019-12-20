@@ -218,11 +218,29 @@ class PlasmaFramework:
                                           competing_tx_input_index,
                                           competing_tx_pos,
                                           competing_tx_inclusion_proof,
-                                          competing_tx_sig):
-        raise NotImplementedError
+                                          competing_tx_sig,
+                                          input_tx,
+                                          input_utxo_pos,
+                                          **kwargs):
+
+        competing_tx_witness = competing_tx_sig
+
+        args = (
+            input_tx,
+            input_utxo_pos,
+            in_flight_tx,
+            in_flight_tx_input_index,
+            competing_tx,
+            competing_tx_input_index,
+            competing_tx_pos,
+            competing_tx_inclusion_proof,
+            competing_tx_witness
+        )
+
+        self.payment_exit_game.challengeInFlightExitNotCanonical(args, **kwargs)
 
     def respondToNonCanonicalChallenge(self, in_flight_tx, in_flight_tx_pos, in_flight_tx_inclusion_proof):
-        raise NotImplementedError
+        self.payment_exit_game.respondToNonCanonicalChallenge(in_flight_tx, in_flight_tx_pos, in_flight_tx_inclusion_proof)
 
     def challengeInFlightExitInputSpent(self, in_flight_tx,
                                         in_flight_tx_input_index,
