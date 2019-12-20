@@ -240,7 +240,7 @@ class PlasmaFramework:
         self.payment_exit_game.challengeInFlightExitNotCanonical(args, **kwargs)
 
     def respondToNonCanonicalChallenge(self, in_flight_tx, in_flight_tx_pos, in_flight_tx_inclusion_proof):
-        raise NotImplementedError
+        self.payment_exit_game.respondToNonCanonicalChallenge(in_flight_tx, in_flight_tx_pos, in_flight_tx_inclusion_proof)
 
     def challengeInFlightExitInputSpent(self, in_flight_tx,
                                         in_flight_tx_input_index,

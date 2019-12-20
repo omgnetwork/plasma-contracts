@@ -2,14 +2,13 @@ import pytest
 from eth_tester.exceptions import TransactionFailed
 from plasma_core.constants import NULL_ADDRESS, MIN_EXIT_PERIOD
 
-pytestmark = pytest.mark.skip("WIP: moving tests to plasma framework")
 
 # should succeed even when phase 2 of in-flight exit is over
 @pytest.mark.parametrize("period", [1, 2, 4])
 def test_respond_to_non_canonical_challenge_should_succeed(testlang, period):
     owner_1, owner_2, amount = testlang.accounts[0], testlang.accounts[1], 100
     deposit_id = testlang.deposit(owner_1, amount)
-    spend_id = testlang.spend_utxo([deposit_id], [owner_1])
+    spend_id = testlang.spend_utxo([deposit_id], [owner_1], [(owner_2.address, NULL_ADDRESS, 100)])
     double_spend_id = testlang.spend_utxo([deposit_id], [owner_1], [(owner_1.address, NULL_ADDRESS, 100)], force_invalid=True)
     testlang.start_in_flight_exit(spend_id)
     testlang.challenge_in_flight_exit_not_canonical(spend_id, double_spend_id, account=owner_2)
@@ -21,14 +20,14 @@ def test_respond_to_non_canonical_challenge_should_succeed(testlang, period):
     in_flight_exit = testlang.get_in_flight_exit(spend_id)
     assert in_flight_exit.bond_owner == owner_1.address
     assert in_flight_exit.oldest_competitor == spend_id
-    assert not in_flight_exit.challenge_flag_set
+    assert in_flight_exit.is_canonical
 
 
 def test_respond_to_non_canonical_challenge_not_older_should_fail(testlang):
     owner_1, owner_2, amount = testlang.accounts[0], testlang.accounts[1], 100
     deposit_id = testlang.deposit(owner_1, amount)
-    double_spend_id = testlang.spend_utxo([deposit_id], [owner_1], [(owner_1.address, NULL_ADDRESS, 100)], force_invalid=True)
-    spend_id = testlang.spend_utxo([deposit_id], [owner_1])
+    double_spend_id = testlang.spend_utxo([deposit_id], [owner_1], [(owner_2.address, NULL_ADDRESS, 100)], force_invalid=True)
+    spend_id = testlang.spend_utxo([deposit_id], [owner_1], [(owner_1.address, NULL_ADDRESS, 100)])
     testlang.start_in_flight_exit(spend_id)
     testlang.challenge_in_flight_exit_not_canonical(spend_id, double_spend_id, account=owner_2)
 
@@ -41,7 +40,7 @@ def test_respond_to_non_canonical_challenge_not_older_should_fail(testlang):
 def test_respond_to_non_canonical_challenge_invalid_proof_should_fail(testlang):
     owner_1, owner_2, amount = testlang.accounts[0], testlang.accounts[1], 100
     deposit_id = testlang.deposit(owner_1, amount)
-    spend_id = testlang.spend_utxo([deposit_id], [owner_1])
+    spend_id = testlang.spend_utxo([deposit_id], [owner_1], [(owner_2.address, NULL_ADDRESS, 100)])
     double_spend_id = testlang.spend_utxo([deposit_id], [owner_1], [(owner_1.address, NULL_ADDRESS, 100)], force_invalid=True)
     testlang.start_in_flight_exit(spend_id)
     testlang.challenge_in_flight_exit_not_canonical(spend_id, double_spend_id, account=owner_2)
@@ -58,7 +57,7 @@ def test_respond_to_not_canonical_challenge_with_inputs_spent_should_fail(testla
     owner_1, owner_2, amount = testlang.accounts[0], testlang.accounts[1], 100
     deposit_id = testlang.deposit(owner_1, amount)
     testlang.start_standard_exit(deposit_id, owner_1)
-    spend_id = testlang.spend_utxo([deposit_id], [owner_1])
+    spend_id = testlang.spend_utxo([deposit_id], [owner_1], [(owner_2.address, NULL_ADDRESS, 100)])
     double_spend_id = testlang.spend_utxo([deposit_id], [owner_1], [(owner_1.address, NULL_ADDRESS, 100)], force_invalid=True)
 
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
