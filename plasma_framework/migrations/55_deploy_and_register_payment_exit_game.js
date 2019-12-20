@@ -31,57 +31,7 @@ module.exports = async (
     const PAYMENT_V2_TX_TYPE = config.registerKeys.txTypes.paymentV2;
     const FEE_TX_TYPE = config.registerKeys.txTypes.fee;
 
-    // deploy and link exit game controllers
-
-    await deployer.deploy(PaymentStartStandardExit);
-    const startStandardExit = await PaymentStartStandardExit.deployed();
-
-    await deployer.deploy(PaymentChallengeStandardExit);
-    const challengeStandardExit = await PaymentChallengeStandardExit.deployed();
-
-    await deployer.deploy(PaymentProcessStandardExit);
-    const processStandardExit = await PaymentProcessStandardExit.deployed();
-
-    await deployer.deploy(PaymentStartInFlightExit);
-    const startInFlightExit = await PaymentStartInFlightExit.deployed();
-
-    await deployer.deploy(PaymentPiggybackInFlightExit);
-    const piggybackInFlightExit = await PaymentPiggybackInFlightExit.deployed();
-
-    await deployer.deploy(PaymentChallengeIFENotCanonical);
-    const challengeInFlightExitNotCanonical = await PaymentChallengeIFENotCanonical.deployed();
-
-    await deployer.deploy(PaymentChallengeIFEInputSpent);
-    const challengeIFEInputSpent = await PaymentChallengeIFEInputSpent.deployed();
-
-    await deployer.deploy(PaymentChallengeIFEOutputSpent);
-    const challengeIFEOutput = await PaymentChallengeIFEOutputSpent.deployed();
-
-    await deployer.deploy(PaymentDeleteInFlightExit);
-    const deleteInFlightExit = await PaymentDeleteInFlightExit.deployed();
-
-    await deployer.deploy(PaymentProcessInFlightExit);
-    const processInFlightExit = await PaymentProcessInFlightExit.deployed();
-
-    await PaymentExitGame.link('PaymentStartStandardExit', startStandardExit.address);
-    await PaymentExitGame.link('PaymentChallengeStandardExit', challengeStandardExit.address);
-    await PaymentExitGame.link('PaymentProcessStandardExit', processStandardExit.address);
-    await PaymentExitGame.link('PaymentStartInFlightExit', startInFlightExit.address);
-    await PaymentExitGame.link('PaymentPiggybackInFlightExit', piggybackInFlightExit.address);
-    await PaymentExitGame.link('PaymentChallengeIFENotCanonical', challengeInFlightExitNotCanonical.address);
-    await PaymentExitGame.link('PaymentChallengeIFEInputSpent', challengeIFEInputSpent.address);
-    await PaymentExitGame.link('PaymentChallengeIFEOutputSpent', challengeIFEOutput.address);
-    await PaymentExitGame.link('PaymentDeleteInFlightExit', deleteInFlightExit.address);
-    await PaymentExitGame.link('PaymentProcessInFlightExit', processInFlightExit.address);
-
-    // deploy exit game
-
-    await deployer.deploy(SpendingConditionRegistry);
     const spendingConditionRegistry = await SpendingConditionRegistry.deployed();
-
-    await deployer.deploy(PaymentTransactionStateTransitionVerifier);
-    const stateVerifier = await PaymentTransactionStateTransitionVerifier.deployed();
-
     const plasmaFramework = await PlasmaFramework.deployed();
 
     // handle spending condition
@@ -125,23 +75,4 @@ module.exports = async (
         FEE_CLAIM_OUTPUT_TYPE, PAYMENT_TX_TYPE, feeClaimOutputToPaymentTxCondition.address,
     );
     await spendingConditionRegistry.renounceOwnership();
-
-    const paymentExitGameArgs = [
-        plasmaFramework.address,
-        config.registerKeys.vaultId.eth,
-        config.registerKeys.vaultId.erc20,
-        spendingConditionRegistry.address,
-        stateVerifier.address,
-        PAYMENT_TX_TYPE,
-        config.frameworks.safeGasStipend.v1,
-    ];
-    const paymentExitGame = await deployer.deploy(PaymentExitGame, paymentExitGameArgs);
-
-    // register the exit game to framework
-    await plasmaFramework.registerExitGame(
-        PAYMENT_TX_TYPE,
-        paymentExitGame.address,
-        config.frameworks.protocols.moreVp,
-        { from: maintainerAddress },
-    );
 };
