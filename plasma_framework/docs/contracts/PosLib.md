@@ -13,7 +13,7 @@ TX position = (blockNumber * BLOCK_OFFSET + txIndex * TX_OFFSET)
 ```js
 struct Position {
  uint256 blockNum,
- uint256 txIndex,
+ uint16 txIndex,
  uint16 outputIndex
 }
 ```
@@ -24,7 +24,9 @@ struct Position {
 ```js
 uint256 internal constant BLOCK_OFFSET;
 uint256 internal constant TX_OFFSET;
+uint256 internal constant MAX_OUTPUT_INDEX;
 uint256 internal constant MAX_TX_INDEX;
+uint256 internal constant MAX_BLOCK_NUM;
 
 ```
 
