@@ -15,7 +15,7 @@ library ExitPriority {
      * @return An exit priority
      *   Anatomy of returned value, most significant bits first
      *   42 bits  - timestamp in seconds (exitable_at); we can represent dates until year 141431
-     *   54 bits  - blknum * CHILD_BLOCK_INTERVAL * 10^5 + txindex; 54 bits represent all transactions for 85 years. We are assuming CHILD_BLOCK_INTERVAL = 1000.
+     *   54 bits  - blocknum * 10^5 + txindex; 54 bits represent all transactions for 85 years. Be aware that child chain block number jumps with the interval of CHILD_BLOCK_INTERVAL, which would be 1000 in production.
      *   160 bits - exit id
      */
     function computePriority(uint64 exitableAt, PosLib.Position memory txPos, uint160 exitId)
