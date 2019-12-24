@@ -11,13 +11,17 @@ library PosLib {
 
     struct Position {
         uint256 blockNum;
-        uint256 txIndex;
+        uint16 txIndex;
         uint16 outputIndex;
     }
 
     uint256 constant internal BLOCK_OFFSET = 1000000000;
     uint256 constant internal TX_OFFSET = 10000;
-    uint256 constant internal MAX_TX_INDEX = BLOCK_OFFSET / TX_OFFSET;
+    
+    uint256 constant internal MAX_OUTPUT_INDEX = TX_OFFSET - 1;
+    // since we are using merkle tree of depth 16, max tx index size would be 2^16 - 1
+    uint256 constant internal MAX_TX_INDEX = 2 ** 16 - 1;
+    uint256 constant internal MAX_BLOCK_NUM = ((2 ** 256 - 1) - MAX_TX_INDEX * TX_OFFSET - MAX_OUTPUT_INDEX) / BLOCK_OFFSET;
 
     /**
      * @notice Returns transaction position which is an utxo position of zero index output
@@ -51,11 +55,10 @@ library PosLib {
      * @return Position encoded as an integer
      */
     function encode(Position memory pos) internal pure returns (uint256) {
-        require(pos.outputIndex < TX_OFFSET, "Invalid output index");
-        require(pos.txIndex < MAX_TX_INDEX, "Invalid transaction index");
+        require(pos.outputIndex <= MAX_OUTPUT_INDEX, "Invalid output index");
+        require(pos.blockNum <= MAX_BLOCK_NUM, "Invalid block number");
 
-        // SafeMath multiplication mitigates the issue of a proper block number value
-        return pos.blockNum.mul(BLOCK_OFFSET).add(pos.txIndex.mul(TX_OFFSET)).add(pos.outputIndex);
+        return pos.blockNum.mul(BLOCK_OFFSET).add(uint256(pos.txIndex).mul(TX_OFFSET)).add(pos.outputIndex);
     }
 
     /**
@@ -67,6 +70,10 @@ library PosLib {
         uint256 blockNum = pos / BLOCK_OFFSET;
         uint256 txIndex = (pos % BLOCK_OFFSET) / TX_OFFSET;
         uint16 outputIndex = uint16(pos % TX_OFFSET);
-        return Position(blockNum, txIndex, outputIndex);
+
+        // (BLOCK_OFFSET / TX_OFFSET) is larger than MAX_TX_INDEX (2 ^ 16 - 1)
+        // thus the encoded position can potentially be with txIndex larger than uint16
+        require(txIndex <= MAX_TX_INDEX, "txIndex should not exceed the size of uint16");
+        return Position(blockNum, uint16(txIndex), outputIndex);
     }
 }
