@@ -120,16 +120,18 @@ contract('MoreVpFinalization', () => {
                 expect(isStandardFinalized).to.be.true;
             });
 
-            it('should return false given empty inclusion proof', async () => {
+            it('should revert given empty inclusion proof', async () => {
                 await this.framework.setBlock(TEST_BLOCK_NUM, this.merkle.root, 0);
 
-                const isStandardFinalized = await this.test.isStandardFinalized(
-                    this.framework.address,
-                    this.txBytes,
-                    this.txPos,
-                    EMPTY_BYTES,
+                await expectRevert(
+                    this.test.isStandardFinalized(
+                        this.framework.address,
+                        this.txBytes,
+                        this.txPos,
+                        EMPTY_BYTES,
+                    ),
+                    'Merkle proof must not be empty',
                 );
-                expect(isStandardFinalized).to.be.false;
             });
 
             it('should return false given invalid inclusion proof', async () => {

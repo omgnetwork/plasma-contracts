@@ -21,6 +21,7 @@ library Merkle {
         pure
         returns (bool)
     {
+        require(proof.length != 0, "Merkle proof must not be empty");
         require(proof.length % 32 == 0, "Length of Merkle proof must be a multiple of 32");
 
         bytes32 proofElement;
