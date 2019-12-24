@@ -9,10 +9,9 @@ contract('PosLib', () => {
 
     const maxOutputIndex = new BN(TX_OFFSET - 1);
     const maxTxIndex = (new BN(2)).pow(new BN(16)).sub(new BN(1));
-    const maxBlockNum = (new BN(2)).pow(new BN(256)).sub(new BN(1))
-        .sub(maxTxIndex.mul(new BN(TX_OFFSET)))
-        .sub(maxOutputIndex)
-        .div(new BN(BLOCK_OFFSET));
+    const maxBlockNum = (new BN(2)).pow(new BN(54)).sub(new BN(1))
+        .sub(maxTxIndex)
+        .div(new BN(BLOCK_OFFSET / TX_OFFSET));
 
     before('setup contract and utxo pos values', async () => {
         this.contract = await PosLib.new();
@@ -40,9 +39,9 @@ contract('PosLib', () => {
         });
     });
 
-    describe('getTxPostionForExitPriority', () => {
+    describe('getTxPositionForExitPriority', () => {
         it('should get a correct tx position for exit priority', async () => {
-            const result = await this.contract.getTxPostionForExitPriority(this.position);
+            const result = await this.contract.getTxPositionForExitPriority(this.position);
             const expected = this.utxoPos / TX_OFFSET;
             expect(result).to.be.bignumber.equal(new BN(expected));
         });
@@ -87,10 +86,7 @@ contract('PosLib', () => {
         });
 
         it('should fail when block number is too big', async () => {
-            const invalidBlockNum = (new BN(2)).pow(new BN(256)).sub(new BN(1))
-                .div(new BN(BLOCK_OFFSET))
-                .add(new BN(1))
-                .toString();
+            const invalidBlockNum = maxBlockNum.add(new BN(1)).toString();
             const position = {
                 blockNum: invalidBlockNum,
                 txIndex: this.txIndex,
@@ -127,12 +123,23 @@ contract('PosLib', () => {
             });
         });
 
-        it('should fail when transaction index is exceeds uint16 limit', async () => {
+        it('should fail when transaction index exceeds uint16 limit', async () => {
             const txIndexTooLarge = 2 ** 16;
             const position = this.blockNum * BLOCK_OFFSET + txIndexTooLarge * TX_OFFSET + this.outputIndex;
             await expectRevert(
                 this.contract.decode(position),
-                'txIndex should not exceed the size of uint16',
+                'txIndex exceed the size of uint16',
+            );
+        });
+
+        it('should fail when block number exceeds max size allowed in PlasmaFramework', async () => {
+            const position = (maxBlockNum.add(new BN(1))).mul(new BN(BLOCK_OFFSET))
+                .add((new BN(0)).mul(new BN(TX_OFFSET)))
+                .add(new BN(0))
+                .toString();
+            await expectRevert(
+                this.contract.decode(position),
+                'blockNum exceed max size allowed in PlasmaFramework',
             );
         });
     });

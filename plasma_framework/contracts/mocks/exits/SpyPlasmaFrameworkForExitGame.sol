@@ -44,7 +44,7 @@ contract SpyPlasmaFrameworkForExitGame is PlasmaFramework {
             _vaultId,
             _token,
             _exitableAt,
-            _txPos.getTxPostionForExitPriority(),
+            _txPos.getTxPositionForExitPriority(),
             _exitId,
             address(_exitProcessor)
         );

@@ -23,7 +23,7 @@ library ExitPriority {
         pure
         returns (uint256)
     {
-        return (uint256(exitableAt) << 214) | (txPos.getTxPostionForExitPriority() << 160) | uint256(exitId);
+        return (uint256(exitableAt) << 214) | (txPos.getTxPositionForExitPriority() << 160) | uint256(exitId);
     }
 
     function parseExitableAt(uint256 priority) internal pure returns (uint64) {
