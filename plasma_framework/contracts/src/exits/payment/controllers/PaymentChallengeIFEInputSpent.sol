@@ -141,11 +141,9 @@ library PaymentChallengeIFEInputSpent {
         );
         require(address(condition) != address(0), "Spending condition contract not found");
 
-        PosLib.Position memory inputUtxoPos = PosLib.decode(data.args.inputUtxoPos);
-
         bool isSpent = condition.verify(
             data.args.inputTx,
-            inputUtxoPos.encode(),
+            data.args.inputUtxoPos,
             data.args.challengingTx,
             data.args.challengingTxInputIndex,
             data.args.challengingTxWitness
