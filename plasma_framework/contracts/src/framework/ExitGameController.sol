@@ -14,8 +14,8 @@ import "../utils/PosLib.sol";
  *         For details, see the Plasma MVP spec: https://ethresear.ch/t/minimal-viable-plasma/426
  */
 contract ExitGameController is ExitGameRegistry {
-    // exit priority => IExitProcessor
-    mapping (uint256 => IExitProcessor) public delegations;
+    // exit hashed (priority, token) => Delegation
+    mapping (bytes32 => IExitProcessor) public delegations;
     // hashed (vault id, token) => PriorityQueue
     mapping (bytes32 => PriorityQueue) public exitsQueues;
     // outputId => bool
@@ -131,7 +131,9 @@ contract ExitGameController is ExitGameRegistry {
         uint256 priority = ExitPriority.computePriority(exitableAt, txPos, exitId);
 
         queue.insert(priority);
-        delegations[priority] = exitProcessor;
+
+        bytes32 delegationKey = getDelegationKey(priority, token);
+        delegations[delegationKey] = exitProcessor;
 
         emit ExitQueued(exitId, priority);
         return priority;
@@ -157,11 +159,12 @@ contract ExitGameController is ExitGameRegistry {
         require(topExitId == 0 || exitId == topExitId,
             "Top exit ID of the queue is different to the one specified");
 
-        IExitProcessor processor = delegations[uniquePriority];
+        bytes32 delegationKey = getDelegationKey(uniquePriority, token);
+        IExitProcessor processor = delegations[delegationKey];
         uint256 processedNum = 0;
 
         while (processedNum < maxExitsToProcess && ExitPriority.parseExitableAt(uniquePriority) < block.timestamp) {
-            delete delegations[uniquePriority];
+            delete delegations[delegationKey];
             queue.delMin();
             processedNum++;
 
@@ -172,8 +175,9 @@ contract ExitGameController is ExitGameRegistry {
             }
 
             uniquePriority = queue.getMin();
+            delegationKey = getDelegationKey(uniquePriority, token);
             exitId = ExitPriority.parseExitId(uniquePriority);
-            processor = delegations[uniquePriority];
+            processor = delegations[delegationKey];
         }
 
         emit ProcessedExitsNum(processedNum, vaultId, token);
@@ -223,5 +227,9 @@ contract ExitGameController is ExitGameRegistry {
 
     function hasExitQueue(bytes32 queueKey) private view returns (bool) {
         return address(exitsQueues[queueKey]) != address(0);
+    }
+
+    function getDelegationKey(uint256 priority, address token) private pure returns (bytes32) {
+        return keccak256(abi.encodePacked(priority, token));
     }
 }
