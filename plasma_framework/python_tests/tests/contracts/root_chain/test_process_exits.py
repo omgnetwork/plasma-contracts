@@ -702,3 +702,26 @@ def test_in_flight_exit_is_cleaned_up_even_though_none_of_outputs_exited(testlan
 
     # assert IFE and piggyback bonds were sent to the owners
     assert testlang.get_balance(owner) == pre_balance + testlang.root_chain.inFlightExitBond() * 2
+
+
+def test_output_exited_via_se_and_ife_exits_only_once(testlang, plasma_framework):
+    # exit cross-spend test, case 7
+    owner_1, amount, amount_spent = testlang.accounts[0], 100, 1
+    deposit_id = testlang.deposit(owner_1, amount)
+    spend_id = testlang.spend_utxo([deposit_id], [owner_1], [(owner_1.address, NULL_ADDRESS, amount_spent)])
+
+    testlang.start_in_flight_exit(spend_id)
+
+    blknum, txindex, _ = decode_utxo_id(spend_id)
+    output_id = encode_utxo_id(blknum, txindex, 0)
+    testlang.start_standard_exit(output_id, account=owner_1)
+
+    testlang.piggyback_in_flight_exit_output(spend_id, 0, owner_1)
+
+    pre_exit_balance = testlang.get_balance(plasma_framework.eth_vault)
+
+    testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
+    testlang.process_exits(NULL_ADDRESS, 0, 100)
+
+    post_exit_balance = testlang.get_balance(plasma_framework.eth_vault)
+    assert post_exit_balance == pre_exit_balance - amount_spent
