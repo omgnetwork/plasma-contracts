@@ -14,7 +14,7 @@ import "../utils/PosLib.sol";
  *         For details, see the Plasma MVP spec: https://ethresear.ch/t/minimal-viable-plasma/426
  */
 contract ExitGameController is ExitGameRegistry {
-    // exit hashed (priority, token) => Delegation
+    // exit hashed (priority, token) => IExitProcessor
     mapping (bytes32 => IExitProcessor) public delegations;
     // hashed (vault id, token) => PriorityQueue
     mapping (bytes32 => PriorityQueue) public exitsQueues;

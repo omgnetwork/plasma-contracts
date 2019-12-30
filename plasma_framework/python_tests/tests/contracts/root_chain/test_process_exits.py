@@ -300,7 +300,7 @@ def test_finalize_skipping_top_utxo_check_is_possible(testlang):
 
 
 def test_finalize_challenged_exit_will_not_send_funds(testlang):
-    owner, finalizer, amount = testlang.accounts[0], testlang.accounts[0], 100
+    owner, amount = testlang.accounts[0], 100
     deposit_id = testlang.deposit(owner, amount)
     spend_id = testlang.spend_utxo([deposit_id], [owner], [(owner.address, NULL_ADDRESS, 100)])
 
@@ -419,7 +419,7 @@ def test_finalize_exits_priority_for_in_flight_exits_corresponds_to_the_age_of_y
     assert testlang.get_balance(owner) == balance + 100 + testlang.root_chain.standardExitBond()
 
 
-def test_finalize_in_flight_exit_with_erc20_token_should_succeed(testlang, token,plasma_framework):
+def test_finalize_in_flight_exit_with_erc20_token_should_succeed(testlang, token, plasma_framework):
     owner, amount = testlang.accounts[1], 100
     deposit_id = testlang.deposit_token(owner, token, amount)
     spend_id = testlang.spend_utxo([deposit_id], [owner], [(owner.address, token.address, amount)])
@@ -550,7 +550,7 @@ def test_does_not_finalize_outputs_of_other_tokens(testlang, token):
 
 
 def test_when_processing_ife_finalization_of_erc20_token_does_not_clean_up_eth_outputs_data(
-    testlang, token, plasma_framework):
+        testlang, token, plasma_framework):
     (owner_1, owner_2), amount = testlang.accounts[1:3], 100
 
     token_deposit = testlang.deposit_token(owner_1, token, amount)
@@ -559,7 +559,7 @@ def test_when_processing_ife_finalization_of_erc20_token_does_not_clean_up_eth_o
     spend_id = testlang.spend_utxo([token_deposit, eth_deposit], [owner_1, owner_2],
                                    [(owner_1.address, NULL_ADDRESS, amount),
                                     (owner_2.address, token.address, amount)])
-   
+
     testlang.start_in_flight_exit(spend_id)
 
     testlang.piggyback_in_flight_exit_output(spend_id, 0, owner_1)
