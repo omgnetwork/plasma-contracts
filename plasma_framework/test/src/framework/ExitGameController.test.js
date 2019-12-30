@@ -184,7 +184,8 @@ contract('ExitGameController', () => {
 
             it('saves the exit data to map', async () => {
                 const priority = await this.dummyExitGame.priorityFromEnqueue();
-                const exitProcessor = await this.controller.delegations(priority);
+                const delegationKey = web3.utils.soliditySha3(priority, this.dummyExit.token);
+                const exitProcessor = await this.controller.delegations(delegationKey);
 
                 expect(exitProcessor).to.equal(this.dummyExit.exitProcessor);
             });
@@ -354,7 +355,8 @@ contract('ExitGameController', () => {
 
                 await this.controller.processExits(VAULT_ID, this.dummyToken, 0, 1);
 
-                const exitProcessor = await this.controller.delegations(priority);
+                const delegationKey = web3.utils.soliditySha3(priority, this.dummyExit.token);
+                const exitProcessor = await this.controller.delegations(delegationKey);
                 expect(exitProcessor).to.equal(constants.ZERO_ADDRESS);
             });
 
