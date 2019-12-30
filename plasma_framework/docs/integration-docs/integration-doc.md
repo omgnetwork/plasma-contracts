@@ -1038,7 +1038,7 @@ Watchers monitor the network and send alerts so that users know when they need t
 
 ### Event BlockSubmitted (emitted in PlasmaFramework contract)
 
-A new Plasma Block has been submitted. Watcher should fetch block data from child chain and verify that it matches block data published on Plasma chain.
+A new Plasma Block has been submitted. Watcher should fetch block data from child chain and verify that it matches block data published to the Plasma contract on the root chain.
 ```
 event BlockSubmitted(
     uint256 blockNumber
@@ -1069,7 +1069,7 @@ event VaultRegistered(
 
 ### Event SetDepositVerifierCalled (emitted in vault contracts)
 
-Chain maintainer chan change deposit verification for a vault by switching to a new deposit verifier, which is a contract that verifies validity of a Plasma deposit. Change of a verifier takes effect after 2 exit periods. User can inspect the source code of the new deposit verifier to examine whether it is safe to use. 
+The Chain maintainer can change deposit verification for a vault by switching to a new deposit verifier, which is a contract that verifies the validity of a Plasma deposit. Change of a verifier takes effect after 2 exit periods. User should inspect the source code of the new deposit verifier to examine whether it is safe to use.
 ```
 event VaultRegistered(
     uint256 vaultId, // id of the vault in the Plasma Framework
@@ -1124,7 +1124,7 @@ event Erc20Withdrawn(
 
 ### Event WithdrawFailed (emitted in EthVault contract)
 
-If ETH withdrawal failed `EthVault` contract emits `WithdrawFailed` event. This event notifies that withdrawal, which is a result of an exit, failed. That event is a result of malicious user or vault not having enough funds, most probably result of an malicious attack.
+If a withdrawal fails, the `EthVault` contract emits a `WithdrawFailed` event. This event notifies that a withdrawal, which is a result of an exit, failed. This can happen because of malicious behaviour or the vault not having enough funds, most probably due to a malicious attack.
 ```
 event WithdrawFailed(
     address indexed receiver, // address that is the target of the withdrawal
@@ -1134,7 +1134,7 @@ event WithdrawFailed(
 
 ### Event ExitGameRegistered (emitted in PlasmaFramework contract)
 
-Event is emitted when maintainer registeres a new exit game. Registered exit game can be used after a quarantine period which is `4 * MIN_EXIT_PERIOD`.
+Event is emitted when maintainer registers a new exit game. The new exit game can be used after a quarantine period which is `4 * MIN_EXIT_PERIOD`.
 ```
 event ExitGameRegistered(
     uint256 txType, // transaction type handled by the registered exit gmae
