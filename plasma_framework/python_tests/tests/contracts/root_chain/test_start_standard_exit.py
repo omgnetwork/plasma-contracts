@@ -130,60 +130,6 @@ def test_start_standard_exit_from_deposit_must_be_exitable_in_minimal_finalizati
     assert testlang.get_standard_exit(deposit_id) == [NULL_ADDRESS_HEX, 0, 0, False]
 
 
-@pytest.mark.skip("Skipped due to mix with IFE")
-@pytest.mark.parametrize("num_outputs", [1, 2, 3, 4])
-def test_start_standard_exit_on_piggyback_in_flight_exit_valid_output_owner_should_fail(testlang, num_outputs):
-    # exit cross-spend test, case 9
-    owner_1, amount = testlang.accounts[0], 100
-    deposit_id = testlang.deposit(owner_1, amount)
-    outputs = []
-    for i in range(0, num_outputs):
-        outputs.append((testlang.accounts[i].address, NULL_ADDRESS, 1))
-    spend_id = testlang.spend_utxo([deposit_id], [owner_1], outputs)
-
-    testlang.start_in_flight_exit(spend_id)
-
-    output_index = num_outputs - 1
-    testlang.piggyback_in_flight_exit_output(spend_id, output_index, testlang.accounts[output_index])
-
-    in_flight_exit = testlang.get_in_flight_exit(spend_id)
-    assert in_flight_exit.output_piggybacked(output_index)
-
-    blknum, txindex, _ = decode_utxo_id(spend_id)
-    output_id = encode_utxo_id(blknum, txindex, output_index)
-
-    with pytest.raises(TransactionFailed):
-        testlang.start_standard_exit(output_id, testlang.accounts[output_index])
-
-
-@pytest.mark.skip("Skipped due to mix with IFE")
-@pytest.mark.parametrize("num_outputs", [1, 2, 3, 4])
-def test_start_standard_exit_on_in_flight_exit_output_should_block_future_piggybacks(testlang, num_outputs):
-    # exit cross-spend test, case 7
-    owner_1, amount = testlang.accounts[0], 100
-    deposit_id = testlang.deposit(owner_1, amount)
-    outputs = []
-    for i in range(0, num_outputs):
-        outputs.append((testlang.accounts[i].address, NULL_ADDRESS, 1))
-    spend_id = testlang.spend_utxo([deposit_id], [owner_1], outputs)
-
-    testlang.start_in_flight_exit(spend_id)
-
-    output_index = num_outputs - 1
-
-    blknum, txindex, _ = decode_utxo_id(spend_id)
-    output_id = encode_utxo_id(blknum, txindex, output_index)
-    testlang.start_standard_exit(output_id, account=testlang.accounts[output_index])
-
-    with pytest.raises(TransactionFailed):
-        testlang.piggyback_in_flight_exit_output(spend_id, output_index, testlang.accounts[output_index])
-
-    in_flight_exit = testlang.get_in_flight_exit(spend_id)
-    assert not in_flight_exit.output_piggybacked(output_index)
-    assert in_flight_exit.output_blocked(output_index)
-
-
-@pytest.mark.skip("Skipped due to mix with IFE")
 @pytest.mark.parametrize("num_outputs", [1, 2, 3, 4])
 def test_start_standard_exit_on_finalized_in_flight_exit_output_should_fail(testlang, num_outputs):
     owner, amount = testlang.accounts[0], 100
@@ -196,7 +142,7 @@ def test_start_standard_exit_on_finalized_in_flight_exit_output_should_fail(test
     testlang.start_in_flight_exit(spend_id)
     testlang.piggyback_in_flight_exit_output(spend_id, output_index, owner)
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
-    testlang.process_exits(testlang.root_chain.eth_vault_id, NULL_ADDRESS, 0, 1)
+    testlang.process_exits(NULL_ADDRESS, 0, 1)
 
     blknum, txindex, _ = decode_utxo_id(spend_id)
 
