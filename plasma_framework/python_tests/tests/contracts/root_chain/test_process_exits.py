@@ -704,19 +704,25 @@ def test_in_flight_exit_is_cleaned_up_even_though_none_of_outputs_exited(testlan
     assert testlang.get_balance(owner) == pre_balance + testlang.root_chain.inFlightExitBond() * 2
 
 
-def test_output_exited_via_se_and_ife_exits_only_once(testlang, plasma_framework):
-    # exit cross-spend test, case 7
+@pytest.mark.parametrize("num_outputs", [1, 2, 3, 4])
+def test_output_exited_via_se_and_ife_exits_only_once(testlang, plasma_framework, num_outputs):
     owner_1, amount, amount_spent = testlang.accounts[0], 100, 1
     deposit_id = testlang.deposit(owner_1, amount)
-    spend_id = testlang.spend_utxo([deposit_id], [owner_1], [(owner_1.address, NULL_ADDRESS, amount_spent)])
+
+    outputs = []
+    for i in range(0, num_outputs):
+        outputs.append((owner_1.address, NULL_ADDRESS, amount_spent))
+    spend_id = testlang.spend_utxo([deposit_id], [owner_1], outputs)
+
+    output_index = num_outputs - 1
 
     testlang.start_in_flight_exit(spend_id)
 
     blknum, txindex, _ = decode_utxo_id(spend_id)
-    output_id = encode_utxo_id(blknum, txindex, 0)
-    testlang.start_standard_exit(output_id, account=owner_1)
+    output_id = encode_utxo_id(blknum, txindex, output_index)
 
-    testlang.piggyback_in_flight_exit_output(spend_id, 0, owner_1)
+    testlang.piggyback_in_flight_exit_output(spend_id, output_index, owner_1)
+    testlang.start_standard_exit(output_id, account=owner_1)
 
     pre_exit_balance = testlang.get_balance(plasma_framework.eth_vault)
 
