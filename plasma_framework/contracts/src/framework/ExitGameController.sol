@@ -14,7 +14,7 @@ import "../utils/PosLib.sol";
  *         For details, see the Plasma MVP spec: https://ethresear.ch/t/minimal-viable-plasma/426
  */
 contract ExitGameController is ExitGameRegistry {
-    // exit hashed (priority, token) => IExitProcessor
+    // exit hashed (priority, vault id, token) => IExitProcessor
     mapping (bytes32 => IExitProcessor) public delegations;
     // hashed (vault id, token) => PriorityQueue
     mapping (bytes32 => PriorityQueue) public exitsQueues;
@@ -132,7 +132,7 @@ contract ExitGameController is ExitGameRegistry {
 
         queue.insert(priority);
 
-        bytes32 delegationKey = getDelegationKey(priority, token);
+        bytes32 delegationKey = getDelegationKey(priority, vaultId, token);
         delegations[delegationKey] = exitProcessor;
 
         emit ExitQueued(exitId, priority);
@@ -159,7 +159,7 @@ contract ExitGameController is ExitGameRegistry {
         require(topExitId == 0 || exitId == topExitId,
             "Top exit ID of the queue is different to the one specified");
 
-        bytes32 delegationKey = getDelegationKey(uniquePriority, token);
+        bytes32 delegationKey = getDelegationKey(uniquePriority, vaultId, token);
         IExitProcessor processor = delegations[delegationKey];
         uint256 processedNum = 0;
 
@@ -175,7 +175,7 @@ contract ExitGameController is ExitGameRegistry {
             }
 
             uniquePriority = queue.getMin();
-            delegationKey = getDelegationKey(uniquePriority, token);
+            delegationKey = getDelegationKey(uniquePriority, vaultId, token);
             exitId = ExitPriority.parseExitId(uniquePriority);
             processor = delegations[delegationKey];
         }
@@ -229,7 +229,7 @@ contract ExitGameController is ExitGameRegistry {
         return address(exitsQueues[queueKey]) != address(0);
     }
 
-    function getDelegationKey(uint256 priority, address token) private pure returns (bytes32) {
-        return keccak256(abi.encodePacked(priority, token));
+    function getDelegationKey(uint256 priority, uint256 vaultId, address token) private pure returns (bytes32) {
+        return keccak256(abi.encodePacked(priority, vaultId, token));
     }
 }

@@ -670,3 +670,19 @@ def test_in_flight_exit_is_cleaned_up_even_though_none_of_outputs_exited(testlan
 
     # assert IFE and piggyback bonds were sent to the owners
     assert testlang.get_balance(owner) == pre_balance + testlang.root_chain.inFlightExitBond()
+
+
+def test_processing_ife_and_se_exit_from_same_output_does_not_fail(testlang):
+    owner, amount = testlang.accounts[0], 100
+    deposit_id = testlang.deposit(owner, amount)
+
+    spend_id = testlang.spend_utxo([deposit_id], [owner], [(owner.address, NULL_ADDRESS, amount)])
+
+    testlang.start_in_flight_exit(spend_id)
+    testlang.piggyback_in_flight_exit_input(spend_id, 0, owner)
+    testlang.start_standard_exit(spend_id, owner)
+
+    testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
+
+    # no error should be raised
+    testlang.process_exits(NULL_ADDRESS, 0, 2)
