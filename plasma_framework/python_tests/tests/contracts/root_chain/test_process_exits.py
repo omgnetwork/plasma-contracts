@@ -686,3 +686,32 @@ def test_processing_ife_and_se_exit_from_same_output_does_not_fail(testlang):
 
     # no error should be raised
     testlang.process_exits(NULL_ADDRESS, 0, 2)
+
+
+@pytest.mark.parametrize("num_outputs", [1, 2, 3, 4])
+def test_output_exited_via_se_and_ife_exits_only_once(testlang, plasma_framework, num_outputs):
+    owner_1, amount, amount_spent = testlang.accounts[0], 100, 1
+    deposit_id = testlang.deposit(owner_1, amount)
+
+    outputs = []
+    for i in range(0, num_outputs):
+        outputs.append((owner_1.address, NULL_ADDRESS, amount_spent))
+    spend_id = testlang.spend_utxo([deposit_id], [owner_1], outputs)
+
+    output_index = num_outputs - 1
+
+    testlang.start_in_flight_exit(spend_id)
+
+    blknum, txindex, _ = decode_utxo_id(spend_id)
+    output_id = encode_utxo_id(blknum, txindex, output_index)
+
+    testlang.piggyback_in_flight_exit_output(spend_id, output_index, owner_1)
+    testlang.start_standard_exit(output_id, account=owner_1)
+
+    pre_exit_balance = testlang.get_balance(plasma_framework.eth_vault)
+
+    testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
+    testlang.process_exits(NULL_ADDRESS, 0, 100)
+
+    post_exit_balance = testlang.get_balance(plasma_framework.eth_vault)
+    assert post_exit_balance == pre_exit_balance - amount_spent
