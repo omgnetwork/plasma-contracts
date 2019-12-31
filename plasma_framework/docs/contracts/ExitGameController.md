@@ -66,7 +66,7 @@ modifier nonReentrant() internal
 - [getNextExit(uint256 vaultId, address token)](#getnextexit)
 - [exitQueueKey(uint256 vaultId, address token)](#exitqueuekey)
 - [hasExitQueue(bytes32 queueKey)](#hasexitqueue)
-- [getDelegationKey(uint256 priority, address token)](#getdelegationkey)
+- [getDelegationKey(uint256 priority, uint256 vaultId, address token)](#getdelegationkey)
 
 ### 
 
@@ -276,7 +276,7 @@ returns(bool)
 ### getDelegationKey
 
 ```js
-function getDelegationKey(uint256 priority, address token) private pure
+function getDelegationKey(uint256 priority, uint256 vaultId, address token) private pure
 returns(bytes32)
 ```
 
@@ -285,6 +285,7 @@ returns(bytes32)
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
 | priority | uint256 |  | 
+| vaultId | uint256 |  | 
 | token | address |  | 
 
 ## Contracts
