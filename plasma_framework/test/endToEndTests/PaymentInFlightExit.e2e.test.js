@@ -103,7 +103,6 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
 
                         this.inFlightTxRaw = web3.utils.bytesToHex(this.inFlightTx.rlpEncoded());
                         const inputTxs = [this.depositTx];
-                        const inputTxTypes = [TX_TYPE_PAYMENT];
                         const inputUtxosPos = [this.depositUtxoPos];
                         const inputTxsInclusionProofs = [this.merkleProofForDepositTx];
 
@@ -113,7 +112,6 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                         const args = {
                             inFlightTx: this.inFlightTxRaw,
                             inputTxs,
-                            inputTxTypes,
                             inputUtxosPos,
                             inputTxsInclusionProofs,
                             inFlightTxWitnesses: [signature],
@@ -327,7 +325,6 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                                     challengingTxWitness: this.signatureTx2,
                                                     inputTx: this.outputAData.depositTx,
                                                     inputUtxoPos: this.outputAData.depositUtxoPos,
-                                                    spendingConditionOptionalArgs: EMPTY_BYTES,
                                                 };
                                                 await this.exitGame.challengeInFlightExitInputSpent(
                                                     args,

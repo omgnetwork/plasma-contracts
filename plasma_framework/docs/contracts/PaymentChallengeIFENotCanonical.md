@@ -35,7 +35,7 @@ event InFlightExitChallengeResponded(address indexed challenger, bytes32 indexed
 Function that builds the controller struct
 
 ```js
-function buildController(PlasmaFramework framework, SpendingConditionRegistry spendingConditionRegistry, uint256 supportedTxType) public view
+function buildController(PlasmaFramework framework, SpendingConditionRegistry spendingConditionRegistry, uint256 supportedTxType) public pure
 returns(struct PaymentChallengeIFENotCanonical.Controller)
 ```
 

@@ -91,10 +91,6 @@ class InFlightExit:
         self.bond_size = bond_size
         self.oldest_competitor = oldest_competitor
 
-    @property
-    def challenge_flag_set(self):
-        return self.root_chain.flagged(self.exit_start_timestamp)
-
     def get_input(self, index):
         input_info = self.inputs.get(index)
         if not input_info:
@@ -428,8 +424,8 @@ class TestingLanguage:
     def find_shared_input(tx_a, tx_b):
         tx_a_input_index = 0
         tx_b_input_index = 0
-        for i in range(0, 4):
-            for j in range(0, 4):
+        for i in range(len(tx_a.inputs)):
+            for j in range(len(tx_b.inputs)):
                 tx_a_input = tx_a.inputs[i].identifier
                 tx_b_input = tx_b.inputs[j].identifier
                 if tx_a_input == tx_b_input and tx_a_input != 0:
@@ -440,7 +436,7 @@ class TestingLanguage:
     @staticmethod
     def find_input_index(output_id, tx_b):
         tx_b_input_index = 0
-        for i in range(0, 4):
+        for i in range(len(tx_b.inputs)):
             tx_b_input = tx_b.inputs[i].identifier
             if tx_b_input == output_id:
                 tx_b_input_index = i
@@ -452,9 +448,14 @@ class TestingLanguage:
         (in_flight_tx_input_index, competing_tx_input_index) = self.find_shared_input(in_flight_tx, competing_tx)
         proof = self.get_merkle_proof(competing_tx_id)
         signature = competing_tx.signatures[competing_tx_input_index]
+
+        shared_input_identifier = in_flight_tx.inputs[in_flight_tx_input_index].identifier
+        shared_input = self.child_chain.get_transaction(shared_input_identifier)
+
         self.root_chain.challengeInFlightExitNotCanonical(in_flight_tx.encoded, in_flight_tx_input_index,
                                                           competing_tx.encoded, competing_tx_input_index,
                                                           competing_tx_id, proof, signature,
+                                                          shared_input.encoded, shared_input_identifier,
                                                           **{'from': account.address})
 
     def respond_to_non_canonical_challenge(self, in_flight_tx_id, key):
@@ -472,8 +473,13 @@ class TestingLanguage:
         spend_tx = self.child_chain.get_transaction(spend_tx_id)
         (in_flight_tx_input_index, spend_tx_input_index) = self.find_shared_input(in_flight_tx, spend_tx)
         signature = spend_tx.signatures[spend_tx_input_index]
+
+        shared_input_identifier = in_flight_tx.inputs[in_flight_tx_input_index].identifier
+        shared_input_tx = self.child_chain.get_transaction(shared_input_identifier)
+
         self.root_chain.challengeInFlightExitInputSpent(in_flight_tx.encoded, in_flight_tx_input_index,
                                                         spend_tx.encoded, spend_tx_input_index, signature,
+                                                        shared_input_tx.encoded, shared_input_identifier,
                                                         **{'from': key.address})
 
     def challenge_in_flight_exit_output_spent(self, in_flight_tx_id, spending_tx_id, output_index, key):

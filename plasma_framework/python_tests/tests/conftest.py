@@ -13,7 +13,7 @@ from plasma_core.account import EthereumAccount
 from plasma_core.constants import NULL_ADDRESS
 from testlang.testlang import TestingLanguage
 from tests.tests_utils.constants import (
-    HUNDRED_ETH,
+    INITIAL_ETH,
     START_GAS,
     GAS_LIMIT,
     INITIAL_IMMUNE_VAULTS,
@@ -54,7 +54,7 @@ def accounts():
 
 
 def ganache_initial_accounts_args(accounts):
-    return [f"--account=\"{acc.key.to_hex()},{HUNDRED_ETH}\"" for acc in accounts]
+    return [f"--account=\"{acc.key.to_hex()},{INITIAL_ETH}\"" for acc in accounts]
 
 
 def parse_worker_no(worker_id):
