@@ -724,16 +724,16 @@ def test_should_not_withdraw_in_flight_exit_twice(testlang, plasma_framework):
                                    [(owner.address, NULL_ADDRESS, 50), (owner.address, NULL_ADDRESS, 50)])
 
     # First time should succeed
-    start_piggyback_process(spend_id, owner, testlang)
+    start_ife_piggyback_and_process(spend_id, owner, testlang)
 
     # Second time should succeed but should not withdraw funds from the vault
     pre_exit_balance = testlang.get_balance(plasma_framework.eth_vault)
-    start_piggyback_process(spend_id, owner, testlang)
+    start_ife_piggyback_and_process(spend_id, owner, testlang)
     post_exit_balance = testlang.get_balance(plasma_framework.eth_vault)
     assert post_exit_balance == pre_exit_balance
 
 
-def start_piggyback_process(spend_id, owner, testlang):
+def start_ife_piggyback_and_process(spend_id, owner, testlang):
     testlang.start_in_flight_exit(spend_id)
     testlang.piggyback_in_flight_exit_input(spend_id, 0, owner)
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
