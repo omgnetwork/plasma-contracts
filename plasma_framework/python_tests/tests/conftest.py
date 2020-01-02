@@ -16,8 +16,6 @@ from tests.tests_utils.constants import (
     INITIAL_ETH,
     START_GAS,
     GAS_LIMIT,
-    INITIAL_IMMUNE_VAULTS,
-    INITIAL_IMMUNE_EXIT_GAMES,
 )
 from tests.tests_utils.convenience_wrappers import ConvenienceContractWrapper, AutominingEth
 from tests.tests_utils.deployer import Deployer
@@ -158,22 +156,6 @@ def token(get_contract, request):
 @pytest.fixture(params=["ERC20Mintable"])
 def no_exit_queue_token(get_contract, request):
     return get_contract(request.param)
-
-
-# FIXME: delete fixture
-@pytest.fixture
-def root_chain_short_exit_period(get_contract):
-    # Minimal valid exit period is 2, if we exit period to less than 2
-    # we will be dividing by zero in function`RootChain::_firstPhaseNotOver`.
-    # But, if we set exit period to 2, then we will automatically end up in the second phase as
-    # blocks are mined with 1 second interval.
-    exit_period = 4
-    return initialized_contract(get_contract, exit_period, INITIAL_IMMUNE_VAULTS, INITIAL_IMMUNE_EXIT_GAMES)
-
-
-@pytest.fixture
-def testlang_root_chain_short_exit_period(root_chain_short_exit_period, w3, accounts):
-    return TestingLanguage(root_chain_short_exit_period, w3, accounts)
 
 
 @pytest.fixture

@@ -1,30 +1,16 @@
 import pytest
 from eth_tester.exceptions import TransactionFailed
-
-pytestmark = pytest.mark.skip("WIP: moving tests to plasma framework")
-
-EXIT_PERIOD = 4 * 60
+from plasma_core.constants import MIN_EXIT_PERIOD, NULL_ADDRESS
 
 
-@pytest.fixture
-def utxo(testlang_root_chain_short_exit_period):
-    return testlang_root_chain_short_exit_period.create_utxo()
+def test_exit_period_setting_has_effect(testlang):
+    owner = testlang.accounts[0]
+    deposit_id = testlang.deposit(owner, 100)
 
+    spend_id = testlang.spend_utxo([deposit_id], [owner], outputs=[(owner.address, NULL_ADDRESS, 50)])
+    testlang.start_in_flight_exit(spend_id)
 
-@pytest.mark.skip("PlasmaFramework has no init function")
-def test_cant_ever_init_twice(plasma_framework, accounts):
-    with pytest.raises(TransactionFailed):
-        plasma_framework.init(EXIT_PERIOD, **{'from': accounts[0].address})
-
-
-def test_exit_period_setting_has_effect(testlang_root_chain_short_exit_period, w3):
-    owner = testlang_root_chain_short_exit_period.accounts[0]
-    deposit_id = testlang_root_chain_short_exit_period.deposit(owner, 100)
-
-    spend_id = testlang_root_chain_short_exit_period.spend_utxo([deposit_id], [owner])
-    testlang_root_chain_short_exit_period.start_in_flight_exit(spend_id)
-
-    w3.eth.increase_time(2)  # explicitly forward time to the second period
+    testlang.forward_timestamp(2 * MIN_EXIT_PERIOD)
 
     with pytest.raises(TransactionFailed):
-        testlang_root_chain_short_exit_period.piggyback_in_flight_exit_input(spend_id, 0, owner)
+        testlang.piggyback_in_flight_exit_input(spend_id, 0, owner)
