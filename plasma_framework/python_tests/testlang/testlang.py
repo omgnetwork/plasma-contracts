@@ -271,23 +271,6 @@ class TestingLanguage:
         spend = self.child_chain.get_transaction(spend_id)
         return Utxo(deposit_id, owner, token_address, amount, spend, spend_id)
 
-    def start_fee_exit(self, operator, amount, token=NULL_ADDRESS, bond=None):
-        """Starts a fee exit.
-
-        Args:
-            operator (EthereumAccount): Account to attempt the fee exit.
-            amount (int): Amount to exit.
-
-        Returns:
-            int: Unique identifier of the exit.
-        """
-
-        fee_exit_id = self.root_chain.getFeeExitId(self.root_chain.nextFeeExit())
-        bond = bond if bond is not None else self.root_chain.standardExitBond()
-        tx_hash = self.root_chain.startFeeExit(token, amount,
-                                               **{'value': bond, 'from': operator.address, 'gas': 1_000_000})
-        return fee_exit_id, tx_hash
-
     def process_exits(self, token, exit_id, count=1, vault_id=None, **kwargs):
         """Finalizes exits that have completed the exit period.
 
