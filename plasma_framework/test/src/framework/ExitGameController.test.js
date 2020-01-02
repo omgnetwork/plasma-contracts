@@ -184,7 +184,8 @@ contract('ExitGameController', () => {
 
             it('saves the exit data to map', async () => {
                 const priority = await this.dummyExitGame.priorityFromEnqueue();
-                const exitProcessor = await this.controller.delegations(priority);
+                const delegationKey = web3.utils.soliditySha3(priority, VAULT_ID, this.dummyExit.token);
+                const exitProcessor = await this.controller.delegations(delegationKey);
 
                 expect(exitProcessor).to.equal(this.dummyExit.exitProcessor);
             });
@@ -320,7 +321,7 @@ contract('ExitGameController', () => {
                 );
             });
 
-            it('should be able to process when the exitId is set to 0', async () => {
+            it('should process the exit when the exitId is set to 0', async () => {
                 const tx = await this.controller.processExits(VAULT_ID, this.dummyToken, 0, 1);
                 await expectEvent.inLogs(tx.logs, 'ProcessedExitsNum', {
                     processedNum: new BN(1),
@@ -328,7 +329,29 @@ contract('ExitGameController', () => {
                 });
             });
 
-            it('should be able to process when the exitId is set to the exact top of the queue', async () => {
+            it('should process an exit for the same token and exitId but a different vault', async () => {
+                const otherVaultId = VAULT_ID + 1;
+                await this.controller.addExitQueue(otherVaultId, this.dummyToken);
+
+                await this.dummyExitGame.enqueue(
+                    otherVaultId,
+                    this.dummyExit.token,
+                    this.dummyExit.exitableAt,
+                    this.dummyExit.txPos,
+                    this.dummyExit.exitId,
+                    this.dummyExit.exitProcessor,
+                );
+
+                await this.controller.processExits(VAULT_ID, this.dummyToken, 0, 1);
+
+                const tx = await this.controller.processExits(otherVaultId, this.dummyToken, 0, 1);
+                await expectEvent.inLogs(tx.logs, 'ProcessedExitsNum', {
+                    processedNum: new BN(1),
+                    token: this.dummyToken,
+                });
+            });
+
+            it('should process the exit when the exitId is set to the exact top of the queue', async () => {
                 const tx = await this.controller.processExits(
                     VAULT_ID, this.dummyToken, this.dummyExit.exitId, 1,
                 );
@@ -354,7 +377,8 @@ contract('ExitGameController', () => {
 
                 await this.controller.processExits(VAULT_ID, this.dummyToken, 0, 1);
 
-                const exitProcessor = await this.controller.delegations(priority);
+                const delegationKey = web3.utils.soliditySha3(priority, VAULT_ID, this.dummyExit.token);
+                const exitProcessor = await this.controller.delegations(delegationKey);
                 expect(exitProcessor).to.equal(constants.ZERO_ADDRESS);
             });
 

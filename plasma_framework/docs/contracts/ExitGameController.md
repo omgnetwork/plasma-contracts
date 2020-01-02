@@ -17,7 +17,7 @@ Controls the logic and functions for ExitGame to interact with the PlasmaFramewo
 
 ```js
 //public members
-mapping(uint256 => contract IExitProcessor) public delegations;
+mapping(bytes32 => contract IExitProcessor) public delegations;
 mapping(bytes32 => contract PriorityQueue) public exitsQueues;
 mapping(bytes32 => bool) public isOutputSpent;
 
@@ -66,6 +66,7 @@ modifier nonReentrant() internal
 - [getNextExit(uint256 vaultId, address token)](#getnextexit)
 - [exitQueueKey(uint256 vaultId, address token)](#exitqueuekey)
 - [hasExitQueue(bytes32 queueKey)](#hasexitqueue)
+- [getDelegationKey(uint256 priority, uint256 vaultId, address token)](#getdelegationkey)
 
 ### 
 
@@ -271,6 +272,21 @@ returns(bool)
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
 | queueKey | bytes32 |  | 
+
+### getDelegationKey
+
+```js
+function getDelegationKey(uint256 priority, uint256 vaultId, address token) private pure
+returns(bytes32)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| priority | uint256 |  | 
+| vaultId | uint256 |  | 
+| token | address |  | 
 
 ## Contracts
 

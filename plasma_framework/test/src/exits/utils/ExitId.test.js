@@ -78,6 +78,7 @@ contract('ExitId', () => {
             expect(await this.contract.getStandardExitId(isDeposit, dummyTxBytes, dummyUtxoPos))
                 .to.be.bignumber.equal(new BN('702208493532374679784918666435922091245195446034'));
         });
+
         it('should overflow when created a tx with more than 255 outputs', async () => {
             const output = new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, 100, OUTPUT_GUARD, constants.ZERO_ADDRESS);
             const isDeposit = false;
@@ -100,13 +101,23 @@ contract('ExitId', () => {
     });
 
     describe('getInFlightExitId', () => {
-        it('should get correct in-flight exit id', async () => {
+        before(async () => {
             const output = new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, 100, OUTPUT_GUARD, constants.ZERO_ADDRESS);
             const transaction = new PaymentTransaction(1, [DUMMY_INPUT], [output], EMPTY_BYTES32);
-            const transactionBytes = web3.utils.bytesToHex(transaction.rlpEncoded());
+            this.transactionBytes = web3.utils.bytesToHex(transaction.rlpEncoded());
+        });
 
-            expect(await this.contract.getInFlightExitId(transactionBytes))
+        it('should get correct in-flight exit id', async () => {
+            expect(await this.contract.getInFlightExitId(this.transactionBytes))
                 .to.be.bignumber.equal(new BN('2857124106454338066358541405669474417649600274'));
+        });
+
+        it('should get an exit id that differs from standard exit id', async () => {
+            const dummyUtxoPos = 1000000000;
+            const seId = await this.contract.getStandardExitId(false, this.transactionBytes, dummyUtxoPos);
+            const ifeId = await this.contract.getInFlightExitId(this.transactionBytes);
+
+            expect(seId).to.be.bignumber.not.equal(ifeId);
         });
     });
 });
