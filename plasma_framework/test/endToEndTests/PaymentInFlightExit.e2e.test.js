@@ -53,7 +53,6 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
 
         this.exitGame = await PaymentExitGame.at(await this.framework.exitGames(config.registerKeys.txTypes.payment));
 
-        this.startStandardExitBondSize = await this.exitGame.startStandardExitBondSize();
         this.startIFEBondSize = await this.exitGame.startIFEBondSize();
         this.piggybackBondSize = await this.exitGame.piggybackBondSize();
 
