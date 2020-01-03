@@ -1,7 +1,7 @@
 import pytest
 from eth_tester.exceptions import TransactionFailed
 from plasma_core.constants import NULL_ADDRESS, NULL_ADDRESS_HEX, MIN_EXIT_PERIOD
-from plasma_core.transaction import Transaction
+from plasma_core.transaction import Transaction, amend_signature
 from plasma_core.utils.eip712_struct_hash import hash_struct
 from plasma_core.utils.transactions import decode_utxo_id, encode_utxo_id
 from testlang.testlang import StandardExit
@@ -94,7 +94,6 @@ def test_start_standard_exit_on_finalized_exit_should_fail(testlang, utxo):
         testlang.start_standard_exit(utxo.spend_id, utxo.owner)
 
 
-@pytest.mark.skip("Skipped due to usage of EIP712")
 def test_start_standard_exit_wrong_oindex_should_fail(testlang):
     alice, bob, alice_money, bob_money = testlang.accounts[0], testlang.accounts[1], 10, 90
 
@@ -171,47 +170,47 @@ def test_start_standard_exit_from_two_deposits_with_the_same_amount_and_owner_sh
     testlang.start_standard_exit(second_deposit_id, owner)
 
 
-@pytest.mark.skip("Skip due to usage of challenges")
 def test_old_signature_scheme_does_not_work_any_longer(testlang, utxo):
     # In this test I will challenge standard exit with old signature schema to show it no longer works
     # Then passing new signature to the same challenge data, challenge will succeed
     alice = testlang.accounts[0]
     outputs = [(alice.address, NULL_ADDRESS, 50)]
-    spend_id = testlang.spend_utxo([utxo.spend_id], [alice], outputs)
+    exiting_tx_id = testlang.spend_utxo([utxo.spend_id], [alice], outputs)
+    exiting_tx = testlang.child_chain.get_transaction(exiting_tx_id)
 
-    testlang.start_standard_exit(spend_id, alice)
-    exit_id = testlang.get_standard_exit_id(spend_id)
+    testlang.start_standard_exit(exiting_tx_id, alice)
+    exit_id = testlang.get_standard_exit_id(exiting_tx_id)
 
     # let's prepare old schema signature for a transaction with an input of exited utxo
-    spend_tx = Transaction(inputs=[decode_utxo_id(spend_id)], outputs=outputs)
-    old_signature = alice.key.sign_msg_hash(spend_tx.hash).to_bytes()
+    spend_tx = Transaction(inputs=[decode_utxo_id(exiting_tx_id)], outputs=outputs)
+    old_signature = amend_signature(alice.key.sign_msg_hash(spend_tx.hash).to_bytes())
 
     # challenge will fail on signature verification
     with pytest.raises(TransactionFailed):
-        testlang.root_chain.challengeStandardExit(exit_id, spend_tx.encoded, 0, old_signature)
+        testlang.root_chain.challengeStandardExit(exit_id, spend_tx.encoded, 0, old_signature, exiting_tx.encoded)
 
     # sanity check: let's provide new schema signature for a challenge
-    new_signature = alice.key.sign_msg_hash(hash_struct(spend_tx, verifying_contract=testlang.root_chain)).to_bytes()
-    testlang.root_chain.challengeStandardExit(exit_id, spend_tx.encoded, 0, new_signature)
+    new_signature = amend_signature(alice.key.sign_msg_hash(hash_struct(spend_tx, verifying_contract=testlang.root_chain)).to_bytes())
+    testlang.root_chain.challengeStandardExit(exit_id, spend_tx.encoded, 0, new_signature, exiting_tx.encoded)
 
 
-@pytest.mark.skip("Skip due to usage of challenges")
 def test_signature_scheme_respects_verifying_contract(testlang, utxo):
     alice = testlang.accounts[0]
     outputs = [(alice.address, NULL_ADDRESS, 50)]
-    spend_id = testlang.spend_utxo([utxo.spend_id], [alice], outputs)
+    exiting_tx_id = testlang.spend_utxo([utxo.spend_id], [alice], outputs)
+    exiting_tx = testlang.child_chain.get_transaction(exiting_tx_id)
 
-    testlang.start_standard_exit(spend_id, alice)
-    exit_id = testlang.get_standard_exit_id(spend_id)
+    testlang.start_standard_exit(exiting_tx_id, alice)
+    exit_id = testlang.get_standard_exit_id(exiting_tx_id)
 
-    spend_tx = Transaction(inputs=[decode_utxo_id(spend_id)], outputs=outputs)
+    spend_tx = Transaction(inputs=[decode_utxo_id(exiting_tx_id)], outputs=outputs)
 
-    bad_contract_signature = alice.key.sign_msg_hash(hash_struct(spend_tx, verifying_contract=None)).to_bytes()
+    bad_contract_signature = amend_signature(alice.key.sign_msg_hash(hash_struct(spend_tx, verifying_contract=None)).to_bytes())
 
     # challenge will fail on signature verification
     with pytest.raises(TransactionFailed):
-        testlang.root_chain.challengeStandardExit(exit_id, spend_tx.encoded, 0, bad_contract_signature)
+        testlang.root_chain.challengeStandardExit(exit_id, spend_tx.encoded, 0, bad_contract_signature, exiting_tx.encoded)
 
     # sanity check
-    proper_signature = alice.key.sign_msg_hash(hash_struct(spend_tx, verifying_contract=testlang.root_chain)).to_bytes()
-    testlang.root_chain.challengeStandardExit(exit_id, spend_tx.encoded, 0, proper_signature)
+    proper_signature = amend_signature(alice.key.sign_msg_hash(hash_struct(spend_tx, verifying_contract=testlang.root_chain)).to_bytes())
+    testlang.root_chain.challengeStandardExit(exit_id, spend_tx.encoded, 0, proper_signature, exiting_tx.encoded)

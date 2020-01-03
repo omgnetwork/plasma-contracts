@@ -1,7 +1,7 @@
 import pytest
 from eth_tester.exceptions import TransactionFailed
 
-from plasma_core.constants import NULL_ADDRESS, MIN_EXIT_PERIOD
+from plasma_core.constants import NULL_ADDRESS
 
 
 def test_challenge_in_flight_exit_not_canonical_should_succeed(testlang):
@@ -184,22 +184,3 @@ def test_challenge_in_flight_exit_twice_younger_position_should_fail(testlang):
 
     with pytest.raises(TransactionFailed):
         testlang.challenge_in_flight_exit_not_canonical(spend_id, double_spend_id_2, account=owner_2)
-
-
-@pytest.mark.skip("SE <> IFE interaction")
-def test_challenge_in_flight_exit_not_canonical_with_inputs_spent_should_fail(testlang):
-    owner_1, owner_2, amount = testlang.accounts[0], testlang.accounts[1], 100
-    deposit_id = testlang.deposit(owner_1, amount)
-    testlang.start_standard_exit(deposit_id, owner_1)
-    spend_id = testlang.spend_utxo([deposit_id], [owner_1], [(owner_2.address, NULL_ADDRESS, 100)])
-    double_spend_id = testlang.spend_utxo([deposit_id], [owner_1], [(owner_1.address, NULL_ADDRESS, 100)],
-                                          force_invalid=True)
-
-    testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
-    testlang.process_exits(NULL_ADDRESS, 0, 1)
-
-    testlang.start_in_flight_exit(spend_id)
-
-    # Since IFE can be exited only from inputs, no further canonicity game required
-    with pytest.raises(TransactionFailed):
-        testlang.challenge_in_flight_exit_not_canonical(spend_id, double_spend_id, account=owner_2)

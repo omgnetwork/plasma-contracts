@@ -147,6 +147,10 @@ class PlasmaFramework:
 
         return filters
 
+    @property
+    def address(self):
+        return self.plasma_framework.address
+
     def blocks(self, block):
         return self.plasma_framework.blocks(block)
 
