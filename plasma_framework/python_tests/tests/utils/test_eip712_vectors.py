@@ -35,11 +35,6 @@ def hash_lib_wrapper(get_contract):
     return get_contract("PaymentEip712LibMock")
 
 
-def test_empty_transaction(hash_lib_wrapper):
-    empty_tx = Transaction(inputs=[], outputs=[])
-    assert hash_struct(empty_tx, test_domain) == hash_lib_wrapper.hashTx(verifyingContract, empty_tx.encoded)
-
-
 def test_sample_transaction(hash_lib_wrapper):
     tx = Transaction(inputs=inputs, outputs=outputs)
     assert hash_struct(tx, test_domain) == hash_lib_wrapper.hashTx(verifyingContract, tx.encoded)
