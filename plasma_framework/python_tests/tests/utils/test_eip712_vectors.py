@@ -5,15 +5,12 @@ from plasma_core.transaction import Transaction
 from eip712_structs import make_domain
 from plasma_core.utils.eip712_struct_hash import hash_struct
 
-# TODO: Run the tests on new tx format
-#  Metamask currently does not implement dynamic arrays
 
-pytestmark = pytest.mark.skip(reason="Dynamic arrays and optional fields in tx format")
-
+verifyingContract = bytes.fromhex('44de0ec539b8c4a4b530c78620fe8320167f2f74')
 test_domain = make_domain(
     name='OMG Network',
     version='1',
-    verifyingContract=bytes.fromhex('44de0ec539b8c4a4b530c78620fe8320167f2f74'),
+    verifyingContract=verifyingContract,
     salt=bytes.fromhex('fad5c7f626d80f9256ef01929f3beb96e058b8b4b0e3fe52d84f054c0e2a7a83')
 )
 owner = bytes.fromhex('2258a5279850f6fb78888a7e45ea2a5eb1b3c436')
@@ -33,17 +30,21 @@ outputs = [
 ]
 
 
-# NOTE: following test vectors were confirmed against contracts code
-def test_empty_transaction():
+@pytest.fixture
+def hash_lib_wrapper(get_contract):
+    return get_contract("PaymentEip712LibMock")
+
+
+def test_empty_transaction(hash_lib_wrapper):
     empty_tx = Transaction(inputs=[], outputs=[])
-    assert hash_struct(empty_tx, test_domain).hex() == '992ac0f45bff7d9fb74636623e5d8b111b49b818cadcf3a91c035735a84d154f'
+    assert hash_struct(empty_tx, test_domain) == hash_lib_wrapper.hashTx(verifyingContract, empty_tx.encoded)
 
 
-def test_sample_transaction():
+def test_sample_transaction(hash_lib_wrapper):
     tx = Transaction(inputs=inputs, outputs=outputs)
-    assert hash_struct(tx, test_domain).hex() == 'b42dc40570279af9faa05e64d62f54db0fd2b768a4a69646efba068cf88eb7a2'
+    assert hash_struct(tx, test_domain) == hash_lib_wrapper.hashTx(verifyingContract, tx.encoded)
 
 
-def test_transaction_with_metadata():
+def test_transaction_with_metadata(hash_lib_wrapper):
     tx = Transaction(inputs=inputs, outputs=outputs, metadata=metadata)
-    assert hash_struct(tx, test_domain).hex() == '5f9adeaaba8d2fa17de40f45eb12136c7e7f26ea56567226274314d0a563e81d'
+    assert hash_struct(tx, test_domain) == hash_lib_wrapper.hashTx(verifyingContract, tx.encoded)
