@@ -761,13 +761,6 @@ def test_should_not_withdraw_in_flight_exit_twice(testlang, plasma_framework):
     assert post_exit_balance == pre_exit_balance
 
 
-def start_ife_piggyback_and_process(spend_id, owner, testlang):
-    testlang.start_in_flight_exit(spend_id)
-    testlang.piggyback_in_flight_exit_input(spend_id, 0, owner)
-    testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
-    testlang.process_exits(NULL_ADDRESS, 0, 10)
-
-
 def test_not_canonial_in_flight_exit_processed_successfully(testlang, plasma_framework):
     owner, deposit_1_amount, deposit_2_amount = testlang.accounts[0], 100, 200
     deposit_id_1 = testlang.deposit(owner, deposit_1_amount)
@@ -801,3 +794,10 @@ def test_not_canonial_in_flight_exit_processed_successfully(testlang, plasma_fra
     vault_balance = testlang.get_balance(plasma_framework.eth_vault)
     # deposit 1 is withdrawn
     assert vault_balance == starting_vault_balance - amount_spent - deposit_1_amount
+
+
+def start_ife_piggyback_and_process(spend_id, owner, testlang):
+    testlang.start_in_flight_exit(spend_id)
+    testlang.piggyback_in_flight_exit_input(spend_id, 0, owner)
+    testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
+    testlang.process_exits(NULL_ADDRESS, 0, 10)
