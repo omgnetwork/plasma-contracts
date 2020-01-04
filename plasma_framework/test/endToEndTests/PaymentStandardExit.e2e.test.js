@@ -63,7 +63,6 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
         this.exitGame = await PaymentExitGame.at(await this.framework.exitGames(config.registerKeys.txTypes.payment));
 
         this.startStandardExitBondSize = await this.exitGame.startStandardExitBondSize();
-        this.startIFEBondSize = await this.exitGame.startIFEBondSize();
         this.piggybackBondSize = await this.exitGame.piggybackBondSize();
 
         this.framework.addExitQueue(config.registerKeys.vaultId.eth, ETH);

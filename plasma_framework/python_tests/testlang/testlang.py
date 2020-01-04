@@ -242,10 +242,10 @@ class TestingLanguage:
         exit_id = self.get_standard_exit_id(output_id)
         self.root_chain.challengeStandardExit(exit_id, spend_tx.encoded, input_index, signature, exiting_tx.encoded)
 
-    def start_in_flight_exit(self, tx_id, bond=None, sender=None):
+    def start_in_flight_exit(self, tx_id, bond=None, sender=None, spend_tx=None):
         if sender is None:
             sender = self.accounts[0]
-        (encoded_spend, encoded_inputs, inputs_pos, proofs, signatures) = self.get_in_flight_exit_info(tx_id)
+        (encoded_spend, encoded_inputs, inputs_pos, proofs, signatures) = self.get_in_flight_exit_info(tx_id, spend_tx)
         bond = bond if bond is not None else self.root_chain.inFlightExitBond()
         self.root_chain.startInFlightExit(encoded_spend, encoded_inputs, proofs, signatures, inputs_pos,
                                           **{'value': bond, 'from': sender.address})
@@ -394,8 +394,9 @@ class TestingLanguage:
         merkle = block.merklized_transaction_set
         return merkle.create_membership_proof(tx.encoded)
 
-    def piggyback_in_flight_exit_input(self, tx_id, input_index, account, bond=None):
-        spend_tx = self.child_chain.get_transaction(tx_id)
+    def piggyback_in_flight_exit_input(self, tx_id, input_index, account, bond=None, spend_tx=None):
+        if spend_tx is None:
+            spend_tx = self.child_chain.get_transaction(tx_id)
         bond = bond if bond is not None else self.root_chain.piggybackBond()
         self.root_chain.piggybackInFlightExit(spend_tx.encoded, input_index, **{'value': bond, 'from': account.address})
 
@@ -425,8 +426,9 @@ class TestingLanguage:
                 tx_b_input_index = i
         return tx_b_input_index
 
-    def challenge_in_flight_exit_not_canonical(self, in_flight_tx_id, competing_tx_id, account):
-        in_flight_tx = self.child_chain.get_transaction(in_flight_tx_id)
+    def challenge_in_flight_exit_not_canonical(self, in_flight_tx_id, competing_tx_id, account, in_flight_tx=None):
+        if in_flight_tx is None:
+            in_flight_tx = self.child_chain.get_transaction(in_flight_tx_id)
         competing_tx = self.child_chain.get_transaction(competing_tx_id)
         (in_flight_tx_input_index, competing_tx_input_index) = self.find_shared_input(in_flight_tx, competing_tx)
         proof = self.get_merkle_proof(competing_tx_id)

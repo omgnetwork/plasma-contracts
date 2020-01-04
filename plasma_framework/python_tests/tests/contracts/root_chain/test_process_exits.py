@@ -2,6 +2,7 @@ import pytest
 from eth_tester.exceptions import TransactionFailed
 
 from plasma_core.constants import NULL_ADDRESS, NULL_ADDRESS_HEX, MIN_EXIT_PERIOD
+from plasma_core.transaction import Transaction
 from plasma_core.utils.transactions import decode_utxo_id, encode_utxo_id
 from tests.conftest import assert_events
 
@@ -689,14 +690,14 @@ def test_processing_ife_and_se_exit_from_same_output_does_not_fail(testlang):
 
 
 @pytest.mark.parametrize("num_outputs", [1, 2, 3, 4])
-def test_output_exited_via_se_and_ife_exits_only_once(testlang, plasma_framework, num_outputs):
-    owner_1, amount, amount_spent = testlang.accounts[0], 100, 1
-    deposit_id = testlang.deposit(owner_1, amount)
+def test_output_exited_via_ife_and_then_se_withdraws_once(testlang, plasma_framework, num_outputs):
+    owner, amount, amount_spent = testlang.accounts[0], 100, 1
+    deposit_id = testlang.deposit(owner, amount)
 
     outputs = []
     for i in range(0, num_outputs):
-        outputs.append((owner_1.address, NULL_ADDRESS, amount_spent))
-    spend_id = testlang.spend_utxo([deposit_id], [owner_1], outputs)
+        outputs.append((owner.address, NULL_ADDRESS, amount_spent))
+    spend_id = testlang.spend_utxo([deposit_id], [owner], outputs)
 
     output_index = num_outputs - 1
 
@@ -705,8 +706,8 @@ def test_output_exited_via_se_and_ife_exits_only_once(testlang, plasma_framework
     blknum, txindex, _ = decode_utxo_id(spend_id)
     output_id = encode_utxo_id(blknum, txindex, output_index)
 
-    testlang.piggyback_in_flight_exit_output(spend_id, output_index, owner_1)
-    testlang.start_standard_exit(output_id, account=owner_1)
+    testlang.piggyback_in_flight_exit_output(spend_id, output_index, owner)
+    testlang.start_standard_exit(output_id, account=owner)
 
     pre_exit_balance = testlang.get_balance(plasma_framework.eth_vault)
 
@@ -715,3 +716,88 @@ def test_output_exited_via_se_and_ife_exits_only_once(testlang, plasma_framework
 
     post_exit_balance = testlang.get_balance(plasma_framework.eth_vault)
     assert post_exit_balance == pre_exit_balance - amount_spent
+
+
+@pytest.mark.parametrize("num_outputs", [1, 2, 3, 4])
+def test_output_exited_via_se_and_then_ife_withdraws_once(testlang, plasma_framework, num_outputs):
+    owner, amount, amount_spent = testlang.accounts[0], 100, 1
+    deposit_id = testlang.deposit(owner, amount)
+
+    outputs = []
+    for i in range(0, num_outputs):
+        outputs.append((owner.address, NULL_ADDRESS, amount_spent))
+    spend_id = testlang.spend_utxo([deposit_id], [owner], outputs)
+
+    output_index = num_outputs - 1
+
+    blknum, txindex, _ = decode_utxo_id(spend_id)
+    output_id = encode_utxo_id(blknum, txindex, output_index)
+    testlang.start_standard_exit(output_id, account=owner)
+
+    pre_exit_balance = testlang.get_balance(plasma_framework.eth_vault)
+
+    testlang.start_in_flight_exit(spend_id)
+    testlang.piggyback_in_flight_exit_output(spend_id, output_index, owner)
+    testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
+    testlang.process_exits(NULL_ADDRESS, 0, 10)
+
+    post_exit_balance = testlang.get_balance(plasma_framework.eth_vault)
+    assert post_exit_balance == pre_exit_balance - amount_spent
+
+
+def test_should_not_withdraw_in_flight_exit_twice(testlang, plasma_framework):
+    owner, amount = testlang.accounts[0], 100
+    deposit_id = testlang.deposit(owner, amount)
+    spend_id = testlang.spend_utxo([deposit_id], [owner],
+                                   [(owner.address, NULL_ADDRESS, 50), (owner.address, NULL_ADDRESS, 50)])
+
+    # First time should succeed
+    start_ife_piggyback_and_process(spend_id, owner, testlang)
+
+    # Second time should succeed but should not withdraw funds from the vault
+    pre_exit_balance = testlang.get_balance(plasma_framework.eth_vault)
+    start_ife_piggyback_and_process(spend_id, owner, testlang)
+    post_exit_balance = testlang.get_balance(plasma_framework.eth_vault)
+    assert post_exit_balance == pre_exit_balance
+
+
+def test_not_canonial_in_flight_exit_processed_successfully(testlang, plasma_framework):
+    owner, deposit_1_amount, deposit_2_amount = testlang.accounts[0], 100, 200
+    deposit_id_1 = testlang.deposit(owner, deposit_1_amount)
+    deposit_id_2 = testlang.deposit(owner, deposit_2_amount)
+
+    starting_vault_balance = testlang.get_balance(plasma_framework.eth_vault)
+
+    amount_spent = 100
+    spend_deposit_2_id = testlang.spend_utxo([deposit_id_2], [owner], outputs=[(owner.address, NULL_ADDRESS, amount_spent)])
+    testlang.start_standard_exit(spend_deposit_2_id, account=owner)
+
+    testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
+    testlang.process_exits(NULL_ADDRESS, 0, 1)
+
+    vault_balance = testlang.get_balance(plasma_framework.eth_vault)
+    assert vault_balance == starting_vault_balance - amount_spent
+
+    # in-flight transaction not included in Plasma
+    inputs = [decode_utxo_id(deposit_id_1), decode_utxo_id(deposit_id_2)]
+    spend_deposits_tx = Transaction(inputs=inputs, outputs=[(owner.address, NULL_ADDRESS, deposit_2_amount + deposit_1_amount)])
+    for i in range(0, len(inputs)):
+        spend_deposits_tx.sign(i, owner, verifying_contract=testlang.root_chain.plasma_framework)
+
+    testlang.start_in_flight_exit(None, spend_tx=spend_deposits_tx)
+    testlang.piggyback_in_flight_exit_input(None, 0, owner, spend_tx=spend_deposits_tx)
+    testlang.challenge_in_flight_exit_not_canonical(None, spend_deposit_2_id, account=owner, in_flight_tx=spend_deposits_tx)
+
+    testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
+    testlang.process_exits(NULL_ADDRESS, 0, 1)
+
+    vault_balance = testlang.get_balance(plasma_framework.eth_vault)
+    # deposit 1 is withdrawn
+    assert vault_balance == starting_vault_balance - amount_spent - deposit_1_amount
+
+
+def start_ife_piggyback_and_process(spend_id, owner, testlang):
+    testlang.start_in_flight_exit(spend_id)
+    testlang.piggyback_in_flight_exit_input(spend_id, 0, owner)
+    testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
+    testlang.process_exits(NULL_ADDRESS, 0, 10)
