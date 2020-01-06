@@ -14,12 +14,12 @@ contract PosLibWrapper {
         return pos.toStrictTxPos();
     }
 
-    function getTxPostionForExitPriority(PosLib.Position memory pos)
+    function getTxPositionForExitPriority(PosLib.Position memory pos)
         public
         pure
         returns (uint256)
     {
-        return pos.getTxPostionForExitPriority();
+        return pos.getTxPositionForExitPriority();
     }
 
     function encode(PosLib.Position memory pos) public pure returns (uint256) {

@@ -376,7 +376,16 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
 
                 await expectRevert(
                     this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: challenger }),
-                    'Canonicity challege phase for this exit has ended',
+                    'Canonicity challenge phase for this exit has ended',
+                );
+            });
+
+            it('fails when competing tx position is not with outputIndex set to 0', async () => {
+                this.challengeArgs.competingTxPos = 1;
+
+                await expectRevert(
+                    this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: challenger }),
+                    'OutputIndex of competingTxPos should be 0',
                 );
             });
 
@@ -677,6 +686,21 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
                 );
             });
 
+            it('fails when outputIndex of in-flight transaction position is not 0', async () => {
+                const wrongPosition = new Position(this.inFlightTxPos);
+                wrongPosition.outputIndex = 123;
+
+                await expectRevert(
+                    this.exitGame.respondToNonCanonicalChallenge(
+                        this.challengeArgs.inFlightTx,
+                        buildUtxoPos(wrongPosition.blockNum, wrongPosition.txIndex, wrongPosition.outputIndex),
+                        this.inFlightTxInclusionProof,
+                        { from: ifeOwner },
+                    ),
+                    'Output index of txPos has to be 0',
+                );
+            });
+
             it('fails when the block of the in-flight tx position does not exist', async () => {
                 const validIFEBlockNum = (new Position(this.inFlightTxPos)).blockNum;
                 const noBlockExistingPosition = buildUtxoPos(validIFEBlockNum - 1000, 0, 0);
@@ -687,7 +711,7 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
                         this.inFlightTxInclusionProof,
                         { from: ifeOwner },
                     ),
-                    'Failed to get the block root hash of the UTXO position',
+                    'Failed to get the block root hash of the tx position',
                 );
             });
 

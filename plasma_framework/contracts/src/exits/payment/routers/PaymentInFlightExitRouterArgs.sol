@@ -45,7 +45,7 @@ library PaymentInFlightExitRouterArgs {
      * @param inFlightTxInputIndex Index of the shared input in the in-flight transaction
      * @param competingTx RLP-encoded competing transaction
      * @param competingTxInputIndex Index of shared input in competing transaction
-     * @param competingTxPos (Optional) Position of competing transaction in the chain, if included
+     * @param competingTxPos (Optional) Position of competing transaction in the chain, if included. OutputIndex of the position should be 0.
      * @param competingTxInclusionProof (Optional) Merkle proofs showing that the competing transaction was contained in chain
      * @param competingTxWitness Witness for competing transaction
      */
