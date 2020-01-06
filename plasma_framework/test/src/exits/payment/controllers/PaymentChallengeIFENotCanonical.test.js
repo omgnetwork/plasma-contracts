@@ -697,7 +697,7 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
                         this.inFlightTxInclusionProof,
                         { from: ifeOwner },
                     ),
-                    'Should only pass in txPos with outputIndex equals to 0',
+                    'Output index of txPos has to be 0',
                 );
             });
 

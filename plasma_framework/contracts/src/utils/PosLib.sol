@@ -17,7 +17,7 @@ library PosLib {
     uint256 constant internal TX_OFFSET = 10000;
     
     uint256 constant internal MAX_OUTPUT_INDEX = TX_OFFSET - 1;
-    // since we are using merkle tree of depth 16, max tx index size would be 2^16 - 1
+    // since we are using merkle tree of depth 16, max tx index size is 2^16 - 1
     uint256 constant internal MAX_TX_INDEX = 2 ** 16 - 1;
     // in ExitPriority, only 54 bits are reserved for both blockNum and txIndex
     uint256 constant internal MAX_BLOCK_NUM = ((2 ** 54 - 1) - MAX_TX_INDEX) / (BLOCK_OFFSET / TX_OFFSET);
@@ -70,8 +70,8 @@ library PosLib {
         uint256 txIndex = (pos % BLOCK_OFFSET) / TX_OFFSET;
         uint16 outputIndex = uint16(pos % TX_OFFSET);
 
-        require(blockNum <= MAX_BLOCK_NUM, "blockNum exceed max size allowed in PlasmaFramework");
-        require(txIndex <= MAX_TX_INDEX, "txIndex exceed the size of uint16");
+        require(blockNum <= MAX_BLOCK_NUM, "blockNum exceeds max size allowed in PlasmaFramework");
+        require(txIndex <= MAX_TX_INDEX, "txIndex exceeds the size of uint16");
         return Position(uint64(blockNum), uint16(txIndex), outputIndex);
     }
 }

@@ -185,7 +185,7 @@ library PaymentChallengeIFENotCanonical {
         private
         pure
     {
-        require(txPos.outputIndex == 0, "Should only pass in txPos with outputIndex equals to 0");
+        require(txPos.outputIndex == 0, "Output index of txPos has to be 0");
         require(
             Merkle.checkMembership(txbytes, txPos.txIndex, root, inclusionProof),
             "Transaction is not included in block of Plasma chain"

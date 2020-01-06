@@ -128,18 +128,15 @@ contract('PosLib', () => {
             const position = this.blockNum * BLOCK_OFFSET + txIndexTooLarge * TX_OFFSET + this.outputIndex;
             await expectRevert(
                 this.contract.decode(position),
-                'txIndex exceed the size of uint16',
+                'txIndex exceeds the size of uint16',
             );
         });
 
         it('should fail when block number exceeds max size allowed in PlasmaFramework', async () => {
-            const position = (maxBlockNum.add(new BN(1))).mul(new BN(BLOCK_OFFSET))
-                .add((new BN(0)).mul(new BN(TX_OFFSET)))
-                .add(new BN(0))
-                .toString();
+            const position = (maxBlockNum.add(new BN(1))).mul(new BN(BLOCK_OFFSET)).toString();
             await expectRevert(
                 this.contract.decode(position),
-                'blockNum exceed max size allowed in PlasmaFramework',
+                'blockNum exceeds max size allowed in PlasmaFramework',
             );
         });
     });
