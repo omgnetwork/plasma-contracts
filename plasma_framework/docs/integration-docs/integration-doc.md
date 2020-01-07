@@ -107,14 +107,14 @@ signedTransaction ::= [signature] rawTransaction
 
 Where
 ```
-signatures ::= bytes
+signature ::= bytes
 rawTransaction ::= transaction
 ```
 
 and are transferred and stored RLP-encoded.
 
 Child chain and watcher both expect, for a signed transaction to be valid, that:
- - every input corresponds to a signature by the respective output's owner (`outputGuard`)
+ - every input has a corresponding signature by the respective output's owner (`outputGuard`)
  - every signature is a 65-byte long binary
 
 **NOTE** Only signature witnesses are operative now, because only payment transactions are supported.
