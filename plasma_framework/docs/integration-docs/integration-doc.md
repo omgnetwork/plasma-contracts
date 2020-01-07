@@ -164,6 +164,39 @@ Note that:
 11. `txData` is unused and must be set to `0`
 12. `metadata` must be padded to 32 bytes long
 
+### Payment transaction fees
+Operator collects fees for including a transaction in a block. Transaction fee is implicit. It is the difference between transaction input utxos and output utxos, grouped by the token. For example if transaction inputs are the following utxos:
+```
+[
+  {
+    'outputType': 1,
+    'outputGuard': '...',
+    'token': '0x000000000000000000000000000000000000000a',
+    'amount': 2
+  },
+  {
+    'outputType': 1,
+    'outputGuard': '...',  
+    'token': '0x000000000000000000000000000000000000000b',
+    'amount': 1
+  }
+]
+```
+and the only transaction output is:
+```
+{
+'outputType': 1,
+'outputGuard': '...',
+'token': '0x000000000000000000000000000000000000000a',
+'amount': 1
+}
+```
+then the fee collected by the operator is:
+```
+1 of token '0x000000000000000000000000000000000000000a' (amount 2 in transaction inputs, 1 in outputs)
+1 of token '0x000000000000000000000000000000000000000b' (amount 1 in transaction inputs, 0 in outputs)
+```
+
 ## Deposit transactions
 Deposit transactions are special transactions that have no inputs. The transaction inputs should be encoded as an empty array. Deposit transactions are created by the vault contracts, and do not need to be explicitly submitted.
 
