@@ -76,7 +76,7 @@ GenericTransaction is based on [Wire Transaction format](https://docs.google.com
 A GenericTransaction is:
 
 ```
-transaction::= txType [input] [output] txData metaData [witness]
+transaction::= txType [input] [output] txData metaData
 ```
 
 Where 
@@ -90,7 +90,6 @@ outputType ::= uint256
 outputData ::= undefined, to be defined by concrete transaction types
 txData ::= undefined, to be defined by concrete transaction types
 metaData ::= bytes32
-witness ::= bytes
 ```
 
 The current implementation supports only the `Payment` transaction type.
