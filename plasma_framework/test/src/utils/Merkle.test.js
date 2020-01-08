@@ -115,7 +115,7 @@ contract('Merkle', () => {
             );
         });
 
-        it('should revert when index exceeds max possible size of proof data', async () => {
+        it('should revert when index exceeds max possible size according to proof data', async () => {
             const leafIndex = 0;
             const leafData = web3.utils.sha3(leaves[leafIndex]);
             const proof = this.merkleTree.getInclusionProof(leaves[leafIndex]);
@@ -130,7 +130,7 @@ contract('Merkle', () => {
                     rootHash,
                     proof,
                 ),
-                'Index exceeds the possible size that matches with the proof',
+                'Index does not match the length of the proof',
             );
         });
     });
