@@ -89,6 +89,21 @@ def test_process_exits_in_flight_exit_should_succeed(testlang):
     assert testlang.get_balance(owner) == expected_balance
 
 
+def test_in_flight_exit_is_not_processed_before_exit_period_passes(testlang, plasma_framework):
+    owner, amount = testlang.accounts[0], 100
+    deposit_id = testlang.deposit(owner, amount)
+    spend_id = testlang.spend_utxo([deposit_id], [owner], outputs=[(owner.address, NULL_ADDRESS, 100)])
+    testlang.start_in_flight_exit(spend_id)
+    testlang.piggyback_in_flight_exit_output(spend_id, 0, owner)
+    testlang.forward_timestamp(MIN_EXIT_PERIOD)
+
+    pre_balance = testlang.get_balance(plasma_framework.eth_vault)
+    testlang.process_exits(NULL_ADDRESS, 0, 100)
+    post_balance = testlang.get_balance(plasma_framework.eth_vault)
+
+    assert pre_balance == post_balance
+
+
 def test_finalize_exits_for_erc20_should_succeed(testlang, plasma_framework, token):
     owner, amount = testlang.accounts[0], 100
     assert plasma_framework.hasExitQueue(plasma_framework.erc20_vault_id, token.address)
