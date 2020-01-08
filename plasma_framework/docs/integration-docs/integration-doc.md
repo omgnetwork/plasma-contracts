@@ -165,7 +165,7 @@ Note that:
 12. `metadata` must be padded to 32 bytes long
 
 ### Payment transaction fees
-Operator collects fees for including a transaction in a block. Transaction fee is implicit. It is the difference between transaction input utxos and output utxos, grouped by the token. For example if transaction inputs are the following utxos:
+Operator collects fees for including a transaction in a block. The transaction fee is implicit i.e. it is the difference between the transaction inputs and outputs, grouped by the token. For example if the transaction inputs are as follows:
 ```
 [
   {
