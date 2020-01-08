@@ -95,6 +95,7 @@ def test_in_flight_exit_is_not_processed_before_exit_period_passes(testlang, pla
     spend_id = testlang.spend_utxo([deposit_id], [owner], outputs=[(owner.address, NULL_ADDRESS, 100)])
     testlang.start_in_flight_exit(spend_id)
     testlang.piggyback_in_flight_exit_output(spend_id, 0, owner)
+    testlang.piggyback_in_flight_exit_input(spend_id, 0, owner)
     testlang.forward_timestamp(MIN_EXIT_PERIOD)
 
     pre_balance = testlang.get_balance(plasma_framework.eth_vault)
