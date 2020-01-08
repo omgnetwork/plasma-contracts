@@ -78,9 +78,9 @@ def test_priority_queue_insert_spam_does_not_elevate_gas_cost_above_200k():
     gas_left = two_weeks_of_gas
     size = 1
     while gas_left < 0:
-        gas_left = gas_left - op_cost(size)
+        gas_left = gas_left - op_cost_insert(size)
         size = size + 1
-    assert op_cost(size) < 200000
+    assert op_cost_insert(size) < 200000
 
 
 def run_test(w3, priority_queue, values):
@@ -88,23 +88,32 @@ def run_test(w3, priority_queue, values):
         priority_queue.insert(value)
         gas = w3.eth.last_gas_used
         if i != 0:  # at first insert there is a small additional cost - we take care of only the asymptotic cost
-            assert gas <= op_cost(i + 1)
+            assert gas <= op_cost_insert(i + 1)
 
     for i in range(1, len(values)):
         assert i == priority_queue.functions.delMin().call()
         priority_queue.delMin()
         gas = w3.eth.last_gas_used
-        assert gas <= op_cost(len(values) - i)
+        assert gas <= op_cost_del(len(values) - i)
 
 
-def op_cost(n):
+def op_cost_insert(n):
+    tx_base_cost = 21000
+    # Numbers were discovered experimentally. They represent upper bound of insert operations.
+    # We assume that the op_cost is a sequence of a form: op_cost_n = alogn + c
+    # To discover the values, one should run many inserts, collect the gas costs
+    # for each insert and compute a and c
+    return tx_base_cost + 41000 + 9700 * math.floor(math.log(n, 2))
+
+
+def op_cost_del(n):
     tx_base_cost = 21000
     # Numbers were discovered experimentally. They represent upper bound of
     # gas cost of execution of delMin or insert operations.
     # We assume that the op_cost is a sequence of a form: op_cost_n = alogn + c
     # To discover the values, one should run many inserts, collect the gas costs
-    # for each insert and compute a and c
-    return tx_base_cost + 40472 + 6689 * math.floor(math.log(n, 2))
+    # for each delMin and compute a and c
+    return tx_base_cost + 28000 + 15300 * math.floor(math.log(n, 2))
 
 
 def test_priority_queue_worst_case_gas_cost(w3, priority_queue):
