@@ -358,7 +358,6 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
             });
         });
 
-
         describe('Given Alice deposited with ERC20 token', () => {
             before(async () => {
                 await this.erc20.transfer(alice, DEPOSIT_VALUE, { from: richFather });
