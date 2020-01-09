@@ -13,7 +13,7 @@ class MerkleNode {
 
 class MerkleTree {
     constructor(leaves, height = 0) {
-        const minHeightForLeaves = parseInt(Math.log2(leaves.length), 10) + 1;
+        const minHeightForLeaves = leaves.length === 1 ? 1 : parseInt(Math.ceil(Math.log2(leaves.length)), 10);
 
         if (height === 0) {
             this.height = minHeightForLeaves;
