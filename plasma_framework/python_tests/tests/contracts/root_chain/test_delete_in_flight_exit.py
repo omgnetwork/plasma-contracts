@@ -62,3 +62,16 @@ def test_deletion_fails_when_exit_is_in_first_phase(testlang):
 
     with pytest.raises(TransactionFailed):
         testlang.delete_in_flight_exit(spend_id)
+
+
+def test_deletion_fails_when_already_piggybacked(testlang):
+    owner, amount = testlang.accounts[0], 100
+    deposit_id = testlang.deposit(owner, amount)
+    spend_id = testlang.spend_utxo([deposit_id], [owner], outputs=[(owner.address, NULL_ADDRESS, amount)])
+
+    testlang.start_in_flight_exit(spend_id)
+    testlang.piggyback_in_flight_exit_input(spend_id, 0, owner)
+    testlang.forward_timestamp(FIRST_PERIOD_OVER)
+
+    with pytest.raises(TransactionFailed):
+        testlang.delete_in_flight_exit(spend_id)
