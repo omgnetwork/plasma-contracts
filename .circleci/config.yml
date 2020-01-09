@@ -32,27 +32,29 @@ commands:
       - run:
           name: Change dependencies directories ownership
           command: |
-            sudo chown -R circleci:circleci /usr/local/bin /usr/local/lib /usr/local/lib/python3.7/site-packages 
+            sudo chown -R circleci:circleci /usr/local/bin /usr/local/lib
       - restore_cache:
           keys:
-            - dependencies_v2_{{ checksum "plasma_framework/python_tests/requirements.txt" }}
+            - dependencies-v1-{{ checksum "~/repo/plasma_framework/python_tests/requirements.txt" }}
       - run:
           name: Prepare environment
           command: |
             sudo apt update && sudo apt install nodejs npm
             sudo npm install -g n && sudo n stable
             sudo npm install -g ganache-cli
+            python3 -m venv ~/venv
       - run:
           name: Install dependencies
           working_directory: ~/repo/plasma_framework/python_tests
           command: |
-            make init dev 
+            . ~/venv/bin/activate
+            make init dev
             python -m solcx.install v0.5.11
       - save_cache:
-          key: dependencies_v2_{{ checksum "plasma_framework/python_tests/requirements.txt" }}
+          key: dependencies-v1-{{ checksum "~/repo/plasma_framework/python_tests/requirements.txt" }}
           paths:
+            - ~/venv
             - /usr/local/bin
-            - /usr/local/lib/python3.7/site-packages
             - /usr/local/lib/node_modules
 
 jobs:
@@ -111,7 +113,9 @@ jobs:
       - run:
           name: Run tests
           working_directory: ~/repo/plasma_framework/python_tests
-          command: make test
+          command: |
+            . ~/venv/bin/activate
+            make test
   
   Python linter:
     executor: python_executor
@@ -121,7 +125,9 @@ jobs:
       - run:
           name: Run linter 
           working_directory: ~/repo/plasma_framework/python_tests
-          command: make lint
+          command: | 
+            . ~/venv/bin/activate
+            make lint
   
   Python long running tests:
     executor: python_executor
@@ -132,7 +138,9 @@ jobs:
           name: Run slow tests
           working_directory: ~/repo/plasma_framework/python_tests
           no_output_timeout: 10h
-          command: make runslow 
+          command: |
+            . ~/venv/bin/activate
+            make runslow 
 
 workflows:
   version: 2
