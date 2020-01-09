@@ -71,6 +71,7 @@ def test_slow(testlang, w3):
         testlang.process_exits(NULL_ADDRESS, 0, 3)
         print(f'[{datetime.datetime.now()}](#5): process exits gas is {testlang.w3.eth.last_gas_used}')
         max_gas = max(max_gas, testlang.w3.eth.last_gas_used)
+
         print(f'max_gas is {max_gas}')
 
-    assert max_gas < 400000
+    assert max_gas < 1000000
