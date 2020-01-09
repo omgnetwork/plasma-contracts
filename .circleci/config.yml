@@ -19,12 +19,19 @@ commands:
       - run:
           name: Set up environment
           command: echo 'export PATH="$(npm bin):$PATH"' >> $BASH_ENV
+      - restore_cache:
+          keys:
+            - dependencies-v1-{{ checksum "~/repo/plasma_framework/package-lock.json" }}
       - run:
           name: Install dependencies
           working_directory: ~/repo/plasma_framework
           command: |
             npm install
             find node_modules -name .git | xargs rm -fr  # workaround for a problem with git dependencies
+      - save_cache:
+          key: dependencies-v1-{{ checksum "~/repo/plasma_framework/package-lock.json" }}
+          paths:
+            - ~/repo/plasma_framework/node_modules
 
   setup_python_env:
     steps:
