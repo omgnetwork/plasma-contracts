@@ -114,6 +114,25 @@ contract('Merkle', () => {
                 'Merkle proof must not be empty',
             );
         });
+
+        it('should revert when index exceeds max possible size according to proof data', async () => {
+            const leafIndex = 0;
+            const leafData = web3.utils.sha3(leaves[leafIndex]);
+            const proof = this.merkleTree.getInclusionProof(leaves[leafIndex]);
+            const rootHash = this.merkleTree.root;
+
+            const invalidIndex = maxSize;
+
+            await expectRevert(
+                this.merkleContract.checkMembership(
+                    leafData,
+                    invalidIndex,
+                    rootHash,
+                    proof,
+                ),
+                'Index does not match the length of the proof',
+            );
+        });
     });
 
     it('check membership for tree where some leaves are empty', async () => {

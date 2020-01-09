@@ -76,7 +76,7 @@ GenericTransaction is based on [Wire Transaction format](https://docs.google.com
 A GenericTransaction is:
 
 ```
-transaction::= txType [input] [output] txData metaData [witness]
+transaction::= txType [input] [output] txData metaData
 ```
 
 Where 
@@ -90,12 +90,35 @@ outputType ::= uint256
 outputData ::= undefined, to be defined by concrete transaction types
 txData ::= undefined, to be defined by concrete transaction types
 metaData ::= bytes32
-witness ::= bytes
 ```
 
 The current implementation supports only the `Payment` transaction type.
 
 Support for additional transaction types, such as ERC721, is reserved for future development.
+
+### Signed transaction format (child chain and watcher only)
+A note on encoding of signed transactions (transactions including witnesses) when handled in the [child chain and watcher implementations](github.com/omisego/elixir-omg).
+
+Signed transactions are:
+
+```
+signedTransaction ::= [signature] rawTransaction
+```
+
+Where
+```
+signature ::= bytes
+rawTransaction ::= transaction
+```
+
+and are transferred and stored RLP-encoded.
+
+Child chain and watcher both expect, for a signed transaction to be valid, that:
+ - every input has a corresponding signature by the respective output's owner (`outputGuard`)
+ - every signature is a 65-byte long binary
+
+**NOTE** Only signature witnesses are operative now, because only payment transactions are supported.
+A signature is a specific form of a `witness` and is called as such throughout this document.
 
 ## Payment transaction format
 Payment transactions are used to transfer fungible tokens, such as ETH and ERC20 tokens. A Payment transaction's output is as described in [FungibleTokenOutputModel](../contracts/FungibleTokenOutputModel.md)

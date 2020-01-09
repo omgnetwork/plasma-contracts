@@ -298,6 +298,9 @@ class PlasmaFramework:
 
         return self.plasma_framework.processExits(vault_id, token, top_exit_id, exits_to_process)
 
+    def deleteNonPiggybackedInFlightExit(self, exit_id):
+        return self.payment_exit_game.deleteNonPiggybackedInFlightExit(exit_id)
+
     def getInFlightExitId(self, tx):
         return self.payment_exit_game.getInFlightExitId(tx)
 
