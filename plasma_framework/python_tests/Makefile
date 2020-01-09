@@ -48,7 +48,7 @@ conctest:
 
 .PHONY: runslow
 runslow:
-	python -m pytest -m "slow" 
+	python -m pytest -m "slow" -s
 	rm -fr .pytest_cache
 
 .PHONY: dev
