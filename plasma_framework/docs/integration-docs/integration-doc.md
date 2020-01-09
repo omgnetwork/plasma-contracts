@@ -165,7 +165,9 @@ Note that:
 12. `metadata` must be padded to 32 bytes long
 
 ### Payment transaction fees
-Operator collects fees for including a transaction in a block. The transaction fee is implicit i.e. it is the difference between the transaction inputs and outputs, grouped by the token. For example if the transaction inputs are as follows:
+Operator collects fees for including a transaction in a block. The transaction fee is implicit i.e. it is the difference between the transaction inputs and outputs, grouped by the token. Operator requires fee to be covered completely with a single currency, but not necessarily by a single input.
+
+For example if the transaction inputs are as follows:
 ```
 [
   {
@@ -191,11 +193,16 @@ and the only transaction output is:
 'amount': 1
 }
 ```
-then the fee collected by the operator is:
+and operator requires to pay 1 of token '0x000000000000000000000000000000000000000a` to include a transaction in a block, then the fee collected by the operator is:
 ```
 1 of token '0x000000000000000000000000000000000000000a' (amount 2 in transaction inputs, 1 in outputs)
 1 of token '0x000000000000000000000000000000000000000b' (amount 1 in transaction inputs, 0 in outputs)
 ```
+Notice that although fees were covered completely by the first input, the second input was also charged as a fee.
+
+Specification for sending a transaction to the child chain is available [here](https://developer.omisego.co/elixir-omg/docs-ui/?url=master%2Foperator_api_specs.yaml&urls.primaryName=master%2Foperator_api_specs#/ChildChain/submit).
+
+When transaction is submitted with insufficient fees error code in the response is `transaction.submit:fees_not_covered`.
 
 ## Deposit transactions
 Deposit transactions are special transactions that have no inputs. The transaction inputs should be encoded as an empty array. Deposit transactions are created by the vault contracts, and do not need to be explicitly submitted.
