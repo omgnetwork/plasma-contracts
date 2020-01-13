@@ -30,7 +30,7 @@ The PlasmaFramework contract may be viewed as the top-level contract. It contain
 
 The PlasmaFramework contract provides access to components in the system. For example, to get the Payment ExitGame, call the following: 
 
- `PlasmaFramework.exitGames(PaymentType)`
+ `PlasmaFramework.exitGames(txType)`
  
 The PlasmaFramework also provides the means for the `maintainer` to upgrade certain components in the system. Since this functionality has important security considerations, the PlasmaFramework emits events whenever a component is added. The Watchers monitor these events and alert users. More information is provided below. 
 
@@ -302,8 +302,8 @@ You must use the appropriate vault to deposit funds from the root chain (Ethereu
 2. Call `EthVault.deposit(depositTx)`
 3. Along with the transaction, send the amount of ETH specified in the deposit transaction.
 4. The ETHVault creates a deposit block, and submits it to the PlasmaFramework.
-5. The ETHVault emits the DepositCreated event.
-6. The child chain receives the DepositCreated, and creates the corresponding UTXO.
+5. The ETHVault emits the `DepositCreated` event.
+6. The child chain receives the `DepositCreated`, and creates the corresponding UTXO.
 7. The UTXO is spendable by the user after a certain number of blocks are submitted to the PlasmaFramework (specified in `deposit_finality_margin`).
 
 
@@ -322,7 +322,7 @@ You must use the appropriate vault to deposit funds from the root chain (Ethereu
 
 
 ## Vault events
-Vaults emit events on deposit, and on withdrawal.
+Vaults emit events on deposit, and on withdrawal. Each event is from the specific vault contract.
 
 ### ETH Vault
 
@@ -362,18 +362,47 @@ For all events of the vault, see contract documentation: [ETH vault doc](https:/
 For all events of the vault, see contract documentation: [ERC20 vault doc](https://github.com/omisego/plasma-contracts/blob/master/plasma_framework/docs/contracts/Erc20Vault.md#erc20vaultsol)
 
 # Exit Game
-Exit Games handle all the actions around exits, challenges, etc.
+Exit Games handle all the actions around exits, challenges, etc. Each transaction type would have one and only one exit game contract to enable the direct exit of transaction within that type.
+
+## Exit Game contracts
+Each exit game is a contract that holds the logic and states of a current exit game status. Each exit game is bound to a `txType` as an identifier used in the Plasma Framework. One can retrieve the contract address by calling the `PlasmaFramework` with the `txType`:
+
+`PlasmaFramework.exitGames(txType)`
+
+### Transaction types
+Followings are the `txType` as in currently deployed exit game contracts:
+- Payment (v1): 1
+- Fee: 3
+
+Transaction type 2 is reserved for Payment v2 while no specific exit game contract being registered to the framework yet. For more detail on why we are reserving a transaction type, please see the "Adding new transaction type" section of the [high level design doc](https://docs.google.com/document/d/1PSxLnMskjqje4MksmW2msSSg-GtZoBSMNYey9nEDvt8/edit#heading=h.yu9haziuwf6b)
+
+### Payment Exit Game (V1)
+This contract is the main exit game contract of the first Plasma Framework iteration. It handles the exit game logic, including both standard exit and in-flight exit.
+
+Most of the following doc within Exit Game section is about `PaymentExitGame`.
+
+### Fee Exit Game
+
+The fee is designed to be exit indirectly from the fee transaction. Operator would first spend the fee transaction output to a payment transaction and then exit the fee value with normal process of exiting a payment transaction.
+
+As a result, the fee exit game contract is just an empty contract.
 
 
-## Exit game bonds
-Exit games are associated with various bonds. The values of these bonds may change over time. The current value of a bond can be retrieved from the PlasmaFramework contract.
+## Payment Exit game bonds
+Exit games are associated with various bonds. The values of these bonds may change over time. The current value of a bond can be retrieved from the `PaymentExitGame` contract.
+
+To get the `PaymentExitGame` contract (js):
+```
+address = PlasmaFramework.exitGames(1)
+PaymentExitGame = PaymetExitGame.at(address);
+```
 
 
 ### Standard exit bond
 A standard exit bond is used to start a standard exit:
 
 ```
-    PlasmaFramework.startStandardExitBondSize()
+    PaymentExitGame.startStandardExitBondSize()
 ```
 
 ### In-flight exit bonds
@@ -382,15 +411,15 @@ There are two types of in-flight exit bonds:
 
 - In-flight exit bond for starting an in-flight exit
 ```
-    PlasmaFramework.startIFEBondSize()
+    PaymentExitGame.startIFEBondSize()
 ```
 - In-flight exit bond for piggybacking on an in-flight exit's input or output:
 ```
-    PlasmaFramework.piggybackBondSize()
+    PaymentExitGame.piggybackBondSize()
 ```
 
 
-## Playing the exit game
+## Playing the payment exit game
 
 ### Starting a standard exit
 
@@ -888,9 +917,10 @@ PaymentExitGame.challengeInFlightExitOutputSpent([
 ])
 ```
 
-## Exit game events
-When listening for events related to the exit game, it's important to remember that there will be only one exit game per transaction type.
+## Payment Exit game events
+When listening for events related to the exit game, it's important to remember that there will be only one exit game per transaction type. One should listen the events from the corresponding exit game contract. See [Exit Game contract section](#exit-game-contracts) for details of each contract and transaction types.
 
+Following are lists of events from `PaymentExitGame` contract:
 
 ### Standard Exit Events
 - A standard exit has started:
