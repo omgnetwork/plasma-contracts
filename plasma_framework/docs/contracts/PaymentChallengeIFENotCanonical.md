@@ -27,8 +27,8 @@ event InFlightExitChallengeResponded(address indexed challenger, bytes32 indexed
 - [buildController(PlasmaFramework framework, SpendingConditionRegistry spendingConditionRegistry, uint256 supportedTxType)](#buildcontroller)
 - [challenge(struct PaymentChallengeIFENotCanonical.Controller self, struct PaymentExitDataModel.InFlightExitMap inFlightExitMap, struct PaymentInFlightExitRouterArgs.ChallengeCanonicityArgs args)](#challenge)
 - [respond(struct PaymentChallengeIFENotCanonical.Controller self, struct PaymentExitDataModel.InFlightExitMap inFlightExitMap, bytes inFlightTx, uint256 inFlightTxPos, bytes inFlightTxInclusionProof)](#respond)
-- [verifyAndDeterminePositionOfTransactionIncludedInBlock(bytes txbytes, struct PosLib.Position utxoPos, bytes32 root, bytes inclusionProof)](#verifyanddeterminepositionoftransactionincludedinblock)
-- [verifyCompetingTxFinalized(struct PaymentChallengeIFENotCanonical.Controller self, struct PaymentInFlightExitRouterArgs.ChallengeCanonicityArgs args)](#verifycompetingtxfinalized)
+- [verifyPositionOfTransactionIncludedInBlock(bytes txbytes, struct PosLib.Position txPos, bytes32 root, bytes inclusionProof)](#verifypositionoftransactionincludedinblock)
+- [verifyCompetingTxFinalizedInThePosition(struct PaymentChallengeIFENotCanonical.Controller self, struct PaymentInFlightExitRouterArgs.ChallengeCanonicityArgs args)](#verifycompetingtxfinalizedintheposition)
 
 ### buildController
 
@@ -85,11 +85,10 @@ function respond(struct PaymentChallengeIFENotCanonical.Controller self, struct 
 | inFlightTxPos | uint256 | The UTXO position of the in-flight exit. Should hardcode 0 for the outputIndex. | 
 | inFlightTxInclusionProof | bytes | Inclusion proof for the in-flight tx | 
 
-### verifyAndDeterminePositionOfTransactionIncludedInBlock
+### verifyPositionOfTransactionIncludedInBlock
 
 ```js
-function verifyAndDeterminePositionOfTransactionIncludedInBlock(bytes txbytes, struct PosLib.Position utxoPos, bytes32 root, bytes inclusionProof) private pure
-returns(uint256)
+function verifyPositionOfTransactionIncludedInBlock(bytes txbytes, struct PosLib.Position txPos, bytes32 root, bytes inclusionProof) private pure
 ```
 
 **Arguments**
@@ -97,14 +96,14 @@ returns(uint256)
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
 | txbytes | bytes |  | 
-| utxoPos | struct PosLib.Position |  | 
+| txPos | struct PosLib.Position |  | 
 | root | bytes32 |  | 
 | inclusionProof | bytes |  | 
 
-### verifyCompetingTxFinalized
+### verifyCompetingTxFinalizedInThePosition
 
 ```js
-function verifyCompetingTxFinalized(struct PaymentChallengeIFENotCanonical.Controller self, struct PaymentInFlightExitRouterArgs.ChallengeCanonicityArgs args) private view
+function verifyCompetingTxFinalizedInThePosition(struct PaymentChallengeIFENotCanonical.Controller self, struct PaymentInFlightExitRouterArgs.ChallengeCanonicityArgs args) private view
 returns(uint256)
 ```
 
