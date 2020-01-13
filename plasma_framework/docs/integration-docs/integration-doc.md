@@ -917,6 +917,94 @@ PaymentExitGame.challengeInFlightExitOutputSpent([
 ])
 ```
 
+### Delete an in-flight exit
+
+For in-flight exit, an exit is only enqueued to the PlasmaFramework when the exit is piggybacked. As a consequence, if an in-flight exit end up not being piggybacked, the in-flight exit bond would end up being locked.
+
+As a mitigation, we have the `deleteNonPiggybackedInFlightExit` api on the exit game contract. One can call this to retrieve the bond back and clean up the state of in-flight exit. This can only be called after the first phase has been passed and nobody piggybacked the exit.
+
+For some more detail, see the original issue: [here](https://github.com/omisego/plasma-contracts/issues/440)
+
+```
+PaymentExitGame.deleteNonPiggybackedInFlightExit(exitId)
+```
+
+### Parameters
+
+#### exitId (uint160)
+Exit Id of the in-flight exit.
+
+You can get your `exitId` by `getInFlightExitId` helper function of the `PaymentExitGame`, see doc: [here](https://github.com/omisego/plasma-contracts/blob/master/plasma_framework/docs/contracts/PaymentExitGame.md#getinflightexitid)
+
+
+#### Example:
+
+```
+PaymentExitGame.deleteNonPiggybackedInFlightExit(707372774235521271159305957085057710072500938)
+```
+
+
+### Processing an in-flight exit
+
+Once the exit period is over, an exit can be processed to release the funds on the root chain. An end user can perform this action, or the operator can do it for everyone.
+
+Be aware that in-flight exit is only enqueued to PlasmFramework when there exists an piggyback of the token. In other words, if an in-flight exit end up nobody piggyback with certain token, eg. ETH, then user cannot find the exit inside the priority queue for ETH. Please make sure piggyback step is done before process exit. 
+
+To process a in-flight exit: 
+1. (Optional) Obtain your `exitId` by `getInFlightExitId` helper function of the `PaymentExitGame`, see doc: [here](https://github.com/omisego/plasma-contracts/blob/master/plasma_framework/docs/contracts/PaymentExitGame.md#getinflightexitid)
+
+```
+PaymentExitGame.getInFlightExitId(
+  "0xf85801c0f4f3019441777dc7bdcc6b58be1c25eb3df7df52d1bfecbd94000000000000000000000000000000000000000087038d7ea4c68000a00000000000000000000000000000000000000000000000000000000000000000", # RLP-encoded transaction sent when startInFlightExit was called
+)
+```
+
+2. Process your exit. 
+
+```
+PlasmaFramework.processExits({
+  uint256 vaultId, 
+  address token, 
+  uint160 topExitId, 
+  uint256 maxExitsToProcess
+})
+```
+
+### Parameters
+This section describes the parameters included in the function called for processing a standard exit.
+
+#### vaultId (uint256)
+The vault ID of the vault that stores exiting funds.
+
+Use `1` for Ether, `2` for ERC-20.
+
+#### token (address)
+The token type to process.
+
+ETH: `0x0000000000000000000000000000000000000000` 
+
+The contract address for ERC-20 tokens.
+
+#### topExitId (uint160)
+The unique priority of the first exit that should be processed. Set to zero to skip the check.
+
+If you're trying to process only your own exit, set your exitId here.
+
+#### maxExitsToProcess (uint256)
+Defines the maximum number of exits you wish to process. Set to `1` to process only your own exit. 
+
+
+### Example: Processing an in-flight exit
+
+```
+PlasmaFramework.processExits([
+  1, # vaultId 
+  0x0000000000000000000000000000000000000000, # token, ETH
+  707372774235521271159305957085057710072500938, # topExitId
+  1 # maxExitsToProcess
+])
+```
+
 ## Payment Exit game events
 When listening for events related to the exit game, it's important to remember that there will be only one exit game per transaction type. One should listen the events from the corresponding exit game contract. See [Exit Game contract section](#exit-game-contracts) for details of each contract and transaction types.
 
