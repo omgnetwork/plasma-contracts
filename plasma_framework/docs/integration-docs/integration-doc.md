@@ -281,16 +281,21 @@ The EIP-712 typed data structure is as follows:
 }
 ```
 
-
-
 # Vaults
 Vaults are used to deposit funds and, indirectly, to withdraw funds via the exit game.
 
+## Vault contract
+Each vault is a contract holding the custody of the transferred token to Plasma Framework. Each vault would have its own `vaultId` as an identifier used in the Plasma Framework. One can retrieve the vault's address by calling the `PlasmaFramework` with the `vaultId`:
+
+`PlasmaFramework.vaults(vaultId)`
+
+### Vault Id
+Followings are the `vaultId` as in currently deployed vault contracts:
+- ETH vault: 1
+- ERC20 vault: 2
 
 ## Depositing funds
-You must use the appropriate vault to deposit funds from the root chain (Ethereum) into the child chain. For example, to deposit ETH you use the EthVault contract. You can retrieve the address of this contract by calling the following function:
-
-`PlasmaFramework.vaults(1)`
+You must use the appropriate vault to deposit funds from the root chain (Ethereum) into the child chain. Check the [vault contract](#vault-contract) section above to see how to get the vault address.
 
 ### Depositing ETH
 1. Create the RLP-encoded deposit transaction: `depositTx`
@@ -319,7 +324,7 @@ You must use the appropriate vault to deposit funds from the root chain (Ethereu
 ## Vault events
 Vaults emit events on deposit, and on withdrawal.
 
-Events emitted on deposit:
+### ETH Vault
 
 ```
     event DepositCreated(
@@ -328,10 +333,25 @@ Events emitted on deposit:
         address indexed token,
         uint256 amount
     );
+
+    event EthWithdrawn(
+        address indexed receiver,
+        uint256  amount
+    );
 ```
 
-Events emitted on withdrawal:
+For all events of the vault, see contract documentation: [ETH vault doc](https://github.com/omisego/plasma-contracts/blob/master/plasma_framework/docs/contracts/EthVault.md#contract-members)
+
+
+### ERC20 Vault
 ```
+    event DepositCreated(
+        address indexed depositor,
+        uint256 indexed blknum,
+        address indexed token,
+        uint256 amount
+    );
+
     event Erc20Withdrawn(
         address payable indexed receiver,
         address indexed token,
@@ -339,6 +359,7 @@ Events emitted on withdrawal:
     );
 ```
 
+For all events of the vault, see contract documentation: [ERC20 vault doc](https://github.com/omisego/plasma-contracts/blob/master/plasma_framework/docs/contracts/Erc20Vault.md#erc20vaultsol)
 
 # Exit Game
 Exit Games handle all the actions around exits, challenges, etc.
