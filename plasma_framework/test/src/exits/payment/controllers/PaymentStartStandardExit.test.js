@@ -214,7 +214,7 @@ contract('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
             const { args, merkleTree } = buildTestData(this.dummyAmount, outputOwner, this.dummyBlockNum);
 
             const outputId = computeDepositOutputId(args.rlpOutputTx, 0, args.utxoPos);
-            await this.framework.setOutputSpent(outputId);
+            await this.framework.setOutputFinalized(outputId);
             await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, this.dummyBlockTimestamp);
 
             await expectRevert(

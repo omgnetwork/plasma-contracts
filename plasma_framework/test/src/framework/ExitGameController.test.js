@@ -447,58 +447,58 @@ contract('ExitGameController', () => {
         });
     });
 
-    describe('isAnyOutputsSpent', () => {
+    describe('isAnyOutputsFinalized', () => {
         it('should return true when checking a spent output', async () => {
             const spentOutputId = web3.utils.sha3('output id');
-            await this.dummyExitGame.proxyBatchFlagOutputsSpent([spentOutputId]);
-            expect(await this.controller.isAnyOutputsSpent([spentOutputId])).to.be.true;
+            await this.dummyExitGame.proxyBatchFlagOutputsFinalized([spentOutputId]);
+            expect(await this.controller.isAnyOutputsFinalized([spentOutputId])).to.be.true;
         });
 
         it('should return false when checking an unspent output', async () => {
             const unspentOutputId = web3.utils.sha3('output id');
-            expect(await this.controller.isAnyOutputsSpent([unspentOutputId])).to.be.false;
+            expect(await this.controller.isAnyOutputsFinalized([unspentOutputId])).to.be.false;
         });
 
         it('should return true when all of the outputs are spent', async () => {
             const dummyOutputId1 = web3.utils.sha3('output id 1');
             const dummyOutputId2 = web3.utils.sha3('output id 2');
-            await this.dummyExitGame.proxyBatchFlagOutputsSpent([dummyOutputId1, dummyOutputId2]);
-            expect(await this.controller.isAnyOutputsSpent([dummyOutputId1, dummyOutputId2])).to.be.true;
+            await this.dummyExitGame.proxyBatchFlagOutputsFinalized([dummyOutputId1, dummyOutputId2]);
+            expect(await this.controller.isAnyOutputsFinalized([dummyOutputId1, dummyOutputId2])).to.be.true;
         });
 
         it('should return true when one of the outputs is spent', async () => {
             const spentOutputId = web3.utils.sha3('output id 1');
             const unspentOutputId = web3.utils.sha3('output id 2');
-            await this.dummyExitGame.proxyBatchFlagOutputsSpent([spentOutputId]);
-            expect(await this.controller.isAnyOutputsSpent([unspentOutputId, spentOutputId])).to.be.true;
+            await this.dummyExitGame.proxyBatchFlagOutputsFinalized([spentOutputId]);
+            expect(await this.controller.isAnyOutputsFinalized([unspentOutputId, spentOutputId])).to.be.true;
         });
 
         it('should return false when all of the outputs are not spent', async () => {
             const unspentOutputId1 = web3.utils.sha3('output id 1');
             const unspentOutputId2 = web3.utils.sha3('output id 2');
-            expect(await this.controller.isAnyOutputsSpent([unspentOutputId1, unspentOutputId2])).to.be.false;
+            expect(await this.controller.isAnyOutputsFinalized([unspentOutputId1, unspentOutputId2])).to.be.false;
         });
     });
 
-    describe('batchFlagOutputsSpent', () => {
+    describe('batchFlagOutputsFinalized', () => {
         it('should be able to flag a single output', async () => {
             const dummyOutputId = web3.utils.sha3('output id');
-            await this.dummyExitGame.proxyBatchFlagOutputsSpent([dummyOutputId]);
-            expect(await this.controller.isOutputSpent(dummyOutputId)).to.be.true;
+            await this.dummyExitGame.proxyBatchFlagOutputsFinalized([dummyOutputId]);
+            expect(await this.controller.isOutputFinalized(dummyOutputId)).to.be.true;
         });
 
         it('should be able to flag multiple outputs', async () => {
             const dummyOutputId1 = web3.utils.sha3('output id 1');
             const dummyOutputId2 = web3.utils.sha3('output id 2');
-            await this.dummyExitGame.proxyBatchFlagOutputsSpent([dummyOutputId1, dummyOutputId2]);
-            expect(await this.controller.isOutputSpent(dummyOutputId1)).to.be.true;
-            expect(await this.controller.isOutputSpent(dummyOutputId2)).to.be.true;
+            await this.dummyExitGame.proxyBatchFlagOutputsFinalized([dummyOutputId1, dummyOutputId2]);
+            expect(await this.controller.isOutputFinalized(dummyOutputId1)).to.be.true;
+            expect(await this.controller.isOutputFinalized(dummyOutputId2)).to.be.true;
         });
 
         it('should fail when try to flag with empty outputId', async () => {
             const dummyOutputId = web3.utils.sha3('output id');
             await expectRevert(
-                this.dummyExitGame.proxyBatchFlagOutputsSpent([dummyOutputId, EMPTY_BYTES_32]),
+                this.dummyExitGame.proxyBatchFlagOutputsFinalized([dummyOutputId, EMPTY_BYTES_32]),
                 'Should not flag with empty outputId',
             );
         });
@@ -506,7 +506,7 @@ contract('ExitGameController', () => {
         it('should fail when not called by Exit Game contracts', async () => {
             const dummyOutputId = web3.utils.sha3('output id');
             await expectRevert(
-                this.controller.batchFlagOutputsSpent([dummyOutputId]),
+                this.controller.batchFlagOutputsFinalized([dummyOutputId]),
                 'The call is not from a registered exit game contract',
             );
         });
@@ -519,7 +519,7 @@ contract('ExitGameController', () => {
             const newDummyExitGameId = 2;
             await this.controller.registerExitGame(newDummyExitGameId, newDummyExitGame.address, PROTOCOL.MORE_VP);
             await expectRevert(
-                newDummyExitGame.proxyBatchFlagOutputsSpent([dummyOutputId1, dummyOutputId2]),
+                newDummyExitGame.proxyBatchFlagOutputsFinalized([dummyOutputId1, dummyOutputId2]),
                 'ExitGame is quarantined',
             );
         });
@@ -553,16 +553,16 @@ contract('ExitGameController', () => {
         });
     });
 
-    describe('flagOutputSpent', () => {
+    describe('flagOutputFinalized', () => {
         it('should be able to flag an output', async () => {
             const dummyOutputId = web3.utils.sha3('output id');
-            await this.dummyExitGame.proxyFlagOutputSpent(dummyOutputId);
-            expect(await this.controller.isOutputSpent(dummyOutputId)).to.be.true;
+            await this.dummyExitGame.proxyFlagOutputFinalized(dummyOutputId);
+            expect(await this.controller.isOutputFinalized(dummyOutputId)).to.be.true;
         });
 
         it('should fail when try to flag withempty outputId', async () => {
             await expectRevert(
-                this.dummyExitGame.proxyFlagOutputSpent(EMPTY_BYTES_32),
+                this.dummyExitGame.proxyFlagOutputFinalized(EMPTY_BYTES_32),
                 'Should not flag with empty outputId',
             );
         });
@@ -570,7 +570,7 @@ contract('ExitGameController', () => {
         it('should fail when not called by Exit Game contracts', async () => {
             const dummyOutputId = web3.utils.sha3('output id');
             await expectRevert(
-                this.controller.flagOutputSpent(dummyOutputId),
+                this.controller.flagOutputFinalized(dummyOutputId),
                 'The call is not from a registered exit game contract',
             );
         });
@@ -582,7 +582,7 @@ contract('ExitGameController', () => {
             const newDummyExitGameId = 2;
             await this.controller.registerExitGame(newDummyExitGameId, newDummyExitGame.address, PROTOCOL.MORE_VP);
             await expectRevert(
-                newDummyExitGame.proxyFlagOutputSpent(dummyOutputId),
+                newDummyExitGame.proxyFlagOutputFinalized(dummyOutputId),
                 'ExitGame is quarantined',
             );
         });

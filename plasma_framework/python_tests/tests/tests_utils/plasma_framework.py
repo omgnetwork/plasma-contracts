@@ -354,5 +354,5 @@ class PlasmaFramework:
 
     # additional convenience proxies (not taken from RootChain) #
 
-    def isOutputSpent(self, utxo_pos):
-        return self.plasma_framework.isOutputSpent(utxo_pos)
+    def isOutputFinalized(self, utxo_pos):
+        return self.plasma_framework.isOutputFinalized(utxo_pos)
