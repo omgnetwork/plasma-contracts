@@ -104,6 +104,7 @@ contract ExitGameController is ExitGameRegistry {
      *         priority queue to enforce the priority of exit during 'processExits'
      * @dev emits ExitQueued event, which can be used to back trace the priority inside the queue
      * @dev Caller of this function should add "pragma experimental ABIEncoderV2;" on top of file
+     * @dev Priority (exitableAt, txPos, exitId) must be unique per queue. Be aware to not enqueue with same priority twice in same queue before it is deleted from the queue.
      * @param vaultId Vault ID of the vault that stores exiting funds
      * @param token Token for the exit
      * @param exitableAt The earliest time a specified exit can be processed
@@ -133,6 +134,7 @@ contract ExitGameController is ExitGameRegistry {
         queue.insert(priority);
 
         bytes32 delegationKey = getDelegationKey(priority, vaultId, token);
+        require(address(delegations[delegationKey]) == address(0), "The exact same priority has already been in the priority queue");
         delegations[delegationKey] = exitProcessor;
 
         emit ExitQueued(exitId, priority);
