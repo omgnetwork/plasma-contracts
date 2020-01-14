@@ -285,12 +285,12 @@ The EIP-712 typed data structure is as follows:
 Vaults are used to deposit funds and, indirectly, to withdraw funds via the exit game.
 
 ## Vault contract
-Each vault is a contract holding the custody of the transferred token to Plasma Framework. Each vault would have its own `vaultId` as an identifier used in the Plasma Framework. One can retrieve the vault's address by calling the `PlasmaFramework` with the `vaultId`:
+A vault is a contract that holds custody of tokens transferred to the Plasma Framework. Each vault has a unique `vaultId` as an identifier used in the Plasma Framework. You can retrieve a vault's contract address from the  `PlasmaFramework`:
 
 `PlasmaFramework.vaults(vaultId)`
 
 ### Vault Id
-Followings are the `vaultId` as in currently deployed vault contracts:
+These are the `vaultId`s of the currently deployed vault contracts:
 - ETH vault: 1
 - ERC20 vault: 2
 
@@ -362,28 +362,28 @@ For all events of the vault, see contract documentation: [ETH vault doc](https:/
 For all events of the vault, see contract documentation: [ERC20 vault doc](https://github.com/omisego/plasma-contracts/blob/master/plasma_framework/docs/contracts/Erc20Vault.md#erc20vaultsol)
 
 # Exit Game
-Exit Games handle all the actions around exits, challenges, etc. Each transaction type would have one and only one exit game contract to enable the direct exit of transaction within that type.
+Exit Games handle all the actions around exits, challenges, etc. Each transaction type has one and only one exit game contract that provides the means of exiting funds from a transaction of that type.
 
 ## Exit Game contracts
-Each exit game is a contract that holds the logic and states of a current exit game status. Each exit game is bound to a `txType` as an identifier used in the Plasma Framework. One can retrieve the contract address by calling the `PlasmaFramework` with the `txType`:
+An exit game is a contract that holds the logic and states of a current exit game status. Each exit game is bound to a `txType` and uses it as an identifier in the Plasma Framework. You can retrieve an exit game's contract address from the `PlasmaFramework`:
 
 `PlasmaFramework.exitGames(txType)`
 
 ### Transaction types
-Followings are the `txType` as in currently deployed exit game contracts:
+The following are the currently deployed exit game contracts, mapped to `txType`:
 - Payment (v1): 1
 - Fee: 3
 
-Transaction type 2 is reserved for Payment v2 while no specific exit game contract being registered to the framework yet. For more detail on why we are reserving a transaction type, please see the "Adding new transaction type" section of the [high level design doc](https://docs.google.com/document/d/1PSxLnMskjqje4MksmW2msSSg-GtZoBSMNYey9nEDvt8/edit#heading=h.yu9haziuwf6b)
+Transaction type 2 is reserved for Payment v2, although it does not have a specific exit game contract registered in the framework yet. For more detail on why we are reserving a transaction type, please see the "Adding new transaction type" section of the [high level design doc](https://docs.google.com/document/d/1PSxLnMskjqje4MksmW2msSSg-GtZoBSMNYey9nEDvt8/edit#heading=h.yu9haziuwf6b)
 
 ### Payment Exit Game (V1)
-This contract is the main exit game contract of the first Plasma Framework iteration. It handles the exit game logic, including both standard exit and in-flight exit.
+This contract is the main exit game contract in the first Plasma Framework iteration. It handles the exit game logic for payment transactions, including both standard exit and in-flight exit.
 
-Most of the following doc within Exit Game section is about `PaymentExitGame`.
+Most of the following documentation in the Exit Game section refers to the `PaymentExitGame`.
 
 ### Fee Exit Game
 
-The fee is designed to be exit indirectly from the fee transaction. Operator would first spend the fee transaction output to a payment transaction and then exit the fee value with normal process of exiting a payment transaction.
+The fee is designed to be exit indirectly from the fee transaction. Operator must first spend the fee transaction output to a payment transaction and then exit the fee value using the normal process of exiting a payment transaction.
 
 As a result, the fee exit game contract is just an empty contract.
 
@@ -919,9 +919,9 @@ PaymentExitGame.challengeInFlightExitOutputSpent([
 
 ### Delete an in-flight exit
 
-For in-flight exit, an exit is only enqueued to the PlasmaFramework when the exit is piggybacked. As a consequence, if an in-flight exit end up not being piggybacked, the in-flight exit bond would end up being locked.
+For in-flight exit, an exit is only enqueued in the PlasmaFramework when the exit is piggybacked. As a consequence, if an in-flight exit is never piggybacked then the in-flight exit bond would end up being locked.
 
-As a mitigation, we have the `deleteNonPiggybackedInFlightExit` api on the exit game contract. One can call this to retrieve the bond back and clean up the state of in-flight exit. This can only be called after the first phase has been passed and nobody piggybacked the exit.
+As a mitigation, we have the `deleteNonPiggybackedInFlightExit` api on the exit game contract. One can call this to release the bond back to its owner and clean up the state of in-flight exit. This can only be called after the first phase has been passed and nobody has piggybacked the exit.
 
 For some more detail, see the original issue: [here](https://github.com/omisego/plasma-contracts/issues/440)
 
@@ -948,7 +948,7 @@ PaymentExitGame.deleteNonPiggybackedInFlightExit(7073727742355212711593059570850
 
 Once the exit period is over, an exit can be processed to release the funds on the root chain. An end user can perform this action, or the operator can do it for everyone.
 
-Be aware that in-flight exit is only enqueued to PlasmFramework when there exists an piggyback of the token. In other words, if an in-flight exit end up nobody piggyback with certain token, eg. ETH, then user cannot find the exit inside the priority queue for ETH. Please make sure piggyback step is done before process exit. 
+Be aware that in-flight exit is only put on a token's exit queue if a piggyback of that token exists. In other words, if an in-flight exit ends up with no piggybacks of a certain token, eg. ETH, then user will not find the exit on the priority queue for ETH. Please make sure piggyback step is done before process exit. 
 
 To process a in-flight exit: 
 1. (Optional) Obtain your `exitId` by `getInFlightExitId` helper function of the `PaymentExitGame`, see doc: [here](https://github.com/omisego/plasma-contracts/blob/master/plasma_framework/docs/contracts/PaymentExitGame.md#getinflightexitid)
@@ -960,6 +960,8 @@ PaymentExitGame.getInFlightExitId(
 ```
 
 2. Process your exit. 
+
+Exits are processed in the order of the priority queue (each vault has its own priority queue). To find out which exit is at the head of a queue, you can call `getNextExit(vaultId, token)`. The return value of this call is binary data about the exit and its priority; the exitId is the 160 least significant bits of this data
 
 ```
 PlasmaFramework.processExits({
@@ -988,11 +990,12 @@ The contract address for ERC-20 tokens.
 #### topExitId (uint160)
 The unique priority of the first exit that should be processed. Set to zero to skip the check.
 
-If you're trying to process only your own exit, set your exitId here.
+The purpose of this parameter is to prevent you from inadvertently processing another exit that has jumped to the head of the queue because it has a higher priority. If your exit is at the head of the queue and you want to make sure that you process _only_ your exit then you should set this parameter to your exitId. If another exit with higher priority jumps to the head of the queue, then the processExits() call will fail and you won't spend the gas to process the other exit. You can then wait until your exit is at the head of the queue before trying again.  
 
 #### maxExitsToProcess (uint256)
 Defines the maximum number of exits you wish to process. Set to `1` to process only your own exit. 
 
+***Note**: `processExits()` will only process exits that have completed their exit period. You can find out which (if any) exits were processed via the `ExitFinalized` or `ProcessedExitsNum` events *
 
 ### Example: Processing an in-flight exit
 
