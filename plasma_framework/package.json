@@ -7,6 +7,7 @@
   },
   "dependencies": {
     "@truffle/hdwallet-provider": "^1.0.22",
+    "async": "^3.1.0",
     "dotenv": "^8.0.0",
     "lodash.clonedeep": "^4.5.0",
     "openzeppelin-solidity": "2.3.0",
@@ -27,14 +28,27 @@
     "seedrandom": "^3.0.5",
     "solhint": "^2.2.0",
     "solidity-coverage": "^0.7.0-beta.2",
-    "truffle": "^5.0.37"
+    "truffle": "^5.0.37",
+    "truffle-security": "^1.6.0",
+    "asyncawait": "3.0.0"
   },
   "scripts": {
     "test": "truffle test",
     "coverage": "truffle run coverage",
     "docgen": "./scripts/docgen.sh",
     "linter": "node_modules/eslint/bin/eslint.js . --fix",
-    "linter-sol": "node_modules/.bin/solhint --max-warnings 0 \"contracts/**/*.sol\""
+    "linter-sol": "node_modules/.bin/solhint --max-warnings 0 \"contracts/**/*.sol\"",
+    "mythx-quick": "npx truffle run verify --mode quick $npm_package_config_PlasmaFramework $npm_package_config_Vaults $npm_package_config_DepositVerifiers $npm_package_config_PaymentExitGame $npm_package_config_PaymentExitGameDeps $npm_package_config_SpendingConditions $npm_package_config_DeployedAsBaseContracts",
+    "mythx-full": "npx truffle run verify --mode full $npm_package_config_PlasmaFramework $npm_package_config_Vaults $npm_package_config_DepositVerifiers $npm_package_config_PaymentExitGame $npm_package_config_PaymentExitGameDeps $npm_package_config_SpendingConditions $npm_package_config_DeployedAsBaseContracts"
+  },
+  "config": {
+    "PlasmaFramework": "./contracts/src/framework/PlasmaFramework.sol:PlasmaFramework",
+    "Vaults": "./contracts/src/vaults/EthVault.sol:EthVault ./contracts/src/vaults/Erc20Vault.sol:Erc20Vault",
+    "DepositVerifiers": "./contracts/src/vaults/verifiers/EthDepositVerifier.sol:EthDepositVerifier ./contracts/src/vaults/verifiers/Erc20DepositVerifier.sol:Erc20DepositVerifier",
+    "PaymentExitGame": "./contracts/src/exits/payment/PaymentExitGame.sol:PaymentExitGame",
+    "PaymentExitGameDeps": "./contracts/src/exits/registries/SpendingConditionRegistry.sol:SpendingConditionRegistry ./contracts/src/exits/payment/PaymentTransactionStateTransitionVerifier.sol:PaymentTransactionStateTransitionVerifier",
+    "SpendingConditions": "./contracts/src/exits/payment/spendingConditions/PaymentOutputToPaymentTxCondition.sol:PaymentOutputToPaymentTxCondition ./contracts/src/exits/fee/FeeClaimOutputToPaymentTxCondition.sol:FeeClaimOutputToPaymentTxCondition",
+    "DeployedAsBaseContracts": "./contracts/mocks/utils/RLPMockSecurity.sol:RLPMockSecurity ./contracts/mocks/utils/BitsWrapper.sol:BitsWrapper ./contracts/mocks/utils/MerkleWrapper.sol:MerkleWrapper ./contracts/mocks/utils/PosLibWrapper.sol:PosLibWrapper ./contracts/mocks/utils/SafeEthTransferMock.sol:SafeEthTransferMock"
   },
   "repository": {
     "type": "git",

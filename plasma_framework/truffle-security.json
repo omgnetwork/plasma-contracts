@@ -1,0 +1,6 @@
+{
+    "style": "table",
+    "mode": "quick",
+    "min-severity": "warning",
+    "swc-blacklist": [131]
+}
