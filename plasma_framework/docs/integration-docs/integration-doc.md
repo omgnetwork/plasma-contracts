@@ -284,6 +284,8 @@ The EIP-712 typed data structure is as follows:
 # Vaults
 Vaults are used to deposit funds and, indirectly, to withdraw funds via the exit game.
 
+A deposit to Plasma Framework means that it is moving fund from Root chain (Ethereum) to the Child chain (or Plasma chain). A withdrawal means the opposite, which is the action to move fund from Child chain back to Root chain. A withdrawal must only be indirectly initiated by a canonical exit.
+
 ## Vault contract
 A vault is a contract that holds custody of tokens transferred to the Plasma Framework. Each vault has a unique `vaultId` as an identifier used in the Plasma Framework. You can retrieve a vault's contract address from the  `PlasmaFramework`:
 
@@ -363,6 +365,8 @@ For all events of the vault, see contract documentation: [ERC20 vault doc](https
 
 # Exit Game
 Exit Games handle all the actions around exits, challenges, etc. Each transaction type has one and only one exit game contract that provides the means of exiting funds from a transaction of that type.
+
+Once a exit is canonical to exit after the challenge period, it can be processed according to the exit priority and withdraw the fund back from Child chain to Root chain.
 
 ## Exit Game contracts
 An exit game is a contract that holds the logic and states of a current exit game status. Each exit game is bound to a `txType` and uses it as an identifier in the Plasma Framework. You can retrieve an exit game's contract address from the `PlasmaFramework`:
