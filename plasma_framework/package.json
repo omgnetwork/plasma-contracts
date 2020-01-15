@@ -48,7 +48,7 @@
     "PaymentExitGame": "./contracts/src/exits/payment/PaymentExitGame.sol:PaymentExitGame",
     "PaymentExitGameDeps": "./contracts/src/exits/registries/SpendingConditionRegistry.sol:SpendingConditionRegistry ./contracts/src/exits/payment/PaymentTransactionStateTransitionVerifier.sol:PaymentTransactionStateTransitionVerifier",
     "SpendingConditions": "./contracts/src/exits/payment/spendingConditions/PaymentOutputToPaymentTxCondition.sol:PaymentOutputToPaymentTxCondition ./contracts/src/exits/fee/FeeClaimOutputToPaymentTxCondition.sol:FeeClaimOutputToPaymentTxCondition",
-    "DeployedAsBaseContracts": "./contracts/mocks/utils/RLPMockSecurity.sol:RLPMockSecurity ./contracts/mocks/utils/BitsWrapper.sol:BitsWrapper ./contracts/mocks/utils/MerkleWrapper.sol:MerkleWrapper ./contracts/mocks/utils/PosLibWrapper.sol:PosLibWrapper ./contracts/mocks/utils/SafeEthTransferMock.sol:SafeEthTransferMock"
+    "DeployedAsBaseContracts": "./contracts/mocks/utils/RLPMockSecurity.sol:RLPMockSecurity ./contracts/mocks/utils/BitsWrapper.sol:BitsWrapper ./contracts/mocks/utils/MerkleWrapper.sol:MerkleWrapper ./contracts/mocks/utils/PosLibWrapper.sol:PosLibWrapper"
   },
   "repository": {
     "type": "git",
