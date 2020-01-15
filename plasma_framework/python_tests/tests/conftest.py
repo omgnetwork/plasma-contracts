@@ -94,7 +94,7 @@ def _w3_session(xprocess, accounts, ganache_port):
     web3_modules = get_default_modules()
     web3_modules.update(eth=(AutominingEth,))
 
-    _w3 = Web3(HTTPProvider(endpoint_uri=f'http://localhost:{ganache_port}'), modules=web3_modules)
+    _w3 = Web3(HTTPProvider(endpoint_uri=f'http://localhost:{ganache_port}', request_kwargs={'timeout': 600}), modules=web3_modules)
     if not _w3.isConnected():  # try to connect to an external ganache
         xprocess.ensure(f'GANACHE_{ganache_port}', ganache_cli(accounts, ganache_port))
         assert _w3.provider.make_request('miner_stop', [])['result']
