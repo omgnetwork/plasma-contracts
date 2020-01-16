@@ -148,7 +148,7 @@ library PaymentProcessInFlightExit {
                 sameTokenIndex++;
             }
         }
-        return framework.isAnyOutputsSpent(outputIdsOfInputs);
+        return framework.isAnyOutputFinalized(outputIdsOfInputs);
     }
 
     function shouldWithdrawInput(
@@ -164,7 +164,7 @@ library PaymentProcessInFlightExit {
     {
         return withdrawal.token == token &&
                 exit.isInputPiggybacked(index) &&
-                !controller.framework.isOutputSpent(withdrawal.outputId);
+                !controller.framework.isOutputFinalized(withdrawal.outputId);
     }
 
     function shouldWithdrawOutput(
@@ -180,7 +180,7 @@ library PaymentProcessInFlightExit {
     {
         return withdrawal.token == token &&
                 exit.isOutputPiggybacked(index) &&
-                !controller.framework.isOutputSpent(withdrawal.outputId);
+                !controller.framework.isOutputFinalized(withdrawal.outputId);
     }
 
     function withdrawFromVault(
@@ -218,7 +218,7 @@ library PaymentProcessInFlightExit {
                 indexForOutputIds++;
             }
         }
-        framework.batchFlagOutputsSpent(outputIdsToFlag);
+        framework.batchFlagOutputsFinalized(outputIdsToFlag);
     }
 
     function flagOutputsWhenCanonical(
@@ -256,7 +256,7 @@ library PaymentProcessInFlightExit {
                 indexForOutputIds++;
             }
         }
-        framework.batchFlagOutputsSpent(outputIdsToFlag);
+        framework.batchFlagOutputsFinalized(outputIdsToFlag);
     }
 
     function clearPiggybackInputFlag(

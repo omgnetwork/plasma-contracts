@@ -142,7 +142,7 @@ library PaymentStartStandardExit {
         PaymentExitDataModel.StandardExit memory exit = exitMap.exits[data.exitId];
         require(exit.amount == 0, "Exit has already started");
 
-        require(self.framework.isOutputSpent(data.outputId) == false, "Output is already spent");
+        require(self.framework.isOutputFinalized(data.outputId) == false, "Output is already spent");
     }
 
     function isStandardFinalized(StartStandardExitData memory data)

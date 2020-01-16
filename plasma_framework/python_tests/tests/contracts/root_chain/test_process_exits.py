@@ -61,7 +61,7 @@ def test_successful_process_exit_should_clear_exit_fields_and_set_output_as_spen
     standard_exit = testlang.get_standard_exit(utxo_pos)
     assert standard_exit.owner == NULL_ADDRESS_HEX
     assert standard_exit.amount == 0
-    assert testlang.root_chain.isOutputSpent(started_exit.output_id)
+    assert testlang.root_chain.isOutputFinalized(started_exit.output_id)
 
 
 def test_process_exits_in_flight_exit_should_succeed(testlang):
@@ -123,7 +123,7 @@ def test_finalize_exits_for_erc20_should_succeed(testlang, plasma_framework, tok
 
     finalized_standard_exit = testlang.get_standard_exit(spend_id)
     assert finalized_standard_exit == [NULL_ADDRESS_HEX, 0, 0, False]
-    assert testlang.root_chain.isOutputSpent(standard_exit.output_id)
+    assert testlang.root_chain.isOutputFinalized(standard_exit.output_id)
     assert token.balanceOf(owner.address) == pre_balance + amount
 
 
@@ -397,8 +397,8 @@ def test_finalize_in_flight_exit_finalizes_only_piggybacked_outputs(testlang, pl
 
     in_flight_exit = testlang.get_in_flight_exit(spend_id)
 
-    assert plasma_framework.isOutputSpent(output_id_0)
-    assert not plasma_framework.isOutputSpent(output_id_1)
+    assert plasma_framework.isOutputFinalized(output_id_0)
+    assert not plasma_framework.isOutputFinalized(output_id_1)
 
 
 def test_finalize_exits_priority_for_in_flight_exits_corresponds_to_the_age_of_youngest_input(testlang):
@@ -469,8 +469,8 @@ def test_finalize_in_flight_exit_with_erc20_token_should_succeed(testlang, token
     assert in_flight_exit.bond_owner == NULL_ADDRESS_HEX
     assert in_flight_exit.oldest_competitor == 0
 
-    assert plasma_framework.isOutputSpent(output_id)
-    assert plasma_framework.isOutputSpent(input_id)
+    assert plasma_framework.isOutputFinalized(output_id)
+    assert plasma_framework.isOutputFinalized(input_id)
 
 
 def test_finalize_in_flight_exit_with_erc20_token_should_transfer_funds_and_bond(testlang, token):
@@ -592,8 +592,8 @@ def test_when_processing_ife_finalization_of_erc20_token_does_not_clean_up_eth_o
     testlang.process_exits(token.address, 0, 1)
     in_flight_exit = testlang.get_in_flight_exit(spend_id)
 
-    assert plasma_framework.isOutputSpent(erc20_output_id)
-    assert not plasma_framework.isOutputSpent(eth_output_id)
+    assert plasma_framework.isOutputFinalized(erc20_output_id)
+    assert not plasma_framework.isOutputFinalized(eth_output_id)
 
     assert in_flight_exit.output_piggybacked(0)
     assert not in_flight_exit.output_piggybacked(1)
