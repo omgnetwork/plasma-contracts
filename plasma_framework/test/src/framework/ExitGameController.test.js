@@ -447,36 +447,36 @@ contract('ExitGameController', () => {
         });
     });
 
-    describe('isAnyOutputsFinalized', () => {
+    describe('isAnyOutputFinalized', () => {
         it('should return true when checking a spent output', async () => {
             const spentOutputId = web3.utils.sha3('output id');
             await this.dummyExitGame.proxyBatchFlagOutputsFinalized([spentOutputId]);
-            expect(await this.controller.isAnyOutputsFinalized([spentOutputId])).to.be.true;
+            expect(await this.controller.isAnyOutputFinalized([spentOutputId])).to.be.true;
         });
 
         it('should return false when checking an unspent output', async () => {
             const unspentOutputId = web3.utils.sha3('output id');
-            expect(await this.controller.isAnyOutputsFinalized([unspentOutputId])).to.be.false;
+            expect(await this.controller.isAnyOutputFinalized([unspentOutputId])).to.be.false;
         });
 
         it('should return true when all of the outputs are spent', async () => {
             const dummyOutputId1 = web3.utils.sha3('output id 1');
             const dummyOutputId2 = web3.utils.sha3('output id 2');
             await this.dummyExitGame.proxyBatchFlagOutputsFinalized([dummyOutputId1, dummyOutputId2]);
-            expect(await this.controller.isAnyOutputsFinalized([dummyOutputId1, dummyOutputId2])).to.be.true;
+            expect(await this.controller.isAnyOutputFinalized([dummyOutputId1, dummyOutputId2])).to.be.true;
         });
 
         it('should return true when one of the outputs is spent', async () => {
             const spentOutputId = web3.utils.sha3('output id 1');
             const unspentOutputId = web3.utils.sha3('output id 2');
             await this.dummyExitGame.proxyBatchFlagOutputsFinalized([spentOutputId]);
-            expect(await this.controller.isAnyOutputsFinalized([unspentOutputId, spentOutputId])).to.be.true;
+            expect(await this.controller.isAnyOutputFinalized([unspentOutputId, spentOutputId])).to.be.true;
         });
 
         it('should return false when all of the outputs are not spent', async () => {
             const unspentOutputId1 = web3.utils.sha3('output id 1');
             const unspentOutputId2 = web3.utils.sha3('output id 2');
-            expect(await this.controller.isAnyOutputsFinalized([unspentOutputId1, unspentOutputId2])).to.be.false;
+            expect(await this.controller.isAnyOutputFinalized([unspentOutputId1, unspentOutputId2])).to.be.false;
         });
     });
 

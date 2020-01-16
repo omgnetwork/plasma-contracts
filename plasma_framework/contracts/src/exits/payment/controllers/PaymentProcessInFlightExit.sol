@@ -148,7 +148,7 @@ library PaymentProcessInFlightExit {
                 sameTokenIndex++;
             }
         }
-        return framework.isAnyOutputsFinalized(outputIdsOfInputs);
+        return framework.isAnyOutputFinalized(outputIdsOfInputs);
     }
 
     function shouldWithdrawInput(
