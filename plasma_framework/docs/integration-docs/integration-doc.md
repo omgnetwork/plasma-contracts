@@ -631,7 +631,7 @@ PaymentExitGame.startInFlightExit([
 
 To exit an input or output of an in-flight transaction the user has to piggyback on it.
 
-When in-flight transaction exits, child chain removes the inputs of the in-flight transaction from the spendable set and it no longer can be spent. Calls to child chain to spend the inputs or outputs of the in-flight transaction result in `submit:utxo_not_found` error. The effect of input or output not being available to spend is not visible in contract's state until exit is processed. After the in-flight exit is processed `PlasmaFramework.isOutputFinalized(piggybackedInputOrOutputPosition)` is set to false.
+When in-flight transaction exits, the child chain removes the inputs of the in-flight transaction from the spendable set and they can no longer be spent. Calls to the child chain to spend the inputs or outputs of an in-flight transaction result in `submit:utxo_not_found` error. The effect of an input or output not being available to spend is not visible in contract's state until the exit is processed. After the in-flight exit is processed `PlasmaFramework.isOutputFinalized(piggybackedInputOrOutputPosition)` is set to true.
 
 1. Get the amount of ETH to cover the bond for piggybacking in-flight exit as described [here](#in-flight-exit-bonds).
 
