@@ -60,7 +60,7 @@ modifier nonReentrant() internal
 - [addExitQueue(uint256 vaultId, address token)](#addexitqueue)
 - [enqueue(uint256 vaultId, address token, uint64 exitableAt, struct PosLib.Position txPos, uint160 exitId, IExitProcessor exitProcessor)](#enqueue)
 - [processExits(uint256 vaultId, address token, uint160 topExitId, uint256 maxExitsToProcess)](#processexits)
-- [isAnyOutputsFinalized(bytes32[] _outputIds)](#isanyoutputsfinalized)
+- [isAnyOutputFinalized(bytes32[] _outputIds)](#isanyoutputfinalized)
 - [batchFlagOutputsFinalized(bytes32[] _outputIds)](#batchflagoutputsfinalized)
 - [flagOutputFinalized(bytes32 _outputId)](#flagoutputfinalized)
 - [getNextExit(uint256 vaultId, address token)](#getnextexit)
@@ -189,12 +189,12 @@ Total number of processed exits
 | topExitId | uint160 | Unique identifier for prioritizing the first exit to process. Set to zero to skip this check. | 
 | maxExitsToProcess | uint256 | Maximum number of exits to process | 
 
-### isAnyOutputsFinalized
+### isAnyOutputFinalized
 
 Checks whether any of the output with the given outputIds is already spent
 
 ```js
-function isAnyOutputsFinalized(bytes32[] _outputIds) external view
+function isAnyOutputFinalized(bytes32[] _outputIds) external view
 returns(bool)
 ```
 
