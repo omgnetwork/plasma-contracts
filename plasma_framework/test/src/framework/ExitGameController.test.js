@@ -134,7 +134,7 @@ contract('ExitGameController', () => {
             );
         });
 
-        it('rejects when the the exact same priority has already been in the priority queue', async () => {
+        it('rejects when the same priority is already enqueued', async () => {
             await this.dummyExitGame.enqueue(
                 VAULT_ID,
                 this.dummyExit.token,
@@ -153,7 +153,7 @@ contract('ExitGameController', () => {
                     this.dummyExit.exitId,
                     this.dummyExit.exitProcessor,
                 ),
-                'The exact same priority has already been in the priority queue',
+                'The same priority is already enqueued',
             );
         });
 
