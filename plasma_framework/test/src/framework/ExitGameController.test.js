@@ -134,7 +134,33 @@ contract('ExitGameController', () => {
             );
         });
 
-        it('can enqueue with the same exitable timestamp (priority) multiple times', async () => {
+        it('rejects when the same priority is already enqueued', async () => {
+            await this.dummyExitGame.enqueue(
+                VAULT_ID,
+                this.dummyExit.token,
+                this.dummyExit.exitableAt,
+                this.dummyExit.txPos,
+                this.dummyExit.exitId,
+                this.dummyExit.exitProcessor,
+            );
+
+            await expectRevert(
+                this.dummyExitGame.enqueue(
+                    VAULT_ID,
+                    this.dummyExit.token,
+                    this.dummyExit.exitableAt,
+                    this.dummyExit.txPos,
+                    this.dummyExit.exitId,
+                    this.dummyExit.exitProcessor,
+                ),
+                'The same priority is already enqueued',
+            );
+        });
+
+        it('can enqueue with the exact same priority to different priority queue', async () => {
+            const vaultId2 = VAULT_ID + 1;
+            await this.controller.addExitQueue(vaultId2, this.dummyToken);
+
             await this.dummyExitGame.enqueue(
                 VAULT_ID,
                 this.dummyExit.token,
@@ -145,11 +171,43 @@ contract('ExitGameController', () => {
             );
 
             await this.dummyExitGame.enqueue(
-                VAULT_ID,
+                vaultId2,
                 this.dummyExit.token,
                 this.dummyExit.exitableAt,
                 this.dummyExit.txPos,
                 this.dummyExit.exitId,
+                this.dummyExit.exitProcessor,
+            );
+
+            const key = exitQueueKey(VAULT_ID, this.dummyToken);
+            const priorityQueueAddress = await this.controller.exitsQueues(key);
+            const priorityQueue = await PriorityQueue.at(priorityQueueAddress);
+            expect(await priorityQueue.currentSize()).to.be.bignumber.equal(new BN(1));
+
+            const key2 = exitQueueKey(vaultId2, this.dummyToken);
+            const priorityQueueAddress2 = await this.controller.exitsQueues(key2);
+            const priorityQueue2 = await PriorityQueue.at(priorityQueueAddress2);
+            expect(await priorityQueue2.currentSize()).to.be.bignumber.equal(new BN(1));
+        });
+
+        it('can enqueue with the same exitable timestamp and txPos but with different exitId multiple times to the same queue', async () => {
+            const exitId1 = 111111;
+            const exitId2 = 22222;
+            await this.dummyExitGame.enqueue(
+                VAULT_ID,
+                this.dummyExit.token,
+                this.dummyExit.exitableAt,
+                this.dummyExit.txPos,
+                exitId1,
+                this.dummyExit.exitProcessor,
+            );
+
+            await this.dummyExitGame.enqueue(
+                VAULT_ID,
+                this.dummyExit.token,
+                this.dummyExit.exitableAt,
+                this.dummyExit.txPos,
+                exitId2,
                 this.dummyExit.exitProcessor,
             );
 
