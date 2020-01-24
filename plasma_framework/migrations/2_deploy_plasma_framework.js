@@ -1,6 +1,8 @@
 const PlasmaFramework = artifacts.require('PlasmaFramework');
 
+const childProcess = require('child_process');
 const config = require('../config.js');
+const pck = require('../package.json');
 
 module.exports = async (
     deployer,
@@ -19,4 +21,6 @@ module.exports = async (
 
     const plasmaFramework = await PlasmaFramework.deployed();
     await plasmaFramework.activateChildChain({ from: authorityAddress });
+    const sha = childProcess.execSync('git rev-parse HEAD').toString().trim().substring(0, 7);
+    await plasmaFramework.setVersion(''.concat(pck.version, '+', sha), { from: maintainerAddress });
 };

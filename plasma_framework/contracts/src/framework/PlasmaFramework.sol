@@ -24,6 +24,7 @@ contract PlasmaFramework is VaultRegistry, ExitGameRegistry, ExitGameController,
      */
     uint256 public minExitPeriod;
     address private maintainer;
+    string public version;
 
     constructor(
         uint256 _minExitPeriod,
@@ -42,5 +43,20 @@ contract PlasmaFramework is VaultRegistry, ExitGameRegistry, ExitGameController,
 
     function getMaintainer() public view returns (address) {
         return maintainer;
+    }
+
+    /**
+     * @notice Gets the semantic version of the current deployed contracts
+    */
+    function getVersion() public view returns (string memory) {
+        return version;
+    }
+    
+    /**
+     * @notice Sets the semantic version of the current deployed contracts
+     * @param _version is semver string
+     */
+    function setVersion(string memory _version) public onlyFrom(getMaintainer()) {
+        version = _version;
     }
 }
