@@ -48,7 +48,7 @@ contract PlasmaFramework is VaultRegistry, ExitGameRegistry, ExitGameController,
     /**
      * @notice Gets the semantic version of the current deployed contracts
     */
-    function getVersion() public view returns (string memory) {
+    function getVersion() external view returns (string memory) {
         return version;
     }
     
