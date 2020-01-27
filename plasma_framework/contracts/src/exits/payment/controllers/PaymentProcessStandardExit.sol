@@ -48,13 +48,13 @@ library PaymentProcessStandardExit {
     {
         PaymentExitDataModel.StandardExit memory exit = exitMap.exits[exitId];
 
-        if (!exit.exitable || self.framework.isOutputSpent(exit.outputId)) {
+        if (!exit.exitable || self.framework.isOutputFinalized(exit.outputId)) {
             emit ExitOmitted(exitId);
             delete exitMap.exits[exitId];
             return;
         }
 
-        self.framework.flagOutputSpent(exit.outputId);
+        self.framework.flagOutputFinalized(exit.outputId);
 
         // we do not want to block a queue if bond return is unsuccessful
         bool success = SafeEthTransfer.transferReturnResult(exit.exitTarget, exit.bondSize, self.safeGasStipend);

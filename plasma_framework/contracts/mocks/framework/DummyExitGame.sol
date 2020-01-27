@@ -47,12 +47,12 @@ contract DummyExitGame is IExitProcessor {
         priorityFromEnqueue = exitGameController.enqueue(_vaultId, _token, _exitableAt, PosLib.decode(_txPos), _exitId, _exitProcessor);
     }
 
-    function proxyBatchFlagOutputsSpent(bytes32[] memory _outputIds) public {
-        exitGameController.batchFlagOutputsSpent(_outputIds);
+    function proxyBatchFlagOutputsFinalized(bytes32[] memory _outputIds) public {
+        exitGameController.batchFlagOutputsFinalized(_outputIds);
     }
 
-    function proxyFlagOutputSpent(bytes32 _outputId) public {
-        exitGameController.flagOutputSpent(_outputId);
+    function proxyFlagOutputFinalized(bytes32 _outputId) public {
+        exitGameController.flagOutputFinalized(_outputId);
     }
 
     // setter function only for test, not a real Exit Game function

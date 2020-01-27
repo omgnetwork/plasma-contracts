@@ -19,7 +19,7 @@ contract ExitGameController is ExitGameRegistry {
     // hashed (vault id, token) => PriorityQueue
     mapping (bytes32 => PriorityQueue) public exitsQueues;
     // outputId => bool
-    mapping (bytes32 => bool) public isOutputSpent;
+    mapping (bytes32 => bool) public isOutputFinalized;
     bool private mutex = false;
 
     event ExitQueueAdded(
@@ -104,6 +104,7 @@ contract ExitGameController is ExitGameRegistry {
      *         priority queue to enforce the priority of exit during 'processExits'
      * @dev emits ExitQueued event, which can be used to back trace the priority inside the queue
      * @dev Caller of this function should add "pragma experimental ABIEncoderV2;" on top of file
+     * @dev Priority (exitableAt, txPos, exitId) must be unique per queue. Do not enqueue when the same priority is already in the queue.
      * @param vaultId Vault ID of the vault that stores exiting funds
      * @param token Token for the exit
      * @param exitableAt The earliest time a specified exit can be processed
@@ -133,6 +134,7 @@ contract ExitGameController is ExitGameRegistry {
         queue.insert(priority);
 
         bytes32 delegationKey = getDelegationKey(priority, vaultId, token);
+        require(address(delegations[delegationKey]) == address(0), "The same priority is already enqueued");
         delegations[delegationKey] = exitProcessor;
 
         emit ExitQueued(exitId, priority);
@@ -187,9 +189,9 @@ contract ExitGameController is ExitGameRegistry {
      * @notice Checks whether any of the output with the given outputIds is already spent
      * @param _outputIds Output IDs to check
      */
-    function isAnyOutputsSpent(bytes32[] calldata _outputIds) external view returns (bool) {
+    function isAnyOutputFinalized(bytes32[] calldata _outputIds) external view returns (bool) {
         for (uint i = 0; i < _outputIds.length; i++) {
-            if (isOutputSpent[_outputIds[i]] == true) {
+            if (isOutputFinalized[_outputIds[i]] == true) {
                 return true;
             }
         }
@@ -200,10 +202,10 @@ contract ExitGameController is ExitGameRegistry {
      * @notice Batch flags already spent outputs
      * @param _outputIds Output IDs to flag
      */
-    function batchFlagOutputsSpent(bytes32[] calldata _outputIds) external onlyFromNonQuarantinedExitGame {
+    function batchFlagOutputsFinalized(bytes32[] calldata _outputIds) external onlyFromNonQuarantinedExitGame {
         for (uint i = 0; i < _outputIds.length; i++) {
             require(_outputIds[i] != bytes32(""), "Should not flag with empty outputId");
-            isOutputSpent[_outputIds[i]] = true;
+            isOutputFinalized[_outputIds[i]] = true;
         }
     }
 
@@ -211,9 +213,9 @@ contract ExitGameController is ExitGameRegistry {
      * @notice Flags a single output as spent
      * @param _outputId The output ID to flag as spent
      */
-    function flagOutputSpent(bytes32 _outputId) external onlyFromNonQuarantinedExitGame {
+    function flagOutputFinalized(bytes32 _outputId) external onlyFromNonQuarantinedExitGame {
         require(_outputId != bytes32(""), "Should not flag with empty outputId");
-        isOutputSpent[_outputId] = true;
+        isOutputFinalized[_outputId] = true;
     }
 
     function getNextExit(uint256 vaultId, address token) external view returns (uint256) {

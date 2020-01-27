@@ -187,7 +187,7 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
 
                             it('should mark output as spent', async () => {
                                 const outputId = computeNormalOutputId(this.inFlightTxRaw, this.exitingOutputIndex);
-                                expect(await this.framework.isOutputSpent(outputId)).to.be.true;
+                                expect(await this.framework.isOutputFinalized(outputId)).to.be.true;
                             });
                         });
                     });

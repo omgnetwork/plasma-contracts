@@ -354,7 +354,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
                 await this.exitGame.setInFlightExit(DUMMY_EXIT_ID, exit);
 
                 // flags the first input and piggybacks the two ETH inputs (first and second)
-                await this.exitGame.proxyFlagOutputSpent(TEST_OUTPUT_ID_FOR_INPUT_1);
+                await this.exitGame.proxyFlagOutputFinalized(TEST_OUTPUT_ID_FOR_INPUT_1);
                 await this.exitGame.setInFlightExitInputPiggybacked(DUMMY_EXIT_ID, 0);
                 await this.exitGame.setInFlightExitInputPiggybacked(DUMMY_EXIT_ID, 1);
             });
@@ -402,7 +402,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
             });
 
             it('should NOT withdraw fund from vault for the piggybacked but already spent input', async () => {
-                await this.exitGame.proxyFlagOutputSpent(TEST_OUTPUT_ID_FOR_INPUT_1);
+                await this.exitGame.proxyFlagOutputFinalized(TEST_OUTPUT_ID_FOR_INPUT_1);
                 const { receipt } = await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH);
                 let didNotCallEthWithdraw = false;
                 try {
@@ -467,19 +467,19 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
             it('should only flag piggybacked inputs with the same token as spent', async () => {
                 await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH);
                 // piggybacked input
-                expect(await this.framework.isOutputSpent(TEST_OUTPUT_ID_FOR_INPUT_1)).to.be.true;
+                expect(await this.framework.isOutputFinalized(TEST_OUTPUT_ID_FOR_INPUT_1)).to.be.true;
                 // non-piggybacked input
-                expect(await this.framework.isOutputSpent(TEST_OUTPUT_ID_FOR_INPUT_2)).to.be.false;
+                expect(await this.framework.isOutputFinalized(TEST_OUTPUT_ID_FOR_INPUT_2)).to.be.false;
                 // piggybacked input but different token
-                expect(await this.framework.isOutputSpent(TEST_OUTPUT_ID_FOR_INPUT_3)).to.be.false;
+                expect(await this.framework.isOutputFinalized(TEST_OUTPUT_ID_FOR_INPUT_3)).to.be.false;
             });
 
             it('should NOT flag output as spent', async () => {
                 await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH);
 
-                expect(await this.framework.isOutputSpent(TEST_OUTPUT_ID_FOR_OUTPUT_1)).to.be.false;
-                expect(await this.framework.isOutputSpent(TEST_OUTPUT_ID_FOR_OUTPUT_2)).to.be.false;
-                expect(await this.framework.isOutputSpent(TEST_OUTPUT_ID_FOR_OUTPUT_3)).to.be.false;
+                expect(await this.framework.isOutputFinalized(TEST_OUTPUT_ID_FOR_OUTPUT_1)).to.be.false;
+                expect(await this.framework.isOutputFinalized(TEST_OUTPUT_ID_FOR_OUTPUT_2)).to.be.false;
+                expect(await this.framework.isOutputFinalized(TEST_OUTPUT_ID_FOR_OUTPUT_3)).to.be.false;
             });
 
             it('should emit InFlightExitInputWithdrawn event', async () => {
@@ -525,7 +525,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
             });
 
             it('should NOT withdraw from fund vault for the piggybacked but already spent output', async () => {
-                await this.exitGame.proxyFlagOutputSpent(TEST_OUTPUT_ID_FOR_OUTPUT_1);
+                await this.exitGame.proxyFlagOutputFinalized(TEST_OUTPUT_ID_FOR_OUTPUT_1);
                 const { receipt } = await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH);
                 let didNotCallEthWithdraw = false;
                 try {
@@ -590,21 +590,21 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
             it('should flag ALL inputs with the same token as spent', async () => {
                 await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH);
                 // same token, both piggybacked and non-piggybacked cases
-                expect(await this.framework.isOutputSpent(TEST_OUTPUT_ID_FOR_INPUT_1)).to.be.true;
-                expect(await this.framework.isOutputSpent(TEST_OUTPUT_ID_FOR_INPUT_2)).to.be.true;
+                expect(await this.framework.isOutputFinalized(TEST_OUTPUT_ID_FOR_INPUT_1)).to.be.true;
+                expect(await this.framework.isOutputFinalized(TEST_OUTPUT_ID_FOR_INPUT_2)).to.be.true;
                 // different token
-                expect(await this.framework.isOutputSpent(TEST_OUTPUT_ID_FOR_INPUT_3)).to.be.false;
+                expect(await this.framework.isOutputFinalized(TEST_OUTPUT_ID_FOR_INPUT_3)).to.be.false;
             });
 
             it('should only flag piggybacked output with the same token as spent', async () => {
                 await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH);
 
                 // piggybacked output of same token
-                expect(await this.framework.isOutputSpent(TEST_OUTPUT_ID_FOR_OUTPUT_1)).to.be.true;
+                expect(await this.framework.isOutputFinalized(TEST_OUTPUT_ID_FOR_OUTPUT_1)).to.be.true;
                 // non piggybacked output of same token
-                expect(await this.framework.isOutputSpent(TEST_OUTPUT_ID_FOR_OUTPUT_2)).to.be.false;
+                expect(await this.framework.isOutputFinalized(TEST_OUTPUT_ID_FOR_OUTPUT_2)).to.be.false;
                 // different token
-                expect(await this.framework.isOutputSpent(TEST_OUTPUT_ID_FOR_OUTPUT_3)).to.be.false;
+                expect(await this.framework.isOutputFinalized(TEST_OUTPUT_ID_FOR_OUTPUT_3)).to.be.false;
             });
 
             it('should emit InFlightExitOutputWithdrawn event', async () => {
