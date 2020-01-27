@@ -53,7 +53,7 @@ event BlockSubmitted(
  > ***Note**: For more information about parameter types, return types, valid values, and so on, see the [Plasma Contract API documentation](../contracts/BlockController.md#submitblock).*
  
 # Block retrieval
-To learn what blocks need to be retrieved during sync, read the values of `nextChildBlock` and `childBlockInterval` from the contract (e.g. via [`eth_call`](https://github.com/ethereum/wiki/wiki/JSON-RPC#eth_call)). Compute block numbers by iterating every `childBlockInterval` from `0 + childBlockInterval` up to `nextChildBlock - childBlockInterval`, inclusive. Next, read values of roots of Merkle trees of blocks by calling `PlasmaFramework.blocks(blknum)`.
+To learn what blocks need to be retrieved during sync, read `PlasmaFramework.nextChildBlock()` and `PlasmaFramework.childBlockInterval()`. Compute block numbers by iterating every `childBlockInterval` from `0 + childBlockInterval` up to `nextChildBlock - childBlockInterval`, inclusive. Next, read values of roots of Merkle trees of blocks by calling `PlasmaFramework.blocks(blknum)`.
 
 # Transactions
 Transactions are composed of inputs and outputs. An input is simply a pointer to the output of another transaction. 
