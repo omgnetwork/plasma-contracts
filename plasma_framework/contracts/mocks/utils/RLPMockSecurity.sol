@@ -49,7 +49,8 @@ contract RLPMockSecurity {
 
     function propertyTestDepositTx1(bytes memory mutTx) public {
         bytes memory depositTx1 = hex'f85a01c0f5f401f294d42b31665b93c128541c8b89a0e545afb08b7dd894000000000000000000000000000000000000000087038d7ea4c6800080a00000000000000000000000000000000000000000000000000000000000000000';
+        require(keccak256(depositTx1) != keccak256(mutTx));
         validateDepositTx1(mutTx);
-        assert(keccak256(depositTx1) == keccak256(mutTx));
+        assert(false);
     }
 }
