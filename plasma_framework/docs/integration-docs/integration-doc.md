@@ -52,7 +52,8 @@ event BlockSubmitted(
 
  > ***Note**: For more information about parameter types, return types, valid values, and so on, see the [Plasma Contract API documentation](../contracts/BlockController.md#submitblock).*
  
-
+# Block retrieval
+To learn what blocks need to be retrieved during sync, compute block numbers by iterating every `childBlockInterval` from `0 + childBlockInterval` up to `nextChildBlock - childBlockInterval`, inclusive. Next, learn their commited hash values by reading `blocks` mapping.
 
 # Transactions
 Transactions are composed of inputs and outputs. An input is simply a pointer to the output of another transaction. 
