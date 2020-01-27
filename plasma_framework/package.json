@@ -28,8 +28,8 @@
     "seedrandom": "^3.0.5",
     "solhint": "^2.2.0",
     "solidity-coverage": "^0.7.0-beta.2",
-    "truffle": "^5.0.37",
-    "truffle-security": "^1.6.0",
+    "truffle": "5.0.40",
+    "truffle-security": "https://git@github.com/ConsenSys/truffle-security.git",
     "asyncawait": "3.0.0"
   },
   "scripts": {
