@@ -33,7 +33,7 @@ contract('PlasmaFramework', ([authority, maintainer, alice]) => {
         it('should set semver string', async () => {
             const sha = childProcess.execSync('git rev-parse HEAD').toString().trim()
                 .substring(0, 7);
-            await this.framework.setVersion(''.concat('1.0.1', '+', sha), { from: maintainer });
+            await this.framework.setVersion('1.0.1+${sha}'), { from: maintainer });
             expect(await this.framework.getVersion()).to.equal('1.0.1'.concat('+', sha));
         });
 
