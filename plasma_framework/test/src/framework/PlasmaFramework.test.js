@@ -34,7 +34,7 @@ contract('PlasmaFramework', ([authority, maintainer, alice]) => {
             const sha = childProcess.execSync('git rev-parse HEAD').toString().trim()
                 .substring(0, 7);
             await this.framework.setVersion(`1.0.1+${sha}`, { from: maintainer });
-            expect(await this.framework.getVersion()).to.equal('1.0.1'.concat('+', sha));
+            expect(await this.framework.getVersion()).to.equal(`1.0.1+${sha}`);
         });
 
         it('should fail when semver not set by maintainer', async () => {
