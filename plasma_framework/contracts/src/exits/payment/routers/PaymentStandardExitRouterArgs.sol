@@ -27,5 +27,6 @@ library PaymentStandardExitRouterArgs {
         bytes challengeTx;
         uint16 inputIndex;
         bytes witness;
+        bytes32 senderData;
     }
 }

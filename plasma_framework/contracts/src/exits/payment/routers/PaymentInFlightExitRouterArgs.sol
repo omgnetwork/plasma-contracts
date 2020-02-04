@@ -59,6 +59,7 @@ library PaymentInFlightExitRouterArgs {
         uint256 competingTxPos;
         bytes competingTxInclusionProof;
         bytes competingTxWitness;
+        bytes32 senderData;
     }
 
     /**
@@ -79,6 +80,7 @@ library PaymentInFlightExitRouterArgs {
         bytes challengingTxWitness;
         bytes inputTx;
         uint256 inputUtxoPos;
+        bytes32 senderData;
     }
 
      /**
@@ -97,5 +99,6 @@ library PaymentInFlightExitRouterArgs {
         bytes challengingTx;
         uint16 challengingTxInputIndex;
         bytes challengingTxWitness;
+        bytes32 senderData;
     }
 }

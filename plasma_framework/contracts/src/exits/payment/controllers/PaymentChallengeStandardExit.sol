@@ -74,6 +74,8 @@ library PaymentChallengeStandardExit {
     )
         public
     {
+        require(args.senderData == keccak256(abi.encodePacked(msg.sender)), "Incorrect senderData");
+
         GenericTransaction.Transaction memory challengeTx = GenericTransaction.decode(args.challengeTx);
 
         ChallengeStandardExitData memory data = ChallengeStandardExitData({

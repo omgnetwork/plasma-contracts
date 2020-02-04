@@ -26,7 +26,7 @@ const {
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../../helpers/transaction.js');
 
 
-contract('PaymentChallengeStandardExit', ([_, alice, bob]) => {
+contract('PaymentChallengeStandardExit', ([txSender, alice, bob, frontRunner]) => {
     const ETH = constants.ZERO_ADDRESS;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week in seconds
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
@@ -61,6 +61,7 @@ contract('PaymentChallengeStandardExit', ([_, alice, bob]) => {
                 challengeTx,
                 inputIndex: 0,
                 witness: web3.utils.utf8ToHex('dummy witness'),
+                senderData: web3.utils.keccak256(txSender),
             };
         };
 
@@ -136,6 +137,7 @@ contract('PaymentChallengeStandardExit', ([_, alice, bob]) => {
                 await this.exitGame.setExit(this.args.exitId, this.exitData);
 
                 const attacker = await Attacker.new();
+                this.args.senderData = web3.utils.keccak256(attacker.address);
 
                 await expectRevert(
                     this.exitGame.challengeStandardExit(this.args, { from: attacker.address }),
@@ -207,10 +209,19 @@ contract('PaymentChallengeStandardExit', ([_, alice, bob]) => {
                 const exitingTxObj = new PaymentTransaction(2, [DUMMY_INPUT_1], [output]);
                 const exitingTx = web3.utils.bytesToHex(exitingTxObj.rlpEncoded());
                 args.exitingTx = exitingTx;
+                args.senderData = web3.utils.keccak256(bob);
 
                 await expectRevert(
                     this.exitGame.challengeStandardExit(args, { from: bob }),
                     'Invalid exiting tx causing outputId mismatch',
+                );
+            });
+
+            it('should fail when senderData is incorrect', async () => {
+                const args = getTestInputArgs(OUTPUT_TYPE.PAYMENT, alice);
+                await expectRevert(
+                    this.exitGame.challengeStandardExit(args, { from: frontRunner }),
+                    'Incorrect senderData',
                 );
             });
 
@@ -239,6 +250,7 @@ contract('PaymentChallengeStandardExit', ([_, alice, bob]) => {
                     await this.exitGame.depositFundForTest({ value: this.startStandardExitBondSize });
 
                     this.args = getTestInputArgs(OUTPUT_TYPE.PAYMENT, alice);
+                    this.args.senderData = web3.utils.keccak256(bob);
                     this.exitData = getTestExitData(this.args, alice, this.startStandardExitBondSize);
 
                     await this.exitGame.setExit(this.args.exitId, this.exitData);
