@@ -30,7 +30,7 @@ const {
 } = require('../../../../helpers/transaction.js');
 const { createInclusionProof } = require('../../../../helpers/ife.js');
 
-contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwner, competitorOwner, challenger, frontRunner]) => {
+contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwner, competitorOwner, challenger]) => {
     const DUMMY_IFE_BOND_SIZE = 31415926535; // wei
     const PIGGYBACK_BOND = 31415926535; // wei
     const CHILD_BLOCK_INTERVAL = 1000;
@@ -122,7 +122,6 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
                 competingTxPos: competingTxPos.utxoPos,
                 competingTxInclusionProof: inclusionProof,
                 competingTxWitness,
-                senderData: web3.utils.keccak256(challenger),
             },
             block: {
                 blockHash, blockNum, blockTimestamp,
@@ -477,13 +476,6 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
                 await expectRevert(
                     this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: challenger }),
                     'Competing transaction is not older than already known competitor',
-                );
-            });
-
-            it('fails when senderData is incorrect', async () => {
-                await expectRevert(
-                    this.exitGame.challengeInFlightExitNotCanonical(this.challengeArgs, { from: frontRunner }),
-                    'Incorrect senderData',
                 );
             });
 

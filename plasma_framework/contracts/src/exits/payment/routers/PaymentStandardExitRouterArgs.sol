@@ -20,6 +20,7 @@ library PaymentStandardExitRouterArgs {
      * @param challengeTx RLP-encoded transaction that spends the exiting output
      * @param inputIndex Input of the challenging tx, corresponding to the exiting output
      * @param witness Witness data that proves the exiting output is spent
+     * @param senderData A keccak256 hash of the sender's address
      */
     struct ChallengeStandardExitArgs {
         uint160 exitId;
