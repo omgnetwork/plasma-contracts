@@ -28,7 +28,7 @@ const { createInputTransaction, createInFlightTx } = require('../../../../helper
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../../helpers/transaction.js');
 const { spentOnGas, computeNormalOutputId, getOutputId } = require('../../../../helpers/utils.js');
 
-contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, challenger, frontRunner]) => {
+contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, challenger, otherAddress]) => {
     const DUMMY_IFE_BOND_SIZE = 31415926535;
     const PIGGYBACK_BOND = 31415926535;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
@@ -405,7 +405,7 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
 
             it('should fail when senderData is incorrect', async () => {
                 await expectRevert(
-                    this.exitGame.challengeInFlightExitInputSpent(this.challengeArgs, { from: frontRunner }),
+                    this.exitGame.challengeInFlightExitInputSpent(this.challengeArgs, { from: otherAddress }),
                     'Incorrect senderData',
                 );
             });

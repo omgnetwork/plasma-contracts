@@ -548,7 +548,7 @@ PaymentExitGame.challengeStandardExit({
   challengeTx,
   inputIndex,
   witness,
-  spenderData
+  senderData
 });
 ```
 
@@ -843,7 +843,7 @@ PaymentExitGame.challengeInFlightExitInputSpent({
     challengingTxWitness,
     inputTx,
     inputUtxoPos,
-    spenderData
+    senderData
 })
 ```
 
@@ -899,7 +899,7 @@ PaymentExitGame.challengeInFlightExitOutputSpent({
     challengingTx,
     challengingTxInputIndex,
     challengingTxWitness,
-    spenderData
+    senderData
 })
 ```
 

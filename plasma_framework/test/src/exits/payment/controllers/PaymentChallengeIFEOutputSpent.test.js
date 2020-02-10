@@ -28,7 +28,7 @@ const {
     PROTOCOL, TX_TYPE, VAULT_ID, DUMMY_INPUT_1, SAFE_GAS_STIPEND, EMPTY_BYTES_32,
 } = require('../../../../helpers/constants.js');
 
-contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob, frontRunner]) => {
+contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob, otherAddress]) => {
     const DUMMY_IFE_BOND_SIZE = 31415926535; // wei
     const PIGGYBACK_BOND = 31415926535;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
@@ -312,7 +312,7 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob, frontRunner]) => {
 
         it('should fail when senderData is incorrect', async () => {
             await expectRevert(
-                this.exitGame.challengeInFlightExitOutputSpent(this.challengeArgs, { from: frontRunner }),
+                this.exitGame.challengeInFlightExitOutputSpent(this.challengeArgs, { from: otherAddress }),
                 'Incorrect senderData',
             );
         });

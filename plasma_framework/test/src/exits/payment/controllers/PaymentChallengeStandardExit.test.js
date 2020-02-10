@@ -26,7 +26,7 @@ const {
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../../helpers/transaction.js');
 
 
-contract('PaymentChallengeStandardExit', ([txSender, alice, bob, frontRunner]) => {
+contract('PaymentChallengeStandardExit', ([txSender, alice, bob, otherAddress]) => {
     const ETH = constants.ZERO_ADDRESS;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week in seconds
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
@@ -220,7 +220,7 @@ contract('PaymentChallengeStandardExit', ([txSender, alice, bob, frontRunner]) =
             it('should fail when senderData is incorrect', async () => {
                 const args = getTestInputArgs(OUTPUT_TYPE.PAYMENT, alice);
                 await expectRevert(
-                    this.exitGame.challengeStandardExit(args, { from: frontRunner }),
+                    this.exitGame.challengeStandardExit(args, { from: otherAddress }),
                     'Incorrect senderData',
                 );
             });
