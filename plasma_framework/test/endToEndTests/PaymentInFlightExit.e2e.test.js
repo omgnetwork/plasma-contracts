@@ -283,6 +283,7 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                             competingTxPos: 0,
                                             competingTxInclusionProof: EMPTY_BYTES,
                                             competingTxWitness: this.signatureTx2,
+                                            senderData: web3.utils.keccak256(carol),
                                         };
 
                                         await this.exitGame.challengeInFlightExitNotCanonical(
@@ -324,6 +325,7 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                                     challengingTxWitness: this.signatureTx2,
                                                     inputTx: this.outputAData.depositTx,
                                                     inputUtxoPos: this.outputAData.depositUtxoPos,
+                                                    senderData: web3.utils.keccak256(carol),
                                                 };
                                                 await this.exitGame.challengeInFlightExitInputSpent(
                                                     args,
@@ -467,6 +469,7 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                             competingTxPos: 0,
                                             competingTxInclusionProof: EMPTY_BYTES,
                                             competingTxWitness: this.signatureBobTx2,
+                                            senderData: web3.utils.keccak256(_deployer),
                                         };
 
                                         await this.exitGame.challengeInFlightExitNotCanonical(argsTx1);
@@ -481,6 +484,7 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                             competingTxPos: 0,
                                             competingTxInclusionProof: EMPTY_BYTES,
                                             competingTxWitness: this.signatureBobTx1,
+                                            senderData: web3.utils.keccak256(_deployer),
                                         };
 
                                         await this.exitGame.challengeInFlightExitNotCanonical(argsTx2);

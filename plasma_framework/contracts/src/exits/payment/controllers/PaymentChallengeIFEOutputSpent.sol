@@ -45,6 +45,8 @@ library PaymentChallengeIFEOutputSpent {
     )
         public
     {
+        require(args.senderData == keccak256(abi.encodePacked(msg.sender)), "Incorrect senderData");
+
         uint160 exitId = ExitId.getInFlightExitId(args.inFlightTx);
         PaymentExitDataModel.InFlightExit storage ife = inFlightExitMap.exits[exitId];
         require(ife.exitStartTimestamp != 0, "In-flight exit does not exist");

@@ -1,4 +1,5 @@
 import pytest
+from eth_utils import keccak
 from eth_tester.exceptions import TransactionFailed
 from plasma_core.constants import NULL_ADDRESS
 
@@ -75,4 +76,4 @@ def test_challenge_in_flight_exit_output_spent_invalid_proof_should_fail(testlan
     with pytest.raises(TransactionFailed):
         testlang.root_chain.challengeInFlightExitOutputSpent(in_flight_tx.encoded, spend_id,
                                                              in_flight_tx_inclusion_proof, spending_tx.encoded, 0,
-                                                             spending_tx_sig, **{'from': owner_2.address})
+                                                             spending_tx_sig, keccak(hexstr=owner_2.address), **{'from': owner_2.address})
