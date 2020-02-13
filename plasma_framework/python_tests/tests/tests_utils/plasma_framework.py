@@ -352,11 +352,11 @@ class PlasmaFramework:
     def piggybackBond(self):
         return self.payment_exit_game.piggybackBondSize()
 
-    def exits(self, exit_id):
-        return self.payment_exit_game.standardExits([exit_id])
+    def exits(self, exit_ids):
+        return self.payment_exit_game.standardExits(exit_ids)
 
     def inFlightExits(self, exit_ids):
-        return self.payment_exit_game.inFlightExits([exit_id])
+        return self.payment_exit_game.inFlightExits(exit_ids)
 
     # additional convenience proxies (not taken from RootChain) #
 
