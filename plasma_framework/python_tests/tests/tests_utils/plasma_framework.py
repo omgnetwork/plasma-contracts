@@ -355,8 +355,8 @@ class PlasmaFramework:
     def exits(self, exit_id):
         return self.payment_exit_game.standardExits([exit_id])
 
-    def inFlightExits(self, exit_id):
-        return self.payment_exit_game.inFlightExits(exit_id)
+    def inFlightExits(self, exit_ids):
+        return self.payment_exit_game.inFlightExits([exit_id])
 
     # additional convenience proxies (not taken from RootChain) #
 

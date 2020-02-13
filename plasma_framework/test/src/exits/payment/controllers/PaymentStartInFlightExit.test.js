@@ -181,7 +181,8 @@ contract('PaymentStartInFlightExit', ([_, alice, richFather, carol]) => {
                 );
                 const exitId = await this.exitIdHelper.getInFlightExitId(this.args.inFlightTx);
 
-                const exit = await this.exitGame.inFlightExits(exitId);
+                const exits = await this.exitGame.inFlightExits([exitId]);
+                const exit = exits[0];
 
                 expect(exit.isCanonical).to.be.true;
                 expect(exit.bondOwner).to.equal(alice);

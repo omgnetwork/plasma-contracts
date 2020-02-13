@@ -264,7 +264,7 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
             });
 
             it('should remove the input from piggybacked', async () => {
-                const exit = await this.exitGame.inFlightExits(this.testData.exitId);
+                const exit = await this.exitGame.inFlightExits([this.testData.exitId]);
                 expect(new BN(exit.exitMap)).to.be.bignumber.equal(new BN(0));
             });
 
@@ -290,16 +290,16 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
 
             it('should remove the input from piggybacked', async () => {
                 // Before the challenge, both inputs should be in the exitMap
-                let exit = await this.exitGame.inFlightExits(this.testData.exitId);
-                expect(new BN(exit.exitMap)).to.be.bignumber.equal(new BN(0b11));
+                let exits = await this.exitGame.inFlightExits([this.testData.exitId]);
+                expect(new BN(exits[0].exitMap)).to.be.bignumber.equal(new BN(0b11));
 
                 await this.exitGame.challengeInFlightExitInputSpent(
                     this.challengeArgs, { from: challenger },
                 );
 
                 // After the challenge, only input 1 should be in the exitMap
-                exit = await this.exitGame.inFlightExits(this.testData.exitId);
-                expect(new BN(exit.exitMap)).to.be.bignumber.equal(new BN(0b01));
+                exits = await this.exitGame.inFlightExits([this.testData.exitId]);
+                expect(new BN(exits[0].exitMap)).to.be.bignumber.equal(new BN(0b01));
             });
         });
 

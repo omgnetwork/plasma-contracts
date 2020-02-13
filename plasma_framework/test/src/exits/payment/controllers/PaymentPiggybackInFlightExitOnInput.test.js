@@ -310,16 +310,16 @@ contract('PaymentPiggybackInFlightExitOnInput', ([_, alice, inputOwner, nonInput
             });
 
             it('should set the exit as piggybacked on the input index', async () => {
-                const exit = await this.exitGame.inFlightExits(this.testData.exitId);
+                const exits = await this.exitGame.inFlightExits([this.testData.exitId]);
 
                 // input index = 0 --> flag the right most position to 1 on exit map thus equals 1
-                expect(new BN(exit.exitMap)).to.be.bignumber.equal(new BN(1));
+                expect(new BN(exits[0].exitMap)).to.be.bignumber.equal(new BN(1));
             });
 
             it('should set a proper piggyback bond size', async () => {
-                const exit = await this.exitGame.inFlightExits(this.testData.exitId);
+                const exits = await this.exitGame.inFlightExits([this.testData.exitId]);
 
-                expect(new BN(exit.inputs[0].piggybackBondSize)).to.be.bignumber.equal(this.piggybackBondSize);
+                expect(new BN(exits[0].inputs[0].piggybackBondSize)).to.be.bignumber.equal(this.piggybackBondSize);
             });
 
             it('should emit InFlightExitInputPiggybacked event', async () => {
