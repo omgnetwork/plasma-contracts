@@ -323,8 +323,8 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
                 });
 
                 it('should NOT delete the exit from storage', async () => {
-                    const exit = await this.exitGame.inFlightExits([DUMMY_EXIT_ID]);
-                    expect(exit.exitStartTimestamp).to.not.equal('0');
+                    const exits = await this.exitGame.inFlightExits([DUMMY_EXIT_ID]);
+                    expect(exits[0].exitStartTimestamp).to.not.equal('0');
                 });
             });
 

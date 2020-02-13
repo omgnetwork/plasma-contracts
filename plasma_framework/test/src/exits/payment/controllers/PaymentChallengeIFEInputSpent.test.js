@@ -264,8 +264,8 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
             });
 
             it('should remove the input from piggybacked', async () => {
-                const exit = await this.exitGame.inFlightExits([this.testData.exitId]);
-                expect(new BN(exit.exitMap)).to.be.bignumber.equal(new BN(0));
+                const exits = await this.exitGame.inFlightExits([this.testData.exitId]);
+                expect(new BN(exits[0].exitMap)).to.be.bignumber.equal(new BN(0));
             });
 
             it('should pay the piggyback bond to the challenger', async () => {
