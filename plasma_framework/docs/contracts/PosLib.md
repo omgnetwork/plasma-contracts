@@ -4,8 +4,8 @@ View Source: [contracts/src/utils/PosLib.sol](../../contracts/src/utils/PosLib.s
 
 **PosLib**
 
-UTXO position = (blockNumber * BLOCK_OFFSET + txIndex * TX_OFFSET + outputIndex).
-TX position = (blockNumber * BLOCK_OFFSET + txIndex * TX_OFFSET)
+UTXO position = (blknum * BLOCK_OFFSET + txIndex * TX_OFFSET + outputIndex).
+TX position = (blknum * BLOCK_OFFSET + txIndex * TX_OFFSET)
 
 ## Structs
 ### Position

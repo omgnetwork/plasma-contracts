@@ -3,8 +3,8 @@ pragma solidity 0.5.11;
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 /**
- * @dev UTXO position = (blockNumber * BLOCK_OFFSET + txIndex * TX_OFFSET + outputIndex).
- * TX position = (blockNumber * BLOCK_OFFSET + txIndex * TX_OFFSET)
+ * @dev UTXO position = (blknum * BLOCK_OFFSET + txIndex * TX_OFFSET + outputIndex).
+ * TX position = (blknum * BLOCK_OFFSET + txIndex * TX_OFFSET)
  */
 library PosLib {
     struct Position {

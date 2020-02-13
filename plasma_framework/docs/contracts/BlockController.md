@@ -25,7 +25,7 @@ mapping(uint256 => struct BlockModel.Block) public blocks;
 **Events**
 
 ```js
-event BlockSubmitted(uint256  blockNumber);
+event BlockSubmitted(uint256  blknum);
 event ChildChainActivated(address  authority);
 ```
 

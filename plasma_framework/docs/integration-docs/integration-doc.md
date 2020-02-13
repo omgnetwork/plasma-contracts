@@ -46,7 +46,7 @@ On success, the PlasmaFramework contract emits a `BlockSubmitted` event:
 
 ```
 event BlockSubmitted(
-    uint256 blockNumber
+    uint256 blknum
 );  
 ``` 
 
@@ -84,7 +84,7 @@ Where
 txType ::= uint256
 input ::= outputId | outputPosition
 outputId ::= hash of the transaction that produced the output concatenated with the outputIndex
-outputPosition ::= 32 byte string that is (blockNumber * BLOCK_OFFSET + txIndex * TX_OFFSET + outputIndex)
+outputPosition ::= 32 byte string that is (blknum * BLOCK_OFFSET + txIndex * TX_OFFSET + outputIndex)
 output ::= outputType outputData
 outputType ::= uint256
 outputData ::= undefined, to be defined by concrete transaction types
@@ -1269,13 +1269,13 @@ Watchers monitor the network and send alerts so that users know when they need t
 A new Plasma Block has been submitted. Watcher should fetch block data from child chain and verify that it matches block data published to the Plasma contract on the root chain.
 ```
 event BlockSubmitted(
-    uint256 blockNumber
+    uint256 blknum
 );
 ```
 
 Fetching block data from `PlasmaFramework`:
 ```
-block = PlasmaFramework.blocks(blockNumber)
+block = PlasmaFramework.blocks(blknum)
 ```
 where block is:
 ```
