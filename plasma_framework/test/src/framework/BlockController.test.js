@@ -144,7 +144,7 @@ contract('BlockController', ([maintainer, authority, other]) => {
 
         it('emits "BlockSubmitted" event', async () => {
             const tx = await this.blockController.submitBlock(this.dummyBlockHash, { from: authority });
-            await expectEvent.inLogs(tx.logs, 'BlockSubmitted', { blockNumber: new BN(this.childBlockInterval) });
+            await expectEvent.inLogs(tx.logs, 'BlockSubmitted', { blknum: new BN(this.childBlockInterval) });
         });
 
         it('reverts when not called by authority', async () => {
