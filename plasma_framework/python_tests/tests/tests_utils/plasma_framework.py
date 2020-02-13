@@ -147,6 +147,10 @@ class PlasmaFramework:
 
         return filters
 
+    @property
+    def address(self):
+        return self.plasma_framework.address
+
     def blocks(self, block):
         return self.plasma_framework.blocks(block)
 
@@ -171,6 +175,7 @@ class PlasmaFramework:
                               input_index,
                               challenge_tx_sig,
                               exiting_tx,
+                              senderData,
                               **kwargs):
         """ NOTICE: ALD takes more obligatory arguments (exiting_tx) in comparison to the RootChain contract """
 
@@ -179,7 +184,8 @@ class PlasmaFramework:
                 exiting_tx,
                 challenge_tx,
                 input_index,
-                witness)
+                witness,
+                senderData)
 
         return self.payment_exit_game.challengeStandardExit(args, **kwargs)
 
@@ -249,6 +255,7 @@ class PlasmaFramework:
                                         spending_tx_sig,
                                         input_tx,
                                         input_tx_txo_pos,
+                                        senderData,
                                         **kwargs):
 
         spending_tx_witness = spending_tx_sig
@@ -260,7 +267,8 @@ class PlasmaFramework:
             spending_tx_input_index,
             spending_tx_witness,
             input_tx,
-            input_tx_txo_pos
+            input_tx_txo_pos,
+            senderData
         )
 
         self.payment_exit_game.challengeInFlightExitInputSpent(args, **kwargs)
@@ -271,6 +279,7 @@ class PlasmaFramework:
                                          spending_tx,
                                          spending_tx_input_index,
                                          spending_tx_sig,
+                                         senderData,
                                          **kwargs):
 
         spending_tx_witness = spending_tx_sig
@@ -281,7 +290,8 @@ class PlasmaFramework:
             in_flight_tx_output_pos,
             spending_tx,
             spending_tx_input_index,
-            spending_tx_witness
+            spending_tx_witness,
+            senderData
         )
         self.payment_exit_game.challengeInFlightExitOutputSpent(args, **kwargs)
 
@@ -293,6 +303,9 @@ class PlasmaFramework:
                 vault_id = self.erc20_vault_id
 
         return self.plasma_framework.processExits(vault_id, token, top_exit_id, exits_to_process)
+
+    def deleteNonPiggybackedInFlightExit(self, exit_id):
+        return self.payment_exit_game.deleteNonPiggybackedInFlightExit(exit_id)
 
     def getInFlightExitId(self, tx):
         return self.payment_exit_game.getInFlightExitId(tx)
@@ -347,5 +360,5 @@ class PlasmaFramework:
 
     # additional convenience proxies (not taken from RootChain) #
 
-    def isOutputSpent(self, utxo_pos):
-        return self.plasma_framework.isOutputSpent(utxo_pos)
+    def isOutputFinalized(self, utxo_pos):
+        return self.plasma_framework.isOutputFinalized(utxo_pos)

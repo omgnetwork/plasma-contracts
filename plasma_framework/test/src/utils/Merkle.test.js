@@ -3,6 +3,7 @@ const Merkle = artifacts.require('MerkleWrapper');
 const { expectRevert } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
+const { EMPTY_BYTES } = require('../../helpers/constants.js');
 const { MerkleTree } = require('../../helpers/merkle.js');
 
 contract('Merkle', () => {
@@ -80,7 +81,7 @@ contract('Merkle', () => {
             expect(result).to.be.false;
         });
 
-        it('should reject call when proof data size is incorrect', async () => {
+        it('should revert when proof data size is incorrect', async () => {
             const leafIndex = 0;
             const leafData = web3.utils.sha3(leaves[leafIndex]);
             const rootHash = this.merkleTree.root;
@@ -95,6 +96,41 @@ contract('Merkle', () => {
                     wrongSizeProof,
                 ),
                 'Length of Merkle proof must be a multiple of 32',
+            );
+        });
+
+        it('should revert when proof data is empty', async () => {
+            const leafIndex = 0;
+            const leafData = web3.utils.sha3(leaves[leafIndex]);
+            const rootHash = this.merkleTree.root;
+
+            await expectRevert(
+                this.merkleContract.checkMembership(
+                    leafData,
+                    leafIndex,
+                    rootHash,
+                    EMPTY_BYTES,
+                ),
+                'Merkle proof must not be empty',
+            );
+        });
+
+        it('should revert when index exceeds max possible size according to proof data', async () => {
+            const leafIndex = 0;
+            const leafData = web3.utils.sha3(leaves[leafIndex]);
+            const proof = this.merkleTree.getInclusionProof(leaves[leafIndex]);
+            const rootHash = this.merkleTree.root;
+
+            const invalidIndex = maxSize;
+
+            await expectRevert(
+                this.merkleContract.checkMembership(
+                    leafData,
+                    invalidIndex,
+                    rootHash,
+                    proof,
+                ),
+                'Index does not match the length of the proof',
             );
         });
     });

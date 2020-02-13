@@ -17,9 +17,9 @@ Controls the logic and functions for ExitGame to interact with the PlasmaFramewo
 
 ```js
 //public members
-mapping(uint256 => contract IExitProcessor) public delegations;
+mapping(bytes32 => contract IExitProcessor) public delegations;
 mapping(bytes32 => contract PriorityQueue) public exitsQueues;
-mapping(bytes32 => bool) public isOutputSpent;
+mapping(bytes32 => bool) public isOutputFinalized;
 
 //private members
 bool private mutex;
@@ -60,12 +60,13 @@ modifier nonReentrant() internal
 - [addExitQueue(uint256 vaultId, address token)](#addexitqueue)
 - [enqueue(uint256 vaultId, address token, uint64 exitableAt, struct PosLib.Position txPos, uint160 exitId, IExitProcessor exitProcessor)](#enqueue)
 - [processExits(uint256 vaultId, address token, uint160 topExitId, uint256 maxExitsToProcess)](#processexits)
-- [isAnyOutputsSpent(bytes32[] _outputIds)](#isanyoutputsspent)
-- [batchFlagOutputsSpent(bytes32[] _outputIds)](#batchflagoutputsspent)
-- [flagOutputSpent(bytes32 _outputId)](#flagoutputspent)
+- [isAnyOutputFinalized(bytes32[] _outputIds)](#isanyoutputfinalized)
+- [batchFlagOutputsFinalized(bytes32[] _outputIds)](#batchflagoutputsfinalized)
+- [flagOutputFinalized(bytes32 _outputId)](#flagoutputfinalized)
 - [getNextExit(uint256 vaultId, address token)](#getnextexit)
 - [exitQueueKey(uint256 vaultId, address token)](#exitqueuekey)
 - [hasExitQueue(bytes32 queueKey)](#hasexitqueue)
+- [getDelegationKey(uint256 priority, uint256 vaultId, address token)](#getdelegationkey)
 
 ### 
 
@@ -188,12 +189,12 @@ Total number of processed exits
 | topExitId | uint160 | Unique identifier for prioritizing the first exit to process. Set to zero to skip this check. | 
 | maxExitsToProcess | uint256 | Maximum number of exits to process | 
 
-### isAnyOutputsSpent
+### isAnyOutputFinalized
 
 Checks whether any of the output with the given outputIds is already spent
 
 ```js
-function isAnyOutputsSpent(bytes32[] _outputIds) external view
+function isAnyOutputFinalized(bytes32[] _outputIds) external view
 returns(bool)
 ```
 
@@ -203,12 +204,12 @@ returns(bool)
 | ------------- |------------- | -----|
 | _outputIds | bytes32[] | Output IDs to check | 
 
-### batchFlagOutputsSpent
+### batchFlagOutputsFinalized
 
 Batch flags already spent outputs
 
 ```js
-function batchFlagOutputsSpent(bytes32[] _outputIds) external nonpayable onlyFromNonQuarantinedExitGame 
+function batchFlagOutputsFinalized(bytes32[] _outputIds) external nonpayable onlyFromNonQuarantinedExitGame 
 ```
 
 **Arguments**
@@ -217,12 +218,12 @@ function batchFlagOutputsSpent(bytes32[] _outputIds) external nonpayable onlyFro
 | ------------- |------------- | -----|
 | _outputIds | bytes32[] | Output IDs to flag | 
 
-### flagOutputSpent
+### flagOutputFinalized
 
 Flags a single output as spent
 
 ```js
-function flagOutputSpent(bytes32 _outputId) external nonpayable onlyFromNonQuarantinedExitGame 
+function flagOutputFinalized(bytes32 _outputId) external nonpayable onlyFromNonQuarantinedExitGame 
 ```
 
 **Arguments**
@@ -271,6 +272,21 @@ returns(bool)
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
 | queueKey | bytes32 |  | 
+
+### getDelegationKey
+
+```js
+function getDelegationKey(uint256 priority, uint256 vaultId, address token) private pure
+returns(bytes32)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| priority | uint256 |  | 
+| vaultId | uint256 |  | 
+| token | address |  | 
 
 ## Contracts
 

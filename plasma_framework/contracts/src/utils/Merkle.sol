@@ -21,7 +21,11 @@ library Merkle {
         pure
         returns (bool)
     {
+        require(proof.length != 0, "Merkle proof must not be empty");
         require(proof.length % 32 == 0, "Length of Merkle proof must be a multiple of 32");
+
+        // see https://github.com/omisego/plasma-contracts/issues/546
+        require(index < 2**(proof.length/32), "Index does not match the length of the proof");
 
         bytes32 proofElement;
         bytes32 computedHash = keccak256(abi.encodePacked(LEAF_SALT, leaf));

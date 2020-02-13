@@ -19,12 +19,19 @@ commands:
       - run:
           name: Set up environment
           command: echo 'export PATH="$(npm bin):$PATH"' >> $BASH_ENV
+      - restore_cache:
+          keys:
+            - dependencies-v1-{{ checksum "~/repo/plasma_framework/package-lock.json" }}
       - run:
           name: Install dependencies
           working_directory: ~/repo/plasma_framework
           command: |
             npm install
             find node_modules -name .git | xargs rm -fr  # workaround for a problem with git dependencies
+      - save_cache:
+          key: dependencies-v1-{{ checksum "~/repo/plasma_framework/package-lock.json" }}
+          paths:
+            - ~/repo/plasma_framework/node_modules
 
   setup_python_env:
     steps:
@@ -32,19 +39,30 @@ commands:
       - run:
           name: Change dependencies directories ownership
           command: |
-            sudo chown -R circleci:circleci /usr/local/bin /usr/local/lib /usr/local/lib/python3.7/site-packages 
+            sudo chown -R circleci:circleci /usr/local/bin /usr/local/lib
+      - restore_cache:
+          keys:
+            - dependencies-v1-{{ checksum "~/repo/plasma_framework/python_tests/requirements.txt" }}
       - run:
           name: Prepare environment
           command: |
             sudo apt update && sudo apt install nodejs npm
             sudo npm install -g n && sudo n stable
             sudo npm install -g ganache-cli
+            python3 -m venv ~/venv
       - run:
           name: Install dependencies
           working_directory: ~/repo/plasma_framework/python_tests
           command: |
-            make init dev 
+            . ~/venv/bin/activate
+            make init dev
             python -m solcx.install v0.5.11
+      - save_cache:
+          key: dependencies-v1-{{ checksum "~/repo/plasma_framework/python_tests/requirements.txt" }}
+          paths:
+            - ~/venv
+            - /usr/local/bin
+            - /usr/local/lib/node_modules
 
 jobs:
   Truffle tests:
@@ -102,7 +120,9 @@ jobs:
       - run:
           name: Run tests
           working_directory: ~/repo/plasma_framework/python_tests
-          command: make test
+          command: |
+            . ~/venv/bin/activate
+            make test
   
   Python linter:
     executor: python_executor
@@ -112,7 +132,9 @@ jobs:
       - run:
           name: Run linter 
           working_directory: ~/repo/plasma_framework/python_tests
-          command: make lint
+          command: | 
+            . ~/venv/bin/activate
+            make lint
   
   Python long running tests:
     executor: python_executor
@@ -123,7 +145,9 @@ jobs:
           name: Run slow tests
           working_directory: ~/repo/plasma_framework/python_tests
           no_output_timeout: 10h
-          command: make runslow 
+          command: |
+            . ~/venv/bin/activate
+            make runslow 
 
 workflows:
   version: 2

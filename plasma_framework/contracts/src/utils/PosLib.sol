@@ -7,17 +7,20 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
  * TX position = (blockNumber * BLOCK_OFFSET + txIndex * TX_OFFSET)
  */
 library PosLib {
-    using SafeMath for uint256;
-
     struct Position {
-        uint256 blockNum;
-        uint256 txIndex;
+        uint64 blockNum;
+        uint16 txIndex;
         uint16 outputIndex;
     }
 
     uint256 constant internal BLOCK_OFFSET = 1000000000;
     uint256 constant internal TX_OFFSET = 10000;
-    uint256 constant internal MAX_TX_INDEX = BLOCK_OFFSET / TX_OFFSET;
+    
+    uint256 constant internal MAX_OUTPUT_INDEX = TX_OFFSET - 1;
+    // since we are using merkle tree of depth 16, max tx index size is 2^16 - 1
+    uint256 constant internal MAX_TX_INDEX = 2 ** 16 - 1;
+    // in ExitPriority, only 54 bits are reserved for both blockNum and txIndex
+    uint256 constant internal MAX_BLOCK_NUM = ((2 ** 54 - 1) - MAX_TX_INDEX) / (BLOCK_OFFSET / TX_OFFSET);
 
     /**
      * @notice Returns transaction position which is an utxo position of zero index output
@@ -37,7 +40,7 @@ library PosLib {
      * @param pos UTXO position for the output
      * @return Identifier of the transaction
      */
-    function getTxPostionForExitPriority(Position memory pos)
+    function getTxPositionForExitPriority(Position memory pos)
         internal
         pure
         returns (uint256)
@@ -51,11 +54,10 @@ library PosLib {
      * @return Position encoded as an integer
      */
     function encode(Position memory pos) internal pure returns (uint256) {
-        require(pos.outputIndex < TX_OFFSET, "Invalid output index");
-        require(pos.txIndex < MAX_TX_INDEX, "Invalid transaction index");
+        require(pos.outputIndex <= MAX_OUTPUT_INDEX, "Invalid output index");
+        require(pos.blockNum <= MAX_BLOCK_NUM, "Invalid block number");
 
-        // SafeMath multiplication mitigates the issue of a proper block number value
-        return pos.blockNum.mul(BLOCK_OFFSET).add(pos.txIndex.mul(TX_OFFSET)).add(pos.outputIndex);
+        return pos.blockNum * BLOCK_OFFSET + pos.txIndex * TX_OFFSET + pos.outputIndex;
     }
 
     /**
@@ -67,6 +69,9 @@ library PosLib {
         uint256 blockNum = pos / BLOCK_OFFSET;
         uint256 txIndex = (pos % BLOCK_OFFSET) / TX_OFFSET;
         uint16 outputIndex = uint16(pos % TX_OFFSET);
-        return Position(blockNum, txIndex, outputIndex);
+
+        require(blockNum <= MAX_BLOCK_NUM, "blockNum exceeds max size allowed in PlasmaFramework");
+        require(txIndex <= MAX_TX_INDEX, "txIndex exceeds the size of uint16");
+        return Position(uint64(blockNum), uint16(txIndex), outputIndex);
     }
 }

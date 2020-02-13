@@ -69,9 +69,9 @@ contract PaymentInFlightExitRouterMock is FailFastReentrancyGuard, PaymentInFlig
         return inFlightExitMap.exits[exitId].outputs[outputIndex];
     }
 
-    /** calls the flagOutputSpent function on behalf of the exit game */
-    function proxyFlagOutputSpent(bytes32 _outputId) public {
-        framework.flagOutputSpent(_outputId);
+    /** calls the flagOutputFinalized function on behalf of the exit game */
+    function proxyFlagOutputFinalized(bytes32 _outputId) public {
+        framework.flagOutputFinalized(_outputId);
     }
 
     /**

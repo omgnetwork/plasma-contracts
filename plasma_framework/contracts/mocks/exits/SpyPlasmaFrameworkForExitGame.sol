@@ -44,7 +44,7 @@ contract SpyPlasmaFrameworkForExitGame is PlasmaFramework {
             _vaultId,
             _token,
             _exitableAt,
-            _txPos.getTxPostionForExitPriority(),
+            _txPos.getTxPositionForExitPriority(),
             _exitId,
             address(_exitProcessor)
         );
@@ -58,8 +58,8 @@ contract SpyPlasmaFrameworkForExitGame is PlasmaFramework {
         blocks[_blockNum] = BlockModel.Block(_root, _timestamp);
     }
 
-    function setOutputSpent(bytes32 _outputId) external {
-        isOutputSpent[_outputId] = true;
+    function setOutputFinalized(bytes32 _outputId) external {
+        isOutputFinalized[_outputId] = true;
     }
 
     /**

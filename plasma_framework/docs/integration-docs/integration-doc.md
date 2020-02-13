@@ -30,7 +30,7 @@ The PlasmaFramework contract may be viewed as the top-level contract. It contain
 
 The PlasmaFramework contract provides access to components in the system. For example, to get the Payment ExitGame, call the following: 
 
- `PlasmaFramework.exitGames(PaymentType)`
+ `PlasmaFramework.exitGames(txType)`
  
 The PlasmaFramework also provides the means for the `maintainer` to upgrade certain components in the system. Since this functionality has important security considerations, the PlasmaFramework emits events whenever a component is added. The Watchers monitor these events and alert users. More information is provided below. 
 
@@ -76,7 +76,7 @@ GenericTransaction is based on [Wire Transaction format](https://docs.google.com
 A GenericTransaction is:
 
 ```
-transaction::= txType [input] [output] txData metaData [witness]
+transaction::= txType [input] [output] txData metaData
 ```
 
 Where 
@@ -90,12 +90,35 @@ outputType ::= uint256
 outputData ::= undefined, to be defined by concrete transaction types
 txData ::= undefined, to be defined by concrete transaction types
 metaData ::= bytes32
-witness ::= bytes
 ```
 
 The current implementation supports only the `Payment` transaction type.
 
 Support for additional transaction types, such as ERC721, is reserved for future development.
+
+### Signed transaction format (child chain and watcher only)
+A note on encoding of signed transactions (transactions including witnesses) when handled in the [child chain and watcher implementations](github.com/omisego/elixir-omg).
+
+Signed transactions are:
+
+```
+signedTransaction ::= [signature] rawTransaction
+```
+
+Where
+```
+signature ::= bytes
+rawTransaction ::= transaction
+```
+
+and are transferred and stored RLP-encoded.
+
+Child chain and watcher both expect, for a signed transaction to be valid, that:
+ - every input has a corresponding signature by the respective output's owner (`outputGuard`)
+ - every signature is a 65-byte long binary
+
+**NOTE** Only signature witnesses are operative now, because only payment transactions are supported.
+A signature is a specific form of a `witness` and is called as such throughout this document.
 
 ## Payment transaction format
 Payment transactions are used to transfer fungible tokens, such as ETH and ERC20 tokens. A Payment transaction's output is as described in [FungibleTokenOutputModel](../contracts/FungibleTokenOutputModel.md)
@@ -164,6 +187,46 @@ Note that:
 11. `txData` is unused and must be set to `0`
 12. `metadata` must be padded to 32 bytes long
 
+### Payment transaction fees
+Operator collects fees for including a transaction in a block. The transaction fee is implicit i.e. it is the difference between the transaction inputs and outputs, grouped by the token. Operator requires fee to be covered completely with a single currency, but not necessarily by a single input.
+
+For example if the transaction inputs are as follows:
+```
+[
+  {
+    'outputType': 1,
+    'outputGuard': '...',
+    'token': '0x000000000000000000000000000000000000000a',
+    'amount': 2
+  },
+  {
+    'outputType': 1,
+    'outputGuard': '...',  
+    'token': '0x000000000000000000000000000000000000000b',
+    'amount': 1
+  }
+]
+```
+and the only transaction output is:
+```
+{
+'outputType': 1,
+'outputGuard': '...',
+'token': '0x000000000000000000000000000000000000000a',
+'amount': 1
+}
+```
+and operator requires to pay 1 of token '0x000000000000000000000000000000000000000a` to include a transaction in a block, then the fee collected by the operator is:
+```
+1 of token '0x000000000000000000000000000000000000000a' (amount 2 in transaction inputs, 1 in outputs)
+1 of token '0x000000000000000000000000000000000000000b' (amount 1 in transaction inputs, 0 in outputs)
+```
+Notice that although fees were covered completely by the first input, the second input was also charged as a fee.
+
+Specification for sending a transaction to the child chain is available [here](https://developer.omisego.co/elixir-omg/docs-ui/?url=master%2Foperator_api_specs.yaml&urls.primaryName=master%2Foperator_api_specs#/ChildChain/submit).
+
+When transaction is submitted with insufficient fees error code in the response is `transaction.submit:fees_not_covered`.
+
 ## Deposit transactions
 Deposit transactions are special transactions that have no inputs. The transaction inputs should be encoded as an empty array. Deposit transactions are created by the vault contracts, and do not need to be explicitly submitted.
 
@@ -218,24 +281,31 @@ The EIP-712 typed data structure is as follows:
 }
 ```
 
-
-
 # Vaults
 Vaults are used to deposit funds and, indirectly, to withdraw funds via the exit game.
 
+A deposit to Plasma Framework means moving funds from the Root chain (Ethereum) to the Child chain (or Plasma chain). A withdrawal means the opposite, moving funds from the Child chain back to the Root chain. A withdrawal must only be indirectly initiated by a canonical exit.
+
+## Vault contract
+A vault is a contract that holds custody of tokens transferred to the Plasma Framework. Each vault has a unique `vaultId` as an identifier used in the Plasma Framework. You can retrieve a vault's contract address from the  `PlasmaFramework`:
+
+`PlasmaFramework.vaults(vaultId)`
+
+### Vault Id
+These are the `vaultId`s of the currently deployed vault contracts:
+- ETH vault: 1
+- ERC20 vault: 2
 
 ## Depositing funds
-You must use the appropriate vault to deposit funds from the root chain (Ethereum) into the child chain. For example, to deposit ETH you use the EthVault contract. You can retrieve the address of this contract by calling the following function:
-
-`PlasmaFramework.vaults(1)`
+You must use the appropriate vault to deposit funds from the root chain (Ethereum) into the child chain. Check the [vault contract](#vault-contract) section above to see how to get the vault address.
 
 ### Depositing ETH
 1. Create the RLP-encoded deposit transaction: `depositTx`
 2. Call `EthVault.deposit(depositTx)`
 3. Along with the transaction, send the amount of ETH specified in the deposit transaction.
 4. The ETHVault creates a deposit block, and submits it to the PlasmaFramework.
-5. The ETHVault emits the DepositCreated event.
-6. The child chain receives the DepositCreated, and creates the corresponding UTXO.
+5. The ETHVault emits the `DepositCreated` event.
+6. The child chain receives the `DepositCreated`, and creates the corresponding UTXO.
 7. The UTXO is spendable by the user after a certain number of blocks are submitted to the PlasmaFramework (specified in `deposit_finality_margin`).
 
 
@@ -254,9 +324,9 @@ You must use the appropriate vault to deposit funds from the root chain (Ethereu
 
 
 ## Vault events
-Vaults emit events on deposit, and on withdrawal.
+Vaults emit events on deposit, and on withdrawal. Each event is from the specific vault contract.
 
-Events emitted on deposit:
+### ETH Vault
 
 ```
     event DepositCreated(
@@ -265,10 +335,25 @@ Events emitted on deposit:
         address indexed token,
         uint256 amount
     );
+
+    event EthWithdrawn(
+        address indexed receiver,
+        uint256  amount
+    );
 ```
 
-Events emitted on withdrawal:
+For all events of the vault, see contract documentation: [ETH vault doc](https://github.com/omisego/plasma-contracts/blob/master/plasma_framework/docs/contracts/EthVault.md#contract-members)
+
+
+### ERC20 Vault
 ```
+    event DepositCreated(
+        address indexed depositor,
+        uint256 indexed blknum,
+        address indexed token,
+        uint256 amount
+    );
+
     event Erc20Withdrawn(
         address payable indexed receiver,
         address indexed token,
@@ -276,20 +361,52 @@ Events emitted on withdrawal:
     );
 ```
 
+For all events of the vault, see contract documentation: [ERC20 vault doc](https://github.com/omisego/plasma-contracts/blob/master/plasma_framework/docs/contracts/Erc20Vault.md#erc20vaultsol)
 
 # Exit Game
-Exit Games handle all the actions around exits, challenges, etc.
+Exit Games handle all the actions around exits, challenges, etc. Each transaction type has one and only one exit game contract that provides the means of exiting funds from a transaction of that type.
+
+Once an exit is canonical to exit after the challenge period, it can be processed according to the exit priority and withdraws the funds back to the Root chain from the Child chain.
+
+## Exit Game contracts
+An exit game is a contract that holds the logic and states of a current exit game status. Each exit game is bound to a `txType` and uses it as an identifier in the Plasma Framework. You can retrieve an exit game's contract address from the `PlasmaFramework`:
+
+`PlasmaFramework.exitGames(txType)`
+
+### Transaction types
+The following are the currently deployed exit game contracts, mapped to `txType`:
+- Payment (v1): 1
+- Fee: 3
+
+Transaction type 2 is reserved for Payment v2, although it does not have a specific exit game contract registered in the framework yet. For more detail on why we are reserving a transaction type, please see the "Adding new transaction type" section of the [high level design doc](https://docs.google.com/document/d/1PSxLnMskjqje4MksmW2msSSg-GtZoBSMNYey9nEDvt8/edit#heading=h.yu9haziuwf6b)
+
+### Payment Exit Game (V1)
+This contract is the main exit game contract in the first Plasma Framework iteration. It handles the exit game logic for payment transactions, including both standard exit and in-flight exit.
+
+Most of the following documentation in the Exit Game section refers to the `PaymentExitGame`.
+
+### Fee Exit Game
+
+The fee is designed to be exited indirectly from the fee transaction. Operator must first spend the fee transaction output to a payment transaction and then exit the fee value using the normal process of exiting a payment transaction.
+
+As a result, the fee exit game contract is just an empty contract.
 
 
-## Exit game bonds
-Exit games are associated with various bonds. The values of these bonds may change over time. The current value of a bond can be retrieved from the PlasmaFramework contract.
+## Payment Exit game bonds
+Exit games are associated with various bonds. The values of these bonds may change over time. The current value of a bond can be retrieved from the `PaymentExitGame` contract.
+
+To get the `PaymentExitGame` contract (js):
+```
+address = PlasmaFramework.exitGames(1)
+PaymentExitGame = PaymetExitGame.at(address);
+```
 
 
 ### Standard exit bond
 A standard exit bond is used to start a standard exit:
 
 ```
-    PlasmaFramework.startStandardExitBondSize()
+    PaymentExitGame.startStandardExitBondSize()
 ```
 
 ### In-flight exit bonds
@@ -298,15 +415,15 @@ There are two types of in-flight exit bonds:
 
 - In-flight exit bond for starting an in-flight exit
 ```
-    PlasmaFramework.startIFEBondSize()
+    PaymentExitGame.startIFEBondSize()
 ```
 - In-flight exit bond for piggybacking on an in-flight exit's input or output:
 ```
-    PlasmaFramework.piggybackBondSize()
+    PaymentExitGame.piggybackBondSize()
 ```
 
 
-## Playing the exit game
+## Playing the payment exit game
 
 ### Starting a standard exit
 
@@ -430,7 +547,8 @@ PaymentExitGame.challengeStandardExit({
   exitingTx,
   challengeTx,
   inputIndex,
-  witness
+  witness,
+  senderData
 });
 ```
 
@@ -452,6 +570,9 @@ Input index of exiting UTXO in the challenging transaction.
 #### witness (bytes)
 Data proving that exiting output was spent. A signature of exiting output owner on challenging transaction.
 
+#### senderData (bytes32)
+A keccak256 hash of the sender's address.
+
 #### Example:
 
 ```
@@ -460,7 +581,8 @@ PaymentExitGame.challengeStandardExit([
   0xf85401c0f0ef01949c7fc8601655b4e1ef395107217e6ed600f7ba48940000000000000000000000000000000000000000830f4240a00000000000000000000000000000000000000000000000000000000000000000,
   0xf88a01c685e9103fda00f85fee0194821aea9a577a9b44299b9c15c88cf3087f3b55449400000000000000000000000000000000000000008203e8ef01949c7fc8601655b4e1ef395107217e6ed600f7ba48940000000000000000000000000000000000000000830f3e58a00000000000000000000000000000000000000000000000000000000000000000,
   0,
-  0xc8fafc7490868b372863778cd2c7928c835e66c59d7bc44b912d14ca574732434f928004b680d9a231c3a688fe1c1f62bac47c663695c8287d779ff2658626c81b
+  0xc8fafc7490868b372863778cd2c7928c835e66c59d7bc44b912d14ca574732434f928004b680d9a231c3a688fe1c1f62bac47c663695c8287d779ff2658626c81b,
+  0x984f41eb67eb23e42139410eade1008a90b01a018ce2577fea44262c6fc16ce3
 ])
 ```
 
@@ -565,6 +687,10 @@ PaymentExitGame.startInFlightExit([
 ```
 
 ### Piggybacking on an in-flight exit input / output
+
+To exit an input or output of an in-flight transaction the user has to piggyback on it.
+
+When in-flight transaction exits, the child chain removes the inputs of the in-flight transaction from the spendable set and they can no longer be spent. Calls to the child chain to spend the inputs or outputs of an in-flight transaction result in `submit:utxo_not_found` error. The effect of an input or output not being available to spend is not visible in contract's state until the exit is processed. After the in-flight exit is processed `PlasmaFramework.isOutputFinalized(piggybackedInputOrOutputPosition)` is set to true.
 
 1. Get the amount of ETH to cover the bond for piggybacking in-flight exit as described [here](#in-flight-exit-bonds).
 
@@ -716,7 +842,8 @@ PaymentExitGame.challengeInFlightExitInputSpent({
     challengingTxInputIndex,
     challengingTxWitness,
     inputTx,
-    inputUtxoPos
+    inputUtxoPos,
+    senderData
 })
 ```
 
@@ -743,6 +870,9 @@ RLP encoded input transaction.
 #### inputUtxoPos (uint256)
  UTXO position of input transaction's output.
 
+#### senderData (bytes32)
+A keccak256 hash of the sender's address.
+
 #### Example:
 
 ```
@@ -753,7 +883,8 @@ PaymentExitGame.challengeInFlightExitInputSpent([
   0,
   0xb5bb3fff130c206bb550e969964c673e53fd5f15edc9e20046ea504389bf7ba324b81adc8a91e01ef49384d86d71ae00b9ac092bf88156a67f1e202806b61a221c,
   0xf85601c0f1f001ee949c7fc8601655b4e1ef395107217e6ed600f7ba48940000000000000000000000000000000000000000830f424080a00000000000000000000000000000000000000000000000000000000000000000,
-  2000000000
+  2000000000,
+  0x984f41eb67eb23e42139410eade1008a90b01a018ce2577fea44262c6fc16ce3
 ])
 ```
 
@@ -767,7 +898,8 @@ PaymentExitGame.challengeInFlightExitOutputSpent({
     outputUtxoPos,
     challengingTx,
     challengingTxInputIndex,
-    challengingTxWitness
+    challengingTxWitness,
+    senderData
 })
 ```
 
@@ -791,6 +923,9 @@ Input index of challenged output in the challenging transaction.
 #### challengingTxWitness (bytes)
 Witness for challenging transaction.
 
+#### senderData (bytes32)
+A keccak256 hash of the sender's address.
+
 #### Example:
 
 ```
@@ -800,13 +935,106 @@ PaymentExitGame.challengeInFlightExitOutputSpent([
   1000000000000,
   0xf87401e1a06e5de68fadce7ffe6ebf92546a4e6d4aedfa3c325929eebfa8dd1f8e6918c4b7eeed02eb94f17f52151ebef6c7334fad080c5704d77216b7329400000000000000000000000000000000000000000180a00000000000000000000000000000000000000000000000000000000000000000,
   0,
-  0xb833e902b1f76a9ece793891fdae542c01b742ea83dfbfb721df1e82413fb5fc
+  0xb833e902b1f76a9ece793891fdae542c01b742ea83dfbfb721df1e82413fb5fc,
+  0x984f41eb67eb23e42139410eade1008a90b01a018ce2577fea44262c6fc16ce3
 ])
 ```
 
-## Exit game events
-When listening for events related to the exit game, it's important to remember that there will be only one exit game per transaction type.
+### Delete an in-flight exit
 
+For in-flight exit, an exit is only enqueued in the PlasmaFramework when the exit is piggybacked. As a consequence, if an in-flight exit is never piggybacked then the in-flight exit bond would end up being locked.
+
+As a mitigation, we have the `deleteNonPiggybackedInFlightExit` api on the exit game contract. One can call this to release the bond back to its owner and clean up the state of in-flight exit. This can only be called after the first phase has been passed and nobody has piggybacked the exit.
+
+For some more detail, see the original issue: [here](https://github.com/omisego/plasma-contracts/issues/440)
+
+```
+PaymentExitGame.deleteNonPiggybackedInFlightExit(exitId)
+```
+
+### Parameters
+
+#### exitId (uint160)
+Exit Id of the in-flight exit.
+
+You can get your `exitId` by `getInFlightExitId` helper function of the `PaymentExitGame`, see doc: [here](https://github.com/omisego/plasma-contracts/blob/master/plasma_framework/docs/contracts/PaymentExitGame.md#getinflightexitid)
+
+
+#### Example:
+
+```
+PaymentExitGame.deleteNonPiggybackedInFlightExit(707372774235521271159305957085057710072500938)
+```
+
+
+### Processing an in-flight exit
+
+Once the exit period is over, an exit can be processed to release the funds on the root chain. An end user can perform this action, or the operator can do it for everyone.
+
+Be aware that in-flight exit is only put on a token's exit queue if a piggyback of that token exists. In other words, if an in-flight exit ends up with no piggybacks of a certain token, eg. ETH, then user will not find the exit on the priority queue for ETH. Please make sure piggyback step is done before process exit. 
+
+To process a in-flight exit: 
+1. (Optional) Obtain your `exitId` by `getInFlightExitId` helper function of the `PaymentExitGame`, see doc: [here](https://github.com/omisego/plasma-contracts/blob/master/plasma_framework/docs/contracts/PaymentExitGame.md#getinflightexitid)
+
+```
+PaymentExitGame.getInFlightExitId(
+  "0xf85801c0f4f3019441777dc7bdcc6b58be1c25eb3df7df52d1bfecbd94000000000000000000000000000000000000000087038d7ea4c68000a00000000000000000000000000000000000000000000000000000000000000000", # RLP-encoded transaction sent when startInFlightExit was called
+)
+```
+
+2. Process your exit. 
+
+Exits are processed in the order of the priority queue (each vault has its own priority queue). To find out which exit is at the head of a queue, you can call `getNextExit(vaultId, token)`. The return value of this call is binary data about the exit and its priority; the exitId is the 160 least significant bits of this data
+
+```
+PlasmaFramework.processExits({
+  uint256 vaultId, 
+  address token, 
+  uint160 topExitId, 
+  uint256 maxExitsToProcess
+})
+```
+
+### Parameters
+This section describes the parameters included in the function called for processing a standard exit.
+
+#### vaultId (uint256)
+The vault ID of the vault that stores exiting funds.
+
+Use `1` for Ether, `2` for ERC-20.
+
+#### token (address)
+The token type to process.
+
+ETH: `0x0000000000000000000000000000000000000000` 
+
+The contract address for ERC-20 tokens.
+
+#### topExitId (uint160)
+The unique priority of the first exit that should be processed. Set to zero to skip the check.
+
+The purpose of this parameter is to prevent you from inadvertently processing another exit that has jumped to the head of the queue because it has a higher priority. If your exit is at the head of the queue and you want to make sure that you process _only_ your exit then you should set this parameter to your exitId. If another exit with higher priority jumps to the head of the queue, then the processExits() call will fail and you won't spend the gas to process the other exit. You can then wait until your exit is at the head of the queue before trying again.  
+
+#### maxExitsToProcess (uint256)
+Defines the maximum number of exits you wish to process. Set to `1` to process only your own exit. 
+
+***Note**: `processExits()` will only process exits that have completed their exit period. You can find out which (if any) exits were processed via the `ExitFinalized` or `ProcessedExitsNum` events *
+
+### Example: Processing an in-flight exit
+
+```
+PlasmaFramework.processExits([
+  1, # vaultId 
+  0x0000000000000000000000000000000000000000, # token, ETH
+  707372774235521271159305957085057710072500938, # topExitId
+  1 # maxExitsToProcess
+])
+```
+
+## Payment Exit game events
+When listening for events related to the exit game, it's important to remember that there will be only one exit game per transaction type. One should listen the events from the corresponding exit game contract. See [Exit Game contract section](#exit-game-contracts) for details of each contract and transaction types.
+
+Following are lists of events from `PaymentExitGame` contract:
 
 ### Standard Exit Events
 - A standard exit has started:

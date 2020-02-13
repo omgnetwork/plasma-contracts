@@ -63,7 +63,6 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
         this.exitGame = await PaymentExitGame.at(await this.framework.exitGames(config.registerKeys.txTypes.payment));
 
         this.startStandardExitBondSize = await this.exitGame.startStandardExitBondSize();
-        this.startIFEBondSize = await this.exitGame.startIFEBondSize();
         this.piggybackBondSize = await this.exitGame.piggybackBondSize();
 
         this.framework.addExitQueue(config.registerKeys.vaultId.eth, ETH);
@@ -293,6 +292,7 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
                             challengeTx: this.transferTx,
                             inputIndex: 0,
                             witness: signature,
+                            senderData: web3.utils.keccak256(bob),
                         };
 
                         this.bobBalanceBeforeChallenge = new BN(await web3.eth.getBalance(bob));
@@ -358,7 +358,6 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
                 });
             });
         });
-
 
         describe('Given Alice deposited with ERC20 token', () => {
             before(async () => {

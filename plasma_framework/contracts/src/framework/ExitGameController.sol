@@ -14,12 +14,12 @@ import "../utils/PosLib.sol";
  *         For details, see the Plasma MVP spec: https://ethresear.ch/t/minimal-viable-plasma/426
  */
 contract ExitGameController is ExitGameRegistry {
-    // exit priority => IExitProcessor
-    mapping (uint256 => IExitProcessor) public delegations;
+    // exit hashed (priority, vault id, token) => IExitProcessor
+    mapping (bytes32 => IExitProcessor) public delegations;
     // hashed (vault id, token) => PriorityQueue
     mapping (bytes32 => PriorityQueue) public exitsQueues;
     // outputId => bool
-    mapping (bytes32 => bool) public isOutputSpent;
+    mapping (bytes32 => bool) public isOutputFinalized;
     bool private mutex = false;
 
     event ExitQueueAdded(
@@ -104,6 +104,7 @@ contract ExitGameController is ExitGameRegistry {
      *         priority queue to enforce the priority of exit during 'processExits'
      * @dev emits ExitQueued event, which can be used to back trace the priority inside the queue
      * @dev Caller of this function should add "pragma experimental ABIEncoderV2;" on top of file
+     * @dev Priority (exitableAt, txPos, exitId) must be unique per queue. Do not enqueue when the same priority is already in the queue.
      * @param vaultId Vault ID of the vault that stores exiting funds
      * @param token Token for the exit
      * @param exitableAt The earliest time a specified exit can be processed
@@ -131,7 +132,10 @@ contract ExitGameController is ExitGameRegistry {
         uint256 priority = ExitPriority.computePriority(exitableAt, txPos, exitId);
 
         queue.insert(priority);
-        delegations[priority] = exitProcessor;
+
+        bytes32 delegationKey = getDelegationKey(priority, vaultId, token);
+        require(address(delegations[delegationKey]) == address(0), "The same priority is already enqueued");
+        delegations[delegationKey] = exitProcessor;
 
         emit ExitQueued(exitId, priority);
         return priority;
@@ -157,11 +161,12 @@ contract ExitGameController is ExitGameRegistry {
         require(topExitId == 0 || exitId == topExitId,
             "Top exit ID of the queue is different to the one specified");
 
-        IExitProcessor processor = delegations[uniquePriority];
+        bytes32 delegationKey = getDelegationKey(uniquePriority, vaultId, token);
+        IExitProcessor processor = delegations[delegationKey];
         uint256 processedNum = 0;
 
         while (processedNum < maxExitsToProcess && ExitPriority.parseExitableAt(uniquePriority) < block.timestamp) {
-            delete delegations[uniquePriority];
+            delete delegations[delegationKey];
             queue.delMin();
             processedNum++;
 
@@ -172,8 +177,9 @@ contract ExitGameController is ExitGameRegistry {
             }
 
             uniquePriority = queue.getMin();
+            delegationKey = getDelegationKey(uniquePriority, vaultId, token);
             exitId = ExitPriority.parseExitId(uniquePriority);
-            processor = delegations[uniquePriority];
+            processor = delegations[delegationKey];
         }
 
         emit ProcessedExitsNum(processedNum, vaultId, token);
@@ -183,9 +189,9 @@ contract ExitGameController is ExitGameRegistry {
      * @notice Checks whether any of the output with the given outputIds is already spent
      * @param _outputIds Output IDs to check
      */
-    function isAnyOutputsSpent(bytes32[] calldata _outputIds) external view returns (bool) {
+    function isAnyOutputFinalized(bytes32[] calldata _outputIds) external view returns (bool) {
         for (uint i = 0; i < _outputIds.length; i++) {
-            if (isOutputSpent[_outputIds[i]] == true) {
+            if (isOutputFinalized[_outputIds[i]] == true) {
                 return true;
             }
         }
@@ -196,10 +202,10 @@ contract ExitGameController is ExitGameRegistry {
      * @notice Batch flags already spent outputs
      * @param _outputIds Output IDs to flag
      */
-    function batchFlagOutputsSpent(bytes32[] calldata _outputIds) external onlyFromNonQuarantinedExitGame {
+    function batchFlagOutputsFinalized(bytes32[] calldata _outputIds) external onlyFromNonQuarantinedExitGame {
         for (uint i = 0; i < _outputIds.length; i++) {
             require(_outputIds[i] != bytes32(""), "Should not flag with empty outputId");
-            isOutputSpent[_outputIds[i]] = true;
+            isOutputFinalized[_outputIds[i]] = true;
         }
     }
 
@@ -207,9 +213,9 @@ contract ExitGameController is ExitGameRegistry {
      * @notice Flags a single output as spent
      * @param _outputId The output ID to flag as spent
      */
-    function flagOutputSpent(bytes32 _outputId) external onlyFromNonQuarantinedExitGame {
+    function flagOutputFinalized(bytes32 _outputId) external onlyFromNonQuarantinedExitGame {
         require(_outputId != bytes32(""), "Should not flag with empty outputId");
-        isOutputSpent[_outputId] = true;
+        isOutputFinalized[_outputId] = true;
     }
 
     function getNextExit(uint256 vaultId, address token) external view returns (uint256) {
@@ -223,5 +229,9 @@ contract ExitGameController is ExitGameRegistry {
 
     function hasExitQueue(bytes32 queueKey) private view returns (bool) {
         return address(exitsQueues[queueKey]) != address(0);
+    }
+
+    function getDelegationKey(uint256 priority, uint256 vaultId, address token) private pure returns (bytes32) {
+        return keccak256(abi.encodePacked(priority, vaultId, token));
     }
 }

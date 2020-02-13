@@ -80,7 +80,7 @@ library PaymentChallengeIFENotCanonical {
         require(ife.exitStartTimestamp != 0, "In-flight exit does not exist");
 
         require(ife.isInFirstPhase(self.framework.minExitPeriod()),
-                "Canonicity challege phase for this exit has ended");
+                "Canonicity challenge phase for this exit has ended");
 
         require(
             keccak256(args.inFlightTx) != keccak256(args.competingTx),
@@ -110,7 +110,7 @@ library PaymentChallengeIFENotCanonical {
 
         bool isSpentByCompetingTx = condition.verify(
             args.inputTx,
-            inputUtxoPos.encode(),
+            args.inputUtxoPos,
             args.competingTx,
             args.competingTxInputIndex,
             args.competingTxWitness
@@ -118,7 +118,7 @@ library PaymentChallengeIFENotCanonical {
         require(isSpentByCompetingTx, "Competing input spending condition is not met");
 
         // Determine the position of the competing transaction
-        uint256 competitorPosition = verifyCompetingTxFinalized(self, args);
+        uint256 competitorPosition = verifyCompetingTxFinalizedInThePosition(self, args);
 
         require(
             ife.oldestCompetitorPosition == 0 || ife.oldestCompetitorPosition > competitorPosition,
@@ -161,39 +161,38 @@ library PaymentChallengeIFENotCanonical {
             ife.oldestCompetitorPosition > inFlightTxPos,
             "In-flight transaction must be older than competitors to respond to non-canonical challenge");
 
-        PosLib.Position memory utxoPos = PosLib.decode(inFlightTxPos);
-        (bytes32 root, ) = self.framework.blocks(utxoPos.blockNum);
-        require(root != bytes32(""), "Failed to get the block root hash of the UTXO position");
+        PosLib.Position memory txPos = PosLib.decode(inFlightTxPos);
+        (bytes32 root, ) = self.framework.blocks(txPos.blockNum);
+        require(root != bytes32(""), "Failed to get the block root hash of the tx position");
 
-        ife.oldestCompetitorPosition = verifyAndDeterminePositionOfTransactionIncludedInBlock(
-            inFlightTx, utxoPos, root, inFlightTxInclusionProof
+        verifyPositionOfTransactionIncludedInBlock(
+            inFlightTx, txPos, root, inFlightTxInclusionProof
         );
 
+        ife.oldestCompetitorPosition = inFlightTxPos;
         ife.isCanonical = true;
         ife.bondOwner = msg.sender;
 
         emit InFlightExitChallengeResponded(msg.sender, keccak256(inFlightTx), inFlightTxPos);
     }
 
-    function verifyAndDeterminePositionOfTransactionIncludedInBlock(
+    function verifyPositionOfTransactionIncludedInBlock(
         bytes memory txbytes,
-        PosLib.Position memory utxoPos,
+        PosLib.Position memory txPos,
         bytes32 root,
         bytes memory inclusionProof
     )
         private
         pure
-        returns (uint256)
     {
+        require(txPos.outputIndex == 0, "Output index of txPos has to be 0");
         require(
-            Merkle.checkMembership(txbytes, utxoPos.txIndex, root, inclusionProof),
+            Merkle.checkMembership(txbytes, txPos.txIndex, root, inclusionProof),
             "Transaction is not included in block of Plasma chain"
         );
-
-        return utxoPos.encode();
     }
 
-    function verifyCompetingTxFinalized(
+    function verifyCompetingTxFinalizedInThePosition(
         Controller memory self,
         PaymentInFlightExitRouterArgs.ChallengeCanonicityArgs memory args
     )
@@ -213,15 +212,17 @@ library PaymentChallengeIFENotCanonical {
             // Should fail already in early stages (eg. decode)
             assert(isProtocolFinalized);
         } else {
-            PosLib.Position memory competingTxUtxoPos = PosLib.decode(args.competingTxPos);
+            PosLib.Position memory competingTxPos = PosLib.decode(args.competingTxPos);
+            require(competingTxPos.outputIndex == 0, "OutputIndex of competingTxPos should be 0");
+
             bool isStandardFinalized = MoreVpFinalization.isStandardFinalized(
                 self.framework,
                 args.competingTx,
-                competingTxUtxoPos.toStrictTxPos(),
+                competingTxPos,
                 args.competingTxInclusionProof
             );
             require(isStandardFinalized, "Competing tx is not standard finalized with the given tx position");
-            competitorPosition = competingTxUtxoPos.encode();
+            competitorPosition = args.competingTxPos;
         }
         return competitorPosition;
     }

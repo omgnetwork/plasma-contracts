@@ -133,7 +133,7 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
             const exitId = 1;
             const testExitData = getTestExitData(true, ETH);
             await this.exitGame.setExit(exitId, testExitData);
-            await this.exitGame.proxyFlagOutputSpent(testExitData.outputId);
+            await this.exitGame.proxyFlagOutputFinalized(testExitData.outputId);
 
             const { logs } = await this.exitGame.processExit(exitId, VAULT_ID.ETH, ETH);
 
@@ -154,7 +154,7 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
 
             await this.exitGame.processExit(exitId, VAULT_ID.ETH, ETH);
 
-            expect(await this.framework.isOutputSpent(testExitData.outputId)).to.be.true;
+            expect(await this.framework.isOutputFinalized(testExitData.outputId)).to.be.true;
         });
 
         it('should return standard exit bond to exit target when the exit token is ETH', async () => {
