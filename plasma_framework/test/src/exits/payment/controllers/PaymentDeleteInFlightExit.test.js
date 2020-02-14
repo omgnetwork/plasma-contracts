@@ -228,8 +228,8 @@ contract('PaymentDeleteInFlightExit', ([_, bondOwner, inputOwner, outputOwner]) 
             });
 
             it('should delete the in-flight exit data', async () => {
-                const exit = await this.exitGame.inFlightExits(exitId);
-                expect(exit.exitStartTimestamp).to.equal('0');
+                const exits = await this.exitGame.inFlightExits([exitId]);
+                expect(exits[0].exitStartTimestamp).to.equal('0');
             });
 
             it('should emit InFlightExitDeleted event', async () => {

@@ -79,7 +79,7 @@ def test_start_standard_exit_old_utxo_has_required_exit_period_to_start_exit(tes
     testlang.start_standard_exit(utxo.spend_id, utxo.owner)
 
     _, _, next_exit_id = testlang.root_chain.getNextExit(testlang.root_chain.eth_vault_id, NULL_ADDRESS)
-    exits = testlang.root_chain.exits(next_exit_id)
+    exits = testlang.root_chain.exits([next_exit_id])
     next_exit = StandardExit(*exits[0])
     assert next_exit.position == utxo.spend_id
 

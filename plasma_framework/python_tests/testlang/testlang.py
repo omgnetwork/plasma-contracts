@@ -332,7 +332,7 @@ class TestingLanguage:
         """
 
         exit_id = self.get_standard_exit_id(utxo_pos)
-        exit_info = self.root_chain.exits(exit_id)
+        exit_info = self.root_chain.exits([exit_id])
         return StandardExit(*exit_info[0])
 
     def get_standard_exit_id(self, utxo_pos):
@@ -485,8 +485,8 @@ class TestingLanguage:
     def get_in_flight_exit(self, in_flight_tx_id):
         in_flight_tx = self.child_chain.get_transaction(in_flight_tx_id)
         exit_id = self.root_chain.getInFlightExitId(in_flight_tx.encoded)
-        exit_info = self.root_chain.inFlightExits(exit_id)
-        return InFlightExit(self.root_chain, in_flight_tx, *exit_info)
+        exit_info = self.root_chain.inFlightExits([exit_id])
+        return InFlightExit(self.root_chain, in_flight_tx, *exit_info[0])
 
     def delete_in_flight_exit(self, in_flight_tx_id):
         in_flight_tx = self.child_chain.get_transaction(in_flight_tx_id)

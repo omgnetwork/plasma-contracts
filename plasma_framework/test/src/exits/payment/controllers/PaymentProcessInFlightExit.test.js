@@ -308,10 +308,10 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
             });
 
             it('should only clean the piggyback flag of the inputs/outputs with same token', async () => {
-                const exit = await this.exitGame.inFlightExits(DUMMY_EXIT_ID);
+                const exits = await this.exitGame.inFlightExits([DUMMY_EXIT_ID]);
                 const thirdOutputIndexInExitMap = MAX_INPUT_NUM + 2;
                 const exitMapWithErc20Outputs = 2 ** thirdOutputIndexInExitMap;
-                expect(exit.exitMap).to.equal(exitMapWithErc20Outputs.toString());
+                expect(exits[0].exitMap).to.equal(exitMapWithErc20Outputs.toString());
             });
 
             // erc20 are not processed yet, thus not fully resolved.
@@ -323,8 +323,8 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
                 });
 
                 it('should NOT delete the exit from storage', async () => {
-                    const exit = await this.exitGame.inFlightExits(DUMMY_EXIT_ID);
-                    expect(exit.exitStartTimestamp).to.not.equal('0');
+                    const exits = await this.exitGame.inFlightExits([DUMMY_EXIT_ID]);
+                    expect(exits[0].exitStartTimestamp).to.not.equal('0');
                 });
             });
 
@@ -341,8 +341,8 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
                 });
 
                 it('should delete the exit from storage', async () => {
-                    const exit = await this.exitGame.inFlightExits(DUMMY_EXIT_ID);
-                    expect(exit.exitStartTimestamp).to.equal('0');
+                    const exits = await this.exitGame.inFlightExits([DUMMY_EXIT_ID]);
+                    expect(exits[0].exitStartTimestamp).to.equal('0');
                 });
             });
         });

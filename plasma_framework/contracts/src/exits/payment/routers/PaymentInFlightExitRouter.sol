@@ -187,10 +187,15 @@ contract PaymentInFlightExitRouter is
 
     /**
      * @notice Getter functions to retrieve in-flight exit data of the PaymentExitGame
-     * @param exitId The exit ID of the in-flight exit
+     * @param exitIds The exit IDs of the in-flight exits
      */
-    function inFlightExits(uint160 exitId) public view returns (PaymentExitDataModel.InFlightExit memory) {
-        return inFlightExitMap.exits[exitId];
+    function inFlightExits(uint160[] calldata exitIds) external view returns (PaymentExitDataModel.InFlightExit[] memory) {
+        PaymentExitDataModel.InFlightExit[] memory exits = new PaymentExitDataModel.InFlightExit[](exitIds.length);
+        for (uint i = 0; i < exitIds.length; i++) {
+            uint160 exitId = exitIds[i];
+            exits[i] = inFlightExitMap.exits[exitId];
+        }
+        return exits;
     }
 
     /**
