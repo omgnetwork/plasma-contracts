@@ -76,14 +76,6 @@ library PaymentProcessInFlightExit {
 
                 if (shouldWithdrawInput(self, exit, withdrawal, token, i)) {
                     withdrawFromVault(self, withdrawal);
-                    bool success = SafeEthTransfer.transferReturnResult(
-                        withdrawal.exitTarget, withdrawal.piggybackBondSize, self.safeGasStipend
-                    );
-
-                    // we do not want to block a queue if bond return is unsuccessful
-                    if (!success) {
-                        emit InFlightBondReturnFailed(withdrawal.exitTarget, withdrawal.piggybackBondSize);
-                    }
                     emit InFlightExitInputWithdrawn(exitId, i);
                 }
             }
@@ -95,19 +87,15 @@ library PaymentProcessInFlightExit {
 
                 if (shouldWithdrawOutput(self, exit, withdrawal, token, i)) {
                     withdrawFromVault(self, withdrawal);
-                    bool success = SafeEthTransfer.transferReturnResult(
-                        withdrawal.exitTarget, withdrawal.piggybackBondSize, self.safeGasStipend
-                    );
-                    // we do not want to block a queue if bond return is unsuccessful
-                    if (!success) {
-                        emit InFlightBondReturnFailed(withdrawal.exitTarget, withdrawal.piggybackBondSize);
-                    }
                     emit InFlightExitOutputWithdrawn(exitId, i);
                 }
             }
 
             flagOutputsWhenCanonical(self.framework, exit, token);
         }
+
+        returnInputPiggybackBonds(self, exit, token);
+        returnOutputPiggybackBonds(self, exit, token);
 
         clearPiggybackInputFlag(exit, token);
         clearPiggybackOutputFlag(exit, token);
@@ -257,6 +245,50 @@ library PaymentProcessInFlightExit {
             }
         }
         framework.batchFlagOutputsFinalized(outputIdsToFlag);
+    }
+
+    function returnInputPiggybackBonds(
+        Controller memory self,
+        PaymentExitDataModel.InFlightExit storage exit,
+        address token
+    )
+        private
+    {
+        for (uint16 i = 0; i < PaymentTransactionModel.MAX_INPUT_NUM(); i++) {
+            PaymentExitDataModel.WithdrawData memory withdrawal = exit.inputs[i];
+            if (token == withdrawal.token && exit.isInputPiggybacked(i)) {
+                bool success = SafeEthTransfer.transferReturnResult(
+                    withdrawal.exitTarget, withdrawal.piggybackBondSize, self.safeGasStipend
+                );
+
+                // we do not want to block a queue if bond return is unsuccessful
+                if (!success) {
+                    emit InFlightBondReturnFailed(withdrawal.exitTarget, withdrawal.piggybackBondSize);
+                }
+            }
+        }
+    }
+
+    function returnOutputPiggybackBonds(
+        Controller memory self,
+        PaymentExitDataModel.InFlightExit storage exit,
+        address token
+    )
+        private
+    {
+        for (uint16 i = 0; i < PaymentTransactionModel.MAX_OUTPUT_NUM(); i++) {
+            PaymentExitDataModel.WithdrawData memory withdrawal = exit.outputs[i];
+            if (token == withdrawal.token && exit.isOutputPiggybacked(i)) {
+                bool success = SafeEthTransfer.transferReturnResult(
+                    withdrawal.exitTarget, withdrawal.piggybackBondSize, self.safeGasStipend
+                );
+
+                // we do not want to block a queue if bond return is unsuccessful
+                if (!success) {
+                    emit InFlightBondReturnFailed(withdrawal.exitTarget, withdrawal.piggybackBondSize);
+                }
+            }
+        }
     }
 
     function clearPiggybackInputFlag(
