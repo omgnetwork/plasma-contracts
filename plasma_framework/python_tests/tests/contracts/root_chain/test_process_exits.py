@@ -686,7 +686,7 @@ def test_in_flight_exit_is_cleaned_up_even_though_none_of_outputs_exited(testlan
     assert in_flight_exit.exit_map == 0
 
     # assert IFE and piggyback bonds were sent to the owners
-    assert testlang.get_balance(owner) == pre_balance + testlang.root_chain.inFlightExitBond()
+    assert testlang.get_balance(owner) == pre_balance + testlang.root_chain.inFlightExitBond() + testlang.root_chain.piggybackBond()
 
 
 def test_processing_ife_and_se_exit_from_same_output_does_not_fail(testlang):

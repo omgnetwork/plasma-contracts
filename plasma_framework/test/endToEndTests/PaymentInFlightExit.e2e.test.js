@@ -352,7 +352,7 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                                     );
                                                 });
 
-                                                it('should return only funds of output B to Alice (input exited)', async () => {
+                                                it('should return funds of output B with piggyback bond to Alice (input exited)', async () => {
                                                     const postBalanceAlice = new BN(await web3.eth.getBalance(alice));
                                                     const expectedBalance = preBalanceAlice
                                                         .add(new BN(DEPOSIT_VALUE))
@@ -361,9 +361,11 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                                     expect(expectedBalance).to.be.bignumber.equal(postBalanceAlice);
                                                 });
 
-                                                it('should NOT return fund to Bob (output not exited)', async () => {
+                                                it('should NOT return funds of output B to Bob (output not exited). However, piggyback bond is returned', async () => {
                                                     const postBalanceBob = new BN(await web3.eth.getBalance(bob));
-                                                    expect(preBalanceBob).to.be.bignumber.equal(postBalanceBob);
+                                                    const expectedBalance = preBalanceBob
+                                                        .add(new BN(this.piggybackBondSize));
+                                                    expect(expectedBalance).to.be.bignumber.equal(postBalanceBob);
                                                 });
                                             });
                                         });
