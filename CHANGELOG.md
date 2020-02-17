@@ -14,3 +14,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Start using "CHANGELOG.md"
 - Event `BlockSubmitted` field `BlockNumber` renamed to `blknum` ([#581](https://github.com/omisego/plasma-contracts/pull/581))
 - `ChallengeStandardExit`, `ChallengeOutputSpent`, `ChallengeInputSpent` take additional parameter - `senderData` ([#574](https://github.com/omisego/plasma-contracts/pull/574))
+- `PaymentInFlightExitRouter.inFlightExits()` takes an array of in-flight exit IDs instead of a single ID ([#583](https://github.com/omisego/plasma-contracts/pull/583))
