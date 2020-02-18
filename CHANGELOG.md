@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased - 2020-02-18
 
 ## [1.0.3] - 2020-02-18
-- In-flight exit would return piggyback bond even if user piggyback the wrong canonicity. ([#585](https://github.com/omisego/plasma-contracts/pull/585))
+- In-flight exit returns all unchallenged piggyback bonds even if user piggybacks the wrong canonicity. ([#585](https://github.com/omisego/plasma-contracts/pull/585))
 
 ## [1.0.2] - 2020-02-13
 
