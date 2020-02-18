@@ -257,7 +257,7 @@ library PaymentProcessInFlightExit {
         for (uint16 i = 0; i < PaymentTransactionModel.MAX_INPUT_NUM(); i++) {
             PaymentExitDataModel.WithdrawData memory withdrawal = exit.inputs[i];
 
-            // challenged input would remove the piggyback flag
+            // If the input has been challenged, isInputPiggybacked() will return false
             if (token == withdrawal.token && exit.isInputPiggybacked(i)) {
                 bool success = SafeEthTransfer.transferReturnResult(
                     withdrawal.exitTarget, withdrawal.piggybackBondSize, self.safeGasStipend
@@ -281,7 +281,7 @@ library PaymentProcessInFlightExit {
         for (uint16 i = 0; i < PaymentTransactionModel.MAX_OUTPUT_NUM(); i++) {
             PaymentExitDataModel.WithdrawData memory withdrawal = exit.outputs[i];
 
-            // challenged output would remove the piggyback flag
+            // If the output has been challenged, isOutputPiggybacked() will return false
             if (token == withdrawal.token && exit.isOutputPiggybacked(i)) {
                 bool success = SafeEthTransfer.transferReturnResult(
                     withdrawal.exitTarget, withdrawal.piggybackBondSize, self.safeGasStipend
