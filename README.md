@@ -120,9 +120,10 @@ npx truffle test --network loadTest
 
 ### How to release a new plasma contracts version
 
-# Bumps the version in package.json (the patch part)
-# Creates a commit with specified message
-# Tags that commit with the new version
+- Update the [CHANGELOG.md](./CHANGELOG.md)
+- Bumps the version in package.json (the patch part)
+- Creates a commit with specified message
+- Tags that commit with the new version
 ```bash
 npm version patch -m "Fixed a bug in X"
 ```

@@ -71,43 +71,31 @@ library PaymentProcessInFlightExit {
         // So an IFE is only canonical if all inputs of the in-flight tx are not double spent by competing tx or exit.
         // see: https://github.com/omisego/plasma-contracts/issues/470
         if (!exit.isCanonical || isAnyInputSpent(self.framework, exit, token)) {
-            for (uint16 i = 0; i < PaymentTransactionModel.MAX_INPUT_NUM(); i++) {
+            for (uint16 i = 0; i < exit.inputs.length; i++) {
                 PaymentExitDataModel.WithdrawData memory withdrawal = exit.inputs[i];
 
                 if (shouldWithdrawInput(self, exit, withdrawal, token, i)) {
                     withdrawFromVault(self, withdrawal);
-                    bool success = SafeEthTransfer.transferReturnResult(
-                        withdrawal.exitTarget, withdrawal.piggybackBondSize, self.safeGasStipend
-                    );
-
-                    // we do not want to block a queue if bond return is unsuccessful
-                    if (!success) {
-                        emit InFlightBondReturnFailed(withdrawal.exitTarget, withdrawal.piggybackBondSize);
-                    }
                     emit InFlightExitInputWithdrawn(exitId, i);
                 }
             }
 
             flagOutputsWhenNonCanonical(self.framework, exit, token);
         } else {
-            for (uint16 i = 0; i < PaymentTransactionModel.MAX_OUTPUT_NUM(); i++) {
+            for (uint16 i = 0; i < exit.outputs.length; i++) {
                 PaymentExitDataModel.WithdrawData memory withdrawal = exit.outputs[i];
 
                 if (shouldWithdrawOutput(self, exit, withdrawal, token, i)) {
                     withdrawFromVault(self, withdrawal);
-                    bool success = SafeEthTransfer.transferReturnResult(
-                        withdrawal.exitTarget, withdrawal.piggybackBondSize, self.safeGasStipend
-                    );
-                    // we do not want to block a queue if bond return is unsuccessful
-                    if (!success) {
-                        emit InFlightBondReturnFailed(withdrawal.exitTarget, withdrawal.piggybackBondSize);
-                    }
                     emit InFlightExitOutputWithdrawn(exitId, i);
                 }
             }
 
             flagOutputsWhenCanonical(self.framework, exit, token);
         }
+
+        returnInputPiggybackBonds(self, exit, token);
+        returnOutputPiggybackBonds(self, exit, token);
 
         clearPiggybackInputFlag(exit, token);
         clearPiggybackOutputFlag(exit, token);
@@ -135,14 +123,14 @@ library PaymentProcessInFlightExit {
         returns (bool)
     {
         uint256 inputNumOfTheToken;
-        for (uint16 i = 0; i < PaymentTransactionModel.MAX_INPUT_NUM(); i++) {
+        for (uint16 i = 0; i < exit.inputs.length; i++) {
             if (exit.inputs[i].token == token && !exit.isInputEmpty(i)) {
                 inputNumOfTheToken++;
             }
         }
         bytes32[] memory outputIdsOfInputs = new bytes32[](inputNumOfTheToken);
         uint sameTokenIndex = 0;
-        for (uint16 i = 0; i < PaymentTransactionModel.MAX_INPUT_NUM(); i++) {
+        for (uint16 i = 0; i < exit.inputs.length; i++) {
             if (exit.inputs[i].token == token && !exit.isInputEmpty(i)) {
                 outputIdsOfInputs[sameTokenIndex] = exit.inputs[i].outputId;
                 sameTokenIndex++;
@@ -204,7 +192,7 @@ library PaymentProcessInFlightExit {
         private
     {
         uint256 piggybackedInputNumOfTheToken;
-        for (uint16 i = 0; i < PaymentTransactionModel.MAX_INPUT_NUM(); i++) {
+        for (uint16 i = 0; i < exit.inputs.length; i++) {
             if (exit.inputs[i].token == token && exit.isInputPiggybacked(i)) {
                 piggybackedInputNumOfTheToken++;
             }
@@ -212,7 +200,7 @@ library PaymentProcessInFlightExit {
 
         bytes32[] memory outputIdsToFlag = new bytes32[](piggybackedInputNumOfTheToken);
         uint indexForOutputIds = 0;
-        for (uint16 i = 0; i < PaymentTransactionModel.MAX_INPUT_NUM(); i++) {
+        for (uint16 i = 0; i < exit.inputs.length; i++) {
             if (exit.inputs[i].token == token && exit.isInputPiggybacked(i)) {
                 outputIdsToFlag[indexForOutputIds] = exit.inputs[i].outputId;
                 indexForOutputIds++;
@@ -229,14 +217,14 @@ library PaymentProcessInFlightExit {
         private
     {
         uint256 inputNumOfTheToken;
-        for (uint16 i = 0; i < PaymentTransactionModel.MAX_INPUT_NUM(); i++) {
+        for (uint16 i = 0; i < exit.inputs.length; i++) {
             if (exit.inputs[i].token == token && !exit.isInputEmpty(i)) {
                 inputNumOfTheToken++;
             }
         }
 
         uint256 piggybackedOutputNumOfTheToken;
-        for (uint16 i = 0; i < PaymentTransactionModel.MAX_OUTPUT_NUM(); i++) {
+        for (uint16 i = 0; i < exit.outputs.length; i++) {
             if (exit.outputs[i].token == token && exit.isOutputPiggybacked(i)) {
                 piggybackedOutputNumOfTheToken++;
             }
@@ -244,13 +232,13 @@ library PaymentProcessInFlightExit {
 
         bytes32[] memory outputIdsToFlag = new bytes32[](inputNumOfTheToken + piggybackedOutputNumOfTheToken);
         uint indexForOutputIds = 0;
-        for (uint16 i = 0; i < PaymentTransactionModel.MAX_INPUT_NUM(); i++) {
+        for (uint16 i = 0; i < exit.inputs.length; i++) {
             if (exit.inputs[i].token == token && !exit.isInputEmpty(i)) {
                 outputIdsToFlag[indexForOutputIds] = exit.inputs[i].outputId;
                 indexForOutputIds++;
             }
         }
-        for (uint16 i = 0; i < PaymentTransactionModel.MAX_OUTPUT_NUM(); i++) {
+        for (uint16 i = 0; i < exit.outputs.length; i++) {
             if (exit.outputs[i].token == token && exit.isOutputPiggybacked(i)) {
                 outputIdsToFlag[indexForOutputIds] = exit.outputs[i].outputId;
                 indexForOutputIds++;
@@ -259,13 +247,61 @@ library PaymentProcessInFlightExit {
         framework.batchFlagOutputsFinalized(outputIdsToFlag);
     }
 
+    function returnInputPiggybackBonds(
+        Controller memory self,
+        PaymentExitDataModel.InFlightExit storage exit,
+        address token
+    )
+        private
+    {
+        for (uint16 i = 0; i < exit.inputs.length; i++) {
+            PaymentExitDataModel.WithdrawData memory withdrawal = exit.inputs[i];
+
+            // If the input has been challenged, isInputPiggybacked() will return false
+            if (token == withdrawal.token && exit.isInputPiggybacked(i)) {
+                bool success = SafeEthTransfer.transferReturnResult(
+                    withdrawal.exitTarget, withdrawal.piggybackBondSize, self.safeGasStipend
+                );
+
+                // we do not want to block a queue if bond return is unsuccessful
+                if (!success) {
+                    emit InFlightBondReturnFailed(withdrawal.exitTarget, withdrawal.piggybackBondSize);
+                }
+            }
+        }
+    }
+
+    function returnOutputPiggybackBonds(
+        Controller memory self,
+        PaymentExitDataModel.InFlightExit storage exit,
+        address token
+    )
+        private
+    {
+        for (uint16 i = 0; i < exit.outputs.length; i++) {
+            PaymentExitDataModel.WithdrawData memory withdrawal = exit.outputs[i];
+
+            // If the output has been challenged, isOutputPiggybacked() will return false
+            if (token == withdrawal.token && exit.isOutputPiggybacked(i)) {
+                bool success = SafeEthTransfer.transferReturnResult(
+                    withdrawal.exitTarget, withdrawal.piggybackBondSize, self.safeGasStipend
+                );
+
+                // we do not want to block a queue if bond return is unsuccessful
+                if (!success) {
+                    emit InFlightBondReturnFailed(withdrawal.exitTarget, withdrawal.piggybackBondSize);
+                }
+            }
+        }
+    }
+
     function clearPiggybackInputFlag(
         PaymentExitDataModel.InFlightExit storage exit,
         address token
     )
         private
     {
-        for (uint16 i = 0; i < PaymentTransactionModel.MAX_INPUT_NUM(); i++) {
+        for (uint16 i = 0; i < exit.inputs.length; i++) {
             if (token == exit.inputs[i].token) {
                 exit.clearInputPiggybacked(i);
             }
@@ -278,7 +314,7 @@ library PaymentProcessInFlightExit {
     )
         private
     {
-        for (uint16 i = 0; i < PaymentTransactionModel.MAX_OUTPUT_NUM(); i++) {
+        for (uint16 i = 0; i < exit.outputs.length; i++) {
             if (token == exit.outputs[i].token) {
                 exit.clearOutputPiggybacked(i);
             }
@@ -286,12 +322,12 @@ library PaymentProcessInFlightExit {
     }
 
     function allPiggybacksCleared(PaymentExitDataModel.InFlightExit memory exit) private pure returns (bool) {
-        for (uint16 i = 0; i < PaymentTransactionModel.MAX_INPUT_NUM(); i++) {
+        for (uint16 i = 0; i < exit.inputs.length; i++) {
             if (exit.isInputPiggybacked(i))
                 return false;
         }
 
-        for (uint16 i = 0; i < PaymentTransactionModel.MAX_OUTPUT_NUM(); i++) {
+        for (uint16 i = 0; i < exit.outputs.length; i++) {
             if (exit.isOutputPiggybacked(i))
                 return false;
         }

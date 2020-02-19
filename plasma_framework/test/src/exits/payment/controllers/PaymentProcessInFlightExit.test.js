@@ -386,6 +386,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
                 await this.exitGame.setInFlightExitOutputPiggybacked(DUMMY_EXIT_ID, 2);
 
                 this.inputOwner3PreBalance = new BN(await web3.eth.getBalance(inputOwner3));
+                this.outputOwner3PreBalance = new BN(await web3.eth.getBalance(outputOwner3));
             });
 
             it('should withdraw ETH from vault for the piggybacked input', async () => {
@@ -464,6 +465,14 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
                 expect(postBalance).to.be.bignumber.equal(expectedBalance);
             });
 
+            it('should return piggyback bond to the output owner', async () => {
+                await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ERC20, erc20);
+                const postBalance = new BN(await web3.eth.getBalance(outputOwner3));
+                const expectedBalance = this.outputOwner3PreBalance.add(this.piggybackBondSize);
+
+                expect(postBalance).to.be.bignumber.equal(expectedBalance);
+            });
+
             it('should only flag piggybacked inputs with the same token as spent', async () => {
                 await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH);
                 // piggybacked input
@@ -508,6 +517,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
                 await this.exitGame.setInFlightExitOutputPiggybacked(DUMMY_EXIT_ID, 0);
                 await this.exitGame.setInFlightExitOutputPiggybacked(DUMMY_EXIT_ID, 2);
 
+                this.inputOwner3PreBalance = new BN(await web3.eth.getBalance(inputOwner3));
                 this.outputOwner3PreBalance = new BN(await web3.eth.getBalance(outputOwner3));
             });
 
@@ -583,6 +593,14 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
                 await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ERC20, erc20);
                 const postBalance = new BN(await web3.eth.getBalance(outputOwner3));
                 const expectedBalance = this.outputOwner3PreBalance.add(this.piggybackBondSize);
+
+                expect(postBalance).to.be.bignumber.equal(expectedBalance);
+            });
+
+            it('should return piggyback bond to the input owner', async () => {
+                await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ERC20, erc20);
+                const postBalance = new BN(await web3.eth.getBalance(inputOwner3));
+                const expectedBalance = this.inputOwner3PreBalance.add(this.piggybackBondSize);
 
                 expect(postBalance).to.be.bignumber.equal(expectedBalance);
             });
