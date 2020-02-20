@@ -70,7 +70,7 @@ library PaymentProcessInFlightExit {
         // Also, slightly different from the solution above, we treat input spent as non-canonical.
         // So an IFE is only canonical if all inputs of the in-flight tx are not double spent by competing tx or exit.
         // see: https://github.com/omisego/plasma-contracts/issues/470
-        if (!exit.isCanonical || isAnyInputSpent(self.framework, exit, token)) {
+        if (!exit.isCanonical || isAnyInputSpent(self.framework, exit)) {
             for (uint16 i = 0; i < exit.inputs.length; i++) {
                 PaymentExitDataModel.WithdrawData memory withdrawal = exit.inputs[i];
 
@@ -115,25 +115,24 @@ library PaymentProcessInFlightExit {
 
     function isAnyInputSpent(
         PlasmaFramework framework,
-        PaymentExitDataModel.InFlightExit memory exit,
-        address token
+        PaymentExitDataModel.InFlightExit memory exit
     )
         private
         view
         returns (bool)
     {
-        uint256 inputNumOfTheToken;
+        uint256 inputNum;
         for (uint16 i = 0; i < exit.inputs.length; i++) {
-            if (exit.inputs[i].token == token && !exit.isInputEmpty(i)) {
-                inputNumOfTheToken++;
+            if (!exit.isInputEmpty(i)) {
+                inputNum++;
             }
         }
-        bytes32[] memory outputIdsOfInputs = new bytes32[](inputNumOfTheToken);
-        uint sameTokenIndex = 0;
+        bytes32[] memory outputIdsOfInputs = new bytes32[](inputNum);
+        inputNum = 0;
         for (uint16 i = 0; i < exit.inputs.length; i++) {
-            if (exit.inputs[i].token == token && !exit.isInputEmpty(i)) {
-                outputIdsOfInputs[sameTokenIndex] = exit.inputs[i].outputId;
-                sameTokenIndex++;
+            if (!exit.isInputEmpty(i)) {
+                outputIdsOfInputs[inputNum] = exit.inputs[i].outputId;
+                inputNum++;
             }
         }
         return framework.isAnyOutputFinalized(outputIdsOfInputs);
