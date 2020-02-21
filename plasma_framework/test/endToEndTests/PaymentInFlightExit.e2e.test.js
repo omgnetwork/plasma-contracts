@@ -121,7 +121,8 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                             { from: alice, value: this.startIFEBondSize },
                         );
 
-                        this.exitId = await this.exitGame.getInFlightExitId(this.inFlightTxRaw);
+                        const exitIds = await this.exitGame.getInFlightExitIds([this.inFlightTxRaw]);
+                        this.exitId = exitIds[0]
                     });
 
                     describe('And owner of the output (Bob) piggybacks', () => {
