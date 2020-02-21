@@ -308,7 +308,8 @@ class PlasmaFramework:
         return self.payment_exit_game.deleteNonPiggybackedInFlightExit(exit_id)
 
     def getInFlightExitId(self, tx):
-        return self.payment_exit_game.getInFlightExitId(tx)
+        exit_ids = self.payment_exit_game.getInFlightExitIds([tx])
+        return exit_ids[0]
 
     def getStandardExitId(self, tx_bytes, utxo_pos):
         blknum, _, _ = decode_utxo_id(utxo_pos)

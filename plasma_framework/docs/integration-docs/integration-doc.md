@@ -958,7 +958,7 @@ PaymentExitGame.deleteNonPiggybackedInFlightExit(exitId)
 #### exitId (uint160)
 Exit Id of the in-flight exit.
 
-You can get your `exitId` by `getInFlightExitId` helper function of the `PaymentExitGame`, see doc: [here](https://github.com/omisego/plasma-contracts/blob/master/plasma_framework/docs/contracts/PaymentExitGame.md#getinflightexitid)
+You can get your `exitId` by `getInFlightExitIds` helper function of the `PaymentExitGame`, see doc: [here](https://github.com/omisego/plasma-contracts/blob/master/plasma_framework/docs/contracts/PaymentExitGame.md#getinflightexitids)
 
 
 #### Example:
@@ -974,13 +974,13 @@ Once the exit period is over, an exit can be processed to release the funds on t
 
 Be aware that in-flight exit is only put on a token's exit queue if a piggyback of that token exists. In other words, if an in-flight exit ends up with no piggybacks of a certain token, eg. ETH, then user will not find the exit on the priority queue for ETH. Please make sure piggyback step is done before process exit. 
 
-To process a in-flight exit: 
-1. (Optional) Obtain your `exitId` by `getInFlightExitId` helper function of the `PaymentExitGame`, see doc: [here](https://github.com/omisego/plasma-contracts/blob/master/plasma_framework/docs/contracts/PaymentExitGame.md#getinflightexitid)
+To process a in-flight exit:
+1. (Optional) Obtain your `exitId` by `getInFlightExitIds` helper function of the `PaymentExitGame`, see doc: [here](https://github.com/omisego/plasma-contracts/blob/master/plasma_framework/docs/contracts/PaymentExitGame.md#getinflightexitids)
 
 ```
-PaymentExitGame.getInFlightExitId(
-  "0xf85801c0f4f3019441777dc7bdcc6b58be1c25eb3df7df52d1bfecbd94000000000000000000000000000000000000000087038d7ea4c68000a00000000000000000000000000000000000000000000000000000000000000000", # RLP-encoded transaction sent when startInFlightExit was called
-)
+PaymentExitGame.getInFlightExitIds([
+  "0xf85801c0f4f3019441777dc7bdcc6b58be1c25eb3df7df52d1bfecbd94000000000000000000000000000000000000000087038d7ea4c68000a00000000000000000000000000000000000000000000000000000000000000000" # RLP-encoded transaction sent when startInFlightExit was called
+])
 ```
 
 2. Process your exit. 

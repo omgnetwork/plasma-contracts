@@ -386,7 +386,8 @@ class TestingLanguage:
 
     def get_in_flight_exit_id(self, tx_id):
         spend_tx = self.child_chain.get_transaction(tx_id)
-        return self.root_chain.getInFlightExitId(spend_tx.encoded)
+        exit_ids = self.root_chain.getInFlightExitIds([spend_tx.encoded])
+        return exit_ids[0]
 
     def get_merkle_proof(self, tx_id):
         tx = self.child_chain.get_transaction(tx_id)
@@ -484,11 +485,11 @@ class TestingLanguage:
 
     def get_in_flight_exit(self, in_flight_tx_id):
         in_flight_tx = self.child_chain.get_transaction(in_flight_tx_id)
-        exit_id = self.root_chain.getInFlightExitId(in_flight_tx.encoded)
-        exit_info = self.root_chain.inFlightExits([exit_id])
-        return InFlightExit(self.root_chain, in_flight_tx, *exit_info[0])
+        exit_ids = self.root_chain.getInFlightExitIds([in_flight_tx.encoded])
+        exit_infos = self.root_chain.inFlightExits([exit_ids[0]])
+        return InFlightExit(self.root_chain, in_flight_tx, *exit_infos[0])
 
     def delete_in_flight_exit(self, in_flight_tx_id):
         in_flight_tx = self.child_chain.get_transaction(in_flight_tx_id)
-        exit_id = self.root_chain.getInFlightExitId(in_flight_tx.encoded)
-        self.root_chain.deleteNonPiggybackedInFlightExit(exit_id)
+        exit_ids = self.root_chain.getInFlightExitIds([in_flight_tx.encoded])
+        self.root_chain.deleteNonPiggybackedInFlightExit(exit_ids[0])

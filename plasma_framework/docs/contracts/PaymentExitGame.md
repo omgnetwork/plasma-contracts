@@ -21,7 +21,7 @@ contract PlasmaFramework private plasmaFramework;
 - [(struct PaymentExitGameArgs.Args args)](#)
 - [processExit(uint160 exitId, uint256 , address token)](#processexit)
 - [getStandardExitId(bool _isDeposit, bytes _txBytes, uint256 _utxoPos)](#getstandardexitid)
-- [getInFlightExitId(bytes _txBytes)](#getinflightexitid)
+- [getInFlightExitIds(bytes[] _txBytes)](#getinflightexitids)
 
 ### 
 
@@ -72,20 +72,20 @@ returns(uint160)
 | _txBytes | bytes |  | 
 | _utxoPos | uint256 |  | 
 
-### getInFlightExitId
+### getInFlightExitIds
 
-Helper function to compute the in-flight exit ID
+Helper function to compute the in-flight exit IDs
 
 ```js
-function getInFlightExitId(bytes _txBytes) public pure
-returns(uint160)
+function getInFlightExitIds(bytes[] _multiTxBytes) public pure
+returns(uint160[])
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| _txBytes | bytes |  | 
+| _multiTxBytes | bytes[] | The array of transaction bytes to compute for exit IDs |
 
 ## Contracts
 

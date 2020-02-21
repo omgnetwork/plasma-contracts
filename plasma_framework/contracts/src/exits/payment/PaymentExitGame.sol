@@ -56,13 +56,17 @@ contract PaymentExitGame is IExitProcessor, OnlyFromAddress, PaymentStandardExit
     }
 
     /**
-     * @notice Helper function to compute the in-flight exit ID
+     * @notice Helper function to compute the in-flight exit IDs from transaction bytes
      */
-    function getInFlightExitId(bytes memory _txBytes)
+    function getInFlightExitIds(bytes[] memory _multiTxBytes)
         public
         pure
-        returns (uint160)
+        returns (uint160[])
     {
-        return ExitId.getInFlightExitId(_txBytes);
+        for (uint i = 0; i < _multiTxBytes.length; i++) {
+            bytes txBytes = _multiTxBytes[i];
+            exits[i] = ExitId.getInFlightExitId(txBytes);
+        }
+        return exits;
     }
 }
