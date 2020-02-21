@@ -63,10 +63,11 @@ contract PaymentExitGame is IExitProcessor, OnlyFromAddress, PaymentStandardExit
         pure
         returns (uint160[] memory)
     {
+        uint160[] memory exitIds = new uint160[](_multiTxBytes.length);
         for (uint i = 0; i < _multiTxBytes.length; i++) {
-            bytes txBytes = _multiTxBytes[i];
-            exits[i] = ExitId.getInFlightExitId(txBytes);
+            bytes memory txBytes = _multiTxBytes[i];
+            exitIds[i] = ExitId.getInFlightExitId(txBytes);
         }
-        return exits;
+        return exitIds;
     }
 }
