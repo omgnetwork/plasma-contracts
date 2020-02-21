@@ -61,7 +61,7 @@ contract PaymentExitGame is IExitProcessor, OnlyFromAddress, PaymentStandardExit
     function getInFlightExitIds(bytes[] memory _multiTxBytes)
         public
         pure
-        returns (uint160[])
+        returns (uint160[] memory)
     {
         for (uint i = 0; i < _multiTxBytes.length; i++) {
             bytes txBytes = _multiTxBytes[i];
