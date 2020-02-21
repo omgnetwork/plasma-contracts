@@ -14,12 +14,16 @@ import "../utils/PosLib.sol";
  *         For details, see the Plasma MVP spec: https://ethresear.ch/t/minimal-viable-plasma/426
  */
 contract ExitGameController is ExitGameRegistry {
+
+    enum Finalization { NotFinalized, Finalized, FinalizedByIFEOutputExit }
+
     // exit hashed (priority, vault id, token) => IExitProcessor
     mapping (bytes32 => IExitProcessor) public delegations;
     // hashed (vault id, token) => PriorityQueue
     mapping (bytes32 => PriorityQueue) public exitsQueues;
-    // outputId => bool
-    mapping (bytes32 => bool) public isOutputFinalized;
+
+    // outputId => Finalization
+    mapping (bytes32 => Finalization) public outputsFinalizations;
     bool private mutex = false;
 
     event ExitQueueAdded(
@@ -185,13 +189,21 @@ contract ExitGameController is ExitGameRegistry {
         emit ProcessedExitsNum(processedNum, vaultId, token);
     }
 
+     /**
+     * @notice Checks whether output with a given outputId is finalized
+     * @param outputId Output ID to check
+     */
+    function isOutputFinalized(bytes32 outputId) external view returns (bool) {
+        return outputsFinalizations[outputId] != Finalization.NotFinalized;
+    }
+
     /**
      * @notice Checks whether any of the output with the given outputIds is already spent
      * @param _outputIds Output IDs to check
      */
     function isAnyOutputFinalized(bytes32[] calldata _outputIds) external view returns (bool) {
         for (uint i = 0; i < _outputIds.length; i++) {
-            if (isOutputFinalized[_outputIds[i]] == true) {
+            if (outputsFinalizations[_outputIds[i]] == Finalization.Finalized) {
                 return true;
             }
         }
@@ -205,7 +217,18 @@ contract ExitGameController is ExitGameRegistry {
     function batchFlagOutputsFinalized(bytes32[] calldata _outputIds) external onlyFromNonQuarantinedExitGame {
         for (uint i = 0; i < _outputIds.length; i++) {
             require(_outputIds[i] != bytes32(""), "Should not flag with empty outputId");
-            isOutputFinalized[_outputIds[i]] = true;
+            outputsFinalizations[_outputIds[i]] = Finalization.Finalized;
+        }
+    }
+
+     /**
+     * @notice Batch flags outputs blocked from being withdrawn because of transaction output exit
+     * @param _outputIds Output IDs to flag
+     */
+    function batchFlagOutputsFinalizedByIFEOutputExit(bytes32[] calldata _outputIds) external onlyFromNonQuarantinedExitGame {
+        for (uint i = 0; i < _outputIds.length; i++) {
+            require(_outputIds[i] != bytes32(""), "Should not flag with empty outputId");
+            outputsFinalizations[_outputIds[i]] = Finalization.FinalizedByIFEOutputExit;
         }
     }
 
@@ -215,7 +238,7 @@ contract ExitGameController is ExitGameRegistry {
      */
     function flagOutputFinalized(bytes32 _outputId) external onlyFromNonQuarantinedExitGame {
         require(_outputId != bytes32(""), "Should not flag with empty outputId");
-        isOutputFinalized[_outputId] = true;
+        outputsFinalizations[_outputId] = Finalization.Finalized;
     }
 
     function getNextExit(uint256 vaultId, address token) external view returns (uint256) {

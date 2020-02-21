@@ -59,7 +59,7 @@ contract SpyPlasmaFrameworkForExitGame is PlasmaFramework {
     }
 
     function setOutputFinalized(bytes32 _outputId) external {
-        isOutputFinalized[_outputId] = true;
+        outputsFinalizations[_outputId] = Finalization.Finalized;
     }
 
     /**

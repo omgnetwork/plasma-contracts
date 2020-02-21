@@ -611,7 +611,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
                 expect(await this.framework.isOutputFinalized(TEST_OUTPUT_ID_FOR_INPUT_1)).to.be.true;
                 expect(await this.framework.isOutputFinalized(TEST_OUTPUT_ID_FOR_INPUT_2)).to.be.true;
                 // different token
-                expect(await this.framework.isOutputFinalized(TEST_OUTPUT_ID_FOR_INPUT_3)).to.be.false;
+                expect(await this.framework.isOutputFinalized(TEST_OUTPUT_ID_FOR_INPUT_3)).to.be.true;
             });
 
             it('should only flag piggybacked output with the same token as spent', async () => {

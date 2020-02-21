@@ -217,10 +217,20 @@ library PaymentProcessInFlightExit {
     {
         uint256 inputNumOfTheToken;
         for (uint16 i = 0; i < exit.inputs.length; i++) {
-            if (exit.inputs[i].token == token && !exit.isInputEmpty(i)) {
+            if (!exit.isInputEmpty(i)) {
                 inputNumOfTheToken++;
             }
         }
+
+        bytes32[] memory outputsIdsBlockedByExit = new bytes32[](inputNumOfTheToken);
+        inputNumOfTheToken = 0;
+        for (uint16 i = 0; i < exit.inputs.length; i++) {
+            if (!exit.isInputEmpty(i)) {
+                outputsIdsBlockedByExit[inputNumOfTheToken] = exit.inputs[i].outputId;
+                inputNumOfTheToken++;
+            }
+        }
+        framework.batchFlagOutputsFinalizedByIFEOutputExit(outputsIdsBlockedByExit);
 
         uint256 piggybackedOutputNumOfTheToken;
         for (uint16 i = 0; i < exit.outputs.length; i++) {
@@ -229,21 +239,15 @@ library PaymentProcessInFlightExit {
             }
         }
 
-        bytes32[] memory outputIdsToFlag = new bytes32[](inputNumOfTheToken + piggybackedOutputNumOfTheToken);
-        uint indexForOutputIds = 0;
-        for (uint16 i = 0; i < exit.inputs.length; i++) {
-            if (exit.inputs[i].token == token && !exit.isInputEmpty(i)) {
-                outputIdsToFlag[indexForOutputIds] = exit.inputs[i].outputId;
-                indexForOutputIds++;
-            }
-        }
+        bytes32[] memory spentOutputIds = new bytes32[](piggybackedOutputNumOfTheToken);
+        uint256 spentOutputIdsIndex;
         for (uint16 i = 0; i < exit.outputs.length; i++) {
             if (exit.outputs[i].token == token && exit.isOutputPiggybacked(i)) {
-                outputIdsToFlag[indexForOutputIds] = exit.outputs[i].outputId;
-                indexForOutputIds++;
+                spentOutputIds[spentOutputIdsIndex] = exit.outputs[i].outputId;
+                spentOutputIdsIndex++;
             }
         }
-        framework.batchFlagOutputsFinalized(outputIdsToFlag);
+        framework.batchFlagOutputsFinalized(spentOutputIds);
     }
 
     function returnInputPiggybackBonds(
