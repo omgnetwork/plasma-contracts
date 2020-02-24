@@ -16,6 +16,10 @@ contract('ExitGameController', () => {
     const MIN_EXIT_PERIOD = 10;
     const INITIAL_IMMUNE_EXIT_GAMES = 1;
     const VAULT_ID = 1;
+    const DUMMY_OUTPUT_ID_1 = web3.utils.sha3('output id 1');
+    const DUMMY_OUTPUT_ID_2 = web3.utils.sha3('output id 2');
+    const FINALIZATION_FINALIZED = new BN(1);
+    const FINALIZATION_BLOCKED_BY_OUTPUT_EXIT = new BN(2);
 
     beforeEach(async () => {
         this.controller = await ExitGameController.new(MIN_EXIT_PERIOD, INITIAL_IMMUNE_EXIT_GAMES);
@@ -538,46 +542,56 @@ contract('ExitGameController', () => {
         });
     });
 
+    async function testFlagSingleOutputFinalized(suite, callback) {
+        await callback([DUMMY_OUTPUT_ID_1]);
+        expect(await suite.controller.isOutputFinalized(DUMMY_OUTPUT_ID_1)).to.be.true;
+    }
+
+    async function testFlagMultipleOutputsFinalized(suite, callback) {
+        await callback([DUMMY_OUTPUT_ID_1, DUMMY_OUTPUT_ID_2]);
+        expect(await suite.controller.isOutputFinalized(DUMMY_OUTPUT_ID_1)).to.be.true;
+        expect(await suite.controller.isOutputFinalized(DUMMY_OUTPUT_ID_2)).to.be.true;
+    }
+
     describe('batchFlagOutputsFinalized', () => {
         it('should be able to flag a single output', async () => {
-            const dummyOutputId = web3.utils.sha3('output id');
-            await this.dummyExitGame.proxyBatchFlagOutputsFinalized([dummyOutputId]);
-            expect(await this.controller.isOutputFinalized(dummyOutputId)).to.be.true;
+            testFlagSingleOutputFinalized(this, this.dummyExitGame.proxyBatchFlagOutputsFinalized);
+            expect(
+                await this.controller.outputsFinalizations(DUMMY_OUTPUT_ID_1),
+            ).to.be.bignumber.equal(FINALIZATION_FINALIZED);
         });
 
         it('should be able to flag multiple outputs', async () => {
-            const dummyOutputId1 = web3.utils.sha3('output id 1');
-            const dummyOutputId2 = web3.utils.sha3('output id 2');
-            await this.dummyExitGame.proxyBatchFlagOutputsFinalized([dummyOutputId1, dummyOutputId2]);
-            expect(await this.controller.isOutputFinalized(dummyOutputId1)).to.be.true;
-            expect(await this.controller.isOutputFinalized(dummyOutputId2)).to.be.true;
+            testFlagMultipleOutputsFinalized(this, this.dummyExitGame.proxyBatchFlagOutputsFinalized);
+            expect(
+                await this.controller.outputsFinalizations(DUMMY_OUTPUT_ID_1),
+            ).to.be.bignumber.equal(FINALIZATION_FINALIZED);
+            expect(
+                await this.controller.outputsFinalizations(DUMMY_OUTPUT_ID_2),
+            ).to.be.bignumber.equal(FINALIZATION_FINALIZED);
         });
 
         it('should fail when try to flag with empty outputId', async () => {
-            const dummyOutputId = web3.utils.sha3('output id');
             await expectRevert(
-                this.dummyExitGame.proxyBatchFlagOutputsFinalized([dummyOutputId, EMPTY_BYTES_32]),
+                this.dummyExitGame.proxyBatchFlagOutputsFinalized([DUMMY_OUTPUT_ID_1, EMPTY_BYTES_32]),
                 'Should not flag with empty outputId',
             );
         });
 
         it('should fail when not called by Exit Game contracts', async () => {
-            const dummyOutputId = web3.utils.sha3('output id');
             await expectRevert(
-                this.controller.batchFlagOutputsFinalized([dummyOutputId]),
+                this.controller.batchFlagOutputsFinalized([DUMMY_OUTPUT_ID_1]),
                 'The call is not from a registered exit game contract',
             );
         });
 
         it('should revert when called on quarantined Exit Game contract', async () => {
-            const dummyOutputId1 = web3.utils.sha3('output id 1');
-            const dummyOutputId2 = web3.utils.sha3('output id 2');
             const newDummyExitGame = await DummyExitGame.new();
             newDummyExitGame.setExitGameController(this.controller.address);
             const newDummyExitGameId = 2;
             await this.controller.registerExitGame(newDummyExitGameId, newDummyExitGame.address, PROTOCOL.MORE_VP);
             await expectRevert(
-                newDummyExitGame.proxyBatchFlagOutputsFinalized([dummyOutputId1, dummyOutputId2]),
+                newDummyExitGame.proxyBatchFlagOutputsFinalized([DUMMY_OUTPUT_ID_1, DUMMY_OUTPUT_ID_2]),
                 'ExitGame is quarantined',
             );
         });
@@ -607,6 +621,50 @@ contract('ExitGameController', () => {
             await expectRevert(
                 this.controller.processExits(VAULT_ID, this.dummyExit.token, 0, 1),
                 'Reentrant call',
+            );
+        });
+    });
+
+    describe('batchFlagOutputsFinalizedByIFEOutputExit', () => {
+        it('should be able to flag a single output', async () => {
+            testFlagSingleOutputFinalized(this, this.dummyExitGame.proxyBatchFlagOutputsFinalizedByIFEOutputExit);
+            expect(
+                await this.controller.outputsFinalizations(DUMMY_OUTPUT_ID_1),
+            ).to.be.bignumber.equal(FINALIZATION_BLOCKED_BY_OUTPUT_EXIT);
+        });
+
+        it('should be able to flag multiple outputs', async () => {
+            testFlagMultipleOutputsFinalized(this, this.dummyExitGame.proxyBatchFlagOutputsFinalizedByIFEOutputExit);
+            expect(
+                await this.controller.outputsFinalizations(DUMMY_OUTPUT_ID_1),
+            ).to.be.bignumber.equal(FINALIZATION_BLOCKED_BY_OUTPUT_EXIT);
+            expect(
+                await this.controller.outputsFinalizations(DUMMY_OUTPUT_ID_2),
+            ).to.be.bignumber.equal(FINALIZATION_BLOCKED_BY_OUTPUT_EXIT);
+        });
+
+        it('should fail when try to flag with empty outputId', async () => {
+            await expectRevert(
+                this.dummyExitGame.proxyBatchFlagOutputsFinalizedByIFEOutputExit([DUMMY_OUTPUT_ID_1, EMPTY_BYTES_32]),
+                'Should not flag with empty outputId',
+            );
+        });
+
+        it('should fail when not called by Exit Game contracts', async () => {
+            await expectRevert(
+                this.controller.batchFlagOutputsFinalizedByIFEOutputExit([DUMMY_OUTPUT_ID_1]),
+                'The call is not from a registered exit game contract',
+            );
+        });
+
+        it('should revert when called on quarantined Exit Game contract', async () => {
+            const newDummyExitGame = await DummyExitGame.new();
+            newDummyExitGame.setExitGameController(this.controller.address);
+            const newDummyExitGameId = 2;
+            await this.controller.registerExitGame(newDummyExitGameId, newDummyExitGame.address, PROTOCOL.MORE_VP);
+            await expectRevert(
+                newDummyExitGame.proxyBatchFlagOutputsFinalizedByIFEOutputExit([DUMMY_OUTPUT_ID_1, DUMMY_OUTPUT_ID_2]),
+                'ExitGame is quarantined',
             );
         });
     });

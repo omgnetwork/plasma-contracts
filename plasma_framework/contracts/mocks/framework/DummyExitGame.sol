@@ -51,6 +51,10 @@ contract DummyExitGame is IExitProcessor {
         exitGameController.batchFlagOutputsFinalized(_outputIds);
     }
 
+    function proxyBatchFlagOutputsFinalizedByIFEOutputExit(bytes32[] memory _outputIds) public {
+        exitGameController.batchFlagOutputsFinalizedByIFEOutputExit(_outputIds);
+    }
+
     function proxyFlagOutputFinalized(bytes32 _outputId) public {
         exitGameController.flagOutputFinalized(_outputId);
     }

@@ -817,3 +817,26 @@ def start_ife_piggyback_and_process(spend_id, owner, testlang):
     testlang.piggyback_in_flight_exit_input(spend_id, 0, owner)
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
     testlang.process_exits(NULL_ADDRESS, 0, 10)
+
+
+def test_should_not_withdraw_inputs_when_output_is_withdrawn_when_exiting_swap_transaction(testlang, plasma_framework, token):
+    owner_1, amount_eth = testlang.accounts[0], 100
+    owner_2, amount_token = testlang.accounts[1], 200
+
+    owner_1_token_starting_balance = token.balanceOf(owner_1.address)
+
+    deposit_id_eth = testlang.deposit(owner_1, amount_eth)
+    deposit_id_token = testlang.deposit_token(owner_2, token, amount_token)
+
+    spend_id = testlang.spend_utxo(
+        [deposit_id_eth, deposit_id_token], [owner_1, owner_2], [(owner_1.address, token.address, amount_token), (owner_2.address, NULL_ADDRESS, amount_eth)])
+
+    testlang.start_in_flight_exit(spend_id)
+    testlang.piggyback_in_flight_exit_output(spend_id, 0, owner_1)
+    testlang.piggyback_in_flight_exit_input(spend_id, 0, owner_1)
+    testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
+    testlang.process_exits(NULL_ADDRESS, 0, 1)
+    testlang.process_exits(token.address, 0, 1)
+
+    owner_1_token_balance = token.balanceOf(owner_1.address)
+    assert owner_1_token_balance == owner_1_token_starting_balance
