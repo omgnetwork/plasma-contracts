@@ -401,9 +401,9 @@ class TestingLanguage:
         bond = bond if bond is not None else self.root_chain.piggybackBond()
         self.root_chain.piggybackInFlightExit(spend_tx.encoded, input_index, **{'value': bond, 'from': account.address})
 
-    def piggyback_in_flight_exit_output(self, tx_id, output_index, account, bond=None):
+    def piggyback_in_flight_exit_output(self, tx_id, output_index, account, bond=None, spend_tx=None):
         assert output_index in range(4)
-        return self.piggyback_in_flight_exit_input(tx_id, output_index + 4, account, bond)
+        return self.piggyback_in_flight_exit_input(tx_id, output_index + 4, account, bond, spend_tx)
 
     @staticmethod
     def find_shared_input(tx_a, tx_b):

@@ -817,3 +817,39 @@ def start_ife_piggyback_and_process(spend_id, owner, testlang):
     testlang.piggyback_in_flight_exit_input(spend_id, 0, owner)
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
     testlang.process_exits(NULL_ADDRESS, 0, 10)
+
+
+def test_should_be_resistant_to_Thomalla_heist(testlang, plasma_framework, token):
+    alice, amount_token = testlang.accounts[0], 200
+    caroline, amount_eth = testlang.accounts[1], 100
+
+    deposit_id_token = testlang.deposit_token(alice, token, amount_token)
+    deposit_id_eth = testlang.deposit(caroline, amount_eth)
+
+    swap_tx_id = testlang.spend_utxo(
+        [deposit_id_token, deposit_id_eth], [alice, caroline], [(alice.address, NULL_ADDRESS, amount_eth), (caroline.address, token.address, amount_token)])
+
+    # in-flight transaction not included in Plasma
+    steal_tx = Transaction(inputs=[decode_utxo_id(deposit_id_eth)], outputs=[(caroline.address, NULL_ADDRESS, amount_eth)])
+    steal_tx.sign(0, caroline, verifying_contract=testlang.root_chain.plasma_framework)
+
+    testlang.start_in_flight_exit(swap_tx_id)
+    testlang.start_in_flight_exit(None, spend_tx=steal_tx)
+
+    testlang.piggyback_in_flight_exit_output(swap_tx_id, 1, caroline)
+    testlang.piggyback_in_flight_exit_output(None, 0, caroline, spend_tx=steal_tx)
+
+    caroline_token_balance_before = token.balanceOf(caroline.address)
+    caroline_eth_balance_before = testlang.get_balance(caroline)
+
+    testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
+    testlang.process_exits(token.address, 0, 1)
+    testlang.process_exits(NULL_ADDRESS, 0, 1)
+
+    # caroline exits with the tokens (previously owned by alice)
+    caroline_token_balance = token.balanceOf(caroline.address)
+    assert caroline_token_balance == caroline_token_balance_before + amount_token
+
+    # and caroline exits with eth
+    caroline_eth_balance = testlang.get_balance(caroline)
+    assert caroline_eth_balance == caroline_eth_balance_before + amount_eth + 2 * testlang.root_chain.piggybackBond()
