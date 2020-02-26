@@ -850,6 +850,7 @@ def test_should_be_resistant_to_Thomalla_heist(testlang, plasma_framework, token
     caroline_token_balance = token.balanceOf(caroline.address)
     assert caroline_token_balance == caroline_token_balance_before + amount_token
 
-    # and caroline exits with eth
+    # but she can not exit with Eth
     caroline_eth_balance = testlang.get_balance(caroline)
-    assert caroline_eth_balance == caroline_eth_balance_before + amount_eth + 2 * testlang.root_chain.piggybackBond()
+    # TODO: piggyback bond is still returned, I am not sure if that's good or bad
+    assert caroline_eth_balance == caroline_eth_balance_before + 2 * testlang.root_chain.piggybackBond()

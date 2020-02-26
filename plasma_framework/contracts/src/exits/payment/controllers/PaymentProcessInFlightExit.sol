@@ -65,12 +65,7 @@ library PaymentProcessInFlightExit {
             return;
         }
 
-        // Check whether any input is already spent. Required to prevent operator stealing funds.
-        // See: https://github.com/omisego/plasma-contracts/issues/102#issuecomment-495809967
-        // Also, slightly different from the solution above, we treat input spent as non-canonical.
-        // So an IFE is only canonical if all inputs of the in-flight tx are not double spent by competing tx or exit.
-        // see: https://github.com/omisego/plasma-contracts/issues/470
-        if (!exit.isCanonical || isAnyInputSpent(self.framework, exit, token)) {
+        if (!exit.isCanonical) {
             for (uint16 i = 0; i < exit.inputs.length; i++) {
                 PaymentExitDataModel.WithdrawData memory withdrawal = exit.inputs[i];
 
@@ -80,18 +75,25 @@ library PaymentProcessInFlightExit {
                 }
             }
 
-            flagOutputsWhenNonCanonical(self.framework, exit, token);
+            flagOutputsWhenNonCanonical(self.framework, exit, token, exitId);
         } else {
-            for (uint16 i = 0; i < exit.outputs.length; i++) {
-                PaymentExitDataModel.WithdrawData memory withdrawal = exit.outputs[i];
+            // Check whether any input is already spent. Required to prevent operator stealing funds.
+            // See: https://github.com/omisego/plasma-contracts/issues/102#issuecomment-495809967
+            // Also, slightly different from the solution above
+            // see: https://github.com/omisego/security-issues/issues/13
+            if (!isAnyInputSpentByOtherExit(self.framework, exit, exitId)) {
+                for (uint16 i = 0; i < exit.outputs.length; i++) {
+                    PaymentExitDataModel.WithdrawData memory withdrawal = exit.outputs[i];
 
-                if (shouldWithdrawOutput(self, exit, withdrawal, token, i)) {
-                    withdrawFromVault(self, withdrawal);
-                    emit InFlightExitOutputWithdrawn(exitId, i);
+                    if (shouldWithdrawOutput(self, exit, withdrawal, token, i)) {
+                        withdrawFromVault(self, withdrawal);
+                        emit InFlightExitOutputWithdrawn(exitId, i);
+                    }
                 }
-            }
 
-            flagOutputsWhenCanonical(self.framework, exit, token);
+                flagOutputsWhenCanonical(self.framework, exit, token, exitId);
+            }
+            //TODO: possibly emit an event that output exit was skipped
         }
 
         returnInputPiggybackBonds(self, exit, token);
@@ -113,10 +115,12 @@ library PaymentProcessInFlightExit {
         }
     }
 
-    function isAnyInputSpent(
+    // input is unspent for a given exitId if it's not marked in finalized outputIds map
+    // or it's marked with the same exitId
+    function isAnyInputSpentByOtherExit(
         PlasmaFramework framework,
         PaymentExitDataModel.InFlightExit memory exit,
-        address token
+        uint160 exitId
     )
         private
         view
@@ -124,19 +128,19 @@ library PaymentProcessInFlightExit {
     {
         uint256 inputNumOfTheToken;
         for (uint16 i = 0; i < exit.inputs.length; i++) {
-            if (exit.inputs[i].token == token && !exit.isInputEmpty(i)) {
+            if (!exit.isInputEmpty(i)) {
                 inputNumOfTheToken++;
             }
         }
         bytes32[] memory outputIdsOfInputs = new bytes32[](inputNumOfTheToken);
-        uint sameTokenIndex = 0;
+        inputNumOfTheToken = 0;
         for (uint16 i = 0; i < exit.inputs.length; i++) {
-            if (exit.inputs[i].token == token && !exit.isInputEmpty(i)) {
-                outputIdsOfInputs[sameTokenIndex] = exit.inputs[i].outputId;
-                sameTokenIndex++;
+            if (!exit.isInputEmpty(i)) {
+                outputIdsOfInputs[inputNumOfTheToken] = exit.inputs[i].outputId;
+                inputNumOfTheToken++;
             }
         }
-        return framework.isAnyOutputFinalized(outputIdsOfInputs);
+        return framework.isAnyInputSpentByOtherExit(outputIdsOfInputs, exitId);
     }
 
     function shouldWithdrawInput(
@@ -187,7 +191,8 @@ library PaymentProcessInFlightExit {
     function flagOutputsWhenNonCanonical(
         PlasmaFramework framework,
         PaymentExitDataModel.InFlightExit memory exit,
-        address token
+        address token,
+        uint160 exitId
     )
         private
     {
@@ -206,19 +211,20 @@ library PaymentProcessInFlightExit {
                 indexForOutputIds++;
             }
         }
-        framework.batchFlagOutputsFinalized(outputIdsToFlag);
+        framework.batchFlagOutputsFinalized(outputIdsToFlag, exitId);
     }
 
     function flagOutputsWhenCanonical(
         PlasmaFramework framework,
         PaymentExitDataModel.InFlightExit memory exit,
-        address token
+        address token,
+        uint160 exitId
     )
         private
     {
         uint256 inputNumOfTheToken;
         for (uint16 i = 0; i < exit.inputs.length; i++) {
-            if (exit.inputs[i].token == token && !exit.isInputEmpty(i)) {
+            if (!exit.isInputEmpty(i)) {
                 inputNumOfTheToken++;
             }
         }
@@ -233,7 +239,7 @@ library PaymentProcessInFlightExit {
         bytes32[] memory outputIdsToFlag = new bytes32[](inputNumOfTheToken + piggybackedOutputNumOfTheToken);
         uint indexForOutputIds = 0;
         for (uint16 i = 0; i < exit.inputs.length; i++) {
-            if (exit.inputs[i].token == token && !exit.isInputEmpty(i)) {
+            if (!exit.isInputEmpty(i)) {
                 outputIdsToFlag[indexForOutputIds] = exit.inputs[i].outputId;
                 indexForOutputIds++;
             }
@@ -244,7 +250,7 @@ library PaymentProcessInFlightExit {
                 indexForOutputIds++;
             }
         }
-        framework.batchFlagOutputsFinalized(outputIdsToFlag);
+        framework.batchFlagOutputsFinalized(outputIdsToFlag, exitId);
     }
 
     function returnInputPiggybackBonds(

@@ -29,8 +29,8 @@ contract PaymentStandardExitRouterMock is PaymentStandardExitRouter {
         PaymentStandardExitRouter.standardExitMap.exits[_exitId] = _exitData;
     }
 
-    function proxyFlagOutputFinalized(bytes32 _outputId) public {
-        framework.flagOutputFinalized(_outputId);
+    function proxyFlagOutputFinalized(bytes32 _outputId, uint160 exitId) public {
+        framework.flagOutputFinalized(_outputId, exitId);
     }
 
     function depositFundForTest() public payable {}
