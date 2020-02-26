@@ -81,7 +81,7 @@ library PaymentProcessInFlightExit {
             // See: https://github.com/omisego/plasma-contracts/issues/102#issuecomment-495809967
             // Also, slightly different from the solution above
             // see: https://github.com/omisego/security-issues/issues/13
-            if (!isAnyInputSpentByOtherExit(self.framework, exit, exitId)) {
+            if (!isAnyInputFinalizedByOtherExit(self.framework, exit, exitId)) {
                 for (uint16 i = 0; i < exit.outputs.length; i++) {
                     PaymentExitDataModel.WithdrawData memory withdrawal = exit.outputs[i];
 
@@ -117,7 +117,7 @@ library PaymentProcessInFlightExit {
 
     // input is unspent for a given exitId if it's not marked in finalized outputIds map
     // or it's marked with the same exitId
-    function isAnyInputSpentByOtherExit(
+    function isAnyInputFinalizedByOtherExit(
         PlasmaFramework framework,
         PaymentExitDataModel.InFlightExit memory exit,
         uint160 exitId
@@ -140,7 +140,7 @@ library PaymentProcessInFlightExit {
                 inputNumOfTheToken++;
             }
         }
-        return framework.isAnyInputSpentByOtherExit(outputIdsOfInputs, exitId);
+        return framework.isAnyInputFinalizedByOtherExit(outputIdsOfInputs, exitId);
     }
 
     function shouldWithdrawInput(

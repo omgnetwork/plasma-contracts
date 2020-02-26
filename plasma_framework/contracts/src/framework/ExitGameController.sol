@@ -189,7 +189,7 @@ contract ExitGameController is ExitGameRegistry {
      * @notice Checks whether any of the output with the given outputIds is already spent
      * @param _outputIds Output IDs to check
      */
-    function isAnyInputSpentByOtherExit(bytes32[] calldata _outputIds, uint160 exitId) external view returns (bool) {
+    function isAnyInputFinalizedByOtherExit(bytes32[] calldata _outputIds, uint160 exitId) external view returns (bool) {
         for (uint i = 0; i < _outputIds.length; i++) {
             uint160 finalizedExitId = outputsFinalizations[_outputIds[i]];
             if (finalizedExitId != 0 && finalizedExitId != exitId) {
