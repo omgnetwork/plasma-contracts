@@ -371,7 +371,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
                 const otherExitId = DUMMY_EXIT_ID + 1;
                 await this.exitGame.proxyFlagOutputFinalized(TEST_OUTPUT_ID_FOR_INPUT_1, otherExitId);
                 const { logs } = await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH);
-                //FIXME: assert
+                expect(logs).to.be.empty;
             });
         });
 
