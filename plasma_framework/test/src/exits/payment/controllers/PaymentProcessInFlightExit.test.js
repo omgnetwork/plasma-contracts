@@ -353,8 +353,8 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
                 exit.isCanonical = true;
                 await this.exitGame.setInFlightExit(DUMMY_EXIT_ID, exit);
 
-                // flags the first input and piggybacks the two ETH inputs (first and second)
                 await this.exitGame.setInFlightExitOutputPiggybacked(DUMMY_EXIT_ID, 0);
+                await this.exitGame.setInFlightExitInputPiggybacked(DUMMY_EXIT_ID, 1);
             });
 
             it('should withdraw output if there are no inputs spent by other exit', async () => {
@@ -367,11 +367,16 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
                 );
             });
 
-            it('should not withdraw output if any of the inputs is spent by other exit', async () => {
+            it('should be treated as non-canonical when there is an input spent by other exit', async () => {
                 const otherExitId = DUMMY_EXIT_ID + 1;
                 await this.exitGame.proxyFlagOutputFinalized(TEST_OUTPUT_ID_FOR_INPUT_1, otherExitId);
                 const { logs } = await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH);
-                expect(logs).to.be.empty;
+                const inputIndexForInput2 = 1;
+                await expectEvent.inLogs(
+                    logs,
+                    'InFlightExitInputWithdrawn',
+                    { exitId: new BN(DUMMY_EXIT_ID), inputIndex: new BN(inputIndexForInput2) },
+                );
             });
         });
 

@@ -65,7 +65,11 @@ library PaymentProcessInFlightExit {
             return;
         }
 
-        if (!exit.isCanonical) {
+        // Check whether any input is already spent. Required to prevent operator stealing funds.
+        // See: https://github.com/omisego/plasma-contracts/issues/102#issuecomment-495809967
+        // Also, slightly different from the solution above
+        // see: https://github.com/omisego/security-issues/issues/13
+        if (!exit.isCanonical || isAnyInputFinalizedByOtherExit(self.framework, exit, exitId)) {
             for (uint16 i = 0; i < exit.inputs.length; i++) {
                 PaymentExitDataModel.WithdrawData memory withdrawal = exit.inputs[i];
 
@@ -77,23 +81,16 @@ library PaymentProcessInFlightExit {
 
             flagOutputsWhenNonCanonical(self.framework, exit, token, exitId);
         } else {
-            // Check whether any input is already spent. Required to prevent operator stealing funds.
-            // See: https://github.com/omisego/plasma-contracts/issues/102#issuecomment-495809967
-            // Also, slightly different from the solution above
-            // see: https://github.com/omisego/security-issues/issues/13
-            if (!isAnyInputFinalizedByOtherExit(self.framework, exit, exitId)) {
-                for (uint16 i = 0; i < exit.outputs.length; i++) {
-                    PaymentExitDataModel.WithdrawData memory withdrawal = exit.outputs[i];
+            for (uint16 i = 0; i < exit.outputs.length; i++) {
+                PaymentExitDataModel.WithdrawData memory withdrawal = exit.outputs[i];
 
-                    if (shouldWithdrawOutput(self, exit, withdrawal, token, i)) {
-                        withdrawFromVault(self, withdrawal);
-                        emit InFlightExitOutputWithdrawn(exitId, i);
-                    }
+                if (shouldWithdrawOutput(self, exit, withdrawal, token, i)) {
+                    withdrawFromVault(self, withdrawal);
+                    emit InFlightExitOutputWithdrawn(exitId, i);
                 }
-
-                flagOutputsWhenCanonical(self.framework, exit, token, exitId);
             }
-            //TODO: possibly emit an event that output exit was skipped
+
+            flagOutputsWhenCanonical(self.framework, exit, token, exitId);
         }
 
         returnInputPiggybackBonds(self, exit, token);
