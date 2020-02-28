@@ -41,35 +41,35 @@ contract DummyExitGame is IExitProcessor {
         exitGameController = ExitGameController(_contract);
     }
 
-    function enqueue(uint256 _vaultId, address _token, uint64 _exitableAt, uint256 _txPos, uint160 _exitId, IExitProcessor _exitProcessor)
+    function enqueue(uint256 vaultId, address token, uint64 exitableAt, uint256 txPos, uint160 exitId, IExitProcessor exitProcessor)
         public
     {
-        priorityFromEnqueue = exitGameController.enqueue(_vaultId, _token, _exitableAt, PosLib.decode(_txPos), _exitId, _exitProcessor);
+        priorityFromEnqueue = exitGameController.enqueue(vaultId, token, exitableAt, PosLib.decode(txPos), exitId, exitProcessor);
     }
 
-    function proxyBatchFlagOutputsFinalized(bytes32[] memory _outputIds, uint160 _exitId) public {
-        exitGameController.batchFlagOutputsFinalized(_outputIds, _exitId);
+    function proxyBatchFlagOutputsFinalized(bytes32[] memory outputIds, uint160 exitId) public {
+        exitGameController.batchFlagOutputsFinalized(outputIds, exitId);
     }
 
-    function proxyFlagOutputFinalized(bytes32 _outputId, uint160 exitId) public {
-        exitGameController.flagOutputFinalized(_outputId, exitId);
-    }
-
-    // setter function only for test, not a real Exit Game function
-    function setEthVault(EthVault _vault) public {
-        ethVault = _vault;
-    }
-
-    function proxyEthWithdraw(address payable _target, uint256 _amount) public {
-        ethVault.withdraw(_target, _amount);
+    function proxyFlagOutputFinalized(bytes32 outputId, uint160 exitId) public {
+        exitGameController.flagOutputFinalized(outputId, exitId);
     }
 
     // setter function only for test, not a real Exit Game function
-    function setErc20Vault(Erc20Vault _vault) public {
-        erc20Vault = _vault;
+    function setEthVault(EthVault vault) public {
+        ethVault = vault;
     }
 
-    function proxyErc20Withdraw(address payable _target, address _token, uint256 _amount) public {
-        erc20Vault.withdraw(_target, _token, _amount);
+    function proxyEthWithdraw(address payable target, uint256 amount) public {
+        ethVault.withdraw(target, amount);
+    }
+
+    // setter function only for test, not a real Exit Game function
+    function setErc20Vault(Erc20Vault vault) public {
+        erc20Vault = vault;
+    }
+
+    function proxyErc20Withdraw(address payable target, address token, uint256 amount) public {
+        erc20Vault.withdraw(target, token, amount);
     }
 }

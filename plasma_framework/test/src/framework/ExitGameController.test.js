@@ -587,6 +587,18 @@ contract('ExitGameController', () => {
             );
         });
 
+        it('should not override exitId when flagging multiple times', async () => {
+            const dummyOutputId1 = web3.utils.sha3('output id 1');
+            const dummyOutputId2 = web3.utils.sha3('output id 2');
+            const overridingExitId = EXIT_ID + 1;
+            await this.dummyExitGame.proxyBatchFlagOutputsFinalized([dummyOutputId1], EXIT_ID);
+            await this.dummyExitGame.proxyBatchFlagOutputsFinalized([dummyOutputId1, dummyOutputId2], overridingExitId);
+            expect(await this.controller.outputsFinalizations(dummyOutputId1)).to.be.bignumber.equal(new BN(EXIT_ID));
+            expect(
+                await this.controller.outputsFinalizations(dummyOutputId2),
+            ).to.be.bignumber.equal(new BN(overridingExitId));
+        });
+
         it('should revert when called on quarantined Exit Game contract', async () => {
             const dummyOutputId1 = web3.utils.sha3('output id 1');
             const dummyOutputId2 = web3.utils.sha3('output id 2');
@@ -634,6 +646,14 @@ contract('ExitGameController', () => {
             const dummyOutputId = web3.utils.sha3('output id');
             await this.dummyExitGame.proxyFlagOutputFinalized(dummyOutputId, EXIT_ID);
             expect(await this.controller.isOutputFinalized(dummyOutputId)).to.be.true;
+        });
+
+        it('should not override exitId when flagging multiple times', async () => {
+            const dummyOutputId1 = web3.utils.sha3('output id 1');
+            const overridingExitId = EXIT_ID + 1;
+            await this.dummyExitGame.proxyFlagOutputFinalized(dummyOutputId1, EXIT_ID);
+            await this.dummyExitGame.proxyFlagOutputFinalized(dummyOutputId1, overridingExitId);
+            expect(await this.controller.outputsFinalizations(dummyOutputId1)).to.be.bignumber.equal(new BN(EXIT_ID));
         });
 
         it('should fail when try to flag withempty outputId', async () => {

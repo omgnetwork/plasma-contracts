@@ -123,18 +123,18 @@ library PaymentProcessInFlightExit {
         view
         returns (bool)
     {
-        uint256 inputNumOfTheToken;
+        uint256 nonEmptyInputIndex;
         for (uint16 i = 0; i < exit.inputs.length; i++) {
             if (!exit.isInputEmpty(i)) {
-                inputNumOfTheToken++;
+                nonEmptyInputIndex++;
             }
         }
-        bytes32[] memory outputIdsOfInputs = new bytes32[](inputNumOfTheToken);
-        inputNumOfTheToken = 0;
+        bytes32[] memory outputIdsOfInputs = new bytes32[](nonEmptyInputIndex);
+        nonEmptyInputIndex = 0;
         for (uint16 i = 0; i < exit.inputs.length; i++) {
             if (!exit.isInputEmpty(i)) {
-                outputIdsOfInputs[inputNumOfTheToken] = exit.inputs[i].outputId;
-                inputNumOfTheToken++;
+                outputIdsOfInputs[nonEmptyInputIndex] = exit.inputs[i].outputId;
+                nonEmptyInputIndex++;
             }
         }
         return framework.isAnyInputFinalizedByOtherExit(outputIdsOfInputs, exitId);

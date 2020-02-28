@@ -200,24 +200,27 @@ contract ExitGameController is ExitGameRegistry {
     }
 
     /**
-     * @notice Batch flags already spent outputs
-     * @param _outputIds Output IDs to flag
+     * @notice Batch flags already spent outputs (only not already spent)
+     * @param outputIds Output IDs to flag
      */
-    function batchFlagOutputsFinalized(bytes32[] calldata _outputIds, uint160 exitId) external onlyFromNonQuarantinedExitGame {
-        for (uint i = 0; i < _outputIds.length; i++) {
-            require(_outputIds[i] != bytes32(""), "Should not flag with empty outputId");
-            outputsFinalizations[_outputIds[i]] = exitId;
-            //TODO: Is it ok, to not check if outputId was flagged previously?
+    function batchFlagOutputsFinalized(bytes32[] calldata outputIds, uint160 exitId) external onlyFromNonQuarantinedExitGame {
+        for (uint i = 0; i < outputIds.length; i++) {
+            require(outputIds[i] != bytes32(""), "Should not flag with empty outputId");
+            if (outputsFinalizations[outputIds[i]] == 0) {
+                outputsFinalizations[outputIds[i]] = exitId;
+            }
         }
     }
 
     /**
-     * @notice Flags a single output as spent
-     * @param _outputId The output ID to flag as spent
+     * @notice Flags a single output as spent if it is not flagged already
+     * @param outputId The output ID to flag as spent
      */
-    function flagOutputFinalized(bytes32 _outputId, uint160 exitId) external onlyFromNonQuarantinedExitGame {
-        require(_outputId != bytes32(""), "Should not flag with empty outputId");
-        outputsFinalizations[_outputId] = exitId;
+    function flagOutputFinalized(bytes32 outputId, uint160 exitId) external onlyFromNonQuarantinedExitGame {
+        require(outputId != bytes32(""), "Should not flag with empty outputId");
+        if (outputsFinalizations[outputId] == 0) {
+            outputsFinalizations[outputId] = exitId;
+        }
     }
 
      /**

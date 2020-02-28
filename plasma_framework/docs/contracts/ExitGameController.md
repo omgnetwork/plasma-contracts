@@ -61,8 +61,8 @@ modifier nonReentrant() internal
 - [enqueue(uint256 vaultId, address token, uint64 exitableAt, struct PosLib.Position txPos, uint160 exitId, IExitProcessor exitProcessor)](#enqueue)
 - [processExits(uint256 vaultId, address token, uint160 topExitId, uint256 maxExitsToProcess)](#processexits)
 - [isAnyInputFinalizedByOtherExit(bytes32[] _outputIds, uint160 exitId)](#isanyinputfinalizedbyotherexit)
-- [batchFlagOutputsFinalized(bytes32[] _outputIds, uint160 exitId)](#batchflagoutputsfinalized)
-- [flagOutputFinalized(bytes32 _outputId, uint160 exitId)](#flagoutputfinalized)
+- [batchFlagOutputsFinalized(bytes32[] outputIds, uint160 exitId)](#batchflagoutputsfinalized)
+- [flagOutputFinalized(bytes32 outputId, uint160 exitId)](#flagoutputfinalized)
 - [isOutputFinalized(bytes32 outputId)](#isoutputfinalized)
 - [getNextExit(uint256 vaultId, address token)](#getnextexit)
 - [exitQueueKey(uint256 vaultId, address token)](#exitqueuekey)
@@ -208,32 +208,32 @@ returns(bool)
 
 ### batchFlagOutputsFinalized
 
-Batch flags already spent outputs
+Batch flags already spent outputs (only not already spent)
 
 ```js
-function batchFlagOutputsFinalized(bytes32[] _outputIds, uint160 exitId) external nonpayable onlyFromNonQuarantinedExitGame 
+function batchFlagOutputsFinalized(bytes32[] outputIds, uint160 exitId) external nonpayable onlyFromNonQuarantinedExitGame 
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| _outputIds | bytes32[] | Output IDs to flag | 
+| outputIds | bytes32[] | Output IDs to flag | 
 | exitId | uint160 |  | 
 
 ### flagOutputFinalized
 
-Flags a single output as spent
+Flags a single output as spent if it is not flagged already
 
 ```js
-function flagOutputFinalized(bytes32 _outputId, uint160 exitId) external nonpayable onlyFromNonQuarantinedExitGame 
+function flagOutputFinalized(bytes32 outputId, uint160 exitId) external nonpayable onlyFromNonQuarantinedExitGame 
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| _outputId | bytes32 | The output ID to flag as spent | 
+| outputId | bytes32 | The output ID to flag as spent | 
 | exitId | uint160 |  | 
 
 ### isOutputFinalized
