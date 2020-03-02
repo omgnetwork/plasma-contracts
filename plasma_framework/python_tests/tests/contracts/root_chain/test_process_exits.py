@@ -852,7 +852,6 @@ def test_should_not_allow_to_withdraw_outputs_from_two_ifes_marked_as_canonical_
 
     # but she can not exit with Eth
     caroline_eth_balance = testlang.get_balance(caroline)
-    # TODO: piggyback bond is still returned, I am not sure if that's good or bad
     assert caroline_eth_balance == caroline_eth_balance_before
 
 

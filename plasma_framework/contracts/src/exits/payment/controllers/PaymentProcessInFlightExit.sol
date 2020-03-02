@@ -65,10 +65,25 @@ library PaymentProcessInFlightExit {
             return;
         }
 
-        // Check whether any input is already spent. Required to prevent operator stealing funds.
-        // See: https://github.com/omisego/plasma-contracts/issues/102#issuecomment-495809967
-        // Also, slightly different from the solution above
-        // see: https://github.com/omisego/security-issues/issues/13
+        /* To prevent a double spend, it is needed to know if an output can be exited.
+         * An output can not be exited if:
+         * - it is finalized by a standard exit
+         * - it is finalized by an in-flight exit as input of a non-canonical transaction
+         * - it is blocked from exiting, because it is an input of a canonical transaction
+         *   that exited from one of it's outputs
+         * - it is finalized by an in-flight exit as an output of a canonical transaction
+         * - it is an output of a transaction for which at least one of its inputs is already finalized
+         *
+         * Hence, Plasma Framework stores each output with an exit id that finalized it.
+         * When transaction is marked as canonical but any of it's input was finalized by
+         * other exit, it is not allowed to exit from the transaction's outputs.
+         * In that case exit from an unspent input is possible.
+         * When all inputs of a transaction that is marked as canonical are either not finalized or finalized
+         * by the same exit (which means they were marked as finalized when processing the same exit for a different token),
+         * only exit from outputs is possible.
+         *
+         * See: https://github.com/omisego/plasma-contracts/issues/102#issuecomment-495809967 for more details
+         */
         if (!exit.isCanonical || isAnyInputFinalizedByOtherExit(self.framework, exit, exitId)) {
             for (uint16 i = 0; i < exit.inputs.length; i++) {
                 PaymentExitDataModel.WithdrawData memory withdrawal = exit.inputs[i];
@@ -112,8 +127,6 @@ library PaymentProcessInFlightExit {
         }
     }
 
-    // input is unspent for a given exitId if it's not marked in finalized outputIds map
-    // or it's marked with the same exitId
     function isAnyInputFinalizedByOtherExit(
         PlasmaFramework framework,
         PaymentExitDataModel.InFlightExit memory exit,
