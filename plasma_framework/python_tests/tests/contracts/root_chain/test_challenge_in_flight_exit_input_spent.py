@@ -21,7 +21,6 @@ def test_challenge_in_flight_exit_input_spent_should_succeed_in_all_periods(test
     assert not in_flight_exit.input_piggybacked(0)
 
 
-
 @pytest.mark.parametrize("num_outputs", [1, 2, 3, 4])
 def test_challenge_in_flight_exit_should_succeed_for_all_output_indexes(testlang, num_outputs):
     deposit_amount = 100
@@ -161,4 +160,3 @@ def test_challenge_in_flight_exit_input_spent_invalid_signature_should_fail(test
 
     with pytest.raises(TransactionFailed):
         testlang.challenge_in_flight_exit_input_spent(spend_id, double_spend_id, owner_2)
-
