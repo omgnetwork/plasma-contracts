@@ -49,9 +49,8 @@ def test_challenge_in_flight_exit_output_spent_should_succeed_for_all_indices(te
     testlang.start_in_flight_exit(ife_tx_id)
     testlang.piggyback_in_flight_exit_output(ife_tx_id, double_spend_output_index, double_spend_owner)
 
-    MAX_INDEX_SIZE = 4
     inputs = []
-    for i in range(0, MAX_INDEX_SIZE):
+    for i in range(0, challenging_tx_num_inputs):
         if i == double_spend_input_index:
             inputs.append(double_spend_utxo)
         else:
@@ -59,7 +58,7 @@ def test_challenge_in_flight_exit_output_spent_should_succeed_for_all_indices(te
 
     challenge_tx_id = testlang.spend_utxo(
         inputs,
-        [double_spend_owner for i in range(0, MAX_INDEX_SIZE)],
+        [double_spend_owner for i in range(0, challenging_tx_num_inputs)],
         [
             (double_spend_owner.address, NULL_ADDRESS, tx_output_amount),
         ],
@@ -69,6 +68,7 @@ def test_challenge_in_flight_exit_output_spent_should_succeed_for_all_indices(te
     testlang.challenge_in_flight_exit_output_spent(ife_tx_id, challenge_tx_id, double_spend_output_index, double_spend_owner)
 
     in_flight_exit = testlang.get_in_flight_exit(ife_tx_id)
+    MAX_INDEX_SIZE = 4
     for i in range(0, MAX_INDEX_SIZE):
         assert not in_flight_exit.output_piggybacked(i)
 
