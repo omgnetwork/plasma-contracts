@@ -5,8 +5,8 @@ from plasma_core.utils.transactions import decode_utxo_id, encode_utxo_id
 
 
 # should succeed even when phase 2 of in-flight exit is over
-@pytest.mark.parametrize("period", [1, 2, 3, 4])
-def test_challenge_in_flight_exit_input_spent_should_succeed_in_all_periods(testlang, period):
+@pytest.mark.parametrize("period", [1, 2, 3])
+def test_challenge_in_flight_exit_input_spent_should_succeed_after_first_period_passes(testlang, period):
     owner_1, owner_2, amount = testlang.accounts[0], testlang.accounts[1], 100
     deposit_id = testlang.deposit(owner_1, amount)
     spend_id = testlang.spend_utxo([deposit_id], [owner_1], [(owner_1.address, NULL_ADDRESS, 100)])
