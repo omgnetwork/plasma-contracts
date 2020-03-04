@@ -20,7 +20,7 @@ const {
     PROTOCOL, VAULT_ID, TX_TYPE, SAFE_GAS_STIPEND,
 } = require('../../../../helpers/constants.js');
 
-contract('PaymentStandardExitRouter', ([_, alice]) => {
+contract('PaymentProcessStandardExit', ([_, alice]) => {
     const ETH = constants.ZERO_ADDRESS;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week in seconds
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
@@ -133,7 +133,7 @@ contract('PaymentStandardExitRouter', ([_, alice]) => {
             const exitId = 1;
             const testExitData = getTestExitData(true, ETH);
             await this.exitGame.setExit(exitId, testExitData);
-            await this.exitGame.proxyFlagOutputFinalized(testExitData.outputId);
+            await this.exitGame.proxyFlagOutputFinalized(testExitData.outputId, exitId);
 
             const { logs } = await this.exitGame.processExit(exitId, VAULT_ID.ETH, ETH);
 

@@ -19,7 +19,7 @@ Controls the logic and functions for ExitGame to interact with the PlasmaFramewo
 //public members
 mapping(bytes32 => contract IExitProcessor) public delegations;
 mapping(bytes32 => contract PriorityQueue) public exitsQueues;
-mapping(bytes32 => bool) public isOutputFinalized;
+mapping(bytes32 => uint160) public outputsFinalizations;
 
 //private members
 bool private mutex;
@@ -60,9 +60,10 @@ modifier nonReentrant() internal
 - [addExitQueue(uint256 vaultId, address token)](#addexitqueue)
 - [enqueue(uint256 vaultId, address token, uint64 exitableAt, struct PosLib.Position txPos, uint160 exitId, IExitProcessor exitProcessor)](#enqueue)
 - [processExits(uint256 vaultId, address token, uint160 topExitId, uint256 maxExitsToProcess)](#processexits)
-- [isAnyOutputFinalized(bytes32[] _outputIds)](#isanyoutputfinalized)
-- [batchFlagOutputsFinalized(bytes32[] _outputIds)](#batchflagoutputsfinalized)
-- [flagOutputFinalized(bytes32 _outputId)](#flagoutputfinalized)
+- [isAnyInputFinalizedByOtherExit(bytes32[] _outputIds, uint160 exitId)](#isanyinputfinalizedbyotherexit)
+- [batchFlagOutputsFinalized(bytes32[] outputIds, uint160 exitId)](#batchflagoutputsfinalized)
+- [flagOutputFinalized(bytes32 outputId, uint160 exitId)](#flagoutputfinalized)
+- [isOutputFinalized(bytes32 outputId)](#isoutputfinalized)
 - [getNextExit(uint256 vaultId, address token)](#getnextexit)
 - [exitQueueKey(uint256 vaultId, address token)](#exitqueuekey)
 - [hasExitQueue(bytes32 queueKey)](#hasexitqueue)
@@ -189,12 +190,12 @@ Total number of processed exits
 | topExitId | uint160 | Unique identifier for prioritizing the first exit to process. Set to zero to skip this check. | 
 | maxExitsToProcess | uint256 | Maximum number of exits to process | 
 
-### isAnyOutputFinalized
+### isAnyInputFinalizedByOtherExit
 
 Checks whether any of the output with the given outputIds is already spent
 
 ```js
-function isAnyOutputFinalized(bytes32[] _outputIds) external view
+function isAnyInputFinalizedByOtherExit(bytes32[] _outputIds, uint160 exitId) external view
 returns(bool)
 ```
 
@@ -203,34 +204,52 @@ returns(bool)
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
 | _outputIds | bytes32[] | Output IDs to check | 
+| exitId | uint160 |  | 
 
 ### batchFlagOutputsFinalized
 
-Batch flags already spent outputs
+Batch flags already spent outputs (only not already spent)
 
 ```js
-function batchFlagOutputsFinalized(bytes32[] _outputIds) external nonpayable onlyFromNonQuarantinedExitGame 
+function batchFlagOutputsFinalized(bytes32[] outputIds, uint160 exitId) external nonpayable onlyFromNonQuarantinedExitGame 
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| _outputIds | bytes32[] | Output IDs to flag | 
+| outputIds | bytes32[] | Output IDs to flag | 
+| exitId | uint160 |  | 
 
 ### flagOutputFinalized
 
-Flags a single output as spent
+Flags a single output as spent if it is not flagged already
 
 ```js
-function flagOutputFinalized(bytes32 _outputId) external nonpayable onlyFromNonQuarantinedExitGame 
+function flagOutputFinalized(bytes32 outputId, uint160 exitId) external nonpayable onlyFromNonQuarantinedExitGame 
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| _outputId | bytes32 | The output ID to flag as spent | 
+| outputId | bytes32 | The output ID to flag as spent | 
+| exitId | uint160 |  | 
+
+### isOutputFinalized
+
+Checks whether output with a given outputId is finalized
+
+```js
+function isOutputFinalized(bytes32 outputId) external view
+returns(bool)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| outputId | bytes32 | Output ID to check | 
 
 ### getNextExit
 
