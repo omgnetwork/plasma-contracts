@@ -24,31 +24,27 @@ def test_challenge_in_flight_exit_input_spent_should_succeed_for_all_periods(tes
 
 @pytest.mark.parametrize(
     "double_spend_output_index,challenge_input_index",
-    [(i, j) for i in range(0, PAYMENT_TX_MAX_OUTPUT_SIZE) for j in range(0, PAYMENT_TX_MAX_INPUT_SIZE)]
+    [(i, j) for i in range(PAYMENT_TX_MAX_OUTPUT_SIZE) for j in range(PAYMENT_TX_MAX_INPUT_SIZE)]
 )
 def test_challenge_in_flight_exit_input_spent_should_succeed_for_all_indices(
     testlang, double_spend_output_index, challenge_input_index
 ):
+    alice, bob, carol = testlang.accounts[0], testlang.accounts[1], testlang.accounts[2]
     deposit_amount = 100
-    deposit_id = testlang.deposit(testlang.accounts[0], deposit_amount)
+    deposit_id = testlang.deposit(alice, deposit_amount)
 
-    owners = []
-    outputs = []
     tx_output_amount = deposit_amount // PAYMENT_TX_MAX_OUTPUT_SIZE
-    for i in range(0, PAYMENT_TX_MAX_OUTPUT_SIZE):
-        owners.append(testlang.accounts[i])
-        outputs.append((testlang.accounts[i].address, NULL_ADDRESS, tx_output_amount))
+    outputs = [(alice.address, NULL_ADDRESS, tx_output_amount)] * PAYMENT_TX_MAX_OUTPUT_SIZE
 
-    input_tx_id = testlang.spend_utxo([deposit_id], owners, outputs=outputs)
+    input_tx_id = testlang.spend_utxo([deposit_id], [alice], outputs=outputs)
     blknum, tx_index, _ = decode_utxo_id(input_tx_id)
-    double_spend_owner = owners[double_spend_output_index]
     double_spend_utxo = encode_utxo_id(blknum, tx_index, double_spend_output_index)
 
-    ife_output_amount = tx_output_amount // 2
+    ife_output_amount = tx_output_amount
     ife_tx_id = testlang.spend_utxo(
         [double_spend_utxo],
-        [double_spend_owner],
-        [(owners[0].address, NULL_ADDRESS, ife_output_amount)]
+        [alice],
+        [(bob.address, NULL_ADDRESS, ife_output_amount)]
     )
 
     inputs = []
@@ -56,20 +52,20 @@ def test_challenge_in_flight_exit_input_spent_should_succeed_for_all_indices(
         if i == challenge_input_index:
             inputs.append(double_spend_utxo)
         else:
-            inputs.append(testlang.deposit(double_spend_owner, tx_output_amount))
+            inputs.append(testlang.deposit(alice, tx_output_amount))
 
     challenge_tx_id = testlang.spend_utxo(
         inputs,
-        [double_spend_owner for i in range(0, PAYMENT_TX_MAX_INPUT_SIZE)],
+        [alice] * PAYMENT_TX_MAX_INPUT_SIZE,
         [
-            (double_spend_owner.address, NULL_ADDRESS, tx_output_amount),
+            (carol.address, NULL_ADDRESS, tx_output_amount),
         ],
         force_invalid=True
     )
 
-    testlang.start_in_flight_exit(ife_tx_id)
-    testlang.piggyback_in_flight_exit_input(ife_tx_id, 0, double_spend_owner)
-    testlang.challenge_in_flight_exit_input_spent(ife_tx_id, challenge_tx_id, double_spend_owner)
+    testlang.start_in_flight_exit(ife_tx_id, sender=bob)
+    testlang.piggyback_in_flight_exit_input(ife_tx_id, 0, alice)
+    testlang.challenge_in_flight_exit_input_spent(ife_tx_id, challenge_tx_id, carol)
 
     in_flight_exit = testlang.get_in_flight_exit(ife_tx_id)
     for i in range(0, PAYMENT_TX_MAX_INPUT_SIZE):
