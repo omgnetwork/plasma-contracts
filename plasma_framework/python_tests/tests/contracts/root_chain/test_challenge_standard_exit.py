@@ -36,8 +36,9 @@ def test_challenge_standard_exit_valid_spend_should_succeed(testlang, exit_outpu
         [owner] * PAYMENT_TX_MAX_INPUT_SIZE,
         outputs=[(owner.address, NULL_ADDRESS, spend_tx_amount)]
     )
-    testlang.challenge_standard_exit(exit_id, doublespend_id)
 
+    assert testlang.get_standard_exit(exit_id).exitable
+    testlang.challenge_standard_exit(exit_id, doublespend_id)
     assert not testlang.get_standard_exit(exit_id).exitable
 
 
