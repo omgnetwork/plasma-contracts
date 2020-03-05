@@ -3,19 +3,42 @@ from eth_utils import keccak
 from eth_tester.exceptions import TransactionFailed
 from plasma_core.constants import NULL_ADDRESS, MIN_EXIT_PERIOD, NULL_SIGNATURE
 from plasma_core.transaction import Transaction
-from plasma_core.utils.transactions import decode_utxo_id
+from plasma_core.utils.transactions import decode_utxo_id, encode_utxo_id
+from tests_utils.constants import PAYMENT_TX_MAX_INPUT_SIZE, PAYMENT_TX_MAX_OUTPUT_SIZE
 
 
-def test_challenge_standard_exit_valid_spend_should_succeed(testlang):
+@pytest.mark.parametrize(
+    "exit_output_index,challenge_input_index",
+    [(i, j) for i in range(PAYMENT_TX_MAX_OUTPUT_SIZE) for j in range(PAYMENT_TX_MAX_INPUT_SIZE)]
+)
+def test_challenge_standard_exit_valid_spend_should_succeed(testlang, exit_output_index, challenge_input_index):
     owner, amount = testlang.accounts[0], 100
     deposit_id = testlang.deposit(owner, amount)
-    spend_id = testlang.spend_utxo([deposit_id], [owner], outputs=[(owner.address, NULL_ADDRESS, amount)])
 
-    testlang.start_standard_exit(spend_id, owner)
-    doublespend_id = testlang.spend_utxo([spend_id], [owner], outputs=[(owner.address, NULL_ADDRESS, amount)])
-    testlang.challenge_standard_exit(spend_id, doublespend_id)
+    spend_tx_amount = amount // PAYMENT_TX_MAX_OUTPUT_SIZE
+    outputs = [(owner.address, NULL_ADDRESS, spend_tx_amount)] * PAYMENT_TX_MAX_OUTPUT_SIZE
+    spend_id = testlang.spend_utxo([deposit_id], [owner], outputs=outputs)
 
-    assert not testlang.get_standard_exit(spend_id).exitable
+    blknum, tx_index, _ = decode_utxo_id(spend_id)
+    exit_id = encode_utxo_id(blknum, tx_index, exit_output_index)
+
+    testlang.start_standard_exit(exit_id, owner)
+
+    inputs = []
+    for i in range(PAYMENT_TX_MAX_INPUT_SIZE):
+        if i == challenge_input_index:
+            inputs.append(exit_id)
+        else:
+            inputs.append(testlang.deposit(owner, amount))
+
+    doublespend_id = testlang.spend_utxo(
+        inputs,
+        [owner] * PAYMENT_TX_MAX_INPUT_SIZE,
+        outputs=[(owner.address, NULL_ADDRESS, spend_tx_amount)]
+    )
+    testlang.challenge_standard_exit(exit_id, doublespend_id)
+
+    assert not testlang.get_standard_exit(exit_id).exitable
 
 
 def test_challenge_standard_exit_if_successful_awards_the_bond(testlang):
