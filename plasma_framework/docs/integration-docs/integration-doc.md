@@ -68,6 +68,9 @@ To determine the position of the outputs of a transaction, you will include the 
 
 ALD introduces the concepts of transaction type and transaction output type.
 Each transaction output type can define its own rules about how funds may be spent.
+Output type white-lists transaction type and defines how exactly it can spend.
+Each output type can white-list many transaction types.
+
 For example, consider an output tx type that represents client funds being held by a venue.
 This output type can limit the transaction types that can spend it to either a "withdrawal" transaction that returns the funds to the client, or a "trade settlement" transaction that contains information about orders signed by clients. 
 In this way the output tx type prevents spending the funds via a "payment" transaction - ensuring that the venue can't pay its bills using the clients' money.
