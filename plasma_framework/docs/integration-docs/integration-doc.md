@@ -68,21 +68,22 @@ To determine the position of the outputs of a transaction, you will include the 
 
 ALD introduces the concepts of transaction type and transaction output type.
 Each transaction output type can define its own rules about how funds may be spent.
-For example, hypothetical output tx type representing client funds being hold by a venue
-can limit transaction types that can spend it to "withdrawal" transaction, returning funds to
-client and "trade settlement" transaction, which could contain information about
-orders signed by clients. Such output tx type could forbid spending via payment transaction
-- since venue can't pay its bills using clients' money.
+For example, consider an output tx type that represents client funds being held by a venue.
+This output type can limit the transaction types that can spend it to either a "withdrawal" transaction that returns the funds to the
+client, or a "trade settlement" transaction that contains information about
+orders signed by clients. 
+In this way the output tx type prevents spending the funds via a "payment" transaction
+- ensuring that the venue can't pay its bills using the clients' money.
 
 Rules are encoded in the [mapping](../contracts/src/exits/registries/SpendingConditionRegistry.sol) from `hash(tx_type, output_type)` to an address.
-If address is 0x0, spend is forbidden.
-Otherwise, address is referencing a contract that implements [ISpendingCondition](../contracts/src/exits/interfaces/ISpendingCondition.sol) interface and its `verify(...) returns (bool)` function. An example is in [PaymentOutputToPaymentTxCondition](../contracts/src/exits/payment/spendingConditions/PaymentOutputToPaymentTxCondition.sol).
+If address is 0x0, spending is forbidden.
+Otherwise, the address is that of a contract that implements the [ISpendingCondition](../contracts/src/exits/interfaces/ISpendingCondition.sol) interface and its `verify(...) returns (bool)` function. An example is in [PaymentOutputToPaymentTxCondition](../contracts/src/exits/payment/spendingConditions/PaymentOutputToPaymentTxCondition.sol).
 
-For a valid transaction, `verify(...)` will return `true` for every of transaction's inputs.
+For a valid transaction, `verify(...)` will return `true` for each of the transaction's inputs.
 
 ## Transaction balance validation
 
-Plasma transactions must not mint tokens. Sum of inputs must not be smaller than sum of outputs. ALD defines `IStateTransitionVerifier.verify(...) returns (bool)` [interface](../contracts/src/exits/interfaces/IStateTransitionVerifier.sol) where such checks must be implemented. An [example](../contracts/src/exits/payment/PaymentTransactionStateTransitionVerifier.sol) is in `PaymentTransactionStateTransitionVerifier`.
+Plasma transactions must not mint tokens. The sum of inputs must not be smaller than the sum of outputs. ALD defines `IStateTransitionVerifier.verify(...) returns (bool)` [interface](../contracts/src/exits/interfaces/IStateTransitionVerifier.sol) where such checks must be implemented. An [example](../contracts/src/exits/payment/PaymentTransactionStateTransitionVerifier.sol) is in `PaymentTransactionStateTransitionVerifier`.
 
 ## Generic transaction format
 All Transactions follow the same basic format [GenericTransaction](../contracts/GenericTransaction.md) and can be extended. 
@@ -109,8 +110,8 @@ metaData ::= bytes32
 
 GenericTransaction [performs](../contracts/src/transactions/GenericTransaction.sol#L42) a range of checks when decoding:
 
-* Is binary a proper RLP encoding?  
-* Is decoded list of required length? See `TX_NUM_ITEMS`  
+* Is the binary a proper RLP encoding?  
+* Is the decoded list of required length? See `TX_NUM_ITEMS`  
 * Is txType an integer? Is it `> 0`?  
 * Is each of the outputs correctly formed? See `decodeOutput(...)`
 
@@ -147,9 +148,9 @@ Payment transactions are used to transfer fungible tokens, such as ETH and ERC20
 
 [PaymentTransactionModel](../contracts/PaymentTransactionModel.md) does few more checks when decoding comparing to GenericTransaction above:
 
-* Is amount of inputs too large? See `_MAX_INPUT_NUM`.  
-* Is outputs number in range `(0, _MAX_OUTPUT_NUM]`?  
-* None of input pointers is null.
+* Is the number of inputs too large? See `_MAX_INPUT_NUM`.  
+* Is the number outputs in the range `(0, _MAX_OUTPUT_NUM]`?  
+* None of the input pointers is null.
 
 ### Payment transaction RLP encoding
 A Payment transaction must be RLP encoded as follows:
