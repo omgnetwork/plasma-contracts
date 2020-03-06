@@ -67,15 +67,20 @@ To determine the position of the outputs of a transaction, you will include the 
 ## Transaction type, output type, and spending condition
 
 ALD introduces the concepts of transaction type and transaction output type.
-Each transaction output type can define its own rule about how funds may be spent.
+Each transaction output type can define its own rules about how funds may be spent.
+For example, hypothetical output tx type representing client funds being hold by a venue
+can limit transaction types that can spend it to "withdrawal" transaction, returning funds to
+client and "trade settlement" transaction, which could contain information about
+orders signed by clients. Such output tx type could forbid spending via payment transaction
+- since venue can't pay its bills using clients' money.
 
 Rules are encoded in the [mapping](../contracts/src/exits/registries/SpendingConditionRegistry.sol) from `hash(tx_type, output_type)` to an address.
 If address is 0x0, spend is forbidden.
-Otherwise, address is referencing a contract that implements [ISpendingCondition](../contracts/src/exits/interfaces/ISpendingCondition.sol) interface and its `verify(...) returns (bool)` function.
+Otherwise, address is referencing a contract that implements [ISpendingCondition](../contracts/src/exits/interfaces/ISpendingCondition.sol) interface and its `verify(...) returns (bool)` function. An example is in [PaymentOutputToPaymentTxCondition](../contracts/src/exits/payment/spendingConditions/PaymentOutputToPaymentTxCondition.sol).
 
 For a valid transaction, `verify(...)` will return `true` for every of transaction's inputs.
 
-## Printing money
+## Transaction balance validation
 
 Plasma transactions must not mint tokens. Sum of inputs must not be smaller than sum of outputs. ALD defines `IStateTransitionVerifier.verify(...) returns (bool)` [interface](../contracts/src/exits/interfaces/IStateTransitionVerifier.sol) where such checks must be implemented. An [example](../contracts/src/exits/payment/PaymentTransactionStateTransitionVerifier.sol) is in `PaymentTransactionStateTransitionVerifier`.
 
