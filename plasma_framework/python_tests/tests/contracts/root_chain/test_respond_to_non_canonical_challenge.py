@@ -25,11 +25,31 @@ def test_respond_to_non_canonical_challenge_should_succeed(testlang, period):
     assert in_flight_exit.is_canonical
 
 
+def _indexes_for_test():
+    """
+    Instead of testing all combinations of indexes, we loop through one index while keep another two indexes fixed.
+    This is to avoid test size exploit and lead to endless test run time.
+    """
+    fixed_index = 2
+
+    all_indexes = []
+    for double_spend_output_index in range(PAYMENT_TX_MAX_OUTPUT_SIZE):
+        all_indexes.append((double_spend_output_index, fixed_index, fixed_index))
+    for ife_input_index in range(PAYMENT_TX_MAX_INPUT_SIZE):
+        all_indexes.append((fixed_index, ife_input_index, fixed_index))
+    for challenge_input_index in range(PAYMENT_TX_MAX_INPUT_SIZE):
+        all_indexes.append((fixed_index, fixed_index, challenge_input_index))
+
+    return all_indexes
+
+
 @pytest.mark.parametrize(
-    "double_spend_output_index,challenge_input_index",
-    [(i, j) for i in range(PAYMENT_TX_MAX_OUTPUT_SIZE) for j in range(PAYMENT_TX_MAX_INPUT_SIZE)]
+    "double_spend_output_index, ife_input_index, challenge_input_index",
+    _indexes_for_test()
 )
-def test_challenge_in_flight_exit_not_canonical_should_succeed_for_all_indices(testlang, double_spend_output_index, challenge_input_index):
+def test_challenge_in_flight_exit_not_canonical_should_succeed_for_all_indices(
+    testlang, double_spend_output_index, ife_input_index, challenge_input_index
+):
     alice, bob, carol = testlang.accounts[0], testlang.accounts[1], testlang.accounts[2]
     deposit_amount = 100
     deposit_id = testlang.deposit(alice, deposit_amount)
@@ -41,22 +61,29 @@ def test_challenge_in_flight_exit_not_canonical_should_succeed_for_all_indices(t
     blknum, tx_index, _ = decode_utxo_id(input_tx_id)
     double_spend_utxo = encode_utxo_id(blknum, tx_index, double_spend_output_index)
 
+    ife_tx_inputs = []
+    for i in range(0, PAYMENT_TX_MAX_INPUT_SIZE):
+        if i == ife_input_index:
+            ife_tx_inputs.append(double_spend_utxo)
+        else:
+            ife_tx_inputs.append(testlang.deposit(alice, tx_output_amount))
+
     ife_output_amount = tx_output_amount
     ife_tx_id = testlang.spend_utxo(
-        [double_spend_utxo],
-        [alice],
+        ife_tx_inputs,
+        [alice] * PAYMENT_TX_MAX_INPUT_SIZE,
         [(bob.address, NULL_ADDRESS, ife_output_amount)]
     )
 
-    inputs = []
+    challenge_tx_inputs = []
     for i in range(0, PAYMENT_TX_MAX_INPUT_SIZE):
         if i == challenge_input_index:
-            inputs.append(double_spend_utxo)
+            challenge_tx_inputs.append(double_spend_utxo)
         else:
-            inputs.append(testlang.deposit(alice, tx_output_amount))
+            challenge_tx_inputs.append(testlang.deposit(alice, tx_output_amount))
 
     challenge_tx_id = testlang.spend_utxo(
-        inputs,
+        challenge_tx_inputs,
         [alice] * PAYMENT_TX_MAX_INPUT_SIZE,
         [
             (carol.address, NULL_ADDRESS, tx_output_amount),
