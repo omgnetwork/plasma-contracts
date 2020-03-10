@@ -1,4 +1,5 @@
 from web3.exceptions import MismatchedABI
+from eth_utils import keccak
 
 from plasma_core.child_chain import ChildChain
 from plasma_core.block import Block
@@ -240,7 +241,7 @@ class TestingLanguage:
             signature = spend_tx.signatures[input_index]
 
         exit_id = self.get_standard_exit_id(output_id)
-        self.root_chain.challengeStandardExit(exit_id, spend_tx.encoded, input_index, signature, exiting_tx.encoded)
+        self.root_chain.challengeStandardExit(exit_id, spend_tx.encoded, input_index, signature, exiting_tx.encoded, keccak(hexstr=self.accounts[0].address))
 
     def start_in_flight_exit(self, tx_id, bond=None, sender=None, spend_tx=None):
         if sender is None:
@@ -331,7 +332,7 @@ class TestingLanguage:
         """
 
         exit_id = self.get_standard_exit_id(utxo_pos)
-        exit_info = self.root_chain.exits(exit_id)
+        exit_info = self.root_chain.exits([exit_id])
         return StandardExit(*exit_info[0])
 
     def get_standard_exit_id(self, utxo_pos):
@@ -400,9 +401,9 @@ class TestingLanguage:
         bond = bond if bond is not None else self.root_chain.piggybackBond()
         self.root_chain.piggybackInFlightExit(spend_tx.encoded, input_index, **{'value': bond, 'from': account.address})
 
-    def piggyback_in_flight_exit_output(self, tx_id, output_index, account, bond=None):
+    def piggyback_in_flight_exit_output(self, tx_id, output_index, account, bond=None, spend_tx=None):
         assert output_index in range(4)
-        return self.piggyback_in_flight_exit_input(tx_id, output_index + 4, account, bond)
+        return self.piggyback_in_flight_exit_input(tx_id, output_index + 4, account, bond, spend_tx)
 
     @staticmethod
     def find_shared_input(tx_a, tx_b):
@@ -465,6 +466,7 @@ class TestingLanguage:
         self.root_chain.challengeInFlightExitInputSpent(in_flight_tx.encoded, in_flight_tx_input_index,
                                                         spend_tx.encoded, spend_tx_input_index, signature,
                                                         shared_input_tx.encoded, shared_input_identifier,
+                                                        keccak(hexstr=key.address),
                                                         **{'from': key.address})
 
     def challenge_in_flight_exit_output_spent(self, in_flight_tx_id, spending_tx_id, output_index, key):
@@ -477,13 +479,14 @@ class TestingLanguage:
         self.root_chain.challengeInFlightExitOutputSpent(in_flight_tx.encoded, in_flight_tx_output_id,
                                                          in_flight_tx_inclusion_proof, spending_tx.encoded,
                                                          spending_tx_input_index, spending_tx_sig,
+                                                         keccak(hexstr=key.address),
                                                          **{'from': key.address})
 
     def get_in_flight_exit(self, in_flight_tx_id):
         in_flight_tx = self.child_chain.get_transaction(in_flight_tx_id)
         exit_id = self.root_chain.getInFlightExitId(in_flight_tx.encoded)
-        exit_info = self.root_chain.inFlightExits(exit_id)
-        return InFlightExit(self.root_chain, in_flight_tx, *exit_info)
+        exit_info = self.root_chain.inFlightExits([exit_id])
+        return InFlightExit(self.root_chain, in_flight_tx, *exit_info[0])
 
     def delete_in_flight_exit(self, in_flight_tx_id):
         in_flight_tx = self.child_chain.get_transaction(in_flight_tx_id)

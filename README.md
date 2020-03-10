@@ -116,3 +116,14 @@ Run the following command to run the test afterward:
 ```
 npx truffle test --network loadTest
 ```
+
+
+### How to release a new plasma contracts version
+
+- Update the [CHANGELOG.md](./CHANGELOG.md)
+- Bumps the version in package.json (the patch part)
+- Creates a commit with specified message
+- Tags that commit with the new version
+```bash
+npm version patch -m "Fixed a bug in X"
+```

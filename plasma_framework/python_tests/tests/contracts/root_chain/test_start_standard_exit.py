@@ -1,4 +1,5 @@
 import pytest
+from eth_utils import keccak
 from eth_tester.exceptions import TransactionFailed
 from plasma_core.constants import NULL_ADDRESS, NULL_ADDRESS_HEX, MIN_EXIT_PERIOD
 from plasma_core.transaction import Transaction, amend_signature
@@ -78,7 +79,7 @@ def test_start_standard_exit_old_utxo_has_required_exit_period_to_start_exit(tes
     testlang.start_standard_exit(utxo.spend_id, utxo.owner)
 
     _, _, next_exit_id = testlang.root_chain.getNextExit(testlang.root_chain.eth_vault_id, NULL_ADDRESS)
-    exits = testlang.root_chain.exits(next_exit_id)
+    exits = testlang.root_chain.exits([next_exit_id])
     next_exit = StandardExit(*exits[0])
     assert next_exit.position == utxo.spend_id
 
@@ -187,11 +188,11 @@ def test_old_signature_scheme_does_not_work_any_longer(testlang, utxo):
 
     # challenge will fail on signature verification
     with pytest.raises(TransactionFailed):
-        testlang.root_chain.challengeStandardExit(exit_id, spend_tx.encoded, 0, old_signature, exiting_tx.encoded)
+        testlang.root_chain.challengeStandardExit(exit_id, spend_tx.encoded, 0, old_signature, exiting_tx.encoded, keccak(hexstr=testlang.accounts[0].address))
 
     # sanity check: let's provide new schema signature for a challenge
     new_signature = amend_signature(alice.key.sign_msg_hash(hash_struct(spend_tx, verifying_contract=testlang.root_chain)).to_bytes())
-    testlang.root_chain.challengeStandardExit(exit_id, spend_tx.encoded, 0, new_signature, exiting_tx.encoded)
+    testlang.root_chain.challengeStandardExit(exit_id, spend_tx.encoded, 0, new_signature, exiting_tx.encoded, keccak(hexstr=testlang.accounts[0].address))
 
 
 def test_signature_scheme_respects_verifying_contract(testlang, utxo):
@@ -209,8 +210,8 @@ def test_signature_scheme_respects_verifying_contract(testlang, utxo):
 
     # challenge will fail on signature verification
     with pytest.raises(TransactionFailed):
-        testlang.root_chain.challengeStandardExit(exit_id, spend_tx.encoded, 0, bad_contract_signature, exiting_tx.encoded)
+        testlang.root_chain.challengeStandardExit(exit_id, spend_tx.encoded, 0, bad_contract_signature, exiting_tx.encoded, keccak(hexstr=testlang.accounts[0].address))
 
     # sanity check
     proper_signature = amend_signature(alice.key.sign_msg_hash(hash_struct(spend_tx, verifying_contract=testlang.root_chain)).to_bytes())
-    testlang.root_chain.challengeStandardExit(exit_id, spend_tx.encoded, 0, proper_signature, exiting_tx.encoded)
+    testlang.root_chain.challengeStandardExit(exit_id, spend_tx.encoded, 0, proper_signature, exiting_tx.encoded, keccak(hexstr=testlang.accounts[0].address))

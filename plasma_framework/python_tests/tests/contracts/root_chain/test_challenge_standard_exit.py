@@ -1,4 +1,5 @@
 import pytest
+from eth_utils import keccak
 from eth_tester.exceptions import TransactionFailed
 from plasma_core.constants import NULL_ADDRESS, MIN_EXIT_PERIOD, NULL_SIGNATURE
 from plasma_core.transaction import Transaction
@@ -78,7 +79,7 @@ def test_challenge_standard_exit_uninitialized_memory_and_zero_sig_should_fail(t
     spend_tx = testlang.child_chain.get_transaction(spend_id)
 
     with pytest.raises(TransactionFailed):
-        testlang.root_chain.challengeStandardExit(0, spend_tx.encoded, 3, NULL_SIGNATURE, deposit_tx.encoded)
+        testlang.root_chain.challengeStandardExit(0, spend_tx.encoded, 3, NULL_SIGNATURE, deposit_tx.encoded, keccak(hexstr=owner.address))
 
 
 def test_challenge_standard_exit_not_started_should_fail(testlang):
@@ -140,6 +141,6 @@ def test_challenge_standard_exit_with_in_flight_exit_tx_should_succeed(testlang)
     exit_id = testlang.get_standard_exit_id(spend_id)
     # FIXME a proper way of getting encoded body of IFE tx is to get it out of generated events
     exiting_tx = testlang.child_chain.get_transaction(spend_id)
-    testlang.root_chain.challengeStandardExit(exit_id, ife_tx.encoded, 0, ife_tx.signatures[0], exiting_tx.encoded)
+    testlang.root_chain.challengeStandardExit(exit_id, ife_tx.encoded, 0, ife_tx.signatures[0], exiting_tx.encoded, keccak(hexstr=owner.address))
 
     assert testlang.get_standard_exit(spend_id) == [owner.address, amount, spend_id, False]

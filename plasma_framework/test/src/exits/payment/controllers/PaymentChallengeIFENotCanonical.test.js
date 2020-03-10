@@ -324,22 +324,22 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
             it('should set the oldest competitorPosition', async () => {
                 const expectedCompetitorPosition = new BN(this.challengeArgs.competingTxPos);
 
-                const exit = await this.exitGame.inFlightExits(this.exitId);
+                const exits = await this.exitGame.inFlightExits([this.exitId]);
 
-                const oldestCompetitorPosition = new BN(exit.oldestCompetitorPosition);
+                const oldestCompetitorPosition = new BN(exits[0].oldestCompetitorPosition);
                 expect(oldestCompetitorPosition).to.be.bignumber.equal(expectedCompetitorPosition);
             });
 
             it('should set the bond owner to challenger', async () => {
-                const exit = await this.exitGame.inFlightExits(this.exitId);
+                const exits = await this.exitGame.inFlightExits([this.exitId]);
 
-                expect(exit.bondOwner).to.be.equal(challenger);
+                expect(exits[0].bondOwner).to.be.equal(challenger);
             });
 
             it('should flag the exit non-canonical', async () => {
-                const exit = await this.exitGame.inFlightExits(this.exitId);
+                const exits = await this.exitGame.inFlightExits([this.exitId]);
 
-                expect(exit.isCanonical).to.be.false;
+                expect(exits[0].isCanonical).to.be.false;
             });
         });
 
@@ -597,9 +597,9 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
                     { from: ifeOwner },
                 );
 
-                const exit = await this.exitGame.inFlightExits(this.exitId);
+                const exits = await this.exitGame.inFlightExits([this.exitId]);
 
-                expect(exit.isCanonical).to.be.true;
+                expect(exits[0].isCanonical).to.be.true;
             });
 
             it('should set bond owner to caller', async () => {
@@ -610,9 +610,9 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
                     { from: ifeOwner },
                 );
 
-                const exit = await this.exitGame.inFlightExits(this.exitId);
+                const exits = await this.exitGame.inFlightExits([this.exitId]);
 
-                expect(exit.bondOwner).to.equal(ifeOwner);
+                expect(exits[0].bondOwner).to.equal(ifeOwner);
             });
 
             it('should set oldest competitor position to response position', async () => {
@@ -623,9 +623,9 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
                     { from: ifeOwner },
                 );
 
-                const exit = await this.exitGame.inFlightExits(this.exitId);
+                const exits = await this.exitGame.inFlightExits([this.exitId]);
 
-                const oldestCompetitorPosition = new BN(exit.oldestCompetitorPosition);
+                const oldestCompetitorPosition = new BN(exits[0].oldestCompetitorPosition);
                 expect(oldestCompetitorPosition).to.be.bignumber.equal(new BN(this.inFlightTxPos));
             });
         });

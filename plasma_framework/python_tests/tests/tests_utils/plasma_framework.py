@@ -175,6 +175,7 @@ class PlasmaFramework:
                               input_index,
                               challenge_tx_sig,
                               exiting_tx,
+                              senderData,
                               **kwargs):
         """ NOTICE: ALD takes more obligatory arguments (exiting_tx) in comparison to the RootChain contract """
 
@@ -183,7 +184,8 @@ class PlasmaFramework:
                 exiting_tx,
                 challenge_tx,
                 input_index,
-                witness)
+                witness,
+                senderData)
 
         return self.payment_exit_game.challengeStandardExit(args, **kwargs)
 
@@ -253,6 +255,7 @@ class PlasmaFramework:
                                         spending_tx_sig,
                                         input_tx,
                                         input_tx_txo_pos,
+                                        senderData,
                                         **kwargs):
 
         spending_tx_witness = spending_tx_sig
@@ -264,7 +267,8 @@ class PlasmaFramework:
             spending_tx_input_index,
             spending_tx_witness,
             input_tx,
-            input_tx_txo_pos
+            input_tx_txo_pos,
+            senderData
         )
 
         self.payment_exit_game.challengeInFlightExitInputSpent(args, **kwargs)
@@ -275,6 +279,7 @@ class PlasmaFramework:
                                          spending_tx,
                                          spending_tx_input_index,
                                          spending_tx_sig,
+                                         senderData,
                                          **kwargs):
 
         spending_tx_witness = spending_tx_sig
@@ -285,7 +290,8 @@ class PlasmaFramework:
             in_flight_tx_output_pos,
             spending_tx,
             spending_tx_input_index,
-            spending_tx_witness
+            spending_tx_witness,
+            senderData
         )
         self.payment_exit_game.challengeInFlightExitOutputSpent(args, **kwargs)
 
@@ -346,11 +352,11 @@ class PlasmaFramework:
     def piggybackBond(self):
         return self.payment_exit_game.piggybackBondSize()
 
-    def exits(self, exit_id):
-        return self.payment_exit_game.standardExits([exit_id])
+    def exits(self, exit_ids):
+        return self.payment_exit_game.standardExits(exit_ids)
 
-    def inFlightExits(self, exit_id):
-        return self.payment_exit_game.inFlightExits(exit_id)
+    def inFlightExits(self, exit_ids):
+        return self.payment_exit_game.inFlightExits(exit_ids)
 
     # additional convenience proxies (not taken from RootChain) #
 

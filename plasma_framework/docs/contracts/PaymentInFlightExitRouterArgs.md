@@ -61,7 +61,8 @@ struct ChallengeInputSpentArgs {
  uint16 challengingTxInputIndex,
  bytes challengingTxWitness,
  bytes inputTx,
- uint256 inputUtxoPos
+ uint256 inputUtxoPos,
+ bytes32 senderData
 }
 ```
 
@@ -74,7 +75,8 @@ struct ChallengeOutputSpent {
  uint256 outputUtxoPos,
  bytes challengingTx,
  uint16 challengingTxInputIndex,
- bytes challengingTxWitness
+ bytes challengingTxWitness,
+ bytes32 senderData
 }
 ```
 

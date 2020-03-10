@@ -23,7 +23,8 @@ struct ChallengeStandardExitArgs {
  bytes exitingTx,
  bytes challengeTx,
  uint16 inputIndex,
- bytes witness
+ bytes witness,
+ bytes32 senderData
 }
 ```
 

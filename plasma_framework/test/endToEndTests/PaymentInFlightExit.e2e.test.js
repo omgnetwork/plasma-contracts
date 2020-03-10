@@ -283,6 +283,7 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                             competingTxPos: 0,
                                             competingTxInclusionProof: EMPTY_BYTES,
                                             competingTxWitness: this.signatureTx2,
+                                            senderData: web3.utils.keccak256(carol),
                                         };
 
                                         await this.exitGame.challengeInFlightExitNotCanonical(
@@ -324,6 +325,7 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                                     challengingTxWitness: this.signatureTx2,
                                                     inputTx: this.outputAData.depositTx,
                                                     inputUtxoPos: this.outputAData.depositUtxoPos,
+                                                    senderData: web3.utils.keccak256(carol),
                                                 };
                                                 await this.exitGame.challengeInFlightExitInputSpent(
                                                     args,
@@ -350,7 +352,7 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                                     );
                                                 });
 
-                                                it('should return only funds of output B to Alice (input exited)', async () => {
+                                                it('should return funds of output B with piggyback bond to Alice (input exited)', async () => {
                                                     const postBalanceAlice = new BN(await web3.eth.getBalance(alice));
                                                     const expectedBalance = preBalanceAlice
                                                         .add(new BN(DEPOSIT_VALUE))
@@ -359,9 +361,11 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                                     expect(expectedBalance).to.be.bignumber.equal(postBalanceAlice);
                                                 });
 
-                                                it('should NOT return fund to Bob (output not exited)', async () => {
+                                                it('should NOT return funds of output B to Bob (output not exited). However, piggyback bond is returned', async () => {
                                                     const postBalanceBob = new BN(await web3.eth.getBalance(bob));
-                                                    expect(preBalanceBob).to.be.bignumber.equal(postBalanceBob);
+                                                    const expectedBalance = preBalanceBob
+                                                        .add(new BN(this.piggybackBondSize));
+                                                    expect(expectedBalance).to.be.bignumber.equal(postBalanceBob);
                                                 });
                                             });
                                         });
@@ -467,6 +471,7 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                             competingTxPos: 0,
                                             competingTxInclusionProof: EMPTY_BYTES,
                                             competingTxWitness: this.signatureBobTx2,
+                                            senderData: web3.utils.keccak256(_deployer),
                                         };
 
                                         await this.exitGame.challengeInFlightExitNotCanonical(argsTx1);
@@ -481,6 +486,7 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                             competingTxPos: 0,
                                             competingTxInclusionProof: EMPTY_BYTES,
                                             competingTxWitness: this.signatureBobTx1,
+                                            senderData: web3.utils.keccak256(_deployer),
                                         };
 
                                         await this.exitGame.challengeInFlightExitNotCanonical(argsTx2);

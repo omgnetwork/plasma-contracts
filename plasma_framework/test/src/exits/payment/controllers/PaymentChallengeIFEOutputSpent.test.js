@@ -28,7 +28,7 @@ const {
     PROTOCOL, TX_TYPE, VAULT_ID, DUMMY_INPUT_1, SAFE_GAS_STIPEND, EMPTY_BYTES_32,
 } = require('../../../../helpers/constants.js');
 
-contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
+contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob, otherAddress]) => {
     const DUMMY_IFE_BOND_SIZE = 31415926535; // wei
     const PIGGYBACK_BOND = 31415926535;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
@@ -186,6 +186,7 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
                 challengingTx: args.challengingTxBytes,
                 challengingTxInputIndex: 0,
                 challengingTxWitness: web3.utils.sha3('sig'),
+                senderData: web3.utils.keccak256(bob),
             };
         });
 
@@ -220,6 +221,7 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
 
         it('should fail when paying out piggyback bond fails', async () => {
             const attacker = await Attacker.new();
+            this.challengeArgs.senderData = web3.utils.keccak256(attacker.address);
 
             await expectRevert(
                 this.exitGame.challengeInFlightExitOutputSpent(this.challengeArgs, { from: attacker.address }),
@@ -305,6 +307,13 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob]) => {
             await expectRevert(
                 this.exitGame.challengeInFlightExitOutputSpent(this.challengeArgs, { from: bob }),
                 'Challenging transaction does not spend the output',
+            );
+        });
+
+        it('should fail when senderData is incorrect', async () => {
+            await expectRevert(
+                this.exitGame.challengeInFlightExitOutputSpent(this.challengeArgs, { from: otherAddress }),
+                'Incorrect senderData',
             );
         });
     });

@@ -24,7 +24,7 @@ contract BlockController is OnlyFromAddress, VaultRegistry {
     mapping (uint256 => BlockModel.Block) public blocks; // block number => Block data
 
     event BlockSubmitted(
-        uint256 blockNumber
+        uint256 blknum
     );
 
     event ChildChainActivated(

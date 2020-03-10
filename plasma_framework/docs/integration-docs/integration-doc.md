@@ -46,13 +46,14 @@ On success, the PlasmaFramework contract emits a `BlockSubmitted` event:
 
 ```
 event BlockSubmitted(
-    uint256 blockNumber
+    uint256 blknum
 );  
 ``` 
 
  > ***Note**: For more information about parameter types, return types, valid values, and so on, see the [Plasma Contract API documentation](../contracts/BlockController.md#submitblock).*
  
-
+# Block retrieval
+To learn what blocks need to be retrieved during sync, read `PlasmaFramework.nextChildBlock()` and `PlasmaFramework.childBlockInterval()`. Compute the block numbers by iterating every `childBlockInterval` from `0 + childBlockInterval` up to `nextChildBlock - childBlockInterval`, inclusive. Next, read the Merkle tree root of each block by calling `PlasmaFramework.blocks(blknum)`.
 
 # Transactions
 Transactions are composed of inputs and outputs. An input is simply a pointer to the output of another transaction. 
@@ -84,7 +85,7 @@ Where
 txType ::= uint256
 input ::= outputId | outputPosition
 outputId ::= hash of the transaction that produced the output concatenated with the outputIndex
-outputPosition ::= 32 byte string that is (blockNumber * BLOCK_OFFSET + txIndex * TX_OFFSET + outputIndex)
+outputPosition ::= 32 byte string that is (blknum * BLOCK_OFFSET + txIndex * TX_OFFSET + outputIndex)
 output ::= outputType outputData
 outputType ::= uint256
 outputData ::= undefined, to be defined by concrete transaction types
@@ -547,7 +548,8 @@ PaymentExitGame.challengeStandardExit({
   exitingTx,
   challengeTx,
   inputIndex,
-  witness
+  witness,
+  senderData
 });
 ```
 
@@ -569,6 +571,9 @@ Input index of exiting UTXO in the challenging transaction.
 #### witness (bytes)
 Data proving that exiting output was spent. A signature of exiting output owner on challenging transaction.
 
+#### senderData (bytes32)
+A keccak256 hash of the sender's address.
+
 #### Example:
 
 ```
@@ -577,7 +582,8 @@ PaymentExitGame.challengeStandardExit([
   0xf85401c0f0ef01949c7fc8601655b4e1ef395107217e6ed600f7ba48940000000000000000000000000000000000000000830f4240a00000000000000000000000000000000000000000000000000000000000000000,
   0xf88a01c685e9103fda00f85fee0194821aea9a577a9b44299b9c15c88cf3087f3b55449400000000000000000000000000000000000000008203e8ef01949c7fc8601655b4e1ef395107217e6ed600f7ba48940000000000000000000000000000000000000000830f3e58a00000000000000000000000000000000000000000000000000000000000000000,
   0,
-  0xc8fafc7490868b372863778cd2c7928c835e66c59d7bc44b912d14ca574732434f928004b680d9a231c3a688fe1c1f62bac47c663695c8287d779ff2658626c81b
+  0xc8fafc7490868b372863778cd2c7928c835e66c59d7bc44b912d14ca574732434f928004b680d9a231c3a688fe1c1f62bac47c663695c8287d779ff2658626c81b,
+  0x984f41eb67eb23e42139410eade1008a90b01a018ce2577fea44262c6fc16ce3
 ])
 ```
 
@@ -837,7 +843,8 @@ PaymentExitGame.challengeInFlightExitInputSpent({
     challengingTxInputIndex,
     challengingTxWitness,
     inputTx,
-    inputUtxoPos
+    inputUtxoPos,
+    senderData
 })
 ```
 
@@ -864,6 +871,9 @@ RLP encoded input transaction.
 #### inputUtxoPos (uint256)
  UTXO position of input transaction's output.
 
+#### senderData (bytes32)
+A keccak256 hash of the sender's address.
+
 #### Example:
 
 ```
@@ -874,7 +884,8 @@ PaymentExitGame.challengeInFlightExitInputSpent([
   0,
   0xb5bb3fff130c206bb550e969964c673e53fd5f15edc9e20046ea504389bf7ba324b81adc8a91e01ef49384d86d71ae00b9ac092bf88156a67f1e202806b61a221c,
   0xf85601c0f1f001ee949c7fc8601655b4e1ef395107217e6ed600f7ba48940000000000000000000000000000000000000000830f424080a00000000000000000000000000000000000000000000000000000000000000000,
-  2000000000
+  2000000000,
+  0x984f41eb67eb23e42139410eade1008a90b01a018ce2577fea44262c6fc16ce3
 ])
 ```
 
@@ -888,7 +899,8 @@ PaymentExitGame.challengeInFlightExitOutputSpent({
     outputUtxoPos,
     challengingTx,
     challengingTxInputIndex,
-    challengingTxWitness
+    challengingTxWitness,
+    senderData
 })
 ```
 
@@ -912,6 +924,9 @@ Input index of challenged output in the challenging transaction.
 #### challengingTxWitness (bytes)
 Witness for challenging transaction.
 
+#### senderData (bytes32)
+A keccak256 hash of the sender's address.
+
 #### Example:
 
 ```
@@ -921,7 +936,8 @@ PaymentExitGame.challengeInFlightExitOutputSpent([
   1000000000000,
   0xf87401e1a06e5de68fadce7ffe6ebf92546a4e6d4aedfa3c325929eebfa8dd1f8e6918c4b7eeed02eb94f17f52151ebef6c7334fad080c5704d77216b7329400000000000000000000000000000000000000000180a00000000000000000000000000000000000000000000000000000000000000000,
   0,
-  0xb833e902b1f76a9ece793891fdae542c01b742ea83dfbfb721df1e82413fb5fc
+  0xb833e902b1f76a9ece793891fdae542c01b742ea83dfbfb721df1e82413fb5fc,
+  0x984f41eb67eb23e42139410eade1008a90b01a018ce2577fea44262c6fc16ce3
 ])
 ```
 
@@ -1254,13 +1270,13 @@ Watchers monitor the network and send alerts so that users know when they need t
 A new Plasma Block has been submitted. Watcher should fetch block data from child chain and verify that it matches block data published to the Plasma contract on the root chain.
 ```
 event BlockSubmitted(
-    uint256 blockNumber
+    uint256 blknum
 );
 ```
 
 Fetching block data from `PlasmaFramework`:
 ```
-block = PlasmaFramework.blocks(blockNumber)
+block = PlasmaFramework.blocks(blknum)
 ```
 where block is:
 ```

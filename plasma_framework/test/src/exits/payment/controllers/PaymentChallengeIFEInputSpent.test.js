@@ -28,7 +28,7 @@ const { createInputTransaction, createInFlightTx } = require('../../../../helper
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../../helpers/transaction.js');
 const { spentOnGas, computeNormalOutputId, getOutputId } = require('../../../../helpers/utils.js');
 
-contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, challenger]) => {
+contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, challenger, otherAddress]) => {
     const DUMMY_IFE_BOND_SIZE = 31415926535;
     const PIGGYBACK_BOND = 31415926535;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
@@ -229,11 +229,13 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                 challengingTxWitness: web3.utils.utf8ToHex('dummy witness'),
                 inputTx: this.inputTx.txBytes,
                 inputUtxoPos: this.inputTx.utxoPos,
+                senderData: web3.utils.keccak256(challenger),
             };
         });
 
         it('should fail when paying out piggyback bond fails', async () => {
             const attacker = await Attacker.new();
+            this.challengeArgs.senderData = web3.utils.keccak256(attacker.address);
 
             await expectRevert(
                 this.exitGame.challengeInFlightExitInputSpent(this.challengeArgs, { from: attacker.address }),
@@ -262,8 +264,8 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
             });
 
             it('should remove the input from piggybacked', async () => {
-                const exit = await this.exitGame.inFlightExits(this.testData.exitId);
-                expect(new BN(exit.exitMap)).to.be.bignumber.equal(new BN(0));
+                const exits = await this.exitGame.inFlightExits([this.testData.exitId]);
+                expect(new BN(exits[0].exitMap)).to.be.bignumber.equal(new BN(0));
             });
 
             it('should pay the piggyback bond to the challenger', async () => {
@@ -288,16 +290,16 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
 
             it('should remove the input from piggybacked', async () => {
                 // Before the challenge, both inputs should be in the exitMap
-                let exit = await this.exitGame.inFlightExits(this.testData.exitId);
-                expect(new BN(exit.exitMap)).to.be.bignumber.equal(new BN(0b11));
+                let exits = await this.exitGame.inFlightExits([this.testData.exitId]);
+                expect(new BN(exits[0].exitMap)).to.be.bignumber.equal(new BN(0b11));
 
                 await this.exitGame.challengeInFlightExitInputSpent(
                     this.challengeArgs, { from: challenger },
                 );
 
                 // After the challenge, only input 1 should be in the exitMap
-                exit = await this.exitGame.inFlightExits(this.testData.exitId);
-                expect(new BN(exit.exitMap)).to.be.bignumber.equal(new BN(0b01));
+                exits = await this.exitGame.inFlightExits([this.testData.exitId]);
+                expect(new BN(exits[0].exitMap)).to.be.bignumber.equal(new BN(0b01));
             });
         });
 
@@ -398,6 +400,13 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                 await expectRevert(
                     this.exitGame.challengeInFlightExitInputSpent(this.challengeArgs, { from: challenger }),
                     'Spending condition failed',
+                );
+            });
+
+            it('should fail when senderData is incorrect', async () => {
+                await expectRevert(
+                    this.exitGame.challengeInFlightExitInputSpent(this.challengeArgs, { from: otherAddress }),
+                    'Incorrect senderData',
                 );
             });
         });

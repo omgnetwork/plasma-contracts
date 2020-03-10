@@ -13,6 +13,7 @@ View Source: [contracts/src/framework/PlasmaFramework.sol](../../contracts/src/f
 //public members
 uint256 public constant CHILD_BLOCK_INTERVAL;
 uint256 public minExitPeriod;
+string public version;
 
 //private members
 address private maintainer;
@@ -23,6 +24,8 @@ address private maintainer;
 
 - [(uint256 _minExitPeriod, uint256 _initialImmuneVaults, uint256 _initialImmuneExitGames, address _authority, address _maintainer)](#)
 - [getMaintainer()](#getmaintainer)
+- [getVersion()](#getversion)
+- [setVersion(string _version)](#setversion)
 
 ### 
 
@@ -53,6 +56,34 @@ returns(address)
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
+
+### getVersion
+
+Gets the semantic version of the current deployed contracts
+
+```js
+function getVersion() external view
+returns(string)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+
+### setVersion
+
+Sets the semantic version of the current deployed contracts
+
+```js
+function setVersion(string _version) public nonpayable onlyFrom 
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| _version | string | is semver string | 
 
 ## Contracts
 

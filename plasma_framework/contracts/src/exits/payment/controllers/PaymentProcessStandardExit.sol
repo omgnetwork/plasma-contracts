@@ -54,7 +54,7 @@ library PaymentProcessStandardExit {
             return;
         }
 
-        self.framework.flagOutputFinalized(exit.outputId);
+        self.framework.flagOutputFinalized(exit.outputId, exitId);
 
         // we do not want to block a queue if bond return is unsuccessful
         bool success = SafeEthTransfer.transferReturnResult(exit.exitTarget, exit.bondSize, self.safeGasStipend);

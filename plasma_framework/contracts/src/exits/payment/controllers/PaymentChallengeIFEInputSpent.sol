@@ -75,6 +75,8 @@ library PaymentChallengeIFEInputSpent {
     )
         public
     {
+        require(args.senderData == keccak256(abi.encodePacked(msg.sender)), "Incorrect senderData");
+
         uint160 exitId = ExitId.getInFlightExitId(args.inFlightTx);
         PaymentExitDataModel.InFlightExit storage ife = inFlightExitMap.exits[exitId];
 
@@ -134,7 +136,8 @@ library PaymentChallengeIFEInputSpent {
         GenericTransaction.Transaction memory challengingTx = GenericTransaction.decode(data.args.challengingTx);
 
         GenericTransaction.Transaction memory inputTx = GenericTransaction.decode(data.args.inputTx);
-        GenericTransaction.Output memory output = GenericTransaction.getOutput(inputTx, data.args.challengingTxInputIndex);
+        PosLib.Position memory utxoPos = PosLib.decode(data.args.inputUtxoPos);
+        GenericTransaction.Output memory output = GenericTransaction.getOutput(inputTx, utxoPos.outputIndex);
 
         ISpendingCondition condition = data.controller.spendingConditionRegistry.spendingConditions(
             output.outputType, challengingTx.txType

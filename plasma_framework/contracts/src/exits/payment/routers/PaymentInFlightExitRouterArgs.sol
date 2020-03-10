@@ -70,6 +70,7 @@ library PaymentInFlightExitRouterArgs {
      * @param challengingTxWitness Witness for challenging transactions
      * @param inputTx RLP-encoded input transaction
      * @param inputUtxoPos UTXO position of input transaction's output
+     * @param senderData A keccak256 hash of the sender's address
      */
     struct ChallengeInputSpentArgs {
         bytes inFlightTx;
@@ -79,6 +80,7 @@ library PaymentInFlightExitRouterArgs {
         bytes challengingTxWitness;
         bytes inputTx;
         uint256 inputUtxoPos;
+        bytes32 senderData;
     }
 
      /**
@@ -89,6 +91,7 @@ library PaymentInFlightExitRouterArgs {
      * @param challengingTx RLP-encoded challenging transaction
      * @param challengingTxInputIndex Input index of challenged output in a challenging transaction
      * @param challengingTxWitness Witness for challenging transaction
+     * @param senderData A keccak256 hash of the sender's address
      */
     struct ChallengeOutputSpent {
         bytes inFlightTx;
@@ -97,5 +100,6 @@ library PaymentInFlightExitRouterArgs {
         bytes challengingTx;
         uint16 challengingTxInputIndex;
         bytes challengingTxWitness;
+        bytes32 senderData;
     }
 }

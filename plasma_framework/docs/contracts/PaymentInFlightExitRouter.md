@@ -56,7 +56,7 @@ event InFlightExitDeleted(uint160 indexed exitId);
 ## Functions
 
 - [(struct PaymentExitGameArgs.Args args)](#)
-- [inFlightExits(uint160 exitId)](#inflightexits)
+- [inFlightExits(uint160[] exitIds)](#inflightexits)
 - [startInFlightExit(struct PaymentInFlightExitRouterArgs.StartExitArgs args)](#startinflightexit)
 - [piggybackInFlightExitOnInput(struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnInputArgs args)](#piggybackinflightexitoninput)
 - [piggybackInFlightExitOnOutput(struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnOutputArgs args)](#piggybackinflightexitonoutput)
@@ -88,15 +88,15 @@ function (struct PaymentExitGameArgs.Args args) public nonpayable
 Getter functions to retrieve in-flight exit data of the PaymentExitGame
 
 ```js
-function inFlightExits(uint160 exitId) public view
-returns(struct PaymentExitDataModel.InFlightExit)
+function inFlightExits(uint160[] exitIds) external view
+returns(struct PaymentExitDataModel.InFlightExit[])
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| exitId | uint160 | The exit ID of the in-flight exit | 
+| exitIds | uint160[] | The exit IDs of the in-flight exits | 
 
 ### startInFlightExit
 

@@ -308,10 +308,10 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
             });
 
             it('should only clean the piggyback flag of the inputs/outputs with same token', async () => {
-                const exit = await this.exitGame.inFlightExits(DUMMY_EXIT_ID);
+                const exits = await this.exitGame.inFlightExits([DUMMY_EXIT_ID]);
                 const thirdOutputIndexInExitMap = MAX_INPUT_NUM + 2;
                 const exitMapWithErc20Outputs = 2 ** thirdOutputIndexInExitMap;
-                expect(exit.exitMap).to.equal(exitMapWithErc20Outputs.toString());
+                expect(exits[0].exitMap).to.equal(exitMapWithErc20Outputs.toString());
             });
 
             // erc20 are not processed yet, thus not fully resolved.
@@ -323,8 +323,8 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
                 });
 
                 it('should NOT delete the exit from storage', async () => {
-                    const exit = await this.exitGame.inFlightExits(DUMMY_EXIT_ID);
-                    expect(exit.exitStartTimestamp).to.not.equal('0');
+                    const exits = await this.exitGame.inFlightExits([DUMMY_EXIT_ID]);
+                    expect(exits[0].exitStartTimestamp).to.not.equal('0');
                 });
             });
 
@@ -341,8 +341,8 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
                 });
 
                 it('should delete the exit from storage', async () => {
-                    const exit = await this.exitGame.inFlightExits(DUMMY_EXIT_ID);
-                    expect(exit.exitStartTimestamp).to.equal('0');
+                    const exits = await this.exitGame.inFlightExits([DUMMY_EXIT_ID]);
+                    expect(exits[0].exitStartTimestamp).to.equal('0');
                 });
             });
         });
@@ -353,13 +353,23 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
                 exit.isCanonical = true;
                 await this.exitGame.setInFlightExit(DUMMY_EXIT_ID, exit);
 
-                // flags the first input and piggybacks the two ETH inputs (first and second)
-                await this.exitGame.proxyFlagOutputFinalized(TEST_OUTPUT_ID_FOR_INPUT_1);
-                await this.exitGame.setInFlightExitInputPiggybacked(DUMMY_EXIT_ID, 0);
+                await this.exitGame.setInFlightExitOutputPiggybacked(DUMMY_EXIT_ID, 0);
                 await this.exitGame.setInFlightExitInputPiggybacked(DUMMY_EXIT_ID, 1);
             });
 
-            it('should be treated as non canonical', async () => {
+            it('should withdraw output if there are no inputs spent by other exit', async () => {
+                await this.exitGame.proxyFlagOutputFinalized(TEST_OUTPUT_ID_FOR_INPUT_1, DUMMY_EXIT_ID);
+                const { logs } = await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH);
+                await expectEvent.inLogs(
+                    logs,
+                    'InFlightExitOutputWithdrawn',
+                    { exitId: new BN(DUMMY_EXIT_ID), outputIndex: new BN(0) },
+                );
+            });
+
+            it('should be treated as non-canonical when there is an input spent by other exit', async () => {
+                const otherExitId = DUMMY_EXIT_ID + 1;
+                await this.exitGame.proxyFlagOutputFinalized(TEST_OUTPUT_ID_FOR_INPUT_1, otherExitId);
                 const { logs } = await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH);
                 const inputIndexForInput2 = 1;
                 await expectEvent.inLogs(
@@ -386,6 +396,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
                 await this.exitGame.setInFlightExitOutputPiggybacked(DUMMY_EXIT_ID, 2);
 
                 this.inputOwner3PreBalance = new BN(await web3.eth.getBalance(inputOwner3));
+                this.outputOwner3PreBalance = new BN(await web3.eth.getBalance(outputOwner3));
             });
 
             it('should withdraw ETH from vault for the piggybacked input', async () => {
@@ -402,7 +413,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
             });
 
             it('should NOT withdraw fund from vault for the piggybacked but already spent input', async () => {
-                await this.exitGame.proxyFlagOutputFinalized(TEST_OUTPUT_ID_FOR_INPUT_1);
+                await this.exitGame.proxyFlagOutputFinalized(TEST_OUTPUT_ID_FOR_INPUT_1, DUMMY_EXIT_ID);
                 const { receipt } = await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH);
                 let didNotCallEthWithdraw = false;
                 try {
@@ -464,6 +475,14 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
                 expect(postBalance).to.be.bignumber.equal(expectedBalance);
             });
 
+            it('should return piggyback bond to the output owner', async () => {
+                await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ERC20, erc20);
+                const postBalance = new BN(await web3.eth.getBalance(outputOwner3));
+                const expectedBalance = this.outputOwner3PreBalance.add(this.piggybackBondSize);
+
+                expect(postBalance).to.be.bignumber.equal(expectedBalance);
+            });
+
             it('should only flag piggybacked inputs with the same token as spent', async () => {
                 await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH);
                 // piggybacked input
@@ -508,6 +527,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
                 await this.exitGame.setInFlightExitOutputPiggybacked(DUMMY_EXIT_ID, 0);
                 await this.exitGame.setInFlightExitOutputPiggybacked(DUMMY_EXIT_ID, 2);
 
+                this.inputOwner3PreBalance = new BN(await web3.eth.getBalance(inputOwner3));
                 this.outputOwner3PreBalance = new BN(await web3.eth.getBalance(outputOwner3));
             });
 
@@ -525,7 +545,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
             });
 
             it('should NOT withdraw from fund vault for the piggybacked but already spent output', async () => {
-                await this.exitGame.proxyFlagOutputFinalized(TEST_OUTPUT_ID_FOR_OUTPUT_1);
+                await this.exitGame.proxyFlagOutputFinalized(TEST_OUTPUT_ID_FOR_OUTPUT_1, DUMMY_EXIT_ID);
                 const { receipt } = await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH);
                 let didNotCallEthWithdraw = false;
                 try {
@@ -587,13 +607,21 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
                 expect(postBalance).to.be.bignumber.equal(expectedBalance);
             });
 
-            it('should flag ALL inputs with the same token as spent', async () => {
+            it('should return piggyback bond to the input owner', async () => {
+                await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ERC20, erc20);
+                const postBalance = new BN(await web3.eth.getBalance(inputOwner3));
+                const expectedBalance = this.inputOwner3PreBalance.add(this.piggybackBondSize);
+
+                expect(postBalance).to.be.bignumber.equal(expectedBalance);
+            });
+
+            it('should flag ALL inputs as spent', async () => {
                 await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH);
                 // same token, both piggybacked and non-piggybacked cases
                 expect(await this.framework.isOutputFinalized(TEST_OUTPUT_ID_FOR_INPUT_1)).to.be.true;
                 expect(await this.framework.isOutputFinalized(TEST_OUTPUT_ID_FOR_INPUT_2)).to.be.true;
                 // different token
-                expect(await this.framework.isOutputFinalized(TEST_OUTPUT_ID_FOR_INPUT_3)).to.be.false;
+                expect(await this.framework.isOutputFinalized(TEST_OUTPUT_ID_FOR_INPUT_3)).to.be.true;
             });
 
             it('should only flag piggybacked output with the same token as spent', async () => {

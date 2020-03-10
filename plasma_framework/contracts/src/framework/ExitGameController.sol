@@ -18,8 +18,8 @@ contract ExitGameController is ExitGameRegistry {
     mapping (bytes32 => IExitProcessor) public delegations;
     // hashed (vault id, token) => PriorityQueue
     mapping (bytes32 => PriorityQueue) public exitsQueues;
-    // outputId => bool
-    mapping (bytes32 => bool) public isOutputFinalized;
+    // outputId => exitId
+    mapping (bytes32 => uint160) public outputsFinalizations;
     bool private mutex = false;
 
     event ExitQueueAdded(
@@ -189,9 +189,10 @@ contract ExitGameController is ExitGameRegistry {
      * @notice Checks whether any of the output with the given outputIds is already spent
      * @param _outputIds Output IDs to check
      */
-    function isAnyOutputFinalized(bytes32[] calldata _outputIds) external view returns (bool) {
+    function isAnyInputFinalizedByOtherExit(bytes32[] calldata _outputIds, uint160 exitId) external view returns (bool) {
         for (uint i = 0; i < _outputIds.length; i++) {
-            if (isOutputFinalized[_outputIds[i]] == true) {
+            uint160 finalizedExitId = outputsFinalizations[_outputIds[i]];
+            if (finalizedExitId != 0 && finalizedExitId != exitId) {
                 return true;
             }
         }
@@ -199,23 +200,35 @@ contract ExitGameController is ExitGameRegistry {
     }
 
     /**
-     * @notice Batch flags already spent outputs
-     * @param _outputIds Output IDs to flag
+     * @notice Batch flags already spent outputs (only not already spent)
+     * @param outputIds Output IDs to flag
      */
-    function batchFlagOutputsFinalized(bytes32[] calldata _outputIds) external onlyFromNonQuarantinedExitGame {
-        for (uint i = 0; i < _outputIds.length; i++) {
-            require(_outputIds[i] != bytes32(""), "Should not flag with empty outputId");
-            isOutputFinalized[_outputIds[i]] = true;
+    function batchFlagOutputsFinalized(bytes32[] calldata outputIds, uint160 exitId) external onlyFromNonQuarantinedExitGame {
+        for (uint i = 0; i < outputIds.length; i++) {
+            require(outputIds[i] != bytes32(""), "Should not flag with empty outputId");
+            if (outputsFinalizations[outputIds[i]] == 0) {
+                outputsFinalizations[outputIds[i]] = exitId;
+            }
         }
     }
 
     /**
-     * @notice Flags a single output as spent
-     * @param _outputId The output ID to flag as spent
+     * @notice Flags a single output as spent if it is not flagged already
+     * @param outputId The output ID to flag as spent
      */
-    function flagOutputFinalized(bytes32 _outputId) external onlyFromNonQuarantinedExitGame {
-        require(_outputId != bytes32(""), "Should not flag with empty outputId");
-        isOutputFinalized[_outputId] = true;
+    function flagOutputFinalized(bytes32 outputId, uint160 exitId) external onlyFromNonQuarantinedExitGame {
+        require(outputId != bytes32(""), "Should not flag with empty outputId");
+        if (outputsFinalizations[outputId] == 0) {
+            outputsFinalizations[outputId] = exitId;
+        }
+    }
+
+     /**
+     * @notice Checks whether output with a given outputId is finalized
+     * @param outputId Output ID to check
+     */
+    function isOutputFinalized(bytes32 outputId) external view returns (bool) {
+        return outputsFinalizations[outputId] != 0;
     }
 
     function getNextExit(uint256 vaultId, address token) external view returns (uint256) {
