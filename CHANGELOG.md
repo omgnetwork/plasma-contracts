@@ -5,7 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased - 2020-02-18
+## [1.0.4] - 2020-03-10
+- Fix broken canonicity in IFE processing. ([#591](https://github.com/omisego/plasma-contracts/pull/591))
+- Fix in-flight exit input-spend-challenge using wrong index. ([#593](https://github.com/omisego/plasma-contracts/pull/593))
+- Add document about block retrieval. ([#570](https://github.com/omisego/plasma-contracts/pull/570))
 
 ## [1.0.3] - 2020-02-18
 - In-flight exit returns all unchallenged piggyback bonds even if user piggybacks the wrong canonicity. ([#585](https://github.com/omisego/plasma-contracts/pull/585))
