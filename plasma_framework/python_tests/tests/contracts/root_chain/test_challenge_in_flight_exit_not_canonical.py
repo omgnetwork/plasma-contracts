@@ -7,19 +7,10 @@ from tests_utils.constants import PAYMENT_TX_MAX_INPUT_SIZE, PAYMENT_TX_MAX_OUTP
 
 
 def _output_params():
-    params = []
-    for i in range(PAYMENT_TX_MAX_OUTPUT_SIZE):
-        for j in range(i):
-            params.append([i, j])
-    return params
-
+    return [(i, j) for i in range(1, PAYMENT_TX_MAX_OUTPUT_SIZE + 1) for j in range(i)]
 
 def _input_params():
-    params = []
-    for i in range(PAYMENT_TX_MAX_INPUT_SIZE):
-        for j in range(i):
-            params.append([i, j])
-    return params
+    return [(i, j) for i in range(1, PAYMENT_TX_MAX_INPUT_SIZE + 1) for j in range(i)]
 
 
 @pytest.mark.parametrize(
@@ -52,7 +43,7 @@ def test_challenge_in_flight_exit_not_canonical_should_succeed(
     double_spend_utxo = encode_utxo_id(blknum, tx_index, double_spend_output_index)
 
     ife_tx_inputs = []
-    for i in range(0, ife_tx_input_num):
+    for i in range(ife_tx_input_num):
         if i == ife_input_index:
             ife_tx_inputs.append(double_spend_utxo)
         else:
@@ -66,7 +57,7 @@ def test_challenge_in_flight_exit_not_canonical_should_succeed(
     )
 
     challenge_tx_inputs = []
-    for i in range(0, challenge_tx_input_num):
+    for i in range(challenge_tx_input_num):
         if i == challenge_input_index:
             challenge_tx_inputs.append(double_spend_utxo)
         else:
