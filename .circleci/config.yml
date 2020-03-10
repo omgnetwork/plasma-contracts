@@ -122,8 +122,8 @@ jobs:
           working_directory: ~/repo/plasma_framework/python_tests
           command: |
             . ~/venv/bin/activate
-            pytest -n 8 -k test_challenge_in_flight_exit_not_canonical_should_succeed
-            pytest -n 8 -k test_respond_to_non_canonical_challenge_should_succeed
+            pytest -n 4 -k test_challenge_in_flight_exit_not_canonical_should_succeed
+            pytest -n 4 -k test_respond_to_non_canonical_challenge_should_succeed
   
   Python linter:
     executor: python_executor

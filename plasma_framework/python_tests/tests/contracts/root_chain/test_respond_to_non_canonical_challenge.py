@@ -41,7 +41,7 @@ def _input_params():
 @pytest.mark.parametrize(
     "challenge_tx_input_num, challenge_input_index", _input_params()
 )
-def test_challenge_in_flight_exit_not_canonical_should_succeed_for_all_indices(
+def test_respond_to_non_canonical_challenge_should_succeed(
     testlang,
     input_tx_output_num,
     double_spend_output_index,
