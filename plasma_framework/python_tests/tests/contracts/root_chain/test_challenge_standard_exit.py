@@ -7,16 +7,31 @@ from plasma_core.utils.transactions import decode_utxo_id, encode_utxo_id
 from tests_utils.constants import PAYMENT_TX_MAX_INPUT_SIZE, PAYMENT_TX_MAX_OUTPUT_SIZE
 
 
+def _output_params():
+    return [(i, j) for i in range(1, PAYMENT_TX_MAX_OUTPUT_SIZE + 1) for j in range(i)]
+
+def _input_params():
+    return [(i, j) for i in range(1, PAYMENT_TX_MAX_INPUT_SIZE + 1) for j in range(i)]
+
+
 @pytest.mark.parametrize(
-    "exit_output_index,challenge_input_index",
-    [(i, j) for i in range(PAYMENT_TX_MAX_OUTPUT_SIZE) for j in range(PAYMENT_TX_MAX_INPUT_SIZE)]
+    "exit_tx_output_num, exit_output_index", _output_params()
 )
-def test_challenge_standard_exit_valid_spend_should_succeed(testlang, exit_output_index, challenge_input_index):
+@pytest.mark.parametrize(
+    "challenge_tx_input_num, challenge_input_index", _input_params()
+)
+def test_challenge_standard_exit_valid_spend_should_succeed(
+    testlang,
+    exit_tx_output_num,
+    exit_output_index,
+    challenge_tx_input_num,
+    challenge_input_index
+):
     owner, amount = testlang.accounts[0], 100
     deposit_id = testlang.deposit(owner, amount)
 
     spend_tx_amount = amount // PAYMENT_TX_MAX_OUTPUT_SIZE
-    outputs = [(owner.address, NULL_ADDRESS, spend_tx_amount)] * PAYMENT_TX_MAX_OUTPUT_SIZE
+    outputs = [(owner.address, NULL_ADDRESS, spend_tx_amount)] * exit_tx_output_num
     spend_id = testlang.spend_utxo([deposit_id], [owner], outputs=outputs)
 
     blknum, tx_index, _ = decode_utxo_id(spend_id)
@@ -25,7 +40,7 @@ def test_challenge_standard_exit_valid_spend_should_succeed(testlang, exit_outpu
     testlang.start_standard_exit(exit_id, owner)
 
     inputs = []
-    for i in range(PAYMENT_TX_MAX_INPUT_SIZE):
+    for i in range(challenge_tx_input_num):
         if i == challenge_input_index:
             inputs.append(exit_id)
         else:
@@ -33,7 +48,7 @@ def test_challenge_standard_exit_valid_spend_should_succeed(testlang, exit_outpu
 
     doublespend_id = testlang.spend_utxo(
         inputs,
-        [owner] * PAYMENT_TX_MAX_INPUT_SIZE,
+        [owner] * challenge_tx_input_num,
         outputs=[(owner.address, NULL_ADDRESS, spend_tx_amount)]
     )
 
