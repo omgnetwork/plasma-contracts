@@ -122,7 +122,7 @@ jobs:
           working_directory: ~/repo/plasma_framework/python_tests
           command: |
             . ~/venv/bin/activate
-            make test
+            pytest -n 4 -k test_challenge_in_flight_exit_not_canonical_should_succeed
   
   Python linter:
     executor: python_executor
@@ -154,14 +154,14 @@ workflows:
   Run python tests:
     jobs:
       - Python tests
-      - Python linter
+      # - Python linter
 
-  Run truffle tests:
-    jobs:
-      - Truffle tests
-      - Solidity coverage
-      - Javascript linter
-      - Solidity linter
+  # Run truffle tests:
+  #   jobs:
+  #     - Truffle tests
+  #     - Solidity coverage
+  #     - Javascript linter
+  #     - Solidity linter
   
   Run python slow tests:
     jobs:
