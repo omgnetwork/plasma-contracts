@@ -64,11 +64,26 @@ To determine the position of the outputs of a transaction, you will include the 
 
 
 
-## Transaction type and output type
+## Transaction type, output type, and spending condition
 
-ALD introduces the concepts of transaction type, and transcation output type. Each transaction type and transcation output type can define different rules about how to spend funds.
+ALD introduces the concepts of transaction type and transaction output type.
+Each transaction output type can define its own rules about how funds may be spent.
+Output type white-lists transaction type and defines how exactly it can spend.
+Each output type can white-list many transaction types.
 
+For example, consider an output tx type that represents client funds being held by a venue.
+This output type can limit the transaction types that can spend it to either a "withdrawal" transaction that returns the funds to the client, or a "trade settlement" transaction that contains information about orders signed by clients. 
+In this way the output tx type prevents spending the funds via a "payment" transaction - ensuring that the venue can't pay its bills using the clients' money.
 
+Rules are encoded in the [mapping](../contracts/src/exits/registries/SpendingConditionRegistry.sol) from `hash(tx_type, output_type)` to an address.
+If address is 0x0, spending is forbidden.
+Otherwise, the address is that of a contract that implements the [ISpendingCondition](../contracts/src/exits/interfaces/ISpendingCondition.sol) interface and its `verify(...) returns (bool)` function. An example is in [PaymentOutputToPaymentTxCondition](../contracts/src/exits/payment/spendingConditions/PaymentOutputToPaymentTxCondition.sol).
+
+For a valid transaction, `verify(...)` will return `true` for each of the transaction's inputs.
+
+## Transaction balance validation
+
+Plasma transactions must not mint tokens. The sum of inputs must not be smaller than the sum of outputs. ALD defines `IStateTransitionVerifier.verify(...) returns (bool)` [interface](../contracts/src/exits/interfaces/IStateTransitionVerifier.sol) where such checks must be implemented. An [example](../contracts/src/exits/payment/PaymentTransactionStateTransitionVerifier.sol) is in `PaymentTransactionStateTransitionVerifier`.
 
 ## Generic transaction format
 All Transactions follow the same basic format [GenericTransaction](../contracts/GenericTransaction.md) and can be extended. 
@@ -92,6 +107,13 @@ outputData ::= undefined, to be defined by concrete transaction types
 txData ::= undefined, to be defined by concrete transaction types
 metaData ::= bytes32
 ```
+
+GenericTransaction [performs](../contracts/src/transactions/GenericTransaction.sol#L42) a range of checks when decoding:
+
+* Is the binary a proper RLP encoding?  
+* Is the decoded list of required length? See `TX_NUM_ITEMS`  
+* Is txType an integer? Is it `> 0`?  
+* Is each of the outputs correctly formed? See `decodeOutput(...)`
 
 The current implementation supports only the `Payment` transaction type.
 
@@ -122,7 +144,13 @@ Child chain and watcher both expect, for a signed transaction to be valid, that:
 A signature is a specific form of a `witness` and is called as such throughout this document.
 
 ## Payment transaction format
-Payment transactions are used to transfer fungible tokens, such as ETH and ERC20 tokens. A Payment transaction's output is as described in [FungibleTokenOutputModel](../contracts/FungibleTokenOutputModel.md)
+Payment transactions are used to transfer fungible tokens, such as ETH and ERC20 tokens. A Payment transaction's output is as described in [FungibleTokenOutputModel](../contracts/FungibleTokenOutputModel.md).
+
+[PaymentTransactionModel](../contracts/PaymentTransactionModel.md) does few more checks when decoding comparing to GenericTransaction above:
+
+* Is the number of inputs too large? See `_MAX_INPUT_NUM`.  
+* Is the number outputs in the range `(0, _MAX_OUTPUT_NUM]`?  
+* None of the input pointers is null.
 
 ### Payment transaction RLP encoding
 A Payment transaction must be RLP encoded as follows:
