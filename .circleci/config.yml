@@ -144,7 +144,7 @@ jobs:
       - run:
           name: Run slow tests
           working_directory: ~/repo/plasma_framework/python_tests
-          no_output_timeout: 10h
+          no_output_timeout: 5h # Circl CI limits to 5hr max: https://discuss.circleci.com/t/job-times-out-after-5-hours/32220/3
           command: |
             . ~/venv/bin/activate
             make runslow 

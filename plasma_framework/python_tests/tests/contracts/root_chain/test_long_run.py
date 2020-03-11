@@ -29,7 +29,9 @@ def test_slow(testlang, w3):
     # 4. exit something
     # 5. attempt to finalize
 
-    for i in range(1000):
+    # Circle CI has a limit of the test can only be run at most 5 hours. After experiment, it can run for close to 800 runs.
+    # Choose 700 as a safer number to run the test.
+    for i in range(700):
         print(f'[{datetime.datetime.now()}]: iteration {i}')
         # 1. deposit few
         for _ in range(5):
