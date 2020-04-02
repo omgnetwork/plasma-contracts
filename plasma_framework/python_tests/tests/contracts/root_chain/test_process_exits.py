@@ -1005,14 +1005,16 @@ def test_challenged_standard_exit_does_not_block_ife_output_exit(testlang, plasm
 
 
 def test_after_canonical_ife_is_finalized_inputs_are_not_exited_when_ife_is_restarted_and_non_canonical(testlang, plasma_framework, token):
-    alice, bob, amount = testlang.accounts[0], testlang.accounts[1], 100
-    alice_deposit_id = testlang.deposit(alice, amount)
-    bob_deposit_id = testlang.deposit(bob, amount)
+    alice, bob, deposit_amount = testlang.accounts[0], testlang.accounts[1], 100
+    alice_deposit_id = testlang.deposit(alice, deposit_amount)
+    bob_deposit_id = testlang.deposit(bob, deposit_amount)
+    alice_output_amount = 2 * deposit_amount
 
-    spend_id = testlang.spend_utxo([alice_deposit_id, bob_deposit_id], [alice, bob], [(alice.address, NULL_ADDRESS, amount * 2)])
+    spend_id = testlang.spend_utxo([alice_deposit_id, bob_deposit_id], [alice, bob], [(alice.address, NULL_ADDRESS, alice_output_amount)])
 
     alice_eth_balance_before = testlang.get_balance(alice)
 
+    # transaction is not included in child chain and canonical in-flight exit is started and processed
     testlang.start_in_flight_exit(spend_id)
     testlang.piggyback_in_flight_exit_output(spend_id, 0, alice)
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
@@ -1020,31 +1022,35 @@ def test_after_canonical_ife_is_finalized_inputs_are_not_exited_when_ife_is_rest
 
     # alice exits with her Eth output
     alice_eth_balance = testlang.get_balance(alice)
-    assert alice_eth_balance == alice_eth_balance_before + amount * 2
+    assert alice_eth_balance == alice_eth_balance_before + alice_output_amount
 
-    restart_spend_id = testlang.spend_utxo(
-        [alice_deposit_id, bob_deposit_id], [alice, bob], [(alice.address, NULL_ADDRESS, amount * 2)],
-        force_invalid=True
-    )
+    # bob spends his inputs in a competing transaction
     competing_spend_id = testlang.spend_utxo(
-        [bob_deposit_id], [bob], [(bob.address, NULL_ADDRESS, amount)],
+        [bob_deposit_id], [bob], [(bob.address, NULL_ADDRESS, deposit_amount)],
         force_invalid=True
     )
 
-    testlang.start_in_flight_exit(restart_spend_id)
-    testlang.challenge_in_flight_exit_not_canonical(restart_spend_id, competing_spend_id, account=bob)
+    # in-flight exit is restarted
+    testlang.start_in_flight_exit(spend_id)
 
-    in_flight_exit = testlang.get_in_flight_exit(restart_spend_id)
+    # it's canonicity is challenged with the competing transaction
+    testlang.challenge_in_flight_exit_not_canonical(spend_id, competing_spend_id, account=bob)
+
+    # in-flight exit is not canonical
+    in_flight_exit = testlang.get_in_flight_exit(spend_id)
     assert not in_flight_exit.is_canonical
 
-    testlang.piggyback_in_flight_exit_input(restart_spend_id, 0, alice)
-    testlang.piggyback_in_flight_exit_input(restart_spend_id, 1, bob)
+    # owners piggyback on inputs
+    testlang.piggyback_in_flight_exit_input(spend_id, 0, alice)
+    testlang.piggyback_in_flight_exit_input(spend_id, 1, bob)
 
     eth_balance_before_processing_exits = testlang.get_balance(plasma_framework.eth_vault)
 
+    # exit is processed
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
     testlang.process_exits(NULL_ADDRESS, 0, 2)
 
     # users didn't exit their inputs - no funds were withdrawn from the eth vault
+    # because in-flight transaction output is already exited and the inputs were flagged as finalized
     eth_balance = testlang.get_balance(plasma_framework.eth_vault)
     assert eth_balance_before_processing_exits == eth_balance
