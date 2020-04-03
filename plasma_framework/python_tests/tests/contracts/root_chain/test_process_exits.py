@@ -1005,6 +1005,14 @@ def test_challenged_standard_exit_does_not_block_ife_output_exit(testlang, plasm
 
 
 def test_after_canonical_ife_is_finalized_inputs_are_not_exited_when_ife_is_restarted_and_non_canonical(testlang, plasma_framework, token):
+    """
+    1. Alice and Bob send a canonical transaction transfering their funds to Alice.
+    2. Alice starts an in-flight exit and exits her output.
+    3. Bob creates a competing transaction spending his input.
+    4. In-flight exit is restarted and is non-canonical as Bob produces a comepeting transaction.
+    5. Alice and Bob piggyback on their inputs and exit is processed.
+    6. Funds from inputs are not withdrawn as they were marked as finalized when Alice exited her output in step 2.
+    """
     alice, bob, deposit_amount = testlang.accounts[0], testlang.accounts[1], 100
     alice_deposit_id = testlang.deposit(alice, deposit_amount)
     bob_deposit_id = testlang.deposit(bob, deposit_amount)
