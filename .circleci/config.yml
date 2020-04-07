@@ -79,7 +79,9 @@ jobs:
             MOCHA_REPORTER: eth-gas-reporter
       - run:
           name: Codechecks for gas usage
-          command: npx codechecks
+          command: |
+            # Don't submit gas report for forks or private mirror
+            [[ -z "${CC_SECRET}" ]] || npx codechecks
           working_directory: ~/repo/plasma_framework
           
   Solidity coverage:
@@ -89,7 +91,13 @@ jobs:
       - setup_truffle_env
       - run:
           name: Run solidity coverage
-          command: npm run coverage && cat coverage/lcov.info | coveralls
+          command: |
+            # Don't submit coverage report for forks, but let the build succeed
+            if [[ -z "$COVERALLS_REPO_TOKEN" ]]; then
+              npm run coverage
+            else
+              npm run coverage && cat coverage/lcov.info | coveralls
+            fi
           working_directory: ~/repo/plasma_framework
 
   Javascript linter:
