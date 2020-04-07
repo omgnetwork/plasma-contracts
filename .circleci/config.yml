@@ -78,6 +78,11 @@ jobs:
             CI: true
             MOCHA_REPORTER: eth-gas-reporter
       - run:
+          name: Show gas report
+          command: |
+            # Somehow the file output format is best read in shell
+            cat ~/repo/plasma_framework/gasReport.rst
+      - run:
           name: Codechecks for gas usage
           command: |
             # Don't submit gas report for forks or private mirror
@@ -85,6 +90,8 @@ jobs:
           working_directory: ~/repo/plasma_framework
       - store_artifacts:
           path: ~/repo/plasma_framework/gasReporterOutput.json
+      - store_artifacts:
+          path: ~/repo/plasma_framework/gasReport.rst
           
   Solidity coverage:
     executor: truffle_executor
