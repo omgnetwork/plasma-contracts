@@ -83,6 +83,8 @@ jobs:
             # Don't submit gas report for forks or private mirror
             [[ -z "${CC_SECRET}" ]] || npx codechecks
           working_directory: ~/repo/plasma_framework
+      - store_artifacts:
+          path: ~/repo/plasma_framework/gasReporterOutput.json
           
   Solidity coverage:
     executor: truffle_executor
