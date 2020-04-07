@@ -99,6 +99,10 @@ jobs:
               npm run coverage && cat coverage/lcov.info | coveralls
             fi
           working_directory: ~/repo/plasma_framework
+      - store_artifacts:
+          path: ~/repo/plasma_framework/coverage
+      - store_artifacts:
+          path: ~/repo/plasma_framework/coverage.json
 
   Javascript linter:
     executor: truffle_executor
