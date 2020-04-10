@@ -2,7 +2,7 @@ name: Auto PR for syncing master to master-private
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
 
 jobs:
   auto-pr-for-branch-syncing:
@@ -15,4 +15,4 @@ jobs:
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           FROM_BRANCH: master
-          TO_BRANCH: private-master
+          TO_BRANCH: master-private

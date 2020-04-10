@@ -2,8 +2,7 @@ name: Dispatch sync event to plasma-contracts-private
 
 on:
   push:
-    branches:
-    - master
+    branches: [master]
 
 jobs:
   dispatch-sync-event:
@@ -11,7 +10,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Repository Dispatch
-        if: github.repository == 'boolafish/plasma-contracts'
+        if: github.repository == 'omisego/plasma-contracts'
         uses: peter-evans/repository-dispatch@v1
         with:
           token: ${{ secrets.HOUSE_KEEPER_BOT_TOKEN }}
