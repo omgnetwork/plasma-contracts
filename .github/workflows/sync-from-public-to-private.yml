@@ -10,7 +10,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          # use personal token to enable continue GH action workflows
+          # use personal token to continue GH action workflows
           # by default GH would not trigger another workflow if it is from GH action token
           # see: https://github.com/ad-m/github-push-action/issues/32
           token: ${{ secrets.HOUSE_KEEPER_BOT_TOKEN }}
