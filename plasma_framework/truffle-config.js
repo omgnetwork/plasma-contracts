@@ -44,6 +44,9 @@ module.exports = {
         reporterOptions: {
             currency: 'USD',
             showTimeSpent: true,
+            rst: true,
+            rstTitle: 'Gas Report',
+            outputFile: './gasReport.rst',
             src: 'contracts/src/',
         },
     },
