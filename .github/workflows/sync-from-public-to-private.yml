@@ -8,7 +8,12 @@ jobs:
   sync-public-repo:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v2
+        with:
+          # use personal token to enable continue GH action workflows
+          # by default GH would not trigger another workflow if it is from GH action token
+          # see: https://github.com/ad-m/github-push-action/issues/32
+          token: ${{ secrets.HOUSE_KEEPER_BOT_TOKEN }}
       - name: Event Information
         run: |
           echo "Syncing with sha '${{ github.event.client_payload.sha }}'"
