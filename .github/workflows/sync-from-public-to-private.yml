@@ -1,0 +1,21 @@
+name: Sync with plasma-contracts
+
+on:
+  repository_dispatch:
+    types: [sync-from-public]
+
+jobs:
+  sync-public-repo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Event Information
+        run: |
+          echo "Syncing with sha '${{ github.event.client_payload.sha }}'"
+      - name: GitHub Repo Sync
+        uses: repo-sync/github-sync@v2.0.0
+        with:
+          source_repo: boolafish/plasma-contracts
+          source_branch: master
+          destination_branch: master
+          github_token: ${{ secrets.GITHUB_TOKEN }}

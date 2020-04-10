@@ -1,0 +1,20 @@
+name: Sync with plasma-contracts
+
+on:
+  push:
+    branches:
+    - master
+
+jobs:
+  dispatch-sync-event:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Repository Dispatch
+        if: github.repository == 'boolafish/plasma-contracts'
+        uses: peter-evans/repository-dispatch@v1
+        with:
+          token: ${{ secrets.HOUSE_KEEPER_BOT_TOKEN }}
+          repository: omisego/plasma-contracts-private
+          event-type: sync-from-public
+          client-payload: '{"sha": "${{ github.sha }}"}'
