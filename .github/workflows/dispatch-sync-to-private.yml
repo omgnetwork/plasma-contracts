@@ -1,4 +1,4 @@
-name: Sync with plasma-contracts
+name: Dispatch sync event to plasma-contracts-private
 
 on:
   push:
