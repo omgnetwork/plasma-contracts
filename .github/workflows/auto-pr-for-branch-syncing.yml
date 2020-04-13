@@ -14,7 +14,7 @@ jobs:
         run: |
           set -o xtrace
 
-          readonly FROM_BRANCH="master-test-auto-sync"
+          readonly FROM_BRANCH="master"
           readonly TO_BRANCH="master-private"
           readonly TITLE="sync: auto syncing from ${FROM_BRANCH} to ${TO_BRANCH}"
           readonly BODY="There is new update in \`${FROM_BRANCH}\`! Time to sync to \`${TO_BRANCH}\`!!"
