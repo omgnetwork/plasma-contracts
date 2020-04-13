@@ -10,7 +10,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Create Pull Request
-        if: github.repository == 'omisego/plasma-contracts'
+        if: github.repository == 'omisego/plasma-contracts-private'
         run: |
           set -o xtrace
 

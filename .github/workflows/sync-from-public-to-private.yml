@@ -1,12 +1,8 @@
 name: Sync with plasma-contracts
 
-# on:
-#   repository_dispatch:
-#     types: [sync-from-public]
-
 on:
-  push:
-    branches: [master-test-auto-sync]
+  repository_dispatch:
+    types: [sync-from-public]
 
 jobs:
   sync-public-repo:
@@ -22,6 +18,7 @@ jobs:
         run: |
           echo "Syncing with sha '${{ github.event.client_payload.sha }}'"
       - name: Sync master branch in between public and private repos
+        if: github.repository == 'omisego/plasma-contracts-private'
         run: |
           set -e
           set -o xtrace
