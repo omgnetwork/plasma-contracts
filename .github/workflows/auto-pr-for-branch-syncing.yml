@@ -2,7 +2,7 @@ name: Auto PR for syncing master to master-private
 
 on:
   push:
-    branches: [master-test-auto-sync]
+    branches: [master]
 
 jobs:
   auto-pr-for-branch-syncing:
