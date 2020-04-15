@@ -1,0 +1,41 @@
+name: Sync with plasma-contracts
+
+on:
+  repository_dispatch:
+    types: [sync-from-public]
+
+jobs:
+  sync-public-repo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          # use personal token to continue GH action workflows
+          # by default GH would not trigger another workflow if it is from GH action token
+          # see: https://github.com/ad-m/github-push-action/issues/32
+          token: ${{ secrets.HOUSE_KEEPER_BOT_TOKEN }}
+      - name: Event Information
+        run: |
+          echo "Syncing with sha '${{ github.event.client_payload.sha }}'"
+      - name: Sync master branch in between public and private repos
+        if: github.repository == 'omisego/plasma-contracts-private'
+        run: |
+          set -e
+          set -o xtrace
+
+          # Credit repo-sync/github-sync for the script used in here
+          # https://github.com/repo-sync/github-sync/blob/520596e97177727db1f2a1de14f4ded905624066/github-sync.sh#L23-L33
+
+          readonly SOURCE_REPO="omisego/plasma-contracts"
+          readonly SOURCE_BRANCH="master"
+          readonly DESTINATION_BRANCH="master"
+
+          echo "Syncing ${DESTINATION_BRANCH} from branch ${SOURCE_BRANCH} of ${SOURCE_REPO}..."
+
+          git remote set-url origin "https://$GITHUB_ACTOR:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY"
+          git remote add tmp_upstream "https://github.com/${SOURCE_REPO}.git"
+          git fetch tmp_upstream
+          git remote --verbose
+          git push origin "refs/remotes/tmp_upstream/${SOURCE_BRANCH}:refs/heads/${DESTINATION_BRANCH}" --force
+          git remote rm tmp_upstream
+          git remote --verbose

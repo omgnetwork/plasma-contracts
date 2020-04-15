@@ -1,0 +1,26 @@
+name: Auto PR for syncing master to master-private
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  auto-pr-for-branch-syncing:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Create Pull Request
+        if: github.repository == 'omisego/plasma-contracts-private'
+        run: |
+          set -o xtrace
+
+          readonly FROM_BRANCH="master"
+          readonly TO_BRANCH="master-private"
+          readonly TITLE="sync: auto syncing from ${FROM_BRANCH} to ${TO_BRANCH}"
+          readonly BODY="There is new update in \`${FROM_BRANCH}\`! Time to sync to \`${TO_BRANCH}\`!!"
+
+          curl -X POST "https://api.github.com/repos/omisego/plasma-contracts-private/pulls" \
+          -H "Accept: application/vnd.github.v3+json" \
+          -H "Authorization: token ${{ secrets.HOUSE_KEEPER_BOT_TOKEN }}" \
+          --data "{\"title\": \"${TITLE}\", \"head\": \"${FROM_BRANCH}\", \"base\": \"${TO_BRANCH}\", \"body\": \"${BODY}\"}"
+
