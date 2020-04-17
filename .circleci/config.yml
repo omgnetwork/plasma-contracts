@@ -72,7 +72,7 @@ jobs:
       - setup_truffle_env
       - run:
           name: Run tests
-          command: truffle test 
+          command: EXPERIMENT=true npm run test
           working_directory: ~/repo/plasma_framework
           environment:
             CI: true
@@ -103,9 +103,9 @@ jobs:
           command: |
             # Don't submit coverage report for forks, but let the build succeed
             if [[ -z "$COVERALLS_REPO_TOKEN" ]]; then
-              npm run coverage
+              EXPERIMENT=true npm run coverage
             else
-              npm run coverage && cat coverage/lcov.info | coveralls
+              EXPERIMENT=true npm run coverage && cat coverage/lcov.info | coveralls
             fi
           working_directory: ~/repo/plasma_framework
       - store_artifacts:
