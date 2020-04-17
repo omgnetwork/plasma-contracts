@@ -15,9 +15,9 @@ module.exports = async (
     const isExperiment = process.env.EXPERIMENT || false;
     if (isExperiment) {
         const PAYMENT_OUTPUT_TYPE = config.registerKeys.outputTypes.payment;
-        const PAYMENT_V2_OUTPUT_TYPE = config.registerKeys.outputTypes.experimental.paymentV2;
+        const PAYMENT_V2_OUTPUT_TYPE = config.experimental.registerKeys.outputTypes.paymentV2;
         const PAYMENT_V2_TX_TYPE = config.registerKeys.txTypes.paymentV2;
-        const PAYMENT_V3_TX_TYPE = config.registerKeys.txTypes.experimental.paymentV3;
+        const PAYMENT_V3_TX_TYPE = config.experimental.registerKeys.txTypes.paymentV3;
 
         const spendingConditionRegistry = await SpendingConditionRegistry.deployed();
         const plasmaFramework = await PlasmaFramework.deployed();
@@ -43,7 +43,7 @@ module.exports = async (
             PAYMENT_V2_TX_TYPE,
         );
         const paymentV2ToPaymentV2Condition = await PaymentOutputToPaymentTxCondition.deployed();
-        console.log(`Registering paymentToPaymentCondition (${paymentV2ToPaymentV2Condition.address}) to spendingConditionRegistry`);
+        console.log(`Registering paymentV2ToPaymentV2Condition (${paymentV2ToPaymentV2Condition.address}) to spendingConditionRegistry`);
         await spendingConditionRegistry.registerSpendingCondition(
             PAYMENT_V2_OUTPUT_TYPE, PAYMENT_V2_TX_TYPE, paymentV2ToPaymentV2Condition.address,
         );
@@ -56,7 +56,7 @@ module.exports = async (
             PAYMENT_V3_TX_TYPE,
         );
         const paymentV2ToPaymentV3Condition = await PaymentOutputToPaymentTxCondition.deployed();
-        console.log(`Registering paymentToPaymentV2Condition (${paymentV2ToPaymentV3Condition.address}) to spendingConditionRegistry`);
+        console.log(`Registering paymentV2ToPaymentV3Condition (${paymentV2ToPaymentV3Condition.address}) to spendingConditionRegistry`);
         await spendingConditionRegistry.registerSpendingCondition(
             PAYMENT_V2_OUTPUT_TYPE, PAYMENT_V3_TX_TYPE, paymentV2ToPaymentV3Condition.address,
         );

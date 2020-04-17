@@ -25,20 +25,29 @@ const development = {
             payment: 1,
             paymentV2: 2,
             fee: 3,
-            experimental: {
-                paymentV3: 4,
-            },
         },
         outputTypes: {
             payment: 1,
             feeClaim: 2,
-            experimental: {
-                paymentV2: 3,
-            },
         },
         vaultId: {
             eth: 1,
             erc20: 2,
+        },
+    },
+    experimental: {
+        frameworks: {
+            // Allow 2 exit games (PaymentExitGame, PaymentV2ExitGame, FeeExitGame)
+            // to be used without going through quarantine.
+            initialImmuneExitGames: 3,
+        },
+        registerKeys: {
+            txTypes: {
+                paymentV3: 4,
+            },
+            outputTypes: {
+                paymentV2: 3,
+            },
         },
     },
 };
