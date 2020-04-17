@@ -25,10 +25,16 @@ const development = {
             payment: 1,
             paymentV2: 2,
             fee: 3,
+            experimental: {
+                paymentV3: 4,
+            },
         },
         outputTypes: {
             payment: 1,
             feeClaim: 2,
+            experimental: {
+                paymentV2: 3,
+            },
         },
         vaultId: {
             eth: 1,
