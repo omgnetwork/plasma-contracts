@@ -12,6 +12,6 @@ Truffle migration scripts run in the order of the numbered prefix of the filenam
 - 2000: Future extensions, new exit games, etc.
 
 ## ENV VAR settings
-- TENDERLY: set to `true` when needed to push the contract to tenderly. Default not pushing to tenderly.
-- DEPLOY_TEST_CONTRACTS: set to `true` when need to deploy some testing contracts like mock, wrapper for conformance testing. Default not deploying test contracts.
-- EXPERIMENT: set to `true` when needed to deploy experimental contracts. For instance, deploying new payment exit game contract to test the flow of extension.
+- TENDERLY: set to `true` when you need to push the contract to tenderly. Default not pushing to tenderly.
+- DEPLOY_TEST_CONTRACTS: set to `true` when you need to deploy some testing contracts like mock, wrapper for conformance testing. By default test contracts are not deployed.
+- EXPERIMENT: set to `true` when you need to deploy experimental contracts. For instance, deploy a new payment exit game contract to test the flow to extend the system.
