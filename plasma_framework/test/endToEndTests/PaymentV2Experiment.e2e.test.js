@@ -22,7 +22,7 @@ contract('PaymentExitGame - V2 Extension experiment', ([_deployer, _maintainer, 
     const INITIAL_ERC20_SUPPLY = 10000000000;
     const DEPOSIT_VALUE = 1000000;
     const OUTPUT_TYPE_PAYMENT = config.registerKeys.outputTypes.payment;
-    const OUTPUT_TYPE_PAYMENT_V2 = config.experimental.registerKeys.outputTypes.paymentV2;
+    const OUTPUT_TYPE_PAYMENT_V2 = config.registerKeys.outputTypes.paymentV2;
     const PAYMENT_V2_TX_TYPE = config.registerKeys.txTypes.paymentV2;
     const MERKLE_TREE_DEPTH = 16;
 

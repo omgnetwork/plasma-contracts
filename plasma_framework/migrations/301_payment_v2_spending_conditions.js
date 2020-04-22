@@ -14,9 +14,9 @@ module.exports = async (
 ) => {
     if (process.env.MULTI_EXIT_GAME_EXPERIMENT) {
         const PAYMENT_OUTPUT_TYPE = config.registerKeys.outputTypes.payment;
-        const PAYMENT_V2_OUTPUT_TYPE = config.experimental.registerKeys.outputTypes.paymentV2;
+        const PAYMENT_V2_OUTPUT_TYPE = config.registerKeys.outputTypes.paymentV2;
         const PAYMENT_V2_TX_TYPE = config.registerKeys.txTypes.paymentV2;
-        const PAYMENT_V3_TX_TYPE = config.experimental.registerKeys.txTypes.paymentV3;
+        const PAYMENT_V3_TX_TYPE = config.registerKeys.txTypes.paymentV3;
 
         const spendingConditionRegistry = await SpendingConditionRegistry.deployed();
         const plasmaFramework = await PlasmaFramework.deployed();
