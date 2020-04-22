@@ -10,15 +10,11 @@ module.exports = async (
     // eslint-disable-next-line no-unused-vars
     [deployerAddress, maintainerAddress, authorityAddress],
 ) => {
-    const isExperiment = process.env.EXPERIMENT || false;
-    const initialImmuneExitGames = (isExperiment)
-        ? config.experimental.frameworks.initialImmuneExitGames : config.frameworks.initialImmuneExitGames;
-
     await deployer.deploy(
         PlasmaFramework,
         config.frameworks.minExitPeriod,
         config.frameworks.initialImmuneVaults,
-        initialImmuneExitGames,
+        config.frameworks.initialImmuneExitGames,
         authorityAddress,
         maintainerAddress,
     );

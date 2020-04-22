@@ -12,8 +12,7 @@ module.exports = async (
     // eslint-disable-next-line no-unused-vars
     [deployerAddress, maintainerAddress, authorityAddress],
 ) => {
-    const isExperiment = process.env.EXPERIMENT || false;
-    if (isExperiment) {
+    if (process.env.MULTI_EXIT_GAME_EXPERIMENT) {
         const PAYMENT_OUTPUT_TYPE = config.registerKeys.outputTypes.payment;
         const PAYMENT_V2_OUTPUT_TYPE = config.experimental.registerKeys.outputTypes.paymentV2;
         const PAYMENT_V2_TX_TYPE = config.registerKeys.txTypes.paymentV2;

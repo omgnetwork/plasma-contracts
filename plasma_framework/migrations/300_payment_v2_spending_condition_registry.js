@@ -8,8 +8,7 @@ module.exports = async (
     // eslint-disable-next-line no-unused-vars
     [deployerAddress, maintainerAddress, authorityAddress],
 ) => {
-    const isExperiment = process.env.EXPERIMENT || false;
-    if (isExperiment) {
+    if (process.env.MULTI_EXIT_GAME_EXPERIMENT) {
         await deployer.deploy(SpendingConditionRegistry);
     }
 };
