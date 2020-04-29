@@ -72,11 +72,12 @@ jobs:
       - setup_truffle_env
       - run:
           name: Run tests
-          command: truffle test 
+          command: npm run test
           working_directory: ~/repo/plasma_framework
           environment:
             CI: true
             MOCHA_REPORTER: eth-gas-reporter
+            MULTI_EXIT_GAME_EXPERIMENT: true
       - run:
           name: Show gas report
           command: |
@@ -108,6 +109,8 @@ jobs:
               npm run coverage && cat coverage/lcov.info | coveralls
             fi
           working_directory: ~/repo/plasma_framework
+          environment:
+            MULTI_EXIT_GAME_EXPERIMENT: true
       - store_artifacts:
           path: ~/repo/plasma_framework/coverage
       - store_artifacts:

@@ -37,6 +37,14 @@ const development = {
     },
 };
 
+if (process.env.MULTI_EXIT_GAME_EXPERIMENT) {
+    // Allow 2 exit games (PaymentExitGame, PaymentV2ExitGame, FeeExitGame)
+    // to be used without going through quarantine.
+    development.frameworks.initialImmuneExitGames = 3;
+    development.registerKeys.txTypes.paymentV3 = 4;
+    development.registerKeys.outputTypes.paymentV2 = 3;
+}
+
 const production = clonedeep(development);
 production.frameworks.minExitPeriod = 60 * 60 * 24 * 7; // The minimum exit period in production is 1 week.
 
