@@ -28,7 +28,7 @@ contract EthDepositVerifier is IEthDepositVerifier {
 
         require(decodedTx.outputs.length == 1, "Deposit must have exactly one output");
         require(decodedTx.outputs[0].amount == amount, "Deposited value must match sent amount");
-        require(decodedTx.outputs[0].token == address(0), "Output requires correct currency (ETH)");
+        require(decodedTx.outputs[0].token == address(0), "Output requires correct token (ETH)");
         require(decodedTx.outputs[0].outputType == supportedOutputType, "Invalid output type");
 
         address depositorsAddress = DepositTx.getOutputOwner(decodedTx.outputs[0]);
