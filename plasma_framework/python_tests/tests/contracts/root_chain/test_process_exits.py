@@ -4,7 +4,7 @@ from eth_tester.exceptions import TransactionFailed
 from plasma_core.constants import NULL_ADDRESS, NULL_ADDRESS_HEX, MIN_EXIT_PERIOD
 from plasma_core.transaction import Transaction
 from plasma_core.utils.transactions import decode_utxo_id, encode_utxo_id
-from tests.conftest import assert_events
+from tests_utils.assertions import assert_events
 
 
 def prepare_exitable_utxo(testlang, owners, amount, outputs, num_outputs=1):
