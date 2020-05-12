@@ -21,15 +21,15 @@ contract liquidity {
         return peg.startStandardExitBondSize();
     }
 
-    function startExitOnRootchainContract(uint256 _utxoPos, bytes memory _rlpOutputTx, bytes memory _outputTxInclusionProof) public {
+   // check if the user calling has deposited and exiting his own utxo
+    function startExitOnRootchainContract(uint256 _utxoPos, bytes memory _rlpOutputTx, bytes memory _outputTxInclusionProof) public payable {
         PaymentStandardExitRouterArgs.StartStandardExitArgs memory s;
         s.utxoPos = _utxoPos;
         s.rlpOutputTx = _rlpOutputTx;
         s.outputTxInclusionProof = _outputTxInclusionProof;
-        // also pay the contract
-        peg.startStandardExit(s);
+        peg.startStandardExit.value(msg.value)(s);
     }
 
-    // logic to store after getting the withdrawl back
+    // logic to store ethers after getting the withdrawl back
 
 }
