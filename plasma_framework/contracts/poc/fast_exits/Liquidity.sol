@@ -15,10 +15,8 @@ import "../../src/exits/payment/routers/PaymentStandardExitRouter.sol";
 */
 contract Liquidity {
     PaymentExitGame private paymentExitGame;
-    address private targetPaymentExitGameContract;
 
     PlasmaFramework private plasmaFrameworkInstance;
-    address private targetPlasmaFrameworkContract;
 
     mapping(address => uint160[]) public userExitIds;
     mapping(uint160 => address) public exitIdtoUser;
@@ -28,10 +26,8 @@ contract Liquidity {
      * @notice generates instances of omg-contracts
     */
     constructor(address _plasmaFrameworkContract) public {
-        targetPlasmaFrameworkContract = _plasmaFrameworkContract;
-        plasmaFrameworkInstance = PlasmaFramework(targetPlasmaFrameworkContract);
-        targetPaymentExitGameContract = plasmaFrameworkInstance.exitGames(1);
-        paymentExitGame = PaymentExitGame(targetPaymentExitGameContract);
+        plasmaFrameworkInstance = PlasmaFramework(_plasmaFrameworkContract);
+        paymentExitGame = PaymentExitGame(plasmaFrameworkInstance.exitGames(1));
     }
 
     function getCurrentBondSize() public view returns (uint128) {
