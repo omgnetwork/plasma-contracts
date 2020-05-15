@@ -38,7 +38,7 @@ contract Liquidity {
      * @dev gets the index of the output from the utxo position
      * @param _utxoPos position of the output
     */
-    function getOutputIndex(uint256 _utxoPos) internal pure returns (uint16) {
+    function getOutputIndex(uint256 _utxoPos) private pure returns (uint16) {
         uint256 txOffset = 10000;
         return uint16(_utxoPos % txOffset);
     }
@@ -62,7 +62,6 @@ contract Liquidity {
     ) public payable {
 
         verifyOwnership(_rlpInputCreationTx, _utxoPosInput);
-
 
             PaymentTransactionModel.Transaction memory decodedSecondTx
          = PaymentTransactionModel.decode(_rlpOutputTxToContract);
@@ -116,7 +115,7 @@ contract Liquidity {
         );
         require(
             ownerFirstTxOutput == msg.sender,
-            "First Tx Provided was not called by sender"
+            "Was not called by the first Tx owner"
         );
     }
 
