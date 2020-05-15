@@ -10,7 +10,6 @@
     "dotenv": "^8.0.0",
     "lodash.clonedeep": "^4.5.0",
     "openzeppelin-solidity": "2.3.0",
-    "solc": "^0.5.11",
     "solidoc": "^1.0.5"
   },
   "devDependencies": {
