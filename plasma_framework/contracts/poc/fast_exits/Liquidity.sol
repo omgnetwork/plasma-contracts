@@ -9,12 +9,15 @@ import "../../src/framework/models/BlockModel.sol";
 import "../../src/utils/Merkle.sol";
 import "../../src/exits/payment/routers/PaymentStandardExitRouter.sol";
 
-/** @title Liquidity Contract. */
+/**
+ * @title Liquidity Contract
+ * Implementation Doc - https://github.com/omisego/research/blob/master/plasma/simple_fast_withdrawals.md
+*/
 contract Liquidity {
-    PaymentExitGame private peg;
+    PaymentExitGame private paymentExitGame;
     address private targetPaymentExitGameContract;
 
-    PlasmaFramework private pf;
+    PlasmaFramework private plasmaFrameworkInstance;
     address private targetPlasmaFrameworkContract;
 
     mapping(address => uint160[]) public userExitIds;
@@ -26,13 +29,13 @@ contract Liquidity {
     */
     constructor(address _plasmaFrameworkContract) public {
         targetPlasmaFrameworkContract = _plasmaFrameworkContract;
-        pf = PlasmaFramework(targetPlasmaFrameworkContract);
-        targetPaymentExitGameContract = pf.exitGames(1);
-        peg = PaymentExitGame(targetPaymentExitGameContract);
+        plasmaFrameworkInstance = PlasmaFramework(targetPlasmaFrameworkContract);
+        targetPaymentExitGameContract = plasmaFrameworkInstance.exitGames(1);
+        paymentExitGame = PaymentExitGame(targetPaymentExitGameContract);
     }
 
     function getCurrentBondSize() public view returns (uint128) {
-        return peg.startStandardExitBondSize();
+        return paymentExitGame.startStandardExitBondSize();
     }
 
     /**
@@ -134,7 +137,7 @@ contract Liquidity {
     ) internal {
         PosLib.Position memory utxoDecoded = PosLib.decode(_utxoPosInput);
         utxoDecoded.outputIndex = 0;
-        (bytes32 _root, ) = pf.blocks(utxoDecoded.blockNum);
+        (bytes32 _root, ) = plasmaFrameworkInstance.blocks(utxoDecoded.blockNum);
         require(_root != bytes32(""), "Failed to get root of the block");
         bool txExists = Merkle.checkMembership(
             _rlpInputCreationTx,
@@ -163,7 +166,7 @@ contract Liquidity {
         s.utxoPos = _utxoPosToExit;
         s.rlpOutputTx = _rlpOutputTxToContract;
         s.outputTxInclusionProof = _outputTxToContractInclusionProof;
-        peg.startStandardExit.value(msg.value)(s);
+        paymentExitGame.startStandardExit.value(msg.value)(s);
     }
 
     function getExitId(bytes memory _txBytes, uint16 _outputIndex)
@@ -189,7 +192,7 @@ contract Liquidity {
         );
         uint160[] memory _exitIdList = new uint160[](1);
         _exitIdList[0] = _exitId;
-        PaymentExitDataModel.StandardExit[] memory exits = peg.standardExits(
+        PaymentExitDataModel.StandardExit[] memory exits = paymentExitGame.standardExits(
             _exitIdList
         );
         if (exits[0].utxoPos == 0) {
