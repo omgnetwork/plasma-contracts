@@ -176,6 +176,10 @@ contract Liquidity {
         return croppedExitId;
     }
 
+    function getContractBalance() public view returns(uint256) {
+        return address(this).balance;
+    }
+
     /**
      * @dev Get Amount from contract after exit is processed - (to be updated)
      * @param _exitId The exit id
@@ -196,5 +200,9 @@ contract Liquidity {
         } else {
             revert("Not processed exit");
         }
+    }
+
+    function() external payable {
+
     }
 }
