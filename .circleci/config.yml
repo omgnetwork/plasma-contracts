@@ -10,7 +10,7 @@ executors:
       - image: circleci/node:10.16
   python_executor:
     docker:
-      - image: circleci/python:3.7
+      - image: circleci/python:3.7.7
 
 commands:
   setup_truffle_env:
