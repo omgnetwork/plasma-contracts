@@ -182,10 +182,10 @@ contract Liquidity {
      * @dev Get Amount from contract after exit is processed - (to be updated)
      * @param exitId The exit id
     */
-    function getWithdrawl(uint160 exitId) public {
+    function getWithdrawal(uint160 exitId) public {
         require(
             exitIdtoUser[exitId] == msg.sender,
-            "Only the exitId owner can get the withdrawl"
+            "Only the exitId owner can get the withdrawal"
         );
         uint160[] memory exitIdList = new uint160[](1);
         exitIdList[0] = exitId;
