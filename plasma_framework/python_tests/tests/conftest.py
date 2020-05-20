@@ -79,8 +79,8 @@ def ganache_cli(accounts, port):
         args = ["ganache-cli",
                 f"--port={port}",
                 f"--gasLimit={GAS_LIMIT}",
-                f"--time=0",
-                f"--blockTime=0",
+                "--time=0",
+                "--blockTime=0",
                 ] + accounts_args
 
         def filter_lines(self, lines):
