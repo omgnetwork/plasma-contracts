@@ -35,7 +35,7 @@ contract PaymentExitGame is IExitProcessor, OnlyFromAddress, PaymentStandardExit
      * @param exitId The exit ID
      * @param token Token (ERC20 address or address(0) for ETH) of the exiting output
      */
-    function processExit(uint160 exitId, uint256, address token) external onlyFrom(address(plasmaFramework)) {
+    function processExit(uint168 exitId, uint256, address token) external onlyFrom(address(plasmaFramework)) {
         if (ExitId.isStandardExit(exitId)) {
             PaymentStandardExitRouter.processStandardExit(exitId, token);
         } else {
@@ -49,7 +49,7 @@ contract PaymentExitGame is IExitProcessor, OnlyFromAddress, PaymentStandardExit
     function getStandardExitId(bool _isDeposit, bytes memory _txBytes, uint256 _utxoPos)
         public
         pure
-        returns (uint160)
+        returns (uint168)
     {
         PosLib.Position memory utxoPos = PosLib.decode(_utxoPos);
         return ExitId.getStandardExitId(_isDeposit, _txBytes, utxoPos);
@@ -61,7 +61,7 @@ contract PaymentExitGame is IExitProcessor, OnlyFromAddress, PaymentStandardExit
     function getInFlightExitId(bytes memory _txBytes)
         public
         pure
-        returns (uint160)
+        returns (uint168)
     {
         return ExitId.getInFlightExitId(_txBytes);
     }

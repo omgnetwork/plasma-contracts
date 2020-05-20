@@ -35,7 +35,7 @@ library PaymentStartStandardExit {
         PosLib.Position utxoPos;
         PaymentTransactionModel.Transaction outputTx;
         FungibleTokenOutputModel.Output output;
-        uint160 exitId;
+        uint168 exitId;
         bool isTxDeposit;
         uint256 txBlockTimeStamp;
         bytes32 outputId;
@@ -43,7 +43,7 @@ library PaymentStartStandardExit {
 
     event ExitStarted(
         address indexed owner,
-        uint160 exitId
+        uint168 exitId
     );
 
     /**
@@ -105,7 +105,7 @@ library PaymentStartStandardExit {
         PaymentTransactionModel.Transaction memory outputTx = PaymentTransactionModel.decode(args.rlpOutputTx);
         FungibleTokenOutputModel.Output memory output = outputTx.getOutput(utxoPos.outputIndex);
         bool isTxDeposit = controller.framework.isDeposit(utxoPos.blockNum);
-        uint160 exitId = ExitId.getStandardExitId(isTxDeposit, args.rlpOutputTx, utxoPos);
+        uint168 exitId = ExitId.getStandardExitId(isTxDeposit, args.rlpOutputTx, utxoPos);
         (, uint256 blockTimestamp) = controller.framework.blocks(utxoPos.blockNum);
 
         bytes32 outputId = isTxDeposit

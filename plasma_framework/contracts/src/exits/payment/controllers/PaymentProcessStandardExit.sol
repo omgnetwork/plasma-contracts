@@ -17,11 +17,11 @@ library PaymentProcessStandardExit {
     }
 
     event ExitOmitted(
-        uint160 indexed exitId
+        uint168 indexed exitId
     );
 
     event ExitFinalized(
-        uint160 indexed exitId
+        uint168 indexed exitId
     );
 
     event BondReturnFailed(
@@ -41,7 +41,7 @@ library PaymentProcessStandardExit {
     function run(
         Controller memory self,
         PaymentExitDataModel.StandardExitMap storage exitMap,
-        uint160 exitId,
+        uint168 exitId,
         address token
     )
         public

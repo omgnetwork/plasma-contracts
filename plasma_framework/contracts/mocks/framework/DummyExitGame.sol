@@ -23,7 +23,7 @@ contract DummyExitGame is IExitProcessor {
     );
 
     // override ExitProcessor interface
-    function processExit(uint160 exitId, uint256 vaultId, address ercContract) public {
+    function processExit(uint168 exitId, uint256 vaultId, address ercContract) public {
         emit ExitFinalizedFromDummyExitGame(exitId, vaultId, ercContract);
     }
 
@@ -41,17 +41,17 @@ contract DummyExitGame is IExitProcessor {
         exitGameController = ExitGameController(_contract);
     }
 
-    function enqueue(uint256 vaultId, address token, uint64 exitableAt, uint256 txPos, uint160 exitId, IExitProcessor exitProcessor)
+    function enqueue(uint256 vaultId, address token, uint64 exitableAt, uint256 txPos, uint168 exitId, IExitProcessor exitProcessor)
         public
     {
         priorityFromEnqueue = exitGameController.enqueue(vaultId, token, exitableAt, PosLib.decode(txPos), exitId, exitProcessor);
     }
 
-    function proxyBatchFlagOutputsFinalized(bytes32[] memory outputIds, uint160 exitId) public {
+    function proxyBatchFlagOutputsFinalized(bytes32[] memory outputIds, uint168 exitId) public {
         exitGameController.batchFlagOutputsFinalized(outputIds, exitId);
     }
 
-    function proxyFlagOutputFinalized(bytes32 outputId, uint160 exitId) public {
+    function proxyFlagOutputFinalized(bytes32 outputId, uint168 exitId) public {
         exitGameController.flagOutputFinalized(outputId, exitId);
     }
 

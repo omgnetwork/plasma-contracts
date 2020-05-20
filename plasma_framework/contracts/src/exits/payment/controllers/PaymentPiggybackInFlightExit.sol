@@ -75,7 +75,7 @@ library PaymentPiggybackInFlightExit {
     )
         public
     {
-        uint160 exitId = ExitId.getInFlightExitId(args.inFlightTx);
+        uint168 exitId = ExitId.getInFlightExitId(args.inFlightTx);
         PaymentExitDataModel.InFlightExit storage exit = inFlightExitMap.exits[exitId];
 
         require(exit.exitStartTimestamp != 0, "No in-flight exit to piggyback on");
@@ -112,7 +112,7 @@ library PaymentPiggybackInFlightExit {
     )
         public
     {
-        uint160 exitId = ExitId.getInFlightExitId(args.inFlightTx);
+        uint168 exitId = ExitId.getInFlightExitId(args.inFlightTx);
         PaymentExitDataModel.InFlightExit storage exit = inFlightExitMap.exits[exitId];
 
         require(exit.exitStartTimestamp != 0, "No in-flight exit to piggyback on");
@@ -139,7 +139,7 @@ library PaymentPiggybackInFlightExit {
         Controller memory controller,
         address token,
         PosLib.Position memory utxoPos,
-        uint160 exitId
+        uint168 exitId
     )
         private
     {

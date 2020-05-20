@@ -33,7 +33,7 @@ contract SpyPlasmaFrameworkForExitGame is PlasmaFramework {
         address _token,
         uint64 _exitableAt,
         PosLib.Position calldata _txPos,
-        uint160 _exitId,
+        uint168 _exitId,
         IExitProcessor _exitProcessor
     )
         external
@@ -58,7 +58,7 @@ contract SpyPlasmaFrameworkForExitGame is PlasmaFramework {
         blocks[_blockNum] = BlockModel.Block(_root, _timestamp);
     }
 
-    function setOutputFinalized(bytes32 _outputId, uint160 _exitId) external {
+    function setOutputFinalized(bytes32 _outputId, uint168 _exitId) external {
         outputsFinalizations[_outputId] = _exitId;
     }
 

@@ -23,7 +23,7 @@ library PaymentStandardExitRouterArgs {
      * @param senderData A keccak256 hash of the sender's address
      */
     struct ChallengeStandardExitArgs {
-        uint160 exitId;
+        uint168 exitId;
         bytes exitingTx;
         bytes challengeTx;
         uint16 inputIndex;

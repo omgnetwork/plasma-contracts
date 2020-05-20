@@ -19,7 +19,7 @@ contract ExitGameController is ExitGameRegistry {
     // hashed (vault id, token) => PriorityQueue
     mapping (bytes32 => PriorityQueue) public exitsQueues;
     // outputId => exitId
-    mapping (bytes32 => uint160) public outputsFinalizations;
+    mapping (bytes32 => uint168) public outputsFinalizations;
     bool private mutex = false;
 
     event ExitQueueAdded(
@@ -34,7 +34,7 @@ contract ExitGameController is ExitGameRegistry {
     );
 
     event ExitQueued(
-        uint160 indexed exitId,
+        uint168 indexed exitId,
         uint256 priority
     );
 
@@ -118,7 +118,7 @@ contract ExitGameController is ExitGameRegistry {
         address token,
         uint64 exitableAt,
         PosLib.Position calldata txPos,
-        uint160 exitId,
+        uint168 exitId,
         IExitProcessor exitProcessor
     )
         external
@@ -150,14 +150,14 @@ contract ExitGameController is ExitGameRegistry {
      * @param maxExitsToProcess Maximum number of exits to process
      * @return Total number of processed exits
      */
-    function processExits(uint256 vaultId, address token, uint160 topExitId, uint256 maxExitsToProcess) external nonReentrant {
+    function processExits(uint256 vaultId, address token, uint168 topExitId, uint256 maxExitsToProcess) external nonReentrant {
         bytes32 key = exitQueueKey(vaultId, token);
         require(hasExitQueue(key), "The token is not yet added to the Plasma framework");
         PriorityQueue queue = exitsQueues[key];
         require(queue.currentSize() > 0, "Exit queue is empty");
 
         uint256 uniquePriority = queue.getMin();
-        uint160 exitId = ExitPriority.parseExitId(uniquePriority);
+        uint168 exitId = ExitPriority.parseExitId(uniquePriority);
         require(topExitId == 0 || exitId == topExitId,
             "Top exit ID of the queue is different to the one specified");
 
@@ -189,9 +189,9 @@ contract ExitGameController is ExitGameRegistry {
      * @notice Checks whether any of the output with the given outputIds is already spent
      * @param _outputIds Output IDs to check
      */
-    function isAnyInputFinalizedByOtherExit(bytes32[] calldata _outputIds, uint160 exitId) external view returns (bool) {
+    function isAnyInputFinalizedByOtherExit(bytes32[] calldata _outputIds, uint168 exitId) external view returns (bool) {
         for (uint i = 0; i < _outputIds.length; i++) {
-            uint160 finalizedExitId = outputsFinalizations[_outputIds[i]];
+            uint168 finalizedExitId = outputsFinalizations[_outputIds[i]];
             if (finalizedExitId != 0 && finalizedExitId != exitId) {
                 return true;
             }
@@ -203,7 +203,7 @@ contract ExitGameController is ExitGameRegistry {
      * @notice Batch flags already spent outputs (only not already spent)
      * @param outputIds Output IDs to flag
      */
-    function batchFlagOutputsFinalized(bytes32[] calldata outputIds, uint160 exitId) external onlyFromNonQuarantinedExitGame {
+    function batchFlagOutputsFinalized(bytes32[] calldata outputIds, uint168 exitId) external onlyFromNonQuarantinedExitGame {
         for (uint i = 0; i < outputIds.length; i++) {
             require(outputIds[i] != bytes32(""), "Should not flag with empty outputId");
             if (outputsFinalizations[outputIds[i]] == 0) {
@@ -216,7 +216,7 @@ contract ExitGameController is ExitGameRegistry {
      * @notice Flags a single output as spent if it is not flagged already
      * @param outputId The output ID to flag as spent
      */
-    function flagOutputFinalized(bytes32 outputId, uint160 exitId) external onlyFromNonQuarantinedExitGame {
+    function flagOutputFinalized(bytes32 outputId, uint168 exitId) external onlyFromNonQuarantinedExitGame {
         require(outputId != bytes32(""), "Should not flag with empty outputId");
         if (outputsFinalizations[outputId] == 0) {
             outputsFinalizations[outputId] = exitId;

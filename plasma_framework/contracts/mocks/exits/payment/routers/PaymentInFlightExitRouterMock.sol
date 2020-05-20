@@ -30,11 +30,11 @@ contract PaymentInFlightExitRouterMock is FailFastReentrancyGuard, PaymentInFlig
     }
 
     /** override and calls processInFlightExit for test */
-    function processExit(uint160 exitId, uint256, address ercContract) external {
+    function processExit(uint168 exitId, uint256, address ercContract) external {
         PaymentInFlightExitRouter.processInFlightExit(exitId, ercContract);
     }
 
-    function setInFlightExit(uint160 exitId, PaymentExitDataModel.InFlightExit memory exit) public {
+    function setInFlightExit(uint168 exitId, PaymentExitDataModel.InFlightExit memory exit) public {
         PaymentExitDataModel.InFlightExit storage ife = inFlightExitMap.exits[exitId];
         ife.isCanonical = exit.isCanonical;
         ife.exitStartTimestamp = exit.exitStartTimestamp;
@@ -53,24 +53,24 @@ contract PaymentInFlightExitRouterMock is FailFastReentrancyGuard, PaymentInFlig
         }
     }
 
-    function getInFlightExitInput(uint160 exitId, uint16 inputIndex) public view returns (PaymentExitDataModel.WithdrawData memory) {
+    function getInFlightExitInput(uint168 exitId, uint16 inputIndex) public view returns (PaymentExitDataModel.WithdrawData memory) {
         return inFlightExitMap.exits[exitId].inputs[inputIndex];
     }
 
-    function setInFlightExitInputPiggybacked(uint160 exitId, uint16 inputIndex) public payable {
+    function setInFlightExitInputPiggybacked(uint168 exitId, uint16 inputIndex) public payable {
         inFlightExitMap.exits[exitId].setInputPiggybacked(inputIndex);
     }
 
-    function setInFlightExitOutputPiggybacked(uint160 exitId, uint16 outputIndex) public payable {
+    function setInFlightExitOutputPiggybacked(uint168 exitId, uint16 outputIndex) public payable {
         inFlightExitMap.exits[exitId].setOutputPiggybacked(outputIndex);
     }
 
-    function getInFlightExitOutput(uint160 exitId, uint16 outputIndex) public view returns (PaymentExitDataModel.WithdrawData memory) {
+    function getInFlightExitOutput(uint168 exitId, uint16 outputIndex) public view returns (PaymentExitDataModel.WithdrawData memory) {
         return inFlightExitMap.exits[exitId].outputs[outputIndex];
     }
 
     /** calls the flagOutputFinalized function on behalf of the exit game */
-    function proxyFlagOutputFinalized(bytes32 outputId, uint160 exitId) public {
+    function proxyFlagOutputFinalized(bytes32 outputId, uint168 exitId) public {
         framework.flagOutputFinalized(outputId, exitId);
     }
 
@@ -94,7 +94,7 @@ contract PaymentInFlightExitRouterMock is FailFastReentrancyGuard, PaymentInFlig
         } else if (stringEquals(testTarget, "challengeInFlightExitOutputSpent")) {
             PaymentInFlightExitRouter.challengeInFlightExitOutputSpent(challengeOutputSpentArgs);
         } else if (stringEquals(testTarget, "deleteNonPiggybackedInFlightExit")) {
-            PaymentInFlightExitRouter.deleteNonPiggybackedInFlightExit(uint160(0));
+            PaymentInFlightExitRouter.deleteNonPiggybackedInFlightExit(uint168(0));
         }
 
         revert("non defined function");

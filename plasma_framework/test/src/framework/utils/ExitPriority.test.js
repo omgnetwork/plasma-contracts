@@ -116,8 +116,8 @@ contract('ExitPriority', () => {
             expect(parsedExitableAt).to.be.bignumber.equal(new BN(exitableAt));
         });
 
-        it('should be able to parse the "exitableAt" from priority given max exitable timestamp of uint42', async () => {
-            const exitableAt = (new BN(2)).pow(new BN(42)).sub(new BN(1)); // 2^42 - 1
+        it('should be able to parse the "exitableAt" from priority given max exitable timestamp of uint32', async () => {
+            const exitableAt = (new BN(2)).pow(new BN(32)).sub(new BN(1)); // 2^32 - 1
             const exitId = 123;
             const txPos = buildTxPos(1000, 0);
             const priority = await this.contract.computePriority(exitableAt, txPos, exitId);

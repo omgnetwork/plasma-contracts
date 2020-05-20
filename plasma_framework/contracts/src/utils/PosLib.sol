@@ -17,9 +17,10 @@ library PosLib {
     uint256 constant internal TX_OFFSET = 10000;
     
     uint256 constant internal MAX_OUTPUT_INDEX = TX_OFFSET - 1;
-    // since we are using merkle tree of depth 16, max tx index size is 2^16 - 1
+    // Since we are using a merkle tree of depth 16, max tx index size is 2^16 - 1
     uint256 constant internal MAX_TX_INDEX = 2 ** 16 - 1;
-    // in ExitPriority, only 54 bits are reserved for both blockNum and txIndex
+    // The maximum block number we can handle depends on ExitPriority. ExitPriority only uses 54 bits for blockNum + txIndex
+    // This is 180143985094 blocks, which works out to be 85 years of blocks (given a block every 15 seconds)
     uint256 constant internal MAX_BLOCK_NUM = ((2 ** 54 - 1) - MAX_TX_INDEX) / (BLOCK_OFFSET / TX_OFFSET);
 
     /**
