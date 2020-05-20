@@ -34,7 +34,6 @@ contract Liquidity {
         return paymentExitGame.startStandardExitBondSize();
     }
 
-
     /**
      * @dev Call this func to start the exit on Rootchain contract
      * @param utxoPosToExit position of the output which the contract has to exit
@@ -98,9 +97,7 @@ contract Liquidity {
 
         PaymentTransactionModel.Transaction memory decodedFirstTx
         = PaymentTransactionModel.decode(rlpInputCreationTx);
-
         PosLib.Position memory position = PosLib.decode(utxoPosInput);
-        
         uint16 firstTransactionOutputIndex = position.outputIndex;
 
         FungibleTokenOutputModel.Output memory outputFromFirstTransaction
