@@ -25,8 +25,8 @@ contract Liquidity {
     /**
      * @notice provide PlasmaFramework contract-address when deploying the contract
     */
-    constructor(address _plasmaFrameworkContract) public {
-        plasmaFrameworkInstance = PlasmaFramework(_plasmaFrameworkContract);
+    constructor(address plasmaFrameworkContract) public {
+        plasmaFrameworkInstance = PlasmaFramework(plasmaFrameworkContract);
         paymentExitGame = PaymentExitGame(plasmaFrameworkInstance.exitGames(1));
     }
 
@@ -36,77 +36,77 @@ contract Liquidity {
 
     /**
      * @dev gets the index of the output from the utxo position
-     * @param _utxoPos position of the output
+     * @param utxoPos position of the output
     */
-    function getOutputIndex(uint256 _utxoPos) private pure returns (uint16) {
+    function getOutputIndex(uint256 utxoPos) private pure returns (uint16) {
         uint256 txOffset = 10000;
-        return uint16(_utxoPos % txOffset);
+        return uint16(utxoPos % txOffset);
     }
 
     /**
      * @dev Call this func to start the exit on Rootchain contract
-     * @param _utxoPosToExit position of the output which the contract has to exit
-     * @param _rlpOutputTxToContract RLP-encoded transaction that creates the output for the contract
-     * @param _outputTxToContractInclusionProof Second Transaction's inclusion proof
-     * @param _rlpInputCreationTx RLP-encoded first transaction that transfers to this contract
-     * @param _inputCreationTxInclusionProof First transactions inclusion proofs
-     * @param _utxoPosInput position of the output that created the inputs for second transaction
+     * @param utxoPosToExit position of the output which the contract has to exit
+     * @param rlpOutputTxToContract RLP-encoded transaction that creates the output for the contract
+     * @param outputTxToContractInclusionProof Second Transaction's inclusion proof
+     * @param rlpInputCreationTx RLP-encoded first transaction that transfers to this contract
+     * @param inputCreationTxInclusionProof First transactions inclusion proofs
+     * @param utxoPosInput position of the output that created the inputs for second transaction
     */
     function startExit(
-        uint256 _utxoPosToExit,
-        bytes memory _rlpOutputTxToContract,
-        bytes memory _outputTxToContractInclusionProof,
-        bytes memory _rlpInputCreationTx,
-        bytes memory _inputCreationTxInclusionProof,
-        uint256 _utxoPosInput
+        uint256 utxoPosToExit,
+        bytes memory rlpOutputTxToContract,
+        bytes memory outputTxToContractInclusionProof,
+        bytes memory rlpInputCreationTx,
+        bytes memory inputCreationTxInclusionProof,
+        uint256 utxoPosInput
     ) public payable {
 
-        verifyOwnership(_rlpInputCreationTx, _utxoPosInput);
+        verifyOwnership(rlpInputCreationTx, utxoPosInput);
 
         PaymentTransactionModel.Transaction memory decodedSecondTx
-        = PaymentTransactionModel.decode(_rlpOutputTxToContract);
+        = PaymentTransactionModel.decode(rlpOutputTxToContract);
         require(
-            decodedSecondTx.inputs[0] == bytes32(_utxoPosInput),
+            decodedSecondTx.inputs[0] == bytes32(utxoPosInput),
             "Wrong utxoPosInput provided"
         );
 
         verifyTxValidity(
-            _utxoPosInput,
-            _rlpInputCreationTx,
-            _inputCreationTxInclusionProof
+            utxoPosInput,
+            rlpInputCreationTx,
+            inputCreationTxInclusionProof
         );
         runExit(
-            _utxoPosToExit,
-            _rlpOutputTxToContract,
-            _outputTxToContractInclusionProof
+            utxoPosToExit,
+            rlpOutputTxToContract,
+            outputTxToContractInclusionProof
         );
 
         // store the resultant exitid as a trait for the nft and map it to the msg.sender
-        uint160 _exitId = getExitId(_rlpOutputTxToContract, 0);
-        userExitIds[msg.sender].push(_exitId);
-        exitIdtoUser[_exitId] = msg.sender;
+        uint160 exitId = getExitId(rlpOutputTxToContract, 0);
+        userExitIds[msg.sender].push(exitId);
+        exitIdtoUser[exitId] = msg.sender;
 
         // associate the amount exiting to the exitId
 
         FungibleTokenOutputModel.Output memory outputFromSecondTransaction
         = decodedSecondTx.outputs[0];
         uint256 amount = outputFromSecondTransaction.amount;
-        exitIdtoAmount[_exitId] = amount;
+        exitIdtoAmount[exitId] = amount;
     }
 
     /**
      * @notice Check if the person calling is the same person who created the tx to the contract
-     * @param _rlpInputCreationTx RLP-encoded first transaction that transfers to this contract
-     * @param _utxoPosInput position of the output that created the inputs for second transaction
+     * @param rlpInputCreationTx RLP-encoded first transaction that transfers to this contract
+     * @param utxoPosInput position of the output that created the inputs for second transaction
     */
     function verifyOwnership(
-        bytes memory _rlpInputCreationTx,
-        uint256 _utxoPosInput
+        bytes memory rlpInputCreationTx,
+        uint256 utxoPosInput
     ) internal {
 
         PaymentTransactionModel.Transaction memory decodedFirstTx
-        = PaymentTransactionModel.decode(_rlpInputCreationTx);
-        uint16 firstTransactionOutputIndex = getOutputIndex(_utxoPosInput);
+        = PaymentTransactionModel.decode(rlpInputCreationTx);
+        uint16 firstTransactionOutputIndex = getOutputIndex(utxoPosInput);
 
         FungibleTokenOutputModel.Output memory outputFromFirstTransaction
         = decodedFirstTx.outputs[firstTransactionOutputIndex];
@@ -121,24 +121,24 @@ contract Liquidity {
 
     /**
      * @notice Verify the First Tx provided is valid
-     * @param _utxoPosInput position of the output that created the inputs for second transaction
-     * @param _rlpInputCreationTx RLP-encoded first transaction that transfers to this contract
-     * @param _inputCreationTxInclusionProof First transactions inclusion proofs
+     * @param utxoPosInput position of the output that created the inputs for second transaction
+     * @param rlpInputCreationTx RLP-encoded first transaction that transfers to this contract
+     * @param inputCreationTxInclusionProof First transactions inclusion proofs
     */
     function verifyTxValidity(
-        uint256 _utxoPosInput,
-        bytes memory _rlpInputCreationTx,
-        bytes memory _inputCreationTxInclusionProof
+        uint256 utxoPosInput,
+        bytes memory rlpInputCreationTx,
+        bytes memory inputCreationTxInclusionProof
     ) internal {
-        PosLib.Position memory utxoDecoded = PosLib.decode(_utxoPosInput);
+        PosLib.Position memory utxoDecoded = PosLib.decode(utxoPosInput);
         utxoDecoded.outputIndex = 0;
-        (bytes32 _root, ) = plasmaFrameworkInstance.blocks(utxoDecoded.blockNum);
-        require(_root != bytes32(""), "Failed to get root of the block");
+        (bytes32 root, ) = plasmaFrameworkInstance.blocks(utxoDecoded.blockNum);
+        require(root != bytes32(""), "Failed to get root of the block");
         bool txExists = Merkle.checkMembership(
-            _rlpInputCreationTx,
+            rlpInputCreationTx,
             utxoDecoded.txIndex,
-            _root,
-            _inputCreationTxInclusionProof
+            root,
+            inputCreationTxInclusionProof
         );
         require(
             txExists,
@@ -148,29 +148,29 @@ contract Liquidity {
 
     /**
      * @notice func that calls omg-contracts to start the exit
-     * @param _utxoPosToExit position of the output which the contract has to exit
-     * @param _rlpOutputTxToContract RLP-encoded transaction that creates the output for the contract
-     * @param _outputTxToContractInclusionProof Second Transaction's inclusion proof
+     * @param utxoPosToExit position of the output which the contract has to exit
+     * @param rlpOutputTxToContract RLP-encoded transaction that creates the output for the contract
+     * @param outputTxToContractInclusionProof Second Transaction's inclusion proof
     */
     function runExit(
-        uint256 _utxoPosToExit,
-        bytes memory _rlpOutputTxToContract,
-        bytes memory _outputTxToContractInclusionProof
+        uint256 utxoPosToExit,
+        bytes memory rlpOutputTxToContract,
+        bytes memory outputTxToContractInclusionProof
     ) internal {
         PaymentStandardExitRouterArgs.StartStandardExitArgs memory s;
-        s.utxoPos = _utxoPosToExit;
-        s.rlpOutputTx = _rlpOutputTxToContract;
-        s.outputTxInclusionProof = _outputTxToContractInclusionProof;
+        s.utxoPos = utxoPosToExit;
+        s.rlpOutputTx = rlpOutputTxToContract;
+        s.outputTxInclusionProof = outputTxToContractInclusionProof;
         paymentExitGame.startStandardExit.value(msg.value)(s);
     }
 
-    function getExitId(bytes memory _txBytes, uint16 _outputIndex)
+    function getExitId(bytes memory txBytes, uint16 outputIndex)
         internal
         pure
         returns (uint160)
     {
-        uint256 exitId = (uint256(keccak256(_txBytes)) >> 105) |
-            (uint256(_outputIndex) << 152);
+        uint256 exitId = (uint256(keccak256(txBytes)) >> 105) |
+            (uint256(outputIndex) << 152);
         uint160 croppedExitId = uint160(exitId);
         require(uint256(croppedExitId) == exitId, "ExitId overflows");
         return croppedExitId;
@@ -182,21 +182,21 @@ contract Liquidity {
 
     /**
      * @dev Get Amount from contract after exit is processed - (to be updated)
-     * @param _exitId The exit id
+     * @param exitId The exit id
     */
-    function getWithdrawl(uint160 _exitId) public {
+    function getWithdrawl(uint160 exitId) public {
         require(
-            exitIdtoUser[_exitId] == msg.sender,
+            exitIdtoUser[exitId] == msg.sender,
             "Only the exitId owner can get the withdrawl"
         );
-        uint160[] memory _exitIdList = new uint160[](1);
-        _exitIdList[0] = _exitId;
+        uint160[] memory exitIdList = new uint160[](1);
+        exitIdList[0] = exitId;
         PaymentExitDataModel.StandardExit[] memory exits = paymentExitGame.standardExits(
-            _exitIdList
+            exitIdList
         );
         if (exits[0].utxoPos == 0) {
-            exitIdtoUser[_exitId] = 0x0000000000000000000000000000000000000000;
-            msg.sender.transfer(exitIdtoAmount[_exitId]);
+            exitIdtoUser[exitId] = 0x0000000000000000000000000000000000000000;
+            msg.sender.transfer(exitIdtoAmount[exitId]);
         } else {
             revert("Not processed exit");
         }
