@@ -23,7 +23,7 @@ contract Liquidity {
     mapping(uint160 => uint256) public exitIdtoAmount;
 
     /**
-     * @notice generates instances of omg-contracts
+     * @notice provide PlasmaFramework contract-address when deploying the contract
     */
     constructor(address _plasmaFrameworkContract) public {
         plasmaFrameworkInstance = PlasmaFramework(_plasmaFrameworkContract);
@@ -52,7 +52,7 @@ contract Liquidity {
      * @param _inputCreationTxInclusionProof First transactions inclusion proofs
      * @param _utxoPosInput position of the output that created the inputs for second transaction
     */
-    function startExitOnRootchainContract(
+    function startExit(
         uint256 _utxoPosToExit,
         bytes memory _rlpOutputTxToContract,
         bytes memory _outputTxToContractInclusionProof,
@@ -63,8 +63,8 @@ contract Liquidity {
 
         verifyOwnership(_rlpInputCreationTx, _utxoPosInput);
 
-            PaymentTransactionModel.Transaction memory decodedSecondTx
-         = PaymentTransactionModel.decode(_rlpOutputTxToContract);
+        PaymentTransactionModel.Transaction memory decodedSecondTx
+        = PaymentTransactionModel.decode(_rlpOutputTxToContract);
         require(
             decodedSecondTx.inputs[0] == bytes32(_utxoPosInput),
             "Wrong utxoPosInput provided"
@@ -88,8 +88,8 @@ contract Liquidity {
 
         // associate the amount exiting to the exitId
 
-            FungibleTokenOutputModel.Output memory outputFromSecondTransaction
-         = decodedSecondTx.outputs[0];
+        FungibleTokenOutputModel.Output memory outputFromSecondTransaction
+        = decodedSecondTx.outputs[0];
         uint256 amount = outputFromSecondTransaction.amount;
         exitIdtoAmount[_exitId] = amount;
     }
@@ -104,12 +104,12 @@ contract Liquidity {
         uint256 _utxoPosInput
     ) internal {
 
-            PaymentTransactionModel.Transaction memory decodedFirstTx
-         = PaymentTransactionModel.decode(_rlpInputCreationTx);
+        PaymentTransactionModel.Transaction memory decodedFirstTx
+        = PaymentTransactionModel.decode(_rlpInputCreationTx);
         uint16 firstTransactionOutputIndex = getOutputIndex(_utxoPosInput);
 
-            FungibleTokenOutputModel.Output memory outputFromFirstTransaction
-         = decodedFirstTx.outputs[firstTransactionOutputIndex];
+        FungibleTokenOutputModel.Output memory outputFromFirstTransaction
+        = decodedFirstTx.outputs[firstTransactionOutputIndex];
         address ownerFirstTxOutput = address(
             uint160(outputFromFirstTransaction.outputGuard)
         );
