@@ -110,9 +110,7 @@ contract Liquidity {
 
         FungibleTokenOutputModel.Output memory outputFromFirstTransaction
         = decodedFirstTx.outputs[firstTransactionOutputIndex];
-        address ownerFirstTxOutput = address(
-            uint160(outputFromFirstTransaction.outputGuard)
-        );
+        address ownerFirstTxOutput = PaymentTransactionModel.getOutputOwner(outputFromFirstTransaction);
         require(
             ownerFirstTxOutput == msg.sender,
             "Was not called by the first Tx owner"
