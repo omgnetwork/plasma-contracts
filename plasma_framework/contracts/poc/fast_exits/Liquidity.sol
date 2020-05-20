@@ -34,14 +34,6 @@ contract Liquidity {
         return paymentExitGame.startStandardExitBondSize();
     }
 
-    /**
-     * @dev gets the index of the output from the utxo position
-     * @param utxoPos position of the output
-    */
-    function getOutputIndex(uint256 utxoPos) private pure returns (uint16) {
-        uint256 txOffset = 10000;
-        return uint16(utxoPos % txOffset);
-    }
 
     /**
      * @dev Call this func to start the exit on Rootchain contract
@@ -106,7 +98,8 @@ contract Liquidity {
 
         PaymentTransactionModel.Transaction memory decodedFirstTx
         = PaymentTransactionModel.decode(rlpInputCreationTx);
-        uint16 firstTransactionOutputIndex = getOutputIndex(utxoPosInput);
+        PosLib.Position memory position = PosLib.decode(utxoPosInput);
+        uint16 firstTransactionOutputIndex = position.outputIndex;
 
         FungibleTokenOutputModel.Output memory outputFromFirstTransaction
         = decodedFirstTx.outputs[firstTransactionOutputIndex];
