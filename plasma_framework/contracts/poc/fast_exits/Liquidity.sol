@@ -98,8 +98,9 @@ contract Liquidity {
 
         PaymentTransactionModel.Transaction memory decodedFirstTx
         = PaymentTransactionModel.decode(rlpInputCreationTx);
-        
+
         PosLib.Position memory position = PosLib.decode(utxoPosInput);
+        
         uint16 firstTransactionOutputIndex = position.outputIndex;
 
         FungibleTokenOutputModel.Output memory outputFromFirstTransaction
