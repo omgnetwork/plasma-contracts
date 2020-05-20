@@ -34,7 +34,6 @@ contract Liquidity {
         return paymentExitGame.startStandardExitBondSize();
     }
 
-
     /**
      * @dev Call this func to start the exit on Rootchain contract
      * @param utxoPosToExit position of the output which the contract has to exit
