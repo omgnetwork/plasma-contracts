@@ -1,6 +1,6 @@
 const ExitId = artifacts.require('ExitIdWrapper');
 
-const { BN, constants, expectRevert } = require('openzeppelin-test-helpers');
+const { BN, constants } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
 const { PaymentTransaction, PaymentTransactionOutput } = require('../../../helpers/transaction.js');
@@ -51,7 +51,7 @@ contract('ExitId', () => {
             const dummyUtxoPos = 1000000000;
 
             expect(await this.contract.getStandardExitId(isDeposit, dummyTxBytes, dummyUtxoPos))
-                .to.be.bignumber.equal(new BN('171604140400374077931245824211501905564658753222974'));
+                .to.be.bignumber.equal(new BN('29924881562170579937487542609620658045092654224514'));
         });
 
         it('should return distinct exit ids for deposits that differ only in utxo pos', async () => {
@@ -76,7 +76,7 @@ contract('ExitId', () => {
             const isDeposit = false;
             const dummyUtxoPos = 123;
             expect(await this.contract.getStandardExitId(isDeposit, dummyTxBytes, dummyUtxoPos))
-                .to.be.bignumber.equal(new BN('172275862235925986801710974270448919124838083678'));
+                .to.be.bignumber.equal(new BN('81104170160179333777435112249424950324615684258574'));
         });
     });
 

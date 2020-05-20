@@ -70,6 +70,28 @@ contract('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
             };
         };
 
+        const buildTestData2 = (
+            outputs,
+            blockNum,
+            txType = TX_TYPE.PAYMENT,
+        ) => {
+            const txObj = new PaymentTransaction(txType, [DUMMY_INPUT_1], outputs);
+            const tx = web3.utils.bytesToHex(txObj.rlpEncoded());
+
+            const merkleTree = new MerkleTree([tx], 3);
+            const merkleProof = merkleTree.getInclusionProof(tx);
+
+            const args = outputs.map((output, i) => ({
+                utxoPos: buildUtxoPos(blockNum, 0, i),
+                rlpOutputTx: tx,
+                outputTxInclusionProof: merkleProof,
+            }));
+
+            return {
+                args, merkleTree,
+            };
+        };
+
         before(async () => {
             this.exitIdHelper = await ExitId.new();
             this.exitableHelper = await ExitableTimestamp.new(MIN_EXIT_PERIOD);
@@ -332,6 +354,45 @@ contract('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
                 logs,
                 'ExitStarted',
                 { owner: outputOwner, exitId },
+            );
+        });
+
+        it('should allow 2 outputs on the same transaction to exit', async () => {
+            const BLOCK_NUM = 2000;
+            const { args, merkleTree } = buildTestData2(
+                [
+                    new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, this.dummyAmount, outputOwner, ETH),
+                    new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, this.dummyAmount, outputOwner, ETH),
+                ],
+                BLOCK_NUM,
+            );
+
+            await this.framework.setBlock(BLOCK_NUM, merkleTree.root, this.dummyBlockTimestamp);
+
+            const isTxDeposit = await this.framework.isDeposit(BLOCK_NUM);
+
+            const { logs: logs1 } = await this.exitGame.startStandardExit(
+                args[0], { from: outputOwner, value: this.startStandardExitBondSize },
+            );
+            const exitId1 = await this.exitIdHelper.getStandardExitId(
+                isTxDeposit, args[0].rlpOutputTx, args[0].utxoPos,
+            );
+            await expectEvent.inLogs(
+                logs1,
+                'ExitStarted',
+                { owner: outputOwner, exitId: exitId1 },
+            );
+
+            const { logs: logs2 } = await this.exitGame.startStandardExit(
+                args[1], { from: outputOwner, value: this.startStandardExitBondSize },
+            );
+            const exitId2 = await this.exitIdHelper.getStandardExitId(
+                isTxDeposit, args[1].rlpOutputTx, args[1].utxoPos,
+            );
+            await expectEvent.inLogs(
+                logs2,
+                'ExitStarted',
+                { owner: outputOwner, exitId: exitId2 },
             );
         });
     });

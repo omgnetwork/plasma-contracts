@@ -2,6 +2,7 @@ pragma solidity 0.5.11;
 
 import "../../utils/Bits.sol";
 import "../../utils/PosLib.sol";
+import "./OutputId.sol";
 
 library ExitId {
     using PosLib for PosLib.Position;
@@ -37,12 +38,14 @@ library ExitId {
         pure
         returns (uint168)
     {
+        bytes32 outputId;
         if (_isDeposit) {
-            bytes32 hashData = keccak256(abi.encodePacked(_txBytes, _utxoPos.encode()));
-            return _computeStandardExitId(hashData);
+            outputId = OutputId.computeDepositOutputId(_txBytes, _utxoPos.outputIndex, _utxoPos.encode());
+        } else {
+            outputId = OutputId.computeNormalOutputId(_txBytes, _utxoPos.outputIndex);
         }
 
-        return _computeStandardExitId(keccak256(_txBytes));
+        return uint168((uint256(outputId) >> (256 - FIRST_BIT)));
     }
 
     /**
@@ -52,9 +55,5 @@ library ExitId {
     */
     function getInFlightExitId(bytes memory _txBytes) internal pure returns (uint168) {
         return uint168((uint256(keccak256(_txBytes)) >> (256 - FIRST_BIT)).setBit(FIRST_BIT));
-    }
-
-    function _computeStandardExitId(bytes32 _txhash) private pure returns (uint168) {
-        return uint168((uint256(_txhash) >> (256 - FIRST_BIT)));
     }
 }
