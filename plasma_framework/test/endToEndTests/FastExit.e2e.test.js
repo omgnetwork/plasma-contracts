@@ -105,63 +105,85 @@ contract(
                     'Caller address is unauthorized.',
                 );
             });
-        });
 
-        describe('Given Alice deposited ETH and transferred some value to the Liquidity Contract', () => {
-            before(async () => {
-                this.aliceBalanceBeforeDeposit = new BN(await web3.eth.getBalance(alice));
-                this.ethVaultBalanceBeforeDeposit = new BN(await web3.eth.getBalance(this.ethVault.address));
-                const { receipt } = await aliceDepositsETH();
-                this.aliceDepositReceipt = receipt;
-                await aliceTransferSomeEthToLC();
-            });
-            it('should have deposited ETH from Alice to vault', async () => {
-                const aliceBalanceAfterDeposit = new BN(await web3.eth.getBalance(alice));
-                const ethVaultBalanceAfterDeposit = new BN(await web3.eth.getBalance(this.ethVault.address));
-                const expectedAliceBalance = this.aliceBalanceBeforeDeposit
-                    .sub(new BN(DEPOSIT_VALUE))
-                    .sub(await spentOnGas(this.aliceDepositReceipt));
-                const expectedEthVaultBalance = this.ethVaultBalanceBeforeDeposit.add(new BN(DEPOSIT_VALUE));
-
-                expect(aliceBalanceAfterDeposit).to.be.bignumber.equal(expectedAliceBalance);
-                expect(ethVaultBalanceAfterDeposit).to.be.bignumber.equal(expectedEthVaultBalance);
-            });
-
-            describe('When Bob tries to start the exit from the UTXO created by Alice', () => {
-                it('should not allow Bob to start the exit', async () => {
-                    const utxoPos = this.transferUtxoPos;
-                    const rlpOutputTx = this.transferTx;
-                    const outputTxInclusionProof = this.merkleProofForTransferTx;
-                    const { depositUtxoPos } = this;
-                    const rlpDepositTx = this.depositTx;
-                    const depositInclusionProof = this.merkleProofForDepositTx;
-
-                    await expectRevert(
-                        this.liquidity.startExit(
-                            utxoPos,
-                            rlpOutputTx,
-                            outputTxInclusionProof,
-                            rlpDepositTx,
-                            depositInclusionProof,
-                            depositUtxoPos,
-                            { from: bob, value: this.startStandardExitBondSize },
-                        ),
-                        'Was not called by the first Tx owner',
-                    );
+            describe('Given Alice deposited ETH and transferred some value to the Liquidity Contract', () => {
+                before(async () => {
+                    this.aliceBalanceBeforeDeposit = new BN(await web3.eth.getBalance(alice));
+                    this.ethVaultBalanceBeforeDeposit = new BN(await web3.eth.getBalance(this.ethVault.address));
+                    const { receipt } = await aliceDepositsETH();
+                    this.aliceDepositReceipt = receipt;
+                    await aliceTransferSomeEthToLC();
                 });
-            });
+                it('should have deposited ETH from Alice to vault', async () => {
+                    const aliceBalanceAfterDeposit = new BN(await web3.eth.getBalance(alice));
+                    const ethVaultBalanceAfterDeposit = new BN(await web3.eth.getBalance(this.ethVault.address));
+                    const expectedAliceBalance = this.aliceBalanceBeforeDeposit
+                        .sub(new BN(DEPOSIT_VALUE))
+                        .sub(await spentOnGas(this.aliceDepositReceipt));
+                    const expectedEthVaultBalance = this.ethVaultBalanceBeforeDeposit.add(new BN(DEPOSIT_VALUE));
 
-            describe('When Alice tries to start the exit with a fake transaction', () => {
-                it('should not allow to start exit', async () => {
-                    const utxoPos = this.transferUtxoPos;
-                    const rlpOutputTx = this.transferTx;
-                    const outputTxInclusionProof = this.merkleProofForTransferTx;
-                    const { depositUtxoPos } = this;
-                    const rlpDepositTx = this.depositTx;
-                    const depositInclusionProof = this.merkleProofForTransferTx;
+                    expect(aliceBalanceAfterDeposit).to.be.bignumber.equal(expectedAliceBalance);
+                    expect(ethVaultBalanceAfterDeposit).to.be.bignumber.equal(expectedEthVaultBalance);
+                });
 
-                    await expectRevert(
-                        this.liquidity.startExit(
+                describe('When Bob tries to start the exit from the UTXO created by Alice', () => {
+                    it('should not allow Bob to start the exit', async () => {
+                        const utxoPos = this.transferUtxoPos;
+                        const rlpOutputTx = this.transferTx;
+                        const outputTxInclusionProof = this.merkleProofForTransferTx;
+                        const { depositUtxoPos } = this;
+                        const rlpDepositTx = this.depositTx;
+                        const depositInclusionProof = this.merkleProofForDepositTx;
+
+                        await expectRevert(
+                            this.liquidity.startExit(
+                                utxoPos,
+                                rlpOutputTx,
+                                outputTxInclusionProof,
+                                rlpDepositTx,
+                                depositInclusionProof,
+                                depositUtxoPos,
+                                { from: bob, value: this.startStandardExitBondSize },
+                            ),
+                            'Was not called by the first Tx owner',
+                        );
+                    });
+                });
+
+                describe('When Alice tries to start the exit with a fake transaction', () => {
+                    it('should not allow to start exit', async () => {
+                        const utxoPos = this.transferUtxoPos;
+                        const rlpOutputTx = this.transferTx;
+                        const outputTxInclusionProof = this.merkleProofForTransferTx;
+                        const { depositUtxoPos } = this;
+                        const rlpDepositTx = this.depositTx;
+                        const depositInclusionProof = this.merkleProofForTransferTx;
+
+                        await expectRevert(
+                            this.liquidity.startExit(
+                                utxoPos,
+                                rlpOutputTx,
+                                outputTxInclusionProof,
+                                rlpDepositTx,
+                                depositInclusionProof,
+                                depositUtxoPos,
+                                { from: alice, value: this.startStandardExitBondSize },
+                            ),
+                            "Provided Transaction isn't finalized or doesn't exist",
+                        );
+                    });
+                });
+
+                describe('When Alice tries to start the standard exit from the Liquidity Contract with all valid proofs', () => {
+                    before(async () => {
+                        const utxoPos = this.transferUtxoPos;
+                        const rlpOutputTx = this.transferTx;
+                        const outputTxInclusionProof = this.merkleProofForTransferTx;
+                        const { depositUtxoPos } = this;
+                        const rlpDepositTx = this.depositTx;
+                        const depositInclusionProof = this.merkleProofForDepositTx;
+
+                        await this.liquidity.startExit(
                             utxoPos,
                             rlpOutputTx,
                             outputTxInclusionProof,
@@ -169,89 +191,73 @@ contract(
                             depositInclusionProof,
                             depositUtxoPos,
                             { from: alice, value: this.startStandardExitBondSize },
-                        ),
-                        "Provided Transaction isn't finalized or doesn't exist",
-                    );
-                });
-            });
+                        );
+                    });
+                    it('should start the exit successully', async () => {
+                        const exitId = await this.exitGame.getStandardExitId(
+                            false,
+                            this.transferTx,
+                            this.transferUtxoPos,
+                        );
+                        const exitIds = [exitId];
+                        const standardExitData = (await this.exitGame.standardExits(exitIds))[0];
+                        const outputIndexForTransfer = 0;
+                        const outputId = computeNormalOutputId(
+                            this.transferTx,
+                            outputIndexForTransfer,
+                            this.transferUtxoPos,
+                        );
 
-            describe('When Alice tries to start the standard exit from the Liquidity Contract with all valid proofs', () => {
-                before(async () => {
-                    const utxoPos = this.transferUtxoPos;
-                    const rlpOutputTx = this.transferTx;
-                    const outputTxInclusionProof = this.merkleProofForTransferTx;
-                    const { depositUtxoPos } = this;
-                    const rlpDepositTx = this.depositTx;
-                    const depositInclusionProof = this.merkleProofForDepositTx;
+                        expect(standardExitData.exitable).to.be.true;
+                        expect(standardExitData.outputId).to.equal(outputId);
+                        expect(new BN(standardExitData.utxoPos)).to.be.bignumber.equal(new BN(this.transferUtxoPos));
+                        expect(standardExitData.exitTarget).to.equal(this.liquidity.address);
+                        expect(new BN(standardExitData.amount)).to.be.bignumber.equal(new BN(TRANSFER_AMOUNT));
 
-                    await this.liquidity.startExit(
-                        utxoPos,
-                        rlpOutputTx,
-                        outputTxInclusionProof,
-                        rlpDepositTx,
-                        depositInclusionProof,
-                        depositUtxoPos,
-                        { from: alice, value: this.startStandardExitBondSize },
-                    );
-                });
-                it('should start the exit successully', async () => {
-                    const exitId = await this.exitGame.getStandardExitId(false, this.transferTx, this.transferUtxoPos);
-                    const exitIds = [exitId];
-                    const standardExitData = (await this.exitGame.standardExits(exitIds))[0];
-                    const outputIndexForTransfer = 0;
-                    const outputId = computeNormalOutputId(
-                        this.transferTx,
-                        outputIndexForTransfer,
-                        this.transferUtxoPos,
-                    );
+                        expect(standardExitData.exitable).to.be.true;
+                    });
+                    it('should not allow to start from the same utxo again', async () => {
+                        const utxoPos = this.transferUtxoPos;
+                        const rlpOutputTx = this.transferTx;
+                        const outputTxInclusionProof = this.merkleProofForTransferTx;
+                        const { depositUtxoPos } = this;
+                        const rlpDepositTx = this.depositTx;
+                        const depositInclusionProof = this.merkleProofForDepositTx;
 
-                    expect(standardExitData.exitable).to.be.true;
-                    expect(standardExitData.outputId).to.equal(outputId);
-                    expect(new BN(standardExitData.utxoPos)).to.be.bignumber.equal(new BN(this.transferUtxoPos));
-                    expect(standardExitData.exitTarget).to.equal(this.liquidity.address);
-                    expect(new BN(standardExitData.amount)).to.be.bignumber.equal(new BN(TRANSFER_AMOUNT));
+                        await expectRevert(
+                            this.liquidity.startExit(
+                                utxoPos,
+                                rlpOutputTx,
+                                outputTxInclusionProof,
+                                rlpDepositTx,
+                                depositInclusionProof,
+                                depositUtxoPos,
+                                { from: alice, value: this.startStandardExitBondSize },
+                            ),
+                            'Exit has already started.',
+                        );
+                    });
 
-                    expect(standardExitData.exitable).to.be.true;
-                });
-                it('should not allow to start from the same utxo again', async () => {
-                    const utxoPos = this.transferUtxoPos;
-                    const rlpOutputTx = this.transferTx;
-                    const outputTxInclusionProof = this.merkleProofForTransferTx;
-                    const { depositUtxoPos } = this;
-                    const rlpDepositTx = this.depositTx;
-                    const depositInclusionProof = this.merkleProofForDepositTx;
+                    describe('And then Alice processes the exits after two weeks', () => {
+                        before(async () => {
+                            await time.increase(time.duration.weeks(2).add(time.duration.seconds(1)));
 
-                    await expectRevert(
-                        this.liquidity.startExit(
-                            utxoPos,
-                            rlpOutputTx,
-                            outputTxInclusionProof,
-                            rlpDepositTx,
-                            depositInclusionProof,
-                            depositUtxoPos,
-                            { from: alice, value: this.startStandardExitBondSize },
-                        ),
-                        'Exit has already started.',
-                    );
-                });
-            });
+                            this.LCBalanceBeforeProcessExit = new BN(await this.liquidity.getContractBalance());
 
-            describe('And then Alice processes the exits after two weeks', () => {
-                before(async () => {
-                    await time.increase(time.duration.weeks(2).add(time.duration.seconds(1)));
+                            await this.framework.processExits(config.registerKeys.vaultId.eth, ETH, 0, 1, {
+                                from: alice,
+                            });
+                        });
 
-                    this.LCBalanceBeforeProcessExit = new BN(await this.liquidity.getContractBalance());
+                        it('should return the output amount plus standard exit bond to the Liquidity Contract', async () => {
+                            const actualLCBalanceAfterProcessExit = new BN(await this.liquidity.getContractBalance());
+                            const expectedLCBalance = this.LCBalanceBeforeProcessExit.add(
+                                this.startStandardExitBondSize,
+                            ).add(new BN(this.transferTxObject.outputs[0].amount));
 
-                    await this.framework.processExits(config.registerKeys.vaultId.eth, ETH, 0, 1, { from: alice });
-                });
-
-                it('should return the output amount plus standard exit bond to the Liquidity Contract', async () => {
-                    const actualLCBalanceAfterProcessExit = new BN(await this.liquidity.getContractBalance());
-                    const expectedLCBalance = this.LCBalanceBeforeProcessExit.add(this.startStandardExitBondSize).add(
-                        new BN(this.transferTxObject.outputs[0].amount),
-                    );
-
-                    expect(actualLCBalanceAfterProcessExit).to.be.bignumber.equal(expectedLCBalance);
+                            expect(actualLCBalanceAfterProcessExit).to.be.bignumber.equal(expectedLCBalance);
+                        });
+                    });
                 });
             });
         });
