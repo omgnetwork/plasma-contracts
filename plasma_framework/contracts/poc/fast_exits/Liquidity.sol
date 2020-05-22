@@ -73,7 +73,7 @@ contract Liquidity {
         );
 
         // store the resultant exitid as a trait for the nft and map it to the msg.sender
-        uint160 exitId = getExitId(rlpOutputTxToContract, 0);
+        uint160 exitId = paymentExitGame.getStandardExitId(false, rlpOutputTxToContract, utxoPosToExit);
         userExitIds[msg.sender].push(exitId);
         exitIdtoUser[exitId] = msg.sender;
 
@@ -152,18 +152,6 @@ contract Liquidity {
         s.rlpOutputTx = rlpOutputTxToContract;
         s.outputTxInclusionProof = outputTxToContractInclusionProof;
         paymentExitGame.startStandardExit.value(msg.value)(s);
-    }
-
-    function getExitId(bytes memory txBytes, uint16 outputIndex)
-        internal
-        pure
-        returns (uint160)
-    {
-        uint256 exitId = (uint256(keccak256(txBytes)) >> 105) |
-            (uint256(outputIndex) << 152);
-        uint160 croppedExitId = uint160(exitId);
-        require(uint256(croppedExitId) == exitId, "ExitId overflows");
-        return croppedExitId;
     }
 
     function getContractBalance() public view returns(uint256) {
