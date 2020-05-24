@@ -146,7 +146,7 @@ contract Liquidity {
         uint256 utxoPosToExit,
         bytes memory rlpOutputTxToContract,
         bytes memory outputTxToContractInclusionProof
-    ) internal {
+    ) private {
         PaymentStandardExitRouterArgs.StartStandardExitArgs memory s;
         s.utxoPos = utxoPosToExit;
         s.rlpOutputTx = rlpOutputTxToContract;
