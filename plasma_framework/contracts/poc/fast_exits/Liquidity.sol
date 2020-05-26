@@ -14,9 +14,9 @@ import "../../src/exits/payment/routers/PaymentStandardExitRouter.sol";
  * Implementation Doc - https://github.com/omisego/research/blob/master/plasma/simple_fast_withdrawals.md
 */
 contract Liquidity {
-    PaymentExitGame private paymentExitGame;
+    PaymentExitGame public paymentExitGame;
 
-    PlasmaFramework private plasmaFrameworkInstance;
+    PlasmaFramework public plasmaFramework;
 
     mapping(address => uint160[]) public userExitIds;
     mapping(uint160 => address) public exitIdtoUser;
@@ -26,12 +26,8 @@ contract Liquidity {
      * @notice provide PlasmaFramework contract-address when deploying the contract
     */
     constructor(address plasmaFrameworkContract) public {
-        plasmaFrameworkInstance = PlasmaFramework(plasmaFrameworkContract);
-        paymentExitGame = PaymentExitGame(plasmaFrameworkInstance.exitGames(1));
-    }
-
-    function getCurrentBondSize() public view returns (uint128) {
-        return paymentExitGame.startStandardExitBondSize();
+        plasmaFramework = PlasmaFramework(plasmaFrameworkContract);
+        paymentExitGame = PaymentExitGame(plasmaFramework.exitGames(1));
     }
 
     /**
@@ -52,7 +48,9 @@ contract Liquidity {
         uint256 utxoPosInput
     ) public payable {
 
-        verifyOwnership(rlpInputCreationTx, utxoPosInput);
+        PosLib.Position memory utxoDecoded = PosLib.decode(utxoPosInput);
+
+        verifyOwnership(rlpInputCreationTx, utxoDecoded);
 
         PaymentTransactionModel.Transaction memory decodedSecondTx
         = PaymentTransactionModel.decode(rlpOutputTxToContract);
@@ -61,15 +59,20 @@ contract Liquidity {
             "Wrong utxoPosInput provided"
         );
 
-        verifyTxValidity(
-            utxoPosInput,
+        require( verifyTxValidity(
+            utxoDecoded,
             rlpInputCreationTx,
             inputCreationTxInclusionProof
+        ),
+        "Provided Transaction isn't finalized or doesn't exist"
         );
-        runExit(
+
+        require( runExit(
             utxoPosToExit,
             rlpOutputTxToContract,
             outputTxToContractInclusionProof
+        ),
+        "Couldn't start the exit"
         );
 
         // store the resultant exitid as a trait for the nft and map it to the msg.sender
@@ -88,17 +91,16 @@ contract Liquidity {
     /**
      * @notice Check if the person calling is the same person who created the tx to the contract
      * @param rlpInputCreationTx RLP-encoded first transaction that transfers to this contract
-     * @param utxoPosInput position of the output that created the inputs for second transaction
+     * @param utxoDecoded decoded position of the output that created the inputs for second transaction
     */
     function verifyOwnership(
         bytes memory rlpInputCreationTx,
-        uint256 utxoPosInput
-    ) internal {
+        PosLib.Position memory utxoDecoded
+    ) private {
 
         PaymentTransactionModel.Transaction memory decodedFirstTx
         = PaymentTransactionModel.decode(rlpInputCreationTx);
-        PosLib.Position memory position = PosLib.decode(utxoPosInput);
-        uint16 firstTransactionOutputIndex = position.outputIndex;
+        uint16 firstTransactionOutputIndex = utxoDecoded.outputIndex;
 
         FungibleTokenOutputModel.Output memory outputFromFirstTransaction
         = decodedFirstTx.outputs[firstTransactionOutputIndex];
@@ -111,28 +113,23 @@ contract Liquidity {
 
     /**
      * @notice Verify the First Tx provided is valid
-     * @param utxoPosInput position of the output that created the inputs for second transaction
+     * @param utxoDecoded decoded position of the output that created the inputs for second transaction
      * @param rlpInputCreationTx RLP-encoded first transaction that transfers to this contract
      * @param inputCreationTxInclusionProof First transactions inclusion proofs
     */
     function verifyTxValidity(
-        uint256 utxoPosInput,
+        PosLib.Position memory utxoDecoded,
         bytes memory rlpInputCreationTx,
         bytes memory inputCreationTxInclusionProof
-    ) internal {
-        PosLib.Position memory utxoDecoded = PosLib.decode(utxoPosInput);
+    ) private returns (bool) {
         utxoDecoded.outputIndex = 0;
-        (bytes32 root, ) = plasmaFrameworkInstance.blocks(utxoDecoded.blockNum);
+        (bytes32 root, ) = plasmaFramework.blocks(utxoDecoded.blockNum);
         require(root != bytes32(""), "Failed to get root of the block");
-        bool txExists = Merkle.checkMembership(
+        return Merkle.checkMembership(
             rlpInputCreationTx,
             utxoDecoded.txIndex,
             root,
             inputCreationTxInclusionProof
-        );
-        require(
-            txExists,
-            "Provided Transaction isn't finalized or doesn't exist"
         );
     }
 
@@ -146,16 +143,14 @@ contract Liquidity {
         uint256 utxoPosToExit,
         bytes memory rlpOutputTxToContract,
         bytes memory outputTxToContractInclusionProof
-    ) private {
-        PaymentStandardExitRouterArgs.StartStandardExitArgs memory s;
-        s.utxoPos = utxoPosToExit;
-        s.rlpOutputTx = rlpOutputTxToContract;
-        s.outputTxInclusionProof = outputTxToContractInclusionProof;
+    ) private returns (bool) {
+        PaymentStandardExitRouterArgs.StartStandardExitArgs memory s = PaymentStandardExitRouterArgs.StartStandardExitArgs({
+            utxoPos: utxoPosToExit,
+            rlpOutputTx: rlpOutputTxToContract,
+            outputTxInclusionProof: outputTxToContractInclusionProof
+        });
         paymentExitGame.startStandardExit.value(msg.value)(s);
-    }
-
-    function getContractBalance() public view returns(uint256) {
-        return address(this).balance;
+        return true;
     }
 
     /**

@@ -242,7 +242,7 @@ contract(
                         before(async () => {
                             await time.increase(time.duration.weeks(2).add(time.duration.seconds(1)));
 
-                            this.LCBalanceBeforeProcessExit = new BN(await this.liquidity.getContractBalance());
+                            this.LCBalanceBeforeProcessExit = new BN(await web3.eth.getBalance(this.liquidity.address));
 
                             await this.framework.processExits(config.registerKeys.vaultId.eth, ETH, 0, 1, {
                                 from: alice,
@@ -250,7 +250,7 @@ contract(
                         });
 
                         it('should return the output amount plus standard exit bond to the Liquidity Contract', async () => {
-                            const actualLCBalanceAfterProcessExit = new BN(await this.liquidity.getContractBalance());
+                            const actualLCBalanceAfterProcessExit = new BN(await web3.eth.getBalance(this.liquidity.address));
                             const expectedLCBalance = this.LCBalanceBeforeProcessExit.add(
                                 this.startStandardExitBondSize,
                             ).add(new BN(this.transferTxObject.outputs[0].amount));
