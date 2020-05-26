@@ -175,6 +175,9 @@ contract Liquidity {
         }
     }
 
+    /**
+     * @dev for the contract to receive funds after the exit has been processed
+    */
     function() external payable {
 
     }

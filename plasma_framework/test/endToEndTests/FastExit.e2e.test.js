@@ -99,13 +99,6 @@ contract(
         describe('Given contracts deployed, exit game and ETH vault registered', () => {
             before(setupContracts);
 
-            it('should not allow to call processExit from outside of exit game controller contract', async () => {
-                await expectRevert(
-                    this.exitGame.processExit(0, config.registerKeys.vaultId.eth, constants.ZERO_ADDRESS),
-                    'Caller address is unauthorized.',
-                );
-            });
-
             describe('Given Alice deposited ETH and transferred some value to the Liquidity Contract', () => {
                 before(async () => {
                     this.aliceBalanceBeforeDeposit = new BN(await web3.eth.getBalance(alice));
@@ -113,17 +106,6 @@ contract(
                     const { receipt } = await aliceDepositsETH();
                     this.aliceDepositReceipt = receipt;
                     await aliceTransferSomeEthToLC();
-                });
-                it('should have deposited ETH from Alice to vault', async () => {
-                    const aliceBalanceAfterDeposit = new BN(await web3.eth.getBalance(alice));
-                    const ethVaultBalanceAfterDeposit = new BN(await web3.eth.getBalance(this.ethVault.address));
-                    const expectedAliceBalance = this.aliceBalanceBeforeDeposit
-                        .sub(new BN(DEPOSIT_VALUE))
-                        .sub(await spentOnGas(this.aliceDepositReceipt));
-                    const expectedEthVaultBalance = this.ethVaultBalanceBeforeDeposit.add(new BN(DEPOSIT_VALUE));
-
-                    expect(aliceBalanceAfterDeposit).to.be.bignumber.equal(expectedAliceBalance);
-                    expect(ethVaultBalanceAfterDeposit).to.be.bignumber.equal(expectedEthVaultBalance);
                 });
 
                 describe('When Bob tries to start the exit from the UTXO created by Alice', () => {
