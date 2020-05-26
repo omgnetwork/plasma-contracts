@@ -145,7 +145,7 @@ contract Liquidity is ExitNFT {
     function mintNFT(bytes memory rlpOutputTxToContract, uint256 utxoPosToExit, PaymentTransactionModel.Transaction memory decodedSecondTx) private {
         //change the return type of exitId once the pr to change it has been merged
         uint160 exitId = paymentExitGame.getStandardExitId(false, rlpOutputTxToContract, utxoPosToExit);
-        super._mint(msg.sender,exitId);
+        super._mint(msg.sender, exitId);
 
         FungibleTokenOutputModel.Output memory outputFromSecondTransaction
         = decodedSecondTx.outputs[0];
@@ -158,7 +158,7 @@ contract Liquidity is ExitNFT {
      * @param exitId The exit id
     */
     function getWithdrawal(uint160 exitId) public {
-        require( ownerOf(exitId) != address(0), "Token does not exist or has been claimed already");
+        require(ownerOf(exitId) != address(0), "Token does not exist or has been claimed already");
         require(
             ownerOf(exitId) == msg.sender,
             "Only the NFT owner of the respective exit can get the withdrawal"

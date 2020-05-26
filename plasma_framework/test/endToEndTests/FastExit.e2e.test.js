@@ -218,10 +218,10 @@ contract(
                     });
                     describe('When the NFT for the exit is generated', () => {
                         it('should have Alice as the owner of the token', async () => {
-                            const nft_owner = await this.liquidity.ownerOf(this.exitId);
-                            const alice_balance = await this.liquidity.balanceOf(alice);
-                            expect(nft_owner).to.equal(alice);
-                            expect(alice_balance).to.be.bignumber.equal(new BN(1));
+                            const nftOwner = await this.liquidity.ownerOf(this.exitId);
+                            const aliceBalance = await this.liquidity.balanceOf(alice);
+                            expect(nftOwner).to.equal(alice);
+                            expect(aliceBalance).to.be.bignumber.equal(new BN(1));
                         });
                         it('should increase the total token supply by one', async () => {
                             const totalSupply = await this.liquidity.totalSupply();
@@ -317,8 +317,8 @@ contract(
                             await this.liquidity.safeTransferFrom(alice, bob, this.exitId, { from: alice });
                         });
                         it('should have Bob as the new owner of the exit token', async () => {
-                            const nft_owner = await this.liquidity.ownerOf(this.exitId);
-                            expect(nft_owner).to.equal(bob);
+                            const nftOwner = await this.liquidity.ownerOf(this.exitId);
+                            expect(nftOwner).to.equal(bob);
                         });
                         describe('And then someone processes the exits after two weeks', () => {
                             before(async () => {

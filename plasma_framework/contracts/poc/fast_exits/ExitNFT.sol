@@ -6,7 +6,7 @@ contract ExitNFT is ERC721Full {
 
     mapping(uint160 => uint256) public exitIdtoAmount;
 
-    constructor () public ERC721Full("OMG Exit","OMGE") {
+    constructor () public ERC721Full("OMG Exit", "OMGE") {
 
     }
 
