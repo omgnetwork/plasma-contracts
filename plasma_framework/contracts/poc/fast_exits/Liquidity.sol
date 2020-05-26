@@ -142,6 +142,12 @@ contract Liquidity is ExitNFT {
         return true;
     }
 
+    /**
+     * @notice mint an ERC-721 wrapping the exit
+     * @param rlpOutputTxToContract RLP-encoded transaction that creates the outputs for the contract
+     * @param utxoPosToExit position of the output which the contract has to exit
+     * @param decodedSecondTx decoded second transaction
+    */
     function mintNFT(bytes memory rlpOutputTxToContract, uint256 utxoPosToExit, PaymentTransactionModel.Transaction memory decodedSecondTx) private {
         //change the return type of exitId once the pr to change it has been merged
         uint160 exitId = paymentExitGame.getStandardExitId(false, rlpOutputTxToContract, utxoPosToExit);
