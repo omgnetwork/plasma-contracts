@@ -19,7 +19,7 @@ contract Liquidity is ExitNFT {
 
     PlasmaFramework public plasmaFramework;
 
-    mapping(uint160 => uint256) exitIdtoBondSize;
+    mapping(uint160 => uint256) public exitIdtoBondSize;
 
     /**
      * @notice provide PlasmaFramework contract-address when deploying the contract
@@ -170,6 +170,7 @@ contract Liquidity is ExitNFT {
         );
         if (exits[0].utxoPos == 0) {
             super._burn(msg.sender, exitId);
+            // possibly a separate function to pull the exit bond
             msg.sender.transfer(exitIdtoAmount[exitId]);
         } else {
             revert("Not processed exit");

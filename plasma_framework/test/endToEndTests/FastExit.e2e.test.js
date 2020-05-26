@@ -101,10 +101,7 @@ contract(
 
             describe('Given Alice deposited ETH and transferred some value to the Liquidity Contract', () => {
                 before(async () => {
-                    this.aliceBalanceBeforeDeposit = new BN(await web3.eth.getBalance(alice));
-                    this.ethVaultBalanceBeforeDeposit = new BN(await web3.eth.getBalance(this.ethVault.address));
-                    const { receipt } = await aliceDepositsETH();
-                    this.aliceDepositReceipt = receipt;
+                    await aliceDepositsETH();
                     await aliceTransferSomeEthToLC();
                 });
 
@@ -176,12 +173,12 @@ contract(
                         );
                     });
                     it('should start the exit successully', async () => {
-                        const exitId = await this.exitGame.getStandardExitId(
+                        this.exitId = await this.exitGame.getStandardExitId(
                             false,
                             this.transferTx,
                             this.transferUtxoPos,
                         );
-                        const exitIds = [exitId];
+                        const exitIds = [this.exitId];
                         const standardExitData = (await this.exitGame.standardExits(exitIds))[0];
                         const outputIndexForTransfer = 0;
                         const outputId = computeNormalOutputId(
@@ -221,12 +218,7 @@ contract(
                     });
                     describe('When the NFT for the exit is generated', () => {
                         it('should have Alice as the owner of the token', async () => {
-                            const exitId = await this.exitGame.getStandardExitId(
-                                false,
-                                this.transferTx,
-                                this.transferUtxoPos,
-                            );
-                            const nft_owner = await this.liquidity.ownerOf(exitId);
+                            const nft_owner = await this.liquidity.ownerOf(this.exitId);
                             const alice_balance = await this.liquidity.balanceOf(alice);
                             expect(nft_owner).to.equal(alice);
                             expect(alice_balance).to.be.bignumber.equal(new BN(1));
@@ -261,12 +253,7 @@ contract(
                             describe('When Alice tries to claim funds back through the NFT', () => {
                                 before(async () => {
                                     this.aliceBalanceBeforeClaiming = new BN(await web3.eth.getBalance(alice));
-                                    this.withdrawalExitId = await this.exitGame.getStandardExitId(
-                                        false,
-                                        this.transferTx,
-                                        this.transferUtxoPos,
-                                    );
-                                    const { receipt } = await this.liquidity.getWithdrawal(this.withdrawalExitId, {
+                                    const { receipt } = await this.liquidity.getWithdrawal(this.exitId, {
                                         from: alice,
                                     });
                                     this.aliceWithdrawalReceipt = receipt;
@@ -283,13 +270,88 @@ contract(
                                     );
                                 });
                                 it('should burn the NFT', async () => {
-                                    expect(await this.liquidity.exists(this.withdrawalExitId)).to.be.false;
+                                    expect(await this.liquidity.exists(this.exitId)).to.be.false;
                                 });
                                 it('should not allow Alice to get withdrawal again', async () => {
                                     await expectRevert(
-                                        this.liquidity.getWithdrawal(this.withdrawalExitId, { from: alice }),
+                                        this.liquidity.getWithdrawal(this.exitId, { from: alice }),
                                         'ERC721: owner query for nonexistent token',
                                     );
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+            describe('Given Alice deposited ETH and transferred some value to the Liquidity Contract', () => {
+                before(async () => {
+                    await aliceDepositsETH();
+                    await aliceTransferSomeEthToLC();
+                });
+                describe('And Alice starts the exit through LC and receives the NFT', () => {
+                    before(async () => {
+                        const utxoPos = this.transferUtxoPos;
+                        const rlpOutputTx = this.transferTx;
+                        const outputTxInclusionProof = this.merkleProofForTransferTx;
+                        const { depositUtxoPos } = this;
+                        const rlpDepositTx = this.depositTx;
+                        const depositInclusionProof = this.merkleProofForDepositTx;
+
+                        await this.liquidity.startExit(
+                            utxoPos,
+                            rlpOutputTx,
+                            outputTxInclusionProof,
+                            rlpDepositTx,
+                            depositInclusionProof,
+                            depositUtxoPos,
+                            { from: alice, value: this.startStandardExitBondSize },
+                        );
+                    });
+                    describe('When Alice transfers the exit NFT to Bob', () => {
+                        before(async () => {
+                            this.exitId = await this.exitGame.getStandardExitId(
+                                false,
+                                this.transferTx,
+                                this.transferUtxoPos,
+                            );
+                            await this.liquidity.safeTransferFrom(alice, bob, this.exitId, { from: alice });
+                        });
+                        it('should have Bob as the new owner of the exit token', async () => {
+                            const nft_owner = await this.liquidity.ownerOf(this.exitId);
+                            expect(nft_owner).to.equal(bob);
+                        });
+                        describe('And then someone processes the exits after two weeks', () => {
+                            before(async () => {
+                                await time.increase(time.duration.weeks(2).add(time.duration.seconds(1)));
+
+                                await this.framework.processExits(config.registerKeys.vaultId.eth, ETH, 0, 1);
+                            });
+                            describe('When Alice tries to claim funds back', () => {
+                                it('should not be successful', async () => {
+                                    await expectRevert(
+                                        this.liquidity.getWithdrawal(this.exitId, { from: alice }),
+                                        'Only the NFT owner of the respective exit can get the withdrawal',
+                                    );
+                                });
+                            });
+                            describe('When Bob tries to claim funds back through the NFT', () => {
+                                before(async () => {
+                                    this.bobBalanceBeforeClaiming = new BN(await web3.eth.getBalance(bob));
+                                    const { receipt } = await this.liquidity.getWithdrawal(this.exitId, {
+                                        from: bob,
+                                    });
+                                    this.bobWithdrawalReceipt = receipt;
+                                });
+                                it('should return the amount to Bob', async () => {
+                                    const actualBobBalanceAfterWithdrawal = new BN(await web3.eth.getBalance(bob));
+                                    const expectedBobBalance = this.bobBalanceBeforeClaiming
+                                        .add(new BN(this.transferTxObject.outputs[0].amount))
+                                        .sub(await spentOnGas(this.bobWithdrawalReceipt));
+
+                                    expect(actualBobBalanceAfterWithdrawal).to.be.bignumber.equal(expectedBobBalance);
+                                });
+                                it('should burn the NFT', async () => {
+                                    expect(await this.liquidity.exists(this.exitId)).to.be.false;
                                 });
                             });
                         });
