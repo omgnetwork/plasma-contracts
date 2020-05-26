@@ -12,7 +12,7 @@ const { expect } = require('chai');
 
 const { MerkleTree } = require('../helpers/merkle.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../helpers/transaction.js');
-const { computeNormalOutputId, spentOnGas } = require('../helpers/utils.js');
+const { computeNormalOutputId} = require('../helpers/utils.js');
 const { buildUtxoPos } = require('../helpers/positions.js');
 const Testlang = require('../helpers/testlang.js');
 const config = require('../../config.js');
