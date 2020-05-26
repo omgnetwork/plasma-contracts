@@ -8,19 +8,18 @@ import "../../src/utils/PosLib.sol";
 import "../../src/framework/models/BlockModel.sol";
 import "../../src/utils/Merkle.sol";
 import "../../src/exits/payment/routers/PaymentStandardExitRouter.sol";
+import "./ExitNFT.sol";
 
 /**
  * @title Liquidity Contract
  * Implementation Doc - https://github.com/omisego/research/blob/master/plasma/simple_fast_withdrawals.md
 */
-contract Liquidity {
+contract Liquidity is ExitNFT {
     PaymentExitGame public paymentExitGame;
 
     PlasmaFramework public plasmaFramework;
 
-    mapping(address => uint160[]) public userExitIds;
-    mapping(uint160 => address) public exitIdtoUser;
-    mapping(uint160 => uint256) public exitIdtoAmount;
+    mapping(uint160 => uint256) exitIdtoBondSize;
 
     /**
      * @notice provide PlasmaFramework contract-address when deploying the contract
@@ -75,17 +74,16 @@ contract Liquidity {
         "Couldn't start the exit"
         );
 
-        // store the resultant exitid as a trait for the nft and map it to the msg.sender
+        //change the return type of exitId once the pr to change it has been merged
         uint160 exitId = paymentExitGame.getStandardExitId(false, rlpOutputTxToContract, utxoPosToExit);
-        userExitIds[msg.sender].push(exitId);
-        exitIdtoUser[exitId] = msg.sender;
+        super._mint(msg.sender,exitId);
 
         // associate the amount exiting to the exitId
-
         FungibleTokenOutputModel.Output memory outputFromSecondTransaction
         = decodedSecondTx.outputs[0];
         uint256 amount = outputFromSecondTransaction.amount;
         exitIdtoAmount[exitId] = amount;
+        exitIdtoBondSize[exitId] = msg.value;
     }
 
     /**
@@ -158,9 +156,10 @@ contract Liquidity {
      * @param exitId The exit id
     */
     function getWithdrawal(uint160 exitId) public {
+        require( ownerOf(exitId) != address(0), "Token does not exist or has been claimed already");
         require(
-            exitIdtoUser[exitId] == msg.sender,
-            "Only the exitId owner can get the withdrawal"
+            ownerOf(exitId) == msg.sender,
+            "Only the NFT owner of the respective exit can get the withdrawal"
         );
         uint160[] memory exitIdList = new uint160[](1);
         exitIdList[0] = exitId;
@@ -168,7 +167,7 @@ contract Liquidity {
             exitIdList
         );
         if (exits[0].utxoPos == 0) {
-            exitIdtoUser[exitId] = 0x0000000000000000000000000000000000000000;
+            super._burn(msg.sender, exitId);
             msg.sender.transfer(exitIdtoAmount[exitId]);
         } else {
             revert("Not processed exit");
