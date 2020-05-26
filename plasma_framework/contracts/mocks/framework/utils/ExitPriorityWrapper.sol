@@ -15,4 +15,8 @@ contract ExitPriorityWrapper {
     function parseExitId(uint256 priority) public pure returns (uint168) {
         return ExitPriority.parseExitId(priority);
     }
+
+    function parseTxPos(uint256 priority) public pure returns (uint256) {
+        return ExitPriority.parseTxPos(priority);
+    }
 }

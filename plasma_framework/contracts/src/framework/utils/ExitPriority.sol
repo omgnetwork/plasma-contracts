@@ -6,8 +6,9 @@ library ExitPriority {
 
     using PosLib for PosLib.Position;
 
-    uint8 constant internal SIZEOF_TIMESTAMP = 32;
-    uint8 constant internal SIZEOF_EXITID = 168;
+    uint256 constant private SIZEOF_TIMESTAMP = 32;
+    uint256 constant private SIZEOF_TXPOS = 54;
+    uint256 constant private SIZEOF_EXITID = 168;
 
     /**
      * @dev Returns an exit priority for a given UTXO position and a unique ID.
@@ -37,5 +38,10 @@ library ExitPriority {
     function parseExitId(uint256 priority) internal pure returns (uint168) {
         // Exit ID uses only 168 least significant bits
         return uint168(priority);
+    }
+
+    function parseTxPos(uint256 priority) internal pure returns (uint256) {
+        uint256 pos = (priority >> SIZEOF_EXITID) & (2 ** SIZEOF_TXPOS - 1);
+        return pos * 10000;
     }
 }
