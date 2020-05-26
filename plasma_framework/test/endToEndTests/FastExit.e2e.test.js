@@ -293,13 +293,6 @@ contract(
                                 });
                             });
                         });
-                        // describe('When Alice transfers the exit NFT to Bob', () => {
-                        //     it('should have the new owner of token set to Bob', async () => {
-                        //         const exitId = await this.exitGame.getStandardExitId(false, this.transferTx, this.transferUtxoPos);
-                        //         await this.liquidity.safeTransferFrom(alice, bob, exitId);
-                        //         console.log(this.liquidity.ownerOf(exitId));
-                        //     });
-                        // });
                     });
                 });
             });

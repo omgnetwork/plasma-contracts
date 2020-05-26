@@ -74,16 +74,7 @@ contract Liquidity is ExitNFT {
         "Couldn't start the exit"
         );
 
-        //change the return type of exitId once the pr to change it has been merged
-        uint160 exitId = paymentExitGame.getStandardExitId(false, rlpOutputTxToContract, utxoPosToExit);
-        super._mint(msg.sender,exitId);
-
-        // associate the amount exiting to the exitId
-        FungibleTokenOutputModel.Output memory outputFromSecondTransaction
-        = decodedSecondTx.outputs[0];
-        uint256 amount = outputFromSecondTransaction.amount;
-        exitIdtoAmount[exitId] = amount;
-        exitIdtoBondSize[exitId] = msg.value;
+        mintNFT(rlpOutputTxToContract, utxoPosToExit, decodedSecondTx);
     }
 
     /**
@@ -122,7 +113,7 @@ contract Liquidity is ExitNFT {
     ) private returns (bool) {
         utxoDecoded.outputIndex = 0;
         (bytes32 root, ) = plasmaFramework.blocks(utxoDecoded.blockNum);
-        require(root != bytes32(""), "Failed to get root of the block");
+        require(root != bytes32(0x0), "Failed to get root of the block");
         return Merkle.checkMembership(
             rlpInputCreationTx,
             utxoDecoded.txIndex,
@@ -149,6 +140,17 @@ contract Liquidity is ExitNFT {
         });
         paymentExitGame.startStandardExit.value(msg.value)(s);
         return true;
+    }
+
+    function mintNFT(bytes memory rlpOutputTxToContract, uint256 utxoPosToExit, PaymentTransactionModel.Transaction memory decodedSecondTx) private {
+        //change the return type of exitId once the pr to change it has been merged
+        uint160 exitId = paymentExitGame.getStandardExitId(false, rlpOutputTxToContract, utxoPosToExit);
+        super._mint(msg.sender,exitId);
+
+        FungibleTokenOutputModel.Output memory outputFromSecondTransaction
+        = decodedSecondTx.outputs[0];
+        exitIdtoAmount[exitId] = outputFromSecondTransaction.amount;
+        exitIdtoBondSize[exitId] = msg.value;
     }
 
     /**
