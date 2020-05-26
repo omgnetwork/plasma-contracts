@@ -232,7 +232,9 @@ contract(
                         });
 
                         it('should return the output amount plus standard exit bond to the Liquidity Contract', async () => {
-                            const actualLCBalanceAfterProcessExit = new BN(await web3.eth.getBalance(this.liquidity.address));
+                            const actualLCBalanceAfterProcessExit = new BN(
+                                await web3.eth.getBalance(this.liquidity.address),
+                            );
                             const expectedLCBalance = this.LCBalanceBeforeProcessExit.add(
                                 this.startStandardExitBondSize,
                             ).add(new BN(this.transferTxObject.outputs[0].amount));

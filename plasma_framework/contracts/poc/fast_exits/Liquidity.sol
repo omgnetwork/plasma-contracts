@@ -59,7 +59,7 @@ contract Liquidity {
             "Wrong utxoPosInput provided"
         );
 
-        require( verifyTxValidity(
+        require(verifyTxValidity(
             utxoDecoded,
             rlpInputCreationTx,
             inputCreationTxInclusionProof
@@ -67,7 +67,7 @@ contract Liquidity {
         "Provided Transaction isn't finalized or doesn't exist"
         );
 
-        require( runExit(
+        require(runExit(
             utxoPosToExit,
             rlpOutputTxToContract,
             outputTxToContractInclusionProof
