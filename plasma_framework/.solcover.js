@@ -1,5 +1,6 @@
 module.exports = {
     skipFiles: [
-        'mocks'
+        'mocks',
+        'poc/fast_exits'
     ]
 }
