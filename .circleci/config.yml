@@ -198,28 +198,28 @@ jobs:
 
 workflows:
   version: 2
-  # Run python tests:
-  #   jobs:
-  #     - Python tests
-  #     - Python linter
+  Run python tests:
+    jobs:
+      - Python tests
+      - Python linter
 
   Run truffle tests:
     jobs:
-      # - Truffle tests
-      # - Solidity coverage
+      - Truffle tests
+      - Solidity coverage
       - Javascript linter
       - Solidity linter
 
-  # Run python slow tests:
-  #   jobs:
-  #     - Python long running tests
-  #   triggers:
-  #     - schedule:
-  #         cron: "0 0 * * 1" # run job every monday at midnight
-  #         filters:
-  #           branches:
-  #             only:
-  #               - master
+  Run python slow tests:
+    jobs:
+      - Python long running tests
+    triggers:
+      - schedule:
+          cron: "0 0 * * 1" # run job every monday at midnight
+          filters:
+            branches:
+              only:
+                - master
 
   Deployment checks:
     jobs:
@@ -227,7 +227,7 @@ workflows:
           filters:
             branches:
               only:
-                - "boolafish/deploy_to_ropsten_in_ci"
+                - master
 
 
 
