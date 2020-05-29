@@ -4,11 +4,11 @@ from urllib import request, parse
 
 THRESHOLD = 3000000000000000000 # 3 ETH
 FAUCET_ADDRESS = '0x179E20BA056FF73A8161d3E3bbC1627CB12e88cC'
-INFURA_TOKEN = os.environ['INFURA_TOKEN']
+INFURA_API_TOKEN = os.environ['INFURA_API_TOKEN']
 GITHUB_BOT_TOKEN = os.environ['GITHUB_BOT_TOKEN']
 
 def get_faucet_balance():
-    url = f'https://rinkeby.infura.io/v3/{INFURA_TOKEN}'
+    url = f'https://rinkeby.infura.io/v3/{INFURA_API_TOKEN}'
 
     data_dict = {
         'jsonrpc': '2.0',
@@ -32,7 +32,7 @@ def get_faucet_balance():
         return balance
 
 def submit_github_issue(balance):
-    url = 'https://api.github.com/repos/boolafish/plasma-contracts/issues'
+    url = 'https://api.github.com/repos/omisego/plasma-contracts/issues'
 
     data_dict = {
         'title': 'Faucet address of CI is in low balance!',

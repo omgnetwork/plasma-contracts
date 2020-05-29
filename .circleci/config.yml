@@ -180,6 +180,11 @@ jobs:
     steps:
       - checkout
       - run:
+          name: "Switch to Python v3.7"
+          command: |
+            pyenv versions
+            pyenv global 3.7.0
+      - run:
           name: build docker
           command: |
             docker build -t omisego/plasma-contracts .
@@ -195,6 +200,10 @@ jobs:
             omisego/plasma-contracts \
             npx truffle migrate --reset \
             --network remote
+      - run:
+          name: check faucet balance
+          command: |
+            python .circleci/scripts/check_faucet_balance_and_warn.py
 
 workflows:
   version: 2
@@ -228,6 +237,3 @@ workflows:
             branches:
               only:
                 - master
-
-
-
