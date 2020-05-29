@@ -93,7 +93,7 @@ jobs:
           path: ~/repo/plasma_framework/gasReporterOutput.json
       - store_artifacts:
           path: ~/repo/plasma_framework/gasReport.rst
-          
+
   Solidity coverage:
     executor: truffle_executor
     working_directory: ~/repo
@@ -123,7 +123,7 @@ jobs:
       - setup_truffle_env
       - run:
           name: Run javascript linter
-          command: eslint . 
+          command: eslint .
           working_directory: ~/repo/plasma_framework
 
   Solidity linter:
@@ -147,19 +147,19 @@ jobs:
           command: |
             . ~/venv/bin/activate
             make test
-  
+
   Python linter:
     executor: python_executor
     working_directory: ~/repo
     steps:
       - setup_python_env
       - run:
-          name: Run linter 
+          name: Run linter
           working_directory: ~/repo/plasma_framework/python_tests
-          command: | 
+          command: |
             . ~/venv/bin/activate
             make lint
-  
+
   Python long running tests:
     executor: python_executor
     working_directory: ~/repo
@@ -171,30 +171,63 @@ jobs:
           no_output_timeout: 5h # Circl CI limits to 5hr max: https://discuss.circleci.com/t/job-times-out-after-5-hours/32220/3
           command: |
             . ~/venv/bin/activate
-            make runslow 
+            make runslow
+
+  Deploy to Rinkeby:
+    machine:
+      image: ubuntu-1604:201903-01
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - run:
+          name: build docker
+          command: |
+            docker build -t omisego/plasma-contracts .
+      - run:
+          name: deploy contract to Rinkeby
+          no_output_timeout: 1h
+          command: |
+            docker run --rm \
+            -e DEPLOYER_PRIVATEKEY=${FAUCET_PRIV_KEY} \
+            -e MAINTAINER_PRIVATEKEY=${FAUCET_PRIV_KEY} \
+            -e AUTHORITY_PRIVATEKEY=${FAUCET_PRIV_KEY} \
+            -e REMOTE_URL="https://rinkeby.infura.io/v3/${INFURA_API_TOKEN}" \
+            omisego/plasma-contracts \
+            npx truffle migrate --reset \
+            --network remote
 
 workflows:
   version: 2
-  Run python tests:
-    jobs:
-      - Python tests
-      - Python linter
+  # Run python tests:
+  #   jobs:
+  #     - Python tests
+  #     - Python linter
 
   Run truffle tests:
     jobs:
-      - Truffle tests
-      - Solidity coverage
+      # - Truffle tests
+      # - Solidity coverage
       - Javascript linter
       - Solidity linter
-  
-  Run python slow tests:
+
+  # Run python slow tests:
+  #   jobs:
+  #     - Python long running tests
+  #   triggers:
+  #     - schedule:
+  #         cron: "0 0 * * 1" # run job every monday at midnight
+  #         filters:
+  #           branches:
+  #             only:
+  #               - master
+
+  Deployment checks:
     jobs:
-      - Python long running tests
-    triggers:
-      - schedule:
-          cron: "0 0 * * 1" # run job every monday at midnight
+      - Deploy to Rinkeby:
           filters:
             branches:
               only:
-                - master
+                - "boolafish/deploy_to_ropsten_in_ci"
+
+
 
