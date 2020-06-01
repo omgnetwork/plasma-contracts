@@ -19,8 +19,13 @@ contract Liquidity is ERC721Full {
 
     PlasmaFramework public plasmaFramework;
 
-    mapping(uint160 => uint256) public exitIdtoBondSize;
-    mapping(uint160 => uint256) public exitIdtoAmount;
+// adding more to the struct when the exit bond payment logic comes up
+    struct ExitData {
+        uint256 exitBondSize;
+        uint256 exitAmount;
+    }
+
+    mapping(uint160 => ExitData) private exitData;
 
     /**
      * @notice provide PlasmaFramework contract-address when deploying the contract
@@ -156,8 +161,7 @@ contract Liquidity is ERC721Full {
 
         FungibleTokenOutputModel.Output memory outputFromSecondTransaction
         = decodedSecondTx.outputs[0];
-        exitIdtoAmount[exitId] = outputFromSecondTransaction.amount;
-        exitIdtoBondSize[exitId] = msg.value;
+        exitData[exitId] = ExitData(msg.value, outputFromSecondTransaction.amount);
     }
 
     /**
@@ -186,7 +190,7 @@ contract Liquidity is ERC721Full {
         if (exits[0].utxoPos == 0) {
             super._burn(msg.sender, exitId);
             // possibly a separate function to pull the exit bond
-            msg.sender.transfer(exitIdtoAmount[exitId]);
+            msg.sender.transfer(exitData[exitId].exitAmount);
         } else {
             revert("Not processed exit");
         }
