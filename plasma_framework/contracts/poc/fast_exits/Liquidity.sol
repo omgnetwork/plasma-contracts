@@ -8,23 +8,24 @@ import "../../src/utils/PosLib.sol";
 import "../../src/framework/models/BlockModel.sol";
 import "../../src/utils/Merkle.sol";
 import "../../src/exits/payment/routers/PaymentStandardExitRouter.sol";
-import "./ExitNFT.sol";
+import "openzeppelin-solidity/contracts/token/ERC721/ERC721Full.sol";
 
 /**
  * @title Liquidity Contract
  * Implementation Doc - https://github.com/omisego/research/blob/master/plasma/simple_fast_withdrawals.md
 */
-contract Liquidity is ExitNFT {
+contract Liquidity is ERC721Full {
     PaymentExitGame public paymentExitGame;
 
     PlasmaFramework public plasmaFramework;
 
     mapping(uint160 => uint256) public exitIdtoBondSize;
+    mapping(uint160 => uint256) public exitIdtoAmount;
 
     /**
      * @notice provide PlasmaFramework contract-address when deploying the contract
     */
-    constructor(address plasmaFrameworkContract) public {
+    constructor(address plasmaFrameworkContract) public ERC721Full("OMG Exit", "OMGE") {
         plasmaFramework = PlasmaFramework(plasmaFrameworkContract);
         paymentExitGame = PaymentExitGame(plasmaFramework.exitGames(1));
     }
@@ -160,13 +161,21 @@ contract Liquidity is ExitNFT {
     }
 
     /**
+     * @dev Check if the token for the exit exists
+     * @param tokenId The tokenId which is also the exitId
+    */
+    function exists(uint256 tokenId) public view returns (bool) {
+        return _exists(tokenId);
+    }
+
+    /**
      * @dev Get Amount from contract after exit is processed - (to be updated)
      * @param exitId The exit id
     */
     function getWithdrawal(uint160 exitId) public {
-        require(ownerOf(exitId) != address(0), "Token does not exist or has been claimed already");
+        require(super.ownerOf(exitId) != address(0), "Token does not exist or has been claimed already");
         require(
-            ownerOf(exitId) == msg.sender,
+            super.ownerOf(exitId) == msg.sender,
             "Only the NFT owner of the respective exit can get the withdrawal"
         );
         uint160[] memory exitIdList = new uint160[](1);
