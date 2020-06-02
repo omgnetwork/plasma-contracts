@@ -270,7 +270,10 @@ contract(
                                     );
                                 });
                                 it('should burn the NFT', async () => {
-                                    expect(await this.liquidity.exists(this.exitId)).to.be.false;
+                                    await expectRevert(
+                                        this.liquidity.ownerOf(this.exitId),
+                                        'ERC721: owner query for nonexistent token',
+                                    );
                                 });
                                 it('should not allow Alice to get withdrawal again', async () => {
                                     await expectRevert(
@@ -351,7 +354,10 @@ contract(
                                     expect(actualBobBalanceAfterWithdrawal).to.be.bignumber.equal(expectedBobBalance);
                                 });
                                 it('should burn the NFT', async () => {
-                                    expect(await this.liquidity.exists(this.exitId)).to.be.false;
+                                    await expectRevert(
+                                        this.liquidity.ownerOf(this.exitId),
+                                        'ERC721: owner query for nonexistent token',
+                                    );
                                 });
                             });
                         });

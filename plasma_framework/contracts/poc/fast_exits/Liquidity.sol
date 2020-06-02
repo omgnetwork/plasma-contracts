@@ -19,7 +19,6 @@ contract Liquidity is ERC721Full {
 
     PlasmaFramework public plasmaFramework;
 
-    // adding more to the struct when the exit bond payment logic comes up
     struct ExitData {
         uint256 exitBondSize;
         uint256 exitAmount;
@@ -165,19 +164,10 @@ contract Liquidity is ERC721Full {
     }
 
     /**
-     * @dev Check if the token for the exit exists
-     * @param tokenId The tokenId which is also the exitId
-    */
-    function exists(uint256 tokenId) public view returns (bool) {
-        return _exists(tokenId);
-    }
-
-    /**
      * @dev Get Amount from contract after exit is processed - (to be updated)
      * @param exitId The exit id
     */
     function getWithdrawal(uint160 exitId) public {
-        require(super.ownerOf(exitId) != address(0), "Token does not exist or has been claimed already");
         require(
             super.ownerOf(exitId) == msg.sender,
             "Only the NFT owner of the respective exit can get the withdrawal"
