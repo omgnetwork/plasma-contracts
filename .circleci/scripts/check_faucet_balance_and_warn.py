@@ -32,7 +32,7 @@ def get_faucet_balance():
         return balance
 
 def submit_github_issue(balance):
-    url = 'https://api.github.com/repos/omisego/plasma-contracts/issues'
+    url = 'https://api.github.com/repos/omgnetwork/plasma-contracts/issues'
 
     data_dict = {
         'title': 'Faucet address of CI is in low balance!',
