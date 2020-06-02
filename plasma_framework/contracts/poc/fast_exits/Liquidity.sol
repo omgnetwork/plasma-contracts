@@ -19,7 +19,7 @@ contract Liquidity is ERC721Full {
 
     PlasmaFramework public plasmaFramework;
 
-// adding more to the struct when the exit bond payment logic comes up
+    // adding more to the struct when the exit bond payment logic comes up
     struct ExitData {
         uint256 exitBondSize;
         uint256 exitAmount;
