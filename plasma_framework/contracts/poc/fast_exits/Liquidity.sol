@@ -21,6 +21,8 @@ contract Liquidity is ERC721Full {
 
     struct ExitData {
         uint256 exitBondSize;
+        address exitInitiator;
+        bool bondReturned;
         uint256 exitAmount;
     }
 
@@ -160,7 +162,7 @@ contract Liquidity is ERC721Full {
 
         FungibleTokenOutputModel.Output memory outputFromSecondTransaction
         = decodedSecondTx.outputs[0];
-        exitData[exitId] = ExitData(msg.value, outputFromSecondTransaction.amount);
+        exitData[exitId] = ExitData(msg.value, msg.sender, false, outputFromSecondTransaction.amount);
     }
 
     /**
@@ -183,6 +185,28 @@ contract Liquidity is ERC721Full {
             msg.sender.transfer(exitData[exitId].exitAmount);
         } else {
             revert("Not processed exit");
+        }
+    }
+
+    /**
+     * @dev Get Exit bond back - to be called by exit intitiator
+     * @param exitId The exit id
+    */
+    function getExitBond(uint160 exitId) public {
+        require(exitData[exitId].bondReturned == false, "Exit Bond Already returned");
+        require(exitData[exitId].exitInitiator != address(0), "ExitId is invalid");
+        require(msg.sender == exitData[exitId].exitInitiator, "Only the Exit Initiator can claim the bond");
+        
+        uint160[] memory exitIdList = new uint160[](1);
+        exitIdList[0] = exitId;
+        PaymentExitDataModel.StandardExit[] memory exits = paymentExitGame.standardExits(
+            exitIdList
+        );
+        if (exits[0].utxoPos == 0) {
+            exitData[exitId].bondReturned = true;
+            msg.sender.transfer(exitData[exitId].exitBondSize); 
+        } else {
+            revert("Exit not Processed");
         }
     }
 

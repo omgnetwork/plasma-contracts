@@ -227,6 +227,17 @@ contract(
                             const totalSupply = await this.liquidity.totalSupply();
                             expect(totalSupply).to.be.bignumber.equal(new BN(1));
                         });
+                        describe('When Alice tries to claim exit Bond before the exit is processed', () => {
+                            it('should not be successful', async () => {
+                                await expectRevert(
+                                    this.liquidity.getExitBond(
+                                       this.exitId,
+                                        { from: alice },
+                                    ),
+                                    'Exit not Processed',
+                                );
+                            });
+                        });
                         describe('And then Alice processes the exits after two weeks', () => {
                             before(async () => {
                                 await time.increase(time.duration.weeks(2).add(time.duration.seconds(1)));
@@ -249,6 +260,35 @@ contract(
                                 ).add(new BN(this.transferTxObject.outputs[0].amount));
 
                                 expect(actualLCBalanceAfterProcessExit).to.be.bignumber.equal(expectedLCBalance);
+                            });
+                            describe('When Alice tries to claim the exit bond back', () => {
+                                before(async () => {
+                                    this.aliceBalanceBeforeClaiming = new BN(await web3.eth.getBalance(alice));
+                                    const { receipt } = await this.liquidity.getExitBond(this.exitId, {
+                                        from: alice,
+                                    });
+                                    this.aliceWithdrawalReceipt = receipt;
+                                });
+
+                                it('should return the exit bond to Alice', async () => {
+                                    const actualAliceBalanceAfterClaiming = new BN(await web3.eth.getBalance(alice));
+                                    const expectedAliceBalance = this.aliceBalanceBeforeClaiming.add(
+                                        this.startStandardExitBondSize,
+                                    ).sub(await spentOnGas(this.aliceWithdrawalReceipt));
+
+                                    expect(actualAliceBalanceAfterClaiming).to.be.bignumber.equal(
+                                        expectedAliceBalance
+                                    );
+                                });
+                                it('should not return the bond again', async () => {
+                                    await expectRevert(
+                                        this.liquidity.getExitBond(
+                                           this.exitId,
+                                            { from: alice },
+                                        ),
+                                        'Exit Bond Already returned',
+                                    );
+                                });
                             });
                             describe('When Alice tries to claim funds back through the NFT', () => {
                                 before(async () => {
@@ -334,6 +374,34 @@ contract(
                                     await expectRevert(
                                         this.liquidity.getWithdrawal(this.exitId, { from: alice }),
                                         'Only the NFT owner of the respective exit can get the withdrawal',
+                                    );
+                                });
+                            });
+                            describe('When Bob tries to get exit bond', () => {
+                                it('should not be successful', async () => {
+                                    await expectRevert(
+                                        this.liquidity.getExitBond(this.exitId, { from: bob }),
+                                        'Only the Exit Initiator can claim the bond',
+                                    );
+                                });
+                            });
+                            describe('When Alice tries to get exit bond back', () => {
+                                before(async () => {
+                                    this.aliceBalanceBeforeClaiming = new BN(await web3.eth.getBalance(alice));
+                                    const { receipt } = await this.liquidity.getExitBond(this.exitId, {
+                                        from: alice,
+                                    });
+                                    this.aliceWithdrawalReceipt = receipt;
+                                });
+
+                                it('should return the exit bond to Alice', async () => {
+                                    const actualAliceBalanceAfterClaiming = new BN(await web3.eth.getBalance(alice));
+                                    const expectedAliceBalance = this.aliceBalanceBeforeClaiming.add(
+                                        this.startStandardExitBondSize,
+                                    ).sub(await spentOnGas(this.aliceWithdrawalReceipt));
+
+                                    expect(actualAliceBalanceAfterClaiming).to.be.bignumber.equal(
+                                        expectedAliceBalance
                                     );
                                 });
                             });
