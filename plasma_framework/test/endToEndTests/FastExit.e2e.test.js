@@ -231,7 +231,7 @@ contract(
                             it('should not be successful', async () => {
                                 await expectRevert(
                                     this.liquidity.getExitBond(
-                                       this.exitId,
+                                        this.exitId,
                                         { from: alice },
                                     ),
                                     'Exit not Processed',
@@ -277,13 +277,13 @@ contract(
                                     ).sub(await spentOnGas(this.aliceWithdrawalReceipt));
 
                                     expect(actualAliceBalanceAfterClaiming).to.be.bignumber.equal(
-                                        expectedAliceBalance
+                                        expectedAliceBalance,
                                     );
                                 });
                                 it('should not return the bond again', async () => {
                                     await expectRevert(
                                         this.liquidity.getExitBond(
-                                           this.exitId,
+                                            this.exitId,
                                             { from: alice },
                                         ),
                                         'Exit Bond Already returned',
@@ -401,7 +401,7 @@ contract(
                                     ).sub(await spentOnGas(this.aliceWithdrawalReceipt));
 
                                     expect(actualAliceBalanceAfterClaiming).to.be.bignumber.equal(
-                                        expectedAliceBalance
+                                        expectedAliceBalance,
                                     );
                                 });
                             });
