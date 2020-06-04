@@ -20,7 +20,9 @@ module.exports = async (
     );
 
     const plasmaFramework = await PlasmaFramework.deployed();
-    await plasmaFramework.activateChildChain({ from: authorityAddress });
-    const sha = childProcess.execSync('git rev-parse HEAD').toString().trim().substring(0, 7);
-    await plasmaFramework.setVersion(`${pck.version}+${sha}`, { from: maintainerAddress });
+    // this comes from vault
+    // await plasmaFramework.activateChildChain({ from: authorityAddress }); 
+    // const sha = childProcess.execSync('git rev-parse HEAD').toString().trim().substring(0, 7);
+    // this should probably be done by the deployer
+    // await plasmaFramework.setVersion(`${pck.version}+${sha}`, { from: maintainerAddress }); 
 };

@@ -27,9 +27,9 @@ module.exports = {
             // are undefined as this is instanciating a class....
             provider: new HDWalletProvider(
                 [
-                    process.env.DEPLOYER_PRIVATEKEY || '0'.repeat(64),
-                    process.env.MAINTAINER_PRIVATEKEY || '0'.repeat(64),
-                    process.env.AUTHORITY_PRIVATEKEY || '0'.repeat(64),
+                    process.env.DEPLOYER_PRIVATEKEY || '0'.repeat(64)//,
+                    // process.env.MAINTAINER_PRIVATEKEY || '0'.repeat(64),
+                    //process.env.AUTHORITY_PRIVATEKEY || '0'.repeat(64),
                 ],
                 process.env.REMOTE_URL || 'http://127.0.0.1:8545',
                 0, 3,
