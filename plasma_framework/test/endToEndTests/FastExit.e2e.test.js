@@ -286,7 +286,7 @@ contract(
                                             this.exitId,
                                             { from: alice },
                                         ),
-                                        'Exit Bond Already returned',
+                                        'Exit Bond does not exist or is already claimed',
                                     );
                                 });
                             });
