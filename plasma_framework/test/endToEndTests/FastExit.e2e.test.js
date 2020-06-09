@@ -495,7 +495,9 @@ contract(
                     describe('And then the bond size is changed, Bob starts exit with new bond size after two days', () => {
                         before(async () => {
                             this.updatedStandardExitBondSize = new BN(8000000000000000);
-                            await this.exitGame.updateStartStandardExitBondSize(this.updatedStandardExitBondSize, { from: maintainer });
+                            await this.exitGame.updateStartStandardExitBondSize(this.updatedStandardExitBondSize, {
+                                from: maintainer,
+                            });
                             await time.increase(time.duration.days(2).add(time.duration.seconds(1)));
 
                             const utxoPos = this.bobTransferUtxoPos;
