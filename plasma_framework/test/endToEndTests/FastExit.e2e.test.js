@@ -19,7 +19,7 @@ const config = require('../../config.js');
 
 contract(
     'LiquidityContract - Fast Exits - End to End Tests',
-    ([_deployer, _maintainer, authority, bob, richFather]) => {
+    ([_deployer, maintainer, authority, bob, richFather]) => {
         const ETH = constants.ZERO_ADDRESS;
         const OUTPUT_TYPE_PAYMENT = config.registerKeys.outputTypes.payment;
         const DEPOSIT_VALUE = 1000000;
@@ -94,6 +94,40 @@ contract(
             this.merkleProofForTransferTx = this.merkleTreeForTransferTx.getInclusionProof(this.transferTx);
 
             await this.framework.submitBlock(this.merkleTreeForTransferTx.root, { from: authority });
+        };
+
+        const bobDepositsETH = async () => {
+            const depositBlockNum = (await this.framework.nextDepositBlock()).toNumber();
+            this.bobDepositUtxoPos = buildUtxoPos(depositBlockNum, 0, 0);
+            this.bobDepositTx = Testlang.deposit(OUTPUT_TYPE_PAYMENT, DEPOSIT_VALUE, bob);
+            this.bobMerkleTreeForDepositTx = new MerkleTree([this.bobDepositTx], MERKLE_TREE_DEPTH);
+            this.bobMerkleProofForDepositTx = this.bobMerkleTreeForDepositTx.getInclusionProof(this.bobDepositTx);
+
+            return this.ethVault.deposit(this.bobDepositTx, { from: bob, value: DEPOSIT_VALUE });
+        };
+
+        const bobTransferSomeEthToLC = async () => {
+            const tranferTxBlockNum = (await this.framework.nextChildBlock()).toNumber();
+            this.bobTransferUtxoPos = buildUtxoPos(tranferTxBlockNum, 0, 0);
+
+            const outputLC = new PaymentTransactionOutput(
+                OUTPUT_TYPE_PAYMENT,
+                TRANSFER_AMOUNT,
+                this.liquidity.address,
+                ETH,
+            );
+            const outputBob = new PaymentTransactionOutput(
+                OUTPUT_TYPE_PAYMENT,
+                DEPOSIT_VALUE - TRANSFER_AMOUNT,
+                bob,
+                ETH,
+            );
+            this.bobTransferTxObject = new PaymentTransaction(1, [this.bobDepositUtxoPos], [outputLC, outputBob]);
+            this.bobTransferTx = web3.utils.bytesToHex(this.bobTransferTxObject.rlpEncoded());
+            this.bobMerkleTreeForTransferTx = new MerkleTree([this.bobTransferTx]);
+            this.bobMerkleProofForTransferTx = this.bobMerkleTreeForTransferTx.getInclusionProof(this.bobTransferTx);
+
+            await this.framework.submitBlock(this.bobMerkleTreeForTransferTx.root, { from: authority });
         };
 
         describe('Given contracts deployed, exit game and ETH vault registered', () => {
@@ -425,6 +459,116 @@ contract(
                                     await expectRevert(
                                         this.liquidity.ownerOf(this.exitId),
                                         'ERC721: owner query for nonexistent token',
+                                    );
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+            describe('Given Alice and Bob both deposited ETH and transferred some value to the Liquidity Contract', () => {
+                before(async () => {
+                    await aliceDepositsETH();
+                    await aliceTransferSomeEthToLC();
+                    await bobDepositsETH();
+                    await bobTransferSomeEthToLC();
+                });
+                describe('When Alice starts the exit through LC', () => {
+                    before(async () => {
+                        const utxoPos = this.transferUtxoPos;
+                        const rlpOutputTx = this.transferTx;
+                        const outputTxInclusionProof = this.merkleProofForTransferTx;
+                        const { depositUtxoPos } = this;
+                        const rlpDepositTx = this.depositTx;
+                        const depositInclusionProof = this.merkleProofForDepositTx;
+
+                        await this.liquidity.startExit(
+                            utxoPos,
+                            rlpOutputTx,
+                            outputTxInclusionProof,
+                            rlpDepositTx,
+                            depositInclusionProof,
+                            depositUtxoPos,
+                            { from: alice, value: this.startStandardExitBondSize },
+                        );
+                    });
+                    describe('And then the bond size is changed, Bob starts exit with new bond size after two days', () => {
+                        before(async () => {
+                            const newBondSize = 8000000000000000;
+                            await this.exitGame.updateStartStandardExitBondSize(newBondSize, { from: maintainer });
+                            await time.increase(time.duration.days(2).add(time.duration.seconds(1)));
+                            this.updatedStandardExitBondSize = await this.exitGame.startStandardExitBondSize();
+
+                            const utxoPos = this.bobTransferUtxoPos;
+                            const rlpOutputTx = this.bobTransferTx;
+                            const outputTxInclusionProof = this.bobMerkleProofForTransferTx;
+                            const depositUtxoPos = this.bobDepositUtxoPos;
+                            const rlpDepositTx = this.bobDepositTx;
+                            const depositInclusionProof = this.bobMerkleProofForDepositTx;
+
+                            await this.liquidity.startExit(
+                                utxoPos,
+                                rlpOutputTx,
+                                outputTxInclusionProof,
+                                rlpDepositTx,
+                                depositInclusionProof,
+                                depositUtxoPos,
+                                { from: bob, value: newBondSize },
+                            );
+                        });
+                        describe('And then someone processes the exits after two weeks', () => {
+                            before(async () => {
+                                await time.increase(time.duration.weeks(2).add(time.duration.seconds(1)));
+
+                                await this.framework.processExits(config.registerKeys.vaultId.eth, ETH, 0, 2);
+                            });
+                            describe('When Alice tries to get exit bond back', () => {
+                                before(async () => {
+                                    this.aliceBalanceBeforeClaiming = new BN(await web3.eth.getBalance(alice));
+                                    this.aliceExitId = await this.exitGame.getStandardExitId(
+                                        false,
+                                        this.transferTx,
+                                        this.transferUtxoPos,
+                                    );
+                                    const { receipt } = await this.liquidity.withdrawExitBond(this.aliceExitId, {
+                                        from: alice,
+                                    });
+                                    this.aliceWithdrawalReceipt = receipt;
+                                });
+
+                                it('should return the exit bond with older size to Alice', async () => {
+                                    const actualAliceBalanceAfterClaiming = new BN(await web3.eth.getBalance(alice));
+                                    const expectedAliceBalance = this.aliceBalanceBeforeClaiming.add(
+                                        this.startStandardExitBondSize,
+                                    ).sub(await spentOnGas(this.aliceWithdrawalReceipt));
+
+                                    expect(actualAliceBalanceAfterClaiming).to.be.bignumber.equal(
+                                        expectedAliceBalance,
+                                    );
+                                });
+                            });
+                            describe('When Bob tries to get exit bond back', () => {
+                                before(async () => {
+                                    this.bobBalanceBeforeClaiming = new BN(await web3.eth.getBalance(bob));
+                                    this.bobExitId = await this.exitGame.getStandardExitId(
+                                        false,
+                                        this.bobTransferTx,
+                                        this.bobTransferUtxoPos,
+                                    );
+                                    const { receipt } = await this.liquidity.withdrawExitBond(this.bobExitId, {
+                                        from: bob,
+                                    });
+                                    this.bobWithdrawalReceipt = receipt;
+                                });
+
+                                it('should return the exit bond with new size to Bob', async () => {
+                                    const actualBobBalanceAfterClaiming = new BN(await web3.eth.getBalance(bob));
+                                    const expectedBobBalance = this.bobBalanceBeforeClaiming.add(
+                                        this.updatedStandardExitBondSize,
+                                    ).sub(await spentOnGas(this.bobWithdrawalReceipt));
+
+                                    expect(actualBobBalanceAfterClaiming).to.be.bignumber.equal(
+                                        expectedBobBalance,
                                     );
                                 });
                             });
