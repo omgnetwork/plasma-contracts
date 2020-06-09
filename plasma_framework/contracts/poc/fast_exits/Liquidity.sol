@@ -168,7 +168,7 @@ contract Liquidity is ERC721Full {
      * @dev Get Amount from contract after exit is processed - (to be updated)
      * @param exitId The exit id
     */
-    function getWithdrawal(uint160 exitId) public {
+    function withdrawExit(uint160 exitId) public {
         require(
             super.ownerOf(exitId) == msg.sender,
             "Only the NFT owner of the respective exit can get the withdrawal"
@@ -183,7 +183,7 @@ contract Liquidity is ERC721Full {
      * @dev Get Exit bond back - to be called by exit intitiator
      * @param exitId The exit id
     */
-    function getExitBond(uint160 exitId) public {
+    function withdrawExitBond(uint160 exitId) public {
         require(exitData[exitId].exitInitiator != address(0), "Exit Bond does not exist or is already claimed");
         require(msg.sender == exitData[exitId].exitInitiator, "Only the Exit Initiator can claim the bond");
         

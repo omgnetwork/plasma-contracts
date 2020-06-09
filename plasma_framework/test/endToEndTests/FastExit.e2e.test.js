@@ -230,7 +230,7 @@ contract(
                         describe('When Alice tries to claim exit Bond before the exit is processed', () => {
                             it('should not be successful', async () => {
                                 await expectRevert(
-                                    this.liquidity.getExitBond(
+                                    this.liquidity.withdrawExitBond(
                                         this.exitId,
                                         { from: alice },
                                     ),
@@ -264,7 +264,7 @@ contract(
                             describe('When Alice tries to claim the exit bond back', () => {
                                 before(async () => {
                                     this.aliceBalanceBeforeClaiming = new BN(await web3.eth.getBalance(alice));
-                                    const { receipt } = await this.liquidity.getExitBond(this.exitId, {
+                                    const { receipt } = await this.liquidity.withdrawExitBond(this.exitId, {
                                         from: alice,
                                     });
                                     this.aliceWithdrawalReceipt = receipt;
@@ -282,7 +282,7 @@ contract(
                                 });
                                 it('should not return the bond again', async () => {
                                     await expectRevert(
-                                        this.liquidity.getExitBond(
+                                        this.liquidity.withdrawExitBond(
                                             this.exitId,
                                             { from: alice },
                                         ),
@@ -293,7 +293,7 @@ contract(
                             describe('When Alice tries to claim funds back through the NFT', () => {
                                 before(async () => {
                                     this.aliceBalanceBeforeClaiming = new BN(await web3.eth.getBalance(alice));
-                                    const { receipt } = await this.liquidity.getWithdrawal(this.exitId, {
+                                    const { receipt } = await this.liquidity.withdrawExit(this.exitId, {
                                         from: alice,
                                     });
                                     this.aliceWithdrawalReceipt = receipt;
@@ -317,7 +317,7 @@ contract(
                                 });
                                 it('should not allow Alice to get withdrawal again', async () => {
                                     await expectRevert(
-                                        this.liquidity.getWithdrawal(this.exitId, { from: alice }),
+                                        this.liquidity.withdrawExit(this.exitId, { from: alice }),
                                         'ERC721: owner query for nonexistent token',
                                     );
                                 });
@@ -372,7 +372,7 @@ contract(
                             describe('When Alice tries to claim funds back', () => {
                                 it('should not be successful', async () => {
                                     await expectRevert(
-                                        this.liquidity.getWithdrawal(this.exitId, { from: alice }),
+                                        this.liquidity.withdrawExit(this.exitId, { from: alice }),
                                         'Only the NFT owner of the respective exit can get the withdrawal',
                                     );
                                 });
@@ -380,7 +380,7 @@ contract(
                             describe('When Bob tries to get exit bond', () => {
                                 it('should not be successful', async () => {
                                     await expectRevert(
-                                        this.liquidity.getExitBond(this.exitId, { from: bob }),
+                                        this.liquidity.withdrawExitBond(this.exitId, { from: bob }),
                                         'Only the Exit Initiator can claim the bond',
                                     );
                                 });
@@ -388,7 +388,7 @@ contract(
                             describe('When Alice tries to get exit bond back', () => {
                                 before(async () => {
                                     this.aliceBalanceBeforeClaiming = new BN(await web3.eth.getBalance(alice));
-                                    const { receipt } = await this.liquidity.getExitBond(this.exitId, {
+                                    const { receipt } = await this.liquidity.withdrawExitBond(this.exitId, {
                                         from: alice,
                                     });
                                     this.aliceWithdrawalReceipt = receipt;
@@ -408,7 +408,7 @@ contract(
                             describe('When Bob tries to claim funds back through the NFT', () => {
                                 before(async () => {
                                     this.bobBalanceBeforeClaiming = new BN(await web3.eth.getBalance(bob));
-                                    const { receipt } = await this.liquidity.getWithdrawal(this.exitId, {
+                                    const { receipt } = await this.liquidity.withdrawExit(this.exitId, {
                                         from: bob,
                                     });
                                     this.bobWithdrawalReceipt = receipt;
