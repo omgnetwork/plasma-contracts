@@ -138,7 +138,7 @@ contract(
             this.depositTx = Testlang.deposit(OUTPUT_TYPE_PAYMENT, DEPOSIT_VALUE, alice, this.erc20.address);
             this.merkleTreeForDepositTx = new MerkleTree([this.depositTx], MERKLE_TREE_DEPTH);
             this.merkleProofForDepositTx = this.merkleTreeForDepositTx.getInclusionProof(this.depositTx);
-    
+
             return this.erc20Vault.deposit(this.depositTx, { from: alice });
         };
 
@@ -528,7 +528,7 @@ contract(
                 before(async () => {
                     await this.erc20.transfer(alice, DEPOSIT_VALUE, { from: richDad });
                     await this.erc20.approve(this.erc20Vault.address, DEPOSIT_VALUE, { from: alice });
-    
+
                     await aliceDepositsErc20();
                     await this.framework.addExitQueue(config.registerKeys.vaultId.erc20, this.erc20.address);
                     await aliceTransferSomeErcToLC();
@@ -581,7 +581,9 @@ contract(
                         before(async () => {
                             await time.increase(time.duration.weeks(1).add(time.duration.seconds(1)));
 
-                            this.LCErc20BalanceBeforeProcessExit = new BN(await this.erc20.balanceOf(this.liquidity.address));
+                            this.LCErc20BalanceBeforeProcessExit = new BN(
+                                await this.erc20.balanceOf(this.liquidity.address),
+                            );
                             this.LCEthBalanceBeforeProcessExit = new BN(
                                 await web3.eth.getBalance(this.liquidity.address),
                             );
@@ -606,7 +608,7 @@ contract(
                                 await this.erc20.balanceOf(this.liquidity.address),
                             );
                             const expectedLCErc20Balance = this.LCErc20BalanceBeforeProcessExit.add(
-                                new BN(this.transferTxObject.outputs[0].amount)
+                                new BN(this.transferTxObject.outputs[0].amount),
                             );
 
                             expect(actualLCBalanceAfterProcessExit).to.be.bignumber.equal(expectedLCBalance);
@@ -643,12 +645,15 @@ contract(
                             });
 
                             it('should return the tokens to Alice', async () => {
-                                const actualAliceErc20BalanceAfterWithdrawal = new BN(await this.erc20.balanceOf(alice));
+                                const actualAliceErc20BalanceAfterWithdrawal = new BN(
+                                    await this.erc20.balanceOf(alice),
+                                );
                                 const expectedAliceErc20Balance = this.aliceErc20BalanceBeforeClaiming.add(
                                     new BN(this.transferTxObject.outputs[0].amount),
                                 );
 
-                                expect(actualAliceErc20BalanceAfterWithdrawal).to.be.bignumber.equal(expectedAliceErc20Balance);
+                                expect(actualAliceErc20BalanceAfterWithdrawal).
+                                to.be.bignumber.equal(expectedAliceErc20Balance);
                             });
                         });
                     });
@@ -741,7 +746,7 @@ contract(
                                     );
                                 });
                             });
-                            
+
                             describe('When Bob tries to get exit bond back', () => {
                                 before(async () => {
                                     this.bobBalanceBeforeClaiming = new BN(await web3.eth.getBalance(bob));

@@ -182,8 +182,7 @@ contract Liquidity is ERC721Full {
         require(isExitProcessed(exitId), "Exit not Processed");
         super._burn(msg.sender, exitId);
 
-        if(exitData[exitId].token == address(0))
-        {
+        if (exitData[exitId].token == address(0)) {
             msg.sender.transfer(exitData[exitId].exitAmount);
         } else {
             IERC20(exitData[exitId].token).safeTransfer(msg.sender, exitData[exitId].exitAmount);
