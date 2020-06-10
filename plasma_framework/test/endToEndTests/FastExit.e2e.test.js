@@ -652,8 +652,9 @@ contract(
                                     new BN(this.transferTxObject.outputs[0].amount),
                                 );
 
-                                expect(actualAliceErc20BalanceAfterWithdrawal).
-                                to.be.bignumber.equal(expectedAliceErc20Balance);
+                                expect(actualAliceErc20BalanceAfterWithdrawal).to.be.bignumber.equal(
+                                    expectedAliceErc20Balance,
+                                );
                             });
                         });
                     });
