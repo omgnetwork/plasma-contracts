@@ -9,12 +9,16 @@ import "../../src/framework/models/BlockModel.sol";
 import "../../src/utils/Merkle.sol";
 import "../../src/exits/payment/routers/PaymentStandardExitRouter.sol";
 import "openzeppelin-solidity/contracts/token/ERC721/ERC721Full.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/SafeERC20.sol";
 
 /**
  * @title Liquidity Contract
  * Implementation Doc - https://github.com/omisego/research/blob/master/plasma/simple_fast_withdrawals.md
 */
 contract Liquidity is ERC721Full {
+    using SafeERC20 for IERC20;
+
     PaymentExitGame public paymentExitGame;
 
     PlasmaFramework public plasmaFramework;
@@ -23,6 +27,7 @@ contract Liquidity is ERC721Full {
         uint256 exitBondSize;
         address exitInitiator;
         uint256 exitAmount;
+        address token;
     }
 
     mapping(uint160 => ExitData) private exitData;
@@ -161,7 +166,7 @@ contract Liquidity is ERC721Full {
 
         FungibleTokenOutputModel.Output memory outputFromSecondTransaction
         = decodedSecondTx.outputs[0];
-        exitData[exitId] = ExitData(msg.value, msg.sender, outputFromSecondTransaction.amount);
+        exitData[exitId] = ExitData(msg.value, msg.sender, outputFromSecondTransaction.amount, outputFromSecondTransaction.token);
     }
 
     /**
@@ -171,12 +176,17 @@ contract Liquidity is ERC721Full {
     function withdrawExit(uint160 exitId) public {
         require(
             super.ownerOf(exitId) == msg.sender,
-            "Only the NFT owner of the respective exit can get the withdrawal"
+            "Only the NFT owner of the respective exit can withdraw"
         );
         
         require(isExitProcessed(exitId), "Exit not Processed");
         super._burn(msg.sender, exitId);
-        msg.sender.transfer(exitData[exitId].exitAmount);
+
+        if (exitData[exitId].token == address(0)) {
+            msg.sender.transfer(exitData[exitId].exitAmount);
+        } else {
+            IERC20(exitData[exitId].token).safeTransfer(msg.sender, exitData[exitId].exitAmount);
+        }
     }
 
     /**
@@ -184,7 +194,7 @@ contract Liquidity is ERC721Full {
      * @param exitId The exit id
     */
     function withdrawExitBond(uint160 exitId) public {
-        require(exitData[exitId].exitInitiator != address(0), "Exit Bond does not exist or is already claimed");
+        require(exitData[exitId].exitInitiator != address(0), "Exit Bond does not exist or has already been claimed");
         require(msg.sender == exitData[exitId].exitInitiator, "Only the Exit Initiator can claim the bond");
         
         require(isExitProcessed(exitId), "Exit not Processed");
