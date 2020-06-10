@@ -21,6 +21,7 @@ contract Liquidity is ERC721Full {
 
     struct ExitData {
         uint256 exitBondSize;
+        address exitInitiator;
         uint256 exitAmount;
     }
 
@@ -160,30 +161,48 @@ contract Liquidity is ERC721Full {
 
         FungibleTokenOutputModel.Output memory outputFromSecondTransaction
         = decodedSecondTx.outputs[0];
-        exitData[exitId] = ExitData(msg.value, outputFromSecondTransaction.amount);
+        exitData[exitId] = ExitData(msg.value, msg.sender, outputFromSecondTransaction.amount);
     }
 
     /**
      * @dev Get Amount from contract after exit is processed - (to be updated)
      * @param exitId The exit id
     */
-    function getWithdrawal(uint160 exitId) public {
+    function withdrawExit(uint160 exitId) public {
         require(
             super.ownerOf(exitId) == msg.sender,
             "Only the NFT owner of the respective exit can get the withdrawal"
         );
+        
+        require(isExitProcessed(exitId), "Exit not Processed");
+        super._burn(msg.sender, exitId);
+        msg.sender.transfer(exitData[exitId].exitAmount);
+    }
+
+    /**
+     * @dev Get Exit bond back - to be called by exit intitiator
+     * @param exitId The exit id
+    */
+    function withdrawExitBond(uint160 exitId) public {
+        require(exitData[exitId].exitInitiator != address(0), "Exit Bond does not exist or is already claimed");
+        require(msg.sender == exitData[exitId].exitInitiator, "Only the Exit Initiator can claim the bond");
+        
+        require(isExitProcessed(exitId), "Exit not Processed");
+        exitData[exitId].exitInitiator = address(0);
+        msg.sender.transfer(exitData[exitId].exitBondSize); 
+    }
+
+    /**
+     * @dev Check if the exit is Processed
+     * @param exitId The exit id
+    */
+    function isExitProcessed(uint160 exitId) private returns (bool) {
         uint160[] memory exitIdList = new uint160[](1);
         exitIdList[0] = exitId;
         PaymentExitDataModel.StandardExit[] memory exits = paymentExitGame.standardExits(
             exitIdList
         );
-        if (exits[0].utxoPos == 0) {
-            super._burn(msg.sender, exitId);
-            // possibly a separate function to pull the exit bond
-            msg.sender.transfer(exitData[exitId].exitAmount);
-        } else {
-            revert("Not processed exit");
-        }
+        return exits[0].utxoPos == 0;
     }
 
     /**
