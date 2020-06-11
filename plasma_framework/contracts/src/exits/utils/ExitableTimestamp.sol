@@ -20,9 +20,9 @@ library ExitableTimestamp {
     )
         internal
         pure
-        returns (uint64)
+        returns (uint32)
     {
-        return uint64(Math.max(_blockTimestamp + (_calculator.minExitPeriod * 2), _now + _calculator.minExitPeriod));
+        return uint32(Math.max(_blockTimestamp + (_calculator.minExitPeriod * 2), _now + _calculator.minExitPeriod));
     }
 
     /**
@@ -38,8 +38,8 @@ library ExitableTimestamp {
     )
         internal
         pure
-        returns (uint64)
+        returns (uint32)
     {
-        return uint64(_now + _calculator.minExitPeriod);
+        return uint32(_now + _calculator.minExitPeriod);
     }
 }

@@ -116,7 +116,7 @@ contract ExitGameController is ExitGameRegistry {
     function enqueue(
         uint256 vaultId,
         address token,
-        uint64 exitableAt,
+        uint32 exitableAt,
         PosLib.Position calldata txPos,
         uint168 exitId,
         IExitProcessor exitProcessor

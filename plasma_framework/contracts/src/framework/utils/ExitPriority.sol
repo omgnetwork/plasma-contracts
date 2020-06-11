@@ -7,7 +7,6 @@ library ExitPriority {
     using PosLib for PosLib.Position;
 
     uint256 constant private SIZEOF_TIMESTAMP = 32;
-    uint256 constant private SIZEOF_TXPOS = 54;
     uint256 constant private SIZEOF_EXITID = 168;
 
     /**
@@ -19,11 +18,11 @@ library ExitPriority {
      * @return An exit priority
      *   Anatomy of returned value, most significant bits first
      *   32 bits  - The exitable_at timestamp (in seconds); can represent dates until the year 2106
-     *   54 bits  - The transaction position. Be aware that child chain block number jumps with the interval of CHILD_BLOCK_INTERVAL (usually 1000).
-                    blocknum * (BLOCK_OFFSET / TX_OFFSET) + txindex; 54 bits can represent all transactions for 85 years.
+     *   56 bits  - The transaction position. Be aware that child chain block number jumps with the interval of CHILD_BLOCK_INTERVAL (usually 1000).
+                    blocknum * (BLOCK_OFFSET / TX_OFFSET) + txindex; 56 bits can represent all transactions for 342 years, assuming a 15 second block time.
      *   168 bits - The exit id
      */
-    function computePriority(uint64 exitableAt, PosLib.Position memory txPos, uint168 exitId)
+    function computePriority(uint32 exitableAt, PosLib.Position memory txPos, uint168 exitId)
         internal
         pure
         returns (uint256)
@@ -31,17 +30,12 @@ library ExitPriority {
         return (uint256(exitableAt) << (256 - SIZEOF_TIMESTAMP)) | (txPos.getTxPositionForExitPriority() << SIZEOF_EXITID) | uint256(exitId);
     }
 
-    function parseExitableAt(uint256 priority) internal pure returns (uint64) {
-        return uint64(priority >> (256 - SIZEOF_TIMESTAMP));
+    function parseExitableAt(uint256 priority) internal pure returns (uint32) {
+        return uint32(priority >> (256 - SIZEOF_TIMESTAMP));
     }
 
     function parseExitId(uint256 priority) internal pure returns (uint168) {
         // Exit ID uses only 168 least significant bits
         return uint168(priority);
-    }
-
-    function parseTxPos(uint256 priority) internal pure returns (uint256) {
-        uint256 pos = (priority >> SIZEOF_EXITID) & (2 ** SIZEOF_TXPOS - 1);
-        return pos * 10000;
     }
 }

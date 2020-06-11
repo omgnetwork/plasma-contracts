@@ -41,7 +41,7 @@ contract DummyExitGame is IExitProcessor {
         exitGameController = ExitGameController(_contract);
     }
 
-    function enqueue(uint256 vaultId, address token, uint64 exitableAt, uint256 txPos, uint168 exitId, IExitProcessor exitProcessor)
+    function enqueue(uint256 vaultId, address token, uint32 exitableAt, uint256 txPos, uint168 exitId, IExitProcessor exitProcessor)
         public
     {
         priorityFromEnqueue = exitGameController.enqueue(vaultId, token, exitableAt, PosLib.decode(txPos), exitId, exitProcessor);

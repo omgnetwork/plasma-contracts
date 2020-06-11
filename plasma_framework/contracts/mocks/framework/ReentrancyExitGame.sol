@@ -23,7 +23,7 @@ contract ReentrancyExitGame is IExitProcessor {
         exitGameController.processExits(vaultId, testToken, 0, reentryMaxExitToProcess);
     }
 
-    function enqueue(uint256 _vaultId, address _token, uint64 _exitableAt, uint256 _txPos, uint168 _exitId, IExitProcessor _exitProcessor)
+    function enqueue(uint256 _vaultId, address _token, uint32 _exitableAt, uint256 _txPos, uint168 _exitId, IExitProcessor _exitProcessor)
         public
     {
         exitGameController.enqueue(_vaultId, _token, _exitableAt, PosLib.decode(_txPos), _exitId, _exitProcessor);

@@ -176,7 +176,7 @@ library PaymentStartStandardExit {
 
     function enqueueStandardExit(StartStandardExitData memory data) private {
 
-        uint64 exitableAt;
+        uint32 exitableAt;
         ExitableTimestamp.Calculator memory exitableTimestampCalculator = data.controller.exitableTimestampCalculator;
 
         if (data.isTxDeposit){
