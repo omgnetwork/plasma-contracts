@@ -15,7 +15,7 @@ contract SpyPlasmaFrameworkForExitGame is PlasmaFramework {
         uint256 vaultId,
         address token,
         uint32 exitableAt,
-        uint256 txPos,
+        uint56 txPos,
         uint256 exitId,
         address exitProcessor
     );

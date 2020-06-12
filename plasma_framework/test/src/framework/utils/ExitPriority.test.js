@@ -102,7 +102,7 @@ contract('ExitPriority', () => {
 
         it('should be able to parse the "exitableAt" from priority given max exit id value', async () => {
             const exitableAt = 123;
-            const exitId = (new BN(2)).pow(new BN(160)).sub(new BN(1)); // 2^160 - 1
+            const exitId = (new BN(2)).pow(new BN(168)).sub(new BN(1)); // 2^168 - 1
             const txPos = buildTxPos(1000, 0);
             const priority = await this.contract.computePriority(exitableAt, txPos, exitId);
             const parsedExitableAt = await this.contract.parseExitableAt(priority);
@@ -137,7 +137,7 @@ contract('ExitPriority', () => {
         });
 
         it('should be able to parse the "exitableAt" from priority given max txPos of uint56', async () => {
-            const exitId = (new BN(2)).pow(new BN(160)).sub(new BN(1)); // 2^160 - 1
+            const exitId = (new BN(2)).pow(new BN(168)).sub(new BN(1)); // 2^168 - 1
             const exitableAt = 123;
             const txPos = (new BN(2)).pow(new BN(56)).sub(new BN(1)); // 2^56 - 1;
             const priority = await this.contract.computePriority(exitableAt, txPos, exitId);
@@ -148,7 +148,7 @@ contract('ExitPriority', () => {
 
     describe('exit priority keeps the exitId and txPos info', () => {
         it('should be able to parse exitId and txPos from priority', async () => {
-            const exitId = (new BN(2)).pow(new BN(160)).sub(new BN(1)); // 2^160 - 1
+            const exitId = (new BN(2)).pow(new BN(168)).sub(new BN(1)); // 2^168 - 1
             const exitableAt = 123;
             // 2^52 - some random tx pos (must be a multiple of TX_OFFSET)
             const txPos = (new BN(2)).pow(new BN(52)).divn(TX_OFFSET).muln(TX_OFFSET);
@@ -172,7 +172,7 @@ contract('ExitPriority', () => {
 
         it('should be able to parse exitId and txPos from priority given max exit id value', async () => {
             const exitableAt = 123;
-            const exitId = (new BN(2)).pow(new BN(160)).sub(new BN(1)); // 2^160 - 1
+            const exitId = (new BN(2)).pow(new BN(168)).sub(new BN(1)); // 2^168 - 1
             const txPos = buildTxPos(1000, 0);
             const priority = await this.contract.computePriority(exitableAt, txPos, exitId);
             const parsedExitId = await this.contract.parseExitId(priority);
@@ -215,7 +215,7 @@ contract('ExitPriority', () => {
         });
 
         it('should be able to parse exitId and txPos from priority given max txPos of uint56', async () => {
-            const exitId = (new BN(2)).pow(new BN(160)).sub(new BN(1)); // 2^160 - 1
+            const exitId = (new BN(2)).pow(new BN(168)).sub(new BN(1)); // 2^168 - 1
             const exitableAt = 123;
             const txPos = (new BN(2)).pow(new BN(56)).sub(new BN(1)).divn(TX_OFFSET)
                 .muln(TX_OFFSET); // max txPos of 2^56 - 1 (a multiple of TX_OFFSET)
