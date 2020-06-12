@@ -19,21 +19,21 @@ struct Controller {
 **Events**
 
 ```js
-event ExitOmitted(uint160 indexed exitId);
-event ExitFinalized(uint160 indexed exitId);
+event ExitOmitted(uint168 indexed exitId);
+event ExitFinalized(uint168 indexed exitId);
 event BondReturnFailed(address indexed receiver, uint256  amount);
 ```
 
 ## Functions
 
-- [run(struct PaymentProcessStandardExit.Controller self, struct PaymentExitDataModel.StandardExitMap exitMap, uint160 exitId, address token)](#run)
+- [run(struct PaymentProcessStandardExit.Controller self, struct PaymentExitDataModel.StandardExitMap exitMap, uint168 exitId, address token)](#run)
 
 ### run
 
 Main logic function to process standard exit
 
 ```js
-function run(struct PaymentProcessStandardExit.Controller self, struct PaymentExitDataModel.StandardExitMap exitMap, uint160 exitId, address token) public nonpayable
+function run(struct PaymentProcessStandardExit.Controller self, struct PaymentExitDataModel.StandardExitMap exitMap, uint168 exitId, address token) public nonpayable
 ```
 
 **Arguments**
@@ -42,7 +42,7 @@ function run(struct PaymentProcessStandardExit.Controller self, struct PaymentEx
 | ------------- |------------- | -----|
 | self | struct PaymentProcessStandardExit.Controller | The controller struct | 
 | exitMap | struct PaymentExitDataModel.StandardExitMap | The storage of all standard exit data | 
-| exitId | uint160 | The exitId of the standard exit | 
+| exitId | uint168 | The exitId of the standard exit | 
 | token | address | The ERC20 token address of the exit. Uses address(0) to represent ETH. | 
 
 ## Contracts

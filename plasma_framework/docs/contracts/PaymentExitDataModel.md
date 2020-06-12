@@ -24,7 +24,7 @@ struct StandardExit {
 
 ```js
 struct StandardExitMap {
- mapping(uint160 => struct PaymentExitDataModel.StandardExit) exits
+ mapping(uint168 => struct PaymentExitDataModel.StandardExit) exits
 }
 ```
 
@@ -60,7 +60,7 @@ struct InFlightExit {
 
 ```js
 struct InFlightExitMap {
- mapping(uint160 => struct PaymentExitDataModel.InFlightExit) exits
+ mapping(uint168 => struct PaymentExitDataModel.InFlightExit) exits
 }
 ```
 

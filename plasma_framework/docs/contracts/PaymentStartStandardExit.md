@@ -27,7 +27,7 @@ struct StartStandardExitData {
  struct PosLib.Position utxoPos,
  struct PaymentTransactionModel.Transaction outputTx,
  struct FungibleTokenOutputModel.Output output,
- uint160 exitId,
+ uint168 exitId,
  bool isTxDeposit,
  uint256 txBlockTimeStamp,
  bytes32 outputId
@@ -37,7 +37,7 @@ struct StartStandardExitData {
 **Events**
 
 ```js
-event ExitStarted(address indexed owner, uint160  exitId);
+event ExitStarted(address indexed owner, uint168  exitId);
 ```
 
 ## Functions

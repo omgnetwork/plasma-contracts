@@ -19,7 +19,7 @@ contract PlasmaFramework private plasmaFramework;
 ## Functions
 
 - [(struct PaymentExitGameArgs.Args args)](#)
-- [processExit(uint160 exitId, uint256 , address token)](#processexit)
+- [processExit(uint168 exitId, uint256 , address token)](#processexit)
 - [getStandardExitId(bool _isDeposit, bytes _txBytes, uint256 _utxoPos)](#getstandardexitid)
 - [getInFlightExitId(bytes _txBytes)](#getinflightexitid)
 
@@ -44,14 +44,14 @@ function (struct PaymentExitGameArgs.Args args) public nonpayable PaymentStandar
 Callback processes exit function for the PlasmaFramework to call
 
 ```js
-function processExit(uint160 exitId, uint256 , address token) external nonpayable onlyFrom 
+function processExit(uint168 exitId, uint256 , address token) external nonpayable onlyFrom 
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| exitId | uint160 | The exit ID | 
+| exitId | uint168 | The exit ID | 
 |  | uint256 | exitId The exit ID | 
 | token | address | Token (ERC20 address or address(0) for ETH) of the exiting output | 
 
@@ -61,7 +61,7 @@ Helper function to compute the standard exit ID
 
 ```js
 function getStandardExitId(bool _isDeposit, bytes _txBytes, uint256 _utxoPos) public pure
-returns(uint160)
+returns(uint168)
 ```
 
 **Arguments**
@@ -78,7 +78,7 @@ Helper function to compute the in-flight exit ID
 
 ```js
 function getInFlightExitId(bytes _txBytes) public pure
-returns(uint160)
+returns(uint168)
 ```
 
 **Arguments**

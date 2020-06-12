@@ -24,7 +24,7 @@ Calculates the exitable timestamp for a mined transaction
 
 ```js
 function calculateTxExitableTimestamp(struct ExitableTimestamp.Calculator _calculator, uint256 _now, uint256 _blockTimestamp) internal pure
-returns(uint64)
+returns(uint32)
 ```
 
 **Arguments**
@@ -41,7 +41,7 @@ Calculates the exitable timestamp for deposit transaction output for standard ex
 
 ```js
 function calculateDepositTxOutputExitableTimestamp(struct ExitableTimestamp.Calculator _calculator, uint256 _now) internal pure
-returns(uint64)
+returns(uint32)
 ```
 
 **Arguments**

@@ -30,7 +30,7 @@ event InFlightExitOutputPiggybacked(address indexed exitTarget, bytes32 indexed 
 - [buildController(PlasmaFramework framework, IExitProcessor exitProcessor, uint256 ethVaultId, uint256 erc20VaultId)](#buildcontroller)
 - [piggybackInput(struct PaymentPiggybackInFlightExit.Controller self, struct PaymentExitDataModel.InFlightExitMap inFlightExitMap, struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnInputArgs args)](#piggybackinput)
 - [piggybackOutput(struct PaymentPiggybackInFlightExit.Controller self, struct PaymentExitDataModel.InFlightExitMap inFlightExitMap, struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnOutputArgs args)](#piggybackoutput)
-- [enqueue(struct PaymentPiggybackInFlightExit.Controller controller, address token, struct PosLib.Position utxoPos, uint160 exitId)](#enqueue)
+- [enqueue(struct PaymentPiggybackInFlightExit.Controller controller, address token, struct PosLib.Position utxoPos, uint168 exitId)](#enqueue)
 - [isFirstPiggybackOfTheToken(struct PaymentExitDataModel.InFlightExit ife, address token)](#isfirstpiggybackofthetoken)
 
 ### buildController
@@ -90,7 +90,7 @@ function piggybackOutput(struct PaymentPiggybackInFlightExit.Controller self, st
 ### enqueue
 
 ```js
-function enqueue(struct PaymentPiggybackInFlightExit.Controller controller, address token, struct PosLib.Position utxoPos, uint160 exitId) private nonpayable
+function enqueue(struct PaymentPiggybackInFlightExit.Controller controller, address token, struct PosLib.Position utxoPos, uint168 exitId) private nonpayable
 ```
 
 **Arguments**
@@ -100,7 +100,7 @@ function enqueue(struct PaymentPiggybackInFlightExit.Controller controller, addr
 | controller | struct PaymentPiggybackInFlightExit.Controller |  | 
 | token | address |  | 
 | utxoPos | struct PosLib.Position |  | 
-| exitId | uint160 |  | 
+| exitId | uint168 |  | 
 
 ### isFirstPiggybackOfTheToken
 

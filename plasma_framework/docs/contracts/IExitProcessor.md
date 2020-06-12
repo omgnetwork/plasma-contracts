@@ -11,7 +11,7 @@ An interface that allows custom logic to process exits for different requirement
 
 ## Functions
 
-- [processExit(uint160 exitId, uint256 vaultId, address token)](#processexit)
+- [processExit(uint168 exitId, uint256 vaultId, address token)](#processexit)
 
 ### processExit
 
@@ -20,14 +20,14 @@ An interface that allows custom logic to process exits for different requirement
 Function interface for processing exits.
 
 ```js
-function processExit(uint160 exitId, uint256 vaultId, address token) external nonpayable
+function processExit(uint168 exitId, uint256 vaultId, address token) external nonpayable
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| exitId | uint160 | Unique ID for exit per tx type | 
+| exitId | uint168 | Unique ID for exit per tx type | 
 | vaultId | uint256 | ID of the vault that funds the exit | 
 | token | address | Address of the token contract | 
 

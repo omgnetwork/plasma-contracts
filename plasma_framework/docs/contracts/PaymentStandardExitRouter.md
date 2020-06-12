@@ -32,22 +32,22 @@ contract PlasmaFramework private framework;
 
 ```js
 event StandardExitBondUpdated(uint128  bondSize);
-event ExitStarted(address indexed owner, uint160  exitId);
+event ExitStarted(address indexed owner, uint168  exitId);
 event ExitChallenged(uint256 indexed utxoPos);
-event ExitOmitted(uint160 indexed exitId);
-event ExitFinalized(uint160 indexed exitId);
+event ExitOmitted(uint168 indexed exitId);
+event ExitFinalized(uint168 indexed exitId);
 event BondReturnFailed(address indexed receiver, uint256  amount);
 ```
 
 ## Functions
 
 - [(struct PaymentExitGameArgs.Args args)](#)
-- [standardExits(uint160[] exitIds)](#standardexits)
+- [standardExits(uint168[] exitIds)](#standardexits)
 - [startStandardExitBondSize()](#startstandardexitbondsize)
 - [updateStartStandardExitBondSize(uint128 newBondSize)](#updatestartstandardexitbondsize)
 - [startStandardExit(struct PaymentStandardExitRouterArgs.StartStandardExitArgs args)](#startstandardexit)
 - [challengeStandardExit(struct PaymentStandardExitRouterArgs.ChallengeStandardExitArgs args)](#challengestandardexit)
-- [processStandardExit(uint160 exitId, address token)](#processstandardexit)
+- [processStandardExit(uint168 exitId, address token)](#processstandardexit)
 
 ### 
 
@@ -66,7 +66,7 @@ function (struct PaymentExitGameArgs.Args args) public nonpayable
 Getter retrieves standard exit data of the PaymentExitGame
 
 ```js
-function standardExits(uint160[] exitIds) external view
+function standardExits(uint168[] exitIds) external view
 returns(struct PaymentExitDataModel.StandardExit[])
 ```
 
@@ -74,7 +74,7 @@ returns(struct PaymentExitDataModel.StandardExit[])
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| exitIds | uint160[] | Exit IDs of the standard exits | 
+| exitIds | uint168[] | Exit IDs of the standard exits | 
 
 ### startStandardExitBondSize
 
@@ -137,14 +137,14 @@ function challengeStandardExit(struct PaymentStandardExitRouterArgs.ChallengeSta
 Process standard exit
 
 ```js
-function processStandardExit(uint160 exitId, address token) internal nonpayable
+function processStandardExit(uint168 exitId, address token) internal nonpayable
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| exitId | uint160 | The standard exit ID | 
+| exitId | uint168 | The standard exit ID | 
 | token | address | The token (in erc20 address or address(0) for ETH) of the exiting output | 
 
 ## Contracts

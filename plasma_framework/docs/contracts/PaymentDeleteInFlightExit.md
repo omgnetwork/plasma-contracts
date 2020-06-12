@@ -17,12 +17,12 @@ struct Controller {
 **Events**
 
 ```js
-event InFlightExitDeleted(uint160 indexed exitId);
+event InFlightExitDeleted(uint168 indexed exitId);
 ```
 
 ## Functions
 
-- [run(struct PaymentDeleteInFlightExit.Controller self, struct PaymentExitDataModel.InFlightExitMap exitMap, uint160 exitId)](#run)
+- [run(struct PaymentDeleteInFlightExit.Controller self, struct PaymentExitDataModel.InFlightExitMap exitMap, uint168 exitId)](#run)
 - [isPiggybacked(struct PaymentExitDataModel.InFlightExit ife)](#ispiggybacked)
 
 ### run
@@ -30,7 +30,7 @@ event InFlightExitDeleted(uint160 indexed exitId);
 Main logic function to delete the non piggybacked in-flight exit
 
 ```js
-function run(struct PaymentDeleteInFlightExit.Controller self, struct PaymentExitDataModel.InFlightExitMap exitMap, uint160 exitId) public nonpayable
+function run(struct PaymentDeleteInFlightExit.Controller self, struct PaymentExitDataModel.InFlightExitMap exitMap, uint168 exitId) public nonpayable
 ```
 
 **Arguments**
@@ -39,7 +39,7 @@ function run(struct PaymentDeleteInFlightExit.Controller self, struct PaymentExi
 | ------------- |------------- | -----|
 | self | struct PaymentDeleteInFlightExit.Controller |  | 
 | exitMap | struct PaymentExitDataModel.InFlightExitMap |  | 
-| exitId | uint160 | The exitId of the standard exit | 
+| exitId | uint168 | The exitId of the standard exit | 
 
 ### isPiggybacked
 

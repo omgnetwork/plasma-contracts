@@ -4,19 +4,26 @@ View Source: [contracts/src/exits/utils/ExitId.sol](../../contracts/src/exits/ut
 
 **ExitId**
 
+## Contract Members
+**Constants & Variables**
+
+```js
+uint8 private constant FIRST_BIT_LOCATION;
+
+```
+
 ## Functions
 
-- [isStandardExit(uint160 _exitId)](#isstandardexit)
-- [getStandardExitId(bool _isDeposit, bytes _txBytes, struct PosLib.Position _utxoPos)](#getstandardexitid)
-- [getInFlightExitId(bytes _txBytes)](#getinflightexitid)
-- [_computeStandardExitId(bytes32 _txhash, uint16 _outputIndex)](#_computestandardexitid)
+- [isStandardExit(uint168 exitId)](#isstandardexit)
+- [getStandardExitId(bool isDeposit, bytes txBytes, struct PosLib.Position utxoPos)](#getstandardexitid)
+- [getInFlightExitId(bytes txBytes)](#getinflightexitid)
 
 ### isStandardExit
 
 Checks whether exitId is a standard exit ID
 
 ```js
-function isStandardExit(uint160 _exitId) internal pure
+function isStandardExit(uint168 exitId) internal pure
 returns(bool)
 ```
 
@@ -24,40 +31,39 @@ returns(bool)
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| _exitId | uint160 |  | 
+| exitId | uint168 |  | 
 
 ### getStandardExitId
 
 Given transaction bytes and UTXO position, returns its exit ID
 
 ```js
-function getStandardExitId(bool _isDeposit, bytes _txBytes, struct PosLib.Position _utxoPos) internal pure
-returns(uint160)
+function getStandardExitId(bool isDeposit, bytes txBytes, struct PosLib.Position utxoPos) internal pure
+returns(uint168)
 ```
 
 **Returns**
 
-_standardExitId Unique ID of the standard exit
+standardExitId Unique ID of the standard exit
     Anatomy of returned value, most significant bits first:
-    8-bits - output index
     1-bit - in-flight flag (0 for standard exit)
-    151-bits - hash(tx) or hash(tx|utxo) for deposit
+    167-bits - hash(tx) or hash(tx|utxo) for deposit
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| _isDeposit | bool | Defines whether the tx for the exitId is a deposit tx | 
-| _txBytes | bytes | Transaction bytes | 
-| _utxoPos | struct PosLib.Position | UTXO position of the exiting output | 
+| isDeposit | bool | Defines whether the tx for the exitId is a deposit tx | 
+| txBytes | bytes | Transaction bytes | 
+| utxoPos | struct PosLib.Position | UTXO position of the exiting output | 
 
 ### getInFlightExitId
 
 Given transaction bytes, returns in-flight exit ID
 
 ```js
-function getInFlightExitId(bytes _txBytes) internal pure
-returns(uint160)
+function getInFlightExitId(bytes txBytes) internal pure
+returns(uint168)
 ```
 
 **Returns**
@@ -68,21 +74,7 @@ Unique in-flight exit ID
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| _txBytes | bytes | Transaction bytes | 
-
-### _computeStandardExitId
-
-```js
-function _computeStandardExitId(bytes32 _txhash, uint16 _outputIndex) private pure
-returns(uint160)
-```
-
-**Arguments**
-
-| Name        | Type           | Description  |
-| ------------- |------------- | -----|
-| _txhash | bytes32 |  | 
-| _outputIndex | uint16 |  | 
+| txBytes | bytes | Transaction bytes | 
 
 ## Contracts
 

@@ -19,7 +19,7 @@ Controls the logic and functions for ExitGame to interact with the PlasmaFramewo
 //public members
 mapping(bytes32 => contract IExitProcessor) public delegations;
 mapping(bytes32 => contract PriorityQueue) public exitsQueues;
-mapping(bytes32 => uint160) public outputsFinalizations;
+mapping(bytes32 => uint168) public outputsFinalizations;
 
 //private members
 bool private mutex;
@@ -31,7 +31,7 @@ bool private mutex;
 ```js
 event ExitQueueAdded(uint256  vaultId, address  token);
 event ProcessedExitsNum(uint256  processedNum, uint256  vaultId, address  token);
-event ExitQueued(uint160 indexed exitId, uint256  priority);
+event ExitQueued(uint168 indexed exitId, uint256  priority);
 ```
 
 ## Modifiers
@@ -58,11 +58,11 @@ modifier nonReentrant() internal
 - [deactivateNonReentrant()](#deactivatenonreentrant)
 - [hasExitQueue(uint256 vaultId, address token)](#hasexitqueue)
 - [addExitQueue(uint256 vaultId, address token)](#addexitqueue)
-- [enqueue(uint256 vaultId, address token, uint64 exitableAt, struct PosLib.Position txPos, uint160 exitId, IExitProcessor exitProcessor)](#enqueue)
-- [processExits(uint256 vaultId, address token, uint160 topExitId, uint256 maxExitsToProcess)](#processexits)
-- [isAnyInputFinalizedByOtherExit(bytes32[] _outputIds, uint160 exitId)](#isanyinputfinalizedbyotherexit)
-- [batchFlagOutputsFinalized(bytes32[] outputIds, uint160 exitId)](#batchflagoutputsfinalized)
-- [flagOutputFinalized(bytes32 outputId, uint160 exitId)](#flagoutputfinalized)
+- [enqueue(uint256 vaultId, address token, uint32 exitableAt, struct PosLib.Position txPos, uint168 exitId, IExitProcessor exitProcessor)](#enqueue)
+- [processExits(uint256 vaultId, address token, uint168 topExitId, uint256 maxExitsToProcess)](#processexits)
+- [isAnyInputFinalizedByOtherExit(bytes32[] _outputIds, uint168 exitId)](#isanyinputfinalizedbyotherexit)
+- [batchFlagOutputsFinalized(bytes32[] outputIds, uint168 exitId)](#batchflagoutputsfinalized)
+- [flagOutputFinalized(bytes32 outputId, uint168 exitId)](#flagoutputfinalized)
 - [isOutputFinalized(bytes32 outputId)](#isoutputfinalized)
 - [getNextExit(uint256 vaultId, address token)](#getnextexit)
 - [exitQueueKey(uint256 vaultId, address token)](#exitqueuekey)
@@ -150,7 +150,7 @@ Enqueue exits from exit game contracts is a function that places the exit into t
         priority queue to enforce the priority of exit during 'processExits'
 
 ```js
-function enqueue(uint256 vaultId, address token, uint64 exitableAt, struct PosLib.Position txPos, uint160 exitId, IExitProcessor exitProcessor) external nonpayable onlyFromNonQuarantinedExitGame 
+function enqueue(uint256 vaultId, address token, uint32 exitableAt, struct PosLib.Position txPos, uint168 exitId, IExitProcessor exitProcessor) external nonpayable onlyFromNonQuarantinedExitGame 
 returns(uint256)
 ```
 
@@ -164,9 +164,9 @@ A unique priority number computed for the exit
 | ------------- |------------- | -----|
 | vaultId | uint256 | Vault ID of the vault that stores exiting funds | 
 | token | address | Token for the exit | 
-| exitableAt | uint64 | The earliest time a specified exit can be processed | 
+| exitableAt | uint32 | The earliest time a specified exit can be processed | 
 | txPos | struct PosLib.Position | Transaction position for the exit priority. For SE it should be the exit tx, for IFE it should be the youngest input tx position. | 
-| exitId | uint160 | ID used by the exit processor contract to determine how to process the exit | 
+| exitId | uint168 | ID used by the exit processor contract to determine how to process the exit | 
 | exitProcessor | IExitProcessor | The exit processor contract, called during "processExits" | 
 
 ### processExits
@@ -174,7 +174,7 @@ A unique priority number computed for the exit
 Processes any exits that have completed the challenge period. Exits are processed according to the exit priority.
 
 ```js
-function processExits(uint256 vaultId, address token, uint160 topExitId, uint256 maxExitsToProcess) external nonpayable nonReentrant 
+function processExits(uint256 vaultId, address token, uint168 topExitId, uint256 maxExitsToProcess) external nonpayable nonReentrant 
 ```
 
 **Returns**
@@ -187,7 +187,7 @@ Total number of processed exits
 | ------------- |------------- | -----|
 | vaultId | uint256 | Vault ID of the vault that stores exiting funds | 
 | token | address | The token type to process | 
-| topExitId | uint160 | Unique identifier for prioritizing the first exit to process. Set to zero to skip this check. | 
+| topExitId | uint168 | Unique identifier for prioritizing the first exit to process. Set to zero to skip this check. | 
 | maxExitsToProcess | uint256 | Maximum number of exits to process | 
 
 ### isAnyInputFinalizedByOtherExit
@@ -195,7 +195,7 @@ Total number of processed exits
 Checks whether any of the output with the given outputIds is already spent
 
 ```js
-function isAnyInputFinalizedByOtherExit(bytes32[] _outputIds, uint160 exitId) external view
+function isAnyInputFinalizedByOtherExit(bytes32[] _outputIds, uint168 exitId) external view
 returns(bool)
 ```
 
@@ -204,14 +204,14 @@ returns(bool)
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
 | _outputIds | bytes32[] | Output IDs to check | 
-| exitId | uint160 |  | 
+| exitId | uint168 |  | 
 
 ### batchFlagOutputsFinalized
 
 Batch flags already spent outputs (only not already spent)
 
 ```js
-function batchFlagOutputsFinalized(bytes32[] outputIds, uint160 exitId) external nonpayable onlyFromNonQuarantinedExitGame 
+function batchFlagOutputsFinalized(bytes32[] outputIds, uint168 exitId) external nonpayable onlyFromNonQuarantinedExitGame 
 ```
 
 **Arguments**
@@ -219,14 +219,14 @@ function batchFlagOutputsFinalized(bytes32[] outputIds, uint160 exitId) external
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
 | outputIds | bytes32[] | Output IDs to flag | 
-| exitId | uint160 |  | 
+| exitId | uint168 |  | 
 
 ### flagOutputFinalized
 
 Flags a single output as spent if it is not flagged already
 
 ```js
-function flagOutputFinalized(bytes32 outputId, uint160 exitId) external nonpayable onlyFromNonQuarantinedExitGame 
+function flagOutputFinalized(bytes32 outputId, uint168 exitId) external nonpayable onlyFromNonQuarantinedExitGame 
 ```
 
 **Arguments**
@@ -234,7 +234,7 @@ function flagOutputFinalized(bytes32 outputId, uint160 exitId) external nonpayab
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
 | outputId | bytes32 | The output ID to flag as spent | 
-| exitId | uint160 |  | 
+| exitId | uint168 |  | 
 
 ### isOutputFinalized
 
