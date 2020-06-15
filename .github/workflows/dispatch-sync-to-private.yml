@@ -12,7 +12,7 @@ jobs:
       - name: Repository Dispatch
         if: github.repository == 'omisego/plasma-contracts'
         run: |
-          curl -X POST https://api.github.com/repos/omisego/plasma-contracts-private/dispatches \
+          curl -X POST https://api.github.com/repos/omgnetwork/plasma-contracts-private/dispatches \
           -H 'Accept: application/vnd.github.v3+json' \
           -H 'authorization: token '${{ secrets.HOUSE_KEEPER_BOT_TOKEN }}'' \
           --data '{"event_type": "sync-from-public", "client_payload": { "sha": "'"${{ github.sha }}"'" }}'
