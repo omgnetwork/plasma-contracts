@@ -17,7 +17,7 @@ contract PosLibWrapper {
     function getTxPositionForExitPriority(PosLib.Position memory pos)
         public
         pure
-        returns (uint256)
+        returns (uint56)
     {
         return pos.getTxPositionForExitPriority();
     }

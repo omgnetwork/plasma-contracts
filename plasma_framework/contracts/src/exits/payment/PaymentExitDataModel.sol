@@ -29,7 +29,7 @@ library PaymentExitDataModel {
      * @dev Mapping of (exitId => StandardExit) that stores all standard exit data
      */
     struct StandardExitMap {
-        mapping (uint160 => PaymentExitDataModel.StandardExit) exits;
+        mapping (uint168 => PaymentExitDataModel.StandardExit) exits;
     }
 
     /**
@@ -81,6 +81,6 @@ library PaymentExitDataModel {
      * @dev Mapping of (exitId => InFlightExit) that stores all in-flight exit data
      */
     struct InFlightExitMap {
-        mapping (uint160 => PaymentExitDataModel.InFlightExit) exits;
+        mapping (uint168 => PaymentExitDataModel.InFlightExit) exits;
     }
 }

@@ -15,12 +15,13 @@ library PosLib {
 
     uint256 constant internal BLOCK_OFFSET = 1000000000;
     uint256 constant internal TX_OFFSET = 10000;
-    
+
     uint256 constant internal MAX_OUTPUT_INDEX = TX_OFFSET - 1;
-    // since we are using merkle tree of depth 16, max tx index size is 2^16 - 1
+    // Since we are using a merkle tree of depth 16, max tx index size is 2^16 - 1
     uint256 constant internal MAX_TX_INDEX = 2 ** 16 - 1;
-    // in ExitPriority, only 54 bits are reserved for both blockNum and txIndex
-    uint256 constant internal MAX_BLOCK_NUM = ((2 ** 54 - 1) - MAX_TX_INDEX) / (BLOCK_OFFSET / TX_OFFSET);
+    // The maximum block number we can handle depends on ExitPriority. ExitPriority only uses 56 bits for blockNum + txIndex
+    // This is 720575940379 blocks, which works out to be 342 years of blocks (given a block occurs every 15 seconds)
+    uint256 constant internal MAX_BLOCK_NUM = ((2 ** 56 - 1) - MAX_TX_INDEX) / (BLOCK_OFFSET / TX_OFFSET);
 
     /**
      * @notice Returns transaction position which is an utxo position of zero index output
@@ -43,9 +44,9 @@ library PosLib {
     function getTxPositionForExitPriority(Position memory pos)
         internal
         pure
-        returns (uint256)
+        returns (uint56)
     {
-        return encode(pos) / TX_OFFSET;
+        return uint56(encode(pos) / TX_OFFSET);
     }
 
     /**

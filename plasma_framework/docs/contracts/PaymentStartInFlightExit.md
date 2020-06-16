@@ -22,7 +22,7 @@ struct Controller {
 ```js
 struct StartExitData {
  struct PaymentStartInFlightExit.Controller controller,
- uint160 exitId,
+ uint168 exitId,
  bytes inFlightTxRaw,
  struct PaymentTransactionModel.Transaction inFlightTx,
  bytes32 inFlightTxHash,
@@ -48,7 +48,7 @@ event InFlightExitStarted(address indexed initiator, bytes32 indexed txHash);
 - [decodeInputTxsPositions(uint256[] inputUtxosPos)](#decodeinputtxspositions)
 - [getOutputIds(struct PaymentStartInFlightExit.Controller controller, bytes[] inputTxs, struct PosLib.Position[] utxoPos)](#getoutputids)
 - [verifyStart(struct PaymentStartInFlightExit.StartExitData exitData, struct PaymentExitDataModel.InFlightExitMap inFlightExitMap)](#verifystart)
-- [verifyExitNotStarted(uint160 exitId, struct PaymentExitDataModel.InFlightExitMap inFlightExitMap)](#verifyexitnotstarted)
+- [verifyExitNotStarted(uint168 exitId, struct PaymentExitDataModel.InFlightExitMap inFlightExitMap)](#verifyexitnotstarted)
 - [verifyInFlightTxType(struct PaymentStartInFlightExit.StartExitData exitData)](#verifyinflighttxtype)
 - [verifyNumberOfInputsMatchesNumberOfInFlightTransactionInputs(struct PaymentStartInFlightExit.StartExitData exitData)](#verifynumberofinputsmatchesnumberofinflighttransactioninputs)
 - [verifyNoInputSpentMoreThanOnce(struct PaymentTransactionModel.Transaction inFlightTx)](#verifynoinputspentmorethanonce)
@@ -156,14 +156,14 @@ function verifyStart(struct PaymentStartInFlightExit.StartExitData exitData, str
 ### verifyExitNotStarted
 
 ```js
-function verifyExitNotStarted(uint160 exitId, struct PaymentExitDataModel.InFlightExitMap inFlightExitMap) private view
+function verifyExitNotStarted(uint168 exitId, struct PaymentExitDataModel.InFlightExitMap inFlightExitMap) private view
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| exitId | uint160 |  | 
+| exitId | uint168 |  | 
 | inFlightExitMap | struct PaymentExitDataModel.InFlightExitMap |  | 
 
 ### verifyInFlightTxType

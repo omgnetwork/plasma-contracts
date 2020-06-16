@@ -62,7 +62,7 @@ Used for calculating exit priority
 
 ```js
 function getTxPositionForExitPriority(struct PosLib.Position pos) internal pure
-returns(uint256)
+returns(uint56)
 ```
 
 **Returns**

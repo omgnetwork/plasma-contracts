@@ -24,7 +24,7 @@ contract Liquidity is ERC721Full {
         uint256 exitAmount;
     }
 
-    mapping(uint160 => ExitData) private exitData;
+    mapping(uint168 => ExitData) private exitData;
 
     /**
      * @notice provide PlasmaFramework contract-address when deploying the contract
@@ -154,8 +154,7 @@ contract Liquidity is ERC721Full {
      * @param decodedSecondTx decoded second transaction
     */
     function mintNFT(bytes memory rlpOutputTxToContract, uint256 utxoPosToExit, PaymentTransactionModel.Transaction memory decodedSecondTx) private {
-        //change the return type of exitId once the pr to change it has been merged
-        uint160 exitId = paymentExitGame.getStandardExitId(false, rlpOutputTxToContract, utxoPosToExit);
+        uint168 exitId = paymentExitGame.getStandardExitId(false, rlpOutputTxToContract, utxoPosToExit);
         super._mint(msg.sender, exitId);
 
         FungibleTokenOutputModel.Output memory outputFromSecondTransaction
@@ -167,12 +166,12 @@ contract Liquidity is ERC721Full {
      * @dev Get Amount from contract after exit is processed - (to be updated)
      * @param exitId The exit id
     */
-    function getWithdrawal(uint160 exitId) public {
+    function getWithdrawal(uint168 exitId) public {
         require(
             super.ownerOf(exitId) == msg.sender,
             "Only the NFT owner of the respective exit can get the withdrawal"
         );
-        uint160[] memory exitIdList = new uint160[](1);
+        uint168[] memory exitIdList = new uint168[](1);
         exitIdList[0] = exitId;
         PaymentExitDataModel.StandardExit[] memory exits = paymentExitGame.standardExits(
             exitIdList

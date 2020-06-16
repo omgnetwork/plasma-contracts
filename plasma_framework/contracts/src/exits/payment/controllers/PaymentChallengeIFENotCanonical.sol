@@ -74,7 +74,7 @@ library PaymentChallengeIFENotCanonical {
     )
         public
     {
-        uint160 exitId = ExitId.getInFlightExitId(args.inFlightTx);
+        uint168 exitId = ExitId.getInFlightExitId(args.inFlightTx);
         PaymentExitDataModel.InFlightExit storage ife = inFlightExitMap.exits[exitId];
         require(args.inFlightTxInputIndex < ife.inputs.length, "Input index out of bounds");
         require(ife.exitStartTimestamp != 0, "In-flight exit does not exist");
@@ -152,7 +152,7 @@ library PaymentChallengeIFENotCanonical {
     )
         public
     {
-        uint160 exitId = ExitId.getInFlightExitId(inFlightTx);
+        uint168 exitId = ExitId.getInFlightExitId(inFlightTx);
         PaymentExitDataModel.InFlightExit storage ife = inFlightExitMap.exits[exitId];
         require(ife.exitStartTimestamp != 0, "In-flight exit does not exist");
         require(inFlightTxPos > 0, "In-flight transaction position must not be 0");

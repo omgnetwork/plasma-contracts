@@ -47,7 +47,7 @@ contract PaymentStandardExitRouter is
 
     event ExitStarted(
         address indexed owner,
-        uint160 exitId
+        uint168 exitId
     );
 
     event ExitChallenged(
@@ -55,11 +55,11 @@ contract PaymentStandardExitRouter is
     );
 
     event ExitOmitted(
-        uint160 indexed exitId
+        uint168 indexed exitId
     );
 
     event ExitFinalized(
-        uint160 indexed exitId
+        uint168 indexed exitId
     );
 
     event BondReturnFailed(
@@ -103,10 +103,10 @@ contract PaymentStandardExitRouter is
      * @notice Getter retrieves standard exit data of the PaymentExitGame
      * @param exitIds Exit IDs of the standard exits
      */
-    function standardExits(uint160[] calldata exitIds) external view returns (PaymentExitDataModel.StandardExit[] memory) {
+    function standardExits(uint168[] calldata exitIds) external view returns (PaymentExitDataModel.StandardExit[] memory) {
         PaymentExitDataModel.StandardExit[] memory exits = new PaymentExitDataModel.StandardExit[](exitIds.length);
         for (uint i = 0; i < exitIds.length; i++){
-            uint160 exitId = exitIds[i];
+            uint168 exitId = exitIds[i];
             exits[i] = standardExitMap.exits[exitId];
         }
         return exits;
@@ -158,7 +158,7 @@ contract PaymentStandardExitRouter is
      * @param exitId The standard exit ID
      * @param token The token (in erc20 address or address(0) for ETH) of the exiting output
      */
-    function processStandardExit(uint160 exitId, address token) internal {
+    function processStandardExit(uint168 exitId, address token) internal {
         processStandardExitController.run(standardExitMap, exitId, token);
     }
 }

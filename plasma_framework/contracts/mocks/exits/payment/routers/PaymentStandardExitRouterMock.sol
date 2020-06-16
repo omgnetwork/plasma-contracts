@@ -20,16 +20,16 @@ contract PaymentStandardExitRouterMock is PaymentStandardExitRouter {
     }
 
     /** override and calls processStandardExit for test */
-    function processExit(uint160 exitId, uint256, address ercContract) external {
+    function processExit(uint168 exitId, uint256, address ercContract) external {
         PaymentStandardExitRouter.processStandardExit(exitId, ercContract);
     }
 
     /** helper functions for testing */
-    function setExit(uint160 exitId, PaymentExitDataModel.StandardExit memory exitData) public {
+    function setExit(uint168 exitId, PaymentExitDataModel.StandardExit memory exitData) public {
         PaymentStandardExitRouter.standardExitMap.exits[exitId] = exitData;
     }
 
-    function proxyFlagOutputFinalized(bytes32 outputId, uint160 exitId) public {
+    function proxyFlagOutputFinalized(bytes32 outputId, uint168 exitId) public {
         framework.flagOutputFinalized(outputId, exitId);
     }
 

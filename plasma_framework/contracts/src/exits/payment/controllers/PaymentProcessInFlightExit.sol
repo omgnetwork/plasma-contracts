@@ -20,17 +20,17 @@ library PaymentProcessInFlightExit {
     }
 
     event InFlightExitOmitted(
-        uint160 indexed exitId,
+        uint168 indexed exitId,
         address token
     );
 
     event InFlightExitOutputWithdrawn(
-        uint160 indexed exitId,
+        uint168 indexed exitId,
         uint16 outputIndex
     );
 
     event InFlightExitInputWithdrawn(
-        uint160 indexed exitId,
+        uint168 indexed exitId,
         uint16 inputIndex
     );
 
@@ -53,7 +53,7 @@ library PaymentProcessInFlightExit {
     function run(
         Controller memory self,
         PaymentExitDataModel.InFlightExitMap storage exitMap,
-        uint160 exitId,
+        uint168 exitId,
         address token
     )
         public
@@ -130,7 +130,7 @@ library PaymentProcessInFlightExit {
     function isAnyInputFinalizedByOtherExit(
         PlasmaFramework framework,
         PaymentExitDataModel.InFlightExit memory exit,
-        uint160 exitId
+        uint168 exitId
     )
         private
         view
@@ -202,7 +202,7 @@ library PaymentProcessInFlightExit {
         PlasmaFramework framework,
         PaymentExitDataModel.InFlightExit memory exit,
         address token,
-        uint160 exitId
+        uint168 exitId
     )
         private
     {
@@ -228,7 +228,7 @@ library PaymentProcessInFlightExit {
         PlasmaFramework framework,
         PaymentExitDataModel.InFlightExit memory exit,
         address token,
-        uint160 exitId
+        uint168 exitId
     )
         private
     {

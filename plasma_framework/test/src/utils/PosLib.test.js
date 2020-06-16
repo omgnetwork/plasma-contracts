@@ -9,7 +9,7 @@ contract('PosLib', () => {
 
     const maxOutputIndex = new BN(TX_OFFSET - 1);
     const maxTxIndex = (new BN(2)).pow(new BN(16)).sub(new BN(1));
-    const maxBlockNum = (new BN(2)).pow(new BN(54)).sub(new BN(1))
+    const maxBlockNum = (new BN(2)).pow(new BN(56)).sub(new BN(1))
         .sub(maxTxIndex)
         .div(new BN(BLOCK_OFFSET / TX_OFFSET));
 

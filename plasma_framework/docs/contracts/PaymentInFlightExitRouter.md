@@ -41,22 +41,22 @@ event IFEBondUpdated(uint128  bondSize);
 event PiggybackBondUpdated(uint128  bondSize);
 event InFlightExitStarted(address indexed initiator, bytes32 indexed txHash);
 event InFlightExitInputPiggybacked(address indexed exitTarget, bytes32 indexed txHash, uint16  inputIndex);
-event InFlightExitOmitted(uint160 indexed exitId, address  token);
+event InFlightExitOmitted(uint168 indexed exitId, address  token);
 event InFlightBondReturnFailed(address indexed receiver, uint256  amount);
-event InFlightExitOutputWithdrawn(uint160 indexed exitId, uint16  outputIndex);
-event InFlightExitInputWithdrawn(uint160 indexed exitId, uint16  inputIndex);
+event InFlightExitOutputWithdrawn(uint168 indexed exitId, uint16  outputIndex);
+event InFlightExitInputWithdrawn(uint168 indexed exitId, uint16  inputIndex);
 event InFlightExitOutputPiggybacked(address indexed exitTarget, bytes32 indexed txHash, uint16  outputIndex);
 event InFlightExitChallenged(address indexed challenger, bytes32 indexed txHash, uint256  challengeTxPosition);
 event InFlightExitChallengeResponded(address indexed challenger, bytes32 indexed txHash, uint256  challengeTxPosition);
 event InFlightExitInputBlocked(address indexed challenger, bytes32 indexed txHash, uint16  inputIndex);
 event InFlightExitOutputBlocked(address indexed challenger, bytes32 indexed txHash, uint16  outputIndex);
-event InFlightExitDeleted(uint160 indexed exitId);
+event InFlightExitDeleted(uint168 indexed exitId);
 ```
 
 ## Functions
 
 - [(struct PaymentExitGameArgs.Args args)](#)
-- [inFlightExits(uint160[] exitIds)](#inflightexits)
+- [inFlightExits(uint168[] exitIds)](#inflightexits)
 - [startInFlightExit(struct PaymentInFlightExitRouterArgs.StartExitArgs args)](#startinflightexit)
 - [piggybackInFlightExitOnInput(struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnInputArgs args)](#piggybackinflightexitoninput)
 - [piggybackInFlightExitOnOutput(struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnOutputArgs args)](#piggybackinflightexitonoutput)
@@ -64,8 +64,8 @@ event InFlightExitDeleted(uint160 indexed exitId);
 - [respondToNonCanonicalChallenge(bytes inFlightTx, uint256 inFlightTxPos, bytes inFlightTxInclusionProof)](#respondtononcanonicalchallenge)
 - [challengeInFlightExitInputSpent(struct PaymentInFlightExitRouterArgs.ChallengeInputSpentArgs args)](#challengeinflightexitinputspent)
 - [challengeInFlightExitOutputSpent(struct PaymentInFlightExitRouterArgs.ChallengeOutputSpent args)](#challengeinflightexitoutputspent)
-- [deleteNonPiggybackedInFlightExit(uint160 exitId)](#deletenonpiggybackedinflightexit)
-- [processInFlightExit(uint160 exitId, address token)](#processinflightexit)
+- [deleteNonPiggybackedInFlightExit(uint168 exitId)](#deletenonpiggybackedinflightexit)
+- [processInFlightExit(uint168 exitId, address token)](#processinflightexit)
 - [startIFEBondSize()](#startifebondsize)
 - [updateStartIFEBondSize(uint128 newBondSize)](#updatestartifebondsize)
 - [piggybackBondSize()](#piggybackbondsize)
@@ -88,7 +88,7 @@ function (struct PaymentExitGameArgs.Args args) public nonpayable
 Getter functions to retrieve in-flight exit data of the PaymentExitGame
 
 ```js
-function inFlightExits(uint160[] exitIds) external view
+function inFlightExits(uint168[] exitIds) external view
 returns(struct PaymentExitDataModel.InFlightExit[])
 ```
 
@@ -96,7 +96,7 @@ returns(struct PaymentExitDataModel.InFlightExit[])
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| exitIds | uint160[] | The exit IDs of the in-flight exits | 
+| exitIds | uint168[] | The exit IDs of the in-flight exits | 
 
 ### startInFlightExit
 
@@ -203,28 +203,28 @@ function challengeInFlightExitOutputSpent(struct PaymentInFlightExitRouterArgs.C
 Deletes in-flight exit if the first phase has passed and not being piggybacked
 
 ```js
-function deleteNonPiggybackedInFlightExit(uint160 exitId) public nonpayable nonReentrant 
+function deleteNonPiggybackedInFlightExit(uint168 exitId) public nonpayable nonReentrant 
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| exitId | uint160 | The exitId of the in-flight exit | 
+| exitId | uint168 | The exitId of the in-flight exit | 
 
 ### processInFlightExit
 
 Process in-flight exit
 
 ```js
-function processInFlightExit(uint160 exitId, address token) internal nonpayable
+function processInFlightExit(uint168 exitId, address token) internal nonpayable
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| exitId | uint160 | The in-flight exit ID | 
+| exitId | uint168 | The in-flight exit ID | 
 | token | address | The token (in erc20 address or address(0) for ETH) of the exiting output | 
 
 ### startIFEBondSize

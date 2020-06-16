@@ -19,7 +19,7 @@ struct StartStandardExitArgs {
 
 ```js
 struct ChallengeStandardExitArgs {
- uint160 exitId,
+ uint168 exitId,
  bytes exitingTx,
  bytes challengeTx,
  uint16 inputIndex,

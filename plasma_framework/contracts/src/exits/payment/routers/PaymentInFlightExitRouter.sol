@@ -74,7 +74,7 @@ contract PaymentInFlightExitRouter is
     );
 
     event InFlightExitOmitted(
-        uint160 indexed exitId,
+        uint168 indexed exitId,
         address token
     );
 
@@ -84,12 +84,12 @@ contract PaymentInFlightExitRouter is
     );
 
     event InFlightExitOutputWithdrawn(
-        uint160 indexed exitId,
+        uint168 indexed exitId,
         uint16 outputIndex
     );
 
     event InFlightExitInputWithdrawn(
-        uint160 indexed exitId,
+        uint168 indexed exitId,
         uint16 inputIndex
     );
 
@@ -124,7 +124,7 @@ contract PaymentInFlightExitRouter is
     );
 
     event InFlightExitDeleted(
-        uint160 indexed exitId
+        uint168 indexed exitId
     );
 
     constructor(PaymentExitGameArgs.Args memory args)
@@ -189,10 +189,10 @@ contract PaymentInFlightExitRouter is
      * @notice Getter functions to retrieve in-flight exit data of the PaymentExitGame
      * @param exitIds The exit IDs of the in-flight exits
      */
-    function inFlightExits(uint160[] calldata exitIds) external view returns (PaymentExitDataModel.InFlightExit[] memory) {
+    function inFlightExits(uint168[] calldata exitIds) external view returns (PaymentExitDataModel.InFlightExit[] memory) {
         PaymentExitDataModel.InFlightExit[] memory exits = new PaymentExitDataModel.InFlightExit[](exitIds.length);
         for (uint i = 0; i < exitIds.length; i++) {
-            uint160 exitId = exitIds[i];
+            uint168 exitId = exitIds[i];
             exits[i] = inFlightExitMap.exits[exitId];
         }
         return exits;
@@ -298,7 +298,7 @@ contract PaymentInFlightExitRouter is
      *      see: https://github.com/omisego/plasma-contracts/issues/440
      * @param exitId The exitId of the in-flight exit
      */
-    function deleteNonPiggybackedInFlightExit(uint160 exitId) public nonReentrant(framework) {
+    function deleteNonPiggybackedInFlightExit(uint168 exitId) public nonReentrant(framework) {
         deleteNonPiggybackIFEController.run(inFlightExitMap, exitId);
     }
 
@@ -308,7 +308,7 @@ contract PaymentInFlightExitRouter is
      * @param exitId The in-flight exit ID
      * @param token The token (in erc20 address or address(0) for ETH) of the exiting output
      */
-    function processInFlightExit(uint160 exitId, address token) internal {
+    function processInFlightExit(uint168 exitId, address token) internal {
         processInflightExitController.run(inFlightExitMap, exitId, token);
     }
 

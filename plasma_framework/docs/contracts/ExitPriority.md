@@ -4,9 +4,18 @@ View Source: [contracts/src/framework/utils/ExitPriority.sol](../../contracts/sr
 
 **ExitPriority**
 
+## Contract Members
+**Constants & Variables**
+
+```js
+uint256 private constant SIZEOF_TIMESTAMP;
+uint256 private constant SIZEOF_EXITID;
+
+```
+
 ## Functions
 
-- [computePriority(uint64 exitableAt, struct PosLib.Position txPos, uint160 exitId)](#computepriority)
+- [computePriority(uint32 exitableAt, struct PosLib.Position txPos, uint168 exitId)](#computepriority)
 - [parseExitableAt(uint256 priority)](#parseexitableat)
 - [parseExitId(uint256 priority)](#parseexitid)
 
@@ -15,7 +24,7 @@ View Source: [contracts/src/framework/utils/ExitPriority.sol](../../contracts/sr
 Detailed explanation on field lengths can be found at https://github.com/omisego/plasma-contracts/pull/303#discussion_r328850572
 
 ```js
-function computePriority(uint64 exitableAt, struct PosLib.Position txPos, uint160 exitId) internal pure
+function computePriority(uint32 exitableAt, struct PosLib.Position txPos, uint168 exitId) internal pure
 returns(uint256)
 ```
 
@@ -23,23 +32,24 @@ returns(uint256)
 
 An exit priority
   Anatomy of returned value, most significant bits first
-  42 bits  - timestamp in seconds (exitable_at); we can represent dates until year 141431
-  54 bits  - blocknum * 10^5 + txindex; 54 bits represent all transactions for 85 years. Be aware that child chain block number jumps with the interval of CHILD_BLOCK_INTERVAL, which would be 1000 in production.
-  160 bits - exit id
+  32 bits  - The exitable_at timestamp (in seconds); can represent dates until the year 2106
+  56 bits  - The transaction position. Be aware that child chain block number jumps with the interval of CHILD_BLOCK_INTERVAL (usually 1000).
+blocknum * (BLOCK_OFFSET / TX_OFFSET) + txindex; 56 bits can represent all transactions for 342 years, assuming a 15 second block time.
+  168 bits - The exit id
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| exitableAt | uint64 |  | 
+| exitableAt | uint32 |  | 
 | txPos | struct PosLib.Position |  | 
-| exitId | uint160 | Unique exit identifier | 
+| exitId | uint168 | Unique exit identifier | 
 
 ### parseExitableAt
 
 ```js
 function parseExitableAt(uint256 priority) internal pure
-returns(uint64)
+returns(uint32)
 ```
 
 **Arguments**
@@ -52,7 +62,7 @@ returns(uint64)
 
 ```js
 function parseExitId(uint256 priority) internal pure
-returns(uint160)
+returns(uint168)
 ```
 
 **Arguments**

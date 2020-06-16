@@ -15,7 +15,7 @@ library PaymentDeleteInFlightExit {
     }
 
     event InFlightExitDeleted(
-        uint160 indexed exitId
+        uint168 indexed exitId
     );
 
     /**
@@ -25,7 +25,7 @@ library PaymentDeleteInFlightExit {
     function run(
         Controller memory self,
         PaymentExitDataModel.InFlightExitMap storage exitMap,
-        uint160 exitId
+        uint168 exitId
     )
         public
     {
