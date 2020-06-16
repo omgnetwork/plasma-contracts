@@ -27,7 +27,7 @@ library ExitId {
      * @return standardExitId Unique ID of the standard exit
      *     Anatomy of returned value, most significant bits first:
      *     1-bit - in-flight flag (0 for standard exit)
-     *     167-bits - hash(tx) or hash(tx|utxo) for deposit
+     *     167-bits - outputId
      */
     function getStandardExitId(
         bool isDeposit,
