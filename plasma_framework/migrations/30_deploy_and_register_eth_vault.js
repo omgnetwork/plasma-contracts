@@ -22,8 +22,8 @@ module.exports = async (
     await deployer.deploy(
         EthVault,
         plasmaFramework.address,
-        config.frameworks.safeGasStipend.v1
-    );
+        config.frameworks.safeGasStipend.v1);
+
     const ethVault = await EthVault.deployed();
     await ethVault.setDepositVerifier(ethDepositVerifier.address, { from: maintainerAddress });
 
