@@ -19,7 +19,7 @@ module.exports = async (
     );
     const erc20DepositVerifier = await Erc20DepositVerifier.deployed();
 
-    await deployer.deploy(Erc20Vault, plasmaFramework.address, { from: maintainerAddress });
+    await deployer.deploy(Erc20Vault, plasmaFramework.address);
     const erc20Vault = await Erc20Vault.deployed();
 
     await erc20Vault.setDepositVerifier(erc20DepositVerifier.address, { from: maintainerAddress });
