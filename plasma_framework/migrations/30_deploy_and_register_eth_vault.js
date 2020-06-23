@@ -26,11 +26,11 @@ module.exports = async (
     );
 
     const ethVault = await EthVault.deployed();
-    await ethVault.setDepositVerifier(ethDepositVerifier.address, { from: maintainerAddress });
+    // await ethVault.setDepositVerifier(ethDepositVerifier.address, { from: maintainerAddress });
 
-    await plasmaFramework.registerVault(
-        config.registerKeys.vaultId.eth,
-        ethVault.address,
-        { from: maintainerAddress },
-    );
+    // await plasmaFramework.registerVault(
+    //     config.registerKeys.vaultId.eth,
+    //     ethVault.address,
+    //     { from: maintainerAddress },
+    // );
 };

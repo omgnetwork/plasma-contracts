@@ -22,11 +22,11 @@ module.exports = async (
     await deployer.deploy(Erc20Vault, plasmaFramework.address);
     const erc20Vault = await Erc20Vault.deployed();
 
-    await erc20Vault.setDepositVerifier(erc20DepositVerifier.address, { from: maintainerAddress });
+    // await erc20Vault.setDepositVerifier(erc20DepositVerifier.address, { from: maintainerAddress });
 
-    await plasmaFramework.registerVault(
-        config.registerKeys.vaultId.erc20,
-        erc20Vault.address,
-        { from: maintainerAddress },
-    );
+    // await plasmaFramework.registerVault(
+    //     config.registerKeys.vaultId.erc20,
+    //     erc20Vault.address,
+    //     { from: maintainerAddress },
+    // );
 };

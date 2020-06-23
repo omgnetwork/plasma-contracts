@@ -26,9 +26,9 @@ module.exports = async (
         FEE_CLAIM_OUTPUT_TYPE,
         PAYMENT_TX_TYPE,
     );
-    const feeClaimOutputToPaymentTxCondition = await FeeClaimOutputToPaymentTxCondition.deployed();
-    console.log(`Registering feeClaimOutputToPaymentTxCondition (${feeClaimOutputToPaymentTxCondition.address}) to spendingConditionRegistry`);
-    await spendingConditionRegistry.registerSpendingCondition(
-        FEE_CLAIM_OUTPUT_TYPE, PAYMENT_TX_TYPE, feeClaimOutputToPaymentTxCondition.address,
-    );
+    // const feeClaimOutputToPaymentTxCondition = await FeeClaimOutputToPaymentTxCondition.deployed();
+    // console.log(`Registering feeClaimOutputToPaymentTxCondition (${feeClaimOutputToPaymentTxCondition.address}) to spendingConditionRegistry`);
+    // await spendingConditionRegistry.registerSpendingCondition(
+    //     FEE_CLAIM_OUTPUT_TYPE, PAYMENT_TX_TYPE, feeClaimOutputToPaymentTxCondition.address,
+    // );
 };

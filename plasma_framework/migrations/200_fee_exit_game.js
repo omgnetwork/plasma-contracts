@@ -12,12 +12,12 @@ module.exports = async (
     const plasmaFramework = await PlasmaFramework.deployed();
 
     await deployer.deploy(FeeExitGame);
-    const feeExitGame = await FeeExitGame.deployed();
+    // const feeExitGame = await FeeExitGame.deployed();
 
-    await plasmaFramework.registerExitGame(
-        config.registerKeys.txTypes.fee,
-        feeExitGame.address,
-        config.frameworks.protocols.moreVp,
-        { from: maintainerAddress },
-    );
+    // await plasmaFramework.registerExitGame(
+    //     config.registerKeys.txTypes.fee,
+    //     feeExitGame.address,
+    //     config.frameworks.protocols.moreVp,
+    //     { from: maintainerAddress },
+    // );
 };

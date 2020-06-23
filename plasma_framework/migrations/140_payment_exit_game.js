@@ -28,14 +28,15 @@ module.exports = async (
         PAYMENT_TX_TYPE,
         config.frameworks.safeGasStipend.v1,
     ];
-    await deployer.deploy(PaymentExitGame, paymentExitGameArgs);
-    const paymentExitGame = await PaymentExitGame.deployed();
-    await paymentExitGame.init({ from: maintainerAddress });
-    // register the exit game to framework
-    await plasmaFramework.registerExitGame(
-        PAYMENT_TX_TYPE,
-        paymentExitGame.address,
-        config.frameworks.protocols.moreVp,
-        { from: maintainerAddress },
-    );
+    const paymentExitGame = await deployer.deploy(PaymentExitGame, paymentExitGameArgs);
+
+    //pa paytmentexitgame.init()
+    // // register the exit game to framework
+    // await plasmaFramework.registerExitGame(
+    //     PAYMENT_TX_TYPE,
+    //     paymentExitGame.address,
+    //     config.frameworks.protocols.moreVp,
+    //     { from: maintainerAddress },
+    // );
+    //
 };
