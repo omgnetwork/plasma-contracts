@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 const PlasmaFramework = artifacts.require('PlasmaFramework');
 const PaymentExitGame = artifacts.require('PaymentExitGame');
 const FeeExitGame = artifacts.require('FeeExitGame');
@@ -44,23 +45,26 @@ module.exports = async (
         erc20Vault.address,
         { from: maintainerAddress },
     );
-
+    const MORE_VP = config.frameworks.protocols.moreVp;
     // 140_payment_exit_game.js
     // register the exit game to framework
+    console.log(`Registering payment exit game`);
     const PAYMENT_TX_TYPE = config.registerKeys.txTypes.payment;
     const paymentExitGame = await PaymentExitGame.deployed();
     await plasmaFramework.registerExitGame(
         PAYMENT_TX_TYPE,
         paymentExitGame.address,
-        config.frameworks.protocols.moreVp,
+        MORE_VP,
         { from: maintainerAddress },
     );
     // 200_fee_exit_game.js
+    console.log(`Registering fee exit game`);
+    const FEE_TX_TYPE =  config.registerKeys.txTypes.fee;
     const feeExitGame = await FeeExitGame.deployed();
     await plasmaFramework.registerExitGame(
-        config.registerKeys.txTypes.fee,
+        FEE_TX_TYPE,
         feeExitGame.address,
-        config.frameworks.protocols.moreVp,
+        MORE_VP,
         { from: maintainerAddress },
     );
 };
