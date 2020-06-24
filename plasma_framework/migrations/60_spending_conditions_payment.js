@@ -25,11 +25,11 @@ module.exports = async (
         PAYMENT_OUTPUT_TYPE,
         PAYMENT_TX_TYPE,
     );
-    // const paymentToPaymentCondition = await PaymentOutputToPaymentTxCondition.deployed();
-    // console.log(`Registering paymentToPaymentCondition (${paymentToPaymentCondition.address}) to spendingConditionRegistry`);
-    // await spendingConditionRegistry.registerSpendingCondition(
-    //     PAYMENT_OUTPUT_TYPE, PAYMENT_TX_TYPE, paymentToPaymentCondition.address,
-    // );
+    const paymentToPaymentCondition = await PaymentOutputToPaymentTxCondition.deployed();
+    console.log(`Registering paymentToPaymentCondition (${paymentToPaymentCondition.address}) to spendingConditionRegistry`);
+    await spendingConditionRegistry.registerSpendingCondition(
+        PAYMENT_OUTPUT_TYPE, PAYMENT_TX_TYPE, paymentToPaymentCondition.address,
+    );
 
     await deployer.deploy(
         PaymentOutputToPaymentTxCondition,
@@ -37,9 +37,9 @@ module.exports = async (
         PAYMENT_OUTPUT_TYPE,
         PAYMENT_V2_TX_TYPE,
     );
-    // const paymentToPaymentV2Condition = await PaymentOutputToPaymentTxCondition.deployed();
-    // console.log(`Registering paymentToPaymentV2Condition (${paymentToPaymentV2Condition.address}) to spendingConditionRegistry`);
-    // await spendingConditionRegistry.registerSpendingCondition(
-    //     PAYMENT_OUTPUT_TYPE, PAYMENT_V2_TX_TYPE, paymentToPaymentV2Condition.address,
-    // );
+    const paymentToPaymentV2Condition = await PaymentOutputToPaymentTxCondition.deployed();
+    console.log(`Registering paymentToPaymentV2Condition (${paymentToPaymentV2Condition.address}) to spendingConditionRegistry`);
+    await spendingConditionRegistry.registerSpendingCondition(
+        PAYMENT_OUTPUT_TYPE, PAYMENT_V2_TX_TYPE, paymentToPaymentV2Condition.address,
+    );
 };

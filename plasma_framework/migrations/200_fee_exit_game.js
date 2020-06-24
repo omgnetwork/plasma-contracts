@@ -1,7 +1,7 @@
 const FeeExitGame = artifacts.require('FeeExitGame');
-const PlasmaFramework = artifacts.require('PlasmaFramework');
+// const PlasmaFramework = artifacts.require('PlasmaFramework');
 
-const config = require('../config.js');
+// const config = require('../config.js');
 
 module.exports = async (
     deployer,
@@ -9,7 +9,7 @@ module.exports = async (
     // eslint-disable-next-line no-unused-vars
     [deployerAddress, maintainerAddress, authorityAddress],
 ) => {
-    const plasmaFramework = await PlasmaFramework.deployed();
+    // const plasmaFramework = await PlasmaFramework.deployed();
 
     await deployer.deploy(FeeExitGame);
     // const feeExitGame = await FeeExitGame.deployed();

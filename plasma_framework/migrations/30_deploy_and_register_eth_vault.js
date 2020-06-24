@@ -17,7 +17,7 @@ module.exports = async (
         config.registerKeys.txTypes.payment,
         config.registerKeys.outputTypes.payment,
     );
-    const ethDepositVerifier = await EthDepositVerifier.deployed();
+    // const ethDepositVerifier = await EthDepositVerifier.deployed();
 
     await deployer.deploy(
         EthVault,
@@ -25,7 +25,7 @@ module.exports = async (
         config.frameworks.safeGasStipend.v1,
     );
 
-    const ethVault = await EthVault.deployed();
+    // const ethVault = await EthVault.deployed();
     // await ethVault.setDepositVerifier(ethDepositVerifier.address, { from: maintainerAddress });
 
     // await plasmaFramework.registerVault(
