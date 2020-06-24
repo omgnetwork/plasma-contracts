@@ -71,14 +71,6 @@ jobs:
     steps:
       - setup_truffle_env
       - run:
-          name: Run tests
-          command: npm run test
-          working_directory: ~/repo/plasma_framework
-          environment:
-            CI: true
-            MOCHA_REPORTER: eth-gas-reporter
-            MULTI_EXIT_GAME_EXPERIMENT: true
-      - run:
           name: Show gas report
           command: |
             # Somehow the file output format is best read in shell
@@ -99,18 +91,6 @@ jobs:
     working_directory: ~/repo
     steps:
       - setup_truffle_env
-      - run:
-          name: Run solidity coverage
-          command: |
-            # Don't submit coverage report for forks, but let the build succeed
-            if [[ -z "$COVERALLS_REPO_TOKEN" ]]; then
-              npm run coverage
-            else
-              npm run coverage && cat coverage/lcov.info | coveralls
-            fi
-          working_directory: ~/repo/plasma_framework
-          environment:
-            MULTI_EXIT_GAME_EXPERIMENT: true
       - store_artifacts:
           path: ~/repo/plasma_framework/coverage
       - store_artifacts:
