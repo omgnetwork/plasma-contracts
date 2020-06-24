@@ -18,6 +18,7 @@ module.exports = async (
 ) => {
     const vault = process.env.VAULT || false;
     // 20_deploy_plasma_framework.js
+    console.log('Activate Childchain');
     const plasmaFramework = await PlasmaFramework.deployed();
     if (vault) {
         await plasmaFramework.activateChildChain({ from: authorityAddress });
@@ -26,6 +27,7 @@ module.exports = async (
     await plasmaFramework.setVersion(`${pck.version}+${sha}`, { from: maintainerAddress });
 
     // 30_deploy_and_register_eth_vault.js
+    console.log('Deploy and register eth vault');
     const ethDepositVerifier = await EthDepositVerifier.deployed();
     const ethVault = await EthVault.deployed();
     await ethVault.setDepositVerifier(ethDepositVerifier.address, { from: maintainerAddress });
@@ -36,6 +38,7 @@ module.exports = async (
     );
 
     // 40_deploy_and_register_erc20_vault.js
+    console.log('Deploy and register ERC20 vault');
     const erc20DepositVerifier = await Erc20DepositVerifier.deployed();
     const erc20Vault = await Erc20Vault.deployed();
     await erc20Vault.setDepositVerifier(erc20DepositVerifier.address, { from: maintainerAddress });
@@ -48,7 +51,7 @@ module.exports = async (
     const MORE_VP = config.frameworks.protocols.moreVp;
     // 140_payment_exit_game.js
     // register the exit game to framework
-    console.log(`Registering payment exit game`);
+    console.log('Registering payment exit game');
     const PAYMENT_TX_TYPE = config.registerKeys.txTypes.payment;
     const paymentExitGame = await PaymentExitGame.deployed();
     await plasmaFramework.registerExitGame(
@@ -58,8 +61,8 @@ module.exports = async (
         { from: maintainerAddress },
     );
     // 200_fee_exit_game.js
-    console.log(`Registering fee exit game`);
-    const FEE_TX_TYPE =  config.registerKeys.txTypes.fee;
+    console.log('Registering fee exit game');
+    const FEE_TX_TYPE = config.registerKeys.txTypes.fee;
     const feeExitGame = await FeeExitGame.deployed();
     await plasmaFramework.registerExitGame(
         FEE_TX_TYPE,
