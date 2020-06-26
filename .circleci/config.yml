@@ -235,8 +235,8 @@ workflows:
 
   Deployment checks:
     jobs:
-      - Deploy to Rinkeby:
-          filters:
-            branches:
-              only:
-                - master
+      - Deploy to Rinkeby
+          # filters:
+          #   branches:
+          #     only:
+          #       - master
