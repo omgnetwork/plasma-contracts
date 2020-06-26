@@ -71,6 +71,10 @@ jobs:
     steps:
       - setup_truffle_env
       - run:
+        name: truffle version
+        command: npx truffle -v
+        working_directory: ~/repo/plasma_framework
+      - run:
           name: Run tests
           command: npm run test
           working_directory: ~/repo/plasma_framework
