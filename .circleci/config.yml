@@ -7,7 +7,7 @@ version: 2.1
 executors:
   truffle_executor:
     docker:
-      - image: circleci/node:10.16
+      - image: circleci/node:10.20
   python_executor:
     docker:
       - image: circleci/python:3.7.7
