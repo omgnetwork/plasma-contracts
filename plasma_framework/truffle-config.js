@@ -3,18 +3,19 @@ require('dotenv').config(); // auto parse env variables from '.env' file
 const HDWalletProvider = require('@truffle/hdwallet-provider');
 
 // DEBUG!!!
-const XHR = require('xhr2-cookies').XMLHttpRequest
+const XHR = require('xhr2-cookies').XMLHttpRequest;
+
 XHR.prototype._onHttpRequestError = function (request, error) {
-  if (this._request !== request) {
-      return;
-  }
-  // A new line
-  console.log(error, 'request')
-  this._setError();
-  request.abort();
-  this._setReadyState(XHR.DONE);
-  this._dispatchProgress('error');
-  this._dispatchProgress('loadend');
+    if (this._request !== request) {
+        return;
+    }
+    // A new line
+    console.log(error, 'request');
+    this._setError();
+    request.abort();
+    this._setReadyState(XHR.DONE);
+    this._dispatchProgress('error');
+    this._dispatchProgress('loadend');
 };
 
 
@@ -24,7 +25,7 @@ XHR.prototype._onHttpRequestError = function (request, error) {
 // are undefined as this is instanciating a class....
 let hdWalletProvider = null;
 const getHDWalletProvider = () => {
-    if (hdWalletProvider !== null ) {
+    if (hdWalletProvider !== null) {
         hdWalletProvider = new HDWalletProvider(
             [
                 process.env.DEPLOYER_PRIVATEKEY || '0'.repeat(64),
@@ -33,10 +34,10 @@ const getHDWalletProvider = () => {
             ],
             process.env.REMOTE_URL,
             0, 3,
-        )
+        );
     }
     return hdWalletProvider;
-}
+};
 
 module.exports = {
     networks: {
