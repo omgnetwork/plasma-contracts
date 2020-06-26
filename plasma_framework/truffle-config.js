@@ -2,43 +2,6 @@ require('dotenv').config(); // auto parse env variables from '.env' file
 
 const HDWalletProvider = require('@truffle/hdwallet-provider');
 
-// DEBUG!!!
-const XHR = require('xhr2-cookies').XMLHttpRequest;
-
-XHR.prototype._onHttpRequestError = function (request, error) {
-    if (this._request !== request) {
-        return;
-    }
-    // A new line
-    console.log(error, 'request');
-    this._setError();
-    request.abort();
-    this._setReadyState(XHR.DONE);
-    this._dispatchProgress('error');
-    this._dispatchProgress('loadend');
-};
-
-
-// Can't be a function otherwise it'll throw a JSON RPC error for some reason
-// https://github.com/trufflesuite/truffle/issues/852#issuecomment-522367001
-// Using 0's as private key because it'll throw an error if the private keys
-// are undefined as this is instanciating a class....
-let hdWalletProvider = null;
-const getHDWalletProvider = () => {
-    if (hdWalletProvider !== null) {
-        hdWalletProvider = new HDWalletProvider(
-            [
-                process.env.DEPLOYER_PRIVATEKEY || '0'.repeat(64),
-                process.env.MAINTAINER_PRIVATEKEY || '0'.repeat(64),
-                process.env.AUTHORITY_PRIVATEKEY || '0'.repeat(64),
-            ],
-            process.env.REMOTE_URL,
-            0, 3,
-        );
-    }
-    return hdWalletProvider;
-};
-
 module.exports = {
     networks: {
         loadTest: {
@@ -58,7 +21,19 @@ module.exports = {
         // before getting submitted to the remote client.
         remote: {
             skipDryRun: true,
-            provider: getHDWalletProvider,
+            // Can't be a function otherwise it'll throw a JSON RPC error for some reason
+            // https://github.com/trufflesuite/truffle/issues/852#issuecomment-522367001
+            // Using 0's as private key because it'll throw an error if the private keys
+            // are undefined as this is instanciating a class....
+            provider: new HDWalletProvider(
+                [
+                    process.env.DEPLOYER_PRIVATEKEY || '0'.repeat(64),
+                    process.env.MAINTAINER_PRIVATEKEY || '0'.repeat(64),
+                    process.env.AUTHORITY_PRIVATEKEY || '0'.repeat(64),
+                ],
+                process.env.REMOTE_URL || 'http://127.0.0.1:8545',
+                0, 3,
+            ),
             gasPrice: process.env.GAS_PRICE || 20000000000, // default 20 gwei
             network_id: '*',
         },
