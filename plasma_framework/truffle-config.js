@@ -46,7 +46,7 @@ module.exports = {
                     process.env.MAINTAINER_PRIVATEKEY || '0'.repeat(64),
                     process.env.AUTHORITY_PRIVATEKEY || '0'.repeat(64),
                 ],
-                process.env.REMOTE_URL || 'http://127.0.0.1:8545',
+                process.env.REMOTE_URL,
                 0, 3,
             ),
             gasPrice: process.env.GAS_PRICE || 20000000000, // default 20 gwei
