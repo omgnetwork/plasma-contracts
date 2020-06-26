@@ -2,6 +2,21 @@ require('dotenv').config(); // auto parse env variables from '.env' file
 
 const HDWalletProvider = require('@truffle/hdwallet-provider');
 
+// DEBUG!!!
+const XHR = require('xhr2-cookies').XMLHttpRequest
+XHR.prototype._onHttpRequestError = function (request, error) {
+  if (this._request !== request) {
+      return;
+  }
+  // A new line
+  console.log(error, 'request')
+  this._setError();
+  request.abort();
+  this._setReadyState(XHR.DONE);
+  this._dispatchProgress('error');
+  this._dispatchProgress('loadend');
+};
+
 module.exports = {
     networks: {
         loadTest: {
