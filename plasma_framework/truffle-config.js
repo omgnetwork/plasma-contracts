@@ -21,10 +21,6 @@ module.exports = {
         // before getting submitted to the remote client.
         remote: {
             skipDryRun: true,
-            // Can't be a function otherwise it'll throw a JSON RPC error for some reason
-            // https://github.com/trufflesuite/truffle/issues/852#issuecomment-522367001
-            // Using 0's as private key because it'll throw an error if the private keys
-            // are undefined as this is instanciating a class....
             provider: () => new HDWalletProvider(
                 [
                     process.env.DEPLOYER_PRIVATEKEY || '0'.repeat(64),
