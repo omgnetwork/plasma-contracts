@@ -96,8 +96,6 @@ jobs:
           path: ~/repo/plasma_framework/gasReporterOutput.json
       - store_artifacts:
           path: ~/repo/plasma_framework/gasReport.rst
-      - store_artifacts:
-          path: /home/circleci/.npm/_logs/
 
   Solidity coverage:
     executor: truffle_executor
@@ -235,8 +233,8 @@ workflows:
 
   Deployment checks:
     jobs:
-      - Deploy to Rinkeby
-          # filters:
-          #   branches:
-          #     only:
-          #       - master
+      - Deploy to Rinkeby:
+          filters:
+            branches:
+              only:
+                - master
