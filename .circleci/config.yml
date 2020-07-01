@@ -7,7 +7,7 @@ version: 2.1
 executors:
   truffle_executor:
     docker:
-      - image: circleci/node:10.16
+      - image: circleci/node:10.20
   python_executor:
     docker:
       - image: circleci/python:3.7.7
@@ -70,6 +70,10 @@ jobs:
     working_directory: ~/repo
     steps:
       - setup_truffle_env
+      - run:
+          name: truffle version
+          command: npx truffle version
+          working_directory: ~/repo/plasma_framework
       - run:
           name: Run tests
           command: npm run test
