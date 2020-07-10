@@ -1,7 +1,5 @@
 const PlasmaFramework = artifacts.require('PlasmaFramework');
-// const childProcess = require('child_process');
 const config = require('../config.js');
-// const pck = require('../package.json');
 
 module.exports = async (
     deployer,
