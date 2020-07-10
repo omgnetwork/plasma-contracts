@@ -8,7 +8,7 @@ const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry')
 const config = require('../config.js');
 
 module.exports = async (
-    _deployer,
+    deployer,
     _,
     // eslint-disable-next-line no-unused-vars
     [deployerAddress, maintainerAddress, authorityAddress],
@@ -28,7 +28,7 @@ module.exports = async (
         PAYMENT_TX_TYPE,
         config.frameworks.safeGasStipend.v1,
     ];
-    const paymentExitGame = await deployer.deploy(PaymentExitGame, paymentExitGameArgs);
+    deployer.deploy(PaymentExitGame, paymentExitGameArgs);
 
     //pa paytmentexitgame.init()
     // // register the exit game to framework
