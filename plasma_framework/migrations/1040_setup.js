@@ -23,6 +23,8 @@ module.exports = async (
     console.log('Activate Childchain');
     const plasmaFramework = await PlasmaFramework.deployed();
     if (vault) {
+        console.log('Hey Vaulty thingy.');
+    } else {
         await plasmaFramework.activateChildChain({ from: authorityAddress });
     }
     const sha = childProcess.execSync('git rev-parse HEAD').toString().trim().substring(0, 7);
