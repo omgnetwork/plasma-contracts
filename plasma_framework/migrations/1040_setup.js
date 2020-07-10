@@ -67,8 +67,8 @@ module.exports = async (
         config.frameworks.safeGasStipend.v1,
     ];
     console.log('Deploy PaymentExitGame');
-    deployer.deploy(PaymentExitGame, paymentExitGameArgs);
-    deployer.deploy(FeeExitGame);
+    await deployer.deploy(PaymentExitGame, paymentExitGameArgs);
+    await deployer.deploy(FeeExitGame);
 
 
     // 140_payment_exit_game.js
