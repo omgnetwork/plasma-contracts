@@ -28,6 +28,7 @@ module.exports = async (
         PAYMENT_TX_TYPE,
         config.frameworks.safeGasStipend.v1,
     ];
+    console.log('Deploy PaymentExitGame');
     deployer.deploy(PaymentExitGame, paymentExitGameArgs);
 
     //pa paytmentexitgame.init()
