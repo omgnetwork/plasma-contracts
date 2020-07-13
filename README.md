@@ -131,7 +131,6 @@ Run the following command to run the test afterward:
 npx truffle test --network loadTest
 ```
 
-
 ### How to release a new plasma contracts version
 
 - Update the [CHANGELOG.md](./CHANGELOG.md)
@@ -141,3 +140,11 @@ npx truffle test --network loadTest
 ```bash
 npm version patch -m "Fixed a bug in X"
 ```
+
+### Use MultiSig contract for maintainer account
+- The contract is based on the work of https://github.com/gnosis/MultiSigWallet/tree/v1.6.0
+```bash
+truffle migrate <account1,account2,...,accountN> <requiredConfirmations> 
+```
+- Address of the contract is in MultiSigWallet/build/outputs.json
+- Before you can use this address, the address needs to be funded!

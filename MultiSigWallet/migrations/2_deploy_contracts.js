@@ -9,7 +9,7 @@ const fs = require('fs');
 const path = require('path');
 const util = require('util')
 
-module.exports = deployer => {
+module.exports = async (deployer) => {
   const args = process.argv.slice()
   if (process.env.DEPLOY_FACTORY){
     deployer.deploy(MultisigWalletFactory)
@@ -21,22 +21,12 @@ module.exports = deployer => {
     console.log("Deploying MultisigWalletWithoutDailyLimit")
     console.log(`Accounts to Multisig Wallet Without Daily Limit ${args[3].split(",")}`)
     console.log(`Number of required confirmations ${args[4]}`)
-    const multisig = deployer.deploy(MultisigWalletWithoutDailyLimit, args[3].split(","), args[4])
-    console.log(util.inspect(MultisigWalletWithoutDailyLimit.deployed(), {showHidden: false, depth: null}))
-    console.log("Wallet deployed")
-    // make a json
-    contracts = {
-      contract: `${multisig.address}`.toLowerCase()
-    };
-    const data = JSON.stringify(contracts);
-    console.log(data);
-
-    // Save to `output.json`
+    multisigInstance = await deployMultisig(args[3].split(","), args[4])
     const buildDir = path.resolve(__dirname, '../build');
     if (!fs.existsSync(buildDir)) {
         fs.mkdirSync(buildDir);
     }
-    fs.writeFileSync(path.resolve(buildDir, 'outputs.json'), data);
+    fs.writeFileSync(path.resolve(buildDir, 'multisig_instance'), `${multisigInstance.address}`.toLowerCase());
   } else {
     deployer.deploy(MultisigWalletWithDailyLimit, args[3].split(","), args[4], args[5])
     console.log("Wallet with Daily Limit deployed")
