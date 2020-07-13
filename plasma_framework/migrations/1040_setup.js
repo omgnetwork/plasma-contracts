@@ -18,20 +18,12 @@ module.exports = async (
     // eslint-disable-next-line no-unused-vars
     [deployerAddress, maintainerAddress, authorityAddress],
 ) => {
-    const vault = process.env.VAULT || false;
-    // 20_deploy_plasma_framework.js
-    console.log('Activate Childchain');
     const plasmaFramework = await PlasmaFramework.deployed();
-    if (vault) {
-        console.log('Hey Vaulty thingy.');
-    } else {
-        await plasmaFramework.activateChildChain({ from: authorityAddress });
-    }
     const sha = childProcess.execSync('git rev-parse HEAD').toString().trim().substring(0, 7);
     await plasmaFramework.setVersion(`${pck.version}+${sha}`, { from: maintainerAddress });
 
-    // 30_deploy_and_register_eth_vault.js
-    console.log('Deploy and register eth vault');
+    // ETH vault registeration
+    console.log('Register eth vault');
     const ethDepositVerifier = await EthDepositVerifier.deployed();
     const ethVault = await EthVault.deployed();
     await ethVault.setDepositVerifier(ethDepositVerifier.address, { from: maintainerAddress });
@@ -41,8 +33,8 @@ module.exports = async (
         { from: maintainerAddress },
     );
 
-    // 40_deploy_and_register_erc20_vault.js
-    console.log('Deploy and register ERC20 vault');
+    // ERC20 vault registeration
+    console.log('Register ERC20 vault');
     const erc20DepositVerifier = await Erc20DepositVerifier.deployed();
     const erc20Vault = await Erc20Vault.deployed();
     await erc20Vault.setDepositVerifier(erc20DepositVerifier.address, { from: maintainerAddress });
@@ -73,8 +65,7 @@ module.exports = async (
     await deployer.deploy(FeeExitGame);
 
 
-    // 140_payment_exit_game.js
-    // register the exit game to framework
+    // Register PAYMENT EXIT GAME
     console.log('Registering payment exit game');
     const paymentExitGame = await PaymentExitGame.deployed();
     await plasmaFramework.registerExitGame(
@@ -83,7 +74,7 @@ module.exports = async (
         MORE_VP,
         { from: maintainerAddress },
     );
-    // 200_fee_exit_game.js
+    // Register FEE EXIT GAME
     console.log('Registering fee exit game');
     const FEE_TX_TYPE = config.registerKeys.txTypes.fee;
     const feeExitGame = await FeeExitGame.deployed();
@@ -93,4 +84,13 @@ module.exports = async (
         MORE_VP,
         { from: maintainerAddress },
     );
+
+    // activate the CHILDCHAIN and DONE
+    const vault = process.env.VAULT || false;
+    if (vault) {
+        console.log('Hey Vaulty thingy.');
+    } else {
+        await plasmaFramework.activateChildChain({ from: authorityAddress });
+    }
+    
 };
