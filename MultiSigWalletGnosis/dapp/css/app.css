@@ -1,0 +1,181 @@
+.nav, .pagination, .carousel, .panel-title a {
+    cursor: pointer;
+}
+
+.navbar {
+    font-weight: bold;
+}
+
+.popover {
+    max-width: 450px;
+    color: #87949c;
+}
+
+h1 {
+    font-size: 40px !important;
+}
+
+html {
+    height: 100%;
+}
+
+body {
+    padding-top: 70px;
+    background-image: url(../img/gnosis-logo.svg);
+    background-repeat: no-repeat;
+    background-position: bottom center;
+    background-size: 512px;
+    background-attachment: fixed;
+}
+
+.navbar-brand > img {
+    height: 32px;
+    margin-top: -6px;
+}
+
+.tx-data{
+  word-wrap: break-word;
+}
+.popover{
+  word-wrap: break-word;
+}
+
+table.collapse.in {
+   display: table;
+}
+
+textarea.json-config {
+  min-height: 100px !important;
+}
+
+.centered-dash {
+  text-align: center;
+  display: block;
+}
+
+.online-status{
+  color: #008000; /* green */
+}
+.offline-status{
+  color: #f5231c; /* red */
+}
+
+.wallet-icon{
+  max-width: 20px;
+}
+
+.prevent-focus:focus {
+  outline:0 !important;
+  text-decoration: none !important;
+  border:none !important;
+}
+
+.pointer {
+  cursor: pointer;
+}
+
+.list-decimal {
+  list-style-type: decimal;
+}
+
+.sk-circle .sk-child:before{
+  background-color: white !important;
+}
+
+.grey {
+  color: #889aa6;
+}
+
+/*.ui-select-choices-row:hover {
+  background-color: #143e4d !important;
+}
+
+.ui-select-bootstrap .ui-select-choices-row>span:hover {
+  background-color: #143e4d !important;
+}
+
+.ui-select-bootstrap .ui-select-choices-row.active > span {
+  background-color: #143e4d !important;
+  color: #1f7692 !important;
+}
+
+.ui-select-bootstrap .ui-select-choices-row > span {
+  color: #1f7692 !important;
+}
+
+.ui-select-bootstrap .ui-select-choices-row > span:hover {
+  color: #1f7692 !important;
+}*/
+
+input[name="editable-select"]:disabled {
+  color: #fff;
+}
+
+.editable-select {
+  color: #fff;
+  background: #143e4d;
+}
+
+.settings-dropdown-menu {
+  width: 100%;
+}
+
+.settings-dropdown-menu:hover {
+  cursor: pointer;
+}
+
+.settings-dropdown-menu li {
+  padding-left: 10px;
+}
+
+.settings-dropdown-menu li:hover {
+  background: #143e4d !important;
+  color: #1f7692 !important;
+}
+
+.settings-caret-container {
+  background: #143e4d !important;
+}
+
+.seed {
+  background-color: #f7d30e;
+  padding: 3rem;
+  color: #1e3749;
+}
+
+.alert-fail {
+    color: #f7d30e;
+}
+
+.not-on-chain-wallet {
+  margin-right: 10px;
+}
+
+.top-10 {
+    margin-top: 10px;
+}
+
+.top-20 {
+    margin-top: 20px;
+}
+
+.ui-notification {
+  top: 50px !important;
+}
+
+.imprint{
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100vw;
+  background: #182a36;
+  padding: 0;
+  text-align: center;
+}
+.imprint a{
+  color: white;
+}
+
+::selection {
+  background: #b3c3ce;
+  }
