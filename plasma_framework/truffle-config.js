@@ -1,5 +1,5 @@
 require('dotenv').config(); // auto parse env variables from '.env' file
-var fs = require('fs');
+const fs = require('fs');
 const HDWalletProvider = require('@truffle/hdwallet-provider');
 
 module.exports = {
