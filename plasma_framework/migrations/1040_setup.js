@@ -39,9 +39,7 @@ module.exports = async (
         PAYMENT_TX_TYPE,
         config.frameworks.safeGasStipend.v1,
     ];
-    const paymentExitGame = await PaymentExitGame.deployed();
     const FEE_TX_TYPE = config.registerKeys.txTypes.fee;
-    const feeExitGame = await FeeExitGame.deployed();
     if (vault) {
         console.log('Yolo vault.');
     } else {
@@ -59,6 +57,8 @@ module.exports = async (
         );
         await deployer.deploy(PaymentExitGame, paymentExitGameArgs);
         await deployer.deploy(FeeExitGame);
+        const paymentExitGame = await PaymentExitGame.deployed();
+        const feeExitGame = await FeeExitGame.deployed();
         await plasmaFramework.registerExitGame(
             PAYMENT_TX_TYPE,
             paymentExitGame.address,
