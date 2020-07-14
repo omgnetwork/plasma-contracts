@@ -8,10 +8,10 @@ const EthDepositVerifier = artifacts.require('EthDepositVerifier');
 const Erc20DepositVerifier = artifacts.require('Erc20DepositVerifier');
 const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry');
 const PaymentTransactionStateTransitionVerifier = artifacts.require('PaymentTransactionStateTransitionVerifier');
+const LedgerWalletProvider = require('truffle-ledger-provider');
 const childProcess = require('child_process');
 const config = require('../config.js');
 const pck = require('../package.json');
-// const LedgerWalletProvider = require('truffle-ledger-provider');
 
 module.exports = async (
     deployer,
@@ -41,6 +41,15 @@ module.exports = async (
     ];
     const FEE_TX_TYPE = config.registerKeys.txTypes.fee;
     if (vault) {
+        const ledgerOptions = {
+            networkId: 1, // mainnet
+            path: "44'/60'/0'/0", // ledger default derivation path
+            askConfirm: false,
+            accountsLength: 1,
+            accountsOffset: 0,
+        };
+        const provider = new LedgerWalletProvider(ledgerOptions, process.env.REMOTE_URL || 'http://127.0.0.1:8545');
+        ethVault.setProvider(provider);
         console.log('Yolo vault.');
     } else {
         await ethVault.setDepositVerifier(ethDepositVerifier.address, { from: maintainerAddress });
