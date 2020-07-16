@@ -10,8 +10,11 @@ const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry')
 const PaymentTransactionStateTransitionVerifier = artifacts.require('PaymentTransactionStateTransitionVerifier');
 const LedgerWalletProvider = require('truffle-ledger-provider');
 const childProcess = require('child_process');
+const fs = require('fs');
+const path = require('path');
 const config = require('../config.js');
 const pck = require('../package.json');
+const util = require('util');
 
 module.exports = async (
     deployer,
@@ -48,9 +51,47 @@ module.exports = async (
             accountsLength: 1,
             accountsOffset: 0,
         };
-        const provider = new LedgerWalletProvider(ledgerOptions, process.env.REMOTE_URL || 'http://127.0.0.1:8545');
-        ethVault.setProvider(provider);
-        console.log('Yolo vault.');
+        const provider = new LedgerWalletProvider(ledgerOptions, process.env.REMOTE_URL || 'http://127.0.0.1:7545');
+        web3.eth.setProvider(provider);
+        const buildDir = path.resolve(__dirname, '../../MultiSigWallet/build/multisig_instance');
+        const gnosisMultisigAddress = fs.readFileSync(buildDir, 'utf8');
+        const gnosisMultisigAbi = {
+            constant: false,
+            inputs: [
+                { name: 'destination', type: 'address' },
+                { name: 'value', type: 'uint256' },
+                { name: 'data', type: 'bytes' },
+            ],
+            name: 'submitTransaction',
+            outputs: [{ name: 'transactionId', type: 'uint256' }],
+            payable: false,
+            type: 'function',
+            signature: '0xc6427474',
+        };
+        const setDepositVerifier = web3.eth.abi.encodeFunctionCall(ethVault.abi.find(o => o.name === 'setDepositVerifier'), [ethDepositVerifier.address]);
+        const gnosisSetDepositVerifier = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [ethVault.address, 0, setDepositVerifier])
+        
+        // await new Promise((resolve, reject) => web3.eth.sendTransaction({gas: 9000000, to: gnosisMultisigAddress, from: deployer, data: gnosisSetDepositVerifier}, e => (e ? reject(e) : resolve())));
+
+        // web3.eth.sendTransaction({gas: 9000000, to: gnosisMultisigAddress, from: deployer, data: gnosisSetDepositVerifier}).then ((result) => {
+        // console.log('what is this?');
+        // console.log(result)
+        // })
+        // .catch ((error) => {
+        // console.log('what is this2?');
+        // console.error(error);
+        // });
+
+        // web3.eth.sendTransaction({gas: 3000000, to: gnosisMultisigAddress, from: deployer, data: gnosisSetDepositVerifier},
+        // function (error, transactionHash) {
+        //     if (!error) {
+        //         console.log("send successfully");
+        //     } else {
+        //         console.log("Error: " + error);
+        //     }
+        // });
+       
+        // console.log(util.inspect(result, {showHidden: false, depth: null}));
     } else {
         await ethVault.setDepositVerifier(ethDepositVerifier.address, { from: maintainerAddress });
         await plasmaFramework.registerVault(
