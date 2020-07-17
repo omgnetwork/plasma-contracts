@@ -43,20 +43,9 @@ module.exports = async (
     ];
     const FEE_TX_TYPE = config.registerKeys.txTypes.fee;
     if (vault) {
-        // const ledgerOptions = {
-        //     networkId: 1, // mainnet
-        //     path: "44'/60'/0'/0", // ledger default derivation path
-        //     askConfirm: false,
-        //     accountsLength: 1,
-        //     accountsOffset: 0,
-        // };
-        //const provider = new LedgerWalletProvider(ledgerOptions, process.env.REMOTE_URL || 'http://127.0.0.1:8545');
-        //web3.eth.setProvider(provider);
-        // console.log('we are here');
-        // console.log(web3.currentProvider);
-        web3.setProvider(new web3.providers.HttpProvider('http://localhost:7545'));
-        web3.eth.net.isListening().then(console.log);
-        console.log('me');
+        //web3.setProvider(new web3.providers.HttpProvider('http://localhost:7545'));
+        //web3.eth.net.isListening().then(console.log);
+        //console.log('me');
         const buildDir = path.resolve(__dirname, '../../MultiSigWallet/build/multisig_instance');
         const gnosisMultisigAddress = fs.readFileSync(buildDir, 'utf8');
         const gnosisMultisigAbi = {
@@ -72,28 +61,28 @@ module.exports = async (
             type: 'function',
             signature: '0xc6427474',
         };
+        // ethVault.setDepositVerifier
         const setDepositVerifier = web3.eth.abi.encodeFunctionCall(ethVault.abi.find(o => o.name === 'setDepositVerifier'), [ethDepositVerifier.address]);
         const gnosisSetDepositVerifier = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [ethVault.address, 0, setDepositVerifier])
         await new Promise((resolve, reject) => web3.eth.sendTransaction({gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisSetDepositVerifier}, e => (e ? reject(e) : resolve())));
-//ganache-cli -p 8545 -d -e 100000 -m "myth like bonus scare over problem client lizard pioneer submit female collect" --networkId 5777
-        // web3.eth.sendTransaction({gas: 9000000, to: gnosisMultisigAddress, from: deployer, data: gnosisSetDepositVerifier}).then ((result) => {
-        // console.log(result)
-        // })
-        // .catch ((error) => {
-        // console.error(error);
-        // });
+        // plasmaFramework.registerVault
+        const registerVault = web3.eth.abi.encodeFunctionCall(plasmaFramework.abi.find(o => o.name === 'registerVault'), [config.registerKeys.vaultId.eth, ethVault.address]);
+        const gnosisRegisterVault = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [plasmaFramework.address, 0, registerVault])
+        await new Promise((resolve, reject) => web3.eth.sendTransaction({gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisRegisterVault}, e => (e ? reject(e) : resolve())));
 
-        // web3.eth.sendTransaction({gas: 3000000, to: gnosisMultisigAddress, from: deployer, data: gnosisSetDepositVerifier},
-        // function (error, transactionHash) {
-        //     if (!error) {
-        //         console.log("send successfully");
-        //     } else {
-        //         console.log("I hate it: " + error);
-        //         console.log("Error: " + error);
-        //     }
-        // });
-       
-        // console.log(util.inspect(result, {showHidden: false, depth: null}));
+        // ERC20 ethVault.setDepositVerifier
+        const setERC20DepositVerifier = web3.eth.abi.encodeFunctionCall(erc20Vault.abi.find(o => o.name === 'setDepositVerifier'), [erc20DepositVerifier.address]);
+        const gnosisERC20SetDepositVerifier = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [erc20Vault.address, 0, setERC20DepositVerifier])
+        await new Promise((resolve, reject) => web3.eth.sendTransaction({gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisERC20SetDepositVerifier}, e => (e ? reject(e) : resolve())));
+        // plasmaFramework.registerVault
+        const registerERC20Vault = web3.eth.abi.encodeFunctionCall(plasmaFramework.abi.find(o => o.name === 'registerVault'), [config.registerKeys.vaultId.erc20, erc20Vault.address]);
+        const gnosisERC20RegisterVault = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [plasmaFramework.address, 0, registerERC20Vault])
+        await new Promise((resolve, reject) => web3.eth.sendTransaction({gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisERC20RegisterVault}, e => (e ? reject(e) : resolve())));
+        await deployer.deploy(FeeExitGame);
+        // the below deployment fails because vaults are not registed yet!
+        // https://github.com/omgnetwork/plasma-contracts/issues/656
+        await deployer.deploy(PaymentExitGame, paymentExitGameArgs);
+        
     } else {
         await ethVault.setDepositVerifier(ethDepositVerifier.address, { from: maintainerAddress });
         await plasmaFramework.registerVault(
