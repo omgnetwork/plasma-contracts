@@ -1,9 +1,9 @@
 const MultisigWalletWithDailyLimit = artifacts.require('MultiSigWalletWithDailyLimit.sol')
 const MultisigWalletWithoutDailyLimit = artifacts.require('MultiSigWallet.sol')
 const MultiSigWallet = artifacts.require('MultiSigWallet')
-const deployMultisig = (owners, confirmations) => {
-  return MultiSigWallet.new(owners, confirmations)
-}
+// const deployMultisig = (owners, confirmations) => {
+//   return MultiSigWallet.new(owners, confirmations)
+// }
 const MultisigWalletFactory = artifacts.require('MultiSigWalletWithDailyLimitFactory.sol')
 const fs = require('fs');
 const path = require('path');
@@ -21,12 +21,14 @@ module.exports = async (deployer) => {
     console.log("Deploying MultisigWalletWithoutDailyLimit")
     console.log(`Accounts to Multisig Wallet Without Daily Limit ${args[3].split(",")}`)
     console.log(`Number of required confirmations ${args[4]}`)
-    multisigInstance = await deployMultisig(args[3].split(","), args[4])
+    await deployer.deploy(MultiSigWallet, args[3].split(","), args[4]) 
+    console.log(deployer);
+    const multiSigWallet = await MultiSigWallet.deployed();
     const buildDir = path.resolve(__dirname, '../build');
     if (!fs.existsSync(buildDir)) {
         fs.mkdirSync(buildDir);
     }
-    fs.writeFileSync(path.resolve(buildDir, 'multisig_instance'), `${multisigInstance.address}`.toLowerCase());
+    fs.writeFileSync(path.resolve(buildDir, 'multisig_instance'), `${multiSigWallet.address}`.toLowerCase());
   } else {
     deployer.deploy(MultisigWalletWithDailyLimit, args[3].split(","), args[4], args[5])
     console.log("Wallet with Daily Limit deployed")

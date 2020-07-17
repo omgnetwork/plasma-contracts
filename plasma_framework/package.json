@@ -11,10 +11,7 @@
     "dotenv": "^8.0.0",
     "elliptic": ">=6.5.3",
     "lodash.clonedeep": "^4.5.0",
-    "openzeppelin-solidity": "2.3.0",
-    "regenerator-runtime": "^0.13.5",
-    "solidoc": "^1.0.5",
-    "truffle-ledger-provider": "^1.0.1"
+    "openzeppelin-solidity": "2.3.0"
   },
   "devDependencies": {
     "elliptic": ">=6.5.3",

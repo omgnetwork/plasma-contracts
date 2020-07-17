@@ -8,7 +8,6 @@ const EthDepositVerifier = artifacts.require('EthDepositVerifier');
 const Erc20DepositVerifier = artifacts.require('Erc20DepositVerifier');
 const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry');
 const PaymentTransactionStateTransitionVerifier = artifacts.require('PaymentTransactionStateTransitionVerifier');
-const LedgerWalletProvider = require('truffle-ledger-provider');
 const childProcess = require('child_process');
 const fs = require('fs');
 const path = require('path');
@@ -44,15 +43,20 @@ module.exports = async (
     ];
     const FEE_TX_TYPE = config.registerKeys.txTypes.fee;
     if (vault) {
-        const ledgerOptions = {
-            networkId: 1, // mainnet
-            path: "44'/60'/0'/0", // ledger default derivation path
-            askConfirm: false,
-            accountsLength: 1,
-            accountsOffset: 0,
-        };
-        const provider = new LedgerWalletProvider(ledgerOptions, process.env.REMOTE_URL || 'http://127.0.0.1:7545');
-        web3.eth.setProvider(provider);
+        // const ledgerOptions = {
+        //     networkId: 1, // mainnet
+        //     path: "44'/60'/0'/0", // ledger default derivation path
+        //     askConfirm: false,
+        //     accountsLength: 1,
+        //     accountsOffset: 0,
+        // };
+        //const provider = new LedgerWalletProvider(ledgerOptions, process.env.REMOTE_URL || 'http://127.0.0.1:8545');
+        //web3.eth.setProvider(provider);
+        // console.log('we are here');
+        // console.log(web3.currentProvider);
+        web3.setProvider(new web3.providers.HttpProvider('http://localhost:7545'));
+        web3.eth.net.isListening().then(console.log);
+        console.log('me');
         const buildDir = path.resolve(__dirname, '../../MultiSigWallet/build/multisig_instance');
         const gnosisMultisigAddress = fs.readFileSync(buildDir, 'utf8');
         const gnosisMultisigAbi = {
@@ -70,15 +74,12 @@ module.exports = async (
         };
         const setDepositVerifier = web3.eth.abi.encodeFunctionCall(ethVault.abi.find(o => o.name === 'setDepositVerifier'), [ethDepositVerifier.address]);
         const gnosisSetDepositVerifier = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [ethVault.address, 0, setDepositVerifier])
-        
-        // await new Promise((resolve, reject) => web3.eth.sendTransaction({gas: 9000000, to: gnosisMultisigAddress, from: deployer, data: gnosisSetDepositVerifier}, e => (e ? reject(e) : resolve())));
-
+        await new Promise((resolve, reject) => web3.eth.sendTransaction({gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisSetDepositVerifier}, e => (e ? reject(e) : resolve())));
+//ganache-cli -p 8545 -d -e 100000 -m "myth like bonus scare over problem client lizard pioneer submit female collect" --networkId 5777
         // web3.eth.sendTransaction({gas: 9000000, to: gnosisMultisigAddress, from: deployer, data: gnosisSetDepositVerifier}).then ((result) => {
-        // console.log('what is this?');
         // console.log(result)
         // })
         // .catch ((error) => {
-        // console.log('what is this2?');
         // console.error(error);
         // });
 
@@ -87,6 +88,7 @@ module.exports = async (
         //     if (!error) {
         //         console.log("send successfully");
         //     } else {
+        //         console.log("I hate it: " + error);
         //         console.log("Error: " + error);
         //     }
         // });
