@@ -72,9 +72,9 @@ contract('PaymentExitGame', () => {
             TX_TYPE.PAYMENT,
             SAFE_GAS_STIPEND,
         ];
-
+        const paymentExitGame = await PaymentExitGame.new(exitGameArgs);
         await expectRevert(
-            PaymentExitGame.new(exitGameArgs),
+            paymentExitGame.init(exitGameArgs),
             'Spending condition registry ownership needs to be renounced',
         );
     });

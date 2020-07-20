@@ -188,7 +188,8 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                 TX_TYPE.PAYMENT,
                 SAFE_GAS_STIPEND,
             ];
-            this.exitGame = await PaymentInFlightExitRouter.new(exitGameArgs);
+            this.exitGame = await PaymentInFlightExitRouter.new();
+            await this.exitGame.init(exitGameArgs);
 
             await this.framework.registerExitGame(TX_TYPE.PAYMENT, this.exitGame.address, PROTOCOL.MORE_VP);
 
@@ -233,7 +234,7 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
             };
         });
 
-        it('should fail when paying out piggyback bond fails', async () => {
+        it.only('should fail when paying out piggyback bond fails', async () => {
             const attacker = await Attacker.new();
             this.challengeArgs.senderData = web3.utils.keccak256(attacker.address);
 
