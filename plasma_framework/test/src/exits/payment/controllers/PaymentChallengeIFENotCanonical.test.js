@@ -232,8 +232,8 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
             IFE_TX_TYPE,
             SAFE_GAS_STIPEND,
         ];
-        this.exitGame = await PaymentInFlightExitRouter.new(exitGameArgs);
-
+        this.exitGame = await PaymentInFlightExitRouter.new();
+        await this.exitGame.init(exitGameArgs);
         this.framework.registerExitGame(IFE_TX_TYPE, this.exitGame.address, PROTOCOL.MORE_VP);
 
         this.condition = await SpendingConditionMock.new();

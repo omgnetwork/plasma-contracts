@@ -81,8 +81,8 @@ contract('PaymentExitGame - Update Bond', () => {
                 TX_TYPE.PAYMENT,
                 SAFE_GAS_STIPEND,
             ];
-            this.exitGame = await PaymentStandardExitRouter.new(exitGameArgs);
-
+            this.exitGame = await PaymentStandardExitRouter.new();
+            await this.exitGame.init(exitGameArgs);
             this.startStandardExitBondSize = await this.exitGame.startStandardExitBondSize();
             this.newBondSize = this.startStandardExitBondSize.addn(20);
             this.updateTx = await this.exitGame.updateStartStandardExitBondSize(this.newBondSize);
@@ -116,7 +116,8 @@ contract('PaymentExitGame - Update Bond', () => {
                 TX_TYPE.PAYMENT,
                 SAFE_GAS_STIPEND,
             ];
-            this.exitGame = await PaymentInFlightExitRouter.new(exitGameArgs);
+            this.exitGame = await PaymentInFlightExitRouter.new();
+            await this.exitGame.init(exitGameArgs);
 
             this.startIFEBondSize = await this.exitGame.startIFEBondSize();
             this.newBondSize = this.startIFEBondSize.addn(20);
@@ -151,8 +152,8 @@ contract('PaymentExitGame - Update Bond', () => {
                 TX_TYPE.PAYMENT,
                 SAFE_GAS_STIPEND,
             ];
-            this.exitGame = await PaymentInFlightExitRouter.new(exitGameArgs);
-
+            this.exitGame = await PaymentInFlightExitRouter.new();
+            await this.exitGame.init(exitGameArgs);
             this.piggybackBondSize = await this.exitGame.piggybackBondSize();
             this.newBondSize = this.piggybackBondSize.addn(20);
             this.updatePiggybackBondTx = await this.exitGame.updatePiggybackBondSize(this.newBondSize);
