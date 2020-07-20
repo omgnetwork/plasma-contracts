@@ -234,10 +234,10 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
             };
         });
 
-        it.only('should fail when paying out piggyback bond fails', async () => {
+        it('should fail when paying out piggyback bond fails', async () => {
             const attacker = await Attacker.new();
             this.challengeArgs.senderData = web3.utils.keccak256(attacker.address);
-
+console.log(attacker.address);
             await expectRevert(
                 this.exitGame.challengeInFlightExitInputSpent(this.challengeArgs, { from: attacker.address }),
                 'SafeEthTransfer: failed to transfer ETH',
