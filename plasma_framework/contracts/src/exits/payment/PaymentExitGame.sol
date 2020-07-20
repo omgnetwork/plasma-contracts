@@ -19,15 +19,18 @@ contract PaymentExitGame is IExitProcessor, OnlyFromAddress, PaymentStandardExit
     /**
      * @dev use struct PaymentExitGameArgs to avoid stack too deep compilation error.
      */
-    constructor(PaymentExitGameArgs.Args memory args)
-        public
-        PaymentStandardExitRouter(args)
-        PaymentInFlightExitRouter(args)
+    constructor() public
     {
-        plasmaFramework = args.framework;
+    }
+
+    function init(PaymentExitGameArgs.Args memory args) public
+    {
 
         // makes sure that the spending condition has already renounced ownership
         require(args.spendingConditionRegistry.owner() == address(0), "Spending condition registry ownership needs to be renounced");
+        plasmaFramework = args.framework;
+        PaymentStandardExitRouter.init(args);
+        PaymentInFlightExitRouter.init(args);
     }
 
     /**
