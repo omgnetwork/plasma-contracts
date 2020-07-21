@@ -19,10 +19,6 @@ contract PaymentExitGame is IExitProcessor, OnlyFromAddress, PaymentStandardExit
     /**
      * @dev use struct PaymentExitGameArgs to avoid stack too deep compilation error.
      */
-    constructor() public
-    {
-    }
-
     function init(PaymentExitGameArgs.Args memory args) public
     {
 

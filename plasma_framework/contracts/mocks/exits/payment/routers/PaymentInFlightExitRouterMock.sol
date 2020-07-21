@@ -22,13 +22,9 @@ contract PaymentInFlightExitRouterMock is FailFastReentrancyGuard, PaymentInFlig
     PaymentInFlightExitRouterArgs.ChallengeInputSpentArgs private challengeInputSpentArgs;
     PaymentInFlightExitRouterArgs.ChallengeOutputSpent private challengeOutputSpentArgs;
 
-    constructor() public
-    {
-        
-    }
-
     function init (PaymentExitGameArgs.Args memory args) public
     {
+        PaymentInFlightExitRouter.init(args);
         framework = args.framework;
     }
 

@@ -127,10 +127,6 @@ contract PaymentInFlightExitRouter is
         uint160 indexed exitId
     );
 
-    constructor() public
-    {
-    }
-
     function init (PaymentExitGameArgs.Args memory args)
         public
     {

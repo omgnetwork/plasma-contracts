@@ -67,11 +67,6 @@ contract PaymentStandardExitRouter is
         uint256 amount
     );
 
-    constructor() public
-    {
-        
-    }
-
     function init(PaymentExitGameArgs.Args memory args)
         public
     {

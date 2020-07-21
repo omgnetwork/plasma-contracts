@@ -76,7 +76,7 @@ contract('PaymentInFlightExitRouter', () => {
             TX_TYPE.PAYMENT,
             SAFE_GAS_STIPEND,
         ];
-        const paymentInFlightExitRouter = PaymentInFlightExitRouter.new();
+        const paymentInFlightExitRouter = await PaymentInFlightExitRouter.new();
         await expectRevert(
             paymentInFlightExitRouter.init(exitGameArgs),
             'Invalid ERC20 vault',
