@@ -882,7 +882,7 @@ def test_should_not_allow_to_withdraw_inputs_and_outputs_when_ifes_processing_in
     testlang.piggyback_in_flight_exit_output(swap_tx_id, 0, alice)
     testlang.piggyback_in_flight_exit_output(swap_tx_id, 1, caroline)
 
-    # we have encounter flaky tests. we are guessing it is caused by too exit being enqueued in the time that is too close.
+    # we have encounter flaky tests. we are guessing it is caused by two exits being enqueued in the time that is too close.
     # within same root chain block time span, the priority in the queue could be the same and hard to differentiate.
     # https://github.com/omgnetwork/plasma-contracts/issues/606
     TIME_DIFF_FOR_ENSUREING_EXIT_PRIORITY = 10
