@@ -70,6 +70,7 @@ contract PaymentStandardExitRouter is
     function init(PaymentExitGameArgs.Args memory args)
         public
     {
+        require(msg.sender == args.framework.getMaintainer(), "Only Maintainer can perform this action");
         framework = args.framework;
 
         EthVault ethVault = EthVault(args.framework.vaults(args.ethVaultId));

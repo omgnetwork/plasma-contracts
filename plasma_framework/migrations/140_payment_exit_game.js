@@ -29,7 +29,7 @@ module.exports = async (
         config.frameworks.safeGasStipend.v1,
     ];
     const paymentExitGame = await deployer.deploy(PaymentExitGame);
-    paymentExitGame.init(paymentExitGameArgs);
+    await paymentExitGame.init(paymentExitGameArgs, { from: maintainerAddress });
     // register the exit game to framework
     await plasmaFramework.registerExitGame(
         PAYMENT_TX_TYPE,
