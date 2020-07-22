@@ -881,6 +881,13 @@ def test_should_not_allow_to_withdraw_inputs_and_outputs_when_ifes_processing_in
     testlang.piggyback_in_flight_exit_input(swap_tx_id, 1, caroline)
     testlang.piggyback_in_flight_exit_output(swap_tx_id, 0, alice)
     testlang.piggyback_in_flight_exit_output(swap_tx_id, 1, caroline)
+
+    # we have encounter flaky tests. we are guessing it is caused by too exit being enqueued in the time that is too close.
+    # within same root chain block time span, the priority in the queue could be the same and hard to differentiate.
+    # https://github.com/omgnetwork/plasma-contracts/issues/606
+    TIME_DIFF_FOR_ENSUREING_EXIT_PRIORITY = 10
+    testlang.forward_timestamp(TIME_DIFF_FOR_ENSUREING_EXIT_PRIORITY)
+
     testlang.piggyback_in_flight_exit_output(None, 0, caroline, spend_tx=steal_tx)
     testlang.piggyback_in_flight_exit_input(None, 0, caroline, spend_tx=steal_tx)
 
