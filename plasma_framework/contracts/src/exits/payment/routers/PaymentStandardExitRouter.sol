@@ -27,7 +27,7 @@ contract PaymentStandardExitRouter is
     using PaymentChallengeStandardExit for PaymentChallengeStandardExit.Controller;
     using PaymentProcessStandardExit for PaymentProcessStandardExit.Controller;
     using BondSize for BondSize.Params;
-
+    bool private initDone = false;
     // Initial bond size = 70000 (gas cost of challenge) * 20 gwei (current fast gas price) * 10 (safety margin)
     uint128 public constant INITIAL_BOND_SIZE = 14000000000000000 wei;
 
@@ -70,9 +70,11 @@ contract PaymentStandardExitRouter is
     function init(PaymentExitGameArgs.Args memory args)
         public
     {
+        require(!initDone, "Exit game was already initialized");
         require(msg.sender == args.framework.getMaintainer(), "Only Maintainer can perform this action");
+        
+        initDone = true;
         framework = args.framework;
-
         EthVault ethVault = EthVault(args.framework.vaults(args.ethVaultId));
         require(address(ethVault) != address(0), "Invalid ETH vault");
 

@@ -35,7 +35,7 @@ contract PaymentInFlightExitRouter is
     using PaymentDeleteInFlightExit for PaymentDeleteInFlightExit.Controller;
     using PaymentProcessInFlightExit for PaymentProcessInFlightExit.Controller;
     using BondSize for BondSize.Params;
-
+    bool private initDone = false;
     // Initial IFE bond size = 185000 (gas cost of challenge) * 20 gwei (current fast gas price) * 10 (safety margin)
     uint128 public constant INITIAL_IFE_BOND_SIZE = 37000000000000000 wei;
 
@@ -130,9 +130,11 @@ contract PaymentInFlightExitRouter is
     function init (PaymentExitGameArgs.Args memory args)
         public
     {
+        require(!initDone, "Exit game was already initialized");
         require(msg.sender == args.framework.getMaintainer(), "Only Maintainer can perform this action");
+        
+        initDone = true;
         framework = args.framework;
-
         EthVault ethVault = EthVault(args.framework.vaults(args.ethVaultId));
         require(address(ethVault) != address(0), "Invalid ETH vault");
 

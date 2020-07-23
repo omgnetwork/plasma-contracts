@@ -15,15 +15,18 @@ import "../../utils/OnlyFromAddress.sol";
  */
 contract PaymentExitGame is IExitProcessor, OnlyFromAddress, PaymentStandardExitRouter, PaymentInFlightExitRouter {
     PlasmaFramework private plasmaFramework;
+    bool private initDone = false;
 
     /**
      * @dev use struct PaymentExitGameArgs to avoid stack too deep compilation error.
      */
     function init(PaymentExitGameArgs.Args memory args) public
     {
+        require(!initDone, "Exit game was already initialized");
         require(msg.sender == args.framework.getMaintainer(), "Only Maintainer can perform this action");
         // makes sure that the spending condition has already renounced ownership
         require(args.spendingConditionRegistry.owner() == address(0), "Spending condition registry ownership needs to be renounced");
+        initDone = true;
         plasmaFramework = args.framework;
         PaymentStandardExitRouter.init(args);
         PaymentInFlightExitRouter.init(args);
