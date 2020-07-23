@@ -120,7 +120,7 @@ class PlasmaFramework:
         )
         payment_exit_game = get_contract("PaymentExitGame",
                                          libraries=libs_map)
-        payment_exit_game.init(payment_exit_game_args)
+        payment_exit_game.init(payment_exit_game_args, **{'from': maintainer.address})
         return payment_exit_game
 
     @staticmethod
