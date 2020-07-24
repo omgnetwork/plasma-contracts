@@ -26,10 +26,6 @@ commands:
           name: Install dependencies
           working_directory: ~/repo/plasma_framework
           command: |
-            sudo apt-get update
-            sudo apt-get install libusb-1.0-0-dev
-            sudo apt-get install libusb-1.0-0
-            sudo apt-get install libudev-dev
             npm install
             find node_modules -name .git | xargs rm -fr  # workaround for a problem with git dependencies
       - save_cache:
