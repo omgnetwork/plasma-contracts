@@ -1,0 +1,67 @@
+version: "3.7"
+services:
+  ganache:
+    image: trufflesuite/ganache-cli:latest
+    ports:
+      - "8545:8545"
+    volumes:
+      - ./ganache_data:/ganache_data
+    entrypoint:
+      - node
+      - ./ganache-core.docker.cli.js
+      - --deterministic
+      - --db=/ganache_data
+      - --mnemonic
+      - 'minimum symptom minute gloom tragic situate silver mechanic salad amused elite beef'
+      - --networkId
+      - '5777'
+      - --hostname
+      - '0.0.0.0'
+      - --debug
+    networks: 
+      - default
+  gencerts:
+    image: alpine:3.10
+    volumes:
+      - "./docker/immutability/ca:/home/root/ca:rw"
+      - "./docker/immutability/config:/home/root/:rw"
+    entrypoint: >
+      /bin/sh -c "
+        apk add bash openssl
+        chown -R nobody:nobody /home/root/ca && chmod -R 777 /home/root/ca
+        # only gen if they aren't there
+        if [ -f /home/root/ca/certs/my-service.crt ];then
+          exit 0
+        else
+          /home/root/gencerts.sh
+        fi
+      "
+  vault_server:
+    image: omisego/immutability-vault-ethereum:latest
+    networks:
+      - testnet
+    ports:
+      - "8200:8200"
+    depends_on:
+      - "gencerts"
+      - "ganache"
+    links:
+      - "ganache"
+    volumes:
+      - "./docker/immutability/ca:/home/vault/ca:rw"
+      - "./docker/immutability/ca/certs/:/etc/ssl/certs/"
+      - "./docker/immutability/config:/home/vault/config:ro"
+    entrypoint: >
+      /bin/sh -c "
+        sleep 2
+        while [ ! -f /home/vault/ca/certs/my-service.crt ];do
+          echo Waiting on gencerts...
+          sleep 1
+        done;
+        /home/vault/config/entrypoint.sh
+      "
+    networks: 
+      - default
+networks:
+  default:
+    name: childchain_default

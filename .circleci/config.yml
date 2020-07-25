@@ -65,6 +65,34 @@ commands:
             - /usr/local/lib/node_modules
 
 jobs:
+  Deploy with Vault:
+    executor: truffle_executor
+    working_directory: ~/repo
+    steps:
+      - setup_truffle_env
+      - run:
+          name: truffle version
+          command: npx truffle version
+          working_directory: ~/repo/plasma_framework
+      - run:
+          name: Pull Submodules
+          command: |
+            git submodule init
+            git submodule update --remote
+          working_directory: ~/repo/
+      - run:
+          name: Apply Overrides
+          command: make init_multisig
+          working_directory: ~/repo/MultiSigWalletOverride
+      - run:
+          name: Start services
+          command: docker-compose up -d
+          working_directory: ~/repo/MultiSigWalletOverride
+      - run:
+          name: Deploy Gnosis MultiSigWalet
+          command: truffle migrate 0xa508dD875f10C33C52a8abb20E16fc68E981F186 1
+          working_directory: ~/repo/MultiSigWallet
+      
   Truffle tests:
     executor: truffle_executor
     working_directory: ~/repo
@@ -219,6 +247,9 @@ workflows:
       - Solidity coverage
       - Javascript linter
       - Solidity linter
+  Other:
+    jobs:
+      - Deploy with Vault
 
   Run python slow tests:
     jobs:
