@@ -66,9 +66,14 @@ commands:
 
 jobs:
   Deploy with Vault:
-    executor: truffle_executor
+    machine: true
     working_directory: ~/repo
     steps:
+      - run:
+          name: Install node 10
+          commmand: |
+            curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
+            sudo apt-get install -y nodejs
       - setup_truffle_env
       - run:
           name: truffle version
