@@ -42,3 +42,6 @@ test_python:
 test_python_quick:
 	$(RUN_PYTHON_MAKEFILE_COMMAND) test_quick
 
+init_multisig:
+	cp ../MultiSigWalletOverride/migrations/* ../MultiSigWallet/migrations
+	cp ../MultiSigWalletOverride/truffle.js ../MultiSigWallet/
