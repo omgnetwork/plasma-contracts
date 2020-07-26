@@ -36,8 +36,6 @@ services:
       "
   vault_server:
     image: omisego/immutability-vault-ethereum:latest
-    networks:
-      - testnet
     ports:
       - "8200:8200"
     depends_on:
