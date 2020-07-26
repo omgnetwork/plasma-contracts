@@ -80,6 +80,8 @@ jobs:
             nvm ls-remote
             nvm install v12.10.0
             node --version
+            node -v
+            nvm alias default v12.10.0
       - run:
           name: Set up environment
           command: echo 'export PATH="$(npm bin):$PATH"' >> $BASH_ENV
@@ -90,8 +92,6 @@ jobs:
           name: Install dependencies
           working_directory: ~/repo/plasma_framework
           command: |
-            [[ -s $HOME/.nvm/nvm.sh ]] && . $HOME/.nvm/nvm.sh
-            nvm use node
             npm install
       - save_cache:
           key: dependencies-machine-v1-{{ checksum "~/repo/plasma_framework/package-lock.json" }}
