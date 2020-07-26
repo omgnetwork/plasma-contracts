@@ -90,8 +90,7 @@ jobs:
           name: Install dependencies
           working_directory: ~/repo/plasma_framework
           command: |
-            node --version
-            npm --version
+            nvm use node
             npm install
       - save_cache:
           key: dependencies-machine-v1-{{ checksum "~/repo/plasma_framework/package-lock.json" }}
@@ -99,7 +98,9 @@ jobs:
             - ~/repo/plasma_framework/node_modules
       - run:
           name: truffle version
-          command: npx truffle version
+          command: |
+            nvm use node
+            npx truffle version
           working_directory: ~/repo/plasma_framework
       - run:
           name: Pull Submodules
@@ -117,7 +118,9 @@ jobs:
           working_directory: ~/repo/MultiSigWalletOverride
       - run:
           name: Deploy Gnosis MultiSigWalet
-          command: truffle migrate 0xa508dD875f10C33C52a8abb20E16fc68E981F186 1
+          command: |
+            nvm use node
+            truffle migrate 0xa508dD875f10C33C52a8abb20E16fc68E981F186 1
           working_directory: ~/repo/MultiSigWallet
       
   Truffle tests:
