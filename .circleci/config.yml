@@ -92,6 +92,8 @@ jobs:
           name: Install dependencies
           working_directory: ~/repo/plasma_framework
           command: |
+            npm version
+            node --version
             npm install
       - save_cache:
           key: dependencies-machine-v1-{{ checksum "~/repo/plasma_framework/package-lock.json" }}
