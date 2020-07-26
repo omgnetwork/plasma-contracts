@@ -79,6 +79,7 @@ jobs:
             [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
             nvm ls-remote
             nvm install v12.10.0
+            node --version
       - run:
           name: Set up environment
           command: echo 'export PATH="$(npm bin):$PATH"' >> $BASH_ENV
@@ -88,7 +89,10 @@ jobs:
       - run:
           name: Install dependencies
           working_directory: ~/repo/plasma_framework
-          command: npm install
+          command: |
+            node --version
+            npm --version
+            npm install
       - save_cache:
           key: dependencies-machine-v1-{{ checksum "~/repo/plasma_framework/package-lock.json" }}
           paths:
