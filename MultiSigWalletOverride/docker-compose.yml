@@ -1,4 +1,4 @@
-version: "3.7"
+version: "3.2"
 services:
   ganache:
     image: trufflesuite/ganache-cli:latest
@@ -18,8 +18,6 @@ services:
       - --hostname
       - '0.0.0.0'
       - --debug
-    networks: 
-      - default
   gencerts:
     image: alpine:3.10
     volumes:
@@ -60,8 +58,3 @@ services:
         done;
         /home/vault/config/entrypoint.sh
       "
-    networks: 
-      - default
-networks:
-  default:
-    name: childchain_default
