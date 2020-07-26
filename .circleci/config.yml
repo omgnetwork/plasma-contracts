@@ -90,6 +90,7 @@ jobs:
           name: Install dependencies
           working_directory: ~/repo/plasma_framework
           command: |
+            [[ -s $HOME/.nvm/nvm.sh ]] && . $HOME/.nvm/nvm.sh
             nvm use node
             npm install
       - save_cache:
