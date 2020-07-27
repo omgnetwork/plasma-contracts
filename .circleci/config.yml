@@ -114,6 +114,7 @@ jobs:
           name: Apply Overrides
           command: make init_multisig
           working_directory: ~/repo/MultiSigWalletOverride
+      - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
       - run:
           name: Start services
           command: docker-compose up -d
