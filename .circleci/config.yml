@@ -77,10 +77,10 @@ jobs:
           name: Install node
           command: |
             curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
-            nvm install v12.10.0
+            nvm install v9
             node --version
             node -v
-            nvm alias default v12.10.0
+            nvm alias default v9
       - run:
           name: Set up environment
           command: echo 'export PATH="$(npm bin):$PATH"' >> $BASH_ENV
