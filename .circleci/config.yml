@@ -122,7 +122,7 @@ jobs:
       - run:
           name: Deploy Gnosis MultiSigWalet
           command: |
-            sudo apt-get install -y libusb-1.0-0-dev
+            sudo apt-get update && sudo apt-get install -y libusb-1.0-0-dev
             nvm use node
             npm install
             truffle migrate 0xa508dD875f10C33C52a8abb20E16fc68E981F186 1
