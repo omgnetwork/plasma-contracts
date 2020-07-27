@@ -70,11 +70,16 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
+      - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
+      - run:
+          name: Start services
+          command: docker-compose up -d
+          working_directory: ~/repo/MultiSigWalletOverride
       - run: |
             echo 'export NVM_DIR="/opt/circleci/.nvm"' >> $BASH_ENV
             echo ' [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
       - run:
-          name: Install node
+          name: Install node 9
           command: |
             curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
             nvm install v9
@@ -82,26 +87,6 @@ jobs:
             node -v
             nvm alias default v9
             echo 'export PATH="$(npm bin):$PATH"' >> $BASH_ENV
-      # - restore_cache:
-      #     keys:
-      #       - dependencies-machine-v1-{{ checksum "~/repo/plasma_framework/package-lock.json" }}
-      # - run:
-      #     name: Install dependencies
-      #     working_directory: ~/repo/plasma_framework
-      #     command: |
-      #       npm version
-      #       node --version
-      #       npm install
-      # - save_cache:
-      #     key: dependencies-machine-v1-{{ checksum "~/repo/plasma_framework/package-lock.json" }}
-      #     paths:
-      #       - ~/repo/plasma_framework/node_modules
-      # - run:
-      #     name: truffle version
-      #     command: |
-      #       nvm use node
-      #       npx truffle version
-      #     working_directory: ~/repo/plasma_framework
       - run:
           name: Pull Submodules
           command: |
@@ -112,11 +97,6 @@ jobs:
           name: Apply Overrides
           command: make init_multisig
           working_directory: ~/repo/MultiSigWalletOverride
-      - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
-      - run:
-          name: Start services
-          command: docker-compose up -d
-          working_directory: ~/repo/MultiSigWalletOverride
       - run:
           name: Deploy Gnosis MultiSigWalet
           command: |
@@ -126,6 +106,34 @@ jobs:
             npm install
             npx truffle migrate 0xa508dD875f10C33C52a8abb20E16fc68E981F186 1
           working_directory: ~/repo/MultiSigWallet
+      - run:
+          name: Install node 12
+          command: |
+            curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
+            nvm install v12
+            node --version
+            node -v
+            nvm alias default v12
+            echo 'export PATH="$(npm bin):$PATH"' >> $BASH_ENV
+      - restore_cache:
+          keys:
+            - dependencies-machine-v1-{{ checksum "~/repo/plasma_framework/package-lock.json" }}
+      - run:
+          name: Install dependencies
+          working_directory: ~/repo/plasma_framework
+          command: |
+            npm version
+            node --version
+            npm install
+      - save_cache:
+          key: dependencies-machine-v1-{{ checksum "~/repo/plasma_framework/package-lock.json" }}
+          paths:
+            - ~/repo/plasma_framework/node_modules
+      - run:
+          name: Deploy Plasma Contracts
+          command: |
+            npx truffle deploy
+          working_directory: ~/repo/plasma_framework
       
   Truffle tests:
     executor: truffle_executor
