@@ -81,6 +81,7 @@ module.exports = async (
             response.on('end', function(){
                 const response_object = JSON.parse(str);
                 if (typeof response_object.request_id !== 'string'){
+                    console.log(str);
                     throw 'Creating wallet failed';
                 }
             })
