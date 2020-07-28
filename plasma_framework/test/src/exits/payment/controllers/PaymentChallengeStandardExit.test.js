@@ -9,6 +9,7 @@ const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
 const StateTransitionVerifierMock = artifacts.require('StateTransitionVerifierMock');
 const Attacker = artifacts.require('FallbackFunctionFailAttacker');
+const ExitBounty = artifacts.require('ExitBountyWrapper');
 
 const {
     BN, constants, expectEvent, expectRevert,
@@ -65,7 +66,7 @@ contract('PaymentChallengeStandardExit', ([txSender, alice, bob, otherAddress]) 
             };
         };
 
-        const getTestExitData = (args, exitTarget, bondSize) => ({
+        const getTestExitData = (args, exitTarget, bondSize, bountySize) => ({
             exitable: true,
             utxoPos: EXITING_TX_UTXOPOS,
             outputId: computeNormalOutputId(args.exitingTx, TEST_OUTPUT_INDEX),
@@ -73,6 +74,11 @@ contract('PaymentChallengeStandardExit', ([txSender, alice, bob, otherAddress]) 
             exitTarget,
             amount: TEST_AMOUNT,
             bondSize: bondSize.toString(),
+            bountySize: bountySize.toString()
+        });
+
+        before(async () => {
+            this.exitBountyHelper = await ExitBounty.new();
         });
 
         beforeEach(async () => {
@@ -107,12 +113,16 @@ contract('PaymentChallengeStandardExit', ([txSender, alice, bob, otherAddress]) 
             await this.framework.registerExitGame(TX_TYPE.PAYMENT, this.exitGame.address, PROTOCOL.MORE_VP);
 
             this.startStandardExitBondSize = await this.exitGame.startStandardExitBondSize();
+
+            this.dummyGasPrice = 1000000000;
+
+            this.processExitBountySize = await this.exitBountyHelper.processStandardExitBountySize({ gasPrice: this.dummyGasPrice });
         });
 
         describe('When spending condition not registered', () => {
             it('should fail by not able to find the spending condition contract', async () => {
                 const args = getTestInputArgs(OUTPUT_TYPE.PAYMENT, alice);
-                const exitData = getTestExitData(args, alice, this.startStandardExitBondSize);
+                const exitData = getTestExitData(args, alice, this.startStandardExitBondSize, this.processExitBountySize);
                 await this.exitGame.setExit(args.exitId, exitData);
 
                 await expectRevert(
@@ -130,10 +140,10 @@ contract('PaymentChallengeStandardExit', ([txSender, alice, bob, otherAddress]) 
             });
 
             it('should fail when malicious user tries attack when paying out bond', async () => {
-                await this.exitGame.depositFundForTest({ value: this.startStandardExitBondSize });
+                await this.exitGame.depositFundForTest({ value: this.startStandardExitBondSize.add(this.processExitBountySize) });
 
                 this.args = getTestInputArgs(OUTPUT_TYPE.PAYMENT, alice);
-                this.exitData = getTestExitData(this.args, alice, this.startStandardExitBondSize);
+                this.exitData = getTestExitData(this.args, alice, this.startStandardExitBondSize, this.processExitBountySize);
                 await this.exitGame.setExit(this.args.exitId, this.exitData);
 
                 const attacker = await Attacker.new();
@@ -168,7 +178,7 @@ contract('PaymentChallengeStandardExit', ([txSender, alice, bob, otherAddress]) 
                 const challengeTx = web3.utils.bytesToHex(challengeTxObj.rlpEncoded());
                 args.challengeTx = challengeTx;
 
-                await this.exitGame.setExit(args.exitId, getTestExitData(args, alice, this.startStandardExitBondSize));
+                await this.exitGame.setExit(args.exitId, getTestExitData(args, alice, this.startStandardExitBondSize, this.processExitBountySize));
 
                 await expectRevert(
                     this.exitGame.challengeStandardExit(args),
@@ -180,7 +190,7 @@ contract('PaymentChallengeStandardExit', ([txSender, alice, bob, otherAddress]) 
                 const args = getTestInputArgs(OUTPUT_TYPE.PAYMENT, alice);
                 await this.spendingCondition.mockResult(false);
 
-                await this.exitGame.setExit(args.exitId, getTestExitData(args, alice, this.startStandardExitBondSize));
+                await this.exitGame.setExit(args.exitId, getTestExitData(args, alice, this.startStandardExitBondSize, this.processExitBountySize));
 
                 await expectRevert(
                     this.exitGame.challengeStandardExit(args),
@@ -193,7 +203,7 @@ contract('PaymentChallengeStandardExit', ([txSender, alice, bob, otherAddress]) 
 
                 await this.spendingCondition.mockRevert();
 
-                await this.exitGame.setExit(args.exitId, getTestExitData(args, alice, this.startStandardExitBondSize));
+                await this.exitGame.setExit(args.exitId, getTestExitData(args, alice, this.startStandardExitBondSize, this.processExitBountySize));
 
                 await expectRevert(
                     this.exitGame.challengeStandardExit(args),
@@ -203,7 +213,7 @@ contract('PaymentChallengeStandardExit', ([txSender, alice, bob, otherAddress]) 
 
             it('should fail when provided exiting transaction does not match stored exiting transaction', async () => {
                 const args = getTestInputArgs(OUTPUT_TYPE.PAYMENT, alice);
-                await this.exitGame.setExit(args.exitId, getTestExitData(args, alice, this.startStandardExitBondSize));
+                await this.exitGame.setExit(args.exitId, getTestExitData(args, alice, this.startStandardExitBondSize, this.processExitBountySize));
 
                 const output = new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, TEST_AMOUNT, alice, ETH);
                 const exitingTxObj = new PaymentTransaction(2, [DUMMY_INPUT_1], [output]);
@@ -226,10 +236,10 @@ contract('PaymentChallengeStandardExit', ([txSender, alice, bob, otherAddress]) 
             });
 
             it('should call the Spending Condition contract with expected params', async () => {
-                await this.exitGame.depositFundForTest({ value: this.startStandardExitBondSize });
+                await this.exitGame.depositFundForTest({ value: this.startStandardExitBondSize.add(this.processExitBountySize) });
 
                 const args = getTestInputArgs(OUTPUT_TYPE.PAYMENT, alice);
-                const exitData = getTestExitData(args, alice, this.startStandardExitBondSize);
+                const exitData = getTestExitData(args, alice, this.startStandardExitBondSize, this.processExitBountySize);
                 await this.exitGame.setExit(args.exitId, exitData);
 
                 const expectedArgs = {
@@ -247,11 +257,11 @@ contract('PaymentChallengeStandardExit', ([txSender, alice, bob, otherAddress]) 
 
             describe('When successfully challenged', () => {
                 beforeEach(async () => {
-                    await this.exitGame.depositFundForTest({ value: this.startStandardExitBondSize });
+                    await this.exitGame.depositFundForTest({ value: this.startStandardExitBondSize.add(this.processExitBountySize) });
 
                     this.args = getTestInputArgs(OUTPUT_TYPE.PAYMENT, alice);
                     this.args.senderData = web3.utils.keccak256(bob);
-                    this.exitData = getTestExitData(this.args, alice, this.startStandardExitBondSize);
+                    this.exitData = getTestExitData(this.args, alice, this.startStandardExitBondSize, this.processExitBountySize);
 
                     await this.exitGame.setExit(this.args.exitId, this.exitData);
 
@@ -264,10 +274,11 @@ contract('PaymentChallengeStandardExit', ([txSender, alice, bob, otherAddress]) 
                     expect(exitData.exitable).to.be.false;
                 });
 
-                it('should transfer the standard exit bond to challenger when successfully challenged', async () => {
+                it('should transfer the standard exit bond plus exit bounty to challenger when successfully challenged', async () => {
                     const actualPostBalance = new BN(await web3.eth.getBalance(bob));
                     const expectedPostBalance = this.preBalance
                         .add(this.startStandardExitBondSize)
+                        .add(this.processExitBountySize)
                         .sub(await spentOnGas(this.tx.receipt));
 
                     expect(actualPostBalance).to.be.bignumber.equal(expectedPostBalance);

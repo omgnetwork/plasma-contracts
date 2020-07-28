@@ -2,6 +2,7 @@ const EthVault = artifacts.require('EthVault');
 const Erc20Vault = artifacts.require('Erc20Vault');
 const ExitableTimestamp = artifacts.require('ExitableTimestampWrapper');
 const ExitPriority = artifacts.require('ExitPriorityWrapper');
+const ExitBounty = artifacts.require('ExitBountyWrapper');
 const ERC20Mintable = artifacts.require('ERC20Mintable');
 const PaymentExitGame = artifacts.require('PaymentExitGame');
 const PlasmaFramework = artifacts.require('PlasmaFramework');
@@ -43,6 +44,7 @@ contract('PaymentExitGame - V2 Extension experiment', ([_deployer, _maintainer, 
         this.erc20 = await ERC20Mintable.new();
         await this.erc20.mint(richFather, INITIAL_ERC20_SUPPLY);
         this.exitableHelper = await ExitableTimestamp.new(config.frameworks.minExitPeriod);
+        this.exitBountyHelper = await ExitBounty.new();
     };
 
     before(async () => {
@@ -61,6 +63,8 @@ contract('PaymentExitGame - V2 Extension experiment', ([_deployer, _maintainer, 
         this.piggybackBondSize = await this.exitGame.piggybackBondSize();
 
         this.framework.addExitQueue(config.registerKeys.vaultId.eth, ETH);
+        this.dummyGasPrice = 1000000000;
+        this.processExitBountySize = await this.exitBountyHelper.processStandardExitBountySize({ gasPrice: this.dummyGasPrice });
     };
 
     const aliceDepositsETH = async () => {
@@ -108,7 +112,7 @@ contract('PaymentExitGame - V2 Extension experiment', ([_deployer, _maintainer, 
                         };
 
                         await this.exitGame.startStandardExit(
-                            args, { from: alice, value: this.startStandardExitBondSize },
+                            args, { from: alice, value: this.startStandardExitBondSize.add(this.processExitBountySize), gasPrice: this.dummyGasPrice },
                         );
                     });
 

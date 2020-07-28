@@ -137,7 +137,7 @@ contract PaymentStandardExitRouter is
         public
         payable
         nonReentrant(framework)
-        onlyWithValue(startStandardExitBondSize())
+        onlyWithValue(startStandardExitBondSize() + ExitBounty.processStandardExitBountySize())
     {
         startStandardExitController.run(standardExitMap, args);
     }

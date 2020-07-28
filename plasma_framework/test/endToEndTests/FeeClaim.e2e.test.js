@@ -1,6 +1,7 @@
 const EthVault = artifacts.require('EthVault');
 const PaymentExitGame = artifacts.require('PaymentExitGame');
 const PlasmaFramework = artifacts.require('PlasmaFramework');
+const ExitBounty = artifacts.require('ExitBountyWrapper');
 
 const {
     constants, expectEvent,
@@ -61,6 +62,9 @@ contract('PlasmaFramework - Fee Claim', ([_, _maintainer, authority, richFather,
             );
 
             this.framework.addExitQueue(config.registerKeys.vaultId.eth, ETH);
+            this.exitBountyHelper = await ExitBounty.new();
+            this.dummyGasPrice = 1000000000;
+            this.processExitBountySize = await this.exitBountyHelper.processStandardExitBountySize({ gasPrice: this.dummyGasPrice });
         });
 
         describe('When Alice deposits ETH to the plasma', () => {
@@ -221,7 +225,7 @@ contract('PlasmaFramework - Fee Claim', ([_, _maintainer, authority, richFather,
 
                                     const bondSize = await this.paymentExitGame.startStandardExitBondSize();
                                     const tx = await this.paymentExitGame.startStandardExit(
-                                        args, { from: operatorFeeAddress, value: bondSize },
+                                        args, { from: operatorFeeAddress, value: bondSize.add(this.processExitBountySize), gasPrice: this.dummyGasPrice },
                                     );
                                     await expectEvent.inLogs(
                                         tx.logs,

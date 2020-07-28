@@ -2,6 +2,7 @@ const PaymentExitGame = artifacts.require('PaymentExitGame');
 const PlasmaFramework = artifacts.require('PlasmaFramework');
 const Liquidity = artifacts.require('../Liquidity');
 const ExitableTimestamp = artifacts.require('ExitableTimestampWrapper');
+const ExitBounty = artifacts.require('ExitBountyWrapper');
 const ExitPriority = artifacts.require('ExitPriorityWrapper');
 const EthVault = artifacts.require('EthVault');
 
@@ -40,6 +41,7 @@ contract(
         const deployStableContracts = async () => {
             this.exitPriorityHelper = await ExitPriority.new();
             this.exitableHelper = await ExitableTimestamp.new(config.frameworks.minExitPeriod);
+            this.exitBountyHelper = await ExitBounty.new();
         };
 
         before(async () => {
@@ -56,6 +58,10 @@ contract(
             );
 
             this.startStandardExitBondSize = await this.exitGame.startStandardExitBondSize();
+
+            this.dummyGasPrice = 1000000000;
+
+            this.processExitBountySize = await this.exitBountyHelper.processStandardExitBountySize({ gasPrice: this.dummyGasPrice });
 
             this.framework.addExitQueue(config.registerKeys.vaultId.eth, ETH);
 
@@ -122,7 +128,7 @@ contract(
                                 rlpDepositTx,
                                 depositInclusionProof,
                                 depositUtxoPos,
-                                { from: bob, value: this.startStandardExitBondSize },
+                                { from: bob, value: this.startStandardExitBondSize.add(this.processExitBountySize), gasPrice: this.dummyGasPrice },
                             ),
                             'Was not called by the first Tx owner',
                         );
@@ -146,7 +152,7 @@ contract(
                                 rlpDepositTx,
                                 depositInclusionProof,
                                 depositUtxoPos,
-                                { from: alice, value: this.startStandardExitBondSize },
+                                { from: alice, value: this.startStandardExitBondSize.add(this.processExitBountySize), gasPrice: this.dummyGasPrice },
                             ),
                             "Provided Transaction isn't finalized or doesn't exist",
                         );
@@ -169,7 +175,7 @@ contract(
                             rlpDepositTx,
                             depositInclusionProof,
                             depositUtxoPos,
-                            { from: alice, value: this.startStandardExitBondSize },
+                            { from: alice, value: this.startStandardExitBondSize.add(this.processExitBountySize), gasPrice: this.dummyGasPrice },
                         );
                     });
                     it('should start the exit successully', async () => {
@@ -211,7 +217,7 @@ contract(
                                 rlpDepositTx,
                                 depositInclusionProof,
                                 depositUtxoPos,
-                                { from: alice, value: this.startStandardExitBondSize },
+                                { from: alice, value: this.startStandardExitBondSize.add(this.processExitBountySize), gasPrice: this.dummyGasPrice },
                             ),
                             'Exit has already started.',
                         );
@@ -307,7 +313,7 @@ contract(
                             rlpDepositTx,
                             depositInclusionProof,
                             depositUtxoPos,
-                            { from: alice, value: this.startStandardExitBondSize },
+                            { from: alice, value: this.startStandardExitBondSize.add(this.processExitBountySize), gasPrice: this.dummyGasPrice },
                         );
                     });
                     describe('When Alice transfers the exit NFT to Bob', () => {

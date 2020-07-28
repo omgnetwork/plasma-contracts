@@ -29,6 +29,11 @@ library PaymentProcessStandardExit {
         uint256 amount
     );
 
+    event BountyRewardFailed(
+        address indexed receiver,
+        uint256 amount
+    );
+
     /**
      * @notice Main logic function to process standard exit
      * @dev emits ExitOmitted event if the exit is omitted
@@ -57,9 +62,14 @@ library PaymentProcessStandardExit {
         self.framework.flagOutputFinalized(exit.outputId, exitId);
 
         // we do not want to block a queue if bond return is unsuccessful
-        bool success = SafeEthTransfer.transferReturnResult(exit.exitTarget, exit.bondSize, self.safeGasStipend);
-        if (!success) {
+        bool successBondReturn = SafeEthTransfer.transferReturnResult(exit.exitTarget, exit.bondSize, self.safeGasStipend);
+        if (!successBondReturn) {
             emit BondReturnFailed(exit.exitTarget, exit.bondSize);
+        }
+
+        bool successBountyReturn = SafeEthTransfer.transferReturnResult(tx.origin, exit.bountySize, self.safeGasStipend);
+        if (!successBountyReturn) {
+            emit BountyRewardFailed(tx.origin, exit.bountySize);
         }
 
         if (token == address(0)) {

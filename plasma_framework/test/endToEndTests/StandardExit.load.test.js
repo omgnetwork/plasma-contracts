@@ -1,6 +1,7 @@
 const EthVault = artifacts.require('EthVault');
 const PaymentExitGame = artifacts.require('PaymentExitGame');
 const PlasmaFramework = artifacts.require('PlasmaFramework');
+const ExitBounty = artifacts.require('ExitBountyWrapper');
 
 const { BN, constants } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
@@ -42,6 +43,9 @@ contract('StandardExit getter Load Test', ([_deployer, _maintainer, richFather])
         this.exitGame = await PaymentExitGame.at(await this.framework.exitGames(config.registerKeys.txTypes.payment));
         this.startStandardExitBondSize = await this.exitGame.startStandardExitBondSize();
         this.framework.addExitQueue(config.registerKeys.vaultId.eth, ETH);
+        this.exitBountyHelper = await ExitBounty.new();
+        this.dummyGasPrice = 1000000000;
+        this.processExitBountySize = await this.exitBountyHelper.processStandardExitBountySize({ gasPrice: this.dummyGasPrice });
     };
 
     const aliceDepositsETH = async () => {
@@ -80,7 +84,7 @@ contract('StandardExit getter Load Test', ([_deployer, _maintainer, richFather])
                             outputTxInclusionProof: this.merkleProofForDepositTx[i],
                         };
                         startExits.push(this.exitGame.startStandardExit(args,
-                            { from: alice, value: this.startStandardExitBondSize }));
+                            { from: alice, value: this.startStandardExitBondSize.add(this.processExitBountySize), gasPrice: this.dummyGasPrice }));
                     }
                     await Promise.all([startExits]);
                 });
