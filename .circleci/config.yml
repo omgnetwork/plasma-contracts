@@ -132,7 +132,7 @@ jobs:
       - run:
           name: Deploy Plasma Contracts
           command: |
-            npx truffle migrate
+            npx truffle migrate --network local
           working_directory: ~/repo/plasma_framework
       
   Truffle tests:
