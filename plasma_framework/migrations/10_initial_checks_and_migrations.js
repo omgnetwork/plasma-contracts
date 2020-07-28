@@ -37,7 +37,7 @@ module.exports = async (
     const vault = process.env.VAULT || false;
     if (vault) {
         const chain_id = `${process.env.CHAIN_ID}` || 1;
-        const rpc_url = process.env.REMOTE_URL || 'http://127.0.0.1:8545';
+        const rpc_url = process.env.VAULT_RPC_REMOTE_URL || 'http://127.0.0.1:8545';
         const walletName = 'plasma-deployer';
         // configuration
         var options = {

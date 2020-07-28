@@ -139,6 +139,7 @@ jobs:
             VAULT_PORT: 8200
             VAULT_TOKEN: totally-secure
             NODE_TLS_REJECT_UNAUTHORIZED: 0
+            VAULT_RPC_REMOTE_URL: http://ganache:8545
           working_directory: ~/repo/plasma_framework
       
   Truffle tests:
