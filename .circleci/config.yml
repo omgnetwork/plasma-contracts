@@ -133,6 +133,11 @@ jobs:
           name: Deploy Plasma Contracts
           command: |
             npx truffle migrate --network local
+          environment:
+            VAULT: true
+            VAULT_ADDR: 127.0.0.1
+            VAULT_PORT: 8200
+            VAULT_TOKEN: totally-secure
           working_directory: ~/repo/plasma_framework
       
   Truffle tests:
