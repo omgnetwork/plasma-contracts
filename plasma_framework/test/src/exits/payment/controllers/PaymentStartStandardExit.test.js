@@ -131,7 +131,7 @@ contract('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
 
             this.startStandardExitBondSize = await this.exitGame.startStandardExitBondSize();
 
-            this.dummyGasPrice = 1000000000;
+            this.dummyGasPrice = 1000000;
 
             this.processExitBountySize = await this.exitBountyHelper.processStandardExitBountySize({
                 gasPrice: this.dummyGasPrice,

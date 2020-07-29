@@ -42,7 +42,7 @@ contract('StandardExit getter Load Test', ([_deployer, _maintainer, richFather])
         this.startStandardExitBondSize = await this.exitGame.startStandardExitBondSize();
         this.framework.addExitQueue(config.registerKeys.vaultId.eth, ETH);
         this.exitBountyHelper = await ExitBounty.new();
-        this.dummyGasPrice = 1000000000;
+        this.dummyGasPrice = 1000000;
         this.processExitBountySize = await this.exitBountyHelper.processStandardExitBountySize({
             gasPrice: this.dummyGasPrice,
         });

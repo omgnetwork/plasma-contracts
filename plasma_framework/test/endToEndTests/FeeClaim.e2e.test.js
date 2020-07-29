@@ -43,12 +43,12 @@ contract('PlasmaFramework - Fee Claim', ([_, _maintainer, authority, richFather,
         alice = await web3.eth.personal.importRawKey(alicePrivateKey, password);
         alice = web3.utils.toChecksumAddress(alice);
         web3.eth.personal.unlockAccount(alice, password, 3600);
-        web3.eth.sendTransaction({ to: alice, from: richFather, value: web3.utils.toWei('1', 'ether') });
+        web3.eth.sendTransaction({ to: alice, from: richFather, value: web3.utils.toWei('2', 'ether') });
 
         operatorFeeAddress = await web3.eth.personal.importRawKey(operatorFeeAddressPrivateKey, password);
         operatorFeeAddress = web3.utils.toChecksumAddress(operatorFeeAddress);
         web3.eth.personal.unlockAccount(operatorFeeAddress, password, 3600);
-        web3.eth.sendTransaction({ to: operatorFeeAddress, from: richFather, value: web3.utils.toWei('1', 'ether') });
+        web3.eth.sendTransaction({ to: operatorFeeAddress, from: richFather, value: web3.utils.toWei('2', 'ether') });
     };
 
     describe('Given contracts deployed, ETH exitQueue added to the framework', () => {
@@ -63,7 +63,7 @@ contract('PlasmaFramework - Fee Claim', ([_, _maintainer, authority, richFather,
 
             this.framework.addExitQueue(config.registerKeys.vaultId.eth, ETH);
             this.exitBountyHelper = await ExitBounty.new();
-            this.dummyGasPrice = 1000000000;
+            this.dummyGasPrice = 1000000;
             this.processExitBountySize = await this.exitBountyHelper.processStandardExitBountySize({
                 gasPrice: this.dummyGasPrice,
             });
