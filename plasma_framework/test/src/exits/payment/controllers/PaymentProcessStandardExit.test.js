@@ -11,9 +11,7 @@ const StateTransitionVerifierMock = artifacts.require('StateTransitionVerifierMo
 const Attacker = artifacts.require('FallbackFunctionFailAttacker');
 const ExitBounty = artifacts.require('ExitBountyWrapper');
 
-const {
-    BN, constants, expectEvent,
-} = require('openzeppelin-test-helpers');
+const { BN, constants, expectEvent } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
 const { buildUtxoPos } = require('../../../../helpers/positions.js');
@@ -41,14 +39,15 @@ contract('PaymentProcessStandardExit', ([_, alice, bob, otherAddress]) => {
     });
 
     describe('processStandardExit', () => {
-
         before(async () => {
             this.exitBountyHelper = await ExitBounty.new();
         });
 
         beforeEach(async () => {
             this.framework = await SpyPlasmaFramework.new(
-                MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
+                MIN_EXIT_PERIOD,
+                DUMMY_INITIAL_IMMUNE_VAULTS_NUM,
+                INITIAL_IMMUNE_EXIT_GAME_NUM,
             );
 
             const ethVault = await SpyEthVault.new(this.framework.address);
@@ -77,9 +76,13 @@ contract('PaymentProcessStandardExit', ([_, alice, bob, otherAddress]) => {
 
             this.dummyGasPrice = 1000000000;
 
-            this.processExitBountySize = await this.exitBountyHelper.processStandardExitBountySize({ gasPrice: this.dummyGasPrice });
+            this.processExitBountySize = await this.exitBountyHelper.processStandardExitBountySize({
+                gasPrice: this.dummyGasPrice,
+            });
 
-            await this.exitGame.depositFundForTest({ value: this.startStandardExitBondSize.add(this.processExitBountySize) });
+            await this.exitGame.depositFundForTest({
+                value: this.startStandardExitBondSize.add(this.processExitBountySize),
+            });
         });
 
         const getTestExitData = (exitable, token, exitTarget = alice) => ({
@@ -90,7 +93,7 @@ contract('PaymentProcessStandardExit', ([_, alice, bob, otherAddress]) => {
             exitTarget,
             amount: web3.utils.toWei('3', 'ether'),
             bondSize: this.startStandardExitBondSize.toString(),
-            bountySize: this.processExitBountySize.toString()
+            bountySize: this.processExitBountySize.toString(),
         });
 
         describe('when paying out bond fails', () => {
@@ -109,8 +112,7 @@ contract('PaymentProcessStandardExit', ([_, alice, bob, otherAddress]) => {
 
             it('should not pay out bond', async () => {
                 const postBalance = new BN(await web3.eth.getBalance(this.exitGame.address));
-                const expectedBalance = this.preBalance
-                    .sub(this.processExitBountySize);
+                const expectedBalance = this.preBalance.sub(this.processExitBountySize);
                 expect(postBalance).to.be.bignumber.equal(expectedBalance);
             });
 
@@ -143,11 +145,7 @@ contract('PaymentProcessStandardExit', ([_, alice, bob, otherAddress]) => {
 
             const { logs } = await this.exitGame.processExit(exitId, VAULT_ID.ETH, ETH, otherAddress);
 
-            await expectEvent.inLogs(
-                logs,
-                'ExitOmitted',
-                { exitId: new BN(exitId) },
-            );
+            await expectEvent.inLogs(logs, 'ExitOmitted', { exitId: new BN(exitId) });
 
             const exitData = (await this.exitGame.standardExits([exitId]))[0];
             expect(exitData).to.deep.equal(EMPTY_EXIT_DATA);
@@ -161,11 +159,7 @@ contract('PaymentProcessStandardExit', ([_, alice, bob, otherAddress]) => {
 
             const { logs } = await this.exitGame.processExit(exitId, VAULT_ID.ETH, ETH, otherAddress);
 
-            await expectEvent.inLogs(
-                logs,
-                'ExitOmitted',
-                { exitId: new BN(exitId) },
-            );
+            await expectEvent.inLogs(logs, 'ExitOmitted', { exitId: new BN(exitId) });
 
             const exitData = (await this.exitGame.standardExits([exitId]))[0];
             expect(exitData).to.deep.equal(EMPTY_EXIT_DATA);
@@ -246,15 +240,10 @@ contract('PaymentProcessStandardExit', ([_, alice, bob, otherAddress]) => {
             await this.exitGame.setExit(exitId, testExitData);
 
             const { receipt } = await this.exitGame.processExit(exitId, VAULT_ID.ETH, ETH, otherAddress);
-            await expectEvent.inTransaction(
-                receipt.transactionHash,
-                SpyEthVault,
-                'EthWithdrawCalled',
-                {
-                    target: testExitData.exitTarget,
-                    amount: new BN(testExitData.amount),
-                },
-            );
+            await expectEvent.inTransaction(receipt.transactionHash, SpyEthVault, 'EthWithdrawCalled', {
+                target: testExitData.exitTarget,
+                amount: new BN(testExitData.amount),
+            });
         });
 
         it('should call the Erc20 vault with exit amount when the exit token is an ERC 20 token', async () => {
@@ -265,16 +254,11 @@ contract('PaymentProcessStandardExit', ([_, alice, bob, otherAddress]) => {
 
             const { receipt } = await this.exitGame.processExit(exitId, VAULT_ID.ERC20, erc20Token, otherAddress);
 
-            await expectEvent.inTransaction(
-                receipt.transactionHash,
-                SpyErc20Vault,
-                'Erc20WithdrawCalled',
-                {
-                    target: testExitData.exitTarget,
-                    token: testExitData.token,
-                    amount: new BN(testExitData.amount),
-                },
-            );
+            await expectEvent.inTransaction(receipt.transactionHash, SpyErc20Vault, 'Erc20WithdrawCalled', {
+                target: testExitData.exitTarget,
+                token: testExitData.token,
+                amount: new BN(testExitData.amount),
+            });
         });
 
         it('should deletes the standard exit data', async () => {
@@ -295,11 +279,7 @@ contract('PaymentProcessStandardExit', ([_, alice, bob, otherAddress]) => {
 
             const { logs } = await this.exitGame.processExit(exitId, VAULT_ID.ETH, ETH, otherAddress);
 
-            await expectEvent.inLogs(
-                logs,
-                'ExitFinalized',
-                { exitId: new BN(exitId) },
-            );
+            await expectEvent.inLogs(logs, 'ExitFinalized', { exitId: new BN(exitId) });
         });
     });
 });

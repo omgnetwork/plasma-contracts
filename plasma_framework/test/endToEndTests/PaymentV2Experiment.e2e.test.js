@@ -7,9 +7,7 @@ const ERC20Mintable = artifacts.require('ERC20Mintable');
 const PaymentExitGame = artifacts.require('PaymentExitGame');
 const PlasmaFramework = artifacts.require('PlasmaFramework');
 
-const {
-    BN, constants, time,
-} = require('openzeppelin-test-helpers');
+const { BN, constants, time } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
 const { MerkleTree } = require('../helpers/merkle.js');
@@ -64,7 +62,9 @@ contract('PaymentExitGame - V2 Extension experiment', ([_deployer, _maintainer, 
 
         this.framework.addExitQueue(config.registerKeys.vaultId.eth, ETH);
         this.dummyGasPrice = 1000000000;
-        this.processExitBountySize = await this.exitBountyHelper.processStandardExitBountySize({ gasPrice: this.dummyGasPrice });
+        this.processExitBountySize = await this.exitBountyHelper.processStandardExitBountySize({
+            gasPrice: this.dummyGasPrice,
+        });
     };
 
     const aliceDepositsETH = async () => {
@@ -111,14 +111,18 @@ contract('PaymentExitGame - V2 Extension experiment', ([_deployer, _maintainer, 
                             outputTxInclusionProof: this.merkleProofForUpgradeTx,
                         };
 
-                        await this.exitGame.startStandardExit(
-                            args, { from: alice, value: this.startStandardExitBondSize.add(this.processExitBountySize), gasPrice: this.dummyGasPrice },
-                        );
+                        await this.exitGame.startStandardExit(args, {
+                            from: alice,
+                            value: this.startStandardExitBondSize.add(this.processExitBountySize),
+                            gasPrice: this.dummyGasPrice,
+                        });
                     });
 
                     it('should start successfully', async () => {
                         const exitId = await this.exitGame.getStandardExitId(
-                            false, this.upgradeTx, this.upgradeUtxoPos,
+                            false,
+                            this.upgradeTx,
+                            this.upgradeUtxoPos,
                         );
                         const exitIds = [exitId];
                         const standardExitData = (await this.exitGame.standardExits(exitIds))[0];

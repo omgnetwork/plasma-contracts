@@ -9,9 +9,7 @@ const { expect } = require('chai');
 const { EMPTY_BYTES, SAFE_GAS_STIPEND } = require('../helpers/constants.js');
 const { MerkleTree } = require('../helpers/merkle.js');
 
-const {
-    computeDepositOutputId,
-} = require('../helpers/utils.js');
+const { computeDepositOutputId } = require('../helpers/utils.js');
 const { buildUtxoPos } = require('../helpers/positions.js');
 const Testlang = require('../helpers/testlang.js');
 const config = require('../../config.js');
@@ -45,7 +43,9 @@ contract('StandardExit getter Load Test', ([_deployer, _maintainer, richFather])
         this.framework.addExitQueue(config.registerKeys.vaultId.eth, ETH);
         this.exitBountyHelper = await ExitBounty.new();
         this.dummyGasPrice = 1000000000;
-        this.processExitBountySize = await this.exitBountyHelper.processStandardExitBountySize({ gasPrice: this.dummyGasPrice });
+        this.processExitBountySize = await this.exitBountyHelper.processStandardExitBountySize({
+            gasPrice: this.dummyGasPrice,
+        });
     };
 
     const aliceDepositsETH = async () => {
@@ -83,8 +83,13 @@ contract('StandardExit getter Load Test', ([_deployer, _maintainer, richFather])
                             outputType: OUTPUT_TYPE_PAYMENT,
                             outputTxInclusionProof: this.merkleProofForDepositTx[i],
                         };
-                        startExits.push(this.exitGame.startStandardExit(args,
-                            { from: alice, value: this.startStandardExitBondSize.add(this.processExitBountySize), gasPrice: this.dummyGasPrice }));
+                        startExits.push(
+                            this.exitGame.startStandardExit(args, {
+                                from: alice,
+                                value: this.startStandardExitBondSize.add(this.processExitBountySize),
+                                gasPrice: this.dummyGasPrice,
+                            }),
+                        );
                     }
                     await Promise.all([startExits]);
                 });
@@ -92,21 +97,22 @@ contract('StandardExit getter Load Test', ([_deployer, _maintainer, richFather])
                 it('should save the StandardExit data when successfully done', async () => {
                     let exitIds = [];
                     for (let i = 0; i < NUMBER_OF_EXITS; i++) {
-                        exitIds.push(this.exitGame.getStandardExitId(true,
-                            this.depositTx[i], this.depositUtxoPos[i]));
+                        exitIds.push(this.exitGame.getStandardExitId(true, this.depositTx[i], this.depositUtxoPos[i]));
                     }
                     exitIds = await Promise.all(exitIds);
-                    const standardExitData = (await this.exitGame.standardExits(exitIds));
+                    const standardExitData = await this.exitGame.standardExits(exitIds);
                     const outputIndexForDeposit = 0;
                     const outputId = [];
 
                     for (let i = 0; i < NUMBER_OF_EXITS; i++) {
-                        outputId.push(computeDepositOutputId(this.depositTx[i],
-                            outputIndexForDeposit, this.depositUtxoPos[i]));
+                        outputId.push(
+                            computeDepositOutputId(this.depositTx[i], outputIndexForDeposit, this.depositUtxoPos[i]),
+                        );
                         expect(standardExitData[i].exitable).to.be.true;
                         expect(standardExitData[i].outputId).to.equal(outputId[i]);
-                        expect(new BN(standardExitData[i].utxoPos)).to.be.bignumber
-                            .equal(new BN(this.depositUtxoPos[i]));
+                        expect(new BN(standardExitData[i].utxoPos)).to.be.bignumber.equal(
+                            new BN(this.depositUtxoPos[i]),
+                        );
                         expect(standardExitData[i].exitTarget).to.equal(alice);
                         expect(new BN(standardExitData[i].amount)).to.be.bignumber.equal(new BN(DEPOSIT_VALUE));
                     }

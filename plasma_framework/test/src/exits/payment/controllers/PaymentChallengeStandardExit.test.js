@@ -17,15 +17,16 @@ const {
 const { expect } = require('chai');
 
 const {
-    TX_TYPE, OUTPUT_TYPE, PROTOCOL, VAULT_ID,
-    DUMMY_INPUT_1, SAFE_GAS_STIPEND,
+    TX_TYPE,
+    OUTPUT_TYPE,
+    PROTOCOL,
+    VAULT_ID,
+    DUMMY_INPUT_1,
+    SAFE_GAS_STIPEND,
 } = require('../../../../helpers/constants.js');
 const { buildUtxoPos } = require('../../../../helpers/positions.js');
-const {
-    spentOnGas, computeNormalOutputId,
-} = require('../../../../helpers/utils.js');
+const { spentOnGas, computeNormalOutputId } = require('../../../../helpers/utils.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../../../../helpers/transaction.js');
-
 
 contract('PaymentChallengeStandardExit', ([txSender, alice, bob, otherAddress]) => {
     const ETH = constants.ZERO_ADDRESS;
@@ -74,7 +75,7 @@ contract('PaymentChallengeStandardExit', ([txSender, alice, bob, otherAddress]) 
             exitTarget,
             amount: TEST_AMOUNT,
             bondSize: bondSize.toString(),
-            bountySize: bountySize.toString()
+            bountySize: bountySize.toString(),
         });
 
         before(async () => {
@@ -83,7 +84,9 @@ contract('PaymentChallengeStandardExit', ([txSender, alice, bob, otherAddress]) 
 
         beforeEach(async () => {
             this.framework = await SpyPlasmaFramework.new(
-                MIN_EXIT_PERIOD, DUMMY_INITIAL_IMMUNE_VAULTS_NUM, INITIAL_IMMUNE_EXIT_GAME_NUM,
+                MIN_EXIT_PERIOD,
+                DUMMY_INITIAL_IMMUNE_VAULTS_NUM,
+                INITIAL_IMMUNE_EXIT_GAME_NUM,
             );
 
             this.ethVault = await SpyEthVault.new(this.framework.address);
@@ -116,34 +119,47 @@ contract('PaymentChallengeStandardExit', ([txSender, alice, bob, otherAddress]) 
 
             this.dummyGasPrice = 1000000000;
 
-            this.processExitBountySize = await this.exitBountyHelper.processStandardExitBountySize({ gasPrice: this.dummyGasPrice });
+            this.processExitBountySize = await this.exitBountyHelper.processStandardExitBountySize({
+                gasPrice: this.dummyGasPrice,
+            });
         });
 
         describe('When spending condition not registered', () => {
             it('should fail by not able to find the spending condition contract', async () => {
                 const args = getTestInputArgs(OUTPUT_TYPE.PAYMENT, alice);
-                const exitData = getTestExitData(args, alice, this.startStandardExitBondSize, this.processExitBountySize);
+                const exitData = getTestExitData(
+                    args,
+                    alice,
+                    this.startStandardExitBondSize,
+                    this.processExitBountySize,
+                );
                 await this.exitGame.setExit(args.exitId, exitData);
 
-                await expectRevert(
-                    this.exitGame.challengeStandardExit(args),
-                    'Spending condition contract not found',
-                );
+                await expectRevert(this.exitGame.challengeStandardExit(args), 'Spending condition contract not found');
             });
         });
 
         describe('Given everything registered', () => {
             beforeEach(async () => {
                 await this.spendingConditionRegistry.registerSpendingCondition(
-                    OUTPUT_TYPE.PAYMENT, TX_TYPE.PAYMENT, this.spendingCondition.address,
+                    OUTPUT_TYPE.PAYMENT,
+                    TX_TYPE.PAYMENT,
+                    this.spendingCondition.address,
                 );
             });
 
             it('should fail when malicious user tries attack when paying out bond', async () => {
-                await this.exitGame.depositFundForTest({ value: this.startStandardExitBondSize.add(this.processExitBountySize) });
+                await this.exitGame.depositFundForTest({
+                    value: this.startStandardExitBondSize.add(this.processExitBountySize),
+                });
 
                 this.args = getTestInputArgs(OUTPUT_TYPE.PAYMENT, alice);
-                this.exitData = getTestExitData(this.args, alice, this.startStandardExitBondSize, this.processExitBountySize);
+                this.exitData = getTestExitData(
+                    this.args,
+                    alice,
+                    this.startStandardExitBondSize,
+                    this.processExitBountySize,
+                );
                 await this.exitGame.setExit(this.args.exitId, this.exitData);
 
                 const attacker = await Attacker.new();
@@ -157,10 +173,7 @@ contract('PaymentChallengeStandardExit', ([txSender, alice, bob, otherAddress]) 
 
             it('should fail when exit for such exit id does not exist', async () => {
                 const args = getTestInputArgs(OUTPUT_TYPE.PAYMENT, alice);
-                await expectRevert(
-                    this.exitGame.challengeStandardExit(args),
-                    'The exit does not exist',
-                );
+                await expectRevert(this.exitGame.challengeStandardExit(args), 'The exit does not exist');
             });
 
             it('should fail when try to challenge with a tx that is not of MoreVP protocol', async () => {
@@ -178,7 +191,10 @@ contract('PaymentChallengeStandardExit', ([txSender, alice, bob, otherAddress]) 
                 const challengeTx = web3.utils.bytesToHex(challengeTxObj.rlpEncoded());
                 args.challengeTx = challengeTx;
 
-                await this.exitGame.setExit(args.exitId, getTestExitData(args, alice, this.startStandardExitBondSize, this.processExitBountySize));
+                await this.exitGame.setExit(
+                    args.exitId,
+                    getTestExitData(args, alice, this.startStandardExitBondSize, this.processExitBountySize),
+                );
 
                 await expectRevert(
                     this.exitGame.challengeStandardExit(args),
@@ -190,12 +206,12 @@ contract('PaymentChallengeStandardExit', ([txSender, alice, bob, otherAddress]) 
                 const args = getTestInputArgs(OUTPUT_TYPE.PAYMENT, alice);
                 await this.spendingCondition.mockResult(false);
 
-                await this.exitGame.setExit(args.exitId, getTestExitData(args, alice, this.startStandardExitBondSize, this.processExitBountySize));
-
-                await expectRevert(
-                    this.exitGame.challengeStandardExit(args),
-                    'Spending condition failed',
+                await this.exitGame.setExit(
+                    args.exitId,
+                    getTestExitData(args, alice, this.startStandardExitBondSize, this.processExitBountySize),
                 );
+
+                await expectRevert(this.exitGame.challengeStandardExit(args), 'Spending condition failed');
             });
 
             it('should fail when spending condition contract reverts', async () => {
@@ -203,17 +219,20 @@ contract('PaymentChallengeStandardExit', ([txSender, alice, bob, otherAddress]) 
 
                 await this.spendingCondition.mockRevert();
 
-                await this.exitGame.setExit(args.exitId, getTestExitData(args, alice, this.startStandardExitBondSize, this.processExitBountySize));
-
-                await expectRevert(
-                    this.exitGame.challengeStandardExit(args),
-                    'Test spending condition reverts',
+                await this.exitGame.setExit(
+                    args.exitId,
+                    getTestExitData(args, alice, this.startStandardExitBondSize, this.processExitBountySize),
                 );
+
+                await expectRevert(this.exitGame.challengeStandardExit(args), 'Test spending condition reverts');
             });
 
             it('should fail when provided exiting transaction does not match stored exiting transaction', async () => {
                 const args = getTestInputArgs(OUTPUT_TYPE.PAYMENT, alice);
-                await this.exitGame.setExit(args.exitId, getTestExitData(args, alice, this.startStandardExitBondSize, this.processExitBountySize));
+                await this.exitGame.setExit(
+                    args.exitId,
+                    getTestExitData(args, alice, this.startStandardExitBondSize, this.processExitBountySize),
+                );
 
                 const output = new PaymentTransactionOutput(OUTPUT_TYPE.PAYMENT, TEST_AMOUNT, alice, ETH);
                 const exitingTxObj = new PaymentTransaction(2, [DUMMY_INPUT_1], [output]);
@@ -236,10 +255,17 @@ contract('PaymentChallengeStandardExit', ([txSender, alice, bob, otherAddress]) 
             });
 
             it('should call the Spending Condition contract with expected params', async () => {
-                await this.exitGame.depositFundForTest({ value: this.startStandardExitBondSize.add(this.processExitBountySize) });
+                await this.exitGame.depositFundForTest({
+                    value: this.startStandardExitBondSize.add(this.processExitBountySize),
+                });
 
                 const args = getTestInputArgs(OUTPUT_TYPE.PAYMENT, alice);
-                const exitData = getTestExitData(args, alice, this.startStandardExitBondSize, this.processExitBountySize);
+                const exitData = getTestExitData(
+                    args,
+                    alice,
+                    this.startStandardExitBondSize,
+                    this.processExitBountySize,
+                );
                 await this.exitGame.setExit(args.exitId, exitData);
 
                 const expectedArgs = {
@@ -257,11 +283,18 @@ contract('PaymentChallengeStandardExit', ([txSender, alice, bob, otherAddress]) 
 
             describe('When successfully challenged', () => {
                 beforeEach(async () => {
-                    await this.exitGame.depositFundForTest({ value: this.startStandardExitBondSize.add(this.processExitBountySize) });
+                    await this.exitGame.depositFundForTest({
+                        value: this.startStandardExitBondSize.add(this.processExitBountySize),
+                    });
 
                     this.args = getTestInputArgs(OUTPUT_TYPE.PAYMENT, alice);
                     this.args.senderData = web3.utils.keccak256(bob);
-                    this.exitData = getTestExitData(this.args, alice, this.startStandardExitBondSize, this.processExitBountySize);
+                    this.exitData = getTestExitData(
+                        this.args,
+                        alice,
+                        this.startStandardExitBondSize,
+                        this.processExitBountySize,
+                    );
 
                     await this.exitGame.setExit(this.args.exitId, this.exitData);
 
@@ -285,11 +318,9 @@ contract('PaymentChallengeStandardExit', ([txSender, alice, bob, otherAddress]) 
                 });
 
                 it('should emit ExitChallenged event when successfully challenged', async () => {
-                    await expectEvent.inLogs(
-                        this.tx.logs,
-                        'ExitChallenged',
-                        { utxoPos: new BN(this.exitData.utxoPos) },
-                    );
+                    await expectEvent.inLogs(this.tx.logs, 'ExitChallenged', {
+                        utxoPos: new BN(this.exitData.utxoPos),
+                    });
                 });
             });
         });
