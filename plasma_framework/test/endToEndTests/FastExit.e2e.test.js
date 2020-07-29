@@ -35,7 +35,7 @@ contract(
             alice = await web3.eth.personal.importRawKey(alicePrivateKey, password);
             alice = web3.utils.toChecksumAddress(alice);
             web3.eth.personal.unlockAccount(alice, password, 3600);
-            web3.eth.sendTransaction({ to: alice, from: richFather, value: web3.utils.toWei('1', 'ether') });
+            web3.eth.sendTransaction({ to: alice, from: richFather, value: web3.utils.toWei('2', 'ether') });
         };
 
         const deployStableContracts = async () => {

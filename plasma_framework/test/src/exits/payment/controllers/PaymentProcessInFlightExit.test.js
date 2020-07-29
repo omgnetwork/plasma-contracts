@@ -26,7 +26,7 @@ const {
 } = require('../../../../helpers/constants.js');
 const { buildUtxoPos } = require('../../../../helpers/positions.js');
 
-contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwner2, inputOwner3, outputOwner1, outputOwner2, outputOwner3]) => {
+contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwner2, inputOwner3, outputOwner1, outputOwner2, outputOwner3, otherAddress]) => {
     const MAX_INPUT_NUM = 4;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week in seconds
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
@@ -174,7 +174,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
         it('should omit the exit if the exit does not exist', async () => {
             const nonExistingExitId = 666;
 
-            const { logs } = await this.exitGame.processExit(nonExistingExitId, VAULT_ID.ETH, ETH);
+            const { logs } = await this.exitGame.processExit(nonExistingExitId, VAULT_ID.ETH, ETH, otherAddress);
             await expectEvent.inLogs(
                 logs,
                 'InFlightExitOmitted',
@@ -194,7 +194,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
                     this.exit = await buildInFlightExitData(inputOwner1, outputOwner1, this.attacker.address);
 
                     await this.exitGame.setInFlightExit(DUMMY_EXIT_ID, this.exit);
-                    const { receipt } = await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH);
+                    const { receipt } = await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH, otherAddress);
                     this.receipt = receipt;
                 });
 
@@ -225,7 +225,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
                     this.exit.exitMap = exitMap;
                     this.exit.isCanonical = isCanonical;
                     await this.exitGame.setInFlightExit(DUMMY_EXIT_ID, this.exit);
-                    const { receipt } = await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH);
+                    const { receipt } = await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH, otherAddress);
                     return receipt;
                 };
 
@@ -295,11 +295,11 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
                 await this.exitGame.setInFlightExitOutputPiggybacked(DUMMY_EXIT_ID, 0);
                 await this.exitGame.setInFlightExitOutputPiggybacked(DUMMY_EXIT_ID, 2);
 
-                await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH);
+                await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH, otherAddress);
             });
 
             it('should transfer exit bond to the IFE bond owner if all piggybacked inputs/outputs are cleaned up', async () => {
-                await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ERC20, erc20);
+                await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ERC20, erc20, otherAddress);
 
                 const postBalance = new BN(await web3.eth.getBalance(ifeBondOwner));
                 const expectedBalance = this.ifeBondOwnerPreBalance.add(this.startIFEBondSize);
@@ -330,7 +330,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
 
             describe('When all piggybacks are resolved', () => {
                 beforeEach(async () => {
-                    await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ERC20, erc20);
+                    await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ERC20, erc20, otherAddress);
                 });
 
                 it('should transfer exit bond to the IFE bond owner', async () => {
@@ -359,7 +359,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
 
             it('should withdraw output if there are no inputs spent by other exit', async () => {
                 await this.exitGame.proxyFlagOutputFinalized(TEST_OUTPUT_ID_FOR_INPUT_1, DUMMY_EXIT_ID);
-                const { logs } = await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH);
+                const { logs } = await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH, otherAddress);
                 await expectEvent.inLogs(
                     logs,
                     'InFlightExitOutputWithdrawn',
@@ -370,7 +370,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
             it('should be treated as non-canonical when there is an input spent by other exit', async () => {
                 const otherExitId = DUMMY_EXIT_ID + 1;
                 await this.exitGame.proxyFlagOutputFinalized(TEST_OUTPUT_ID_FOR_INPUT_1, otherExitId);
-                const { logs } = await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH);
+                const { logs } = await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH, otherAddress);
                 const inputIndexForInput2 = 1;
                 await expectEvent.inLogs(
                     logs,
@@ -400,7 +400,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
             });
 
             it('should withdraw ETH from vault for the piggybacked input', async () => {
-                const { receipt } = await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH);
+                const { receipt } = await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH, otherAddress);
                 await expectEvent.inTransaction(
                     receipt.transactionHash,
                     SpyEthVault,
@@ -414,7 +414,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
 
             it('should NOT withdraw fund from vault for the piggybacked but already spent input', async () => {
                 await this.exitGame.proxyFlagOutputFinalized(TEST_OUTPUT_ID_FOR_INPUT_1, DUMMY_EXIT_ID);
-                const { receipt } = await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH);
+                const { receipt } = await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH, otherAddress);
                 let didNotCallEthWithdraw = false;
                 try {
                     await expectEvent.inTransaction(
@@ -434,7 +434,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
             });
 
             it('should NOT withdraw fund from vault for the non piggybacked input', async () => {
-                const { receipt } = await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH);
+                const { receipt } = await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH, otherAddress);
                 let didNotCallEthWithdraw = false;
                 try {
                     await expectEvent.inTransaction(
@@ -454,7 +454,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
             });
 
             it('should withdraw ERC20 from vault for the piggybacked input', async () => {
-                const { receipt } = await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ERC20, erc20);
+                const { receipt } = await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ERC20, erc20, otherAddress);
                 await expectEvent.inTransaction(
                     receipt.transactionHash,
                     SpyErc20Vault,
@@ -468,7 +468,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
             });
 
             it('should return piggyback bond to the input owner', async () => {
-                await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ERC20, erc20);
+                await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ERC20, erc20, otherAddress);
                 const postBalance = new BN(await web3.eth.getBalance(inputOwner3));
                 const expectedBalance = this.inputOwner3PreBalance.add(this.piggybackBondSize);
 
@@ -476,7 +476,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
             });
 
             it('should return piggyback bond to the output owner', async () => {
-                await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ERC20, erc20);
+                await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ERC20, erc20, otherAddress);
                 const postBalance = new BN(await web3.eth.getBalance(outputOwner3));
                 const expectedBalance = this.outputOwner3PreBalance.add(this.piggybackBondSize);
 
@@ -484,7 +484,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
             });
 
             it('should only flag piggybacked inputs with the same token as spent', async () => {
-                await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH);
+                await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH, otherAddress);
                 // piggybacked input
                 expect(await this.framework.isOutputFinalized(TEST_OUTPUT_ID_FOR_INPUT_1)).to.be.true;
                 // non-piggybacked input
@@ -494,7 +494,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
             });
 
             it('should NOT flag output as spent', async () => {
-                await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH);
+                await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH, otherAddress);
 
                 expect(await this.framework.isOutputFinalized(TEST_OUTPUT_ID_FOR_OUTPUT_1)).to.be.false;
                 expect(await this.framework.isOutputFinalized(TEST_OUTPUT_ID_FOR_OUTPUT_2)).to.be.false;
@@ -502,7 +502,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
             });
 
             it('should emit InFlightExitInputWithdrawn event', async () => {
-                const { logs } = await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ERC20, erc20);
+                const { logs } = await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ERC20, erc20, otherAddress);
                 const inputIndexForThirdInput = 2;
                 await expectEvent.inLogs(
                     logs,
@@ -532,7 +532,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
             });
 
             it('should withdraw ETH from vault for the piggybacked output', async () => {
-                const { receipt } = await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH);
+                const { receipt } = await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH, otherAddress);
                 await expectEvent.inTransaction(
                     receipt.transactionHash,
                     SpyEthVault,
@@ -546,7 +546,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
 
             it('should NOT withdraw from fund vault for the piggybacked but already spent output', async () => {
                 await this.exitGame.proxyFlagOutputFinalized(TEST_OUTPUT_ID_FOR_OUTPUT_1, DUMMY_EXIT_ID);
-                const { receipt } = await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH);
+                const { receipt } = await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH, otherAddress);
                 let didNotCallEthWithdraw = false;
                 try {
                     await expectEvent.inTransaction(
@@ -566,7 +566,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
             });
 
             it('should NOT withdraw from fund vault for the non piggybacked output', async () => {
-                const { receipt } = await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH);
+                const { receipt } = await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH, otherAddress);
                 let didNotCallEthWithdraw = false;
                 try {
                     await expectEvent.inTransaction(
@@ -586,7 +586,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
             });
 
             it('should withdraw ERC20 from vault for the piggybacked output', async () => {
-                const { receipt } = await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ERC20, erc20);
+                const { receipt } = await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ERC20, erc20, otherAddress);
                 await expectEvent.inTransaction(
                     receipt.transactionHash,
                     SpyErc20Vault,
@@ -600,7 +600,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
             });
 
             it('should return piggyback bond to the output owner', async () => {
-                await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ERC20, erc20);
+                await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ERC20, erc20, otherAddress);
                 const postBalance = new BN(await web3.eth.getBalance(outputOwner3));
                 const expectedBalance = this.outputOwner3PreBalance.add(this.piggybackBondSize);
 
@@ -608,7 +608,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
             });
 
             it('should return piggyback bond to the input owner', async () => {
-                await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ERC20, erc20);
+                await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ERC20, erc20, otherAddress);
                 const postBalance = new BN(await web3.eth.getBalance(inputOwner3));
                 const expectedBalance = this.inputOwner3PreBalance.add(this.piggybackBondSize);
 
@@ -616,7 +616,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
             });
 
             it('should flag ALL inputs as spent', async () => {
-                await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH);
+                await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH, otherAddress);
                 // same token, both piggybacked and non-piggybacked cases
                 expect(await this.framework.isOutputFinalized(TEST_OUTPUT_ID_FOR_INPUT_1)).to.be.true;
                 expect(await this.framework.isOutputFinalized(TEST_OUTPUT_ID_FOR_INPUT_2)).to.be.true;
@@ -625,7 +625,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
             });
 
             it('should only flag piggybacked output with the same token as spent', async () => {
-                await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH);
+                await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH, otherAddress);
 
                 // piggybacked output of same token
                 expect(await this.framework.isOutputFinalized(TEST_OUTPUT_ID_FOR_OUTPUT_1)).to.be.true;
@@ -636,7 +636,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
             });
 
             it('should emit InFlightExitOutputWithdrawn event', async () => {
-                const { logs } = await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ERC20, erc20);
+                const { logs } = await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ERC20, erc20, otherAddress);
                 const outputIndexForThirdOutput = 2;
                 await expectEvent.inLogs(
                     logs,

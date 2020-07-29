@@ -47,7 +47,8 @@ library PaymentProcessStandardExit {
         Controller memory self,
         PaymentExitDataModel.StandardExitMap storage exitMap,
         uint168 exitId,
-        address token
+        address token,
+        address payable processor
     )
         public
     {
@@ -67,9 +68,9 @@ library PaymentProcessStandardExit {
             emit BondReturnFailed(exit.exitTarget, exit.bondSize);
         }
 
-        bool successBountyReturn = SafeEthTransfer.transferReturnResult(tx.origin, exit.bountySize, self.safeGasStipend);
+        bool successBountyReturn = SafeEthTransfer.transferReturnResult(processor, exit.bountySize, self.safeGasStipend);
         if (!successBountyReturn) {
-            emit BountyRewardFailed(tx.origin, exit.bountySize);
+            emit BountyRewardFailed(processor, exit.bountySize);
         }
 
         if (token == address(0)) {

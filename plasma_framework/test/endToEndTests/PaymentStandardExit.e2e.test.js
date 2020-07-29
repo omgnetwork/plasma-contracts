@@ -114,7 +114,7 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
 
         it('should not allow to call processExit from outside of exit game controller contract', async () => {
             await expectRevert(
-                this.exitGame.processExit(0, config.registerKeys.vaultId.eth, constants.ZERO_ADDRESS),
+                this.exitGame.processExit(0, config.registerKeys.vaultId.eth, constants.ZERO_ADDRESS, alice),
                 'Caller address is unauthorized.',
             );
         });
