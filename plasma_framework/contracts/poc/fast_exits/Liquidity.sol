@@ -177,7 +177,6 @@ contract Liquidity is ERC721Full {
             super.ownerOf(exitId) == msg.sender,
             "Only the NFT owner of the respective exit can withdraw"
         );
-
         require(isExitProcessed(exitId), "Exit not Processed");
         super._burn(msg.sender, exitId);
 
