@@ -18,7 +18,7 @@ const { expectRevert, constants } = require('openzeppelin-test-helpers');
 
 const { VAULT_ID, TX_TYPE, SAFE_GAS_STIPEND } = require('../../../helpers/constants.js');
 
-contract('PaymentExitGame', () => {
+contract('PaymentExitGame', ([_, _maintainer, _authority, richFather]) => {
     const MIN_EXIT_PERIOD = 1000;
     const INITIAL_IMMUNE_VAULTS_NUM = 1;
     const INITIAL_IMMUNE_EXIT_GAME_NUM = 1;
@@ -76,6 +76,42 @@ contract('PaymentExitGame', () => {
         await expectRevert(
             PaymentExitGame.new(exitGameArgs),
             'Spending condition registry ownership needs to be renounced',
+        );
+    });
+
+    it('should fail to init if the caller is not the maintainer', async () => {
+        const exitGameArgs = [
+            this.framework.address,
+            VAULT_ID.ETH,
+            VAULT_ID.ERC20,
+            this.spendingConditionRegistry.address,
+            DUMMY_STATE_TRANSITION_VERIFIER,
+            TX_TYPE.PAYMENT,
+            SAFE_GAS_STIPEND,
+        ];
+        const paymentExitGame = await PaymentExitGame.new(exitGameArgs);
+        await expectRevert(
+            paymentExitGame.init({ from: richFather }),
+            'Only Maintainer can perform this action.',
+        );
+    });
+
+    it('should fail to init twice', async () => {
+        await this.spendingConditionRegistry.renounceOwnership();
+        const exitGameArgs = [
+            this.framework.address,
+            VAULT_ID.ETH,
+            VAULT_ID.ERC20,
+            this.spendingConditionRegistry.address,
+            DUMMY_STATE_TRANSITION_VERIFIER,
+            TX_TYPE.PAYMENT,
+            SAFE_GAS_STIPEND,
+        ];
+        const paymentExitGame = await PaymentExitGame.new(exitGameArgs);
+        await paymentExitGame.init();
+        await expectRevert(
+            paymentExitGame.init(),
+            'Exit game was already initialized.',
         );
     });
 });

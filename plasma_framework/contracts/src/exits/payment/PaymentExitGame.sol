@@ -22,8 +22,8 @@ contract PaymentExitGame is IExitProcessor, OnlyFromAddress, PaymentStandardExit
      */
     constructor(PaymentExitGameArgs.Args memory args)
         public
-        PaymentStandardExitRouter(args)
-        PaymentInFlightExitRouter(args)
+        PaymentStandardExitRouter()
+        PaymentInFlightExitRouter()
     {
         paymentExitGameArgs = args;
 
@@ -35,8 +35,8 @@ contract PaymentExitGame is IExitProcessor, OnlyFromAddress, PaymentStandardExit
     {
         require(msg.sender == paymentExitGameArgs.framework.getMaintainer(), "Only Maintainer can perform this action");
         require(!initDone, "Exit game was already initialized");
-        PaymentStandardExitRouter.init();
-        PaymentInFlightExitRouter.init();
+        PaymentStandardExitRouter.init(paymentExitGameArgs);
+        PaymentInFlightExitRouter.init(paymentExitGameArgs);
     }
 
     /**
@@ -44,7 +44,7 @@ contract PaymentExitGame is IExitProcessor, OnlyFromAddress, PaymentStandardExit
      * @param exitId The exit ID
      * @param token Token (ERC20 address or address(0) for ETH) of the exiting output
      */
-    function processExit(uint168 exitId, uint256, address token) external onlyFrom(address(plasmaFramework)) {
+    function processExit(uint168 exitId, uint256, address token) external onlyFrom(address(paymentExitGameArgs.framework)) {
         if (ExitId.isStandardExit(exitId)) {
             PaymentStandardExitRouter.processStandardExit(exitId, token);
         } else {

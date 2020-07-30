@@ -41,7 +41,7 @@ contract PaymentStandardExitRouter is
     PaymentChallengeStandardExit.Controller internal challengeStandardExitController;
     BondSize.Params internal startStandardExitBond;
 
-    PaymentExitGameArgs.Args private paymentExitGameArgs;
+    PlasmaFramework private framework;
     bool private initDone = false;
 
     event StandardExitBondUpdated(uint128 bondSize);
@@ -68,13 +68,7 @@ contract PaymentStandardExitRouter is
         uint256 amount
     );
 
-    constructor(PaymentExitGameArgs.Args memory args)
-        public
-    {
-        paymentExitGameArgs = args;
-    }
-
-    function init()
+    function init(PaymentExitGameArgs.Args memory paymentExitGameArgs)
         public
     {
         require(msg.sender == paymentExitGameArgs.framework.getMaintainer(), "Only Maintainer can perform this action");
@@ -84,7 +78,7 @@ contract PaymentStandardExitRouter is
 
         Erc20Vault erc20Vault = Erc20Vault(paymentExitGameArgs.framework.vaults(paymentExitGameArgs.erc20VaultId));
         require(address(erc20Vault) != address(0), "Invalid ERC20 vault");
-
+        framework = paymentExitGameArgs.framework;
         startStandardExitController = PaymentStartStandardExit.buildController(
             this,
             paymentExitGameArgs.framework,
