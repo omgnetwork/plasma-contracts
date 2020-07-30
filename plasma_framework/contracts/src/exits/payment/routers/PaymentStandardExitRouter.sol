@@ -41,7 +41,8 @@ contract PaymentStandardExitRouter is
     PaymentChallengeStandardExit.Controller internal challengeStandardExitController;
     BondSize.Params internal startStandardExitBond;
 
-    PlasmaFramework private framework;
+    PaymentExitGameArgs.Args private paymentExitGameArgs;
+    bool private initDone = false;
 
     event StandardExitBondUpdated(uint128 bondSize);
 
@@ -70,30 +71,36 @@ contract PaymentStandardExitRouter is
     constructor(PaymentExitGameArgs.Args memory args)
         public
     {
-        framework = args.framework;
+        paymentExitGameArgs = args;
+    }
 
-        EthVault ethVault = EthVault(args.framework.vaults(args.ethVaultId));
+    function init()
+        public
+    {
+        require(msg.sender == paymentExitGameArgs.framework.getMaintainer(), "Only Maintainer can perform this action");
+        require(!initDone, "Exit game was already initialized");
+        EthVault ethVault = EthVault(paymentExitGameArgs.framework.vaults(paymentExitGameArgs.ethVaultId));
         require(address(ethVault) != address(0), "Invalid ETH vault");
 
-        Erc20Vault erc20Vault = Erc20Vault(args.framework.vaults(args.erc20VaultId));
+        Erc20Vault erc20Vault = Erc20Vault(paymentExitGameArgs.framework.vaults(paymentExitGameArgs.erc20VaultId));
         require(address(erc20Vault) != address(0), "Invalid ERC20 vault");
 
         startStandardExitController = PaymentStartStandardExit.buildController(
             this,
-            args.framework,
-            args.ethVaultId,
-            args.erc20VaultId,
-            args.supportTxType
+            paymentExitGameArgs.framework,
+            paymentExitGameArgs.ethVaultId,
+            paymentExitGameArgs.erc20VaultId,
+            paymentExitGameArgs.supportTxType
         );
 
         challengeStandardExitController = PaymentChallengeStandardExit.buildController(
-            args.framework,
-            args.spendingConditionRegistry,
-            args.safeGasStipend
+            paymentExitGameArgs.framework,
+            paymentExitGameArgs.spendingConditionRegistry,
+            paymentExitGameArgs.safeGasStipend
         );
 
         processStandardExitController = PaymentProcessStandardExit.Controller(
-            args.framework, ethVault, erc20Vault, args.safeGasStipend
+            paymentExitGameArgs.framework, ethVault, erc20Vault, paymentExitGameArgs.safeGasStipend
         );
 
         startStandardExitBond = BondSize.buildParams(INITIAL_BOND_SIZE, BOND_LOWER_BOUND_DIVISOR, BOND_UPPER_BOUND_MULTIPLIER);
