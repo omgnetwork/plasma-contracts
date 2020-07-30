@@ -37,6 +37,7 @@ contract PaymentExitGame is IExitProcessor, OnlyFromAddress, PaymentStandardExit
         require(!initDone, "Exit game was already initialized");
         PaymentStandardExitRouter.init(paymentExitGameArgs);
         PaymentInFlightExitRouter.init(paymentExitGameArgs);
+        initDone = true;
     }
 
     /**
