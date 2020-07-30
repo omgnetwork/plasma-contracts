@@ -33,7 +33,7 @@ contract PaymentExitGame is IExitProcessor, OnlyFromAddress, PaymentStandardExit
 
     function init() public
     {
-        require(msg.sender == paymentExitGameArgs.framework.getMaintainer(), "Only Maintainer can perform this action");
+        //require(msg.sender == paymentExitGameArgs.framework.getMaintainer(), "Only Maintainer can perform this action");
         require(!initDone, "Exit game was already initialized");
         PaymentStandardExitRouter.init(paymentExitGameArgs);
         PaymentInFlightExitRouter.init(paymentExitGameArgs);
