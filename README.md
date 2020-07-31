@@ -2,7 +2,7 @@
 
 Root chain contracts for The OmiseGO Plasma Framework, a layer 2 scaling solution for Ethereum.
 
-[![Build Status](https://circleci.com/gh/omisego/plasma-contracts.svg?style=svg)](https://circleci.com/gh/omisego/plasma-contracts)
+[![Build Status](https://circleci.com/gh/omgnetwork/plasma-contracts.svg?style=svg)](https://circleci.com/gh/omisego/plasma-contracts)
 [![Coverage Status](https://coveralls.io/repos/github/omisego/plasma-contracts/badge.svg?branch=master)](https://coveralls.io/github/omisego/plasma-contracts?branch=master)
 
 ## Contents
