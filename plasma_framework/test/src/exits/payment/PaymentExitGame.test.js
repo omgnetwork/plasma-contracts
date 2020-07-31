@@ -79,7 +79,8 @@ contract('PaymentExitGame', ([_, _maintainer, _authority, richFather]) => {
         );
     });
 
-    it('should fail to init if the caller is not the maintainer', async () => {
+    it.only('should fail to init if the caller is not the maintainer', async () => {
+        await this.spendingConditionRegistry.renounceOwnership();
         const exitGameArgs = [
             this.framework.address,
             VAULT_ID.ETH,
@@ -90,8 +91,9 @@ contract('PaymentExitGame', ([_, _maintainer, _authority, richFather]) => {
             SAFE_GAS_STIPEND,
         ];
         const paymentExitGame = await PaymentExitGame.new(exitGameArgs);
+        PaymentExitGame.defaults({ from: richFather });
         await expectRevert(
-            paymentExitGame.init({ from: richFather }),
+            paymentExitGame.init(),
             'Only Maintainer can perform this action.',
         );
     });

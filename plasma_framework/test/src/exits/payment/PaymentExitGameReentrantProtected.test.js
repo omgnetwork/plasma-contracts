@@ -82,8 +82,8 @@ contract('PaymentExitGame - Reentrant Protected', () => {
                 TX_TYPE.PAYMENT,
                 SAFE_GAS_STIPEND,
             ];
-            this.exitGame = await PaymentStandardExitRouter.new(exitGameArgs);
-            await this.exitGame.init();
+            this.exitGame = await PaymentStandardExitRouter.new();
+            await this.exitGame.init(exitGameArgs);
             await this.framework.registerExitGame(TX_TYPE.PAYMENT, this.exitGame.address, PROTOCOL.MORE_VP);
         });
 
