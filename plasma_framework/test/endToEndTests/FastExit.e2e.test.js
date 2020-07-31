@@ -578,7 +578,11 @@ contract(
                             rlpDepositTx,
                             depositInclusionProof,
                             depositUtxoPos,
-                            { from: alice, value: this.startStandardExitBondSize },
+                            {
+                                from: alice,
+                                value: this.startStandardExitBondSize.add(this.processExitBountySize),
+                                gasPrice: this.dummyGasPrice,
+                            },
                         );
                     });
 
@@ -713,7 +717,11 @@ contract(
                             rlpDepositTx,
                             depositInclusionProof,
                             depositUtxoPos,
-                            { from: alice, value: this.startStandardExitBondSize },
+                            {
+                                from: alice,
+                                value: this.startStandardExitBondSize.add(this.processExitBountySize),
+                                gasPrice: this.dummyGasPrice,
+                            },
                         );
                     });
 
@@ -739,7 +747,11 @@ contract(
                                 rlpDepositTx,
                                 depositInclusionProof,
                                 depositUtxoPos,
-                                { from: bob, value: this.updatedStandardExitBondSize },
+                                {
+                                    from: bob,
+                                    value: this.updatedStandardExitBondSize.add(this.processExitBountySize),
+                                    gasPrice: this.dummyGasPrice,
+                                },
                             );
                         });
 

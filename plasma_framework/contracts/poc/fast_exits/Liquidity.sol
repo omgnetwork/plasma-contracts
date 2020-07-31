@@ -9,12 +9,9 @@ import "../../src/framework/models/BlockModel.sol";
 import "../../src/utils/Merkle.sol";
 import "../../src/exits/payment/routers/PaymentStandardExitRouter.sol";
 import "openzeppelin-solidity/contracts/token/ERC721/ERC721Full.sol";
-<<<<<<< HEAD
 import "../../src/exits/utils/ExitBounty.sol";
-=======
 import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/SafeERC20.sol";
->>>>>>> v2.0.0
 
 /**
  * @title Liquidity Contract
@@ -169,7 +166,12 @@ contract Liquidity is ERC721Full {
 
         FungibleTokenOutputModel.Output memory outputFromSecondTransaction
         = decodedSecondTx.outputs[0];
-        exitData[exitId] = ExitData(msg.value - ExitBounty.processStandardExitBountySize(), outputFromSecondTransaction.amount);
+        exitData[exitId] = ExitData(
+            msg.value - ExitBounty.processStandardExitBountySize(),
+            msg.sender,
+            outputFromSecondTransaction.amount,
+            outputFromSecondTransaction.token
+        );
     }
 
     /**
