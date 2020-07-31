@@ -26,14 +26,13 @@ contract PaymentExitGame is IExitProcessor, OnlyFromAddress, PaymentStandardExit
         PaymentInFlightExitRouter()
     {
         paymentExitGameArgs = args;
-
         // makes sure that the spending condition has already renounced ownership
         require(args.spendingConditionRegistry.owner() == address(0), "Spending condition registry ownership needs to be renounced");
     }
 
     function init() public
     {
-        //require(msg.sender == paymentExitGameArgs.framework.getMaintainer(), "Only Maintainer can perform this action");
+        require(msg.sender == plasmaFramework.getMaintainer(), "Only Maintainer can perform this action");
         require(!initDone, "Exit game was already initialized");
         PaymentStandardExitRouter.init(paymentExitGameArgs);
         PaymentInFlightExitRouter.init(paymentExitGameArgs);
