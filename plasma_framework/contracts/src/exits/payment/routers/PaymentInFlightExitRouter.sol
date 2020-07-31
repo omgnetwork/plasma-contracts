@@ -132,10 +132,10 @@ contract PaymentInFlightExitRouter is
     {
         require(msg.sender == paymentExitGameArgs.framework.getMaintainer(), "Only Maintainer can perform this action");
         require(!initDone, "Exit game was already initialized");
-        require(address(ethVault) != address(0), "Invalid ETH vault");
-        require(address(erc20Vault) != address(0), "Invalid ERC20 vault");
         EthVault ethVault = EthVault(paymentExitGameArgs.framework.vaults(paymentExitGameArgs.ethVaultId));
+        require(address(ethVault) != address(0), "Invalid ETH vault");
         Erc20Vault erc20Vault = Erc20Vault(paymentExitGameArgs.framework.vaults(paymentExitGameArgs.erc20VaultId));
+        require(address(erc20Vault) != address(0), "Invalid ERC20 vault");
         framework = paymentExitGameArgs.framework;
         startInFlightExitController = PaymentStartInFlightExit.buildController(
             paymentExitGameArgs.framework,
