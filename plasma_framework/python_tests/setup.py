@@ -26,7 +26,7 @@ setup(
     install_requires=[
         'rlp==1.1.0',
         'py-solc-simple@git+https://github.com/omisego/py-solc-simple@plasma_contracts_tmp_compilation',
-        'web3==5.1.0',
+        'web3==5.0.0',
         'eip712-structs==1.1.0',
         'eth_tester==0.2.0b2'
     ],
