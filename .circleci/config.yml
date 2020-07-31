@@ -213,28 +213,28 @@ workflows:
       - Python tests
       - Python linter
 
-  Run truffle tests:
-    jobs:
-      - Truffle tests
-      - Solidity coverage
-      - Javascript linter
-      - Solidity linter
+  # Run truffle tests:
+  #   jobs:
+  #     - Truffle tests
+  #     - Solidity coverage
+  #     - Javascript linter
+  #     - Solidity linter
 
-  Run python slow tests:
-    jobs:
-      - Python long running tests
-    triggers:
-      - schedule:
-          cron: "0 0 * * 1" # run job every monday at midnight
-          filters:
-            branches:
-              only:
-                - master
+  # Run python slow tests:
+  #   jobs:
+  #     - Python long running tests
+  #   triggers:
+  #     - schedule:
+  #         cron: "0 0 * * 1" # run job every monday at midnight
+  #         filters:
+  #           branches:
+  #             only:
+  #               - master
 
-  Deployment checks:
-    jobs:
-      - Deploy to Rinkeby:
-          filters:
-            branches:
-              only:
-                - master
+  # Deployment checks:
+  #   jobs:
+  #     - Deploy to Rinkeby:
+  #         filters:
+  #           branches:
+  #             only:
+  #               - master
