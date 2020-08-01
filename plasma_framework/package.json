@@ -6,6 +6,7 @@
     "test": "test"
   },
   "dependencies": {
+    "elliptic": ">=6.5.3",
     "@truffle/hdwallet-provider": "^1.0.37",
     "dotenv": "^8.0.0",
     "elliptic": ">=6.5.3",
