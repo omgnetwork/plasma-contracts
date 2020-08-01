@@ -79,7 +79,7 @@ contract('PaymentExitGame', ([_, _maintainer, _authority, richFather]) => {
         );
     });
 
-    it.only('should fail to init if the caller is not the maintainer', async () => {
+    it('should fail to init if the caller is not the maintainer', async () => {
         await this.spendingConditionRegistry.renounceOwnership();
         const exitGameArgs = [
             this.framework.address,
