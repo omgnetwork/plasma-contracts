@@ -103,7 +103,7 @@ contract('PaymentChallengeStandardExit', ([txSender, alice, bob, otherAddress]) 
                 SAFE_GAS_STIPEND,
             ];
             this.exitGame = await PaymentStandardExitRouter.new();
-            await this.exitGame.init(this.exitGameArgs);
+            await this.exitGame.boot(this.exitGameArgs);
             await this.framework.registerExitGame(TX_TYPE.PAYMENT, this.exitGame.address, PROTOCOL.MORE_VP);
 
             this.startStandardExitBondSize = await this.exitGame.startStandardExitBondSize();
@@ -155,7 +155,7 @@ contract('PaymentChallengeStandardExit', ([txSender, alice, bob, otherAddress]) 
 
             it('should fail when try to challenge with a tx that is not of MoreVP protocol', async () => {
                 const dummyExitGame = await PaymentStandardExitRouter.new();
-                await dummyExitGame.init(this.exitGameArgs);
+                await dummyExitGame.boot(this.exitGameArgs);
                 const args = getTestInputArgs(OUTPUT_TYPE.PAYMENT, alice);
                 // the test data is only setup for MoreVp, MVP would fail
                 const mvpTxType = 999;

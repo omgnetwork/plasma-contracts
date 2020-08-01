@@ -12,10 +12,10 @@ contract PaymentStandardExitRouterMock is PaymentStandardExitRouter {
     PaymentStandardExitRouterArgs.StartStandardExitArgs private startStandardExitArgs;
     PaymentStandardExitRouterArgs.ChallengeStandardExitArgs private challengeStandardExitArgs;
 
-    function init(PaymentExitGameArgs.Args memory args)
-        public
+    function boot(PaymentExitGameArgs.Args memory args)
+        internal
     {
-        PaymentStandardExitRouter.init(args);
+        PaymentStandardExitRouter.boot(args);
         framework = args.framework;
     }
 

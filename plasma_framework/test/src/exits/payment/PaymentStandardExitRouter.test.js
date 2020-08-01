@@ -48,7 +48,7 @@ contract('PaymentStandardExitRouter', () => {
         ];
         const paymentStandardExitRouter = await PaymentStandardExitRouter.new();
         await expectRevert(
-            paymentStandardExitRouter.init(exitGameArgs),
+            paymentStandardExitRouter.boot(exitGameArgs),
             'Invalid ETH vault',
         );
     });
@@ -66,7 +66,7 @@ contract('PaymentStandardExitRouter', () => {
         ];
         const paymentStandardExitRouter = await PaymentStandardExitRouter.new();
         await expectRevert(
-            paymentStandardExitRouter.init(exitGameArgs),
+            paymentStandardExitRouter.boot(exitGameArgs),
             'Invalid ERC20 vault',
         );
     });

@@ -91,9 +91,8 @@ contract('PaymentExitGame', ([_, maintainer, _authority, richFather]) => {
             SAFE_GAS_STIPEND,
         ];
         const paymentExitGame = await PaymentExitGame.new(exitGameArgs);
-        PaymentExitGame.defaults({ from: richFather });
         await expectRevert(
-            paymentExitGame.init(),
+            paymentExitGame.init( { from: richFather } ),
             'Only Maintainer can perform this action.',
         );
     });
@@ -110,7 +109,6 @@ contract('PaymentExitGame', ([_, maintainer, _authority, richFather]) => {
             SAFE_GAS_STIPEND,
         ];
         const paymentExitGame = await PaymentExitGame.new(exitGameArgs);
-        PaymentExitGame.defaults({ from: maintainer });
         await paymentExitGame.init();
         await expectRevert(
             paymentExitGame.init(),

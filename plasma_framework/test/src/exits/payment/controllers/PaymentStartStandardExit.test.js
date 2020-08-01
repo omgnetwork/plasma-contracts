@@ -126,7 +126,7 @@ contract('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
                 SAFE_GAS_STIPEND,
             ];
             this.exitGame = await PaymentStandardExitRouter.new();
-            await this.exitGame.init(exitGameArgs);
+            await this.exitGame.boot(exitGameArgs);
             await this.framework.registerExitGame(TX_TYPE.PAYMENT, this.exitGame.address, PROTOCOL.MORE_VP);
 
             this.startStandardExitBondSize = await this.exitGame.startStandardExitBondSize();

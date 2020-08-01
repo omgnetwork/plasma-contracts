@@ -68,8 +68,8 @@ contract PaymentStandardExitRouter is
         uint256 amount
     );
 
-    function init(PaymentExitGameArgs.Args memory paymentExitGameArgs)
-        public
+    function boot(PaymentExitGameArgs.Args memory paymentExitGameArgs)
+        internal
     {
         require(msg.sender == paymentExitGameArgs.framework.getMaintainer(), "Only Maintainer can perform this action");
         require(!initDone, "Exit game was already initialized");

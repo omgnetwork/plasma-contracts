@@ -84,7 +84,7 @@ contract('PaymentDeleteInFlightExit', ([_, bondOwner, inputOwner, outputOwner]) 
             SAFE_GAS_STIPEND,
         ];
         this.exitGame = await PaymentInFlightExitRouter.new();
-        await this.exitGame.init(exitArgs);
+        await this.exitGame.boot(exitArgs);
         await this.framework.registerExitGame(TX_TYPE.PAYMENT, this.exitGame.address, PROTOCOL.MORE_VP);
 
         this.startIFEBondSize = await this.exitGame.startIFEBondSize();

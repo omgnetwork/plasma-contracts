@@ -30,8 +30,7 @@ module.exports = async (
     ];
     await deployer.deploy(PaymentExitGame, paymentExitGameArgs);
     const paymentExitGame = await PaymentExitGame.deployed();
-    PaymentExitGame.defaults({ from: maintainerAddress });
-    await paymentExitGame.init();
+    await paymentExitGame.init({ from: maintainerAddress });
     // register the exit game to framework
     await plasmaFramework.registerExitGame(
         PAYMENT_TX_TYPE,
