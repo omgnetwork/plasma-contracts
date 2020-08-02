@@ -133,7 +133,7 @@ contract('PaymentStartInFlightExit', ([_, alice, richFather, carol]) => {
                     SAFE_GAS_STIPEND,
                 ];
                 this.exitGame = await PaymentInFlightExitRouter.new();
-                await this.exitGame.boot(exitGameArgs);
+                await this.exitGame.bootInternal(exitGameArgs);
                 await this.framework.registerExitGame(IFE_TX_TYPE, this.exitGame.address, PROTOCOL.MORE_VP);
 
                 const {
@@ -325,7 +325,7 @@ contract('PaymentStartInFlightExit', ([_, alice, richFather, carol]) => {
                     SAFE_GAS_STIPEND,
                 ];
                 this.exitGame = await PaymentInFlightExitRouter.new();
-                await this.exitGame.boot(exitGameArgs);
+                await this.exitGame.bootInternal(exitGameArgs);
 
                 await this.framework.registerExitGame(IFE_TX_TYPE, this.exitGame.address, PROTOCOL.MORE_VP);
                 this.startIFEBondSize = await this.exitGame.startIFEBondSize();

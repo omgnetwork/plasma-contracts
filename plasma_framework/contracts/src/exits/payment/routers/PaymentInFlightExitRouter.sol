@@ -58,7 +58,7 @@ contract PaymentInFlightExitRouter is
     BondSize.Params internal piggybackBond;
 
     PlasmaFramework private framework;
-    bool private initDone = false;
+    bool private bootDone = false;
 
     event IFEBondUpdated(uint128 bondSize);
     event PiggybackBondUpdated(uint128 bondSize);
@@ -132,7 +132,8 @@ contract PaymentInFlightExitRouter is
         internal
     {
         require(msg.sender == paymentExitGameArgs.framework.getMaintainer(), "Only Maintainer can perform this action");
-        require(!initDone, "Exit game was already initialized");
+        require(!bootDone, "Exit game was already initialized");
+        bootDone = true;
         EthVault ethVault = EthVault(paymentExitGameArgs.framework.vaults(paymentExitGameArgs.ethVaultId));
         require(address(ethVault) != address(0), "Invalid ETH vault");
         Erc20Vault erc20Vault = Erc20Vault(paymentExitGameArgs.framework.vaults(paymentExitGameArgs.erc20VaultId));

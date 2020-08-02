@@ -166,11 +166,11 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob, otherAddress]) => {
                 SAFE_GAS_STIPEND,
             ];
             this.exitGame = await PaymentInFlightExitRouter.new();
-            await this.exitGame.boot(exitGameArgs);
+            await this.exitGame.bootInternal(exitGameArgs);
             await this.framework.registerExitGame(TX_TYPE.PAYMENT, this.exitGame.address, PROTOCOL.MORE_VP);
 
             const dummyExitGame = await PaymentInFlightExitRouter.new();
-            await dummyExitGame.boot(exitGameArgs);
+            await dummyExitGame.bootInternal(exitGameArgs);
             await this.framework.registerExitGame(OTHER_TX_TYPE, dummyExitGame.address, PROTOCOL.MORE_VP);
 
             this.piggybackBondSize = await this.exitGame.piggybackBondSize();

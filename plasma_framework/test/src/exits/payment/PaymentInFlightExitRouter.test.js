@@ -60,7 +60,7 @@ contract('PaymentInFlightExitRouter', () => {
         ];
         const paymentInFlightExitRouter = await PaymentInFlightExitRouter.new();
         await expectRevert(
-            paymentInFlightExitRouter.boot(exitGameArgs),
+            paymentInFlightExitRouter.bootInternal(exitGameArgs),
             'Invalid ETH vault',
         );
     });
@@ -78,7 +78,7 @@ contract('PaymentInFlightExitRouter', () => {
         ];
         const paymentInFlightExitRouter = await PaymentInFlightExitRouter.new();
         await expectRevert(
-            paymentInFlightExitRouter.boot(exitGameArgs),
+            paymentInFlightExitRouter.bootInternal(exitGameArgs),
             'Invalid ERC20 vault',
         );
     });

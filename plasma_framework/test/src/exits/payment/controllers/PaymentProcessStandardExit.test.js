@@ -63,7 +63,7 @@ contract('PaymentProcessStandardExit', ([_, alice]) => {
                 SAFE_GAS_STIPEND,
             ];
             this.exitGame = await PaymentStandardExitRouter.new();
-            await this.exitGame.boot(exitGameArgs);
+            await this.exitGame.bootInternal(exitGameArgs);
             this.framework.registerExitGame(1, this.exitGame.address, PROTOCOL.MORE_VP);
 
             // prepare the bond that should be set when exit starts

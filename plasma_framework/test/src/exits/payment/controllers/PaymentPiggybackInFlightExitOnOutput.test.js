@@ -87,7 +87,7 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
             SAFE_GAS_STIPEND,
         ];
         this.exitGame = await PaymentInFlightExitRouter.new();
-        await this.exitGame.boot(exitGameArgs);
+        await this.exitGame.bootInternal(exitGameArgs);
         await this.framework.registerExitGame(TX_TYPE.PAYMENT, this.exitGame.address, PROTOCOL.MORE_VP);
 
         this.startIFEBondSize = await this.exitGame.startIFEBondSize();
