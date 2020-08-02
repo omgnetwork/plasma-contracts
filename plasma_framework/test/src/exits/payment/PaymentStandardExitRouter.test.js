@@ -10,7 +10,7 @@ const { expectRevert, constants } = require('openzeppelin-test-helpers');
 
 const { VAULT_ID, TX_TYPE, SAFE_GAS_STIPEND } = require('../../../helpers/constants.js');
 
-contract('PaymentStandardExitRouter', () => {
+contract('PaymentStandardExitRouter', ([_, _maintainer, other]) => {
     const MIN_EXIT_PERIOD = 1000;
     const INITIAL_IMMUNE_VAULTS_NUM = 1;
     const INITIAL_IMMUNE_EXIT_GAME_NUM = 1;
@@ -68,6 +68,45 @@ contract('PaymentStandardExitRouter', () => {
         await expectRevert(
             paymentStandardExitRouter.bootInternal(exitGameArgs),
             'Invalid ERC20 vault',
+        );
+    });
+
+    it.only('should fail with maintainer restriction', async () => {
+        await this.framework.registerVault(VAULT_ID.ERC20, this.erc20Vault.address);
+        await this.framework.registerVault(VAULT_ID.ETH, this.ethVault.address);
+        const exitGameArgs = [
+            this.framework.address,
+            VAULT_ID.ETH,
+            VAULT_ID.ERC20,
+            DUMMY_SPENDING_CONDITION_REGISTRY,
+            DUMMY_STATE_TRANSITION_VERIFIER,
+            TX_TYPE.PAYMENT,
+            SAFE_GAS_STIPEND,
+        ];
+        const paymentStandardExitRouter = await PaymentStandardExitRouter.new();
+        await expectRevert(
+            paymentStandardExitRouter.bootInternal(exitGameArgs, { from: other }),
+            'Only Maintainer can perform this action',
+        );
+    });
+
+    it.only('should fail with already initialized', async () => {
+        await this.framework.registerVault(VAULT_ID.ERC20, this.erc20Vault.address);
+        await this.framework.registerVault(VAULT_ID.ETH, this.ethVault.address);
+        const exitGameArgs = [
+            this.framework.address,
+            VAULT_ID.ETH,
+            VAULT_ID.ERC20,
+            DUMMY_SPENDING_CONDITION_REGISTRY,
+            DUMMY_STATE_TRANSITION_VERIFIER,
+            TX_TYPE.PAYMENT,
+            SAFE_GAS_STIPEND,
+        ];
+        const paymentStandardExitRouter = await PaymentStandardExitRouter.new();
+        await paymentStandardExitRouter.bootInternal(exitGameArgs);
+        await expectRevert(
+            paymentStandardExitRouter.bootInternal(exitGameArgs),
+            'Exit game was already initialized',
         );
     });
 });
