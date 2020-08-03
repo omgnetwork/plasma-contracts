@@ -93,7 +93,7 @@ contract('PaymentExitGame', ([_, richFather]) => {
         const paymentExitGame = await PaymentExitGame.new(exitGameArgs);
         await expectRevert(
             paymentExitGame.init({ from: richFather }),
-            'Caller address is unauthorized -- Reason given: Caller address is unauthorized.',
+            'Caller address is unauthorized.',
         );
     });
 

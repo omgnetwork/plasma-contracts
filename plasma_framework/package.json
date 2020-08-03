@@ -1,6 +1,6 @@
 {
   "name": "plasma_framework",
-  "version": "1.0.5",
+  "version": "2.0.0",
   "description": "Plasma Framework",
   "directories": {
     "test": "test"
