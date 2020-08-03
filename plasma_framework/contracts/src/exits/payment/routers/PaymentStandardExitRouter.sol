@@ -73,12 +73,12 @@ contract PaymentStandardExitRouter is
     {
         require(msg.sender == paymentExitGameArgs.framework.getMaintainer(), "Only Maintainer can perform this action");
         require(!bootDone, "Exit game was already initialized");
-        bootDone = true;
         EthVault ethVault = EthVault(paymentExitGameArgs.framework.vaults(paymentExitGameArgs.ethVaultId));
         require(address(ethVault) != address(0), "Invalid ETH vault");
         Erc20Vault erc20Vault = Erc20Vault(paymentExitGameArgs.framework.vaults(paymentExitGameArgs.erc20VaultId));        
         require(address(erc20Vault) != address(0), "Invalid ERC20 vault");     
-        framework = paymentExitGameArgs.framework;  
+        framework = paymentExitGameArgs.framework;
+        bootDone = true;
         startStandardExitController = PaymentStartStandardExit.buildController(
             this,
             paymentExitGameArgs.framework,

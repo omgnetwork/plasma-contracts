@@ -10,7 +10,7 @@ const { expectRevert, constants } = require('openzeppelin-test-helpers');
 
 const { VAULT_ID, TX_TYPE, SAFE_GAS_STIPEND } = require('../../../helpers/constants.js');
 
-contract('PaymentStandardExitRouter', ([_, _maintainer, other]) => {
+contract('PaymentStandardExitRouter', ([_, other]) => {
     const MIN_EXIT_PERIOD = 1000;
     const INITIAL_IMMUNE_VAULTS_NUM = 1;
     const INITIAL_IMMUNE_EXIT_GAME_NUM = 1;
@@ -71,7 +71,7 @@ contract('PaymentStandardExitRouter', ([_, _maintainer, other]) => {
         );
     });
 
-    it.only('should fail with maintainer restriction', async () => {
+    it('should fail with maintainer restriction', async () => {
         await this.framework.registerVault(VAULT_ID.ERC20, this.erc20Vault.address);
         await this.framework.registerVault(VAULT_ID.ETH, this.ethVault.address);
         const exitGameArgs = [
@@ -90,7 +90,7 @@ contract('PaymentStandardExitRouter', ([_, _maintainer, other]) => {
         );
     });
 
-    it.only('should fail with already initialized', async () => {
+    it('should fail with already initialized', async () => {
         await this.framework.registerVault(VAULT_ID.ERC20, this.erc20Vault.address);
         await this.framework.registerVault(VAULT_ID.ETH, this.ethVault.address);
         const exitGameArgs = [

@@ -18,7 +18,7 @@ const { expectRevert, constants } = require('openzeppelin-test-helpers');
 
 const { VAULT_ID, TX_TYPE, SAFE_GAS_STIPEND } = require('../../../helpers/constants.js');
 
-contract('PaymentExitGame', ([_, _maintainer, _authority, richFather]) => {
+contract('PaymentExitGame', ([_, richFather]) => {
     const MIN_EXIT_PERIOD = 1000;
     const INITIAL_IMMUNE_VAULTS_NUM = 1;
     const INITIAL_IMMUNE_EXIT_GAME_NUM = 1;
