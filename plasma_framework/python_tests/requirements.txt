@@ -34,12 +34,12 @@ multiaddr==0.0.8
 netaddr==0.7.19
 packaging==19.2
 parsimonious==0.8.1
--e git+git@github.com:omisego/py-solc-simple.git@f84477e8a82f2bb548ad814f383f5be14ba1d086#egg=py-solc-simple
+-e git+git@github.com:omisego/py-solc-simple.git@cd808fbd7977e798e2c0cf7c55b3a7bb10fdacb6#egg=py-solc-simple
 pluggy==0.13.0
 protobuf==3.10.0
 psutil==5.6.6
 py==1.8.0
-py-solc-x==0.4.0
+py-solc-x==0.10.1
 pycodestyle==2.5.0
 pycryptodome==3.9.0
 pyflakes==2.1.1
