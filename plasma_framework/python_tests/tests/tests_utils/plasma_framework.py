@@ -119,10 +119,9 @@ class PlasmaFramework:
             SAFE_GAS_STIPEND,
         )
         payment_exit_game = get_contract("PaymentExitGame",
-                                         sender=maintainer,
                                          args=(payment_exit_game_args,),
                                          libraries=libs_map)
-
+        payment_exit_game.init(**{'from': maintainer.address})
         return payment_exit_game
 
     @staticmethod
