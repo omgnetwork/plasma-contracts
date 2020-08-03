@@ -146,5 +146,5 @@ npm version patch -m "Fixed a bug in X"
 ```bash
 truffle migrate <account1,account2,...,accountN> <requiredConfirmations> 
 ```
-- Address of the contract is in MultiSigWallet/build/outputs.json
-- Before you can use this address, the address needs to be funded!
+- Address of the contract is in MultiSigWallet/build/multisig_instance
+- The multisig contract needs to be funded so that it's able to execute stacked transactions!

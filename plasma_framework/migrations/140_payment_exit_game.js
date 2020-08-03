@@ -1,14 +1,14 @@
 /* eslint-disable no-console */
 
-// const PaymentExitGame = artifacts.require('PaymentExitGame');
-// const PaymentTransactionStateTransitionVerifier = artifacts.require('PaymentTransactionStateTransitionVerifier');
-// const PlasmaFramework = artifacts.require('PlasmaFramework');
-// const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry');
-
-// const config = require('../config.js');
+const PaymentExitGame = artifacts.require('PaymentExitGame');
+const PaymentTransactionStateTransitionVerifier = artifacts.require('PaymentTransactionStateTransitionVerifier');
+const PlasmaFramework = artifacts.require('PlasmaFramework');
+const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry');
+const FeeExitGame = artifacts.require('FeeExitGame');
+const config = require('../config.js');
 
 module.exports = async (
-    _deployer,
+    deployer,
     _,
     // eslint-disable-next-line no-unused-vars
     [deployerAddress, maintainerAddress, authorityAddress],
@@ -29,15 +29,5 @@ module.exports = async (
         config.frameworks.safeGasStipend.v1,
     ];
     
-    deployer.deploy(PaymentExitGame, paymentExitGameArgs);
-
-    //pa paytmentexitgame.init()
-    // // register the exit game to framework
-    // await plasmaFramework.registerExitGame(
-    //     PAYMENT_TX_TYPE,
-    //     paymentExitGame.address,
-    //     config.frameworks.protocols.moreVp,
-    //     { from: maintainerAddress },
-    // );
-    //
+    await deployer.deploy(PaymentExitGame, paymentExitGameArgs);
 };
