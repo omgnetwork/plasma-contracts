@@ -6,14 +6,9 @@ const EthVault = artifacts.require('EthVault');
 const Erc20Vault = artifacts.require('Erc20Vault');
 const EthDepositVerifier = artifacts.require('EthDepositVerifier');
 const Erc20DepositVerifier = artifacts.require('Erc20DepositVerifier');
-const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry');
-const PaymentTransactionStateTransitionVerifier = artifacts.require('PaymentTransactionStateTransitionVerifier');
 const childProcess = require('child_process');
-const fs = require('fs');
-const path = require('path');
 const config = require('../config.js');
 const pck = require('../package.json');
-// const util = require('util');
 
 module.exports = async (
     deployer,
@@ -30,8 +25,6 @@ module.exports = async (
     const erc20Vault = await Erc20Vault.deployed();
     const MORE_VP = config.frameworks.protocols.moreVp;
     const PAYMENT_TX_TYPE = config.registerKeys.txTypes.payment;
-    const spendingConditionRegistry = await SpendingConditionRegistry.deployed();
-    const stateVerifier = await PaymentTransactionStateTransitionVerifier.deployed();
     const FEE_TX_TYPE = config.registerKeys.txTypes.fee;
     if (!vault) {
         const paymentExitGame = await PaymentExitGame.deployed();
@@ -64,6 +57,5 @@ module.exports = async (
         );
         await plasmaFramework.setVersion(`${pck.version}+${sha}`, { from: maintainerAddress });
         await plasmaFramework.activateChildChain({ from: authorityAddress });
-        
     }
 };

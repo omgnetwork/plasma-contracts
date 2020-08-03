@@ -1,13 +1,10 @@
 /* eslint-disable no-console */
 const PlasmaFramework = artifacts.require('PlasmaFramework');
-const PaymentExitGame = artifacts.require('PaymentExitGame');
-const FeeExitGame = artifacts.require('FeeExitGame');
 const EthVault = artifacts.require('EthVault');
 const Erc20Vault = artifacts.require('Erc20Vault');
 const EthDepositVerifier = artifacts.require('EthDepositVerifier');
 const Erc20DepositVerifier = artifacts.require('Erc20DepositVerifier');
-const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry');
-const PaymentTransactionStateTransitionVerifier = artifacts.require('PaymentTransactionStateTransitionVerifier');
+const FeeExitGame = artifacts.require('FeeExitGame');
 const childProcess = require('child_process');
 const fs = require('fs');
 const path = require('path');
@@ -24,34 +21,32 @@ module.exports = async (
     const vault = process.env.VAULT || false;
     const plasmaFramework = await PlasmaFramework.deployed();
     const sha = childProcess.execSync('git rev-parse HEAD').toString().trim().substring(0, 7);
+    const feeExitGame = FeeExitGame.deployed();
     const ethDepositVerifier = await EthDepositVerifier.deployed();
     const ethVault = await EthVault.deployed();
     const erc20DepositVerifier = await Erc20DepositVerifier.deployed();
     const erc20Vault = await Erc20Vault.deployed();
     const MORE_VP = config.frameworks.protocols.moreVp;
     const PAYMENT_TX_TYPE = config.registerKeys.txTypes.payment;
-    const spendingConditionRegistry = await SpendingConditionRegistry.deployed();
-    const stateVerifier = await PaymentTransactionStateTransitionVerifier.deployed();
     const FEE_TX_TYPE = config.registerKeys.txTypes.fee;
     if (vault) {
-//curl -X PUT -H "X-Vault-Token: $(vault print token)" -H "X-Vault-Request: true" -d '{"chain_id":"5777","rpc_url":"http://ganache:8545"}' http://127.0.0.1:8900/v1/immutability-eth-plugin/config
-//const walletName = 'plasma-deployer';
-//curl -X PUT -H "X-Vault-Request: true" -H "X-Vault-Token: $(vault print token)" -d 'null' http://127.0.0.1:8900/v1/immutability-eth-plugin/wallets/`${walletName}`
-//curl -X PUT -H "X-Vault-Request: true" -H "X-Vault-Token: $(vault print token)" -d 'null' http://127.0.0.1:8900/v1/immutability-eth-plugin/wallets/`${walletName}`/accounts
-// {
-//   "request_id": "4141b5c3-3ba7-beeb-64fe-cac2d75a1dc0",
-//   "lease_id": "",
-//   "lease_duration": 0,
-//   "renewable": false,
-//   "data": {
-//     "address": "0xA1296d36980058b1fe2Bb177b733FaC763d8405E",
-//     "blacklist": null,
-//     "index": 0,
-//     "whitelist": null
-//   },
-//   "warnings": null
-// }
-
+        // curl -X PUT -H "X-Vault-Token: $(vault print token)" -H "X-Vault-Request: true" -d '{"chain_id":"5777","rpc_url":"http://ganache:8545"}' http://127.0.0.1:8900/v1/immutability-eth-plugin/config
+        // const walletName = 'plasma-deployer';
+        // curl -X PUT -H "X-Vault-Request: true" -H "X-Vault-Token: $(vault print token)" -d 'null' http://127.0.0.1:8900/v1/immutability-eth-plugin/wallets/`${walletName}`
+        // curl -X PUT -H "X-Vault-Request: true" -H "X-Vault-Token: $(vault print token)" -d 'null' http://127.0.0.1:8900/v1/immutability-eth-plugin/wallets/`${walletName}`/accounts
+        // {
+        //   "request_id": "4141b5c3-3ba7-beeb-64fe-cac2d75a1dc0",
+        //   "lease_id": "",
+        //   "lease_duration": 0,
+        //   "renewable": false,
+        //   "data": {
+        //     "address": "0xA1296d36980058b1fe2Bb177b733FaC763d8405E",
+        //     "blacklist": null,
+        //     "index": 0,
+        //     "whitelist": null
+        //   },
+        //   "warnings": null
+        // }
         const buildDir = path.resolve(__dirname, '../../MultiSigWallet/build/multisig_instance');
         const gnosisMultisigAddress = fs.readFileSync(buildDir, 'utf8');
         const gnosisMultisigAbi = {
@@ -75,7 +70,6 @@ module.exports = async (
         const registerVault = web3.eth.abi.encodeFunctionCall(plasmaFramework.abi.find(o => o.name === 'registerVault'), [config.registerKeys.vaultId.eth, ethVault.address]);
         const gnosisRegisterVault = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [plasmaFramework.address, 0, registerVault]);
         await new Promise((resolve, reject) => web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisRegisterVault }, e => (e ? reject(e) : resolve())));
-
         // ERC20 ethVault.setDepositVerifier
         const setERC20DepositVerifier = web3.eth.abi.encodeFunctionCall(erc20Vault.abi.find(o => o.name === 'setDepositVerifier'), [erc20DepositVerifier.address]);
         const gnosisERC20SetDepositVerifier = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [erc20Vault.address, 0, setERC20DepositVerifier]);
@@ -88,7 +82,7 @@ module.exports = async (
         // await deployer.deploy(FeeExitGame);
         // the below deployment fails because vaults are not registered yet!
         // https://github.com/omgnetwork/plasma-contracts/issues/656
-        //await deployer.deploy(PaymentExitGame, paymentExitGameArgs);
+        // await deployer.deploy(PaymentExitGame, paymentExitGameArgs);
 
         // plasmaFramework.registerExitGame PAYMENT_TX_TYPE
         const registerExitGame = web3.eth.abi.encodeFunctionCall(plasmaFramework.abi.find(o => o.name === 'registerExitGame'), [PAYMENT_TX_TYPE, paymentExitGame.address, MORE_VP]);
@@ -106,8 +100,8 @@ module.exports = async (
         await new Promise((resolve, reject) => web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisSetVersion }, e => (e ? reject(e) : resolve())));
 
         // activate child chain via Vault
-//
-//curl -X PUT -H "X-Vault-Request: true" -H "X-Vault-Token: $(vault print token)" -d '{"contract":"0xd185aff7fb18d2045ba766287ca64992fdd79b1e"}' http://127.0.0.1:8900/v1/immutability-eth-plugin/wallets/plasma-deployer/accounts/0x888a65279D4a3A4E3cbA57D5B3Bd3eB0726655a6/plasma/activateChildChain
-//
+        //
+        // curl -X PUT -H "X-Vault-Request: true" -H "X-Vault-Token: $(vault print token)" -d '{"contract":"0xd185aff7fb18d2045ba766287ca64992fdd79b1e"}' http://127.0.0.1:8900/v1/immutability-eth-plugin/wallets/plasma-deployer/accounts/0x888a65279D4a3A4E3cbA57D5B3Bd3eB0726655a6/plasma/activateChildChain
+        //
     }
 };

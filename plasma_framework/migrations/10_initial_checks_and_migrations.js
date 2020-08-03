@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 /* eslint-disable prefer-destructuring */
-const https = require('https');
 const Migrations = artifacts.require('Migrations');
+const config = require('../config.js');
 
 const fundAddressIfEmpty = async (from, to, value, receiverName) => {
     const balanceWeiCount = await Migrations.web3.eth.getBalance(to);
@@ -33,88 +33,17 @@ module.exports = async (
     // eslint-disable-next-line no-unused-vars
     [deployerAddress, maintainerAddress, authorityAddress],
 ) => {
-    var authority = authorityAddress;
     const vault = process.env.VAULT || false;
+    let authority;
     if (vault) {
-        const chain_id = `${process.env.CHAIN_ID}` || 1;
-        const rpc_url = process.env.VAULT_RPC_REMOTE_URL || 'http://127.0.0.1:8545';
-        const walletName = 'plasma-deployer';
-        // configuration
-        var options = {
-            host: `${process.env.VAULT_ADDR}`,
-            port: `${process.env.VAULT_PORT}`,
-            path: '/v1/immutability-eth-plugin/config',
-            method: 'PUT',
-            headers: { 
-                "X-Vault-Token" : `${process.env.VAULT_TOKEN}`,
-                "X-Vault-Request" : true,
-            }
-        };
-        var callback = function(response) {
-            var str = ''
-            response.on('data', function(chunk){
-                str += chunk
-            })
-
-            response.on('end', function(){
-                const response_object = JSON.parse(str);
-                if (response_object.data.chain_id != chain_id || response_object.data.rpc_url != rpc_url){
-                    throw 'Vault configuration did not stick';
-                }
-            })
-        }
-        var body = JSON.stringify({
-            chain_id: chain_id,
-            rpc_url: rpc_url
-        });
-        https.request(options, callback).end(body);
-        // wallet 
-        options.path = `/v1/immutability-eth-plugin/wallets/${walletName}`;
-
-        callback = function(response) {
-
-            var str = ''
-            response.on('data', function(chunk){
-                str += chunk
-            })
-
-            response.on('end', function(){
-                const response_object = JSON.parse(str);
-                if (typeof response_object.request_id !== 'string'){
-                    console.log(str);
-                    throw 'Creating wallet failed';
-                }
-            })
-        }
-        https.request(options, callback).end(JSON.stringify({}));
-        // account
-        options.path = `/v1/immutability-eth-plugin/wallets/${walletName}/accounts`;
-
-        callback = function(response) {
-
-            var str = ''
-            response.on('data', function(chunk){
-                str += chunk
-            })
-
-            response.on('end', function(){
-                const response_object = JSON.parse(str);
-                console.log(response_object);
-                if (typeof response_object.data.address !== 'string'){
-                    throw 'Creating account failed';
-                }else{
-                    authority = response_object.data.address;
-                }
-            })
-        }
-        await https.request(options, callback).end(JSON.stringify({}));
-
-    }else{
-        console.log(`Deployer address: ${deployerAddress}`);
-        console.log(`Maintainer address: ${maintainerAddress}`);
-        
+        authority = config.authority;
+        console.log(`Vault authority address: ${authority}`);
+    } else {
+        authority = authorityAddress;
+        console.log(`Authority address: ${authority}`);
     }
-    console.log(`Authority address: ${authority}`);
+    console.log(`Deployer address: ${deployerAddress}`);
+    console.log(`Maintainer address: ${maintainerAddress}`);
     const initAmountForMaintainer = process.env.MAINTAINER_ADDRESS_INITIAL_AMOUNT || 2e17; // 0.2 ETH by default
     const initAmountForAuthority = process.env.AUTHORITY_ADDRESS_INITIAL_AMOUNT || 2e17; // 0.2 ETH by default
 
