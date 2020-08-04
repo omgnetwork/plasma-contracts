@@ -85,5 +85,7 @@ module.exports = async (
             });
         };
         await https.request(options, callback).end(JSON.stringify({}));
+    } else {
+        console.log(`Skipping because Vault ${vault} or perhaps authority exists ${authorityExists}`);
     }
 };
