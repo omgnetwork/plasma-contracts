@@ -1,6 +1,6 @@
 const PlasmaFramework = artifacts.require('PlasmaFramework');
-const config = require('../config.js');
 const fs = require('fs');
+const config = require('../config.js');
 
 module.exports = async (
     deployer,
@@ -10,9 +10,9 @@ module.exports = async (
 ) => {
     let authority;
     const vault = process.env.VAULT || false;
-    if (vault){
+    if (vault) {
         authority = fs.readFileSync('vault_authority').toString();
-    }else {
+    } else {
         authority = authorityAddress;
     }
     await deployer.deploy(

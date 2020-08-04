@@ -16,9 +16,9 @@ module.exports = async (
 ) => {
     let authority;
     const vault = process.env.VAULT || false;
-    if (vault){
+    if (vault) {
         authority = fs.readFileSync('vault_authority');
-    }else {
+    } else {
         authority = authorityAddress;
     }
     const plasmaFramework = await PlasmaFramework.deployed();
