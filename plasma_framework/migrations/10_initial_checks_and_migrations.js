@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 /* eslint-disable prefer-destructuring */
 const Migrations = artifacts.require('Migrations');
-const config = require('../config.js');
+const fs = require('fs');
 
 const fundAddressIfEmpty = async (from, to, value, receiverName) => {
     const balanceWeiCount = await Migrations.web3.eth.getBalance(to);

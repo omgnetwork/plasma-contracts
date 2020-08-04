@@ -1,7 +1,6 @@
 /* eslint-disable no-console */
 /* eslint-disable prefer-destructuring */
 const https = require('https');
-const config = require('../config.js');
 const fs = require('fs');
 
 module.exports = async (
