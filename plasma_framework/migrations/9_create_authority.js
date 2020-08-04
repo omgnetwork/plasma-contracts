@@ -16,6 +16,7 @@ module.exports = async (
         const rpcUrl = process.env.VAULT_RPC_REMOTE_URL || 'http://127.0.0.1:8545';
         const walletName = 'plasma-deployer';
         // configuration
+        console.log('Configuring vault');
         var options = {
             host: `${process.env.VAULT_ADDR}`,
             port: `${process.env.VAULT_PORT}`,
@@ -45,6 +46,7 @@ module.exports = async (
         });
         https.request(options, callback).end(body);
         // wallet 
+        console.log('Creating wallet');
         options.path = `/v1/immutability-eth-plugin/wallets/${walletName}`;
 
         callback = function(response) {
@@ -64,6 +66,7 @@ module.exports = async (
         };
         https.request(options, callback).end(JSON.stringify({}));
         // account
+        console.log('Creating account');
         options.path = `/v1/immutability-eth-plugin/wallets/${walletName}/accounts`;
 
         callback = function(response) {
@@ -85,6 +88,7 @@ module.exports = async (
             });
         };
         await https.request(options, callback).end(JSON.stringify({}));
+        console.log('Done');
     } else {
         console.log(`Skipping because Vault ${vault} or perhaps authority exists ${authorityExists}`);
     }
