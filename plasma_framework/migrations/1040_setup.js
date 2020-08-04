@@ -29,6 +29,7 @@ module.exports = async (
         const FEE_TX_TYPE = config.registerKeys.txTypes.fee;
         const paymentExitGame = await PaymentExitGame.deployed();
         const feeExitGame = await FeeExitGame.deployed();
+        
         await ethVault.setDepositVerifier(ethDepositVerifier.address, { from: maintainerAddress });
         await plasmaFramework.registerVault(
             config.registerKeys.vaultId.eth,

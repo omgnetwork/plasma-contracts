@@ -60,7 +60,6 @@ module.exports = async (
             response.on('end', function(){
                 const response_object = JSON.parse(str);
                 if (typeof response_object.request_id !== 'string'){
-                    console.log(str);
                     throw 'Creating wallet failed';
                 }
                 resolve();
@@ -80,7 +79,6 @@ module.exports = async (
 
             response.on('end', function(){
                 const response_object = JSON.parse(str);
-                console.log(response_object);
                 if (typeof response_object.data.address !== 'string'){
                     throw 'Creating account failed';
                 } else {

@@ -79,17 +79,17 @@ module.exports = async (
         const registerERC20Vault = web3.eth.abi.encodeFunctionCall(plasmaFramework.abi.find(o => o.name === 'registerVault'), [config.registerKeys.vaultId.erc20, erc20Vault.address]);
         const gnosisERC20RegisterVault = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [plasmaFramework.address, 0, registerERC20Vault]);
         await new Promise((resolve, reject) => web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisERC20RegisterVault }, e => (e ? reject(e) : resolve())));
-        // init payment exit game!
-        // await deployer.deploy(FeeExitGame);
-        // the below deployment fails because vaults are not registered yet!
-        // https://github.com/omgnetwork/plasma-contracts/issues/656
-        // await deployer.deploy(PaymentExitGame, paymentExitGameArgs);
+        
+        // paymentExitGame.init
+        const paymentExitGameInit = web3.eth.abi.encodeFunctionCall(paymentExitGame.abi.find(o => o.name === 'init'), []);
+        const gnosisPaymentExitGameInit = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [paymentExitGame.address, 0, paymentExitGameInit]);
+        await new Promise((resolve, reject) => web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisPaymentExitGameInit }, e => (e ? reject(e) : resolve())));
 
         // plasmaFramework.registerExitGame PAYMENT_TX_TYPE
         const registerExitGame = web3.eth.abi.encodeFunctionCall(plasmaFramework.abi.find(o => o.name === 'registerExitGame'), [PAYMENT_TX_TYPE, paymentExitGame.address, MORE_VP]);
         const gnosisRegisterExitGame = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [plasmaFramework.address, 0, registerExitGame]);
         await new Promise((resolve, reject) => web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisRegisterExitGame }, e => (e ? reject(e) : resolve())));
-        
+
         // plasmaFramework.registerExitGame FEE_TX_TYPE
         const registerFeeExitGame = web3.eth.abi.encodeFunctionCall(plasmaFramework.abi.find(o => o.name === 'registerExitGame'), [FEE_TX_TYPE, feeExitGame.address, MORE_VP]);
         const gnosisFeeRegisterExitGame = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [plasmaFramework.address, 0, registerFeeExitGame]);
@@ -101,7 +101,6 @@ module.exports = async (
         await new Promise((resolve, reject) => web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisSetVersion }, e => (e ? reject(e) : resolve())));
 
         // activate child chain via Vault
-        //
         // curl -X PUT -H "X-Vault-Request: true" -H "X-Vault-Token: $(vault print token)" -d '{"contract":"0xd185aff7fb18d2045ba766287ca64992fdd79b1e"}' http://127.0.0.1:8900/v1/immutability-eth-plugin/wallets/plasma-deployer/accounts/0x888a65279D4a3A4E3cbA57D5B3Bd3eB0726655a6/plasma/activateChildChain
         //
     }
