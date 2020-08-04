@@ -135,8 +135,7 @@ jobs:
             npx truffle migrate --network local
           environment:
             VAULT: true
-            VAULT_ADDR: 127.0.0.1
-            VAULT_PORT: 8200
+            VAULT_ADDR: https://127.0.0.1:8200
             VAULT_TOKEN: totally-secure
             NODE_TLS_REJECT_UNAUTHORIZED: 0
             VAULT_RPC_REMOTE_URL: http://ganache:8545

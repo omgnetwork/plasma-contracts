@@ -6,9 +6,10 @@
     "test": "test"
   },
   "dependencies": {
-    "elliptic": ">=6.5.3",
     "@truffle/hdwallet-provider": "^1.0.37",
+    "axios": "^0.19.2",
     "dotenv": "^8.0.0",
+    "elliptic": ">=6.5.3",
     "lodash.clonedeep": "^4.5.0",
     "openzeppelin-solidity": "2.3.0"
   },
