@@ -36,7 +36,7 @@ module.exports = async (
     const vault = process.env.VAULT || false;
     let authority;
     if (vault) {
-        authority = config.authority;
+        authority = fs.readFileSync('vault_authority');
         console.log(`Vault authority address: ${authority}`);
     } else {
         authority = authorityAddress;

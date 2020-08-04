@@ -2,6 +2,7 @@
 /* eslint-disable prefer-destructuring */
 const https = require('https');
 const config = require('../config.js');
+const fs = require('fs');
 
 module.exports = async (
     _deployer,
@@ -10,7 +11,8 @@ module.exports = async (
     [_deployerAddress, _maintainerAddress, _authorityAddress],
 ) => {
     const vault = process.env.VAULT || false;
-    if (vault) {
+    const authorityExists = fs.existsSync('vault_authority');
+    if (vault && !authorityExists) {
         const chainId = `${process.env.CHAIN_ID}` || 1;
         const rpcUrl = process.env.VAULT_RPC_REMOTE_URL || 'http://127.0.0.1:8545';
         const walletName = 'plasma-deployer';
@@ -26,7 +28,7 @@ module.exports = async (
             }
         };
         var callback = function(response) {
-            var str = ''
+            var str = '';
             response.on('data', function(chunk){
                 str += chunk
             });
@@ -37,7 +39,7 @@ module.exports = async (
                     throw 'Vault configuration did not stick';
                 }
             });
-        }
+        };
         var body = JSON.stringify({
             chain_id: chainId,
             rpc_url: rpcUrl
@@ -48,7 +50,7 @@ module.exports = async (
 
         callback = function(response) {
 
-            var str = ''
+            var str = '';
             response.on('data', function(chunk){
                 str += chunk;
             });
@@ -60,14 +62,14 @@ module.exports = async (
                     throw 'Creating wallet failed';
                 }
             });
-        }
+        };
         https.request(options, callback).end(JSON.stringify({}));
         // account
         options.path = `/v1/immutability-eth-plugin/wallets/${walletName}/accounts`;
 
         callback = function(response) {
 
-            var str = ''
+            var str = '';
             response.on('data', function(chunk){
                 str += chunk;
             });
@@ -78,10 +80,10 @@ module.exports = async (
                 if (typeof response_object.data.address !== 'string'){
                     throw 'Creating account failed';
                 } else {
-                    config.authority = response_object.data.address;
+                    fs.writeFileSync('vault_authority', `${response_object.data.address}`);
                 }
             });
-        }
+        };
         await https.request(options, callback).end(JSON.stringify({}));
     }
 };
