@@ -50,3 +50,5 @@ coverage.json
 tenderly.yaml
 
 MultiSigWallet
+MultiSigWalletOverride/ganache_data/
+plasma_framework/vault_authority

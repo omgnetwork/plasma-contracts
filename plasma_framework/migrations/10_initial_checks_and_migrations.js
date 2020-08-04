@@ -4,6 +4,7 @@ const Migrations = artifacts.require('Migrations');
 const fs = require('fs');
 
 const fundAddressIfEmpty = async (from, to, value, receiverName) => {
+    console.log(`Funding ${receiverName} address ${to}`);
     const balanceWeiCount = await Migrations.web3.eth.getBalance(to);
     const balanceEthCount = Migrations.web3.utils.fromWei(balanceWeiCount.toString());
     const fundEthCount = Migrations.web3.utils.fromWei(value.toString());
@@ -33,10 +34,10 @@ module.exports = async (
     // eslint-disable-next-line no-unused-vars
     [deployerAddress, maintainerAddress, authorityAddress],
 ) => {
-    const vault = process.env.VAULT || false;
     let authority;
+    const vault = process.env.VAULT || false;
     if (vault) {
-        authority = fs.readFileSync('vault_authority');
+        authority = fs.readFileSync('vault_authority').toString();
         console.log(`Vault authority address: ${authority}`);
     } else {
         authority = authorityAddress;

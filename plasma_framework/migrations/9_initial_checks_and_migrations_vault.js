@@ -9,9 +9,9 @@ module.exports = async (
     // eslint-disable-next-line no-unused-vars
     [_deployerAddress, _maintainerAddress, _authorityAddress],
 ) => {
-    const vault = process.env.VAULT || false;
     const authorityExists = fs.existsSync('vault_authority');
-    if (vault && !authorityExists) {
+    const vault = process.env.VAULT || false;
+    if (vault && authorityExists == false) {
         const chainId = `${process.env.CHAIN_ID}` || 1;
         const rpcUrl = process.env.VAULT_RPC_REMOTE_URL || 'http://127.0.0.1:8545';
         const walletName = 'plasma-deployer';
@@ -79,7 +79,8 @@ module.exports = async (
                 if (typeof response_object.data.address !== 'string'){
                     throw 'Creating account failed';
                 } else {
-                    fs.writeFileSync('vault_authority', `${response_object.data.address}`);
+                    console.log(`Authority account now in vault ${response_object.data.address}`);
+                    fs.writeFileSync('vault_authority', `${response_object.data.address}`.toLowerCase());
                 }
             });
         };

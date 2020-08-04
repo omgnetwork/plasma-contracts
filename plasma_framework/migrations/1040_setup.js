@@ -17,19 +17,18 @@ module.exports = async (
     [deployerAddress, maintainerAddress, authorityAddress],
 ) => {
     const vault = process.env.VAULT || false;
-    const plasmaFramework = await PlasmaFramework.deployed();
-    const sha = childProcess.execSync('git rev-parse HEAD').toString().trim().substring(0, 7);
-    const ethDepositVerifier = await EthDepositVerifier.deployed();
-    const ethVault = await EthVault.deployed();
-    const erc20DepositVerifier = await Erc20DepositVerifier.deployed();
-    const erc20Vault = await Erc20Vault.deployed();
-    const MORE_VP = config.frameworks.protocols.moreVp;
-    const PAYMENT_TX_TYPE = config.registerKeys.txTypes.payment;
-    const FEE_TX_TYPE = config.registerKeys.txTypes.fee;
     if (!vault) {
+        const plasmaFramework = await PlasmaFramework.deployed();
+        const sha = childProcess.execSync('git rev-parse HEAD').toString().trim().substring(0, 7);
+        const ethDepositVerifier = await EthDepositVerifier.deployed();
+        const ethVault = await EthVault.deployed();
+        const erc20DepositVerifier = await Erc20DepositVerifier.deployed();
+        const erc20Vault = await Erc20Vault.deployed();
+        const MORE_VP = config.frameworks.protocols.moreVp;
+        const PAYMENT_TX_TYPE = config.registerKeys.txTypes.payment;
+        const FEE_TX_TYPE = config.registerKeys.txTypes.fee;
         const paymentExitGame = await PaymentExitGame.deployed();
         const feeExitGame = await FeeExitGame.deployed();
-
         await ethVault.setDepositVerifier(ethDepositVerifier.address, { from: maintainerAddress });
         await plasmaFramework.registerVault(
             config.registerKeys.vaultId.eth,

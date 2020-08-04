@@ -1,16 +1,16 @@
 /* eslint-disable no-console */
 const PlasmaFramework = artifacts.require('PlasmaFramework');
+const PaymentExitGame = artifacts.require('PaymentExitGame');
+const FeeExitGame = artifacts.require('FeeExitGame');
 const EthVault = artifacts.require('EthVault');
 const Erc20Vault = artifacts.require('Erc20Vault');
 const EthDepositVerifier = artifacts.require('EthDepositVerifier');
 const Erc20DepositVerifier = artifacts.require('Erc20DepositVerifier');
-const FeeExitGame = artifacts.require('FeeExitGame');
 const childProcess = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const config = require('../config.js');
 const pck = require('../package.json');
-// const util = require('util');
 
 module.exports = async (
     deployer,
@@ -19,17 +19,18 @@ module.exports = async (
     [deployerAddress, maintainerAddress, authorityAddress],
 ) => {
     const vault = process.env.VAULT || false;
-    const plasmaFramework = await PlasmaFramework.deployed();
-    const sha = childProcess.execSync('git rev-parse HEAD').toString().trim().substring(0, 7);
-    const feeExitGame = FeeExitGame.deployed();
-    const ethDepositVerifier = await EthDepositVerifier.deployed();
-    const ethVault = await EthVault.deployed();
-    const erc20DepositVerifier = await Erc20DepositVerifier.deployed();
-    const erc20Vault = await Erc20Vault.deployed();
-    const MORE_VP = config.frameworks.protocols.moreVp;
-    const PAYMENT_TX_TYPE = config.registerKeys.txTypes.payment;
-    const FEE_TX_TYPE = config.registerKeys.txTypes.fee;
     if (vault) {
+        const plasmaFramework = await PlasmaFramework.deployed();
+        const sha = childProcess.execSync('git rev-parse HEAD').toString().trim().substring(0, 7);
+        const ethDepositVerifier = await EthDepositVerifier.deployed();
+        const ethVault = await EthVault.deployed();
+        const erc20DepositVerifier = await Erc20DepositVerifier.deployed();
+        const erc20Vault = await Erc20Vault.deployed();
+        const MORE_VP = config.frameworks.protocols.moreVp;
+        const PAYMENT_TX_TYPE = config.registerKeys.txTypes.payment;
+        const FEE_TX_TYPE = config.registerKeys.txTypes.fee;
+        const paymentExitGame = await PaymentExitGame.deployed();
+        const feeExitGame = await FeeExitGame.deployed();
         // curl -X PUT -H "X-Vault-Token: $(vault print token)" -H "X-Vault-Request: true" -d '{"chain_id":"5777","rpc_url":"http://ganache:8545"}' http://127.0.0.1:8900/v1/immutability-eth-plugin/config
         // const walletName = 'plasma-deployer';
         // curl -X PUT -H "X-Vault-Request: true" -H "X-Vault-Token: $(vault print token)" -d 'null' http://127.0.0.1:8900/v1/immutability-eth-plugin/wallets/`${walletName}`
