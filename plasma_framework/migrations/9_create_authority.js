@@ -27,7 +27,7 @@ module.exports = async (
                 "X-Vault-Request" : true,
             }
         };
-        var callback = function(response) {
+        callback = resolve => function(response) {
             var str = '';
             response.on('data', function(chunk){
                 str += chunk
@@ -35,21 +35,22 @@ module.exports = async (
 
             response.on('end', function(){
                 const response_object = JSON.parse(str);
-                if (response_object.data.chain_id != chainId || response_object.data.rpc_url != rpcUrl){
+                if (response_object.data.chain_id != chainId && response_object.data.rpc_url != rpcUrl){
                     throw 'Vault configuration did not stick';
                 }
+                resolve();
             });
         };
         var body = JSON.stringify({
             chain_id: chainId,
             rpc_url: rpcUrl
         });
-        https.request(options, callback).end(body);
+        await new Promise(resolve => https.request(options, callback(resolve)).end(body));
         // wallet 
         console.log('Creating wallet');
         options.path = `/v1/immutability-eth-plugin/wallets/${walletName}`;
 
-        callback = function(response) {
+        callback = resolve => function(response) {
 
             var str = '';
             response.on('data', function(chunk){
@@ -62,14 +63,15 @@ module.exports = async (
                     console.log(str);
                     throw 'Creating wallet failed';
                 }
+                resolve();
             });
         };
-        https.request(options, callback).end(JSON.stringify({}));
+        await new Promise(resolve => https.request(options, callback(resolve)).end(JSON.stringify({})));
         // account
         console.log('Creating account');
         options.path = `/v1/immutability-eth-plugin/wallets/${walletName}/accounts`;
 
-        callback = function(response) {
+        callback = resolve =>  function(response) {
 
             var str = '';
             response.on('data', function(chunk){
@@ -85,9 +87,10 @@ module.exports = async (
                     console.log(`Authority account now in vault ${response_object.data.address}`);
                     fs.writeFileSync('vault_authority', `${response_object.data.address}`.toLowerCase());
                 }
+                resolve();
             });
         };
-        await https.request(options, callback).end(JSON.stringify({}));
+        await new Promise(resolve => https.request(options, callback(resolve)).end(JSON.stringify({})));
         console.log('Done');
     } else {
         console.log(`Skipping because Vault ${vault} or perhaps authority exists ${authorityExists}`);
