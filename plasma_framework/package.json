@@ -29,7 +29,7 @@
     "seedrandom": "^3.0.5",
     "solhint": "^2.2.0",
     "solidity-coverage": "^0.7.2",
-    "truffle": "5.1.32"
+    "truffle": "5.1.36"
   },
   "scripts": {
     "test": "truffle test",
