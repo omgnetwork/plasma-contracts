@@ -6,7 +6,7 @@ const {
 } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
-contract('BlockController', ([maintainer, authority, other]) => {
+contract('BlockController', ([_maintainer, authority, other]) => {
     const MIN_EXIT_PERIOD = 10;
     const INITIAL_IMMUNE_VAULTS = 1;
 
