@@ -18,7 +18,6 @@ contract('BlockController', ([maintainer, authority, other]) => {
             INITIAL_IMMUNE_VAULTS,
             authority,
         );
-        this.blockController.activateChildChain({ from: authority });
 
         this.dummyBlockHash = web3.utils.keccak256('dummy block');
 
@@ -47,71 +46,6 @@ contract('BlockController', ([maintainer, authority, other]) => {
         it('childBlockInterval is set as the inserted value', async () => {
             expect(await this.blockController.childBlockInterval())
                 .to.be.bignumber.equal(new BN(this.childBlockInterval));
-        });
-    });
-
-    describe('activateChildChain', () => {
-        describe('before activate', () => {
-            beforeEach(async () => {
-                const childBlockInterval = 5;
-                this.blockController = await BlockController.new(
-                    childBlockInterval,
-                    MIN_EXIT_PERIOD,
-                    INITIAL_IMMUNE_VAULTS,
-                    authority,
-                );
-                this.dummyBlockHash = web3.utils.keccak256('dummy block');
-                this.dummyVault = await DummyVault.new();
-                this.dummyVault.setBlockController(this.blockController.address);
-                this.dummyVaultId = 1;
-                this.blockController.registerVault(this.dummyVaultId, this.dummyVault.address);
-            });
-
-            it('should not be able to submit child chain block', async () => {
-                await expectRevert(
-                    this.blockController.submitBlock(this.dummyBlockHash, { from: authority }),
-                    'Child chain has not been activated by authority address yet',
-                );
-            });
-
-            it('should not be able to submit deposit block', async () => {
-                await expectRevert(
-                    this.dummyVault.submitDepositBlock(this.dummyBlockHash),
-                    'Child chain has not been activated by authority address yet',
-                );
-            });
-
-            it('should not be able to be activated by non authority', async () => {
-                await expectRevert(
-                    this.blockController.activateChildChain({ from: maintainer }),
-                    'Caller address is unauthorized',
-                );
-            });
-
-            describe('after activated by authority', () => {
-                beforeEach(async () => {
-                    this.tx = await this.blockController.activateChildChain({ from: authority });
-                });
-
-                it('should change isChildChainActivated flag to true', async () => {
-                    expect(await this.blockController.isChildChainActivated()).to.be.true;
-                });
-
-                it('should emit ChildChainActivated event', async () => {
-                    await expectEvent.inLogs(
-                        this.tx.logs,
-                        'ChildChainActivated',
-                        { authority },
-                    );
-                });
-
-                it('should not be able to activate again', async () => {
-                    await expectRevert(
-                        this.blockController.activateChildChain({ from: authority }),
-                        'Child chain already activated',
-                    );
-                });
-            });
         });
     });
 
