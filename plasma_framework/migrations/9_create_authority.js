@@ -29,34 +29,31 @@ module.exports = async (
             }),
         };
         console.log('Configuring vault');
-        await axios(options).then((response) => {
-            const responseObject = response.data;
-            if (responseObject.data.chain_id !== chainId && responseObject.data.rpc_url !== rpcUrl) {
-                throw new Error('Vault configuration did not stick');
-            }
-        });
+        let response = await axios(options);
+        let responseObject = response.data;
+        if (responseObject.data.chain_id !== chainId && responseObject.data.rpc_url !== rpcUrl) {
+          throw new Error('Vault configuration did not stick');
+        } 
         // wallet
         console.log('Creating wallet');
         options.url = `${process.env.VAULT_ADDR}/v1/immutability-eth-plugin/wallets/${walletName}`;
         delete options.data;
-        await axios(options).then((response) => {
-            const responseObject = response.data;
-            if (typeof responseObject.request_id !== 'string') {
-                throw new Error('Creating wallet failed');
-            }
-        });
+        response = await axios(options);
+        responseObject = response.data;
+        if (typeof responseObject.request_id !== 'string') {
+            throw new Error('Creating wallet failed');
+        }
         // account
         console.log('Creating account');
         options.url = `${process.env.VAULT_ADDR}/v1/immutability-eth-plugin/wallets/${walletName}/accounts`;
-        await axios(options).then((response) => {
-            const responseObject = response.data;
-            if (typeof responseObject.data.address !== 'string') {
-                throw new Error('Creating account failed');
-            } else {
-                console.log(`Authority account now in vault ${responseObject.data.address}`);
-                fs.writeFileSync('vault_authority', `${responseObject.data.address}`.toLowerCase());
-            }
-        });
+        response = await axios(options);
+        responseObject = response.data;
+        if (typeof responseObject.data.address !== 'string') {
+            throw new Error('Creating account failed');
+        } else {
+            console.log(`Authority account now in vault ${responseObject.data.address}`);
+            fs.writeFileSync('vault_authority', `${responseObject.data.address}`.toLowerCase());
+        }
         console.log('Done');
     } else {
         console.log(`Skipping because Vault ${vault} or perhaps authority exists ${authorityExists}`);
