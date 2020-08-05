@@ -90,6 +90,28 @@ docker run --rm omisego/plasma-contracts npx truffle migrate --network remote
 
 For more detail of the deploying scripts and the env vars to set, see [deploying.md](./plasma_framework/docs/deploying/deploying.md)
 
+The `MAINTAINER` account can also be a multisignature contract. The example we've built uses Gnosis MultiSigWallet. The project has been added as a git submodule:
+```bash
+git submodule init
+git submodule update --remote
+```
+
+Their deployment scripts were slightly addapted. We can override them by executing:
+```bash
+cd MultiSigWalletOverride/
+make init_multisig
+```
+
+While we're in the directory we can deploy the contract by executing:
+```bash
+truffle migrate <account1,account2,...,accountN> <requiredConfirmations> 
+```
+
+The address of the multisignature contract is exported into:
+```
+MultiSigWallet/build/multisig_instance
+```
+
 ### Building and running the python tests
 We suggest running the following commands with an active python virtual environment ex. `venv`.
 All the code is in the `plasma_framework/python_tests` directory, so go there first.
