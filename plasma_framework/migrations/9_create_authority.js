@@ -32,8 +32,8 @@ module.exports = async (
         let response = await axios(options);
         let responseObject = response.data;
         if (responseObject.data.chain_id !== chainId && responseObject.data.rpc_url !== rpcUrl) {
-          throw new Error('Vault configuration did not stick');
-        } 
+            throw new Error('Vault configuration did not stick');
+        }
         // wallet
         console.log('Creating wallet');
         options.url = `${process.env.VAULT_ADDR}/v1/immutability-eth-plugin/wallets/${walletName}`;
