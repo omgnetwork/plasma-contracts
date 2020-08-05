@@ -13,12 +13,13 @@ module.exports = deployer => {
     console.error("Multisig with daily limit requires to pass owner " +
       "list, required confirmations and daily limit");
   } else if (args.length < 6) {
-    console.log(deployer.deploy(MultisigWalletWithoutDailyLimit, args[3].split(","), args[4]));
-    const buildDir = path.resolve(__dirname, '../build');
-    if (!fs.existsSync(buildDir)) {
-        fs.mkdirSync(buildDir);
-    }
-    fs.writeFileSync(path.resolve(buildDir, 'multisig_instance'), `${MultisigWalletWithoutDailyLimit.address}`.toLowerCase());
+    console.log(deployer.deploy(MultisigWalletWithoutDailyLimit, args[3].split(","), args[4])).then(function() {
+      const buildDir = path.resolve(__dirname, '../build');
+      if (!fs.existsSync(buildDir)) {
+          fs.mkdirSync(buildDir);
+      }
+      fs.writeFileSync(path.resolve(buildDir, 'multisig_instance'), `${MultisigWalletWithoutDailyLimit.address}`.toLowerCase());
+    });
     console.log("Wallet deployed");
   } else {
     deployer.deploy(MultisigWalletWithDailyLimit, args[3].split(","), args[4], args[5]);
