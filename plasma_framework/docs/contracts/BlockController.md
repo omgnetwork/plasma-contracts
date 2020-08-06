@@ -17,7 +17,6 @@ address public authority;
 uint256 public childBlockInterval;
 uint256 public nextChildBlock;
 uint256 public nextDeposit;
-bool public isChildChainActivated;
 mapping(uint256 => struct BlockModel.Block) public blocks;
 
 ```
@@ -26,13 +25,11 @@ mapping(uint256 => struct BlockModel.Block) public blocks;
 
 ```js
 event BlockSubmitted(uint256  blknum);
-event ChildChainActivated(address  authority);
 ```
 
 ## Functions
 
 - [(uint256 _interval, uint256 _minExitPeriod, uint256 _initialImmuneVaults, address _authority)](#)
-- [activateChildChain()](#activatechildchain)
 - [submitBlock(bytes32 _blockRoot)](#submitblock)
 - [submitDepositBlock(bytes32 _blockRoot)](#submitdepositblock)
 - [nextDepositBlock()](#nextdepositblock)
@@ -52,19 +49,6 @@ function (uint256 _interval, uint256 _minExitPeriod, uint256 _initialImmuneVault
 | _minExitPeriod | uint256 |  | 
 | _initialImmuneVaults | uint256 |  | 
 | _authority | address |  | 
-
-### activateChildChain
-
-Activates the child chain so that child chain can start to submit child blocks to root chain
-
-```js
-function activateChildChain() external nonpayable onlyFrom 
-```
-
-**Arguments**
-
-| Name        | Type           | Description  |
-| ------------- |------------- | -----|
 
 ### submitBlock
 
