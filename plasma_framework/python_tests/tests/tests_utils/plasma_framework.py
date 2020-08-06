@@ -346,6 +346,9 @@ class PlasmaFramework:
     def standardExitBond(self):
         return self.payment_exit_game.startStandardExitBondSize()
 
+    def standardExitBounty(self):
+        return 107000 * 100
+
     def inFlightExitBond(self):
         return self.payment_exit_game.startIFEBondSize()
 

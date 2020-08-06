@@ -21,18 +21,20 @@ class StandardExit:
         exitable (boolean): whether will exit at processing
         output_id (str): output exit identifier (not exit id)
         bond_size (int): value of paid bond
+        bounty_size (int): value of process exit bounty
     """
 
-    def __init__(self, exitable, utxo_pos, output_id, exit_target, amount, bond_size):
+    def __init__(self, exitable, utxo_pos, output_id, exit_target, amount, bond_size, bounty_size):
         self.owner = exit_target
         self.amount = amount
         self.position = utxo_pos
         self.exitable = exitable
         self.output_id = output_id
         self.bond_size = bond_size
+        self.bounty_size = bounty_size
 
     def to_list(self):
-        return [self.owner, self.amount, self.position, self.exitable, self.output_id, self.bond_size]
+        return [self.owner, self.amount, self.position, self.exitable, self.output_id, self.bond_size, self.bounty_size]
 
     def __str__(self):
         return self.to_list().__str__()
@@ -224,9 +226,9 @@ class TestingLanguage:
             transactions = block.transactions
         merkle = FixedMerkle(16, list(map(lambda tx: tx.encoded, transactions)))
         proof = merkle.create_membership_proof(output_tx.encoded)
-        bond = bond if bond is not None else self.root_chain.standardExitBond()
+        bond = bond if bond is not None else self.root_chain.standardExitBond() + self.root_chain.standardExitBounty()
         self.root_chain.startStandardExit(output_id, output_tx.encoded, proof,
-                                          **{'value': bond, 'from': account.address})
+                                          **{'value': bond, 'from': account.address, 'gasPrice': 100 })
 
     def challenge_standard_exit(self, output_id, spend_id, input_index=None, signature=None):
         spend_tx = self.child_chain.get_transaction(spend_id)
