@@ -48,3 +48,6 @@ coverage.json
 
 #tenderly config 
 tenderly.yaml
+
+MultiSigWallet
+MultiSigWalletOverride/ganache_data/

@@ -188,7 +188,8 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                 TX_TYPE.PAYMENT,
                 SAFE_GAS_STIPEND,
             ];
-            this.exitGame = await PaymentInFlightExitRouter.new(exitGameArgs);
+            this.exitGame = await PaymentInFlightExitRouter.new();
+            await this.exitGame.bootInternal(exitGameArgs);
 
             await this.framework.registerExitGame(TX_TYPE.PAYMENT, this.exitGame.address, PROTOCOL.MORE_VP);
 

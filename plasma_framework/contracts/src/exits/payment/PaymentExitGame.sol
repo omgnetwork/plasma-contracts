@@ -14,20 +14,27 @@ import "../../utils/OnlyFromAddress.sol";
  * @notice The exit game contract implementation for Payment Transaction
  */
 contract PaymentExitGame is IExitProcessor, OnlyFromAddress, PaymentStandardExitRouter, PaymentInFlightExitRouter {
-    PlasmaFramework private plasmaFramework;
+    PaymentExitGameArgs.Args private paymentExitGameArgs;
+    bool private initDone = false;
 
     /**
      * @dev use struct PaymentExitGameArgs to avoid stack too deep compilation error.
      */
     constructor(PaymentExitGameArgs.Args memory args)
         public
-        PaymentStandardExitRouter(args)
-        PaymentInFlightExitRouter(args)
+        PaymentStandardExitRouter()
+        PaymentInFlightExitRouter()
     {
-        plasmaFramework = args.framework;
-
+        paymentExitGameArgs = args;
         // makes sure that the spending condition has already renounced ownership
         require(args.spendingConditionRegistry.owner() == address(0), "Spending condition registry ownership needs to be renounced");
+    }
+
+    function init() public onlyFrom(paymentExitGameArgs.framework.getMaintainer()) {
+        require(!initDone, "Exit game was already initialized");
+        initDone = true;
+        PaymentStandardExitRouter.boot(paymentExitGameArgs);
+        PaymentInFlightExitRouter.boot(paymentExitGameArgs); 
     }
 
     /**
@@ -36,7 +43,7 @@ contract PaymentExitGame is IExitProcessor, OnlyFromAddress, PaymentStandardExit
      * @param token Token (ERC20 address or address(0) for ETH) of the exiting output
      * @param processor The processExit initiator
      */
-    function processExit(uint168 exitId, uint256, address token, address payable processor) external onlyFrom(address(plasmaFramework)) {
+    function processExit(uint168 exitId, uint256, address token, address payable processor) external onlyFrom(address(paymentExitGameArgs.framework)) {
         if (ExitId.isStandardExit(exitId)) {
             PaymentStandardExitRouter.processStandardExit(exitId, token, processor);
         } else {

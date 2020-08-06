@@ -58,6 +58,7 @@ contract PaymentInFlightExitRouter is
     BondSize.Params internal piggybackBond;
 
     PlasmaFramework private framework;
+    bool private bootDone = false;
 
     event IFEBondUpdated(uint128 bondSize);
     event PiggybackBondUpdated(uint128 bondSize);
@@ -127,59 +128,59 @@ contract PaymentInFlightExitRouter is
         uint168 indexed exitId
     );
 
-    constructor(PaymentExitGameArgs.Args memory args)
-        public
+    function boot(PaymentExitGameArgs.Args memory paymentExitGameArgs) 
+        internal
     {
-        framework = args.framework;
-
-        EthVault ethVault = EthVault(args.framework.vaults(args.ethVaultId));
+        require(msg.sender == paymentExitGameArgs.framework.getMaintainer(), "Only Maintainer can perform this action");
+        require(!bootDone, "Exit game was already initialized");
+        EthVault ethVault = EthVault(paymentExitGameArgs.framework.vaults(paymentExitGameArgs.ethVaultId));
         require(address(ethVault) != address(0), "Invalid ETH vault");
-
-        Erc20Vault erc20Vault = Erc20Vault(args.framework.vaults(args.erc20VaultId));
+        Erc20Vault erc20Vault = Erc20Vault(paymentExitGameArgs.framework.vaults(paymentExitGameArgs.erc20VaultId));
         require(address(erc20Vault) != address(0), "Invalid ERC20 vault");
-
+        framework = paymentExitGameArgs.framework;
+        bootDone = true;
         startInFlightExitController = PaymentStartInFlightExit.buildController(
-            args.framework,
-            args.spendingConditionRegistry,
-            args.stateTransitionVerifier,
-            args.supportTxType
+            paymentExitGameArgs.framework,
+            paymentExitGameArgs.spendingConditionRegistry,
+            paymentExitGameArgs.stateTransitionVerifier,
+            paymentExitGameArgs.supportTxType
         );
 
         piggybackInFlightExitController = PaymentPiggybackInFlightExit.buildController(
-            args.framework,
+            paymentExitGameArgs.framework,
             this,
-            args.ethVaultId,
-            args.erc20VaultId
+            paymentExitGameArgs.ethVaultId,
+            paymentExitGameArgs.erc20VaultId
         );
 
         challengeCanonicityController = PaymentChallengeIFENotCanonical.buildController(
-            args.framework,
-            args.spendingConditionRegistry,
-            args.supportTxType
+            paymentExitGameArgs.framework,
+            paymentExitGameArgs.spendingConditionRegistry,
+            paymentExitGameArgs.supportTxType
         );
 
         challengeInputSpentController = PaymentChallengeIFEInputSpent.buildController(
-            args.framework,
-            args.spendingConditionRegistry,
-            args.safeGasStipend
+            paymentExitGameArgs.framework,
+            paymentExitGameArgs.spendingConditionRegistry,
+            paymentExitGameArgs.safeGasStipend
         );
 
         challengeOutputSpentController = PaymentChallengeIFEOutputSpent.Controller(
-            args.framework,
-            args.spendingConditionRegistry,
-            args.safeGasStipend
+            paymentExitGameArgs.framework,
+            paymentExitGameArgs.spendingConditionRegistry,
+            paymentExitGameArgs.safeGasStipend
         );
 
         deleteNonPiggybackIFEController = PaymentDeleteInFlightExit.Controller({
-            minExitPeriod: args.framework.minExitPeriod(),
-            safeGasStipend: args.safeGasStipend
+            minExitPeriod: paymentExitGameArgs.framework.minExitPeriod(),
+            safeGasStipend: paymentExitGameArgs.safeGasStipend
         });
 
         processInflightExitController = PaymentProcessInFlightExit.Controller({
-            framework: args.framework,
+            framework: paymentExitGameArgs.framework,
             ethVault: ethVault,
             erc20Vault: erc20Vault,
-            safeGasStipend: args.safeGasStipend
+            safeGasStipend: paymentExitGameArgs.safeGasStipend
         });
         startIFEBond = BondSize.buildParams(INITIAL_IFE_BOND_SIZE, BOND_LOWER_BOUND_DIVISOR, BOND_UPPER_BOUND_MULTIPLIER);
         piggybackBond = BondSize.buildParams(INITIAL_PB_BOND_SIZE, BOND_LOWER_BOUND_DIVISOR, BOND_UPPER_BOUND_MULTIPLIER);

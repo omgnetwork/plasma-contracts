@@ -31,7 +31,6 @@ contract('Erc20Vault', ([_, erc20Minter, authority, maintainer, alice]) => {
             authority,
             maintainer,
         );
-        await this.framework.activateChildChain({ from: authority });
         this.erc20Vault = await Erc20Vault.new(this.framework.address);
         await this.framework.registerVault(2, this.erc20Vault.address, { from: maintainer });
 

@@ -29,7 +29,6 @@ contract('EthVault', ([_, authority, maintainer, alice]) => {
             authority,
             maintainer,
         );
-        await this.framework.activateChildChain({ from: authority });
         this.ethVault = await EthVault.new(this.framework.address, SAFE_GAS_STIPEND);
 
         await this.framework.registerVault(1, this.ethVault.address, { from: maintainer });
