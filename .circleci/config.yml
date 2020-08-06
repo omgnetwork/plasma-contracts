@@ -106,14 +106,14 @@ jobs:
             npx truffle migrate 0xa508dD875f10C33C52a8abb20E16fc68E981F186 1
           working_directory: ~/repo/MultiSigWallet
       - run:
-        name: Install node 12
-        command: |
-          curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
-          nvm install v12
-          node --version
-          node -v
-          nvm alias default v12
-          echo 'export PATH="$(npm bin):$PATH"' >> $BASH_ENV
+          name: Install node 12
+          command: |
+            curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
+            nvm install v12
+            node --version
+            node -v
+            nvm alias default v12
+            echo 'export PATH="$(npm bin):$PATH"' >> $BASH_ENV
       - restore_cache:
           keys:
             - dependencies-machine-v1-{{ checksum "~/repo/plasma_framework/package-lock.json" }}
