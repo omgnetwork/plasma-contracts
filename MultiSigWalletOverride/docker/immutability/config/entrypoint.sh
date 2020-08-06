@@ -9,9 +9,9 @@ VAULT_PID=$!
 
 count=1
 while [ "$count" -le 60 ]; do
-  if vault status; then break; fi
-  count=$((count+1))
-  sleep 0.5
+	if vault status; then break; fi
+	count=$((count+1))
+	sleep 0.5
 done
 
 vault status
@@ -26,19 +26,19 @@ function configure_plugin {
 	ls -latr /home/vault/plugins
 	sha256sum=`cat /home/vault/plugins/SHA256SUMS | awk '{print $1}'`
 	vault write sys/plugins/catalog/secret/${plugin_file} \
-		  sha_256="$sha256sum" \
-		  command="$plugin_file --ca-cert=/home/vault/ca/certs/ca.crt --client-cert=/home/vault/ca/certs/my-service.crt --client-key=/home/vault/ca/private/my-service.key"
+			sha_256="$sha256sum" \
+			command="$plugin_file --ca-cert=/home/vault/ca/certs/ca.crt --client-cert=/home/vault/ca/certs/my-service.crt --client-key=/home/vault/ca/private/my-service.key"
 
 	if [[ $? -eq 2 ]] ; then
-	  echo "Vault Catalog update failed!"
-	  exit 2
+		echo "Vault Catalog update failed!"
+		exit 2
 	fi
 
 	echo "MOUNTING: ${plugin_file}"
 	vault secrets enable -path=${plugin_file} -plugin-name=${plugin_file} plugin
 	if [[ $? -eq 2 ]] ; then
-	  echo "Failed to mount ${plugin_file} plugin for test!"
-	  exit 2
+		echo "Failed to mount ${plugin_file} plugin for test!"
+		exit 2
 	fi
 }
 

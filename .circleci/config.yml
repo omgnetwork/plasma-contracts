@@ -75,6 +75,37 @@ jobs:
           name: Start services
           command: docker-compose up -d
           working_directory: ~/repo/MultiSigWalletOverride
+      - run: |
+            echo 'export NVM_DIR="/opt/circleci/.nvm"' >> $BASH_ENV
+            echo ' [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
+      - run:
+          name: Install node 9
+          command: |
+            curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
+            nvm install v9
+            node --version
+            node -v
+            nvm alias default v9
+            echo 'export PATH="$(npm bin):$PATH"' >> $BASH_ENV
+      - run:
+          name: Pull Submodules
+          command: |
+            git submodule init
+            git submodule update --remote
+          working_directory: ~/repo/
+      - run:
+          name: Apply Overrides
+          command: make init_multisig
+          working_directory: ~/repo/MultiSigWalletOverride
+      - run:
+          name: Deploy Gnosis MultiSigWalet
+          command: |
+            sudo apt-get update && sudo apt-get install -y libudev-dev libusb-1.0-0 libusb-1.0-0-dev
+            npm install -g npm@latest
+            nvm use node
+            npm install
+            npx truffle migrate 0xa508dD875f10C33C52a8abb20E16fc68E981F186 1
+          working_directory: ~/repo/MultiSigWallet
       
   Truffle tests:
     executor: truffle_executor
