@@ -56,6 +56,5 @@ module.exports = async (
             { from: maintainerAddress },
         );
         await plasmaFramework.setVersion(`${pck.version}+${sha}`, { from: maintainerAddress });
-        await plasmaFramework.activateChildChain({ from: authorityAddress });
     }
 };
