@@ -27,6 +27,8 @@ class PlasmaFramework:
             sender=maintainer
         )
 
+        self.plasma_framework.activateChildChain(**{"from": authority.address})
+
         self._setup_deposit_verifiers(get_contract, maintainer)
         self._setup_vaults(get_contract, maintainer)
         self._setup_spending_conditions(get_contract, maintainer)
@@ -117,9 +119,10 @@ class PlasmaFramework:
             SAFE_GAS_STIPEND,
         )
         payment_exit_game = get_contract("PaymentExitGame",
+                                         sender=maintainer,
                                          args=(payment_exit_game_args,),
                                          libraries=libs_map)
-        payment_exit_game.init(**{'from': maintainer.address})
+
         return payment_exit_game
 
     @staticmethod
@@ -342,9 +345,6 @@ class PlasmaFramework:
 
     def standardExitBond(self):
         return self.payment_exit_game.startStandardExitBondSize()
-
-    def standardExitBounty(self):
-        return 107000 * 100
 
     def inFlightExitBond(self):
         return self.payment_exit_game.startIFEBondSize()
