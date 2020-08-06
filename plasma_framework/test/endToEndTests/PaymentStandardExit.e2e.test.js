@@ -72,6 +72,7 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
         this.processExitBountySize = await this.exitBountyHelper.processStandardExitBountySize({
             gasPrice: this.dummyGasPrice,
         });
+        this.startStandardExitTxValue = this.startStandardExitBondSize.add(this.processExitBountySize);
     };
 
     const aliceDepositsETH = async () => {
@@ -150,7 +151,7 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
                     };
                     await this.exitGame.startStandardExit(args, {
                         from: alice,
-                        value: this.startStandardExitBondSize.add(this.processExitBountySize),
+                        value: this.startStandardExitTxValue,
                         gasPrice: this.dummyGasPrice,
                     });
                 });
@@ -241,7 +242,7 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
 
                     await this.exitGame.startStandardExit(args, {
                         from: bob,
-                        value: this.startStandardExitBondSize.add(this.processExitBountySize),
+                        value: this.startStandardExitTxValue,
                         gasPrice: this.dummyGasPrice,
                     });
                 });
@@ -261,7 +262,7 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
 
                         this.bobBalanceBeforeProcessExit = new BN(await web3.eth.getBalance(bob));
 
-                        this.bobtx = await this.framework.processExits(config.registerKeys.vaultId.eth, ETH, 0, 1, {
+                        this.processTx = await this.framework.processExits(config.registerKeys.vaultId.eth, ETH, 0, 1, {
                             from: bob,
                         });
                     });
@@ -272,7 +273,7 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
                             .add(this.startStandardExitBondSize)
                             .add(this.processExitBountySize)
                             .add(new BN(this.transferTxObject.outputs[0].amount))
-                            .sub(await spentOnGas(this.bobtx.receipt));
+                            .sub(await spentOnGas(this.processTx.receipt));
 
                         expect(actualBobBalanceAfterProcessExit).to.be.bignumber.equal(expectedBobBalance);
                     });
@@ -296,7 +297,7 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
 
                     await this.exitGame.startStandardExit(this.startStandardExitArgs, {
                         from: alice,
-                        value: this.startStandardExitBondSize.add(this.processExitBountySize),
+                        value: this.startStandardExitTxValue,
                         gasPrice: this.dummyGasPrice,
                     });
 
@@ -352,7 +353,7 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
                         await expectRevert(
                             this.exitGame.startStandardExit(this.startStandardExitArgs, {
                                 from: alice,
-                                value: this.startStandardExitBondSize.add(this.processExitBountySize),
+                                value: this.startStandardExitTxValue,
                                 gasPrice: this.dummyGasPrice,
                             }),
                             'Exit has already started.',
@@ -432,7 +433,7 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
 
                         await this.exitGame.startStandardExit(args, {
                             from: alice,
-                            value: this.startStandardExitBondSize.add(this.processExitBountySize),
+                            value: this.startStandardExitTxValue,
                             gasPrice: this.dummyGasPrice,
                         });
                     });
@@ -455,7 +456,7 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
                             this.bobEthBalanceBeforeProcessExit = new BN(await web3.eth.getBalance(bob));
                             this.aliceErc20BalanceBeforeProcessExit = new BN(await this.erc20.balanceOf(alice));
 
-                            this.bobtx = await this.framework.processExits(
+                            this.processTx = await this.framework.processExits(
                                 config.registerKeys.vaultId.erc20,
                                 this.erc20.address,
                                 0,
@@ -477,7 +478,7 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
                             const actualBobEthBalanceAfterProcessExit = new BN(await web3.eth.getBalance(bob));
                             const expectedBobEthBalance = this.bobEthBalanceBeforeProcessExit
                                 .add(this.processExitBountySize)
-                                .sub(await spentOnGas(this.bobtx.receipt));
+                                .sub(await spentOnGas(this.processTx.receipt));
 
                             expect(actualBobEthBalanceAfterProcessExit)
                                 .to.be.bignumber.equal(expectedBobEthBalance);

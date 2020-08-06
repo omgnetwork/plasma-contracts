@@ -67,6 +67,8 @@ contract(
                 gasPrice: this.dummyGasPrice,
             });
 
+            this.startStandardExitTxValue = this.startStandardExitBondSize.add(this.processExitBountySize);
+
             this.framework.addExitQueue(config.registerKeys.vaultId.eth, ETH);
 
             this.liquidity = await Liquidity.new(this.framework.address, { from: authority });
@@ -202,7 +204,7 @@ contract(
                                 depositUtxoPos,
                                 {
                                     from: bob,
-                                    value: this.startStandardExitBondSize.add(this.processExitBountySize),
+                                    value: this.startStandardExitTxValue,
                                     gasPrice: this.dummyGasPrice,
                                 },
                             ),
@@ -230,7 +232,7 @@ contract(
                                 depositUtxoPos,
                                 {
                                     from: alice,
-                                    value: this.startStandardExitBondSize.add(this.processExitBountySize),
+                                    value: this.startStandardExitTxValue,
                                     gasPrice: this.dummyGasPrice,
                                 },
                             ),
@@ -257,7 +259,7 @@ contract(
                             depositUtxoPos,
                             {
                                 from: alice,
-                                value: this.startStandardExitBondSize.add(this.processExitBountySize),
+                                value: this.startStandardExitTxValue,
                                 gasPrice: this.dummyGasPrice,
                             },
                         );
@@ -305,7 +307,7 @@ contract(
                                 depositUtxoPos,
                                 {
                                     from: alice,
-                                    value: this.startStandardExitBondSize.add(this.processExitBountySize),
+                                    value: this.startStandardExitTxValue,
                                     gasPrice: this.dummyGasPrice,
                                 },
                             ),
@@ -455,7 +457,7 @@ contract(
                             depositUtxoPos,
                             {
                                 from: alice,
-                                value: this.startStandardExitBondSize.add(this.processExitBountySize),
+                                value: this.startStandardExitTxValue,
                                 gasPrice: this.dummyGasPrice,
                             },
                         );
@@ -580,7 +582,7 @@ contract(
                             depositUtxoPos,
                             {
                                 from: alice,
-                                value: this.startStandardExitBondSize.add(this.processExitBountySize),
+                                value: this.startStandardExitTxValue,
                                 gasPrice: this.dummyGasPrice,
                             },
                         );
@@ -719,7 +721,7 @@ contract(
                             depositUtxoPos,
                             {
                                 from: alice,
-                                value: this.startStandardExitBondSize.add(this.processExitBountySize),
+                                value: this.startStandardExitTxValue,
                                 gasPrice: this.dummyGasPrice,
                             },
                         );
