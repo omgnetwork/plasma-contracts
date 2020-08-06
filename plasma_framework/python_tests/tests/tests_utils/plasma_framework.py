@@ -27,8 +27,6 @@ class PlasmaFramework:
             sender=maintainer
         )
 
-        self.plasma_framework.activateChildChain(**{"from": authority.address})
-
         self._setup_deposit_verifiers(get_contract, maintainer)
         self._setup_vaults(get_contract, maintainer)
         self._setup_spending_conditions(get_contract, maintainer)
