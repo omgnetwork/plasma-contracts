@@ -913,7 +913,7 @@ def test_should_not_allow_to_withdraw_outputs_from_two_ifes_marked_as_canonical_
 #     assert alice_token_balance == alice_token_balance_before
 
 
-def test_not_challenged_standard_exit_blocks_ife_output_exit(testlang, plasma_framework, token):
+def test_not_challenged_standard_exit_blocks_ife_output_exit(testlang, w3, plasma_framework, token):
     alice, amount_token = testlang.accounts[1], 200
     caroline, amount_eth_small, amount_eth_big = testlang.accounts[2], 1, 100
 
@@ -963,7 +963,7 @@ def test_not_challenged_standard_exit_blocks_ife_output_exit(testlang, plasma_fr
     assert alice_eth_balance == alice_eth_balance_before
 
 
-def test_challenged_standard_exit_does_not_block_ife_output_exit(testlang, plasma_framework, token):
+def test_challenged_standard_exit_does_not_block_ife_output_exit(testlang, w3, plasma_framework, token):
     alice, amount_token = testlang.accounts[1], 200
     caroline, amount_eth_small, amount_eth_big = testlang.accounts[2], 1, 100
 
