@@ -15,7 +15,7 @@ module.exports = async (
     [deployerAddress, maintainerAddress, authorityAddress],
 ) => {
     const vault = process.env.VAULT || false;
-    if (!vault) {
+    //if (!vault) {
         const plasmaFramework = await PlasmaFramework.deployed();
         const ethVault = await plasmaFramework.vaults(config.registerKeys.vaultId.eth);
         const erc20Vault = await plasmaFramework.vaults(config.registerKeys.vaultId.erc20);
@@ -48,5 +48,5 @@ module.exports = async (
             fs.mkdirSync(buildDir);
         }
         fs.writeFileSync(path.resolve(buildDir, 'outputs.json'), data);
-    }
+    //}
 };

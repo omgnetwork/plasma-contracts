@@ -111,7 +111,6 @@ jobs:
             curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
             nvm install v12
             node --version
-            node -v
             nvm alias default v12
             echo 'export PATH="$(npm bin):$PATH"' >> $BASH_ENV
       - restore_cache:
