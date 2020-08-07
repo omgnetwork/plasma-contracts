@@ -953,7 +953,7 @@ def test_not_challenged_standard_exit_blocks_ife_output_exit(testlang, w3, plasm
     assert caroline_token_balance == caroline_token_balance_before
     # but gets her Eth back
     caroline_eth_balance = testlang.get_balance(caroline)
-    assert caroline_eth_balance == caroline_eth_balance_before + amount_eth_big + amount_eth_small - gasCost
+    assert caroline_eth_balance == caroline_eth_balance_before + amount_eth_big + amount_eth_small - gasCost - testlang.root_chain.processStandardExitBounty()
 
     # alice gets tokens
     alice_token_balance = token.balanceOf(alice.address)
@@ -1004,7 +1004,7 @@ def test_challenged_standard_exit_does_not_block_ife_output_exit(testlang, w3, p
     assert caroline_token_balance == caroline_token_balance_before + amount_token
     # and does not get the Eth back
     caroline_eth_balance = testlang.get_balance(caroline)
-    assert caroline_eth_balance == caroline_eth_balance_before - testlang.root_chain.standardExitBond() - gasCost
+    assert caroline_eth_balance == caroline_eth_balance_before - testlang.root_chain.standardExitBond() - gasCost - testlang.root_chain.processStandardExitBounty()
 
     # alice exits with her Eth output
     alice_eth_balance = testlang.get_balance(alice)
