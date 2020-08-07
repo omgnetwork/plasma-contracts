@@ -1,3 +1,5 @@
+const HDWalletProvider = require('@truffle/hdwallet-provider');
+
 module.exports = {
   networks: {
     development: {
@@ -22,6 +24,14 @@ module.exports = {
     remote: {
       skipDryRun: true,
       gasPrice: process.env.GAS_PRICE || 20000000000, // default 20 gwei
+      skipDryRun: true,
+      provider: () => new HDWalletProvider(
+          [
+              process.env.DEPLOYER_PRIVATEKEY || '0'.repeat(64),
+          ],
+          process.env.REMOTE_URL || 'http://127.0.0.1:8545',
+          0, 3,
+      ),
       network_id: '*',
     }
   },

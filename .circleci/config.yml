@@ -103,7 +103,7 @@ jobs:
             npm install -g npm@latest
             nvm use node
             npm install
-            npx truffle migrate 0xa508dD875f10C33C52a8abb20E16fc68E981F186 1
+            npx truffle migrate --accounts 0xa508dD875f10C33C52a8abb20E16fc68E981F186 --confirmations 1
           working_directory: ~/repo/MultiSigWallet
       - run:
           name: Install node 12
