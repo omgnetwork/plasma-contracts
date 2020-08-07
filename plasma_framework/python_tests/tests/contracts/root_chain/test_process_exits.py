@@ -22,7 +22,7 @@ def prepare_exitable_utxo(testlang, owners, amount, outputs, num_outputs=1):
 
 
 @pytest.mark.parametrize("num_outputs", [1, 2, 3, 4])
-def test_process_exits_standard_exit_should_succeed(testlang, num_outputs, plasma_framework):
+def test_process_exits_standard_exit_should_succeed(testlang, w3, num_outputs, plasma_framework):
     amount = 100
     utxo_pos, output_owner = prepare_exitable_utxo(testlang, [], amount, [], num_outputs)
 
@@ -402,7 +402,7 @@ def test_finalize_in_flight_exit_finalizes_only_piggybacked_outputs(testlang, pl
     assert not plasma_framework.isOutputFinalized(output_id_1)
 
 
-def test_finalize_exits_priority_for_in_flight_exits_corresponds_to_the_age_of_youngest_input(testlang):
+def test_finalize_exits_priority_for_in_flight_exits_corresponds_to_the_age_of_youngest_input(testlang, w3):
     owner, amount = testlang.accounts[0], 100
     deposit_0_id = testlang.deposit(owner, amount)
     deposit_1_id = testlang.deposit(owner, amount)
