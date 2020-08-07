@@ -30,6 +30,7 @@ def test_process_exits_standard_exit_should_succeed(testlang, num_outputs, plasm
     testlang.flush_events()
 
     testlang.start_standard_exit(utxo_pos, output_owner)
+    gasCost = w3.eth.last_gas_used * 100
     _, _, exit_id = plasma_framework.getNextExit(plasma_framework.eth_vault_id, NULL_ADDRESS_HEX)
     start_exit_events = testlang.flush_events()
 
@@ -45,7 +46,7 @@ def test_process_exits_standard_exit_should_succeed(testlang, num_outputs, plasm
                    ('ExitFinalized', {"exitId": exit_id}),
                    ('ProcessedExitsNum', {'processedNum': 1, 'token': NULL_ADDRESS_HEX})])
 
-    assert testlang.get_balance(output_owner) == pre_balance + amount
+    assert testlang.get_balance(output_owner) == pre_balance + amount - gasCost - testlang.root_chain.processStandardExitBounty()
 
 
 def test_successful_process_exit_should_clear_exit_fields_and_set_output_as_spent(testlang):
