@@ -416,16 +416,18 @@ def test_finalize_exits_priority_for_in_flight_exits_corresponds_to_the_age_of_y
 
     testlang.start_standard_exit(spend_00_id, owner)
 
+    gasCost1 = w3.eth.last_gas_used * 100
     testlang.start_in_flight_exit(spend_1_id)
     testlang.piggyback_in_flight_exit_output(spend_1_id, 0, owner)
     testlang.start_standard_exit(spend_2_id, owner)
 
+    gasCost2 = w3.eth.last_gas_used * 100
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
 
     balance = testlang.get_balance(owner)
 
     testlang.process_exits(NULL_ADDRESS, testlang.get_standard_exit_id(spend_00_id), 1)
-    assert testlang.get_balance(owner) == balance + 30 + testlang.root_chain.standardExitBond()
+    assert testlang.get_balance(owner) == balance + 30 + testlang.root_chain.standardExitBond() - gasCost1
 
     balance = testlang.get_balance(owner)
     testlang.process_exits(NULL_ADDRESS, testlang.get_in_flight_exit_id(spend_1_id), 1)
@@ -434,7 +436,7 @@ def test_finalize_exits_priority_for_in_flight_exits_corresponds_to_the_age_of_y
 
     balance = testlang.get_balance(owner)
     testlang.process_exits(NULL_ADDRESS, testlang.get_standard_exit_id(spend_2_id), 1)
-    assert testlang.get_balance(owner) == balance + 100 + testlang.root_chain.standardExitBond()
+    assert testlang.get_balance(owner) == balance + 100 + testlang.root_chain.standardExitBond() - gasCost2
 
 
 def test_finalize_in_flight_exit_with_erc20_token_should_succeed(testlang, token, plasma_framework):
