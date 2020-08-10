@@ -30,7 +30,7 @@ module.exports = {
               process.env.DEPLOYER_PRIVATEKEY || '0'.repeat(64),
           ],
           process.env.REMOTE_URL || 'http://127.0.0.1:8545',
-          0, 3,
+          0, 1,
       ),
       network_id: '*',
     }

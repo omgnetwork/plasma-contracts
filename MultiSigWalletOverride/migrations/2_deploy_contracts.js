@@ -19,7 +19,7 @@ module.exports = async (deployer, [_deployerAddress]) => {
   }
   console.log(`Accounts: ${args[accountsIndex + 1].split(",")}`);
   console.log(`Confirmations: ${args[confirmationsIndex + 1]}`);
-  if (accountsIndex === undefined || confirmationsIndex == undefined) {
+  if (accountsIndex === undefined || confirmationsIndex === undefined) {
     console.log('ABORT. Use: --accounts 0xasdf,0xfdsa --confirmations 2');
     process.exit(1); 
   }
