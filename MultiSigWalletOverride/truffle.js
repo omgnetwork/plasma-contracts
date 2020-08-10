@@ -22,7 +22,6 @@ module.exports = {
       network_id: '*',
     },
     remote: {
-      skipDryRun: true,
       gasPrice: process.env.GAS_PRICE || 20000000000, // default 20 gwei
       skipDryRun: true,
       provider: () => new HDWalletProvider(
