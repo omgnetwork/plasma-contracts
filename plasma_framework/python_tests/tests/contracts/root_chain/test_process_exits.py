@@ -402,7 +402,7 @@ def test_finalize_in_flight_exit_finalizes_only_piggybacked_outputs(testlang, pl
     assert not plasma_framework.isOutputFinalized(output_id_1)
 
 
-def test_finalize_exits_priority_for_in_flight_exits_corresponds_to_the_age_of_youngest_input(testlang, w3):
+def test_finalize_exits_priority_for_in_flight_exits_corresponds_to_the_age_of_youngest_input(testlang):
     owner, amount = testlang.accounts[0], 100
     deposit_0_id = testlang.deposit(owner, amount)
     deposit_1_id = testlang.deposit(owner, amount)
