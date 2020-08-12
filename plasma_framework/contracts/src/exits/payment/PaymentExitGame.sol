@@ -41,10 +41,11 @@ contract PaymentExitGame is IExitProcessor, OnlyFromAddress, PaymentStandardExit
      * @notice Callback processes exit function for the PlasmaFramework to call
      * @param exitId The exit ID
      * @param token Token (ERC20 address or address(0) for ETH) of the exiting output
+     * @param processor The processExit initiator
      */
-    function processExit(uint168 exitId, uint256, address token) external onlyFrom(address(paymentExitGameArgs.framework)) {
+    function processExit(uint168 exitId, uint256, address token, address payable processor) external onlyFrom(address(paymentExitGameArgs.framework)) {
         if (ExitId.isStandardExit(exitId)) {
-            PaymentStandardExitRouter.processStandardExit(exitId, token);
+            PaymentStandardExitRouter.processStandardExit(exitId, token, processor);
         } else {
             PaymentInFlightExitRouter.processInFlightExit(exitId, token);
         }

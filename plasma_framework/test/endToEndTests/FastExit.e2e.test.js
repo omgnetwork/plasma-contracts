@@ -35,7 +35,7 @@ contract(
             alice = await web3.eth.personal.importRawKey(alicePrivateKey, password);
             alice = web3.utils.toChecksumAddress(alice);
             web3.eth.personal.unlockAccount(alice, password, 3600);
-            web3.eth.sendTransaction({ to: alice, from: richDad, value: web3.utils.toWei('1', 'ether') });
+            web3.eth.sendTransaction({ to: alice, from: richDad, value: web3.utils.toWei('2', 'ether') });
         };
 
         const deployStableContracts = async () => {
@@ -58,6 +58,12 @@ contract(
             );
 
             this.startStandardExitBondSize = await this.exitGame.startStandardExitBondSize();
+
+            this.dummyGasPrice = 1000000;
+
+            this.processExitBountySize = await this.exitGame.processStandardExitBountySize(this.dummyGasPrice);
+
+            this.startStandardExitTxValue = this.startStandardExitBondSize.add(this.processExitBountySize);
 
             this.framework.addExitQueue(config.registerKeys.vaultId.eth, ETH);
 
@@ -192,7 +198,11 @@ contract(
                                 rlpDepositTx,
                                 depositInclusionProof,
                                 depositUtxoPos,
-                                { from: bob, value: this.startStandardExitBondSize },
+                                {
+                                    from: bob,
+                                    value: this.startStandardExitTxValue,
+                                    gasPrice: this.dummyGasPrice,
+                                },
                             ),
                             'Was not called by the first Tx owner',
                         );
@@ -216,7 +226,11 @@ contract(
                                 rlpDepositTx,
                                 depositInclusionProof,
                                 depositUtxoPos,
-                                { from: alice, value: this.startStandardExitBondSize },
+                                {
+                                    from: alice,
+                                    value: this.startStandardExitTxValue,
+                                    gasPrice: this.dummyGasPrice,
+                                },
                             ),
                             "Provided Transaction isn't finalized or doesn't exist",
                         );
@@ -239,7 +253,11 @@ contract(
                             rlpDepositTx,
                             depositInclusionProof,
                             depositUtxoPos,
-                            { from: alice, value: this.startStandardExitBondSize },
+                            {
+                                from: alice,
+                                value: this.startStandardExitTxValue,
+                                gasPrice: this.dummyGasPrice,
+                            },
                         );
                     });
 
@@ -283,7 +301,11 @@ contract(
                                 rlpDepositTx,
                                 depositInclusionProof,
                                 depositUtxoPos,
-                                { from: alice, value: this.startStandardExitBondSize },
+                                {
+                                    from: alice,
+                                    value: this.startStandardExitTxValue,
+                                    gasPrice: this.dummyGasPrice,
+                                },
                             ),
                             'Exit has already started.',
                         );
@@ -429,7 +451,11 @@ contract(
                             rlpDepositTx,
                             depositInclusionProof,
                             depositUtxoPos,
-                            { from: alice, value: this.startStandardExitBondSize },
+                            {
+                                from: alice,
+                                value: this.startStandardExitTxValue,
+                                gasPrice: this.dummyGasPrice,
+                            },
                         );
                     });
 
@@ -550,7 +576,11 @@ contract(
                             rlpDepositTx,
                             depositInclusionProof,
                             depositUtxoPos,
-                            { from: alice, value: this.startStandardExitBondSize },
+                            {
+                                from: alice,
+                                value: this.startStandardExitTxValue,
+                                gasPrice: this.dummyGasPrice,
+                            },
                         );
                     });
 
@@ -685,7 +715,11 @@ contract(
                             rlpDepositTx,
                             depositInclusionProof,
                             depositUtxoPos,
-                            { from: alice, value: this.startStandardExitBondSize },
+                            {
+                                from: alice,
+                                value: this.startStandardExitTxValue,
+                                gasPrice: this.dummyGasPrice,
+                            },
                         );
                     });
 
@@ -711,7 +745,11 @@ contract(
                                 rlpDepositTx,
                                 depositInclusionProof,
                                 depositUtxoPos,
-                                { from: bob, value: this.updatedStandardExitBondSize },
+                                {
+                                    from: bob,
+                                    value: this.updatedStandardExitBondSize.add(this.processExitBountySize),
+                                    gasPrice: this.dummyGasPrice,
+                                },
                             );
                         });
 

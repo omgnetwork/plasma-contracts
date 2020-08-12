@@ -7,10 +7,10 @@ import "../../utils/ExitableTimestamp.sol";
 import "../../utils/ExitId.sol";
 import "../../utils/OutputId.sol";
 import "../../utils/MoreVpFinalization.sol";
+import "../../utils/ExitBounty.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
 import "../../../utils/PosLib.sol";
 import "../../../framework/PlasmaFramework.sol";
-import "../../utils/ExitableTimestamp.sol";
 
 library PaymentStartStandardExit {
     using ExitableTimestamp for ExitableTimestamp.Calculator;
@@ -170,7 +170,8 @@ library PaymentStartStandardExit {
             outputId: data.outputId,
             exitTarget: msg.sender,
             amount: data.output.amount,
-            bondSize: msg.value
+            bondSize: msg.value - ExitBounty.processStandardExitBountySize(tx.gasprice),
+            bountySize: ExitBounty.processStandardExitBountySize(tx.gasprice)
         });
     }
 
