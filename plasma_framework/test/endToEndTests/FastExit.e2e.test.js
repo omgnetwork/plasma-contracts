@@ -19,7 +19,7 @@ const config = require('../../config.js');
 
 contract(
     'LiquidityContract - Fast Exits - End to End Tests',
-    ([_deployer, maintainer, authority, bob, richDad]) => {
+    ([_deployer, maintainer, authority, bob, richDad, otherAddress]) => {
         const ETH = constants.ZERO_ADDRESS;
         const OUTPUT_TYPE_PAYMENT = config.registerKeys.outputTypes.payment;
         const INITIAL_ERC20_SUPPLY = 10000000000;
@@ -35,7 +35,7 @@ contract(
             alice = await web3.eth.personal.importRawKey(alicePrivateKey, password);
             alice = web3.utils.toChecksumAddress(alice);
             web3.eth.personal.unlockAccount(alice, password, 3600);
-            web3.eth.sendTransaction({ to: alice, from: richDad, value: web3.utils.toWei('1', 'ether') });
+            web3.eth.sendTransaction({ to: alice, from: richDad, value: web3.utils.toWei('2', 'ether') });
         };
 
         const deployStableContracts = async () => {
@@ -58,6 +58,10 @@ contract(
             );
 
             this.startStandardExitBondSize = await this.exitGame.startStandardExitBondSize();
+
+            this.processExitBountySize = await this.exitGame.processStandardExitBountySize();
+
+            this.startStandardExitTxValue = this.startStandardExitBondSize.add(this.processExitBountySize);
 
             this.framework.addExitQueue(config.registerKeys.vaultId.eth, ETH);
 
@@ -192,7 +196,10 @@ contract(
                                 rlpDepositTx,
                                 depositInclusionProof,
                                 depositUtxoPos,
-                                { from: bob, value: this.startStandardExitBondSize },
+                                {
+                                    from: bob,
+                                    value: this.startStandardExitTxValue,
+                                },
                             ),
                             'Was not called by the first Tx owner',
                         );
@@ -216,7 +223,10 @@ contract(
                                 rlpDepositTx,
                                 depositInclusionProof,
                                 depositUtxoPos,
-                                { from: alice, value: this.startStandardExitBondSize },
+                                {
+                                    from: alice,
+                                    value: this.startStandardExitTxValue,
+                                },
                             ),
                             "Provided Transaction isn't finalized or doesn't exist",
                         );
@@ -239,7 +249,10 @@ contract(
                             rlpDepositTx,
                             depositInclusionProof,
                             depositUtxoPos,
-                            { from: alice, value: this.startStandardExitBondSize },
+                            {
+                                from: alice,
+                                value: this.startStandardExitTxValue,
+                            },
                         );
                     });
 
@@ -283,7 +296,10 @@ contract(
                                 rlpDepositTx,
                                 depositInclusionProof,
                                 depositUtxoPos,
-                                { from: alice, value: this.startStandardExitBondSize },
+                                {
+                                    from: alice,
+                                    value: this.startStandardExitTxValue,
+                                },
                             ),
                             'Exit has already started.',
                         );
@@ -322,9 +338,14 @@ contract(
                                     await web3.eth.getBalance(this.liquidity.address),
                                 );
 
-                                await this.framework.processExits(config.registerKeys.vaultId.eth, ETH, 0, 1, {
-                                    from: alice,
-                                });
+                                await this.framework.processExits(
+                                    config.registerKeys.vaultId.eth,
+                                    ETH,
+                                    0,
+                                    1,
+                                    web3.utils.keccak256(alice),
+                                    { from: alice },
+                                );
                             });
 
                             it('should return the output amount plus standard exit bond to the Liquidity Contract', async () => {
@@ -429,7 +450,10 @@ contract(
                             rlpDepositTx,
                             depositInclusionProof,
                             depositUtxoPos,
-                            { from: alice, value: this.startStandardExitBondSize },
+                            {
+                                from: alice,
+                                value: this.startStandardExitTxValue,
+                            },
                         );
                     });
 
@@ -452,7 +476,14 @@ contract(
                             before(async () => {
                                 await time.increase(time.duration.weeks(2).add(time.duration.seconds(1)));
 
-                                await this.framework.processExits(config.registerKeys.vaultId.eth, ETH, 0, 1);
+                                await this.framework.processExits(
+                                    config.registerKeys.vaultId.eth,
+                                    ETH,
+                                    0,
+                                    1,
+                                    web3.utils.keccak256(otherAddress),
+                                    { from: otherAddress },
+                                );
                             });
 
                             describe('When Alice tries to claim funds back', () => {
@@ -550,7 +581,10 @@ contract(
                             rlpDepositTx,
                             depositInclusionProof,
                             depositUtxoPos,
-                            { from: alice, value: this.startStandardExitBondSize },
+                            {
+                                from: alice,
+                                value: this.startStandardExitTxValue,
+                            },
                         );
                     });
 
@@ -593,6 +627,8 @@ contract(
                                 this.erc20.address,
                                 0,
                                 1,
+                                web3.utils.keccak256(otherAddress),
+                                { from: otherAddress },
                             );
                         });
 
@@ -685,7 +721,10 @@ contract(
                             rlpDepositTx,
                             depositInclusionProof,
                             depositUtxoPos,
-                            { from: alice, value: this.startStandardExitBondSize },
+                            {
+                                from: alice,
+                                value: this.startStandardExitTxValue,
+                            },
                         );
                     });
 
@@ -711,7 +750,10 @@ contract(
                                 rlpDepositTx,
                                 depositInclusionProof,
                                 depositUtxoPos,
-                                { from: bob, value: this.updatedStandardExitBondSize },
+                                {
+                                    from: bob,
+                                    value: this.updatedStandardExitBondSize.add(this.processExitBountySize),
+                                },
                             );
                         });
 
@@ -719,7 +761,14 @@ contract(
                             before(async () => {
                                 await time.increase(time.duration.weeks(2).add(time.duration.seconds(1)));
 
-                                await this.framework.processExits(config.registerKeys.vaultId.eth, ETH, 0, 2);
+                                await this.framework.processExits(
+                                    config.registerKeys.vaultId.eth,
+                                    ETH,
+                                    0,
+                                    2,
+                                    web3.utils.keccak256(otherAddress),
+                                    { from: otherAddress },
+                                );
                             });
 
                             describe('When Alice tries to get exit bond back', () => {

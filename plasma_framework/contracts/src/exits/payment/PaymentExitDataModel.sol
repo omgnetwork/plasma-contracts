@@ -15,6 +15,7 @@ library PaymentExitDataModel {
      * @param exitTarget The address to which the exit withdraws funds
      * @param amount The amount of funds to withdraw with this exit
      * @param bondSize The size of the bond put up for this exit to start, and which is used to cover the cost of challenges
+     * @param bountySize The size of the bounty put up to cover the cost of processing the exit
      */
     struct StandardExit {
         bool exitable;
@@ -23,6 +24,7 @@ library PaymentExitDataModel {
         address payable exitTarget;
         uint256 amount;
         uint256 bondSize;
+        uint256 bountySize;
     }
 
     /**
@@ -41,6 +43,7 @@ library PaymentExitDataModel {
         address token;
         uint256 amount;
         uint256 piggybackBondSize;
+        uint256 bountySize;
     }
 
     /**
