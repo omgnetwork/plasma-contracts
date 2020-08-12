@@ -10,12 +10,14 @@ import "../../utils/MoreVpFinalization.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
 import "../../../utils/PosLib.sol";
 import "../../../framework/PlasmaFramework.sol";
-import "../../utils/ExitableTimestamp.sol";
+
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 library PaymentStartStandardExit {
     using ExitableTimestamp for ExitableTimestamp.Calculator;
     using PosLib for PosLib.Position;
     using PaymentTransactionModel for PaymentTransactionModel.Transaction;
+    using SafeMath for uint256;
 
     struct Controller {
         IExitProcessor exitProcessor;
@@ -81,13 +83,14 @@ library PaymentStartStandardExit {
     function run(
         Controller memory self,
         PaymentExitDataModel.StandardExitMap storage exitMap,
-        PaymentStandardExitRouterArgs.StartStandardExitArgs memory args
+        PaymentStandardExitRouterArgs.StartStandardExitArgs memory args,
+        uint128 processStandardExitBountySize
     )
         public
     {
         StartStandardExitData memory data = setupStartStandardExitData(self, args);
         verifyStartStandardExitData(self, data, exitMap);
-        saveStandardExitData(data, exitMap);
+        saveStandardExitData(data, exitMap, processStandardExitBountySize);
         enqueueStandardExit(data);
 
         emit ExitStarted(msg.sender, data.exitId);
@@ -160,7 +163,8 @@ library PaymentStartStandardExit {
 
     function saveStandardExitData(
         StartStandardExitData memory data,
-        PaymentExitDataModel.StandardExitMap storage exitMap
+        PaymentExitDataModel.StandardExitMap storage exitMap,
+        uint128 processStandardExitBountySize
     )
         private
     {
@@ -170,7 +174,8 @@ library PaymentStartStandardExit {
             outputId: data.outputId,
             exitTarget: msg.sender,
             amount: data.output.amount,
-            bondSize: msg.value
+            bondSize: msg.value.sub(processStandardExitBountySize),
+            bountySize: processStandardExitBountySize
         });
     }
 
