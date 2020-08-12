@@ -9,7 +9,6 @@ const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
 const StateTransitionVerifierMock = artifacts.require('StateTransitionVerifierMock');
 const Attacker = artifacts.require('FallbackFunctionFailAttacker');
-const BountyAttacker = artifacts.require('BountyFallbackFunctionFailAttacker');
 
 const { BN, constants, expectEvent } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
