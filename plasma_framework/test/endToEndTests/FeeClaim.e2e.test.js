@@ -1,7 +1,6 @@
 const EthVault = artifacts.require('EthVault');
 const PaymentExitGame = artifacts.require('PaymentExitGame');
 const PlasmaFramework = artifacts.require('PlasmaFramework');
-const ExitBounty = artifacts.require('ExitBountyWrapper');
 
 const { constants, expectEvent } = require('openzeppelin-test-helpers');
 
@@ -62,11 +61,8 @@ contract('PlasmaFramework - Fee Claim', ([_, _maintainer, authority, richFather,
             );
 
             this.framework.addExitQueue(config.registerKeys.vaultId.eth, ETH);
-            this.exitBountyHelper = await ExitBounty.new();
             this.dummyGasPrice = 1000000;
-            this.processExitBountySize = await this.exitBountyHelper.processStandardExitBountySize({
-                gasPrice: this.dummyGasPrice,
-            });
+            this.processExitBountySize = await this.paymentExitGame.processStandardExitBountySize(this.dummyGasPrice);
         });
 
         describe('When Alice deposits ETH to the plasma', () => {

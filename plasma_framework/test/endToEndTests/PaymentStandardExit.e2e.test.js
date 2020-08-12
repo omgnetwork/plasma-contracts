@@ -1,7 +1,6 @@
 const EthVault = artifacts.require('EthVault');
 const Erc20Vault = artifacts.require('Erc20Vault');
 const ExitableTimestamp = artifacts.require('ExitableTimestampWrapper');
-const ExitBounty = artifacts.require('ExitBountyWrapper');
 const ExitPriority = artifacts.require('ExitPriorityWrapper');
 const ERC20Mintable = artifacts.require('ERC20Mintable');
 const PaymentExitGame = artifacts.require('PaymentExitGame');
@@ -49,7 +48,6 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
         this.erc20 = await ERC20Mintable.new();
         await this.erc20.mint(richFather, INITIAL_ERC20_SUPPLY);
         this.exitableHelper = await ExitableTimestamp.new(config.frameworks.minExitPeriod);
-        this.exitBountyHelper = await ExitBounty.new();
     };
 
     before(async () => {
@@ -69,9 +67,7 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
 
         this.framework.addExitQueue(config.registerKeys.vaultId.eth, ETH);
         this.dummyGasPrice = 1000000;
-        this.processExitBountySize = await this.exitBountyHelper.processStandardExitBountySize({
-            gasPrice: this.dummyGasPrice,
-        });
+        this.processExitBountySize = await this.exitGame.processStandardExitBountySize(this.dummyGasPrice);
         this.startStandardExitTxValue = this.startStandardExitBondSize.add(this.processExitBountySize);
     };
 

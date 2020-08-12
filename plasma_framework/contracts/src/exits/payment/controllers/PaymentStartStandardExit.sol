@@ -170,8 +170,8 @@ library PaymentStartStandardExit {
             outputId: data.outputId,
             exitTarget: msg.sender,
             amount: data.output.amount,
-            bondSize: msg.value - ExitBounty.processStandardExitBountySize(),
-            bountySize: ExitBounty.processStandardExitBountySize()
+            bondSize: msg.value - ExitBounty.processStandardExitBountySize(tx.gasprice),
+            bountySize: ExitBounty.processStandardExitBountySize(tx.gasprice)
         });
     }
 

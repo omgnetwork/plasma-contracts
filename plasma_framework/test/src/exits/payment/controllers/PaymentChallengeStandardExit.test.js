@@ -9,7 +9,6 @@ const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
 const StateTransitionVerifierMock = artifacts.require('StateTransitionVerifierMock');
 const Attacker = artifacts.require('FallbackFunctionFailAttacker');
-const ExitBounty = artifacts.require('ExitBountyWrapper');
 
 const {
     BN, constants, expectEvent, expectRevert,
@@ -78,10 +77,6 @@ contract('PaymentChallengeStandardExit', ([txSender, alice, bob, otherAddress]) 
             bountySize: bountySize.toString(),
         });
 
-        before(async () => {
-            this.exitBountyHelper = await ExitBounty.new();
-        });
-
         beforeEach(async () => {
             this.framework = await SpyPlasmaFramework.new(
                 MIN_EXIT_PERIOD,
@@ -119,9 +114,7 @@ contract('PaymentChallengeStandardExit', ([txSender, alice, bob, otherAddress]) 
 
             this.dummyGasPrice = 1000000000;
 
-            this.processExitBountySize = await this.exitBountyHelper.processStandardExitBountySize({
-                gasPrice: this.dummyGasPrice,
-            });
+            this.processExitBountySize = await this.exitGame.processStandardExitBountySize(this.dummyGasPrice);
         });
 
         describe('When spending condition not registered', () => {

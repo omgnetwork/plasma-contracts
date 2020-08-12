@@ -167,7 +167,7 @@ contract Liquidity is ERC721Full {
         FungibleTokenOutputModel.Output memory outputFromSecondTransaction
         = decodedSecondTx.outputs[0];
         exitData[exitId] = ExitData(
-            msg.value - ExitBounty.processStandardExitBountySize(),
+            msg.value - ExitBounty.processStandardExitBountySize(tx.gasprice),
             msg.sender,
             outputFromSecondTransaction.amount,
             outputFromSecondTransaction.token

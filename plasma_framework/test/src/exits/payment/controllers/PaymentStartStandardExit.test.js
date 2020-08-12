@@ -1,6 +1,5 @@
 const ExitableTimestamp = artifacts.require('ExitableTimestampWrapper');
 const ExitId = artifacts.require('ExitIdWrapper');
-const ExitBounty = artifacts.require('ExitBountyWrapper');
 const PaymentChallengeStandardExit = artifacts.require('PaymentChallengeStandardExit');
 const PaymentProcessStandardExit = artifacts.require('PaymentProcessStandardExit');
 const PaymentStandardExitRouter = artifacts.require('PaymentStandardExitRouterMock');
@@ -92,7 +91,6 @@ contract('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
         before(async () => {
             this.exitIdHelper = await ExitId.new();
             this.exitableHelper = await ExitableTimestamp.new(MIN_EXIT_PERIOD);
-            this.exitBountyHelper = await ExitBounty.new();
 
             this.dummyAmount = 1000;
             this.dummyBlockNum = 1001;
@@ -133,9 +131,7 @@ contract('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
 
             this.dummyGasPrice = 1000000;
 
-            this.processExitBountySize = await this.exitBountyHelper.processStandardExitBountySize({
-                gasPrice: this.dummyGasPrice,
-            });
+            this.processExitBountySize = await this.exitGame.processStandardExitBountySize(this.dummyGasPrice);
             this.startStandardExitTxValue = this.startStandardExitBondSize.add(this.processExitBountySize);
         });
 

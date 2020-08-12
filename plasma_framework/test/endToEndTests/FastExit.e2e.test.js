@@ -2,7 +2,6 @@ const PaymentExitGame = artifacts.require('PaymentExitGame');
 const PlasmaFramework = artifacts.require('PlasmaFramework');
 const Liquidity = artifacts.require('../Liquidity');
 const EthVault = artifacts.require('EthVault');
-const ExitBounty = artifacts.require('ExitBountyWrapper');
 const Erc20Vault = artifacts.require('Erc20Vault');
 const ERC20Mintable = artifacts.require('ERC20Mintable');
 
@@ -40,7 +39,6 @@ contract(
         };
 
         const deployStableContracts = async () => {
-            this.exitBountyHelper = await ExitBounty.new();
             this.erc20 = await ERC20Mintable.new();
             await this.erc20.mint(richDad, INITIAL_ERC20_SUPPLY);
         };
@@ -63,9 +61,7 @@ contract(
 
             this.dummyGasPrice = 1000000;
 
-            this.processExitBountySize = await this.exitBountyHelper.processStandardExitBountySize({
-                gasPrice: this.dummyGasPrice,
-            });
+            this.processExitBountySize = await this.exitGame.processStandardExitBountySize(this.dummyGasPrice);
 
             this.startStandardExitTxValue = this.startStandardExitBondSize.add(this.processExitBountySize);
 

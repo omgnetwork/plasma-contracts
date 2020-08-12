@@ -9,7 +9,7 @@ const SpyEthVault = artifacts.require('SpyEthVaultForExitGame');
 const SpyErc20Vault = artifacts.require('SpyErc20VaultForExitGame');
 const StateTransitionVerifierMock = artifacts.require('StateTransitionVerifierMock');
 const Attacker = artifacts.require('FallbackFunctionFailAttacker');
-const ExitBounty = artifacts.require('ExitBountyWrapper');
+const BountyAttacker = artifacts.require('BountyFallbackFunctionFailAttacker');
 
 const { BN, constants, expectEvent } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
@@ -39,10 +39,6 @@ contract('PaymentProcessStandardExit', ([_, alice, bob, otherAddress]) => {
     });
 
     describe('processStandardExit', () => {
-        before(async () => {
-            this.exitBountyHelper = await ExitBounty.new();
-        });
-
         beforeEach(async () => {
             this.framework = await SpyPlasmaFramework.new(
                 MIN_EXIT_PERIOD,
@@ -77,9 +73,7 @@ contract('PaymentProcessStandardExit', ([_, alice, bob, otherAddress]) => {
 
             this.dummyGasPrice = 1000000000;
 
-            this.processExitBountySize = await this.exitBountyHelper.processStandardExitBountySize({
-                gasPrice: this.dummyGasPrice,
-            });
+            this.processExitBountySize = await this.exitGame.processStandardExitBountySize(this.dummyGasPrice);
 
             await this.exitGame.depositFundForTest({
                 value: this.startStandardExitBondSize.add(this.processExitBountySize),
@@ -134,6 +128,46 @@ contract('PaymentProcessStandardExit', ([_, alice, bob, otherAddress]) => {
                 const expectedBobBalance = this.bobBalanceBeforeProcessExit
                     .add(this.processExitBountySize)
                     .sub(await spentOnGas(this.receiptAfterAttack));
+                expect(bobBalanceAfterProcessExit).to.be.bignumber.equal(expectedBobBalance);
+            });
+        });
+
+        describe('when paying out bond fails', () => {
+            beforeEach(async () => {
+                const exitId = 1;
+                this.attacker = await Attacker.new();
+
+                const testExitData = getTestExitData(true, ETH, bob);
+                await this.exitGame.setExit(exitId, testExitData);
+
+                this.preBalance = new BN(await web3.eth.getBalance(this.exitGame.address));
+                this.bobBalanceBeforeProcessExit = new BN(await web3.eth.getBalance(bob));
+                const { receipt } = await this.exitGame.processExit(exitId, VAULT_ID.ETH, ETH, this.attacker.address);
+                this.receiptAfterAttack = receipt;
+            });
+
+            it('should not pay out bounty', async () => {
+                const postBalance = new BN(await web3.eth.getBalance(this.exitGame.address));
+                const expectedBalance = this.preBalance.sub(this.startStandardExitBondSize);
+                expect(postBalance).to.be.bignumber.equal(expectedBalance);
+            });
+
+            it('should publish an event informing that bounty pay out failed', async () => {
+                await expectEvent.inTransaction(
+                    this.receiptAfterAttack.transactionHash,
+                    PaymentProcessStandardExit,
+                    'BountyRewardFailed',
+                    {
+                        receiver: this.attacker.address,
+                        amount: new BN(this.processExitBountySize),
+                    },
+                );
+            });
+
+            it('should still pay out the bond', async () => {
+                const bobBalanceAfterProcessExit = new BN(await web3.eth.getBalance(bob));
+                const expectedBobBalance = this.bobBalanceBeforeProcessExit
+                    .add(this.startStandardExitBondSize);
                 expect(bobBalanceAfterProcessExit).to.be.bignumber.equal(expectedBobBalance);
             });
         });
