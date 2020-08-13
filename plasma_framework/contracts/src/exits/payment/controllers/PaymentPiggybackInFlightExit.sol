@@ -6,6 +6,7 @@ import "../PaymentInFlightExitModelUtils.sol";
 import "../routers/PaymentInFlightExitRouterArgs.sol";
 import "../../utils/ExitableTimestamp.sol";
 import "../../utils/ExitId.sol";
+import "../../utils/ExitBounty.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../framework/interfaces/IExitProcessor.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
@@ -87,7 +88,8 @@ library PaymentPiggybackInFlightExit {
         PaymentExitDataModel.WithdrawData storage withdrawData = exit.inputs[args.inputIndex];
 
         require(withdrawData.exitTarget == msg.sender, "Can be called only by the exit target");
-        withdrawData.piggybackBondSize = msg.value;
+        withdrawData.piggybackBondSize = msg.value - ExitBounty.processInFlightExitBountySize(tx.gasprice);
+        withdrawData.bountySize = ExitBounty.processInFlightExitBountySize(tx.gasprice);
 
         if (isFirstPiggybackOfTheToken(exit, withdrawData.token)) {
             enqueue(self, withdrawData.token, PosLib.decode(exit.position), exitId);
@@ -124,7 +126,8 @@ library PaymentPiggybackInFlightExit {
         PaymentExitDataModel.WithdrawData storage withdrawData = exit.outputs[args.outputIndex];
 
         require(withdrawData.exitTarget == msg.sender, "Can be called only by the exit target");
-        withdrawData.piggybackBondSize = msg.value;
+        withdrawData.piggybackBondSize = msg.value - ExitBounty.processInFlightExitBountySize(tx.gasprice);
+        withdrawData.bountySize = ExitBounty.processInFlightExitBountySize(tx.gasprice);
 
         if (isFirstPiggybackOfTheToken(exit, withdrawData.token)) {
             enqueue(self, withdrawData.token, PosLib.decode(exit.position), exitId);
