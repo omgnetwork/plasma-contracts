@@ -92,6 +92,11 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
 
         this.startIFEBondSize = await this.exitGame.startIFEBondSize();
         this.piggybackBondSize = await this.exitGame.piggybackBondSize();
+
+        this.dummyGasPrice = 1000000;
+
+        this.processExitBountySize = await this.exitGame.processInFlightExitBountySize(this.dummyGasPrice);
+        this.piggybackExitTxValue = this.piggybackBondSize.add(this.processExitBountySize);
     });
 
     describe('piggybackOnOutput', () => {
@@ -114,6 +119,7 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
                 token: constants.ZERO_ADDRESS,
                 amount: 0,
                 piggybackBondSize: 0,
+                bountySize: 0,
             };
 
             const inFlightExitData = {
@@ -128,6 +134,7 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
                     token: ETH,
                     amount: 999,
                     piggybackBondSize: 0,
+                    bountySize: 0,
                 }, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData],
                 outputs: [{
                     outputId: web3.utils.sha3('dummy output id'),
@@ -135,12 +142,14 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
                     token: ETH,
                     amount: outputAmount1,
                     piggybackBondSize: 0,
+                    bountySize: 0,
                 }, {
                     outputId: web3.utils.sha3('dummy output id'),
                     exitTarget: outputOwner,
                     token: ETH,
                     amount: outputAmount2,
                     piggybackBondSize: 0,
+                    bountySize: 0,
                 }, emptyWithdrawData, emptyWithdrawData],
                 bondSize: this.startIFEBondSize.toString(),
             };
@@ -174,7 +183,19 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
         it('should fail when not send with the bond value', async () => {
             const data = await buildPiggybackOutputData();
             await expectRevert(
-                this.exitGame.piggybackInFlightExitOnOutput(data.outputOneCase.args),
+                this.exitGame.piggybackInFlightExitOnOutput(
+                    data.outputOneCase.args, { value: this.processExitBountySize, gasPrice: this.dummyGasPrice },
+                ),
+                'Input value must match msg.value',
+            );
+        });
+
+        it('should fail when not sent with the correct bounty', async () => {
+            const data = await buildPiggybackOutputData();
+            await expectRevert(
+                this.exitGame.piggybackInFlightExitOnOutput(
+                    data.outputOneCase.args, { value: this.piggybackBondSize, gasPrice: this.dummyGasPrice },
+                ),
                 'Input value must match msg.value',
             );
         });
@@ -183,7 +204,11 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
             const data = await buildPiggybackOutputData();
             await expectRevert(
                 this.exitGame.piggybackInFlightExitOnOutput(
-                    data.outputOneCase.args, { from: outputOwner, value: this.piggybackBondSize.toString() },
+                    data.outputOneCase.args, {
+                        from: outputOwner,
+                        value: this.piggybackExitTxValue,
+                        gasPrice: this.dummyGasPrice,
+                    },
                 ),
                 'No in-flight exit to piggyback on',
             );
@@ -197,7 +222,11 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
 
             await expectRevert(
                 this.exitGame.piggybackInFlightExitOnOutput(
-                    data.outputOneCase.args, { from: outputOwner, value: this.piggybackBondSize.toString() },
+                    data.outputOneCase.args, {
+                        from: outputOwner,
+                        value: this.piggybackExitTxValue,
+                        gasPrice: this.dummyGasPrice,
+                    },
                 ),
                 'Piggyback is possible only in the first phase of the exit period',
             );
@@ -211,7 +240,11 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
             data.outputOneCase.args.outputIndex = MAX_OUTPUT_SIZE + 1;
             await expectRevert(
                 this.exitGame.piggybackInFlightExitOnOutput(
-                    data.outputOneCase.args, { from: outputOwner, value: this.piggybackBondSize.toString() },
+                    data.outputOneCase.args, {
+                        from: outputOwner,
+                        value: this.piggybackExitTxValue,
+                        gasPrice: this.dummyGasPrice,
+                    },
                 ),
                 'Invalid output index',
             );
@@ -226,7 +259,11 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
             data.outputOneCase.args.outputIndex = indexOfEmptyOutput;
             await expectRevert(
                 this.exitGame.piggybackInFlightExitOnOutput(
-                    data.outputOneCase.args, { from: outputOwner, value: this.piggybackBondSize.toString() },
+                    data.outputOneCase.args, {
+                        from: outputOwner,
+                        value: this.piggybackExitTxValue,
+                        gasPrice: this.dummyGasPrice,
+                    },
                 ),
                 'Indexed output is empty',
             );
@@ -243,7 +280,11 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
 
             await expectRevert(
                 this.exitGame.piggybackInFlightExitOnOutput(
-                    data.outputOneCase.args, { from: outputOwner, value: this.piggybackBondSize.toString() },
+                    data.outputOneCase.args, {
+                        from: outputOwner,
+                        value: this.piggybackExitTxValue,
+                        gasPrice: this.dummyGasPrice,
+                    },
                 ),
                 'Indexed output already piggybacked',
             );
@@ -256,7 +297,11 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
 
             await expectRevert(
                 this.exitGame.piggybackInFlightExitOnOutput(
-                    data.outputOneCase.args, { from: outputOwner, value: this.piggybackBondSize.toString() },
+                    data.outputOneCase.args, {
+                        from: outputOwner,
+                        value: this.piggybackExitTxValue,
+                        gasPrice: this.dummyGasPrice,
+                    },
                 ),
                 'There is no block for the exit position to enqueue',
             );
@@ -267,7 +312,11 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
             await this.exitGame.setInFlightExit(data.exitId, data.inFlightExitData);
             await expectRevert(
                 this.exitGame.piggybackInFlightExitOnOutput(
-                    data.outputOneCase.args, { from: nonOutputOwner, value: this.piggybackBondSize.toString() },
+                    data.outputOneCase.args, {
+                        from: nonOutputOwner,
+                        value: this.piggybackExitTxValue,
+                        gasPrice: this.dummyGasPrice,
+                    },
                 ),
                 'Can be called only by the exit target',
             );
@@ -285,7 +334,11 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
                 );
 
                 this.piggybackTx = await this.exitGame.piggybackInFlightExitOnOutput(
-                    this.testData.outputOneCase.args, { from: outputOwner, value: this.piggybackBondSize.toString() },
+                    this.testData.outputOneCase.args, {
+                        from: outputOwner,
+                        value: this.piggybackExitTxValue,
+                        gasPrice: this.dummyGasPrice,
+                    },
                 );
             });
 
@@ -312,7 +365,11 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
             it('should NOT enqueue with correct data when it is not the first piggyback of the exit on the token', async () => {
                 const originalEnqueuedCount = await this.framework.enqueuedCount();
                 await this.exitGame.piggybackInFlightExitOnOutput(
-                    this.testData.outputTwoCase.args, { from: outputOwner, value: this.piggybackBondSize.toString() },
+                    this.testData.outputTwoCase.args, {
+                        from: outputOwner,
+                        value: this.piggybackExitTxValue,
+                        gasPrice: this.dummyGasPrice,
+                    },
                 );
 
                 expect(await this.framework.enqueuedCount()).to.be.bignumber.equal(originalEnqueuedCount);
@@ -330,6 +387,12 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
                 const exits = await this.exitGame.inFlightExits([this.testData.exitId]);
 
                 expect(new BN(exits[0].outputs[0].piggybackBondSize)).to.be.bignumber.equal(this.piggybackBondSize);
+            });
+
+            it('should set the proper bounty size', async () => {
+                const exits = await this.exitGame.inFlightExits([this.testData.exitId]);
+
+                expect(new BN(exits[0].outputs[0].bountySize)).to.be.bignumber.equal(this.processExitBountySize);
             });
 
             it('should set the correct exit target to withdraw data on the output of exit data', async () => {

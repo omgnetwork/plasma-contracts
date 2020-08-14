@@ -11,14 +11,14 @@ const { expect } = require('chai');
 const { EMPTY_BYTES, SAFE_GAS_STIPEND } = require('../helpers/constants.js');
 const { MerkleTree } = require('../helpers/merkle.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../helpers/transaction.js');
-const { computeNormalOutputId } = require('../helpers/utils.js');
+const { computeNormalOutputId, spentOnGas } = require('../helpers/utils.js');
 const { sign } = require('../helpers/sign.js');
 const { hashTx } = require('../helpers/paymentEip712.js');
 const { buildUtxoPos } = require('../helpers/positions.js');
 const Testlang = require('../helpers/testlang.js');
 const config = require('../../config.js');
 
-contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _maintainer, authority, carol, richFather]) => {
+contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _maintainer, authority, carol, richFather, otherAdress]) => {
     const ETH = constants.ZERO_ADDRESS;
     const DEPOSIT_VALUE = 1000000;
     const TX_TYPE_PAYMENT = config.registerKeys.txTypes.payment;
@@ -55,6 +55,13 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
 
         this.startIFEBondSize = await this.exitGame.startIFEBondSize();
         this.piggybackBondSize = await this.exitGame.piggybackBondSize();
+
+        this.dummyGasPrice = 1000000;
+        this.dummyNewGasPrice = 2000000;
+
+        this.processExitBountySize = await this.exitGame.processInFlightExitBountySize(this.dummyGasPrice);
+        this.processExitBountySizeOther = await this.exitGame.processInFlightExitBountySize(this.dummyNewGasPrice);
+        this.piggybackExitTxValue = this.piggybackBondSize.add(this.processExitBountySize);
 
         this.framework.addExitQueue(config.registerKeys.vaultId.eth, ETH);
     };
@@ -134,7 +141,7 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
 
                             this.piggybackTx = await this.exitGame.piggybackInFlightExitOnOutput(
                                 args,
-                                { from: bob, value: this.piggybackBondSize },
+                                { from: bob, value: this.piggybackExitTxValue, gasPrice: this.dummyGasPrice },
                             );
                         });
 
@@ -159,8 +166,10 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                 await time.increase(time.duration.weeks(2).add(time.duration.seconds(1)));
                                 this.exitsToProcess = 1;
 
+                                this.preBalanceCarol = new BN(await web3.eth.getBalance(carol));
                                 this.processTx = await this.framework.processExits(
                                     config.registerKeys.vaultId.eth, ETH, 0, this.exitsToProcess,
+                                    { from: carol },
                                 );
                             });
 
@@ -171,6 +180,15 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                     .add(new BN(this.amountIFE));
 
                                 expect(postBalanceBob).to.be.bignumber.equal(expectedBalance);
+                            });
+
+                            it('should transfer the exit bounty to processor (Carol)', async () => {
+                                const postBalanceCarol = new BN(await web3.eth.getBalance(carol));
+                                const expectedBalance = this.preBalanceCarol
+                                    .add(new BN(this.processExitBountySize))
+                                    .sub(await spentOnGas(this.processTx.receipt));
+
+                                expect(postBalanceCarol).to.be.bignumber.equal(expectedBalance);
                             });
 
                             it('should publish an event', async () => {
@@ -267,7 +285,7 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
 
                                     await this.exitGame.piggybackInFlightExitOnOutput(
                                         args,
-                                        { from: bob, value: this.piggybackBondSize },
+                                        { from: bob, value: this.piggybackExitTxValue, gasPrice: this.dummyGasPrice },
                                     );
                                 });
 
@@ -305,13 +323,19 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                             };
 
                                             await this.exitGame.piggybackInFlightExitOnInput(
-                                                args1,
-                                                { from: alice, value: this.piggybackBondSize },
+                                                args1, {
+                                                    from: alice,
+                                                    value: this.piggybackBondSize.add(this.processExitBountySizeOther),
+                                                    gasPrice: this.dummyNewGasPrice,
+                                                },
                                             );
 
                                             await this.exitGame.piggybackInFlightExitOnInput(
-                                                args2,
-                                                { from: alice, value: this.piggybackBondSize },
+                                                args2, {
+                                                    from: alice,
+                                                    value: this.piggybackBondSize.add(this.processExitBountySizeOther),
+                                                    gasPrice: this.dummyNewGasPrice,
+                                                },
                                             );
                                         });
 
@@ -347,8 +371,12 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                                     await time.increase(slightlyMoreThanTwoWeeks);
                                                     const exitsToProcess = 1;
 
-                                                    await this.framework.processExits(
+                                                    this.preBalanceOtherAdress = new BN(
+                                                        await web3.eth.getBalance(otherAdress),
+                                                    );
+                                                    this.processTx = await this.framework.processExits(
                                                         config.registerKeys.vaultId.eth, ETH, 0, exitsToProcess,
+                                                        { from: otherAdress },
                                                     );
                                                 });
 
@@ -365,7 +393,21 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                                     const postBalanceBob = new BN(await web3.eth.getBalance(bob));
                                                     const expectedBalance = preBalanceBob
                                                         .add(new BN(this.piggybackBondSize));
+
                                                     expect(expectedBalance).to.be.bignumber.equal(postBalanceBob);
+                                                });
+
+                                                it('should award bounty for both piggybacks to the processor', async () => {
+                                                    const postBalanceOtherAdress = new BN(
+                                                        await web3.eth.getBalance(otherAdress),
+                                                    );
+                                                    const expectedBalance = this.preBalanceOtherAdress
+                                                        .add(new BN(this.processExitBountySize))
+                                                        .add(new BN(this.processExitBountySizeOther))
+                                                        .sub(await spentOnGas(this.processTx.receipt));
+
+                                                    expect(expectedBalance)
+                                                        .to.be.bignumber.equal(postBalanceOtherAdress);
                                                 });
                                             });
                                         });
@@ -518,8 +560,11 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                                     inputIndex: 0,
                                                 };
                                                 await this.exitGame.piggybackInFlightExitOnInput(
-                                                    piggybackInputArgs,
-                                                    { from: alice, value: this.piggybackBondSize },
+                                                    piggybackInputArgs, {
+                                                        from: alice,
+                                                        value: this.piggybackExitTxValue,
+                                                        gasPrice: this.dummyGasPrice,
+                                                    },
                                                 );
 
                                                 const piggybackOutputArgs = {
@@ -527,8 +572,11 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                                     outputIndex: 0,
                                                 };
                                                 await this.exitGame.piggybackInFlightExitOnOutput(
-                                                    piggybackOutputArgs,
-                                                    { from: bob, value: this.piggybackBondSize },
+                                                    piggybackOutputArgs, {
+                                                        from: bob,
+                                                        value: this.piggybackExitTxValue,
+                                                        gasPrice: this.dummyGasPrice,
+                                                    },
                                                 );
                                             });
 
@@ -548,8 +596,10 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                                     await time.increase(slightlyMoreThanTwoWeeks);
                                                     const exitsToProcess = 2;
 
-                                                    await this.framework.processExits(
+                                                    this.preBalanceOtherAdress = new BN(await web3.eth.getBalance(otherAdress));
+                                                    this.processTx = await this.framework.processExits(
                                                         config.registerKeys.vaultId.eth, ETH, 0, exitsToProcess,
+                                                        { from: otherAdress },
                                                     );
                                                 });
 
@@ -577,6 +627,16 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                                         .add(new BN(this.piggybackBondSize));
 
                                                     expect(expectedBalance).to.be.bignumber.equal(postBalanceAlice);
+                                                });
+
+                                                it('should award exit bounty to Processor', async () => {
+                                                    const postBalanceOtherAdress = new BN(await web3.eth.getBalance(otherAdress));
+                                                    const expectedBalance = this.preBalanceOtherAdress
+                                                        .add(new BN(this.processExitBountySize))
+                                                        .add(new BN(this.processExitBountySize))
+                                                        .sub(await spentOnGas(this.processTx.receipt));
+
+                                                    expect(expectedBalance).to.be.bignumber.equal(postBalanceOtherAdress);
                                                 });
                                             });
                                         });

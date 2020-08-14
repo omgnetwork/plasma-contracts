@@ -8,4 +8,8 @@ contract ExitBountyWrapper {
         return ExitBounty.processStandardExitBountySize(gasPriceStartExit);
     }
 
+    function processInFlightExitBountySize(uint256 gasPricePiggyback) public view returns (uint256) {
+        return ExitBounty.processInFlightExitBountySize(gasPricePiggyback);
+    }
+
 }

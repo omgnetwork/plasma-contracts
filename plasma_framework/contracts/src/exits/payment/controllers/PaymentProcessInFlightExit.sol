@@ -42,7 +42,7 @@ library PaymentProcessInFlightExit {
     event InFlightBountyReturnFailed(
         address indexed receiver,
         uint256 amount
-    )
+    );
 
     /**
      * @notice Main logic function to process in-flight exit
