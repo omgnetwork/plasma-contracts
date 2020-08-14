@@ -35,12 +35,12 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
         alice = await web3.eth.personal.importRawKey(alicePrivateKey, password);
         alice = web3.utils.toChecksumAddress(alice);
         web3.eth.personal.unlockAccount(alice, password, 3600);
-        web3.eth.sendTransaction({ to: alice, from: richFather, value: web3.utils.toWei('1', 'ether') });
+        web3.eth.sendTransaction({ to: alice, from: richFather, value: web3.utils.toWei('2', 'ether') });
 
         bob = await web3.eth.personal.importRawKey(bobPrivateKey, password);
         bob = web3.utils.toChecksumAddress(bob);
         web3.eth.personal.unlockAccount(bob, password, 3600);
-        web3.eth.sendTransaction({ to: bob, from: richFather, value: web3.utils.toWei('1', 'ether') });
+        web3.eth.sendTransaction({ to: bob, from: richFather, value: web3.utils.toWei('2', 'ether') });
     };
 
     before(setupAccount);
@@ -56,8 +56,8 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
         this.startIFEBondSize = await this.exitGame.startIFEBondSize();
         this.piggybackBondSize = await this.exitGame.piggybackBondSize();
 
-        this.dummyGasPrice = 1000000;
-        this.dummyNewGasPrice = 2000000;
+        this.dummyGasPrice = 10000;
+        this.dummyNewGasPrice = 20000;
 
         this.processExitBountySize = await this.exitGame.processInFlightExitBountySize(this.dummyGasPrice);
         this.processExitBountySizeOther = await this.exitGame.processInFlightExitBountySize(this.dummyNewGasPrice);
