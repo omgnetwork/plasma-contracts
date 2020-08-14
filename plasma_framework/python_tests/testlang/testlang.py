@@ -63,12 +63,13 @@ class PlasmaBlock:
 
 class InFlightExit:
     class WithdrawData:
-        def __init__(self, output_id, exit_target, token, amount, piggyback_bond_size):
+        def __init__(self, output_id, exit_target, token, amount, piggyback_bond_size, bounty_size):
             self.output_id = output_id
             self.exit_target = exit_target
             self.token = token
             self.amount = amount
             self.piggyback_bond_size = piggyback_bond_size
+            self.bounty_size = bounty_size
 
     def __init__(self, root_chain, in_flight_tx,
                  is_canonical,
@@ -400,8 +401,8 @@ class TestingLanguage:
     def piggyback_in_flight_exit_input(self, tx_id, input_index, account, bond=None, spend_tx=None):
         if spend_tx is None:
             spend_tx = self.child_chain.get_transaction(tx_id)
-        bond = bond if bond is not None else self.root_chain.piggybackBond()
-        self.root_chain.piggybackInFlightExit(spend_tx.encoded, input_index, **{'value': bond, 'from': account.address})
+        bond = bond if bond is not None else self.root_chain.piggybackBond() + self.root_chain.processInFlightExitBounty()
+        self.root_chain.piggybackInFlightExit(spend_tx.encoded, input_index, **{'value': bond, 'from': account.address, 'gasPrice': 100})
 
     def piggyback_in_flight_exit_output(self, tx_id, output_index, account, bond=None, spend_tx=None):
         assert output_index in range(4)
