@@ -2,6 +2,7 @@
 /* eslint-disable prefer-destructuring */
 const Migrations = artifacts.require('Migrations');
 const fs = require('fs');
+const path = require('path');
 
 const fundAddressIfEmpty = async (from, to, value, receiverName) => {
     console.log(`Funding ${receiverName} address ${to}`);
@@ -35,24 +36,29 @@ module.exports = async (
     [deployerAddress, maintainerAddress, authorityAddress],
 ) => {
     let authority;
+    let maintainer;
     const vault = process.env.VAULT || false;
     if (vault) {
         authority = fs.readFileSync('vault_authority').toString();
+        const buildDir = path.resolve(__dirname, '../../MultiSigWallet/build/multisig_instance');
+        maintainer = fs.readFileSync(buildDir, 'utf8');
         console.log(`Vault authority address: ${authority}`);
+        console.log(`Maintainer multisig address: ${maintainer}`);
     } else {
         authority = authorityAddress;
+        maintainer = maintainerAddress;
         console.log(`Authority address: ${authority}`);
+        console.log(`Maintainer address: ${maintainer}`);
     }
     console.log(`Deployer address: ${deployerAddress}`);
-    console.log(`Maintainer address: ${maintainerAddress}`);
     const initAmountForMaintainer = process.env.MAINTAINER_ADDRESS_INITIAL_AMOUNT || 2e17; // 0.2 ETH by default
     const initAmountForAuthority = process.env.AUTHORITY_ADDRESS_INITIAL_AMOUNT || 2e17; // 0.2 ETH by default
 
-    await fundAddressIfEmpty(deployerAddress, maintainerAddress, initAmountForMaintainer, 'maintainer');
+    await fundAddressIfEmpty(deployerAddress, maintainer, initAmountForMaintainer, 'maintainer');
     await fundAddressIfEmpty(deployerAddress, authority, initAmountForAuthority, 'authority');
 
     await outputAddressFunds(deployerAddress, 'Deployer');
-    await outputAddressFunds(maintainerAddress, 'Maintainer');
+    await outputAddressFunds(maintainer, 'Maintainer');
     await outputAddressFunds(authority, 'Authority');
 
     console.log('\n########################### Notice ############################');

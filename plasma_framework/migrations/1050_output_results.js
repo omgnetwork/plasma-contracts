@@ -12,14 +12,21 @@ module.exports = async (
     deployer,
     _,
     // eslint-disable-next-line no-unused-vars
-    [deployerAddress, maintainerAddress, authorityAddress],
+    [deployerAddress, _maintainerAddress, authorityAddress],
 ) => {
+    const vault = process.env.VAULT || false;
+    let authority;
+    if (vault) {
+        authority = fs.readFileSync('vault_authority').toString();
+    } else {
+        authority = authorityAddress;
+    }
     const plasmaFramework = await PlasmaFramework.deployed();
     const ethVault = await plasmaFramework.vaults(config.registerKeys.vaultId.eth);
     const erc20Vault = await plasmaFramework.vaults(config.registerKeys.vaultId.erc20);
     const paymentExitGame = await plasmaFramework.exitGames(config.registerKeys.txTypes.payment);
     const contracts = {
-        authority_address: `${authorityAddress}`.toLowerCase(),
+        authority_address: `${authority}`.toLowerCase(),
         eth_vault: `${ethVault}`.toLowerCase(),
         erc20_vault: `${erc20Vault}`.toLowerCase(),
         payment_exit_game: `${paymentExitGame}`.toLowerCase(),
