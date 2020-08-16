@@ -9,13 +9,13 @@ module.exports = async (deployer, [_deployerAddress]) => {
   let accountsIndex = args.indexOf('--accounts');
   let confirmationsIndex = args.indexOf('--confirmations');
   let accounts = args[accountsIndex + 1].split(",");
-  console.log(`Accounts: ${accounts}`);
-  console.log(`Confirmations: ${args[confirmationsIndex + 1]}`);
-  if (accountsIndex === undefined || confirmationsIndex === undefined) {
-    console.log('ABORT. Use: --accounts 0xasdf,0xfdsa --confirmations 2');
+  if (accountsIndex === -1 || confirmationsIndex === -1) {
+    console.error('ABORTED. Use: --accounts 0xasdf,0xfdsa --confirmations 2');
     process.exit(1); 
   }
   else {
+    console.log(`Accounts: ${accounts}`);
+    console.log(`Confirmations: ${args[confirmationsIndex + 1]}`);
     deployer.deploy(MultisigWalletWithoutDailyLimit, accounts, args[confirmationsIndex + 1]).then(function() {
       const buildDir = path.resolve(__dirname, '../build');
       if (!fs.existsSync(buildDir)) {
