@@ -14,10 +14,11 @@ const path = require('path');
 const config = require('../config.js');
 const pck = require('../package.json');
 
-const expectedBlockTime = 1000; 
+const expectedBlockTime = 1000;
+/* eslint-disable arrow-body-style */
 const sleep = (milliseconds) => {
-    return new Promise(resolve => setTimeout(resolve, milliseconds))
-}
+    return new Promise(resolve => setTimeout(resolve, milliseconds));
+};
 
 module.exports = async (
     deployer,
@@ -55,42 +56,116 @@ module.exports = async (
         // ethVault.setDepositVerifier
         const setDepositVerifier = web3.eth.abi.encodeFunctionCall(ethVault.abi.find(o => o.name === 'setDepositVerifier'), [ethDepositVerifier.address]);
         const gnosisSetDepositVerifier = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [ethVault.address, 0, setDepositVerifier]);
-        web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisSetDepositVerifier }, function(error, transactonHash) {
-            console.log("Submitted transaction with hash: ", transactonHash)
-            let transactionReceipt = null
+        /* eslint-disable prefer-arrow-callback */
+        web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisSetDepositVerifier }, async function (error, transactonHash) {
+            console.log(`Submitted transaction with hash: ${transactonHash}`);
+            let transactionReceipt = null;
             while (transactionReceipt == null) { // Waiting expectedBlockTime until the transaction is mined
+                /* eslint-disable no-await-in-loop */
                 transactionReceipt = await web3.eth.getTransactionReceipt(transactonHash);
+                /* eslint-disable no-await-in-loop */
                 await sleep(expectedBlockTime);
             }
-            console.log("Got the transaction receipt for setDepositVerifier: ", transactionReceipt);
+            console.log(`Got the transaction receipt for ETH setDepositVerifier: ${transactionReceipt}`);
         });
         // plasmaFramework.registerVault
         const registerVault = web3.eth.abi.encodeFunctionCall(plasmaFramework.abi.find(o => o.name === 'registerVault'), [config.registerKeys.vaultId.eth, ethVault.address]);
         const gnosisRegisterVault = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [plasmaFramework.address, 0, registerVault]);
-        await web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisRegisterVault });
+        /* eslint-disable prefer-arrow-callback */
+        web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisRegisterVault }, async function (error, transactonHash) {
+            console.log(`Submitted transaction with hash: ${transactonHash}`);
+            let transactionReceipt = null;
+            while (transactionReceipt == null) { // Waiting expectedBlockTime until the transaction is mined
+                /* eslint-disable no-await-in-loop */
+                transactionReceipt = await web3.eth.getTransactionReceipt(transactonHash);
+                /* eslint-disable no-await-in-loop */
+                await sleep(expectedBlockTime);
+            }
+            console.log(`Got the transaction receipt for ETH registerVault: ${transactionReceipt}`);
+        });
         // ERC20 ethVault.setDepositVerifier
         const setERC20DepositVerifier = web3.eth.abi.encodeFunctionCall(erc20Vault.abi.find(o => o.name === 'setDepositVerifier'), [erc20DepositVerifier.address]);
         const gnosisERC20SetDepositVerifier = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [erc20Vault.address, 0, setERC20DepositVerifier]);
-        await web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisERC20SetDepositVerifier });
+        /* eslint-disable prefer-arrow-callback */
+        web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisERC20SetDepositVerifier }, async function (error, transactonHash) {
+            console.log(`Submitted transaction with hash: ${transactonHash}`);
+            let transactionReceipt = null;
+            while (transactionReceipt == null) { // Waiting expectedBlockTime until the transaction is mined
+                /* eslint-disable no-await-in-loop */
+                transactionReceipt = await web3.eth.getTransactionReceipt(transactonHash);
+                /* eslint-disable no-await-in-loop */
+                await sleep(expectedBlockTime);
+            }
+            console.log(`Got the transaction receipt for ERC20 setDepositVerifier: ${transactionReceipt}`);
+        });
         // plasmaFramework.registerVault
         const registerERC20Vault = web3.eth.abi.encodeFunctionCall(plasmaFramework.abi.find(o => o.name === 'registerVault'), [config.registerKeys.vaultId.erc20, erc20Vault.address]);
         const gnosisERC20RegisterVault = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [plasmaFramework.address, 0, registerERC20Vault]);
-        await web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisERC20RegisterVault });
+        web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisERC20RegisterVault }, async function (error, transactonHash) {
+            console.log(`Submitted transaction with hash: ${transactonHash}`);
+            let transactionReceipt = null;
+            while (transactionReceipt == null) { // Waiting expectedBlockTime until the transaction is mined
+                /* eslint-disable no-await-in-loop */
+                transactionReceipt = await web3.eth.getTransactionReceipt(transactonHash);
+                /* eslint-disable no-await-in-loop */
+                await sleep(expectedBlockTime);
+            }
+            console.log(`Got the transaction receipt for ERC20 registerVault: ${transactionReceipt}`);
+        });
         // paymentExitGame.init
         const paymentExitGameInit = web3.eth.abi.encodeFunctionCall(paymentExitGame.abi.find(o => o.name === 'init'), []);
         const gnosisPaymentExitGameInit = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [paymentExitGame.address, 0, paymentExitGameInit]);
-        await web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisPaymentExitGameInit });
+        web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisPaymentExitGameInit }, async function (error, transactonHash) {
+            console.log(`Submitted transaction with hash: ${transactonHash}`);
+            let transactionReceipt = null;
+            while (transactionReceipt == null) { // Waiting expectedBlockTime until the transaction is mined
+                /* eslint-disable no-await-in-loop */
+                transactionReceipt = await web3.eth.getTransactionReceipt(transactonHash);
+                /* eslint-disable no-await-in-loop */
+                await sleep(expectedBlockTime);
+            }
+            console.log(`Got the transaction receipt for init: ${transactionReceipt}`);
+        });
         // plasmaFramework.registerExitGame PAYMENT_TX_TYPE
         const registerExitGame = web3.eth.abi.encodeFunctionCall(plasmaFramework.abi.find(o => o.name === 'registerExitGame'), [PAYMENT_TX_TYPE, paymentExitGame.address, MORE_VP]);
         const gnosisRegisterExitGame = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [plasmaFramework.address, 0, registerExitGame]);
-        await web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisRegisterExitGame });
+        web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisRegisterExitGame }, async function (error, transactonHash) {
+            console.log(`Submitted transaction with hash: ${transactonHash}`);
+            let transactionReceipt = null;
+            while (transactionReceipt == null) { // Waiting expectedBlockTime until the transaction is mined
+                /* eslint-disable no-await-in-loop */
+                transactionReceipt = await web3.eth.getTransactionReceipt(transactonHash);
+                /* eslint-disable no-await-in-loop */
+                await sleep(expectedBlockTime);
+            }
+            console.log(`Got the transaction receipt for registerExitGame: ${transactionReceipt}`);
+        });
         // plasmaFramework.registerExitGame FEE_TX_TYPE
         const registerFeeExitGame = web3.eth.abi.encodeFunctionCall(plasmaFramework.abi.find(o => o.name === 'registerExitGame'), [FEE_TX_TYPE, feeExitGame.address, MORE_VP]);
         const gnosisFeeRegisterExitGame = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [plasmaFramework.address, 0, registerFeeExitGame]);
-        await web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisFeeRegisterExitGame });
+        web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisFeeRegisterExitGame }, async function (error, transactonHash) {
+            console.log(`Submitted transaction with hash: ${transactonHash}`);
+            let transactionReceipt = null;
+            while (transactionReceipt == null) { // Waiting expectedBlockTime until the transaction is mined
+                transactionReceipt = await web3.eth.getTransactionReceipt(transactonHash);
+                /* eslint-disable no-await-in-loop */
+                await sleep(expectedBlockTime);
+            }
+            console.log(`Got the transaction receipt for registerExitGame: ${transactionReceipt}`);
+        });
         // set version
         const setVersion = web3.eth.abi.encodeFunctionCall(plasmaFramework.abi.find(o => o.name === 'setVersion'), [`${pck.version}+${sha}`]);
         const gnosisSetVersion = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [plasmaFramework.address, 0, setVersion]);
-        await web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisSetVersion });
+        web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisSetVersion }, async function (error, transactonHash) {
+            console.log(`Submitted transaction with hash: ", ${transactonHash}`);
+            let transactionReceipt = null;
+            while (transactionReceipt == null) { // Waiting expectedBlockTime until the transaction is mined
+                /* eslint-disable no-await-in-loop */
+                transactionReceipt = await web3.eth.getTransactionReceipt(transactonHash);
+                /* eslint-disable no-await-in-loop */
+                await sleep(expectedBlockTime);
+            }
+            console.log(`Got the transaction receipt for setVersion: ${transactionReceipt}`);
+        });
     }
 };
