@@ -54,7 +54,7 @@ module.exports = async (
             console.log(`Authority account now in vault ${responseObject.data.address}`);
             fs.writeFileSync('vault_authority', `${responseObject.data.address}`.toLowerCase());
         }
-        console.log('Done');
+        console.log('Done creating authority account inside vault');
     } else {
         console.log(`Skipping because Vault ${vault} or perhaps authority exists ${authorityExists}`);
     }
