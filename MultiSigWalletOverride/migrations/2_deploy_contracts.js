@@ -6,25 +6,17 @@ const path = require('path');
 
 module.exports = async (deployer, [_deployerAddress]) => {
   const args = process.argv.slice();
-  let accountsIndex = undefined;
-  let confirmationsIndex = undefined;
-  for (let j = 0; j < process.argv.length; j++) {
-    
-    if (process.argv[j] == '--accounts') {
-      accountsIndex = j;
-    }
-    if (process.argv[j] == '--confirmations') {
-      confirmationsIndex = j;
-    }
-  }
-  console.log(`Accounts: ${args[accountsIndex + 1].split(",")}`);
+  let accountsIndex = args.indexOf('--accounts');
+  let confirmationsIndex = args.indexOf('--confirmations');
+  let accounts = args[accountsIndex + 1].split(",");
+  console.log(`Accounts: ${accounts}`);
   console.log(`Confirmations: ${args[confirmationsIndex + 1]}`);
   if (accountsIndex === undefined || confirmationsIndex === undefined) {
     console.log('ABORT. Use: --accounts 0xasdf,0xfdsa --confirmations 2');
     process.exit(1); 
   }
   else {
-    deployer.deploy(MultisigWalletWithoutDailyLimit, args[accountsIndex + 1].split(","), args[confirmationsIndex + 1]).then(function() {
+    deployer.deploy(MultisigWalletWithoutDailyLimit, accounts, args[confirmationsIndex + 1]).then(function() {
       const buildDir = path.resolve(__dirname, '../build');
       if (!fs.existsSync(buildDir)) {
           fs.mkdirSync(buildDir);
