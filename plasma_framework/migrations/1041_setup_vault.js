@@ -58,19 +58,17 @@ module.exports = async (
         // ethVault.setDepositVerifier
         const setDepositVerifier = web3.eth.abi.encodeFunctionCall(ethVault.abi.find(o => o.name === 'setDepositVerifier'), [ethDepositVerifier.address]);
         const gnosisSetDepositVerifier = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [ethVault.address, 0, setDepositVerifier]);
-        console.log(await web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisSetDepositVerifier }));
-        // web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisSetDepositVerifier }, async function (error, transactonHash) {
-        //     console.log(`Submitted transaction with hash: ${transactonHash}`);
-        //     let transactionReceipt = null;
-        //     while (transactionReceipt == null) { // Waiting expectedBlockTime until the transaction is mined
-        //         transactionReceipt = await web3.eth.getTransactionReceipt(transactonHash);
-        //         if (transactionReceipt != null) {
-        //             console.log(`Got the transaction receipt for ETH setDepositVerifier: ${transactionReceipt}`);
-        //         } else {
-        //             await sleep(expectedBlockTime);
-        //         }
-        //     }
-        // });
+        let transaction = await web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisSetDepositVerifier });
+        console.log(`Submitted transaction with hash: ${transaction.transactonHash}`);
+        let transactionReceipt = null;
+        while (transactionReceipt == null) { // Waiting expectedBlockTime until the transaction is mined
+            transactionReceipt = await web3.eth.getTransactionReceipt(transaction.transactonHash);
+            if (transactionReceipt != null) {
+                console.log(`Got the transaction receipt for ETH setDepositVerifier: ${transactionReceipt}`);
+            } else {
+                await sleep(expectedBlockTime);
+            }
+        }
         // plasmaFramework.registerVault
         const registerVault = web3.eth.abi.encodeFunctionCall(plasmaFramework.abi.find(o => o.name === 'registerVault'), [config.registerKeys.vaultId.eth, ethVault.address]);
         const gnosisRegisterVault = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [plasmaFramework.address, 0, registerVault]);
