@@ -63,9 +63,12 @@ module.exports = async (
             let transactionReceipt = null;
             while (transactionReceipt == null) { // Waiting expectedBlockTime until the transaction is mined
                 transactionReceipt = await web3.eth.getTransactionReceipt(transactonHash);
-                await sleep(expectedBlockTime);
+                if (transactionReceipt != null) {
+                    console.log(`Got the transaction receipt for ETH setDepositVerifier: ${transactionReceipt}`);
+                } else {
+                    await sleep(expectedBlockTime);
+                }
             }
-            console.log(`Got the transaction receipt for ETH setDepositVerifier: ${transactionReceipt}`);
         });
         // plasmaFramework.registerVault
         const registerVault = web3.eth.abi.encodeFunctionCall(plasmaFramework.abi.find(o => o.name === 'registerVault'), [config.registerKeys.vaultId.eth, ethVault.address]);
