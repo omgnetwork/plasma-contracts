@@ -1,6 +1,8 @@
 /* eslint-disable no-console */
 /* eslint max-len: ["error", { "code": 500 }] */
 /* eslint object-curly-newline: ["error", "never"] */
+/* eslint-disable no-await-in-loop */
+/* eslint-disable prefer-arrow-callback */
 const PlasmaFramework = artifacts.require('PlasmaFramework');
 const PaymentExitGame = artifacts.require('PaymentExitGame');
 const FeeExitGame = artifacts.require('FeeExitGame');
@@ -56,14 +58,11 @@ module.exports = async (
         // ethVault.setDepositVerifier
         const setDepositVerifier = web3.eth.abi.encodeFunctionCall(ethVault.abi.find(o => o.name === 'setDepositVerifier'), [ethDepositVerifier.address]);
         const gnosisSetDepositVerifier = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [ethVault.address, 0, setDepositVerifier]);
-        /* eslint-disable prefer-arrow-callback */
         web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisSetDepositVerifier }, async function (error, transactonHash) {
             console.log(`Submitted transaction with hash: ${transactonHash}`);
             let transactionReceipt = null;
             while (transactionReceipt == null) { // Waiting expectedBlockTime until the transaction is mined
-                /* eslint-disable no-await-in-loop */
                 transactionReceipt = await web3.eth.getTransactionReceipt(transactonHash);
-                /* eslint-disable no-await-in-loop */
                 await sleep(expectedBlockTime);
             }
             console.log(`Got the transaction receipt for ETH setDepositVerifier: ${transactionReceipt}`);
@@ -71,14 +70,11 @@ module.exports = async (
         // plasmaFramework.registerVault
         const registerVault = web3.eth.abi.encodeFunctionCall(plasmaFramework.abi.find(o => o.name === 'registerVault'), [config.registerKeys.vaultId.eth, ethVault.address]);
         const gnosisRegisterVault = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [plasmaFramework.address, 0, registerVault]);
-        /* eslint-disable prefer-arrow-callback */
         web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisRegisterVault }, async function (error, transactonHash) {
             console.log(`Submitted transaction with hash: ${transactonHash}`);
             let transactionReceipt = null;
             while (transactionReceipt == null) { // Waiting expectedBlockTime until the transaction is mined
-                /* eslint-disable no-await-in-loop */
                 transactionReceipt = await web3.eth.getTransactionReceipt(transactonHash);
-                /* eslint-disable no-await-in-loop */
                 await sleep(expectedBlockTime);
             }
             console.log(`Got the transaction receipt for ETH registerVault: ${transactionReceipt}`);
@@ -86,14 +82,11 @@ module.exports = async (
         // ERC20 ethVault.setDepositVerifier
         const setERC20DepositVerifier = web3.eth.abi.encodeFunctionCall(erc20Vault.abi.find(o => o.name === 'setDepositVerifier'), [erc20DepositVerifier.address]);
         const gnosisERC20SetDepositVerifier = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [erc20Vault.address, 0, setERC20DepositVerifier]);
-        /* eslint-disable prefer-arrow-callback */
         web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisERC20SetDepositVerifier }, async function (error, transactonHash) {
             console.log(`Submitted transaction with hash: ${transactonHash}`);
             let transactionReceipt = null;
             while (transactionReceipt == null) { // Waiting expectedBlockTime until the transaction is mined
-                /* eslint-disable no-await-in-loop */
                 transactionReceipt = await web3.eth.getTransactionReceipt(transactonHash);
-                /* eslint-disable no-await-in-loop */
                 await sleep(expectedBlockTime);
             }
             console.log(`Got the transaction receipt for ERC20 setDepositVerifier: ${transactionReceipt}`);
@@ -105,9 +98,7 @@ module.exports = async (
             console.log(`Submitted transaction with hash: ${transactonHash}`);
             let transactionReceipt = null;
             while (transactionReceipt == null) { // Waiting expectedBlockTime until the transaction is mined
-                /* eslint-disable no-await-in-loop */
                 transactionReceipt = await web3.eth.getTransactionReceipt(transactonHash);
-                /* eslint-disable no-await-in-loop */
                 await sleep(expectedBlockTime);
             }
             console.log(`Got the transaction receipt for ERC20 registerVault: ${transactionReceipt}`);
@@ -119,9 +110,7 @@ module.exports = async (
             console.log(`Submitted transaction with hash: ${transactonHash}`);
             let transactionReceipt = null;
             while (transactionReceipt == null) { // Waiting expectedBlockTime until the transaction is mined
-                /* eslint-disable no-await-in-loop */
                 transactionReceipt = await web3.eth.getTransactionReceipt(transactonHash);
-                /* eslint-disable no-await-in-loop */
                 await sleep(expectedBlockTime);
             }
             console.log(`Got the transaction receipt for init: ${transactionReceipt}`);
@@ -133,9 +122,7 @@ module.exports = async (
             console.log(`Submitted transaction with hash: ${transactonHash}`);
             let transactionReceipt = null;
             while (transactionReceipt == null) { // Waiting expectedBlockTime until the transaction is mined
-                /* eslint-disable no-await-in-loop */
                 transactionReceipt = await web3.eth.getTransactionReceipt(transactonHash);
-                /* eslint-disable no-await-in-loop */
                 await sleep(expectedBlockTime);
             }
             console.log(`Got the transaction receipt for registerExitGame: ${transactionReceipt}`);
@@ -148,7 +135,6 @@ module.exports = async (
             let transactionReceipt = null;
             while (transactionReceipt == null) { // Waiting expectedBlockTime until the transaction is mined
                 transactionReceipt = await web3.eth.getTransactionReceipt(transactonHash);
-                /* eslint-disable no-await-in-loop */
                 await sleep(expectedBlockTime);
             }
             console.log(`Got the transaction receipt for registerExitGame: ${transactionReceipt}`);
@@ -157,12 +143,10 @@ module.exports = async (
         const setVersion = web3.eth.abi.encodeFunctionCall(plasmaFramework.abi.find(o => o.name === 'setVersion'), [`${pck.version}+${sha}`]);
         const gnosisSetVersion = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [plasmaFramework.address, 0, setVersion]);
         web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisSetVersion }, async function (error, transactonHash) {
-            console.log(`Submitted transaction with hash: ", ${transactonHash}`);
+            console.log(`Submitted transaction with hash: ${transactonHash}`);
             let transactionReceipt = null;
             while (transactionReceipt == null) { // Waiting expectedBlockTime until the transaction is mined
-                /* eslint-disable no-await-in-loop */
                 transactionReceipt = await web3.eth.getTransactionReceipt(transactonHash);
-                /* eslint-disable no-await-in-loop */
                 await sleep(expectedBlockTime);
             }
             console.log(`Got the transaction receipt for setVersion: ${transactionReceipt}`);
