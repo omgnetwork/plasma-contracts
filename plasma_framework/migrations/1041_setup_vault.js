@@ -59,6 +59,7 @@ module.exports = async (
         const setDepositVerifier = web3.eth.abi.encodeFunctionCall(ethVault.abi.find(o => o.name === 'setDepositVerifier'), [ethDepositVerifier.address]);
         const gnosisSetDepositVerifier = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [ethVault.address, 0, setDepositVerifier]);
         let transaction = await web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisSetDepositVerifier });
+        console.log(`Submitted transaction with hash: ${transaction}`);
         console.log(`Submitted transaction with hash: ${transaction.transactonHash}`);
         let transactionReceipt = null;
         while (transactionReceipt == null) { // Waiting expectedBlockTime until the transaction is mined
