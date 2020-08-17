@@ -274,7 +274,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
 
                     it('should not return piggyback bond', async () => {
                         const postAttackBalance = new BN(await web3.eth.getBalance(this.exitGame.address));
-                        // only start ife bond was returned
+                        // only start ife bond and exit bounty was returned
                         const expectedBalance = this.preAttackBalance
                             .sub(new BN(this.startIFEBondSize))
                             .sub(new BN(this.processExitBountySize));
@@ -327,7 +327,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
 
                     it('should not return exit bounty', async () => {
                         const postAttackBalance = new BN(await web3.eth.getBalance(this.exitGame.address));
-                        // only start IFE bond and piggyback bond was returned
+                        // only start ife bond and piggyback bond was returned
                         const expectedBalance = this.preAttackBalance
                             .sub(new BN(this.startIFEBondSize))
                             .sub(new BN(this.piggybackBondSize));
@@ -352,7 +352,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
                         this.receipt = await setExitAndStartProcessing(2 ** MAX_INPUT_NUM, true);
                     });
 
-                    it('should not return piggyback bond', async () => {
+                    it('should not return exit bounty', async () => {
                         const postAttackBalance = new BN(await web3.eth.getBalance(this.exitGame.address));
                         // only start ife bond and piggyback bond was returned
                         const expectedBalance = this.preAttackBalance
@@ -361,7 +361,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
                         expect(postAttackBalance).to.be.bignumber.equal(expectedBalance);
                     });
 
-                    it('should publish an event that input bond return failed', async () => {
+                    it('should publish an event that bounty award failed', async () => {
                         await expectEvent.inTransaction(
                             this.receipt.transactionHash,
                             PaymentProcessInFlightExit,

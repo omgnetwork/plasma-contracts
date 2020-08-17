@@ -12,10 +12,13 @@ import "../../../framework/interfaces/IExitProcessor.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
 import "../../../utils/PosLib.sol";
 
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+
 library PaymentPiggybackInFlightExit {
     using PosLib for PosLib.Position;
     using ExitableTimestamp for ExitableTimestamp.Calculator;
     using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
+    using SafeMath for uint256;
 
     struct Controller {
         PlasmaFramework framework;
@@ -88,8 +91,8 @@ library PaymentPiggybackInFlightExit {
         PaymentExitDataModel.WithdrawData storage withdrawData = exit.inputs[args.inputIndex];
 
         require(withdrawData.exitTarget == msg.sender, "Can be called only by the exit target");
-        withdrawData.piggybackBondSize = msg.value - ExitBounty.processInFlightExitBountySize(tx.gasprice);
         withdrawData.bountySize = ExitBounty.processInFlightExitBountySize(tx.gasprice);
+        withdrawData.piggybackBondSize = msg.value.sub(withdrawData.bountySize);
 
         if (isFirstPiggybackOfTheToken(exit, withdrawData.token)) {
             enqueue(self, withdrawData.token, PosLib.decode(exit.position), exitId);
@@ -126,8 +129,8 @@ library PaymentPiggybackInFlightExit {
         PaymentExitDataModel.WithdrawData storage withdrawData = exit.outputs[args.outputIndex];
 
         require(withdrawData.exitTarget == msg.sender, "Can be called only by the exit target");
-        withdrawData.piggybackBondSize = msg.value - ExitBounty.processInFlightExitBountySize(tx.gasprice);
         withdrawData.bountySize = ExitBounty.processInFlightExitBountySize(tx.gasprice);
+        withdrawData.piggybackBondSize = msg.value.sub(withdrawData.bountySize);
 
         if (isFirstPiggybackOfTheToken(exit, withdrawData.token)) {
             enqueue(self, withdrawData.token, PosLib.decode(exit.position), exitId);

@@ -18,7 +18,7 @@ const { buildUtxoPos } = require('../helpers/positions.js');
 const Testlang = require('../helpers/testlang.js');
 const config = require('../../config.js');
 
-contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _maintainer, authority, carol, richFather, otherAdress]) => {
+contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _maintainer, authority, carol, richFather, otherAddress]) => {
     const ETH = constants.ZERO_ADDRESS;
     const DEPOSIT_VALUE = 1000000;
     const TX_TYPE_PAYMENT = config.registerKeys.txTypes.payment;
@@ -371,12 +371,12 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                                     await time.increase(slightlyMoreThanTwoWeeks);
                                                     const exitsToProcess = 1;
 
-                                                    this.preBalanceOtherAdress = new BN(
-                                                        await web3.eth.getBalance(otherAdress),
+                                                    this.preBalanceOtherAddress = new BN(
+                                                        await web3.eth.getBalance(otherAddress),
                                                     );
                                                     this.processTx = await this.framework.processExits(
                                                         config.registerKeys.vaultId.eth, ETH, 0, exitsToProcess,
-                                                        { from: otherAdress },
+                                                        { from: otherAddress },
                                                     );
                                                 });
 
@@ -398,16 +398,16 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                                 });
 
                                                 it('should award bounty for both piggybacks to the processor', async () => {
-                                                    const postBalanceOtherAdress = new BN(
-                                                        await web3.eth.getBalance(otherAdress),
+                                                    const postBalanceOtherAddress = new BN(
+                                                        await web3.eth.getBalance(otherAddress),
                                                     );
-                                                    const expectedBalance = this.preBalanceOtherAdress
+                                                    const expectedBalance = this.preBalanceOtherAddress
                                                         .add(new BN(this.processExitBountySize))
                                                         .add(new BN(this.processExitBountySizeOther))
                                                         .sub(await spentOnGas(this.processTx.receipt));
 
                                                     expect(expectedBalance)
-                                                        .to.be.bignumber.equal(postBalanceOtherAdress);
+                                                        .to.be.bignumber.equal(postBalanceOtherAddress);
                                                 });
                                             });
                                         });
@@ -596,12 +596,12 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                                     await time.increase(slightlyMoreThanTwoWeeks);
                                                     const exitsToProcess = 2;
 
-                                                    this.preBalanceOtherAdress = new BN(
-                                                        await web3.eth.getBalance(otherAdress),
+                                                    this.preBalanceOtherAddress = new BN(
+                                                        await web3.eth.getBalance(otherAddress),
                                                     );
                                                     this.processTx = await this.framework.processExits(
                                                         config.registerKeys.vaultId.eth, ETH, 0, exitsToProcess,
-                                                        { from: otherAdress },
+                                                        { from: otherAddress },
                                                     );
                                                 });
 
@@ -632,16 +632,16 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                                 });
 
                                                 it('should award exit bounty to Processor', async () => {
-                                                    const postBalanceOtherAdress = new BN(
-                                                        await web3.eth.getBalance(otherAdress),
+                                                    const postBalanceOtherAddress = new BN(
+                                                        await web3.eth.getBalance(otherAddress),
                                                     );
-                                                    const expectedBalance = this.preBalanceOtherAdress
+                                                    const expectedBalance = this.preBalanceOtherAddress
                                                         .add(new BN(this.processExitBountySize))
                                                         .add(new BN(this.processExitBountySize))
                                                         .sub(await spentOnGas(this.processTx.receipt));
 
                                                     expect(expectedBalance)
-                                                        .to.be.bignumber.equal(postBalanceOtherAdress);
+                                                        .to.be.bignumber.equal(postBalanceOtherAddress);
                                                 });
                                             });
                                         });
