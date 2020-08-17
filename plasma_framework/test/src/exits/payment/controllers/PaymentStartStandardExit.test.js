@@ -390,13 +390,13 @@ contract('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
 
             const isTxDeposit = await this.framework.isDeposit(this.dummyBlockNum);
             const exitId = await this.exitIdHelper.getStandardExitId(isTxDeposit, args.rlpOutputTx, args.utxoPos);
-            const { logs } = await this.exitGame.startStandardExit(args, {
+            const { receipt } = await this.exitGame.startStandardExit(args, {
                 from: outputOwner,
                 value: this.startStandardExitTxValue,
                 gasPrice: this.dummyGasPrice,
             });
-
-            await expectEvent.inLogs(logs, 'ExitStarted', { owner: outputOwner, exitId });
+            console.log(args.rlpOutputTx)
+            await expectEvent.inTransaction(receipt, PaymentStartStandardExit, 'ExitStarted', { owner: outputOwner, exitId, utxoPos: args.utxoPos, rlpOutputTx: args.rlpOutputTx });
         });
 
         it('should allow 2 outputs on the same transaction to exit', async () => {
