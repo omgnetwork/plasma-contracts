@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 const PlasmaFramework = artifacts.require('PlasmaFramework');
 const fs = require('fs');
 const path = require('path');
