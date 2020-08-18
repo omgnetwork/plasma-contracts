@@ -22,6 +22,24 @@ const sleep = (milliseconds) => {
     return new Promise(resolve => setTimeout(resolve, milliseconds));
 };
 
+const setDepositVerifier = async (ethVault, ethDepositVerifier, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress) => {
+    const setDepositVerifierCall = web3.eth.abi.encodeFunctionCall(ethVault.abi.find(o => o.name === 'setDepositVerifier'), [ethDepositVerifier.address]);
+    const gnosisSetDepositVerifier = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [ethVault.address, 0, setDepositVerifierCall]);
+    const transaction = await web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisSetDepositVerifier });
+    console.log(`Submitted transaction with hash for ETH setDepositVerifier: ${transaction.transactionHash}`);
+    let transactionReceipt = null;
+    while (transactionReceipt === null) { // Waiting expectedBlockTime until the transaction is mined
+        transactionReceipt = await web3.eth.getTransactionReceipt(transaction.transactionHash);
+        if (transactionReceipt !== null && transactionReceipt.status === true) {
+            console.log('Got a success transaction receipt for ETH setDepositVerifier');
+        } else {
+            console.log('Waiting for successful transaction receipt for ETH setDepositVerifier');
+            await sleep(expectedBlockTime);
+        }
+    }
+    console.log(`Transaction receipt for ETH setDepositVerifier: ${util.inspect(transactionReceipt, { showHidden: false, depth: null })}`);
+};
+
 module.exports = async (
     deployer,
     _,
@@ -55,22 +73,10 @@ module.exports = async (
             payable: false,
             type: 'function',
             signature: '0xc6427474' };
-        // ethVault.setDepositVerifier
-        const setDepositVerifier = web3.eth.abi.encodeFunctionCall(ethVault.abi.find(o => o.name === 'setDepositVerifier'), [ethDepositVerifier.address]);
-        const gnosisSetDepositVerifier = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [ethVault.address, 0, setDepositVerifier]);
-        let transaction = await web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisSetDepositVerifier });
-        console.log(`Submitted transaction with hash for ETH setDepositVerifier: ${transaction.transactionHash}`);
+        let transaction;
         let transactionReceipt = null;
-        while (transactionReceipt === null) { // Waiting expectedBlockTime until the transaction is mined
-            transactionReceipt = await web3.eth.getTransactionReceipt(transaction.transactionHash);
-            if (transactionReceipt !== null && transactionReceipt.status === true) {
-                console.log('Got a success transaction receipt for ETH setDepositVerifier');
-            } else {
-                console.log('Waiting for successful transaction receipt for ETH setDepositVerifier');
-                await sleep(expectedBlockTime);
-            }
-        }
-        console.log(`Transaction receipt for ETH setDepositVerifier: ${util.inspect(transactionReceipt, { showHidden: false, depth: null })}`);
+        // ethVault.setDepositVerifier
+        setDepositVerifier(ethVault, ethDepositVerifier, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress);
         // plasmaFramework.registerVault
         const registerVault = web3.eth.abi.encodeFunctionCall(plasmaFramework.abi.find(o => o.name === 'registerVault'), [config.registerKeys.vaultId.eth, ethVault.address]);
         const gnosisRegisterVault = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [plasmaFramework.address, 0, registerVault]);
