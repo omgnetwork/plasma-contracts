@@ -40,31 +40,31 @@ const setDepositVerifier = async (whatLog, ethVault, ethDepositVerifier, gnosisM
     const setDepositVerifierCall = web3.eth.abi.encodeFunctionCall(ethVault.abi.find(o => o.name === 'setDepositVerifier'), [ethDepositVerifier.address]);
     const gnosisSetDepositVerifier = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [ethVault.address, 0, setDepositVerifierCall]);
     const transaction = await web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisSetDepositVerifier });
-    console.log(`Submitted transaction with hash for ETH setDepositVerifier: ${transaction.transactionHash}`);
+    console.log(`Submitted transaction with hash for ${whatLog}: ${transaction.transactionHash}`);
     await waitForReceipt(whatLog, transaction);
 };
 
-const registerVault = async (plasmaFramework, ethVault, key, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress) => {
+const registerVault = async (whatLog, plasmaFramework, ethVault, key, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress) => {
     const registerVaultCall = web3.eth.abi.encodeFunctionCall(plasmaFramework.abi.find(o => o.name === 'registerVault'), [key, ethVault.address]);
     const gnosisRegisterVault = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [plasmaFramework.address, 0, registerVaultCall]);
     const transaction = await web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisRegisterVault });
-    console.log(`Submitted transaction with hash for ETH registerVault: ${transaction.transactionHash}`);
-    await waitForReceipt('ETH registerVault', transaction);
+    console.log(`Submitted transaction with hash for ${whatLog}: ${transaction.transactionHash}`);
+    await waitForReceipt(whatLog, transaction);
 };
 
-const paymentExitGameInit = async (paymentExitGame, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress) => {
+const paymentExitGameInit = async (whatLog, paymentExitGame, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress) => {
     const paymentExitGameInitCall = web3.eth.abi.encodeFunctionCall(paymentExitGame.abi.find(o => o.name === 'init'), []);
     const gnosisPaymentExitGameInit = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [paymentExitGame.address, 0, paymentExitGameInitCall]);
     const transaction = await web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisPaymentExitGameInit });
-    console.log(`Submitted transaction with hash for init: ${transaction.transactionHash}`);
-    await waitForReceipt('paymentExitGame init', transaction);
+    console.log(`Submitted transaction with hash for ${whatLog}: ${transaction.transactionHash}`);
+    await waitForReceipt(whatLog, transaction);
 };
 
 const registerExitGame = async (whatLog, plasmaFramework, txType, exitGame, id, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress) => {
     const registerFeeExitGameCall = web3.eth.abi.encodeFunctionCall(plasmaFramework.abi.find(o => o.name === 'registerExitGame'), [txType, exitGame.address, id]);
     const gnosisFeeRegisterExitGame = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [plasmaFramework.address, 0, registerFeeExitGameCall]);
     const transaction = await web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisFeeRegisterExitGame });
-    console.log(`Submitted transaction with hash for registerExitGame PAYMENT_TX_TYPE: ${transaction.transactionHash}`);
+    console.log(`Submitted transaction with hash for ${whatLog}: ${transaction.transactionHash}`);
     await waitForReceipt(whatLog, transaction);
 };
 
@@ -72,7 +72,7 @@ const setVersion = async (whatLog, plasmaFramework, sha, gnosisMultisigAbi, gnos
     const setVersionCall = web3.eth.abi.encodeFunctionCall(plasmaFramework.abi.find(o => o.name === 'setVersion'), [`${pck.version}+${sha}`]);
     const gnosisSetVersion = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [plasmaFramework.address, 0, setVersionCall]);
     const transaction = await web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisSetVersion });
-    console.log(`Submitted transaction with hash for setVersion: ${transaction.transactionHash}`);
+    console.log(`Submitted transaction with hash for ${whatLog}: ${transaction.transactionHash}`);
     await waitForReceipt(whatLog, transaction);
 };
 
@@ -109,20 +109,14 @@ module.exports = async (
             payable: false,
             type: 'function',
             signature: '0xc6427474' };
-        // ethVault.setDepositVerifier
+        
         await setDepositVerifier('ETH setDepositVerifier', ethVault, ethDepositVerifier, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress);
-        // plasmaFramework.registerVault
         await registerVault('ETH registerVault', plasmaFramework, ethVault, config.registerKeys.vaultId.eth, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress);
-        // ERC20 ethVault.setDepositVerifier
         await setDepositVerifier('ERC20 setDepositVerifier', erc20Vault, erc20DepositVerifier, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress);
-        // plasmaFramework.registerVault
-        await registerVault('ERC20 registerVault', plasmaFramework, erc20Vault, config.registerKeys.vaultId.erc20, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress);
-        // paymentExitGame.init
-        await paymentExitGameInit(paymentExitGame, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress);
-        // plasmaFramework.registerExitGame PAYMENT_TX_TYPE FEE_TX_TYPE
+        await registerVault('ERC20 registerVault', plasmaFramework, erc20Vault, config.registerKeys.vaultId.erc20, gnosisMultisigAbi, gnosisMultisigAddres, deployerAddress);
+        await paymentExitGameInit('payment exit game init', paymentExitGame, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress);
         await registerExitGame('registerExitGame PAYMENT_TX_TYPE', plasmaFramework, PAYMENT_TX_TYPE, paymentExitGame, MORE_VP, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress);
         await registerExitGame('registerExitGame FEE_TX_TYPE', plasmaFramework, FEE_TX_TYPE, feeExitGame, MORE_VP, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress);
-        // set version
         await setVersion('set Version', plasmaFramework, sha, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress);
     }
 };
