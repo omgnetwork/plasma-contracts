@@ -36,20 +36,44 @@ const waitForReceipt = async (whatLog, transaction) => {
     console.log(`Transaction receipt for ${whatLog}: ${util.inspect(transactionReceipt, { showHidden: false, depth: null })}`);
 };
 
-const setDepositVerifier = async (ethVault, ethDepositVerifier, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress) => {
+const setDepositVerifier = async (whatLog, ethVault, ethDepositVerifier, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress) => {
     const setDepositVerifierCall = web3.eth.abi.encodeFunctionCall(ethVault.abi.find(o => o.name === 'setDepositVerifier'), [ethDepositVerifier.address]);
     const gnosisSetDepositVerifier = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [ethVault.address, 0, setDepositVerifierCall]);
     const transaction = await web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisSetDepositVerifier });
     console.log(`Submitted transaction with hash for ETH setDepositVerifier: ${transaction.transactionHash}`);
-    await waitForReceipt('ETH setDepositVerifier', transaction);
+    await waitForReceipt(whatLog, transaction);
 };
 
-const registerVault = async (plasmaFramework, ethVault, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress) => {
-    const registerVaultCall = web3.eth.abi.encodeFunctionCall(plasmaFramework.abi.find(o => o.name === 'registerVault'), [config.registerKeys.vaultId.eth, ethVault.address]);
+const registerVault = async (plasmaFramework, ethVault, key, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress) => {
+    const registerVaultCall = web3.eth.abi.encodeFunctionCall(plasmaFramework.abi.find(o => o.name === 'registerVault'), [key, ethVault.address]);
     const gnosisRegisterVault = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [plasmaFramework.address, 0, registerVaultCall]);
     const transaction = await web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisRegisterVault });
     console.log(`Submitted transaction with hash for ETH registerVault: ${transaction.transactionHash}`);
     await waitForReceipt('ETH registerVault', transaction);
+};
+
+const paymentExitGameInit = async (paymentExitGame, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress) => {
+    const paymentExitGameInitCall = web3.eth.abi.encodeFunctionCall(paymentExitGame.abi.find(o => o.name === 'init'), []);
+    const gnosisPaymentExitGameInit = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [paymentExitGame.address, 0, paymentExitGameInitCall]);
+    const transaction = await web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisPaymentExitGameInit });
+    console.log(`Submitted transaction with hash for init: ${transaction.transactionHash}`);
+    await waitForReceipt('paymentExitGame init', transaction);
+};
+
+const registerExitGame = async (whatLog, plasmaFramework, txType, exitGame, id, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress) => {
+    const registerFeeExitGameCall = web3.eth.abi.encodeFunctionCall(plasmaFramework.abi.find(o => o.name === 'registerExitGame'), [txType, exitGame.address, id]);
+    const gnosisFeeRegisterExitGame = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [plasmaFramework.address, 0, registerFeeExitGameCall]);
+    const transaction = await web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisFeeRegisterExitGame });
+    console.log(`Submitted transaction with hash for registerExitGame PAYMENT_TX_TYPE: ${transaction.transactionHash}`);
+    await waitForReceipt(whatLog, transaction);
+};
+
+const setVersion = async (whatLog, plasmaFramework, sha, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress) => {
+    const setVersionCall = web3.eth.abi.encodeFunctionCall(plasmaFramework.abi.find(o => o.name === 'setVersion'), [`${pck.version}+${sha}`]);
+    const gnosisSetVersion = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [plasmaFramework.address, 0, setVersionCall]);
+    const transaction = await web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisSetVersion });
+    console.log(`Submitted transaction with hash for setVersion: ${transaction.transactionHash}`);
+    await waitForReceipt(whatLog, transaction);
 };
 
 module.exports = async (
@@ -85,107 +109,20 @@ module.exports = async (
             payable: false,
             type: 'function',
             signature: '0xc6427474' };
-        let transaction;
-        let transactionReceipt = null;
         // ethVault.setDepositVerifier
-        await setDepositVerifier(ethVault, ethDepositVerifier, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress);
+        await setDepositVerifier('ETH setDepositVerifier', ethVault, ethDepositVerifier, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress);
         // plasmaFramework.registerVault
-        await registerVault(plasmaFramework, ethVault, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress);
+        await registerVault('ETH registerVault', plasmaFramework, ethVault, config.registerKeys.vaultId.eth, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress);
         // ERC20 ethVault.setDepositVerifier
-        const setERC20DepositVerifier = web3.eth.abi.encodeFunctionCall(erc20Vault.abi.find(o => o.name === 'setDepositVerifier'), [erc20DepositVerifier.address]);
-        const gnosisERC20SetDepositVerifier = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [erc20Vault.address, 0, setERC20DepositVerifier]);
-        transaction = await web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisERC20SetDepositVerifier });
-        console.log(`Submitted transaction with hash for ERC20 setDepositVerifier: ${transaction.transactionHash}`);
-        transactionReceipt = null;
-        while (transactionReceipt === null) { // Waiting expectedBlockTime until the transaction is mined
-            transactionReceipt = await web3.eth.getTransactionReceipt(transaction.transactionHash);
-            if (transactionReceipt !== null && transactionReceipt.status === true) {
-                console.log('Got a success transaction receipt for ERC20 setDepositVerifier');
-            } else {
-                console.log('Waiting for successful transaction receipt for ERC20 setDepositVerifier');
-                await sleep(expectedBlockTime);
-            }
-        }
-        console.log(`Transaction receipt for ERC20 setDepositVerifier: ${util.inspect(transactionReceipt, { showHidden: false, depth: null })}`);
+        await setDepositVerifier('ERC20 setDepositVerifier', erc20Vault, erc20DepositVerifier, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress);
         // plasmaFramework.registerVault
-        const registerERC20Vault = web3.eth.abi.encodeFunctionCall(plasmaFramework.abi.find(o => o.name === 'registerVault'), [config.registerKeys.vaultId.erc20, erc20Vault.address]);
-        const gnosisERC20RegisterVault = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [plasmaFramework.address, 0, registerERC20Vault]);
-        transaction = await web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisERC20RegisterVault });
-        console.log(`Submitted transaction with hash for ERC20 registerVault: ${transaction.transactionHash}`);
-        transactionReceipt = null;
-        while (transactionReceipt === null) { // Waiting expectedBlockTime until the transaction is mined
-            transactionReceipt = await web3.eth.getTransactionReceipt(transaction.transactionHash);
-            if (transactionReceipt !== null && transactionReceipt.status === true) {
-                console.log('Got a success transaction receipt for ERC20 registerVault');
-            } else {
-                console.log('Waiting for successful transaction receipt for ERC20 registerVault');
-                await sleep(expectedBlockTime);
-            }
-        }
-        console.log(`Transaction receipt for ERC20 registerVault: ${util.inspect(transactionReceipt, { showHidden: false, depth: null })}`);
+        await registerVault('ERC20 registerVault', plasmaFramework, erc20Vault, config.registerKeys.vaultId.erc20, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress);
         // paymentExitGame.init
-        const paymentExitGameInit = web3.eth.abi.encodeFunctionCall(paymentExitGame.abi.find(o => o.name === 'init'), []);
-        const gnosisPaymentExitGameInit = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [paymentExitGame.address, 0, paymentExitGameInit]);
-        transaction = await web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisPaymentExitGameInit });
-        console.log(`Submitted transaction with hash for init: ${transaction.transactionHash}`);
-        transactionReceipt = null;
-        while (transactionReceipt === null) { // Waiting expectedBlockTime until the transaction is mined
-            transactionReceipt = await web3.eth.getTransactionReceipt(transaction.transactionHash);
-            if (transactionReceipt !== null && transactionReceipt.status === true) {
-                console.log('Got a success transaction receipt for init');
-            } else {
-                console.log('Waiting for successful transaction receipt for init');
-                await sleep(expectedBlockTime);
-            }
-        }
-        console.log(`Transaction receipt for init: ${util.inspect(transactionReceipt, { showHidden: false, depth: null })}`);
-        // plasmaFramework.registerExitGame PAYMENT_TX_TYPE
-        const registerExitGame = web3.eth.abi.encodeFunctionCall(plasmaFramework.abi.find(o => o.name === 'registerExitGame'), [PAYMENT_TX_TYPE, paymentExitGame.address, MORE_VP]);
-        const gnosisRegisterExitGame = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [plasmaFramework.address, 0, registerExitGame]);
-        transaction = await web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisRegisterExitGame });
-        console.log(`Submitted transaction with hash for registerExitGame PAYMENT_TX_TYPE: ${transaction.transactionHash}`);
-        transactionReceipt = null;
-        while (transactionReceipt === null) { // Waiting expectedBlockTime until the transaction is mined
-            transactionReceipt = await web3.eth.getTransactionReceipt(transaction.transactionHash);
-            if (transactionReceipt !== null && transactionReceipt.status === true) {
-                console.log('Got a success transaction receipt for registerExitGame PAYMENT_TX_TYPE');
-            } else {
-                console.log('Waiting for successful transaction receipt for registerExitGame PAYMENT_TX_TYPE');
-                await sleep(expectedBlockTime);
-            }
-        }
-        console.log(`Transaction receipt for registerExitGame PAYMENT_TX_TYPE: ${util.inspect(transactionReceipt, { showHidden: false, depth: null })}`);
-        // plasmaFramework.registerExitGame FEE_TX_TYPE
-        const registerFeeExitGame = web3.eth.abi.encodeFunctionCall(plasmaFramework.abi.find(o => o.name === 'registerExitGame'), [FEE_TX_TYPE, feeExitGame.address, MORE_VP]);
-        const gnosisFeeRegisterExitGame = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [plasmaFramework.address, 0, registerFeeExitGame]);
-        transaction = await web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisFeeRegisterExitGame });
-        console.log(`Submitted transaction with hash for registerExitGame PAYMENT_TX_TYPE: ${transaction.transactionHash}`);
-        transactionReceipt = null;
-        while (transactionReceipt === null) { // Waiting expectedBlockTime until the transaction is mined
-            transactionReceipt = await web3.eth.getTransactionReceipt(transaction.transactionHash);
-            if (transactionReceipt !== null && transactionReceipt.status === true) {
-                console.log('Got a success transaction receipt for registerExitGame FEE_TX_TYPE');
-            } else {
-                console.log('Waiting for successful transaction receipt for registerExitGame FEE_TX_TYPE');
-                await sleep(expectedBlockTime);
-            }
-        }
-        console.log(`Transaction receipt for registerExitGame FEE_TX_TYPE: ${util.inspect(transactionReceipt, { showHidden: false, depth: null })}`);
+        await paymentExitGameInit(paymentExitGame, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress);
+        // plasmaFramework.registerExitGame PAYMENT_TX_TYPE FEE_TX_TYPE
+        await registerExitGame('registerExitGame PAYMENT_TX_TYPE', plasmaFramework, PAYMENT_TX_TYPE, paymentExitGame, MORE_VP, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress);
+        await registerExitGame('registerExitGame FEE_TX_TYPE', plasmaFramework, FEE_TX_TYPE, feeExitGame, MORE_VP, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress);
         // set version
-        const setVersion = web3.eth.abi.encodeFunctionCall(plasmaFramework.abi.find(o => o.name === 'setVersion'), [`${pck.version}+${sha}`]);
-        const gnosisSetVersion = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [plasmaFramework.address, 0, setVersion]);
-        transaction = await web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisSetVersion });
-        console.log(`Submitted transaction with hash for setVersion: ${transaction.transactionHash}`);
-        transactionReceipt = null;
-        while (transactionReceipt === null) { // Waiting expectedBlockTime until the transaction is mined
-            transactionReceipt = await web3.eth.getTransactionReceipt(transaction.transactionHash);
-            if (transactionReceipt !== null && transactionReceipt.status === true) {
-                console.log('Got a success transaction receipt for setVersion');
-            } else {
-                console.log('Waiting for successful transaction receipt for setVersion');
-                await sleep(expectedBlockTime);
-            }
-        }
-        console.log(`Transaction receipt for setVersion: ${util.inspect(transactionReceipt, { showHidden: false, depth: null })}`);
+        await setVersion('set Version', plasmaFramework, sha, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress);
     }
 };
