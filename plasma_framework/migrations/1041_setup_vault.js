@@ -58,14 +58,15 @@ module.exports = async (
         // ethVault.setDepositVerifier
         const setDepositVerifier = web3.eth.abi.encodeFunctionCall(ethVault.abi.find(o => o.name === 'setDepositVerifier'), [ethDepositVerifier.address]);
         const gnosisSetDepositVerifier = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [ethVault.address, 0, setDepositVerifier]);
-        let transaction = await web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisSetDepositVerifier });
+        let transaction = await web3.eth.sendTransaction({ gasPrice: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisSetDepositVerifier });
         console.log(`Submitted transaction with hash for ETH setDepositVerifier: ${transaction.transactionHash}`);
         let transactionReceipt = null;
-        while (transactionReceipt == null) { // Waiting expectedBlockTime until the transaction is mined
+        while (transactionReceipt === null) { // Waiting expectedBlockTime until the transaction is mined
             transactionReceipt = await web3.eth.getTransactionReceipt(transaction.transactionHash);
-            if (transactionReceipt != null && transactionReceipt.status === true) {
+            if (transactionReceipt !== null && transactionReceipt.status === true) {
                 console.log('Got a success transaction receipt for ETH setDepositVerifier');
             } else {
+                console.log('Waiting for successful transaction receipt for ETH setDepositVerifier');
                 await sleep(expectedBlockTime);
             }
         }
@@ -76,11 +77,12 @@ module.exports = async (
         transaction = await web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisRegisterVault });
         console.log(`Submitted transaction with hash for ETH registerVault: ${transaction.transactionHash}`);
         transactionReceipt = null;
-        while (transactionReceipt == null) { // Waiting expectedBlockTime until the transaction is mined
+        while (transactionReceipt === null) { // Waiting expectedBlockTime until the transaction is mined
             transactionReceipt = await web3.eth.getTransactionReceipt(transaction.transactionHash);
-            if (transactionReceipt != null && transactionReceipt.status === true) {
+            if (transactionReceipt !== null && transactionReceipt.status === true) {
                 console.log('Got a success transaction receipt for ETH registerVault');
             } else {
+                console.log('Waiting for successful transaction receipt for ETH registerVault');
                 await sleep(expectedBlockTime);
             }
         }
@@ -91,11 +93,12 @@ module.exports = async (
         transaction = await web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisERC20SetDepositVerifier });
         console.log(`Submitted transaction with hash for ERC20 setDepositVerifier: ${transaction.transactionHash}`);
         transactionReceipt = null;
-        while (transactionReceipt == null) { // Waiting expectedBlockTime until the transaction is mined
+        while (transactionReceipt === null) { // Waiting expectedBlockTime until the transaction is mined
             transactionReceipt = await web3.eth.getTransactionReceipt(transaction.transactionHash);
-            if (transactionReceipt != null && transactionReceipt.status === true) {
+            if (transactionReceipt !== null && transactionReceipt.status === true) {
                 console.log('Got a success transaction receipt for ERC20 setDepositVerifier');
             } else {
+                console.log('Waiting for successful transaction receipt for ERC20 setDepositVerifier');
                 await sleep(expectedBlockTime);
             }
         }
@@ -106,11 +109,12 @@ module.exports = async (
         transaction = await web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisERC20RegisterVault });
         console.log(`Submitted transaction with hash for ERC20 registerVault: ${transaction.transactionHash}`);
         transactionReceipt = null;
-        while (transactionReceipt == null) { // Waiting expectedBlockTime until the transaction is mined
+        while (transactionReceipt === null) { // Waiting expectedBlockTime until the transaction is mined
             transactionReceipt = await web3.eth.getTransactionReceipt(transaction.transactionHash);
-            if (transactionReceipt != null && transactionReceipt.status === true) {
+            if (transactionReceipt !== null && transactionReceipt.status === true) {
                 console.log('Got a success transaction receipt for ERC20 registerVault');
             } else {
+                console.log('Waiting for successful transaction receipt for ERC20 registerVault');
                 await sleep(expectedBlockTime);
             }
         }
@@ -121,11 +125,12 @@ module.exports = async (
         transaction = await web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisPaymentExitGameInit });
         console.log(`Submitted transaction with hash for init: ${transaction.transactionHash}`);
         transactionReceipt = null;
-        while (transactionReceipt == null) { // Waiting expectedBlockTime until the transaction is mined
+        while (transactionReceipt === null) { // Waiting expectedBlockTime until the transaction is mined
             transactionReceipt = await web3.eth.getTransactionReceipt(transaction.transactionHash);
-            if (transactionReceipt != null && transactionReceipt.status === true) {
+            if (transactionReceipt !== null && transactionReceipt.status === true) {
                 console.log('Got a success transaction receipt for init');
             } else {
+                console.log('Waiting for successful transaction receipt for init');
                 await sleep(expectedBlockTime);
             }
         }
@@ -136,11 +141,12 @@ module.exports = async (
         transaction = await web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisRegisterExitGame });
         console.log(`Submitted transaction with hash for registerExitGame PAYMENT_TX_TYPE: ${transaction.transactionHash}`);
         transactionReceipt = null;
-        while (transactionReceipt == null) { // Waiting expectedBlockTime until the transaction is mined
+        while (transactionReceipt === null) { // Waiting expectedBlockTime until the transaction is mined
             transactionReceipt = await web3.eth.getTransactionReceipt(transaction.transactionHash);
-            if (transactionReceipt != null && transactionReceipt.status === true) {
+            if (transactionReceipt !== null && transactionReceipt.status === true) {
                 console.log('Got a success transaction receipt for registerExitGame PAYMENT_TX_TYPE');
             } else {
+                console.log('Waiting for successful transaction receipt for registerExitGame PAYMENT_TX_TYPE');
                 await sleep(expectedBlockTime);
             }
         }
@@ -151,11 +157,12 @@ module.exports = async (
         transaction = await web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisFeeRegisterExitGame });
         console.log(`Submitted transaction with hash for registerExitGame PAYMENT_TX_TYPE: ${transaction.transactionHash}`);
         transactionReceipt = null;
-        while (transactionReceipt == null) { // Waiting expectedBlockTime until the transaction is mined
+        while (transactionReceipt === null) { // Waiting expectedBlockTime until the transaction is mined
             transactionReceipt = await web3.eth.getTransactionReceipt(transaction.transactionHash);
-            if (transactionReceipt != null && transactionReceipt.status === true) {
+            if (transactionReceipt !== null && transactionReceipt.status === true) {
                 console.log('Got a success transaction receipt for registerExitGame FEE_TX_TYPE');
             } else {
+                console.log('Waiting for successful transaction receipt for registerExitGame FEE_TX_TYPE');
                 await sleep(expectedBlockTime);
             }
         }
@@ -166,11 +173,12 @@ module.exports = async (
         transaction = await web3.eth.sendTransaction({ gas: 3000000, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisSetVersion });
         console.log(`Submitted transaction with hash for setVersion: ${transaction.transactionHash}`);
         transactionReceipt = null;
-        while (transactionReceipt == null) { // Waiting expectedBlockTime until the transaction is mined
+        while (transactionReceipt === null) { // Waiting expectedBlockTime until the transaction is mined
             transactionReceipt = await web3.eth.getTransactionReceipt(transaction.transactionHash);
-            if (transactionReceipt != null && transactionReceipt.status === true) {
+            if (transactionReceipt !== null && transactionReceipt.status === true) {
                 console.log('Got a success transaction receipt for setVersion');
             } else {
+                console.log('Waiting for successful transaction receipt for setVersion');
                 await sleep(expectedBlockTime);
             }
         }
