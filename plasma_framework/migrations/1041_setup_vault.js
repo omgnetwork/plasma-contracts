@@ -109,7 +109,6 @@ module.exports = async (
             payable: false,
             type: 'function',
             signature: '0xc6427474' };
-        
         await setDepositVerifier('ETH setDepositVerifier', ethVault, ethDepositVerifier, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress);
         await registerVault('ETH registerVault', plasmaFramework, ethVault, config.registerKeys.vaultId.eth, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress);
         await setDepositVerifier('ERC20 setDepositVerifier', erc20Vault, erc20DepositVerifier, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress);
