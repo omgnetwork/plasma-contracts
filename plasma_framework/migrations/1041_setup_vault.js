@@ -113,7 +113,7 @@ module.exports = async (
         await setDepositVerifier('ETH setDepositVerifier', ethVault, ethDepositVerifier, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress);
         await registerVault('ETH registerVault', plasmaFramework, ethVault, config.registerKeys.vaultId.eth, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress);
         await setDepositVerifier('ERC20 setDepositVerifier', erc20Vault, erc20DepositVerifier, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress);
-        await registerVault('ERC20 registerVault', plasmaFramework, erc20Vault, config.registerKeys.vaultId.erc20, gnosisMultisigAbi, gnosisMultisigAddres, deployerAddress);
+        await registerVault('ERC20 registerVault', plasmaFramework, erc20Vault, config.registerKeys.vaultId.erc20, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress);
         await paymentExitGameInit('payment exit game init', paymentExitGame, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress);
         await registerExitGame('registerExitGame PAYMENT_TX_TYPE', plasmaFramework, PAYMENT_TX_TYPE, paymentExitGame, MORE_VP, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress);
         await registerExitGame('registerExitGame FEE_TX_TYPE', plasmaFramework, FEE_TX_TYPE, feeExitGame, MORE_VP, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress);
