@@ -7,6 +7,7 @@
   },
   "dependencies": {
     "@truffle/hdwallet-provider": "^1.0.37",
+    "axios": "^0.19.2",
     "dotenv": "^8.0.0",
     "elliptic": ">=6.5.3",
     "lodash.clonedeep": "^4.5.0",
@@ -29,7 +30,7 @@
     "seedrandom": "^3.0.5",
     "solhint": "^2.2.0",
     "solidity-coverage": "^0.7.2",
-    "truffle": "5.1.32"
+    "truffle": "5.1.36"
   },
   "scripts": {
     "test": "truffle test",

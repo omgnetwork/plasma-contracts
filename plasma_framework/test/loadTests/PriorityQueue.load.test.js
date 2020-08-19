@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 const PriorityQueue = artifacts.require('PriorityQueue');
 const LoadTest = artifacts.require('PriorityQueueLoadTest');
 
