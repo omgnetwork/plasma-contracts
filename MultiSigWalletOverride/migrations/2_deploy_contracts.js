@@ -4,25 +4,23 @@ const MultisigWalletFactory = artifacts.require('MultiSigWalletWithDailyLimitFac
 const fs = require('fs');
 const path = require('path');
 
-module.exports = deployer => {
+module.exports = async (deployer, [_deployerAddress]) => {
   const args = process.argv.slice();
-  if (process.env.DEPLOY_FACTORY){
-    deployer.deploy(MultisigWalletFactory);
-    console.log("Factory with Daily Limit deployed");
-  } else if (args.length < 5) {
-    console.error("Multisig with daily limit requires to pass owner " +
-      "list, required confirmations and daily limit");
-  } else if (args.length < 6) {
-    deployer.deploy(MultisigWalletWithoutDailyLimit, args[3].split(","), args[4]).then(function() {
-      const buildDir = path.resolve(__dirname, '../build');
-      if (!fs.existsSync(buildDir)) {
-          fs.mkdirSync(buildDir);
-      }
-      fs.writeFileSync(path.resolve(buildDir, 'multisig_instance'), `${MultisigWalletWithoutDailyLimit.address}`.toLowerCase());
-    });
-    console.log("Wallet deployed");
+  const accountsIndex = args.indexOf('--accounts');
+  const confirmationsIndex = args.indexOf('--confirmations');
+  const numberOfConfirmations = args[confirmationsIndex + 1];
+  const accounts = args[accountsIndex + 1].split(",");
+  if (accountsIndex === -1 || confirmationsIndex === -1) {
+    console.error('ABORTED. Use: --accounts 0xasdf,0xfdsa --confirmations 2');
+    process.exit(1); 
   } else {
-    deployer.deploy(MultisigWalletWithDailyLimit, args[3].split(","), args[4], args[5]);
-    console.log("Wallet with Daily Limit deployed");
+    console.log(`Accounts: ${accounts}`);
+    console.log(`Confirmations: ${numberOfConfirmations}`);
+    await deployer.deploy(MultisigWalletWithoutDailyLimit, accounts, numberOfConfirmations);
+    const buildDir = path.resolve(__dirname, '../build');
+    if (!fs.existsSync(buildDir)) {
+      fs.mkdirSync(buildDir);
+    }
+    fs.writeFileSync(path.resolve(buildDir, 'multisig_instance'), `${MultisigWalletWithoutDailyLimit.address}`.toLowerCase());
   }
 }

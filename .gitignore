@@ -51,3 +51,4 @@ tenderly.yaml
 
 MultiSigWallet
 MultiSigWalletOverride/ganache_data/
+MultiSigWalletOverride/docker/immutability/ca/
