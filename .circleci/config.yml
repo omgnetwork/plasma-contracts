@@ -84,7 +84,6 @@ jobs:
             curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
             nvm install v9
             node --version
-            node -v
             nvm alias default v9
             echo 'export PATH="$(npm bin):$PATH"' >> $BASH_ENV
       - run:
@@ -104,8 +103,41 @@ jobs:
             npm install -g npm@latest
             nvm use node
             npm install
-            npx truffle migrate 0xa508dD875f10C33C52a8abb20E16fc68E981F186 1
+            npx truffle migrate --accounts 0xa508dD875f10C33C52a8abb20E16fc68E981F186 --confirmations 1
           working_directory: ~/repo/MultiSigWallet
+      - run:
+          name: Install node 12
+          command: |
+            curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
+            nvm install v12
+            node --version
+            nvm alias default v12
+            echo 'export PATH="$(npm bin):$PATH"' >> $BASH_ENV
+      - restore_cache:
+          keys:
+            - dependencies-machine-v1-{{ checksum "~/repo/plasma_framework/package-lock.json" }}
+      - run:
+          name: Install dependencies
+          working_directory: ~/repo/plasma_framework
+          command: |
+            npm version
+            node --version
+            npm install
+      - save_cache:
+          key: dependencies-machine-v1-{{ checksum "~/repo/plasma_framework/package-lock.json" }}
+          paths:
+            - ~/repo/plasma_framework/node_modules
+      - run:
+          name: Deploy Plasma Contracts
+          command: |
+            npx truffle migrate --network local
+          environment:
+            VAULT: true
+            VAULT_ADDR: https://127.0.0.1:8200
+            VAULT_TOKEN: totally-secure
+            NODE_TLS_REJECT_UNAUTHORIZED: 0
+            VAULT_RPC_REMOTE_URL: http://ganache:8545
+          working_directory: ~/repo/plasma_framework
       
   Truffle tests:
     executor: truffle_executor
