@@ -311,7 +311,7 @@ workflows:
   Deployment checks:
     jobs:
       - Deploy to Rinkeby:
-          filters:
-            branches:
-              only:
-                - master
+          # filters:
+          #   branches:
+          #     only:
+          #       - master
