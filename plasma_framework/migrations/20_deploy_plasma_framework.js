@@ -15,8 +15,8 @@ module.exports = async (
     const vault = process.env.VAULT || false;
     if (vault) {
         authority = fs.readFileSync('vault_authority').toString();
-        const buildDir = path.resolve(__dirname, '../../MultiSigWallet/build/multisig_instance');
-        maintainer = fs.readFileSync(buildDir, 'utf8');
+        const multisigInstance = path.resolve(__dirname, '../../MultiSigWallet/build/multisig_instance');
+        maintainer = fs.readFileSync(multisigInstance, 'utf8');
     } else {
         authority = authorityAddress;
         maintainer = maintainerAddress;

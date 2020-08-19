@@ -96,8 +96,8 @@ module.exports = async (
         const FEE_TX_TYPE = config.registerKeys.txTypes.fee;
         const paymentExitGame = await PaymentExitGame.deployed();
         const feeExitGame = await FeeExitGame.deployed();
-        const buildDir = path.resolve(__dirname, '../../MultiSigWallet/build/multisig_instance');
-        const gnosisMultisigAddress = fs.readFileSync(buildDir, 'utf8');
+        const multisigInstance = path.resolve(__dirname, '../../MultiSigWallet/build/multisig_instance');
+        const gnosisMultisigAddress = fs.readFileSync(multisigInstance, 'utf8');
         const gnosisMultisigAbi = { constant: false,
             inputs: [
                 { name: 'destination', type: 'address' },

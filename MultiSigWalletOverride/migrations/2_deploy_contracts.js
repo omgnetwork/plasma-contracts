@@ -16,13 +16,11 @@ module.exports = async (deployer, [_deployerAddress]) => {
   } else {
     console.log(`Accounts: ${accounts}`);
     console.log(`Confirmations: ${numberOfConfirmations}`);
-    deployer.deploy(MultisigWalletWithoutDailyLimit, accounts, numberOfConfirmations).then(function() {
-      const buildDir = path.resolve(__dirname, '../build');
-      if (!fs.existsSync(buildDir)) {
-          fs.mkdirSync(buildDir);
-      }
-      fs.writeFileSync(path.resolve(buildDir, 'multisig_instance'), `${MultisigWalletWithoutDailyLimit.address}`.toLowerCase());
-    });
-    console.log("Wallet deployed");
+    await deployer.deploy(MultisigWalletWithoutDailyLimit, accounts, numberOfConfirmations);
+    const buildDir = path.resolve(__dirname, '../build');
+    if (!fs.existsSync(buildDir)) {
+      fs.mkdirSync(buildDir);
+    }
+    fs.writeFileSync(path.resolve(buildDir, 'multisig_instance'), `${MultisigWalletWithoutDailyLimit.address}`.toLowerCase());
   }
 }
