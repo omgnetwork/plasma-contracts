@@ -283,6 +283,7 @@ jobs:
           no_output_timeout: 1h
           command: |
             docker run --rm \
+            -v /tmp:/home/plasma-contracts/MultiSigWallet/build \
             -e DEPLOYER_PRIVATEKEY=${FAUCET_PRIV_KEY} \
             -e MAINTAINER_PRIVATEKEY=${FAUCET_PRIV_KEY} \
             -e AUTHORITY_PRIVATEKEY=${FAUCET_PRIV_KEY} \
@@ -296,6 +297,7 @@ jobs:
           no_output_timeout: 1h
           command: |
             docker run --rm \
+            -v /tmp:/home/plasma-contracts/MultiSigWallet/build \
             --network=multisigwalletoverride_default \
             -e VAULT=true \
             -e VAULT_ADDR=https://vault_server:8200 \
