@@ -275,7 +275,7 @@ jobs:
             pyenv versions
             pyenv global 3.7.0
       - run:
-          name: build docker
+          name: Build docker
           command: |
             docker build -t omisego/plasma-contracts .
       - run:
@@ -300,7 +300,7 @@ jobs:
             -e VAULT_ADDR=https://127.0.0.1:8200 \
             -e VAULT_TOKEN=totally-secure \
             -e NODE_TLS_REJECT_UNAUTHORIZED=0 \
-            -e VAULT_RPC_REMOTE_URL: "https://rinkeby.infura.io/v3/${INFURA_API_TOKEN}" \
+            -e VAULT_RPC_REMOTE_URL="https://rinkeby.infura.io/v3/${INFURA_API_TOKEN}" \
             -e DEPLOYER_PRIVATEKEY=${FAUCET_PRIV_KEY} \
             -e MAINTAINER_PRIVATEKEY=${FAUCET_PRIV_KEY} \
             -e AUTHORITY_PRIVATEKEY=${FAUCET_PRIV_KEY} \
@@ -309,7 +309,7 @@ jobs:
             npx truffle migrate --reset \
             --network remote
       - run:
-          name: check faucet balance
+          name: Check faucet balance
           command: |
             python .circleci/scripts/check_faucet_balance_and_warn.py
 
@@ -335,7 +335,7 @@ jobs:
           command: make init_multisig
           working_directory: ~/repo/MultiSigWalletOverride
       - run:
-          name: build docker
+          name: Build docker
           command: |
             docker build -t omisego/plasma-contracts .
       - run:
