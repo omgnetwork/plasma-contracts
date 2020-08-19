@@ -264,6 +264,7 @@ jobs:
           name: Apply Overrides
           command: make init_multisig
           working_directory: ~/repo/MultiSigWalletOverride
+      - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
       - run:
           name: Start services
           command: docker-compose up -d
@@ -317,6 +318,16 @@ jobs:
           command: |
             pyenv versions
             pyenv global 3.7.0
+      - run:
+          name: Pull Submodules
+          command: |
+            git submodule init
+            git submodule update --remote
+          working_directory: ~/repo/
+      - run:
+          name: Apply Overrides
+          command: make init_multisig
+          working_directory: ~/repo/MultiSigWalletOverride
       - run:
           name: build docker
           command: |
