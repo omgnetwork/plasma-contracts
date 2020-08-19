@@ -267,7 +267,7 @@ jobs:
       - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
       - run:
           name: Start services
-          command: docker-compose up -d
+          command: docker-compose up -d vault_server
           working_directory: ~/repo/MultiSigWalletOverride
       - run:
           name: "Switch to Python v3.7"
@@ -296,6 +296,7 @@ jobs:
           no_output_timeout: 1h
           command: |
             docker run --rm \
+            --network=multisigwalletoverride_default \
             -e VAULT=true \
             -e VAULT_ADDR=https://vault_server:8200 \
             -e VAULT_TOKEN=totally-secure \
