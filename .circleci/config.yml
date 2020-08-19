@@ -297,7 +297,7 @@ jobs:
           command: |
             docker run --rm \
             -e VAULT=true \
-            -e VAULT_ADDR=https://127.0.0.1:8200 \
+            -e VAULT_ADDR=https://vault_server:8200 \
             -e VAULT_TOKEN=totally-secure \
             -e NODE_TLS_REJECT_UNAUTHORIZED=0 \
             -e VAULT_RPC_REMOTE_URL="https://rinkeby.infura.io/v3/${INFURA_API_TOKEN}" \
