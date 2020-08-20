@@ -1006,7 +1006,7 @@ def test_challenged_standard_exit_does_not_block_ife_output_exit(testlang, plasm
 
     # alice exits with her Eth output
     alice_eth_balance = testlang.get_balance(alice)
-    assert alice_eth_balance == alice_eth_balance_before + amount_eth_small + amount_eth_big - gasCostAliceInput - gasCostAliceOutput - (2 * testlang.root_chain.processInFlightExitBounty())
+    assert alice_eth_balance == alice_eth_balance_before + amount_eth_small + amount_eth_big - (2 * testlang.root_chain.processInFlightExitBounty())
     # and does not get the tokens back
     alice_token_balance = token.balanceOf(alice.address)
     assert alice_token_balance == alice_token_balance_before
