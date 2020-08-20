@@ -66,8 +66,7 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
         this.piggybackBondSize = await this.exitGame.piggybackBondSize();
 
         this.framework.addExitQueue(config.registerKeys.vaultId.eth, ETH);
-        this.dummyGasPrice = 1000000;
-        this.processExitBountySize = await this.exitGame.processStandardExitBountySize(this.dummyGasPrice);
+        this.processExitBountySize = await this.exitGame.processStandardExitBountySize();
         this.startStandardExitTxValue = this.startStandardExitBondSize.add(this.processExitBountySize);
     };
 
@@ -148,7 +147,6 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
                     await this.exitGame.startStandardExit(args, {
                         from: alice,
                         value: this.startStandardExitTxValue,
-                        gasPrice: this.dummyGasPrice,
                     });
                 });
 
@@ -202,7 +200,6 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
                             1,
                             web3.utils.keccak256(bob), {
                                 from: bob,
-                                gasPrice: this.dummyGasPrice,
                             },
                         );
                     });
@@ -245,7 +242,6 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
                     await this.exitGame.startStandardExit(args, {
                         from: bob,
                         value: this.startStandardExitTxValue,
-                        gasPrice: this.dummyGasPrice,
                     });
                 });
 
@@ -305,7 +301,6 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
                     await this.exitGame.startStandardExit(this.startStandardExitArgs, {
                         from: alice,
                         value: this.startStandardExitTxValue,
-                        gasPrice: this.dummyGasPrice,
                     });
 
                     this.exitId = await this.exitGame.getStandardExitId(
@@ -361,7 +356,6 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
                             this.exitGame.startStandardExit(this.startStandardExitArgs, {
                                 from: alice,
                                 value: this.startStandardExitTxValue,
-                                gasPrice: this.dummyGasPrice,
                             }),
                             'Exit has already started.',
                         );
@@ -443,7 +437,6 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
                         await this.exitGame.startStandardExit(args, {
                             from: alice,
                             value: this.startStandardExitTxValue,
-                            gasPrice: this.dummyGasPrice,
                         });
                     });
 

@@ -61,8 +61,7 @@ contract('PlasmaFramework - Fee Claim', ([_, _maintainer, authority, richFather,
             );
 
             this.framework.addExitQueue(config.registerKeys.vaultId.eth, ETH);
-            this.dummyGasPrice = 1000000;
-            this.processExitBountySize = await this.paymentExitGame.processStandardExitBountySize(this.dummyGasPrice);
+            this.processExitBountySize = await this.paymentExitGame.processStandardExitBountySize();
         });
 
         describe('When Alice deposits ETH to the plasma', () => {
@@ -230,7 +229,6 @@ contract('PlasmaFramework - Fee Claim', ([_, _maintainer, authority, richFather,
                                     const tx = await this.paymentExitGame.startStandardExit(args, {
                                         from: operatorFeeAddress,
                                         value: bondSize.add(this.processExitBountySize),
-                                        gasPrice: this.dummyGasPrice,
                                     });
                                     await expectEvent.inLogs(tx.logs, 'ExitStarted', { owner: operatorFeeAddress });
                                 });

@@ -70,9 +70,7 @@ contract('PaymentProcessStandardExit', ([_, alice, bob, otherAddress]) => {
             // prepare the bond that should be set when exit starts
             this.startStandardExitBondSize = await this.exitGame.startStandardExitBondSize();
 
-            this.dummyGasPrice = 1000000000;
-
-            this.processExitBountySize = await this.exitGame.processStandardExitBountySize(this.dummyGasPrice);
+            this.processExitBountySize = await this.exitGame.processStandardExitBountySize();
 
             await this.exitGame.depositFundForTest({
                 value: this.startStandardExitBondSize.add(this.processExitBountySize),

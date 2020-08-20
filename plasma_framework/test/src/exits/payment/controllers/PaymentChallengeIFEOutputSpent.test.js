@@ -179,8 +179,7 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob, otherAddress]) => {
             await this.framework.registerExitGame(OTHER_TX_TYPE, dummyExitGame.address, PROTOCOL.MORE_VP);
 
             this.piggybackBondSize = await this.exitGame.piggybackBondSize();
-            this.dummyGasPrice = 1000000;
-            this.processExitBountySize = await this.exitGame.processInFlightExitBountySize(this.dummyGasPrice);
+            this.processExitBountySize = await this.exitGame.processInFlightExitBountySize();
 
             this.exitGame.depositFundForTest({
                 from: alice,

@@ -93,9 +93,7 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
         this.startIFEBondSize = await this.exitGame.startIFEBondSize();
         this.piggybackBondSize = await this.exitGame.piggybackBondSize();
 
-        this.dummyGasPrice = 1000000;
-
-        this.processExitBountySize = await this.exitGame.processInFlightExitBountySize(this.dummyGasPrice);
+        this.processExitBountySize = await this.exitGame.processInFlightExitBountySize();
         this.piggybackExitTxValue = this.piggybackBondSize.add(this.processExitBountySize);
     });
 
@@ -184,7 +182,7 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
             const data = await buildPiggybackOutputData();
             await expectRevert(
                 this.exitGame.piggybackInFlightExitOnOutput(
-                    data.outputOneCase.args, { value: this.processExitBountySize, gasPrice: this.dummyGasPrice },
+                    data.outputOneCase.args, { value: this.processExitBountySize },
                 ),
                 'Input value must match msg.value',
             );
@@ -194,7 +192,7 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
             const data = await buildPiggybackOutputData();
             await expectRevert(
                 this.exitGame.piggybackInFlightExitOnOutput(
-                    data.outputOneCase.args, { value: this.piggybackBondSize, gasPrice: this.dummyGasPrice },
+                    data.outputOneCase.args, { value: this.piggybackBondSize },
                 ),
                 'Input value must match msg.value',
             );
@@ -207,7 +205,6 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
                     data.outputOneCase.args, {
                         from: outputOwner,
                         value: this.piggybackExitTxValue,
-                        gasPrice: this.dummyGasPrice,
                     },
                 ),
                 'No in-flight exit to piggyback on',
@@ -225,7 +222,6 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
                     data.outputOneCase.args, {
                         from: outputOwner,
                         value: this.piggybackExitTxValue,
-                        gasPrice: this.dummyGasPrice,
                     },
                 ),
                 'Piggyback is possible only in the first phase of the exit period',
@@ -243,7 +239,6 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
                     data.outputOneCase.args, {
                         from: outputOwner,
                         value: this.piggybackExitTxValue,
-                        gasPrice: this.dummyGasPrice,
                     },
                 ),
                 'Invalid output index',
@@ -262,7 +257,6 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
                     data.outputOneCase.args, {
                         from: outputOwner,
                         value: this.piggybackExitTxValue,
-                        gasPrice: this.dummyGasPrice,
                     },
                 ),
                 'Indexed output is empty',
@@ -283,7 +277,6 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
                     data.outputOneCase.args, {
                         from: outputOwner,
                         value: this.piggybackExitTxValue,
-                        gasPrice: this.dummyGasPrice,
                     },
                 ),
                 'Indexed output already piggybacked',
@@ -300,7 +293,6 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
                     data.outputOneCase.args, {
                         from: outputOwner,
                         value: this.piggybackExitTxValue,
-                        gasPrice: this.dummyGasPrice,
                     },
                 ),
                 'There is no block for the exit position to enqueue',
@@ -315,7 +307,6 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
                     data.outputOneCase.args, {
                         from: nonOutputOwner,
                         value: this.piggybackExitTxValue,
-                        gasPrice: this.dummyGasPrice,
                     },
                 ),
                 'Can be called only by the exit target',
@@ -337,7 +328,6 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
                     this.testData.outputOneCase.args, {
                         from: outputOwner,
                         value: this.piggybackExitTxValue,
-                        gasPrice: this.dummyGasPrice,
                     },
                 );
             });
@@ -368,7 +358,6 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
                     this.testData.outputTwoCase.args, {
                         from: outputOwner,
                         value: this.piggybackExitTxValue,
-                        gasPrice: this.dummyGasPrice,
                     },
                 );
 

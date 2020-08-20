@@ -59,9 +59,7 @@ contract(
 
             this.startStandardExitBondSize = await this.exitGame.startStandardExitBondSize();
 
-            this.dummyGasPrice = 1000000;
-
-            this.processExitBountySize = await this.exitGame.processStandardExitBountySize(this.dummyGasPrice);
+            this.processExitBountySize = await this.exitGame.processStandardExitBountySize();
 
             this.startStandardExitTxValue = this.startStandardExitBondSize.add(this.processExitBountySize);
 
@@ -201,7 +199,6 @@ contract(
                                 {
                                     from: bob,
                                     value: this.startStandardExitTxValue,
-                                    gasPrice: this.dummyGasPrice,
                                 },
                             ),
                             'Was not called by the first Tx owner',
@@ -229,7 +226,6 @@ contract(
                                 {
                                     from: alice,
                                     value: this.startStandardExitTxValue,
-                                    gasPrice: this.dummyGasPrice,
                                 },
                             ),
                             "Provided Transaction isn't finalized or doesn't exist",
@@ -256,7 +252,6 @@ contract(
                             {
                                 from: alice,
                                 value: this.startStandardExitTxValue,
-                                gasPrice: this.dummyGasPrice,
                             },
                         );
                     });
@@ -304,7 +299,6 @@ contract(
                                 {
                                     from: alice,
                                     value: this.startStandardExitTxValue,
-                                    gasPrice: this.dummyGasPrice,
                                 },
                             ),
                             'Exit has already started.',
@@ -459,7 +453,6 @@ contract(
                             {
                                 from: alice,
                                 value: this.startStandardExitTxValue,
-                                gasPrice: this.dummyGasPrice,
                             },
                         );
                     });
@@ -591,7 +584,6 @@ contract(
                             {
                                 from: alice,
                                 value: this.startStandardExitTxValue,
-                                gasPrice: this.dummyGasPrice,
                             },
                         );
                     });
@@ -732,7 +724,6 @@ contract(
                             {
                                 from: alice,
                                 value: this.startStandardExitTxValue,
-                                gasPrice: this.dummyGasPrice,
                             },
                         );
                     });
@@ -762,7 +753,6 @@ contract(
                                 {
                                     from: bob,
                                     value: this.updatedStandardExitBondSize.add(this.processExitBountySize),
-                                    gasPrice: this.dummyGasPrice,
                                 },
                             );
                         });

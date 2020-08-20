@@ -6,7 +6,6 @@ import "../PaymentInFlightExitModelUtils.sol";
 import "../routers/PaymentInFlightExitRouterArgs.sol";
 import "../../utils/ExitableTimestamp.sol";
 import "../../utils/ExitId.sol";
-import "../../utils/ExitBounty.sol";
 import "../../../framework/PlasmaFramework.sol";
 import "../../../framework/interfaces/IExitProcessor.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
@@ -75,7 +74,8 @@ library PaymentPiggybackInFlightExit {
     function piggybackInput(
         Controller memory self,
         PaymentExitDataModel.InFlightExitMap storage inFlightExitMap,
-        PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnInputArgs memory args
+        PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnInputArgs memory args,
+        uint128 processInFlightExitBountySize
     )
         public
     {
@@ -91,7 +91,7 @@ library PaymentPiggybackInFlightExit {
         PaymentExitDataModel.WithdrawData storage withdrawData = exit.inputs[args.inputIndex];
 
         require(withdrawData.exitTarget == msg.sender, "Can be called only by the exit target");
-        withdrawData.bountySize = ExitBounty.processInFlightExitBountySize(tx.gasprice);
+        withdrawData.bountySize = processInFlightExitBountySize;
         withdrawData.piggybackBondSize = msg.value.sub(withdrawData.bountySize);
 
         if (isFirstPiggybackOfTheToken(exit, withdrawData.token)) {
@@ -113,7 +113,8 @@ library PaymentPiggybackInFlightExit {
     function piggybackOutput(
         Controller memory self,
         PaymentExitDataModel.InFlightExitMap storage inFlightExitMap,
-        PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnOutputArgs memory args
+        PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnOutputArgs memory args,
+        uint128 processInFlightExitBountySize
     )
         public
     {
@@ -129,7 +130,7 @@ library PaymentPiggybackInFlightExit {
         PaymentExitDataModel.WithdrawData storage withdrawData = exit.outputs[args.outputIndex];
 
         require(withdrawData.exitTarget == msg.sender, "Can be called only by the exit target");
-        withdrawData.bountySize = ExitBounty.processInFlightExitBountySize(tx.gasprice);
+        withdrawData.bountySize = processInFlightExitBountySize;
         withdrawData.piggybackBondSize = msg.value.sub(withdrawData.bountySize);
 
         if (isFirstPiggybackOfTheToken(exit, withdrawData.token)) {

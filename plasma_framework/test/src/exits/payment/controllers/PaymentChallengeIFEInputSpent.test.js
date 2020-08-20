@@ -205,8 +205,7 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
 
             this.piggybackBondSize = await this.exitGame.piggybackBondSize();
 
-            this.dummyGasPrice = 1000000;
-            this.processExitBountySize = await this.exitGame.processInFlightExitBountySize(this.dummyGasPrice);
+            this.processExitBountySize = await this.exitGame.processInFlightExitBountySize();
 
             // Set up the piggyback data
             this.testData = await buildPiggybackInputData(this.inputTx);
@@ -216,7 +215,6 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
             await this.exitGame.setInFlightExitInputPiggybacked(this.testData.exitId, 1, {
                 from: inputOwner,
                 value: this.piggybackBondSize.add(this.processExitBountySize),
-                gasPrice: this.dummyGasPrice,
             });
 
             // Create a transaction that spends the same input
@@ -294,7 +292,6 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                 await this.exitGame.setInFlightExitInputPiggybacked(this.testData.exitId, 0, {
                     from: inputOwner,
                     value: this.piggybackBondSize.add(this.processExitBountySize),
-                    gasPrice: this.dummyGasPrice,
                 });
             });
 

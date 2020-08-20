@@ -229,7 +229,7 @@ class TestingLanguage:
         proof = merkle.create_membership_proof(output_tx.encoded)
         bond = bond if bond is not None else self.root_chain.standardExitBond() + self.root_chain.processStandardExitBounty()
         self.root_chain.startStandardExit(output_id, output_tx.encoded, proof,
-                                          **{'value': bond, 'from': account.address, 'gasPrice': 100})
+                                          **{'value': bond, 'from': account.address})
 
     def challenge_standard_exit(self, output_id, spend_id, input_index=None, signature=None):
         spend_tx = self.child_chain.get_transaction(spend_id)
@@ -405,7 +405,7 @@ class TestingLanguage:
         if spend_tx is None:
             spend_tx = self.child_chain.get_transaction(tx_id)
         bond = bond if bond is not None else self.root_chain.piggybackBond() + self.root_chain.processInFlightExitBounty()
-        self.root_chain.piggybackInFlightExit(spend_tx.encoded, input_index, **{'value': bond, 'from': account.address, 'gasPrice': 100})
+        self.root_chain.piggybackInFlightExit(spend_tx.encoded, input_index, **{'value': bond, 'from': account.address})
 
     def piggyback_in_flight_exit_output(self, tx_id, output_index, account, bond=None, spend_tx=None):
         assert output_index in range(4)

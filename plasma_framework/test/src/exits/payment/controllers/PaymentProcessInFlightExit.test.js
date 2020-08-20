@@ -175,11 +175,11 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
             this.startIFEBondSize = await this.exitGame.startIFEBondSize();
             this.piggybackBondSize = await this.exitGame.piggybackBondSize();
 
-            this.dummyGasPrice = 1000000;
-            this.processExitBountySize = await this.exitGame.processInFlightExitBountySize(this.dummyGasPrice);
+            this.processExitBountySize = await this.exitGame.processInFlightExitBountySize();
 
             const maxNeededBond = this.startIFEBondSize.add(this.piggybackBondSize).muln(4);
-            await this.exitGame.depositFundForTest({ value: maxNeededBond.toString() });
+            const totalAmount = maxNeededBond.add(this.processExitBountySize).muln(2);
+            await this.exitGame.depositFundForTest({ value: totalAmount.toString() });
         });
 
         it('should omit the exit if the exit does not exist', async () => {

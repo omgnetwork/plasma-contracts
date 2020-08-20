@@ -56,11 +56,7 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
         this.startIFEBondSize = await this.exitGame.startIFEBondSize();
         this.piggybackBondSize = await this.exitGame.piggybackBondSize();
 
-        this.dummyGasPrice = 10000;
-        this.dummyNewGasPrice = 20000;
-
-        this.processExitBountySize = await this.exitGame.processInFlightExitBountySize(this.dummyGasPrice);
-        this.processExitBountySizeOther = await this.exitGame.processInFlightExitBountySize(this.dummyNewGasPrice);
+        this.processExitBountySize = await this.exitGame.processInFlightExitBountySize();
         this.piggybackExitTxValue = this.piggybackBondSize.add(this.processExitBountySize);
 
         this.framework.addExitQueue(config.registerKeys.vaultId.eth, ETH);
@@ -141,7 +137,7 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
 
                             this.piggybackTx = await this.exitGame.piggybackInFlightExitOnOutput(
                                 args,
-                                { from: bob, value: this.piggybackExitTxValue, gasPrice: this.dummyGasPrice },
+                                { from: bob, value: this.piggybackExitTxValue },
                             );
                         });
 
@@ -289,7 +285,7 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
 
                                     await this.exitGame.piggybackInFlightExitOnOutput(
                                         args,
-                                        { from: bob, value: this.piggybackExitTxValue, gasPrice: this.dummyGasPrice },
+                                        { from: bob, value: this.piggybackExitTxValue },
                                     );
                                 });
 
@@ -329,16 +325,14 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                             await this.exitGame.piggybackInFlightExitOnInput(
                                                 args1, {
                                                     from: alice,
-                                                    value: this.piggybackBondSize.add(this.processExitBountySizeOther),
-                                                    gasPrice: this.dummyNewGasPrice,
+                                                    value: this.piggybackBondSize.add(this.processExitBountySize),
                                                 },
                                             );
 
                                             await this.exitGame.piggybackInFlightExitOnInput(
                                                 args2, {
                                                     from: alice,
-                                                    value: this.piggybackBondSize.add(this.processExitBountySizeOther),
-                                                    gasPrice: this.dummyNewGasPrice,
+                                                    value: this.piggybackBondSize.add(this.processExitBountySize),
                                                 },
                                             );
                                         });
@@ -411,7 +405,7 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                                     );
                                                     const expectedBalance = this.preBalanceOtherAddress
                                                         .add(new BN(this.processExitBountySize))
-                                                        .add(new BN(this.processExitBountySizeOther))
+                                                        .add(new BN(this.processExitBountySize))
                                                         .sub(await spentOnGas(this.processTx.receipt));
 
                                                     expect(expectedBalance)
@@ -571,7 +565,6 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                                     piggybackInputArgs, {
                                                         from: alice,
                                                         value: this.piggybackExitTxValue,
-                                                        gasPrice: this.dummyGasPrice,
                                                     },
                                                 );
 
@@ -583,7 +576,6 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                                     piggybackOutputArgs, {
                                                         from: bob,
                                                         value: this.piggybackExitTxValue,
-                                                        gasPrice: this.dummyGasPrice,
                                                     },
                                                 );
                                             });

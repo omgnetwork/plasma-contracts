@@ -7,7 +7,6 @@ import "../../utils/ExitableTimestamp.sol";
 import "../../utils/ExitId.sol";
 import "../../utils/OutputId.sol";
 import "../../utils/MoreVpFinalization.sol";
-import "../../utils/ExitBounty.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
 import "../../../utils/PosLib.sol";
 import "../../../framework/PlasmaFramework.sol";
@@ -84,13 +83,14 @@ library PaymentStartStandardExit {
     function run(
         Controller memory self,
         PaymentExitDataModel.StandardExitMap storage exitMap,
-        PaymentStandardExitRouterArgs.StartStandardExitArgs memory args
+        PaymentStandardExitRouterArgs.StartStandardExitArgs memory args,
+        uint128 processStandardExitBountySize
     )
         public
     {
         StartStandardExitData memory data = setupStartStandardExitData(self, args);
         verifyStartStandardExitData(self, data, exitMap);
-        saveStandardExitData(data, exitMap);
+        saveStandardExitData(data, exitMap, processStandardExitBountySize);
         enqueueStandardExit(data);
 
         emit ExitStarted(msg.sender, data.exitId);
@@ -163,7 +163,8 @@ library PaymentStartStandardExit {
 
     function saveStandardExitData(
         StartStandardExitData memory data,
-        PaymentExitDataModel.StandardExitMap storage exitMap
+        PaymentExitDataModel.StandardExitMap storage exitMap,
+        uint128 processStandardExitBountySize
     )
         private
     {
@@ -173,8 +174,8 @@ library PaymentStartStandardExit {
             outputId: data.outputId,
             exitTarget: msg.sender,
             amount: data.output.amount,
-            bondSize: msg.value.sub(ExitBounty.processStandardExitBountySize(tx.gasprice)),
-            bountySize: ExitBounty.processStandardExitBountySize(tx.gasprice)
+            bondSize: msg.value.sub(processStandardExitBountySize),
+            bountySize: processStandardExitBountySize
         });
     }
 

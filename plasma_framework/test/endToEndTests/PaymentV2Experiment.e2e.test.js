@@ -59,8 +59,7 @@ contract('PaymentExitGame - V2 Extension experiment', ([_deployer, _maintainer, 
         this.piggybackBondSize = await this.exitGame.piggybackBondSize();
 
         this.framework.addExitQueue(config.registerKeys.vaultId.eth, ETH);
-        this.dummyGasPrice = 1000000000;
-        this.processExitBountySize = await this.exitGame.processStandardExitBountySize(this.dummyGasPrice);
+        this.processExitBountySize = await this.exitGame.processStandardExitBountySize();
     };
 
     const aliceDepositsETH = async () => {
@@ -110,7 +109,6 @@ contract('PaymentExitGame - V2 Extension experiment', ([_deployer, _maintainer, 
                         await this.exitGame.startStandardExit(args, {
                             from: alice,
                             value: this.startStandardExitBondSize.add(this.processExitBountySize),
-                            gasPrice: this.dummyGasPrice,
                         });
                     });
 
