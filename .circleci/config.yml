@@ -328,10 +328,6 @@ jobs:
             pyenv versions
             pyenv global 3.7.0
       - run:
-          name: Apply Overrides
-          command: make init_multisig
-          working_directory: ~/repo/MultiSigWalletOverride
-      - run:
           name: Build docker
           command: |
             docker build -t omisego/plasma-contracts .

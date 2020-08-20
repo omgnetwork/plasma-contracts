@@ -1,9 +1,10 @@
 FROM node:10-alpine
+ARG VAULT
 
 RUN apk update && apk add make git g++ python
 
 COPY . /home/plasma-contracts
-RUN if [ "$ENV" = "true" ]; then \
+RUN if [ "$VAULT" = "true" ]; then \
   WORKDIR /home/plasma-contracts/MultiSigWallet && \
   rm -Rf ./node_modules && \
   rm -Rf ./build && \
