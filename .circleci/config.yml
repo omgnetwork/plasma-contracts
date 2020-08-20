@@ -382,14 +382,14 @@ workflows:
 
   Deployment checks:
     jobs:
-      - Deploy to Rinkeby:
-          filters:
-            branches:
-              only:
-                - v2.0.0
-      - Deploy to Rinkeby with Gnosis and Vault:
-          filters:
-            branches:
-              only:
-                - v2.0.0
+      - Deploy to Rinkeby #:
+          # filters:
+          #   branches:
+          #     only:
+          #       - v2.0.0
+      - Deploy to Rinkeby with Gnosis and Vault #:
+          # filters:
+          #   branches:
+          #     only:
+          #       - v2.0.0
 
