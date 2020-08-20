@@ -43,6 +43,7 @@ library PaymentExitDataModel {
         address token;
         uint256 amount;
         uint256 piggybackBondSize;
+        uint256 bountySize;
     }
 
     /**

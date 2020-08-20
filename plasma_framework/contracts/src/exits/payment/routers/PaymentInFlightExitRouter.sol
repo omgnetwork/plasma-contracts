@@ -222,7 +222,7 @@ contract PaymentInFlightExitRouter is
         public
         payable
         nonReentrant(framework)
-        onlyWithValue(piggybackBondSize())
+        onlyWithValue(piggybackBondSize() + processInFlightExitBountySize(tx.gasprice))
     {
         piggybackInFlightExitController.piggybackInput(inFlightExitMap, args);
     }
@@ -237,7 +237,7 @@ contract PaymentInFlightExitRouter is
         public
         payable
         nonReentrant(framework)
-        onlyWithValue(piggybackBondSize())
+        onlyWithValue(piggybackBondSize() + processInFlightExitBountySize(tx.gasprice))
     {
         piggybackInFlightExitController.piggybackOutput(inFlightExitMap, args);
     }
@@ -309,8 +309,8 @@ contract PaymentInFlightExitRouter is
      * @param exitId The in-flight exit ID
      * @param token The token (in erc20 address or address(0) for ETH) of the exiting output
      */
-    function processInFlightExit(uint168 exitId, address token) internal {
-        processInflightExitController.run(inFlightExitMap, exitId, token);
+    function processInFlightExit(uint168 exitId, address token, address payable processor) internal {
+        processInflightExitController.run(inFlightExitMap, exitId, token, processor);
     }
 
     /**
@@ -343,5 +343,12 @@ contract PaymentInFlightExitRouter is
     function updatePiggybackBondSize(uint128 newBondSize) public onlyFrom(framework.getMaintainer()) {
         piggybackBond.updateBondSize(newBondSize);
         emit PiggybackBondUpdated(newBondSize);
+    }
+
+    /**
+     * @notice Retrieves the process IFE bounty size
+     */
+    function processInFlightExitBountySize(uint256 gasPricePiggyback) public view returns (uint256) {
+        return ExitBounty.processInFlightExitBountySize(gasPricePiggyback);
     }
 }

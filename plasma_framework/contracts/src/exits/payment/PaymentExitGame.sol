@@ -47,7 +47,7 @@ contract PaymentExitGame is IExitProcessor, OnlyFromAddress, PaymentStandardExit
         if (ExitId.isStandardExit(exitId)) {
             PaymentStandardExitRouter.processStandardExit(exitId, token, processor);
         } else {
-            PaymentInFlightExitRouter.processInFlightExit(exitId, token);
+            PaymentInFlightExitRouter.processInFlightExit(exitId, token, processor);
         }
     }
 
