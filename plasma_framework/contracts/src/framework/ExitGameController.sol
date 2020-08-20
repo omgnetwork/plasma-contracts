@@ -152,7 +152,7 @@ contract ExitGameController is ExitGameRegistry {
      * @return Total number of processed exits
      */
     function processExits(uint256 vaultId, address token, uint168 topExitId, uint256 maxExitsToProcess, bytes32 senderData) external nonReentrant {
-        require(senderData == keccak256(abi.encodePacked(msg.sender)),"Incorrect SenderData");
+        require(senderData == keccak256(abi.encodePacked(msg.sender)), "Incorrect SenderData");
         bytes32 key = exitQueueKey(vaultId, token);
         require(hasExitQueue(key), "The token is not yet added to the Plasma framework");
         PriorityQueue queue = exitsQueues[key];

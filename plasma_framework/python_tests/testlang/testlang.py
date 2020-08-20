@@ -287,7 +287,7 @@ class TestingLanguage:
 
         if sender is None:
             sender = self.accounts[0].address
-        
+
         return self.root_chain.processExits(token, exit_id, count, sender, vault_id, **kwargs)
 
     def get_challenge_proof(self, utxo_id, spend_id):
