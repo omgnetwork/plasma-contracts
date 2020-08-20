@@ -195,10 +195,16 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
                         this.aliceBalanceBeforeProcessExit = new BN(await web3.eth.getBalance(alice));
 
                         this.bobBalanceBeforeProcessExit = new BN(await web3.eth.getBalance(bob));
-                        this.tx = await this.framework.processExits(config.registerKeys.vaultId.eth, ETH, 0, 1, {
-                            from: bob,
-                            gasPrice: this.dummyGasPrice,
-                        });
+                        this.tx = await this.framework.processExits(
+                            config.registerKeys.vaultId.eth,
+                            ETH,
+                            0,
+                            1,
+                            web3.utils.keccak256(bob), {
+                                from: bob,
+                                gasPrice: this.dummyGasPrice,
+                            },
+                        );
                     });
 
                     it('should return the fund plus standard exit bond to Alice', async () => {
@@ -258,9 +264,14 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
 
                         this.bobBalanceBeforeProcessExit = new BN(await web3.eth.getBalance(bob));
 
-                        this.processTx = await this.framework.processExits(config.registerKeys.vaultId.eth, ETH, 0, 1, {
-                            from: bob,
-                        });
+                        this.processTx = await this.framework.processExits(
+                            config.registerKeys.vaultId.eth,
+                            ETH,
+                            0,
+                            1,
+                            web3.utils.keccak256(bob),
+                            { from: bob },
+                        );
                     });
 
                     it('should return the output amount plus standard exit bond plus process exit bounty to Bob', async () => {
@@ -366,6 +377,8 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
                                 ETH,
                                 0,
                                 1,
+                                web3.utils.keccak256(bob),
+                                { from: bob },
                             );
                             this.processExitsReceipt = receipt;
                         });
@@ -457,6 +470,7 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
                                 this.erc20.address,
                                 0,
                                 1,
+                                web3.utils.keccak256(bob),
                                 { from: bob },
                             );
                         });

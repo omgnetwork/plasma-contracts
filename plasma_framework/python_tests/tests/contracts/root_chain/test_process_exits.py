@@ -1,5 +1,6 @@
 import pytest
 from eth_tester.exceptions import TransactionFailed
+from eth_utils import keccak
 
 from plasma_core.constants import NULL_ADDRESS, NULL_ADDRESS_HEX, MIN_EXIT_PERIOD
 from plasma_core.transaction import Transaction
@@ -256,8 +257,8 @@ def test_finalize_exits_tx_race_short_circuit(testlang, w3, plasma_framework):
     w3.eth.disable_auto_mine()
 
     tx_hash = plasma_framework.plasma_framework.functions \
-        .processExits(plasma_framework.eth_vault_id, NULL_ADDRESS, testlang.get_standard_exit_id(utxo1.spend_id), 3) \
-        .transact({'gas': 100_000})  # reasonably high amount of gas (otherwise it fails on gas estimation)
+        .processExits(plasma_framework.eth_vault_id, NULL_ADDRESS, testlang.get_standard_exit_id(utxo1.spend_id), 3, keccak(hexstr=testlang.accounts[0].address)) \
+        .transact({'from': testlang.accounts[0].address, 'gas': 100_000})  # reasonably high amount of gas (otherwise it fails on gas estimation)
 
     w3.eth.mine(expect_error=True)
 

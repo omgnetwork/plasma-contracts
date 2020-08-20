@@ -168,7 +168,11 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
 
                                 this.preBalanceCarol = new BN(await web3.eth.getBalance(carol));
                                 this.processTx = await this.framework.processExits(
-                                    config.registerKeys.vaultId.eth, ETH, 0, this.exitsToProcess,
+                                    config.registerKeys.vaultId.eth,
+                                    ETH,
+                                    0,
+                                    this.exitsToProcess,
+                                    web3.utils.keccak256(carol),
                                     { from: carol },
                                 );
                             });
@@ -375,7 +379,11 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                                         await web3.eth.getBalance(otherAddress),
                                                     );
                                                     this.processTx = await this.framework.processExits(
-                                                        config.registerKeys.vaultId.eth, ETH, 0, exitsToProcess,
+                                                        config.registerKeys.vaultId.eth,
+                                                        ETH,
+                                                        0,
+                                                        exitsToProcess,
+                                                        web3.utils.keccak256(otherAddress),
                                                         { from: otherAddress },
                                                     );
                                                 });
@@ -600,7 +608,11 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                                         await web3.eth.getBalance(otherAddress),
                                                     );
                                                     this.processTx = await this.framework.processExits(
-                                                        config.registerKeys.vaultId.eth, ETH, 0, exitsToProcess,
+                                                        config.registerKeys.vaultId.eth,
+                                                        ETH,
+                                                        0,
+                                                        exitsToProcess,
+                                                        web3.utils.keccak256(otherAddress),
                                                         { from: otherAddress },
                                                     );
                                                 });

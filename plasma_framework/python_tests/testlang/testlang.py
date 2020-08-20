@@ -275,7 +275,7 @@ class TestingLanguage:
         spend = self.child_chain.get_transaction(spend_id)
         return Utxo(deposit_id, owner, token_address, amount, spend, spend_id)
 
-    def process_exits(self, token, exit_id, count=1, vault_id=None, **kwargs):
+    def process_exits(self, token, exit_id, count=1, vault_id=None, sender=None, **kwargs):
         """Finalizes exits that have completed the exit period.
 
         Args:
@@ -285,7 +285,10 @@ class TestingLanguage:
             vault_id (int): Id of the vault that funds the exit
         """
 
-        return self.root_chain.processExits(token, exit_id, count, vault_id, **kwargs)
+        if sender is None:
+            sender = self.accounts[0].address
+        
+        return self.root_chain.processExits(token, exit_id, count, sender, vault_id, **kwargs)
 
     def get_challenge_proof(self, utxo_id, spend_id):
         """Returns information required to submit a challenge.

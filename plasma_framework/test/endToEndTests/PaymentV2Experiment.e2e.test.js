@@ -15,7 +15,7 @@ const { buildUtxoPos } = require('../helpers/positions.js');
 const Testlang = require('../helpers/testlang.js');
 const config = require('../../config.js');
 
-contract('PaymentExitGame - V2 Extension experiment', ([_deployer, _maintainer, authority, richFather]) => {
+contract('PaymentExitGame - V2 Extension experiment', ([_deployer, _maintainer, authority, richFather, otherAddress]) => {
     const ETH = constants.ZERO_ADDRESS;
     const INITIAL_ERC20_SUPPLY = 10000000000;
     const DEPOSIT_VALUE = 1000000;
@@ -131,7 +131,14 @@ contract('PaymentExitGame - V2 Extension experiment', ([_deployer, _maintainer, 
 
                             this.bobBalanceBeforeProcessExit = new BN(await web3.eth.getBalance(alice));
 
-                            await this.framework.processExits(config.registerKeys.vaultId.eth, ETH, 0, 1);
+                            await this.framework.processExits(
+                                config.registerKeys.vaultId.eth,
+                                ETH,
+                                0,
+                                1,
+                                web3.utils.keccak256(otherAddress),
+                                { from: otherAddress },
+                            );
                         });
 
                         it('should return the output amount plus standard exit bond to Alice', async () => {
