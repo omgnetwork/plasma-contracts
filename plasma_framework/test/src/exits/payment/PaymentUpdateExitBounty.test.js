@@ -20,7 +20,7 @@ const { expect } = require('chai');
 const { expectEvent, time } = require('openzeppelin-test-helpers');
 const { TX_TYPE, VAULT_ID, SAFE_GAS_STIPEND } = require('../../../helpers/constants.js');
 
-contract('PaymentExitGame - Update Bond', () => {
+contract('PaymentExitGame - Update Exit Bounty', () => {
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
     const INITIAL_IMMUNE_EXIT_GAME_NUM = 1;
@@ -69,7 +69,7 @@ contract('PaymentExitGame - Update Bond', () => {
         await this.stateTransitionVerifier.mockResult(true);
     });
 
-    describe('updateStartStandardExitBondSize', () => {
+    describe('updateProcessStandardExitBountySize', () => {
         beforeEach(async () => {
             const exitGameArgs = [
                 this.framework.address,
