@@ -130,13 +130,6 @@ contract PaymentStandardExitRouter is
     }
 
     /**
-     * @notice Retrieves the process standard exit bounty size
-     */
-    function processStandardExitBountySize(uint256 gasPriceStartExit) public view returns (uint256) {
-        return ExitBounty.processStandardExitBountySize(gasPriceStartExit);
-    }
-
-    /**
      * @notice Starts a standard exit of a given output, using output-age priority
      */
     function startStandardExit(
@@ -145,7 +138,7 @@ contract PaymentStandardExitRouter is
         public
         payable
         nonReentrant(framework)
-        onlyWithValue(startStandardExitBondSize() + processStandardExitBountySize(tx.gasprice))
+        onlyWithValue(startStandardExitBondSize())
     {
         startStandardExitController.run(standardExitMap, args);
     }
@@ -165,9 +158,8 @@ contract PaymentStandardExitRouter is
      * @dev This function is designed to be called in the main processExit function, using internal
      * @param exitId The standard exit ID
      * @param token The token (in erc20 address or address(0) for ETH) of the exiting output
-     * @param processor The processExit initiator
      */
-    function processStandardExit(uint168 exitId, address token, address payable processor) internal {
-        processStandardExitController.run(standardExitMap, exitId, token, processor);
+    function processStandardExit(uint168 exitId, address token) internal {
+        processStandardExitController.run(standardExitMap, exitId, token);
     }
 }

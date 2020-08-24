@@ -30,7 +30,7 @@ contract PaymentInFlightExitRouterMock is FailFastReentrancyGuard, PaymentInFlig
     }
 
     /** override and calls processInFlightExit for test */
-    function processExit(uint168 exitId, uint256, address ercContract, address payable) external {
+    function processExit(uint168 exitId, uint256, address ercContract) external {
         PaymentInFlightExitRouter.processInFlightExit(exitId, ercContract);
     }
 

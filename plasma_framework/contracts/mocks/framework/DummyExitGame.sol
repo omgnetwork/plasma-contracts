@@ -23,7 +23,7 @@ contract DummyExitGame is IExitProcessor {
     );
 
     // override ExitProcessor interface
-    function processExit(uint168 exitId, uint256 vaultId, address ercContract, address payable) public {
+    function processExit(uint168 exitId, uint256 vaultId, address ercContract) public {
         emit ExitFinalizedFromDummyExitGame(exitId, vaultId, ercContract);
     }
 
