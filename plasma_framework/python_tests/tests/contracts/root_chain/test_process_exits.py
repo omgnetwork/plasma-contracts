@@ -861,7 +861,7 @@ def test_should_not_allow_to_withdraw_from_non_canonical_and_already_spent_input
     6. Sb starts IFE for the steal tx
     7. Alice and Caroline both piggyback all inputs and outputs of both IFEs
     8. Alice challenge the IFE for steal tx non canonical and challenge the input already spent
-    9. Sb processes the exit. Alice should get her output exited from the swap tx. Caroline's ETH input should not be able to exit.
+    9. Sb processes the exit. Both Alice and Caroline should get the output funds from the swap tx but nothing from steal tx
     """
 
     alice, amount_token = testlang.accounts[1], 200
