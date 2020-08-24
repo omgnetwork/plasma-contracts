@@ -131,7 +131,7 @@ contract('PaymentProcessStandardExit', ([_, alice, bob, otherAddress]) => {
             });
         });
 
-        describe('when paying out bounty fails', () => {
+        describe('when paying out bond fails', () => {
             beforeEach(async () => {
                 const exitId = 1;
                 this.attacker = await Attacker.new();

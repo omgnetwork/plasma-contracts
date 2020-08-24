@@ -86,7 +86,7 @@ def test_process_exits_in_flight_exit_should_succeed(testlang):
         assert input_info.exit_target == NULL_ADDRESS_HEX
         assert input_info.amount == 0
 
-    expected_balance = pre_balance + amount + testlang.root_chain.inFlightExitBond() + testlang.root_chain.piggybackBond() + testlang.root_chain.processInFlightExitBounty()
+    expected_balance = pre_balance + amount + testlang.root_chain.inFlightExitBond() + testlang.root_chain.piggybackBond()
     assert testlang.get_balance(owner) == expected_balance
 
 
@@ -369,7 +369,7 @@ def test_finalize_exits_for_in_flight_exit_should_transfer_funds(testlang, plasm
 
     testlang.process_exits(NULL_ADDRESS, 0, 10)
     assert testlang.get_balance(owner) == \
-        pre_balance + first_utxo + testlang.root_chain.inFlightExitBond() + testlang.root_chain.piggybackBond() + testlang.root_chain.processInFlightExitBounty()
+        pre_balance + first_utxo + testlang.root_chain.inFlightExitBond() + testlang.root_chain.piggybackBond()
 
 
 def test_finalize_in_flight_exit_finalizes_only_piggybacked_outputs(testlang, plasma_framework):
@@ -394,7 +394,7 @@ def test_finalize_in_flight_exit_finalizes_only_piggybacked_outputs(testlang, pl
 
     testlang.process_exits(NULL_ADDRESS, 0, 10)
     assert testlang.get_balance(owner) == \
-        pre_balance + first_utxo + testlang.root_chain.inFlightExitBond() + testlang.root_chain.piggybackBond() + testlang.root_chain.processInFlightExitBounty()
+        pre_balance + first_utxo + testlang.root_chain.inFlightExitBond() + testlang.root_chain.piggybackBond()
 
     in_flight_exit = testlang.get_in_flight_exit(spend_id)
 
@@ -430,7 +430,7 @@ def test_finalize_exits_priority_for_in_flight_exits_corresponds_to_the_age_of_y
     balance = testlang.get_balance(owner)
     testlang.process_exits(NULL_ADDRESS, testlang.get_in_flight_exit_id(spend_1_id), 1)
     assert testlang.get_balance(
-        owner) == balance + 70 + testlang.root_chain.inFlightExitBond() + testlang.root_chain.piggybackBond() + testlang.root_chain.processInFlightExitBounty()
+        owner) == balance + 70 + testlang.root_chain.inFlightExitBond() + testlang.root_chain.piggybackBond()
 
     balance = testlang.get_balance(owner)
     testlang.process_exits(NULL_ADDRESS, testlang.get_standard_exit_id(spend_2_id), 1)
@@ -663,7 +663,7 @@ def test_when_processing_an_ife_it_is_cleaned_up_when_all_piggybacked_outputs_fi
     assert in_flight_exit.exit_map == 0
 
     # assert bond was sent to the owner
-    assert testlang.get_balance(testlang.accounts[0]) == pre_balance + testlang.root_chain.inFlightExitBond() + (2 * testlang.root_chain.processInFlightExitBounty())
+    assert testlang.get_balance(testlang.accounts[0]) == pre_balance + testlang.root_chain.inFlightExitBond()
 
 
 def test_in_flight_exit_is_cleaned_up_even_though_none_of_outputs_exited(testlang):
@@ -687,7 +687,7 @@ def test_in_flight_exit_is_cleaned_up_even_though_none_of_outputs_exited(testlan
     assert in_flight_exit.exit_map == 0
 
     # assert IFE and piggyback bonds were sent to the owners
-    assert testlang.get_balance(owner) == pre_balance + testlang.root_chain.inFlightExitBond() + testlang.root_chain.piggybackBond() + testlang.root_chain.processInFlightExitBounty()
+    assert testlang.get_balance(owner) == pre_balance + testlang.root_chain.inFlightExitBond() + testlang.root_chain.piggybackBond()
 
 
 def test_processing_ife_and_se_exit_from_same_output_does_not_fail(testlang):
@@ -820,7 +820,7 @@ def start_ife_piggyback_and_process(spend_id, owner, testlang):
     testlang.process_exits(NULL_ADDRESS, 0, 10)
 
 
-def test_should_not_allow_to_withdraw_outputs_from_two_ifes_marked_as_canonical_but_sharing_an_input(testlang, w3, plasma_framework, token):
+def test_should_not_allow_to_withdraw_outputs_from_two_ifes_marked_as_canonical_but_sharing_an_input(testlang, plasma_framework, token):
     alice, amount_token = testlang.accounts[0], 200
     caroline, amount_eth = testlang.accounts[1], 100
 
@@ -841,9 +841,7 @@ def test_should_not_allow_to_withdraw_outputs_from_two_ifes_marked_as_canonical_
     caroline_eth_balance_before = testlang.get_balance(caroline)
 
     testlang.piggyback_in_flight_exit_output(swap_tx_id, 1, caroline)
-    gasCostToken = w3.eth.last_gas_used * 100
     testlang.piggyback_in_flight_exit_output(None, 0, caroline, spend_tx=steal_tx)
-    gasCostEth = w3.eth.last_gas_used * 100
 
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
     testlang.process_exits(token.address, 0, 1)
@@ -855,7 +853,7 @@ def test_should_not_allow_to_withdraw_outputs_from_two_ifes_marked_as_canonical_
 
     # but she can not exit with Eth
     caroline_eth_balance = testlang.get_balance(caroline)
-    assert caroline_eth_balance == caroline_eth_balance_before - gasCostToken - gasCostEth - (2 * testlang.root_chain.processInFlightExitBounty())
+    assert caroline_eth_balance == caroline_eth_balance_before
 
 # flaky: https://github.com/omgnetwork/plasma-contracts/issues/606
 # def test_should_not_allow_to_withdraw_inputs_and_outputs_when_ifes_processing_interchanges(testlang, plasma_framework, token):
@@ -934,19 +932,14 @@ def test_not_challenged_standard_exit_blocks_ife_output_exit(testlang, w3, plasm
     caroline_eth_balance_before = testlang.get_balance(caroline)
 
     testlang.start_standard_exit(deposit_id_eth_small, caroline)
-    gasCostStartExit = w3.eth.last_gas_used * 100
+    gasCost = w3.eth.last_gas_used * 100
     testlang.start_in_flight_exit(swap_tx_id)
 
     testlang.piggyback_in_flight_exit_output(swap_tx_id, 0, alice)
-    gasCostAliceOutput = w3.eth.last_gas_used * 100
     testlang.piggyback_in_flight_exit_output(swap_tx_id, 1, caroline)
-    gasCostCarolineOutputOne = w3.eth.last_gas_used * 100
     testlang.piggyback_in_flight_exit_input(swap_tx_id, 0, alice)
-    gasCostAliceInput = w3.eth.last_gas_used * 100
     testlang.piggyback_in_flight_exit_input(swap_tx_id, 1, caroline)
-    gasCostCarolineInputOne = w3.eth.last_gas_used * 100
     testlang.piggyback_in_flight_exit_input(swap_tx_id, 2, caroline)
-    gasCostCarolineInputTwo = w3.eth.last_gas_used * 100
 
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
     # caroline's exits finalize
@@ -960,14 +953,14 @@ def test_not_challenged_standard_exit_blocks_ife_output_exit(testlang, w3, plasm
     assert caroline_token_balance == caroline_token_balance_before
     # but gets her Eth back
     caroline_eth_balance = testlang.get_balance(caroline)
-    assert caroline_eth_balance == caroline_eth_balance_before + amount_eth_big + amount_eth_small - gasCostStartExit - testlang.root_chain.processStandardExitBounty() - gasCostCarolineInputOne - gasCostCarolineInputTwo - gasCostCarolineOutputOne - (3 * testlang.root_chain.processInFlightExitBounty())
+    assert caroline_eth_balance == caroline_eth_balance_before + amount_eth_big + amount_eth_small - gasCost - testlang.root_chain.processStandardExitBounty()
 
     # alice gets tokens
     alice_token_balance = token.balanceOf(alice.address)
     assert alice_token_balance == alice_token_balance_before + amount_token
     # but does not get Eth output
     alice_eth_balance = testlang.get_balance(alice)
-    assert alice_eth_balance == alice_eth_balance_before - gasCostAliceInput - gasCostAliceOutput - (2 * testlang.root_chain.processInFlightExitBounty())
+    assert alice_eth_balance == alice_eth_balance_before
 
 
 def test_challenged_standard_exit_does_not_block_ife_output_exit(testlang, w3, plasma_framework, token):
@@ -989,20 +982,15 @@ def test_challenged_standard_exit_does_not_block_ife_output_exit(testlang, w3, p
     caroline_eth_balance_before = testlang.get_balance(caroline)
 
     testlang.start_standard_exit(deposit_id_eth_small, caroline)
-    gasCostStartExit = w3.eth.last_gas_used * 100
+    gasCost = w3.eth.last_gas_used * 100
     testlang.challenge_standard_exit(deposit_id_eth_small, swap_tx_id)
     testlang.start_in_flight_exit(swap_tx_id)
 
     testlang.piggyback_in_flight_exit_output(swap_tx_id, 0, alice)
-    gasCostAliceOutput = w3.eth.last_gas_used * 100
     testlang.piggyback_in_flight_exit_output(swap_tx_id, 1, caroline)
-    gasCostCarolineOutputOne = w3.eth.last_gas_used * 100
     testlang.piggyback_in_flight_exit_input(swap_tx_id, 0, alice)
-    gasCostAliceInput = w3.eth.last_gas_used * 100
     testlang.piggyback_in_flight_exit_input(swap_tx_id, 1, caroline)
-    gasCostCarolineInputOne = w3.eth.last_gas_used * 100
     testlang.piggyback_in_flight_exit_input(swap_tx_id, 2, caroline)
-    gasCostCarolineInputTwo = w3.eth.last_gas_used * 100
 
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
     # caroline's exits finalize
@@ -1016,17 +1004,17 @@ def test_challenged_standard_exit_does_not_block_ife_output_exit(testlang, w3, p
     assert caroline_token_balance == caroline_token_balance_before + amount_token
     # and does not get the Eth back
     caroline_eth_balance = testlang.get_balance(caroline)
-    assert caroline_eth_balance == caroline_eth_balance_before - testlang.root_chain.standardExitBond() - gasCostStartExit - testlang.root_chain.processStandardExitBounty() - gasCostCarolineInputOne - gasCostCarolineInputTwo - gasCostCarolineOutputOne - (3 * testlang.root_chain.processInFlightExitBounty())
+    assert caroline_eth_balance == caroline_eth_balance_before - testlang.root_chain.standardExitBond() - gasCost - testlang.root_chain.processStandardExitBounty()
 
     # alice exits with her Eth output
     alice_eth_balance = testlang.get_balance(alice)
-    assert alice_eth_balance == alice_eth_balance_before + amount_eth_small + amount_eth_big - gasCostAliceInput - gasCostAliceOutput - (2 * testlang.root_chain.processInFlightExitBounty())
+    assert alice_eth_balance == alice_eth_balance_before + amount_eth_small + amount_eth_big
     # and does not get the tokens back
     alice_token_balance = token.balanceOf(alice.address)
     assert alice_token_balance == alice_token_balance_before
 
 
-def test_after_canonical_ife_is_finalized_inputs_are_not_exited_when_ife_is_restarted_and_non_canonical(testlang, w3, plasma_framework, token):
+def test_after_canonical_ife_is_finalized_inputs_are_not_exited_when_ife_is_restarted_and_non_canonical(testlang, plasma_framework, token):
     """
     1. Alice and Bob send a canonical transaction transfering their funds to Alice.
     2. Alice starts an in-flight exit and exits her output.
@@ -1047,13 +1035,12 @@ def test_after_canonical_ife_is_finalized_inputs_are_not_exited_when_ife_is_rest
     # transaction is not included in child chain and canonical in-flight exit is started and processed
     testlang.start_in_flight_exit(spend_id)
     testlang.piggyback_in_flight_exit_output(spend_id, 0, alice)
-    gasCost = w3.eth.last_gas_used * 100
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
     testlang.process_exits(NULL_ADDRESS, 0, 1)
 
     # alice exits with her Eth output
     alice_eth_balance = testlang.get_balance(alice)
-    assert alice_eth_balance == alice_eth_balance_before + alice_output_amount - gasCost
+    assert alice_eth_balance == alice_eth_balance_before + alice_output_amount
 
     # bob spends his inputs in a competing transaction
     competing_spend_id = testlang.spend_utxo(

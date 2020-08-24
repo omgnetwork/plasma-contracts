@@ -21,7 +21,6 @@ contract('PaymentInFlightExitModelUtils', () => {
         token: constants.ZERO_ADDRESS,
         amount: 0,
         piggybackBondSize: 0,
-        bountySize: 0,
     };
 
     describe('isInputEmpty', () => {

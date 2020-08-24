@@ -39,11 +39,6 @@ library PaymentProcessInFlightExit {
         uint256 amount
     );
 
-    event InFlightBountyReturnFailed(
-        address indexed receiver,
-        uint256 amount
-    );
-
     /**
      * @notice Main logic function to process in-flight exit
      * @dev emits InFlightExitOmitted event if the exit is omitted
@@ -59,8 +54,7 @@ library PaymentProcessInFlightExit {
         Controller memory self,
         PaymentExitDataModel.InFlightExitMap storage exitMap,
         uint168 exitId,
-        address token,
-        address payable processor
+        address token
     )
         public
     {
@@ -114,8 +108,8 @@ library PaymentProcessInFlightExit {
             flagOutputsWhenCanonical(self.framework, exit, token, exitId);
         }
 
-        returnInputPiggybackBonds(self, exit, token, processor);
-        returnOutputPiggybackBonds(self, exit, token, processor);
+        returnInputPiggybackBonds(self, exit, token);
+        returnOutputPiggybackBonds(self, exit, token);
 
         clearPiggybackInputFlag(exit, token);
         clearPiggybackOutputFlag(exit, token);
@@ -272,8 +266,7 @@ library PaymentProcessInFlightExit {
     function returnInputPiggybackBonds(
         Controller memory self,
         PaymentExitDataModel.InFlightExit storage exit,
-        address token,
-        address payable processor
+        address token
     )
         private
     {
@@ -282,22 +275,13 @@ library PaymentProcessInFlightExit {
 
             // If the input has been challenged, isInputPiggybacked() will return false
             if (token == withdrawal.token && exit.isInputPiggybacked(i)) {
-                bool successBondReturn = SafeEthTransfer.transferReturnResult(
+                bool success = SafeEthTransfer.transferReturnResult(
                     withdrawal.exitTarget, withdrawal.piggybackBondSize, self.safeGasStipend
                 );
 
                 // we do not want to block a queue if bond return is unsuccessful
-                if (!successBondReturn) {
+                if (!success) {
                     emit InFlightBondReturnFailed(withdrawal.exitTarget, withdrawal.piggybackBondSize);
-                }
-
-                bool successBountyReturn = SafeEthTransfer.transferReturnResult(
-                    processor, withdrawal.bountySize, self.safeGasStipend
-                );
-
-                // we do not want to block a queue if bounty return is unsuccessful
-                if (!successBountyReturn) {
-                    emit InFlightBountyReturnFailed(processor, withdrawal.bountySize);
                 }
             }
         }
@@ -306,8 +290,7 @@ library PaymentProcessInFlightExit {
     function returnOutputPiggybackBonds(
         Controller memory self,
         PaymentExitDataModel.InFlightExit storage exit,
-        address token,
-        address payable processor
+        address token
     )
         private
     {
@@ -316,22 +299,13 @@ library PaymentProcessInFlightExit {
 
             // If the output has been challenged, isOutputPiggybacked() will return false
             if (token == withdrawal.token && exit.isOutputPiggybacked(i)) {
-                bool successBondReturn = SafeEthTransfer.transferReturnResult(
+                bool success = SafeEthTransfer.transferReturnResult(
                     withdrawal.exitTarget, withdrawal.piggybackBondSize, self.safeGasStipend
                 );
 
                 // we do not want to block a queue if bond return is unsuccessful
-                if (!successBondReturn) {
+                if (!success) {
                     emit InFlightBondReturnFailed(withdrawal.exitTarget, withdrawal.piggybackBondSize);
-                }
-
-                bool successBountyReturn = SafeEthTransfer.transferReturnResult(
-                    processor, withdrawal.bountySize, self.safeGasStipend
-                );
-
-                // we do not want to block a queue if bounty return is unsuccessful
-                if (!successBountyReturn) {
-                    emit InFlightBountyReturnFailed(processor, withdrawal.bountySize);
                 }
             }
         }
