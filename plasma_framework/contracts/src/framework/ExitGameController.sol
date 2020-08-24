@@ -170,7 +170,7 @@ contract ExitGameController is ExitGameRegistry {
             queue.delMin();
             processedNum++;
 
-            processor.processExit(exitId, vaultId, token, msg.sender);
+            processor.processExit(exitId, vaultId, token);
 
             if (queue.currentSize() == 0) {
                 break;
