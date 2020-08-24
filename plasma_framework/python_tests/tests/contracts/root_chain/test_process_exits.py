@@ -850,6 +850,7 @@ def test_should_not_allow_to_withdraw_outputs_from_two_ifes_marked_as_canonical_
     caroline_eth_balance = testlang.get_balance(caroline)
     assert caroline_eth_balance == caroline_eth_balance_before
 
+
 def test_should_not_allow_to_withdraw_from_non_canonical_and_already_spent_input_but_can_withdraw_from_canonical_tx_outputs(testlang, w3, plasma_framework, token):
     """
     1. Alice deposits some token
@@ -918,16 +919,16 @@ def test_should_not_allow_to_withdraw_from_non_canonical_and_already_spent_input
     caroline_eth_balance = testlang.get_balance(caroline)
     assert caroline_eth_balance == (
         caroline_eth_balance_before
-        + 3 * testlang.root_chain.piggybackBond() # 4 piggybacks, with 1 being challenged
+        + 3 * testlang.root_chain.piggybackBond()  # 4 piggybacks, with 1 being challenged
     )
 
     # alice exits with eth
     alice_eth_balance = testlang.get_balance(alice)
     assert alice_eth_balance == (
         alice_eth_balance_before
-        + amount_eth # get the ETH from exit output
-        + 2 * testlang.root_chain.piggybackBond() # get 2 piggybacks bonds back
-        + testlang.root_chain.inFlightExitBond() # get start IFE bond from challenge non-canonical
+        + amount_eth  # get the ETH from exit output
+        + 2 * testlang.root_chain.piggybackBond()  # get 2 piggybacks bonds back
+        + testlang.root_chain.inFlightExitBond()  # get start IFE bond from challenge non-canonical
     )
     # but she does not get token back
     alice_token_balance = token.balanceOf(alice.address)
