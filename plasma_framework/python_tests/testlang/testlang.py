@@ -454,8 +454,9 @@ class TestingLanguage:
         if forward_time:
             self.forward_timestamp(forward_time)
 
-    def challenge_in_flight_exit_input_spent(self, in_flight_tx_id, spend_tx_id, key):
-        in_flight_tx = self.child_chain.get_transaction(in_flight_tx_id)
+    def challenge_in_flight_exit_input_spent(self, in_flight_tx_id, spend_tx_id, key, in_flight_tx=None):
+        if in_flight_tx is None:
+            in_flight_tx = self.child_chain.get_transaction(in_flight_tx_id)
         spend_tx = self.child_chain.get_transaction(spend_tx_id)
         (in_flight_tx_input_index, spend_tx_input_index) = self.find_shared_input(in_flight_tx, spend_tx)
         signature = spend_tx.signatures[spend_tx_input_index]

@@ -850,62 +850,88 @@ def test_should_not_allow_to_withdraw_outputs_from_two_ifes_marked_as_canonical_
     caroline_eth_balance = testlang.get_balance(caroline)
     assert caroline_eth_balance == caroline_eth_balance_before
 
-# flaky: https://github.com/omgnetwork/plasma-contracts/issues/606
-# def test_should_not_allow_to_withdraw_inputs_and_outputs_when_ifes_processing_interchanges(testlang, plasma_framework, token):
-#     alice, amount_token = testlang.accounts[0], 200
-#     caroline, amount_eth = testlang.accounts[1], 100
+def test_should_not_allow_to_withdraw_from_non_canonical_and_already_spent_input_but_can_withdraw_from_canonical_tx_outputs(testlang, w3, plasma_framework, token):
+    """
+    1. Alice deposits some token
+    2. Caroline deposits some ETH
+    3. Alice and Caroline do a swap tx for the token and ETH. The swap tx is submitted to the childchain
+    4. Caroline tries to steal the fund with an in-flight tx double spending the ETH input of swap tx to herself
+    5. Sb starts IFE for the swap tx
+    6. Sb starts IFE for the steal tx
+    7. Alice and Caroline both piggyback all inputs and outputs of both IFEs
+    8. Alice challenge the IFE for steal tx non canonical and challenge the input already spent
+    9. Sb processes the exit. Alice should get her output exited from the swap tx. Caroline's ETH input should not be able to exit.
+    """
 
-#     deposit_id_token = testlang.deposit_token(alice, token, amount_token)
-#     deposit_id_eth = testlang.deposit(caroline, amount_eth)
+    alice, amount_token = testlang.accounts[1], 200
+    caroline, amount_eth = testlang.accounts[2], 100
 
-#     swap_tx_id = testlang.spend_utxo(
-#         [deposit_id_token, deposit_id_eth], [alice, caroline], [(alice.address, NULL_ADDRESS, amount_eth), (caroline.address, token.address, amount_token)])
+    deposit_id_token = testlang.deposit_token(alice, token, amount_token)
+    deposit_id_eth = testlang.deposit(caroline, amount_eth)
 
-#     # in-flight transaction not included in Plasma
-#     steal_tx = Transaction(inputs=[decode_utxo_id(deposit_id_eth)], outputs=[(caroline.address, NULL_ADDRESS, amount_eth)])
-#     steal_tx.sign(0, caroline, verifying_contract=testlang.root_chain.plasma_framework)
+    swap_tx_id = testlang.spend_utxo(
+        [deposit_id_token, deposit_id_eth], [alice, caroline], [(alice.address, NULL_ADDRESS, amount_eth), (caroline.address, token.address, amount_token)])
 
-#     alice_token_balance_before = token.balanceOf(alice.address)
-#     alice_eth_balance_before = testlang.get_balance(alice)
-#     caroline_token_balance_before = token.balanceOf(caroline.address)
-#     caroline_eth_balance_before = testlang.get_balance(caroline)
+    # in-flight transaction not included in Plasma
+    steal_tx = Transaction(inputs=[decode_utxo_id(deposit_id_eth)], outputs=[(caroline.address, NULL_ADDRESS, amount_eth)])
+    steal_tx.sign(0, caroline, verifying_contract=testlang.root_chain.plasma_framework)
 
-#     testlang.start_in_flight_exit(swap_tx_id)
-#     testlang.start_in_flight_exit(None, spend_tx=steal_tx)
+    testlang.start_in_flight_exit(swap_tx_id)
+    testlang.start_in_flight_exit(None, spend_tx=steal_tx)
 
-#     testlang.piggyback_in_flight_exit_input(swap_tx_id, 0, alice)
-#     testlang.piggyback_in_flight_exit_input(swap_tx_id, 1, caroline)
-#     testlang.piggyback_in_flight_exit_output(swap_tx_id, 0, alice)
-#     testlang.piggyback_in_flight_exit_output(swap_tx_id, 1, caroline)
+    testlang.piggyback_in_flight_exit_input(swap_tx_id, 0, alice)
+    testlang.piggyback_in_flight_exit_input(swap_tx_id, 1, caroline)
+    testlang.piggyback_in_flight_exit_output(swap_tx_id, 0, alice)
+    testlang.piggyback_in_flight_exit_output(swap_tx_id, 1, caroline)
 
-#     # we have encounter flaky tests. we are guessing it is caused by two exits being enqueued in the time that is too close.
-#     # within same root chain block time span, the priority in the queue could be the same and hard to differentiate.
-#     # https://github.com/omgnetwork/plasma-contracts/issues/606
-#     TIME_DIFF_FOR_ENSUREING_EXIT_PRIORITY = 10
-#     testlang.forward_timestamp(TIME_DIFF_FOR_ENSUREING_EXIT_PRIORITY)
+    testlang.piggyback_in_flight_exit_output(None, 0, caroline, spend_tx=steal_tx)
+    testlang.piggyback_in_flight_exit_input(None, 0, caroline, spend_tx=steal_tx)
 
-#     testlang.piggyback_in_flight_exit_output(None, 0, caroline, spend_tx=steal_tx)
-#     testlang.piggyback_in_flight_exit_input(None, 0, caroline, spend_tx=steal_tx)
+    testlang.challenge_in_flight_exit_not_canonical(
+        in_flight_tx_id=None,
+        competing_tx_id=swap_tx_id,
+        account=alice,
+        in_flight_tx=steal_tx
+    )
+    testlang.challenge_in_flight_exit_input_spent(
+        in_flight_tx_id=None,
+        spend_tx_id=swap_tx_id,
+        key=alice,
+        in_flight_tx=steal_tx
+    )
 
-#     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
-#     # process swap_tx Eth exit and then steal_tx Eth exit
-#     testlang.process_exits(NULL_ADDRESS, 0, 2)
-#     # process token exit
-#     testlang.process_exits(token.address, 0, 1)
+    alice_token_balance_before = token.balanceOf(alice.address)
+    alice_eth_balance_before = testlang.get_balance(alice)
+    caroline_token_balance_before = token.balanceOf(caroline.address)
+    caroline_eth_balance_before = testlang.get_balance(caroline)
 
-#     # caroline exits with the tokens
-#     caroline_token_balance = token.balanceOf(caroline.address)
-#     assert caroline_token_balance == caroline_token_balance_before + amount_token
-#     # but she does not get ETH back
-#     caroline_eth_balance = testlang.get_balance(caroline)
-#     assert caroline_eth_balance == caroline_eth_balance_before
+    testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
+    # process swap_tx Eth exit and then steal_tx Eth exit
+    testlang.process_exits(NULL_ADDRESS, 0, 2)
+    # process token exit
+    testlang.process_exits(token.address, 0, 1)
 
-#     # alice exits with eth
-#     alice_eth_balance = testlang.get_balance(alice)
-#     assert alice_eth_balance == alice_eth_balance_before + amount_eth
-#     # but she does not get token back
-#     alice_token_balance = token.balanceOf(alice.address)
-#     assert alice_token_balance == alice_token_balance_before
+    # caroline exits with the tokens
+    caroline_token_balance = token.balanceOf(caroline.address)
+    assert caroline_token_balance == caroline_token_balance_before + amount_token
+    # but she does not get ETH back
+    caroline_eth_balance = testlang.get_balance(caroline)
+    assert caroline_eth_balance == (
+        caroline_eth_balance_before
+        + 3 * testlang.root_chain.piggybackBond() # 4 piggybacks, with 1 being challenged
+    )
+
+    # alice exits with eth
+    alice_eth_balance = testlang.get_balance(alice)
+    assert alice_eth_balance == (
+        alice_eth_balance_before
+        + amount_eth # get the ETH from exit output
+        + 2 * testlang.root_chain.piggybackBond() # get 2 piggybacks bonds back
+        + testlang.root_chain.inFlightExitBond() # get start IFE bond from challenge non-canonical
+    )
+    # but she does not get token back
+    alice_token_balance = token.balanceOf(alice.address)
+    assert alice_token_balance == alice_token_balance_before
 
 
 def test_not_challenged_standard_exit_blocks_ife_output_exit(testlang, plasma_framework, token):
