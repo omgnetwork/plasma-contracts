@@ -248,7 +248,6 @@ contract('PaymentStartInFlightExit', ([_, alice, richFather, carol]) => {
                 const logs = PaymentStartInFlightExit.decodeLogs(txReceipt.logs);
                 const event = logs.filter(e => e.event === 'InFlightExitStarted')[0];
 
-                expect(event.args.inputTxs).to.have.ordered.members(this.args.inputTxs);
                 expect(event.args.inFlightTxWitnesses).to.have.ordered.members(this.args.inFlightTxWitnesses);
 
                 const inputUtxosPos = this.args.inputUtxosPos.map(utxoPos => new BN(utxoPos));

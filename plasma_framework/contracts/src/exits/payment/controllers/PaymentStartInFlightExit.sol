@@ -39,7 +39,6 @@ library PaymentStartInFlightExit {
         bytes32 indexed txHash,
         bytes inFlightTx,
         uint256[] inputUtxosPos,
-        bytes[] inputTxs,
         bytes[] inFlightTxWitnesses
     );
 
@@ -114,7 +113,6 @@ library PaymentStartInFlightExit {
             txHash: startExitData.inFlightTxHash,
             inFlightTx: args.inFlightTx,
             inputUtxosPos: args.inputUtxosPos,
-            inputTxs: args.inputTxs,
             inFlightTxWitnesses: args.inFlightTxWitnesses
         });
     }
