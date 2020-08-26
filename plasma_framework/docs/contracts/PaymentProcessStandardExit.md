@@ -22,18 +22,19 @@ struct Controller {
 event ExitOmitted(uint168 indexed exitId);
 event ExitFinalized(uint168 indexed exitId);
 event BondReturnFailed(address indexed receiver, uint256  amount);
+event BountyRewardFailed(address indexed receiver, uint256  amount);
 ```
 
 ## Functions
 
-- [run(struct PaymentProcessStandardExit.Controller self, struct PaymentExitDataModel.StandardExitMap exitMap, uint168 exitId, address token)](#run)
+- [run(struct PaymentProcessStandardExit.Controller self, struct PaymentExitDataModel.StandardExitMap exitMap, uint168 exitId, address token, address payable processor)](#run)
 
 ### run
 
 Main logic function to process standard exit
 
 ```js
-function run(struct PaymentProcessStandardExit.Controller self, struct PaymentExitDataModel.StandardExitMap exitMap, uint168 exitId, address token) public nonpayable
+function run(struct PaymentProcessStandardExit.Controller self, struct PaymentExitDataModel.StandardExitMap exitMap, uint168 exitId, address token, address payable processor) public nonpayable
 ```
 
 **Arguments**
@@ -44,6 +45,7 @@ function run(struct PaymentProcessStandardExit.Controller self, struct PaymentEx
 | exitMap | struct PaymentExitDataModel.StandardExitMap | The storage of all standard exit data | 
 | exitId | uint168 | The exitId of the standard exit | 
 | token | address | The ERC20 token address of the exit. Uses address(0) to represent ETH. | 
+| processor | address payable |  | 
 
 ## Contracts
 
@@ -58,6 +60,7 @@ function run(struct PaymentProcessStandardExit.Controller self, struct PaymentEx
 * [EthDepositVerifier](EthDepositVerifier.md)
 * [EthVault](EthVault.md)
 * [ExitableTimestamp](ExitableTimestamp.md)
+* [ExitBounty](ExitBounty.md)
 * [ExitGameController](ExitGameController.md)
 * [ExitGameRegistry](ExitGameRegistry.md)
 * [ExitId](ExitId.md)

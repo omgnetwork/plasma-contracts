@@ -31,6 +31,7 @@ def test_process_exits_standard_exit_should_succeed(testlang, w3, num_outputs, p
     testlang.start_standard_exit(utxo_pos, output_owner)
     gasCost = w3.eth.last_gas_used * 100
     _, _, exit_id = plasma_framework.getNextExit(plasma_framework.eth_vault_id, NULL_ADDRESS_HEX)
+
     testlang.flush_events()
 
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)

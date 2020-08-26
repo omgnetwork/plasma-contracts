@@ -16,7 +16,8 @@ struct StandardExit {
  bytes32 outputId,
  address payable exitTarget,
  uint256 amount,
- uint256 bondSize
+ uint256 bondSize,
+ uint256 bountySize
 }
 ```
 
@@ -88,6 +89,7 @@ uint8 public constant MAX_OUTPUT_NUM;
 * [EthDepositVerifier](EthDepositVerifier.md)
 * [EthVault](EthVault.md)
 * [ExitableTimestamp](ExitableTimestamp.md)
+* [ExitBounty](ExitBounty.md)
 * [ExitGameController](ExitGameController.md)
 * [ExitGameRegistry](ExitGameRegistry.md)
 * [ExitId](ExitId.md)

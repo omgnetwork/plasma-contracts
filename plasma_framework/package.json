@@ -14,7 +14,7 @@
     "solidoc": "^1.0.5"
   },
   "devDependencies": {
-    "elliptic": ">=6.5.3",  
+    "elliptic": ">=6.5.3",
     "@codechecks/client": "^0.1.10",
     "chai": "^4.2.0",
     "coveralls": "^3.0.6",

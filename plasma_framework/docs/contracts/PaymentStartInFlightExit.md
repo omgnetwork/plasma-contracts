@@ -37,7 +37,7 @@ struct StartExitData {
 **Events**
 
 ```js
-event InFlightExitStarted(address indexed initiator, bytes32 indexed txHash);
+event InFlightExitStarted(address indexed initiator, bytes32 indexed txHash, bytes  inFlightTx, uint256[]  inputUtxosPos, bytes[]  inFlightTxWitnesses);
 ```
 
 ## Functions
@@ -303,6 +303,7 @@ function setInFlightExitOutputs(struct PaymentExitDataModel.InFlightExit ife, st
 * [EthDepositVerifier](EthDepositVerifier.md)
 * [EthVault](EthVault.md)
 * [ExitableTimestamp](ExitableTimestamp.md)
+* [ExitBounty](ExitBounty.md)
 * [ExitGameController](ExitGameController.md)
 * [ExitGameRegistry](ExitGameRegistry.md)
 * [ExitId](ExitId.md)
