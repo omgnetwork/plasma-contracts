@@ -22,14 +22,13 @@ def prepare_exitable_utxo(testlang, owners, amount, outputs, num_outputs=1):
 
 
 @pytest.mark.parametrize("num_outputs", [1, 2, 3, 4])
-def test_process_exits_standard_exit_should_succeed(testlang, w3, num_outputs, plasma_framework):
+def test_process_exits_standard_exit_should_succeed(testlang, num_outputs, plasma_framework):
     amount = 100
     utxo_pos, output_owner = prepare_exitable_utxo(testlang, [], amount, [], num_outputs)
 
     pre_balance = testlang.get_balance(output_owner)
 
     testlang.start_standard_exit(utxo_pos, output_owner)
-    gasCost = w3.eth.last_gas_used * 100
     _, _, exit_id = plasma_framework.getNextExit(plasma_framework.eth_vault_id, NULL_ADDRESS_HEX)
 
     testlang.flush_events()
@@ -42,7 +41,7 @@ def test_process_exits_standard_exit_should_succeed(testlang, w3, num_outputs, p
                    ('ExitFinalized', {"exitId": exit_id}),
                    ('ProcessedExitsNum', {'processedNum': 1, 'token': NULL_ADDRESS_HEX})])
 
-    assert testlang.get_balance(output_owner) == pre_balance + amount - gasCost - testlang.root_chain.processStandardExitBounty()
+    assert testlang.get_balance(output_owner) == pre_balance + amount
 
 
 def test_successful_process_exit_should_clear_exit_fields_and_set_output_as_spent(testlang):
@@ -421,7 +420,7 @@ def test_finalize_exits_priority_for_in_flight_exits_corresponds_to_the_age_of_y
     balance = testlang.get_balance(owner)
 
     testlang.process_exits(NULL_ADDRESS, testlang.get_standard_exit_id(spend_00_id), 1)
-    assert testlang.get_balance(owner) == balance + 30 + testlang.root_chain.standardExitBond() + testlang.root_chain.processStandardExitBounty()
+    assert testlang.get_balance(owner) == balance + 30 + testlang.root_chain.standardExitBond()
 
     balance = testlang.get_balance(owner)
     testlang.process_exits(NULL_ADDRESS, testlang.get_in_flight_exit_id(spend_1_id), 1)
@@ -430,7 +429,7 @@ def test_finalize_exits_priority_for_in_flight_exits_corresponds_to_the_age_of_y
 
     balance = testlang.get_balance(owner)
     testlang.process_exits(NULL_ADDRESS, testlang.get_standard_exit_id(spend_2_id), 1)
-    assert testlang.get_balance(owner) == balance + 100 + testlang.root_chain.standardExitBond() + testlang.root_chain.processStandardExitBounty()
+    assert testlang.get_balance(owner) == balance + 100 + testlang.root_chain.standardExitBond()
 
 
 def test_finalize_in_flight_exit_with_erc20_token_should_succeed(testlang, token, plasma_framework):
@@ -909,7 +908,7 @@ def test_should_not_allow_to_withdraw_outputs_from_two_ifes_marked_as_canonical_
 #     assert alice_token_balance == alice_token_balance_before
 
 
-def test_not_challenged_standard_exit_blocks_ife_output_exit(testlang, w3, plasma_framework, token):
+def test_not_challenged_standard_exit_blocks_ife_output_exit(testlang, plasma_framework, token):
     alice, amount_token = testlang.accounts[1], 200
     caroline, amount_eth_small, amount_eth_big = testlang.accounts[2], 1, 100
 
@@ -928,7 +927,6 @@ def test_not_challenged_standard_exit_blocks_ife_output_exit(testlang, w3, plasm
     caroline_eth_balance_before = testlang.get_balance(caroline)
 
     testlang.start_standard_exit(deposit_id_eth_small, caroline)
-    gasCost = w3.eth.last_gas_used * 100
     testlang.start_in_flight_exit(swap_tx_id)
 
     testlang.piggyback_in_flight_exit_output(swap_tx_id, 0, alice)
@@ -949,7 +947,7 @@ def test_not_challenged_standard_exit_blocks_ife_output_exit(testlang, w3, plasm
     assert caroline_token_balance == caroline_token_balance_before
     # but gets her Eth back
     caroline_eth_balance = testlang.get_balance(caroline)
-    assert caroline_eth_balance == caroline_eth_balance_before + amount_eth_big + amount_eth_small - gasCost - testlang.root_chain.processStandardExitBounty()
+    assert caroline_eth_balance == caroline_eth_balance_before + amount_eth_big + amount_eth_small
 
     # alice gets tokens
     alice_token_balance = token.balanceOf(alice.address)
@@ -959,7 +957,7 @@ def test_not_challenged_standard_exit_blocks_ife_output_exit(testlang, w3, plasm
     assert alice_eth_balance == alice_eth_balance_before
 
 
-def test_challenged_standard_exit_does_not_block_ife_output_exit(testlang, w3, plasma_framework, token):
+def test_challenged_standard_exit_does_not_block_ife_output_exit(testlang, plasma_framework, token):
     alice, amount_token = testlang.accounts[1], 200
     caroline, amount_eth_small, amount_eth_big = testlang.accounts[2], 1, 100
 
@@ -978,7 +976,6 @@ def test_challenged_standard_exit_does_not_block_ife_output_exit(testlang, w3, p
     caroline_eth_balance_before = testlang.get_balance(caroline)
 
     testlang.start_standard_exit(deposit_id_eth_small, caroline)
-    gasCost = w3.eth.last_gas_used * 100
     testlang.challenge_standard_exit(deposit_id_eth_small, swap_tx_id)
     testlang.start_in_flight_exit(swap_tx_id)
 
@@ -1000,7 +997,7 @@ def test_challenged_standard_exit_does_not_block_ife_output_exit(testlang, w3, p
     assert caroline_token_balance == caroline_token_balance_before + amount_token
     # and does not get the Eth back
     caroline_eth_balance = testlang.get_balance(caroline)
-    assert caroline_eth_balance == caroline_eth_balance_before - testlang.root_chain.standardExitBond() - gasCost - testlang.root_chain.processStandardExitBounty()
+    assert caroline_eth_balance == caroline_eth_balance_before - testlang.root_chain.standardExitBond()
 
     # alice exits with her Eth output
     alice_eth_balance = testlang.get_balance(alice)
