@@ -389,4 +389,5 @@ workflows:
             branches:
               only:
                 - v2.0.0
+                - souradeep/truffle_test
 
