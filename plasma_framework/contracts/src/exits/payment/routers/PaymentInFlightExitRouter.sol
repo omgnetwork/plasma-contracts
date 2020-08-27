@@ -322,9 +322,10 @@ contract PaymentInFlightExitRouter is
      * @dev This function is designed to be called in the main processExit function, thus, using internal
      * @param exitId The in-flight exit ID
      * @param token The token (in erc20 address or address(0) for ETH) of the exiting output
+     * @param processExitInitiator The processExits() initiator
      */
-    function processInFlightExit(uint168 exitId, address token, address payable processor) internal {
-        processInflightExitController.run(inFlightExitMap, exitId, token, processor);
+    function processInFlightExit(uint168 exitId, address token, address payable processExitInitiator) internal {
+        processInflightExitController.run(inFlightExitMap, exitId, token, processExitInitiator);
     }
 
     /**

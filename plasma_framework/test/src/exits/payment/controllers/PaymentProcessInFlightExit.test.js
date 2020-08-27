@@ -394,7 +394,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
                 await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH, otherAddress);
             });
 
-            it('should transfer exit bounty to the processor of all piggybacked inputs/outputs that are cleaned up', async () => {
+            it('should transfer exit bounty to the process exit initiator of all piggybacked inputs/outputs that are cleaned up', async () => {
                 const postBalanceOtherAddress = new BN(await web3.eth.getBalance(otherAddress));
                 const expectedBalance = this.preBalanceOtherAddress
                     .add(this.processExitBountySize)
@@ -588,7 +588,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
                 expect(postBalance).to.be.bignumber.equal(expectedBalance);
             });
 
-            it('should return bounty to processor for both input and output', async () => {
+            it('should return bounty to the process exit initiator for both input and output', async () => {
                 const preBalanceOtherAddress = new BN(await web3.eth.getBalance(otherAddress));
                 await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ERC20, erc20, otherAddress);
                 const postBalanceOtherAddress = new BN(await web3.eth.getBalance(otherAddress));
@@ -731,7 +731,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
                 expect(postBalance).to.be.bignumber.equal(expectedBalance);
             });
 
-            it('should return bounty to processor for both input and output', async () => {
+            it('should return bounty to the process exit initiator for both input and output', async () => {
                 const preBalanceOtherAddress = new BN(await web3.eth.getBalance(otherAddress));
                 await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ERC20, erc20, otherAddress);
                 const postBalanceOtherAddress = new BN(await web3.eth.getBalance(otherAddress));

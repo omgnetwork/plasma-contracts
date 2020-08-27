@@ -213,7 +213,7 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
                         expect(actualAliceBalanceAfterProcessExit).to.be.bignumber.equal(expectedAliceBalance);
                     });
 
-                    it('should return the process exit bounty to the processor', async () => {
+                    it('should return the process exit bounty to the process exit initiator', async () => {
                         const actualBobBalanceAfterProcessExit = new BN(await web3.eth.getBalance(bob));
                         const expectedBobBalance = this.bobBalanceBeforeProcessExit
                             .add(this.processExitBountySize)

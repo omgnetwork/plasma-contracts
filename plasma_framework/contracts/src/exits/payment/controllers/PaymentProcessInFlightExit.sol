@@ -54,13 +54,14 @@ library PaymentProcessInFlightExit {
      * @param exitMap The storage of all in-flight exit data
      * @param exitId The exitId of the in-flight exit
      * @param token The ERC20 token address of the exit; uses address(0) to represent ETH
+     @ @param processExitInitiator The processExits() initiator
      */
     function run(
         Controller memory self,
         PaymentExitDataModel.InFlightExitMap storage exitMap,
         uint168 exitId,
         address token,
-        address payable processor
+        address payable processExitInitiator
     )
         public
     {
@@ -114,8 +115,8 @@ library PaymentProcessInFlightExit {
             flagOutputsWhenCanonical(self.framework, exit, token, exitId);
         }
 
-        returnInputPiggybackBonds(self, exit, token, processor);
-        returnOutputPiggybackBonds(self, exit, token, processor);
+        returnInputPiggybackBonds(self, exit, token, processExitInitiator);
+        returnOutputPiggybackBonds(self, exit, token, processExitInitiator);
 
         clearPiggybackInputFlag(exit, token);
         clearPiggybackOutputFlag(exit, token);
@@ -273,7 +274,7 @@ library PaymentProcessInFlightExit {
         Controller memory self,
         PaymentExitDataModel.InFlightExit storage exit,
         address token,
-        address payable processor
+        address payable processExitInitiator
     )
         private
     {
@@ -292,12 +293,12 @@ library PaymentProcessInFlightExit {
                 }
 
                 bool successBountyReturn = SafeEthTransfer.transferReturnResult(
-                    processor, withdrawal.bountySize, self.safeGasStipend
+                    processExitInitiator, withdrawal.bountySize, self.safeGasStipend
                 );
 
                 // we do not want to block a queue if bounty return is unsuccessful
                 if (!successBountyReturn) {
-                    emit InFlightBountyReturnFailed(processor, withdrawal.bountySize);
+                    emit InFlightBountyReturnFailed(processExitInitiator, withdrawal.bountySize);
                 }
             }
         }
@@ -307,7 +308,7 @@ library PaymentProcessInFlightExit {
         Controller memory self,
         PaymentExitDataModel.InFlightExit storage exit,
         address token,
-        address payable processor
+        address payable processExitInitiator
     )
         private
     {
@@ -326,12 +327,12 @@ library PaymentProcessInFlightExit {
                 }
 
                 bool successBountyReturn = SafeEthTransfer.transferReturnResult(
-                    processor, withdrawal.bountySize, self.safeGasStipend
+                    processExitInitiator, withdrawal.bountySize, self.safeGasStipend
                 );
 
                 // we do not want to block a queue if bounty return is unsuccessful
                 if (!successBountyReturn) {
-                    emit InFlightBountyReturnFailed(processor, withdrawal.bountySize);
+                    emit InFlightBountyReturnFailed(processExitInitiator, withdrawal.bountySize);
                 }
             }
         }

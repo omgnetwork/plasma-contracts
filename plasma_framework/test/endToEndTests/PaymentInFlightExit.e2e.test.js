@@ -182,7 +182,7 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                 expect(postBalanceBob).to.be.bignumber.equal(expectedBalance);
                             });
 
-                            it('should transfer the exit bounty to processor (Carol)', async () => {
+                            it('should transfer the exit bounty to the process exit initiator (Carol)', async () => {
                                 const postBalanceCarol = new BN(await web3.eth.getBalance(carol));
                                 const expectedBalance = this.preBalanceCarol
                                     .add(new BN(this.processExitBountySize))
@@ -399,7 +399,7 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                                     expect(expectedBalance).to.be.bignumber.equal(postBalanceBob);
                                                 });
 
-                                                it('should award bounty for both piggybacks to the processor', async () => {
+                                                it('should award bounty for both piggybacks to the process exit initiator', async () => {
                                                     const postBalanceOtherAddress = new BN(
                                                         await web3.eth.getBalance(otherAddress),
                                                     );
@@ -635,7 +635,7 @@ contract('PaymentExitGame - In-flight Exit - End to End Tests', ([_deployer, _ma
                                                     expect(expectedBalance).to.be.bignumber.equal(postBalanceAlice);
                                                 });
 
-                                                it('should award exit bounty to Processor', async () => {
+                                                it('should award exit bounty to the process exit initiator', async () => {
                                                     const postBalanceOtherAddress = new BN(
                                                         await web3.eth.getBalance(otherAddress),
                                                     );
