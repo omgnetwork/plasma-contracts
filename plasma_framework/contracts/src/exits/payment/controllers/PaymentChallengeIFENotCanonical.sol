@@ -31,7 +31,11 @@ library PaymentChallengeIFENotCanonical {
     event InFlightExitChallenged(
         address indexed challenger,
         bytes32 indexed txHash,
-        uint256 challengeTxPosition
+        uint256 challengeTxPosition,
+        uint16 inFlightTxInputIndex,
+        bytes challengeTx,
+        uint16 challengeTxInputIndex,
+        bytes challengeTxWitness
     );
 
     event InFlightExitChallengeResponded(
@@ -131,7 +135,15 @@ library PaymentChallengeIFENotCanonical {
         // Set a flag so that only the inputs are exitable, unless a response is received.
         ife.isCanonical = false;
 
-        emit InFlightExitChallenged(msg.sender, keccak256(args.inFlightTx), competitorPosition);
+        emit InFlightExitChallenged({
+            challenger: msg.sender,
+            txHash: keccak256(args.inFlightTx),
+            challengeTxPosition: competitorPosition,
+            inFlightTxInputIndex: args.inFlightTxInputIndex,
+            challengeTx: args.competingTx,
+            challengeTxInputIndex: args.competingTxInputIndex,
+            challengeTxWitness: args.competingTxWitness
+        });
     }
 
     /**

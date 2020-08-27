@@ -27,15 +27,11 @@ def test_process_exits_standard_exit_should_succeed(testlang, num_outputs, plasm
     utxo_pos, output_owner = prepare_exitable_utxo(testlang, [], amount, [], num_outputs)
 
     pre_balance = testlang.get_balance(output_owner)
-    testlang.flush_events()
 
     testlang.start_standard_exit(utxo_pos, output_owner)
     _, _, exit_id = plasma_framework.getNextExit(plasma_framework.eth_vault_id, NULL_ADDRESS_HEX)
-    start_exit_events = testlang.flush_events()
 
-    assert_events(start_exit_events,
-                  [('ExitStarted', {"owner": output_owner.address, "exitId": exit_id}),
-                   ('ExitQueued', {"exitId": exit_id})])
+    testlang.flush_events()
 
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
     testlang.process_exits(NULL_ADDRESS, 0, 100)

@@ -1,6 +1,8 @@
 const EthVault = artifacts.require('EthVault');
 const PaymentExitGame = artifacts.require('PaymentExitGame');
 const PlasmaFramework = artifacts.require('PlasmaFramework');
+const PaymentStartStandardExit = artifacts.require('PaymentStartStandardExit');
+const PaymentStartInFlightExit = artifacts.require('PaymentStartInFlightExit');
 
 const {
     constants, expectEvent,
@@ -220,13 +222,14 @@ contract('PlasmaFramework - Fee Claim', ([_, _maintainer, authority, richFather,
                                     };
 
                                     const bondSize = await this.paymentExitGame.startStandardExitBondSize();
-                                    const tx = await this.paymentExitGame.startStandardExit(
-                                        args, { from: operatorFeeAddress, value: bondSize },
-                                    );
-                                    await expectEvent.inLogs(
-                                        tx.logs,
+                                    const { receipt } = await this.paymentExitGame.startStandardExit(args, {
+                                        from: operatorFeeAddress,
+                                        value: bondSize,
+                                    });
+                                    await expectEvent.inTransaction(
+                                        receipt.transactionHash,
+                                        PaymentStartStandardExit,
                                         'ExitStarted',
-                                        { owner: operatorFeeAddress },
                                     );
                                 });
 
@@ -242,12 +245,13 @@ contract('PlasmaFramework - Fee Claim', ([_, _maintainer, authority, richFather,
                                     };
 
                                     const bondSize = await this.paymentExitGame.startIFEBondSize();
-                                    const tx = await this.paymentExitGame.startInFlightExit(
-                                        args,
-                                        { from: alice, value: bondSize },
-                                    );
-                                    await expectEvent.inLogs(
-                                        tx.logs,
+                                    const { receipt } = await this.paymentExitGame.startInFlightExit(args, {
+                                        from: alice,
+                                        value: bondSize,
+                                    });
+                                    await expectEvent.inTransaction(
+                                        receipt.transactionHash,
+                                        PaymentStartInFlightExit,
                                         'InFlightExitStarted',
                                     );
                                 });

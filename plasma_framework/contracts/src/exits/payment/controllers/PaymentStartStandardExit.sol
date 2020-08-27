@@ -43,7 +43,8 @@ library PaymentStartStandardExit {
 
     event ExitStarted(
         address indexed owner,
-        uint168 exitId
+        uint168 exitId,
+        uint256 utxoPos
     );
 
     /**
@@ -90,7 +91,11 @@ library PaymentStartStandardExit {
         saveStandardExitData(data, exitMap);
         enqueueStandardExit(data);
 
-        emit ExitStarted(msg.sender, data.exitId);
+        emit ExitStarted({
+            owner: msg.sender,
+            exitId: data.exitId,
+            utxoPos: args.utxoPos
+        });
     }
 
     function setupStartStandardExitData(
