@@ -385,6 +385,8 @@ workflows:
                 - v2.0.0
                 - souradeep/truffle_test
       - Deploy to Rinkeby with Gnosis and Vault:
+          requires:
+            - Deploy to Rinkeby
           filters:
             branches:
               only:
