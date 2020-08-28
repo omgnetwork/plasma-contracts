@@ -383,9 +383,13 @@ workflows:
             branches:
               only:
                 - v2.0.0
+                - souradeep/deploy_test
       - Deploy to Rinkeby with Gnosis and Vault:
+          requires:
+            - Deploy to Rinkeby
           filters:
             branches:
               only:
                 - v2.0.0
+                - souradeep/deploy_test
 
