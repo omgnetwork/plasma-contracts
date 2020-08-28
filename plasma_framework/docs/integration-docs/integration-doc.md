@@ -1070,7 +1070,8 @@ Following are lists of events from `PaymentExitGame` contract:
 ```
    event ExitStarted(
         address indexed owner,
-        uint160 exitId
+        uint160 exitId,
+        uint256 utxoPos
     );
 ```
 - A standard exit is successfully challenged:
@@ -1100,7 +1101,10 @@ This section describes the events for an in-flight exit.
 ```
     event InFlightExitStarted(
         address indexed initiator,
-        bytes32 indexed txHash
+        bytes32 indexed txHash,
+        bytes inFlightTx,
+        uint256[] inputUtxosPos,
+        bytes[] inFlightTxWitnesses
     );
 ```
 - An input has been piggybacked on an in-flight exit:
@@ -1124,7 +1128,11 @@ This section describes the events for an in-flight exit.
     event InFlightExitChallenged(
         address indexed challenger,
         bytes32 indexed txHash,
-        uint256 challengeTxPosition
+        uint256 challengeTxPosition,
+        uint16 inFlightTxInputIndex,
+        bytes challengeTx,
+        uint16 challengeTxInputIndex,
+        bytes challengeTxWitness
     );
 ```
 - An in-flight exit has been proved canonical in response to a non-canonical challenge:
