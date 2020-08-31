@@ -29,6 +29,11 @@ library PaymentProcessStandardExit {
         uint256 amount
     );
 
+    event BountyReturnFailed(
+        address indexed receiver,
+        uint256 amount
+    );
+
     /**
      * @notice Main logic function to process standard exit
      * @dev emits ExitOmitted event if the exit is omitted
@@ -37,12 +42,14 @@ library PaymentProcessStandardExit {
      * @param exitMap The storage of all standard exit data
      * @param exitId The exitId of the standard exit
      * @param token The ERC20 token address of the exit. Uses address(0) to represent ETH.
+     * @param processExitInitiator The processExits() initiator
      */
     function run(
         Controller memory self,
         PaymentExitDataModel.StandardExitMap storage exitMap,
         uint168 exitId,
-        address token
+        address token,
+        address payable processExitInitiator
     )
         public
     {
@@ -57,9 +64,14 @@ library PaymentProcessStandardExit {
         self.framework.flagOutputFinalized(exit.outputId, exitId);
 
         // we do not want to block a queue if bond return is unsuccessful
-        bool success = SafeEthTransfer.transferReturnResult(exit.exitTarget, exit.bondSize, self.safeGasStipend);
-        if (!success) {
+        bool successBondReturn = SafeEthTransfer.transferReturnResult(exit.exitTarget, exit.bondSize, self.safeGasStipend);
+        if (!successBondReturn) {
             emit BondReturnFailed(exit.exitTarget, exit.bondSize);
+        }
+
+        bool successBountyReturn = SafeEthTransfer.transferReturnResult(processExitInitiator, exit.bountySize, self.safeGasStipend);
+        if (!successBountyReturn) {
+            emit BountyReturnFailed(processExitInitiator, exit.bountySize);
         }
 
         if (token == address(0)) {

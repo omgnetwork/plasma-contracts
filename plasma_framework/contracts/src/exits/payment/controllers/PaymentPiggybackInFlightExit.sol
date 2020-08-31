@@ -11,10 +11,13 @@ import "../../../framework/interfaces/IExitProcessor.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
 import "../../../utils/PosLib.sol";
 
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+
 library PaymentPiggybackInFlightExit {
     using PosLib for PosLib.Position;
     using ExitableTimestamp for ExitableTimestamp.Calculator;
     using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
+    using SafeMath for uint256;
 
     struct Controller {
         PlasmaFramework framework;
@@ -71,7 +74,8 @@ library PaymentPiggybackInFlightExit {
     function piggybackInput(
         Controller memory self,
         PaymentExitDataModel.InFlightExitMap storage inFlightExitMap,
-        PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnInputArgs memory args
+        PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnInputArgs memory args,
+        uint128 processInFlightExitBountySize
     )
         public
     {
@@ -87,7 +91,8 @@ library PaymentPiggybackInFlightExit {
         PaymentExitDataModel.WithdrawData storage withdrawData = exit.inputs[args.inputIndex];
 
         require(withdrawData.exitTarget == msg.sender, "Can be called only by the exit target");
-        withdrawData.piggybackBondSize = msg.value;
+        withdrawData.bountySize = processInFlightExitBountySize;
+        withdrawData.piggybackBondSize = msg.value.sub(withdrawData.bountySize);
 
         if (isFirstPiggybackOfTheToken(exit, withdrawData.token)) {
             enqueue(self, withdrawData.token, PosLib.decode(exit.position), exitId);
@@ -108,7 +113,8 @@ library PaymentPiggybackInFlightExit {
     function piggybackOutput(
         Controller memory self,
         PaymentExitDataModel.InFlightExitMap storage inFlightExitMap,
-        PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnOutputArgs memory args
+        PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnOutputArgs memory args,
+        uint128 processInFlightExitBountySize
     )
         public
     {
@@ -124,7 +130,8 @@ library PaymentPiggybackInFlightExit {
         PaymentExitDataModel.WithdrawData storage withdrawData = exit.outputs[args.outputIndex];
 
         require(withdrawData.exitTarget == msg.sender, "Can be called only by the exit target");
-        withdrawData.piggybackBondSize = msg.value;
+        withdrawData.bountySize = processInFlightExitBountySize;
+        withdrawData.piggybackBondSize = msg.value.sub(withdrawData.bountySize);
 
         if (isFirstPiggybackOfTheToken(exit, withdrawData.token)) {
             enqueue(self, withdrawData.token, PosLib.decode(exit.position), exitId);

@@ -18,9 +18,9 @@ contract ReentrancyExitGame is IExitProcessor {
     }
 
     // override ExitProcessor interface
-    // This would call the processExits back to mimic reentracy attack
-    function processExit(uint168, uint256, address) public {
-        exitGameController.processExits(vaultId, testToken, 0, reentryMaxExitToProcess);
+    // This would call the processExits back to mimic reentrancy attack
+    function processExit(uint168, uint256, address, address payable) public {
+        exitGameController.processExits(vaultId, testToken, 0, reentryMaxExitToProcess, keccak256(abi.encodePacked(msg.sender)));
     }
 
     function enqueue(uint256 _vaultId, address _token, uint32 _exitableAt, uint256 _txPos, uint168 _exitId, IExitProcessor _exitProcessor)
