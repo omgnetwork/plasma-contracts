@@ -27,7 +27,7 @@ jobs:
           # https://github.com/repo-sync/github-sync/blob/520596e97177727db1f2a1de14f4ded905624066/github-sync.sh#L23-L33
 
           readonly SOURCE_REPO="omgnetwork/plasma-contracts"
-          readonly SOURCE_BRANCH="master"
+          readonly SOURCE_BRANCH="v2.0.0"
           readonly DESTINATION_BRANCH="master"
 
           echo "Syncing ${DESTINATION_BRANCH} from branch ${SOURCE_BRANCH} of ${SOURCE_REPO}..."
