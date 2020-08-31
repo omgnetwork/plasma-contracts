@@ -18,7 +18,7 @@ struct Controller {
 **Events**
 
 ```js
-event InFlightExitChallenged(address indexed challenger, bytes32 indexed txHash, uint256  challengeTxPosition);
+event InFlightExitChallenged(address indexed challenger, bytes32 indexed txHash, uint256  challengeTxPosition, uint16  inFlightTxInputIndex, bytes  challengeTx, uint16  challengeTxInputIndex, bytes  challengeTxWitness);
 event InFlightExitChallengeResponded(address indexed challenger, bytes32 indexed txHash, uint256  challengeTxPosition);
 ```
 
@@ -127,6 +127,7 @@ returns(uint256)
 * [EthDepositVerifier](EthDepositVerifier.md)
 * [EthVault](EthVault.md)
 * [ExitableTimestamp](ExitableTimestamp.md)
+* [ExitBounty](ExitBounty.md)
 * [ExitGameController](ExitGameController.md)
 * [ExitGameRegistry](ExitGameRegistry.md)
 * [ExitId](ExitId.md)

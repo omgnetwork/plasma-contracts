@@ -225,21 +225,36 @@ contract('PaymentStartInFlightExit', ([_, alice, richFather, carol]) => {
             });
 
             it('should emit InFlightExitStarted event', async () => {
-                const { logs } = await this.exitGame.startInFlightExit(
+                const { receipt } = await this.exitGame.startInFlightExit(
                     this.args,
                     { from: alice, value: this.startIFEBondSize.toString() },
                 );
 
                 const expectedIfeHash = web3.utils.sha3(this.args.inFlightTx);
 
-                await expectEvent.inLogs(
-                    logs,
+                await expectEvent.inTransaction(
+                    receipt.transactionHash,
+                    PaymentStartInFlightExit,
                     'InFlightExitStarted',
                     {
                         initiator: alice,
                         txHash: expectedIfeHash,
+                        inFlightTx: this.args.inFlightTx,
                     },
                 );
+
+                // expectEvent.inTransaction can't properly match arrays
+                const txReceipt = await web3.eth.getTransactionReceipt(receipt.transactionHash);
+                const logs = PaymentStartInFlightExit.decodeLogs(txReceipt.logs);
+                const event = logs.filter(e => e.event === 'InFlightExitStarted')[0];
+
+                expect(event.args.inFlightTxWitnesses).to.have.ordered.members(this.args.inFlightTxWitnesses);
+
+                const inputUtxosPos = this.args.inputUtxosPos.map(utxoPos => new BN(utxoPos));
+                expect(event.args.inputUtxosPos).to.have.lengthOf(inputUtxosPos.length);
+                for (let i = 0; i < inputUtxosPos.length; i++) {
+                    expect(event.args.inputUtxosPos[i].eq(inputUtxosPos[i]));
+                }
             });
 
             it('should charge user with a bond', async () => {
@@ -280,15 +295,16 @@ contract('PaymentStartInFlightExit', ([_, alice, richFather, carol]) => {
             });
 
             it('should be able to start by non input or output owner', async () => {
-                const { logs } = await this.exitGame.startInFlightExit(
+                const { receipt } = await this.exitGame.startInFlightExit(
                     this.args,
                     { from: richFather, value: this.startIFEBondSize.toString() },
                 );
 
                 const expectedIfeHash = web3.utils.sha3(this.args.inFlightTx);
 
-                await expectEvent.inLogs(
-                    logs,
+                await expectEvent.inTransaction(
+                    receipt.transactionHash,
+                    PaymentStartInFlightExit,
                     'InFlightExitStarted',
                     {
                         initiator: richFather,

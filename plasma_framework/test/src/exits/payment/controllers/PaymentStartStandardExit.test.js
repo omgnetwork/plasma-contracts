@@ -36,13 +36,13 @@ contract('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
     const INITIAL_IMMUNE_EXIT_GAME_NUM = 1;
 
     before('deploy and link with controller lib', async () => {
-        const startStandardExit = await PaymentStartStandardExit.new();
-        const challengeStandardExit = await PaymentChallengeStandardExit.new();
-        const processStandardExit = await PaymentProcessStandardExit.new();
+        this.startStandardExit = await PaymentStartStandardExit.new();
+        this.challengeStandardExit = await PaymentChallengeStandardExit.new();
+        this.processStandardExit = await PaymentProcessStandardExit.new();
 
-        await PaymentStandardExitRouter.link('PaymentStartStandardExit', startStandardExit.address);
-        await PaymentStandardExitRouter.link('PaymentChallengeStandardExit', challengeStandardExit.address);
-        await PaymentStandardExitRouter.link('PaymentProcessStandardExit', processStandardExit.address);
+        await PaymentStandardExitRouter.link('PaymentStartStandardExit', this.startStandardExit.address);
+        await PaymentStandardExitRouter.link('PaymentChallengeStandardExit', this.challengeStandardExit.address);
+        await PaymentStandardExitRouter.link('PaymentProcessStandardExit', this.processStandardExit.address);
     });
 
     describe('startStandardExit', () => {
@@ -374,12 +374,21 @@ contract('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
 
             const isTxDeposit = await this.framework.isDeposit(this.dummyBlockNum);
             const exitId = await this.exitIdHelper.getStandardExitId(isTxDeposit, args.rlpOutputTx, args.utxoPos);
-            const { logs } = await this.exitGame.startStandardExit(args, {
+            const { receipt } = await this.exitGame.startStandardExit(args, {
                 from: outputOwner,
                 value: this.startStandardExitTxValue,
             });
 
-            await expectEvent.inLogs(logs, 'ExitStarted', { owner: outputOwner, exitId });
+            await expectEvent.inTransaction(
+                receipt.transactionHash,
+                PaymentStartStandardExit,
+                'ExitStarted',
+                {
+                    owner: outputOwner,
+                    exitId,
+                    utxoPos: new BN(args.utxoPos),
+                },
+            );
         });
 
         it('should allow 2 outputs on the same transaction to exit', async () => {
@@ -396,27 +405,43 @@ contract('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
 
             const isTxDeposit = await this.framework.isDeposit(BLOCK_NUM);
 
-            const { logs: logs1 } = await this.exitGame.startStandardExit(args[0], {
+            const { receipt: receipt1 } = await this.exitGame.startStandardExit(args[0], {
                 from: outputOwner,
                 value: this.startStandardExitTxValue,
             });
             const exitId1 = await this.exitIdHelper.getStandardExitId(
-                isTxDeposit,
-                args[0].rlpOutputTx,
-                args[0].utxoPos,
+                isTxDeposit, args[0].rlpOutputTx, args[0].utxoPos,
             );
-            await expectEvent.inLogs(logs1, 'ExitStarted', { owner: outputOwner, exitId: exitId1 });
 
-            const { logs: logs2 } = await this.exitGame.startStandardExit(args[1], {
+            await expectEvent.inTransaction(
+                receipt1.transactionHash,
+                PaymentStartStandardExit,
+                'ExitStarted',
+                {
+                    owner: outputOwner,
+                    exitId: exitId1,
+                    utxoPos: new BN(args[0].utxoPos),
+                },
+            );
+
+            const { receipt: receipt2 } = await this.exitGame.startStandardExit(args[1], {
                 from: outputOwner,
                 value: this.startStandardExitTxValue,
             });
             const exitId2 = await this.exitIdHelper.getStandardExitId(
-                isTxDeposit,
-                args[1].rlpOutputTx,
-                args[1].utxoPos,
+                isTxDeposit, args[1].rlpOutputTx, args[1].utxoPos,
             );
-            await expectEvent.inLogs(logs2, 'ExitStarted', { owner: outputOwner, exitId: exitId2 });
+
+            await expectEvent.inTransaction(
+                receipt2.transactionHash,
+                PaymentStartStandardExit,
+                'ExitStarted',
+                {
+                    owner: outputOwner,
+                    exitId: exitId2,
+                    utxoPos: new BN(args[1].utxoPos),
+                },
+            );
         });
     });
 });

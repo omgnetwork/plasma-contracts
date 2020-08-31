@@ -25,6 +25,7 @@ struct BondSize.Params internal startStandardExitBond;
 
 //private members
 contract PlasmaFramework private framework;
+bool private bootDone;
 
 ```
 
@@ -41,25 +42,28 @@ event BondReturnFailed(address indexed receiver, uint256  amount);
 
 ## Functions
 
-- [(struct PaymentExitGameArgs.Args args)](#)
+- [boot(struct PaymentExitGameArgs.Args paymentExitGameArgs)](#boot)
 - [standardExits(uint168[] exitIds)](#standardexits)
 - [startStandardExitBondSize()](#startstandardexitbondsize)
 - [updateStartStandardExitBondSize(uint128 newBondSize)](#updatestartstandardexitbondsize)
+- [processStandardExitBountySize(uint256 gasPriceStartExit)](#processstandardexitbountysize)
 - [startStandardExit(struct PaymentStandardExitRouterArgs.StartStandardExitArgs args)](#startstandardexit)
 - [challengeStandardExit(struct PaymentStandardExitRouterArgs.ChallengeStandardExitArgs args)](#challengestandardexit)
-- [processStandardExit(uint168 exitId, address token)](#processstandardexit)
+- [processStandardExit(uint168 exitId, address token, address payable processor)](#processstandardexit)
 
-### 
+### boot
+
+⤿ Overridden Implementation(s): [PaymentInFlightExitRouter.boot](PaymentInFlightExitRouter.md#boot)
 
 ```js
-function (struct PaymentExitGameArgs.Args args) public nonpayable
+function boot(struct PaymentExitGameArgs.Args paymentExitGameArgs) internal nonpayable
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| args | struct PaymentExitGameArgs.Args |  | 
+| paymentExitGameArgs | struct PaymentExitGameArgs.Args |  | 
 
 ### standardExits
 
@@ -104,6 +108,21 @@ function updateStartStandardExitBondSize(uint128 newBondSize) public nonpayable 
 | ------------- |------------- | -----|
 | newBondSize | uint128 | The new bond size | 
 
+### processStandardExitBountySize
+
+Retrieves the process standard exit bounty size
+
+```js
+function processStandardExitBountySize(uint256 gasPriceStartExit) public view
+returns(uint256)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| gasPriceStartExit | uint256 |  | 
+
 ### startStandardExit
 
 Starts a standard exit of a given output, using output-age priority
@@ -137,7 +156,7 @@ function challengeStandardExit(struct PaymentStandardExitRouterArgs.ChallengeSta
 Process standard exit
 
 ```js
-function processStandardExit(uint168 exitId, address token) internal nonpayable
+function processStandardExit(uint168 exitId, address token, address payable processor) internal nonpayable
 ```
 
 **Arguments**
@@ -146,6 +165,7 @@ function processStandardExit(uint168 exitId, address token) internal nonpayable
 | ------------- |------------- | -----|
 | exitId | uint168 | The standard exit ID | 
 | token | address | The token (in erc20 address or address(0) for ETH) of the exiting output | 
+| processor | address payable | The processExit initiator | 
 
 ## Contracts
 
@@ -160,6 +180,7 @@ function processStandardExit(uint168 exitId, address token) internal nonpayable
 * [EthDepositVerifier](EthDepositVerifier.md)
 * [EthVault](EthVault.md)
 * [ExitableTimestamp](ExitableTimestamp.md)
+* [ExitBounty](ExitBounty.md)
 * [ExitGameController](ExitGameController.md)
 * [ExitGameRegistry](ExitGameRegistry.md)
 * [ExitId](ExitId.md)

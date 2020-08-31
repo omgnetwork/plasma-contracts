@@ -281,18 +281,23 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
                 this.competingTxBlock.blockTimestamp,
             );
 
-            const challengeIFETx = await this.exitGame.challengeInFlightExitNotCanonical(
+            const { receipt } = await this.exitGame.challengeInFlightExitNotCanonical(
                 this.challengeArgs, { from: challenger },
             );
 
             const rlpInFlightTxBytes = web3.utils.bytesToHex(this.inFlightTx.rlpEncoded());
-            await expectEvent.inLogs(
-                challengeIFETx.logs,
+            await expectEvent.inTransaction(
+                receipt.transactionHash,
+                PaymentChallengeIFENotCanonical,
                 'InFlightExitChallenged',
                 {
                     challenger,
                     txHash: web3.utils.sha3(rlpInFlightTxBytes),
                     challengeTxPosition: new BN(this.challengeArgs.competingTxPos),
+                    inFlightTxInputIndex: new BN(this.challengeArgs.inFlightTxInputIndex),
+                    challengeTx: this.challengeArgs.competingTx,
+                    challengeTxInputIndex: new BN(this.challengeArgs.competingTxInputIndex),
+                    challengeTxWitness: this.challengeArgs.competingTxWitness.toLowerCase(),
                 },
             );
         });
@@ -314,13 +319,18 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
 
             it('should emit InFlightExitChallenged event', async () => {
                 const rlpInFlightTxBytes = web3.utils.bytesToHex(this.inFlightTx.rlpEncoded());
-                await expectEvent.inLogs(
-                    this.challengeIFETx.logs,
+                await expectEvent.inTransaction(
+                    this.challengeIFETx.receipt.transactionHash,
+                    PaymentChallengeIFENotCanonical,
                     'InFlightExitChallenged',
                     {
                         challenger,
                         txHash: web3.utils.sha3(rlpInFlightTxBytes),
                         challengeTxPosition: new BN(this.challengeArgs.competingTxPos),
+                        inFlightTxInputIndex: new BN(this.challengeArgs.inFlightTxInputIndex),
+                        challengeTx: this.challengeArgs.competingTx,
+                        challengeTxInputIndex: new BN(this.challengeArgs.competingTxInputIndex),
+                        challengeTxWitness: this.challengeArgs.competingTxWitness.toLowerCase(),
                     },
                 );
             });
@@ -490,13 +500,15 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
                 // it seems to be solidity `~uint256(0)` - what is important here: it's HUGE
                 const expectedCompetitorPos = new BN(2).pow(new BN(256)).sub(new BN(1));
 
-                const { logs } = await this.exitGame.challengeInFlightExitNotCanonical(
+                const { receipt } = await this.exitGame.challengeInFlightExitNotCanonical(
                     this.challengeArgs, { from: challenger },
                 );
 
                 const rlpInFlightTxBytes = web3.utils.bytesToHex(this.inFlightTx.rlpEncoded());
-                await expectEvent.inLogs(
-                    logs,
+
+                await expectEvent.inTransaction(
+                    receipt.transactionHash,
+                    PaymentChallengeIFENotCanonical,
                     'InFlightExitChallenged',
                     {
                         challenger,
