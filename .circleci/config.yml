@@ -374,7 +374,7 @@ workflows:
           filters:
             branches:
               only:
-                - master
+                - v2.0.0
 
   Deployment checks:
     jobs:
@@ -384,6 +384,8 @@ workflows:
               only:
                 - v2.0.0
       - Deploy to Rinkeby with Gnosis and Vault:
+          requires:
+            - Deploy to Rinkeby
           filters:
             branches:
               only:

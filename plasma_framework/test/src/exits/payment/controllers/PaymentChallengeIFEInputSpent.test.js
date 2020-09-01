@@ -31,6 +31,7 @@ const { spentOnGas, computeNormalOutputId, getOutputId } = require('../../../../
 contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, challenger, otherAddress]) => {
     const DUMMY_IFE_BOND_SIZE = 31415926535;
     const PIGGYBACK_BOND = 31415926535;
+    const PROCESS_EXIT_BOUNTY = 500000000000;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
     const INITIAL_IMMUNE_EXIT_GAME_NUM = 1;
@@ -117,6 +118,7 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                 token: constants.ZERO_ADDRESS,
                 amount: 0,
                 piggybackBondSize: 0,
+                bountySize: 0,
             };
 
             const inFlightExitData = {
@@ -133,6 +135,7 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                     token: ETH,
                     amount: 999,
                     piggybackBondSize: PIGGYBACK_BOND,
+                    bountySize: PROCESS_EXIT_BOUNTY,
                 }, {
                     outputId: getOutputId(inputTx.txBytes, inputTx.utxoPos),
                     outputGuard: web3.utils.sha3('dummy output guard'),
@@ -140,6 +143,7 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                     token: ETH,
                     amount: INPUT_TX_AMOUNT,
                     piggybackBondSize: PIGGYBACK_BOND,
+                    bountySize: PROCESS_EXIT_BOUNTY,
                 }, emptyWithdrawData, emptyWithdrawData],
                 outputs: [{
                     outputId: web3.utils.sha3('dummy output id'),
@@ -148,6 +152,7 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                     token: ETH,
                     amount: outputAmount,
                     piggybackBondSize: PIGGYBACK_BOND,
+                    bountySize: PROCESS_EXIT_BOUNTY,
                 }, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData],
             };
 
@@ -200,16 +205,17 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
 
             this.piggybackBondSize = await this.exitGame.piggybackBondSize();
 
+            this.processExitBountySize = await this.exitGame.processInFlightExitBountySize();
+
             // Set up the piggyback data
             this.testData = await buildPiggybackInputData(this.inputTx);
             await this.exitGame.setInFlightExit(this.testData.exitId, this.testData.inFlightExitData);
 
             // Piggyback the second input
-            await this.exitGame.setInFlightExitInputPiggybacked(
-                this.testData.exitId,
-                1,
-                { from: inputOwner, value: this.piggybackBondSize.toString() },
-            );
+            await this.exitGame.setInFlightExitInputPiggybacked(this.testData.exitId, 1, {
+                from: inputOwner,
+                value: this.piggybackBondSize.add(this.processExitBountySize),
+            });
 
             // Create a transaction that spends the same input
             const challengingTx = createInputTransaction(
@@ -269,10 +275,11 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                 expect(new BN(exits[0].exitMap)).to.be.bignumber.equal(new BN(0));
             });
 
-            it('should pay the piggyback bond to the challenger', async () => {
+            it('should pay the piggyback bond plus exit bounty to the challenger', async () => {
                 const actualPostBalance = new BN(await web3.eth.getBalance(challenger));
                 const expectedPostBalance = this.challengerPreBalance
                     .add(new BN(PIGGYBACK_BOND))
+                    .add(new BN(PROCESS_EXIT_BOUNTY))
                     .sub(await spentOnGas(this.challengeTx.receipt));
 
                 expect(actualPostBalance).to.be.bignumber.equal(expectedPostBalance);
@@ -282,11 +289,10 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
         describe('check exitMap before and after challenge', () => {
             beforeEach(async () => {
                 // Piggyback input0 as well.
-                await this.exitGame.setInFlightExitInputPiggybacked(
-                    this.testData.exitId,
-                    0,
-                    { from: inputOwner, value: this.piggybackBondSize.toString() },
-                );
+                await this.exitGame.setInFlightExitInputPiggybacked(this.testData.exitId, 0, {
+                    from: inputOwner,
+                    value: this.piggybackBondSize.add(this.processExitBountySize),
+                });
             });
 
             it('should remove the input from piggybacked', async () => {

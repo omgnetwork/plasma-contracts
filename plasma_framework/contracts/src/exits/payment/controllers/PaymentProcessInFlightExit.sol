@@ -39,6 +39,11 @@ library PaymentProcessInFlightExit {
         uint256 amount
     );
 
+    event InFlightBountyReturnFailed(
+        address indexed receiver,
+        uint256 amount
+    );
+
     /**
      * @notice Main logic function to process in-flight exit
      * @dev emits InFlightExitOmitted event if the exit is omitted
@@ -49,12 +54,14 @@ library PaymentProcessInFlightExit {
      * @param exitMap The storage of all in-flight exit data
      * @param exitId The exitId of the in-flight exit
      * @param token The ERC20 token address of the exit; uses address(0) to represent ETH
+     @ @param processExitInitiator The processExits() initiator
      */
     function run(
         Controller memory self,
         PaymentExitDataModel.InFlightExitMap storage exitMap,
         uint168 exitId,
-        address token
+        address token,
+        address payable processExitInitiator
     )
         public
     {
@@ -108,8 +115,8 @@ library PaymentProcessInFlightExit {
             flagOutputsWhenCanonical(self.framework, exit, token, exitId);
         }
 
-        returnInputPiggybackBonds(self, exit, token);
-        returnOutputPiggybackBonds(self, exit, token);
+        returnInputPiggybackBonds(self, exit, token, processExitInitiator);
+        returnOutputPiggybackBonds(self, exit, token, processExitInitiator);
 
         clearPiggybackInputFlag(exit, token);
         clearPiggybackOutputFlag(exit, token);
@@ -266,7 +273,8 @@ library PaymentProcessInFlightExit {
     function returnInputPiggybackBonds(
         Controller memory self,
         PaymentExitDataModel.InFlightExit storage exit,
-        address token
+        address token,
+        address payable processExitInitiator
     )
         private
     {
@@ -275,13 +283,22 @@ library PaymentProcessInFlightExit {
 
             // If the input has been challenged, isInputPiggybacked() will return false
             if (token == withdrawal.token && exit.isInputPiggybacked(i)) {
-                bool success = SafeEthTransfer.transferReturnResult(
+                bool successBondReturn = SafeEthTransfer.transferReturnResult(
                     withdrawal.exitTarget, withdrawal.piggybackBondSize, self.safeGasStipend
                 );
 
                 // we do not want to block a queue if bond return is unsuccessful
-                if (!success) {
+                if (!successBondReturn) {
                     emit InFlightBondReturnFailed(withdrawal.exitTarget, withdrawal.piggybackBondSize);
+                }
+
+                bool successBountyReturn = SafeEthTransfer.transferReturnResult(
+                    processExitInitiator, withdrawal.bountySize, self.safeGasStipend
+                );
+
+                // we do not want to block a queue if bounty return is unsuccessful
+                if (!successBountyReturn) {
+                    emit InFlightBountyReturnFailed(processExitInitiator, withdrawal.bountySize);
                 }
             }
         }
@@ -290,7 +307,8 @@ library PaymentProcessInFlightExit {
     function returnOutputPiggybackBonds(
         Controller memory self,
         PaymentExitDataModel.InFlightExit storage exit,
-        address token
+        address token,
+        address payable processExitInitiator
     )
         private
     {
@@ -299,13 +317,22 @@ library PaymentProcessInFlightExit {
 
             // If the output has been challenged, isOutputPiggybacked() will return false
             if (token == withdrawal.token && exit.isOutputPiggybacked(i)) {
-                bool success = SafeEthTransfer.transferReturnResult(
+                bool successBondReturn = SafeEthTransfer.transferReturnResult(
                     withdrawal.exitTarget, withdrawal.piggybackBondSize, self.safeGasStipend
                 );
 
                 // we do not want to block a queue if bond return is unsuccessful
-                if (!success) {
+                if (!successBondReturn) {
                     emit InFlightBondReturnFailed(withdrawal.exitTarget, withdrawal.piggybackBondSize);
+                }
+
+                bool successBountyReturn = SafeEthTransfer.transferReturnResult(
+                    processExitInitiator, withdrawal.bountySize, self.safeGasStipend
+                );
+
+                // we do not want to block a queue if bounty return is unsuccessful
+                if (!successBountyReturn) {
+                    emit InFlightBountyReturnFailed(processExitInitiator, withdrawal.bountySize);
                 }
             }
         }

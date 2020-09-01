@@ -21,18 +21,20 @@ class StandardExit:
         exitable (boolean): whether will exit at processing
         output_id (str): output exit identifier (not exit id)
         bond_size (int): value of paid bond
+        bounty_size (int): value of process exit bounty
     """
 
-    def __init__(self, exitable, utxo_pos, output_id, exit_target, amount, bond_size):
+    def __init__(self, exitable, utxo_pos, output_id, exit_target, amount, bond_size, bounty_size):
         self.owner = exit_target
         self.amount = amount
         self.position = utxo_pos
         self.exitable = exitable
         self.output_id = output_id
         self.bond_size = bond_size
+        self.bounty_size = bounty_size
 
     def to_list(self):
-        return [self.owner, self.amount, self.position, self.exitable, self.output_id, self.bond_size]
+        return [self.owner, self.amount, self.position, self.exitable, self.output_id, self.bond_size, self.bounty_size]
 
     def __str__(self):
         return self.to_list().__str__()
@@ -61,12 +63,13 @@ class PlasmaBlock:
 
 class InFlightExit:
     class WithdrawData:
-        def __init__(self, output_id, exit_target, token, amount, piggyback_bond_size):
+        def __init__(self, output_id, exit_target, token, amount, piggyback_bond_size, bounty_size):
             self.output_id = output_id
             self.exit_target = exit_target
             self.token = token
             self.amount = amount
             self.piggyback_bond_size = piggyback_bond_size
+            self.bounty_size = bounty_size
 
     def __init__(self, root_chain, in_flight_tx,
                  is_canonical,
@@ -224,7 +227,7 @@ class TestingLanguage:
             transactions = block.transactions
         merkle = FixedMerkle(16, list(map(lambda tx: tx.encoded, transactions)))
         proof = merkle.create_membership_proof(output_tx.encoded)
-        bond = bond if bond is not None else self.root_chain.standardExitBond()
+        bond = bond if bond is not None else self.root_chain.standardExitBond() + self.root_chain.processStandardExitBounty()
         self.root_chain.startStandardExit(output_id, output_tx.encoded, proof,
                                           **{'value': bond, 'from': account.address})
 
@@ -272,7 +275,7 @@ class TestingLanguage:
         spend = self.child_chain.get_transaction(spend_id)
         return Utxo(deposit_id, owner, token_address, amount, spend, spend_id)
 
-    def process_exits(self, token, exit_id, count=1, vault_id=None, **kwargs):
+    def process_exits(self, token, exit_id, count=1, vault_id=None, sender=None, **kwargs):
         """Finalizes exits that have completed the exit period.
 
         Args:
@@ -282,7 +285,10 @@ class TestingLanguage:
             vault_id (int): Id of the vault that funds the exit
         """
 
-        return self.root_chain.processExits(token, exit_id, count, vault_id, **kwargs)
+        if sender is None:
+            sender = self.accounts[0].address
+
+        return self.root_chain.processExits(token, exit_id, count, sender, vault_id, **kwargs)
 
     def get_challenge_proof(self, utxo_id, spend_id):
         """Returns information required to submit a challenge.
@@ -398,7 +404,7 @@ class TestingLanguage:
     def piggyback_in_flight_exit_input(self, tx_id, input_index, account, bond=None, spend_tx=None):
         if spend_tx is None:
             spend_tx = self.child_chain.get_transaction(tx_id)
-        bond = bond if bond is not None else self.root_chain.piggybackBond()
+        bond = bond if bond is not None else self.root_chain.piggybackBond() + self.root_chain.processInFlightExitBounty()
         self.root_chain.piggybackInFlightExit(spend_tx.encoded, input_index, **{'value': bond, 'from': account.address})
 
     def piggyback_in_flight_exit_output(self, tx_id, output_index, account, bond=None, spend_tx=None):

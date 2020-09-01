@@ -12,7 +12,7 @@ const { buildTxPos } = require('../../helpers/positions.js');
 const { PROTOCOL, EMPTY_BYTES_32 } = require('../../helpers/constants.js');
 const { exitQueueKey } = require('../../helpers/utils.js');
 
-contract('ExitGameController', () => {
+contract('ExitGameController', ([otherAddress]) => {
     const MIN_EXIT_PERIOD = 10;
     const INITIAL_IMMUNE_EXIT_GAMES = 1;
     const VAULT_ID = 1;
@@ -315,15 +315,43 @@ contract('ExitGameController', () => {
         it('rejects when such token has not been added yet', async () => {
             const fakeNonAddedTokenAddress = (await DummyExitGame.new()).address;
             await expectRevert(
-                this.controller.processExits(VAULT_ID, fakeNonAddedTokenAddress, 0, 1),
+                this.controller.processExits(
+                    VAULT_ID,
+                    fakeNonAddedTokenAddress,
+                    0,
+                    1,
+                    web3.utils.keccak256(otherAddress),
+                    { from: otherAddress },
+                ),
                 'The token is not yet added to the Plasma framework',
             );
         });
 
         it('rejects when the exit queue is empty', async () => {
             await expectRevert(
-                this.controller.processExits(VAULT_ID, this.dummyToken, 0, 1),
+                this.controller.processExits(
+                    VAULT_ID,
+                    this.dummyToken,
+                    0,
+                    1,
+                    web3.utils.keccak256(otherAddress),
+                    { from: otherAddress },
+                ),
                 'Exit queue is empty',
+            );
+        });
+
+        it('rejects when senderData is incorrect', async () => {
+            await expectRevert(
+                this.controller.processExits(
+                    VAULT_ID,
+                    this.dummyToken,
+                    0,
+                    1,
+                    web3.utils.keccak256(this.controller.address),
+                    { from: otherAddress },
+                ),
+                'Incorrect SenderData',
             );
         });
 
@@ -339,7 +367,14 @@ contract('ExitGameController', () => {
 
             const nonExistingExitId = this.dummyExit.exitId - 1;
             await expectRevert(
-                this.controller.processExits(VAULT_ID, this.dummyToken, nonExistingExitId, 1),
+                this.controller.processExits(
+                    VAULT_ID,
+                    this.dummyToken,
+                    nonExistingExitId,
+                    1,
+                    web3.utils.keccak256(otherAddress),
+                    { from: otherAddress },
+                ),
                 'Top exit ID of the queue is different to the one specified',
             );
         });
@@ -361,7 +396,14 @@ contract('ExitGameController', () => {
                 notAbleToExitYetExit.exitProcessor,
             );
 
-            const tx = await this.controller.processExits(VAULT_ID, this.dummyToken, 0, 1);
+            const tx = await this.controller.processExits(
+                VAULT_ID,
+                this.dummyToken,
+                0,
+                1,
+                web3.utils.keccak256(otherAddress),
+                { from: otherAddress },
+            );
 
             await expectEvent.inLogs(tx.logs, 'ProcessedExitsNum', {
                 processedNum: new BN(0),
@@ -382,7 +424,14 @@ contract('ExitGameController', () => {
             });
 
             it('should process the exit when the exitId is set to 0', async () => {
-                const tx = await this.controller.processExits(VAULT_ID, this.dummyToken, 0, 1);
+                const tx = await this.controller.processExits(
+                    VAULT_ID,
+                    this.dummyToken,
+                    0,
+                    1,
+                    web3.utils.keccak256(otherAddress),
+                    { from: otherAddress },
+                );
                 await expectEvent.inLogs(tx.logs, 'ProcessedExitsNum', {
                     processedNum: new BN(1),
                     token: this.dummyToken,
@@ -402,9 +451,23 @@ contract('ExitGameController', () => {
                     this.dummyExit.exitProcessor,
                 );
 
-                await this.controller.processExits(VAULT_ID, this.dummyToken, 0, 1);
+                await this.controller.processExits(
+                    VAULT_ID,
+                    this.dummyToken,
+                    0,
+                    1,
+                    web3.utils.keccak256(otherAddress),
+                    { from: otherAddress },
+                );
 
-                const tx = await this.controller.processExits(otherVaultId, this.dummyToken, 0, 1);
+                const tx = await this.controller.processExits(
+                    otherVaultId,
+                    this.dummyToken,
+                    0,
+                    1,
+                    web3.utils.keccak256(otherAddress),
+                    { from: otherAddress },
+                );
                 await expectEvent.inLogs(tx.logs, 'ProcessedExitsNum', {
                     processedNum: new BN(1),
                     token: this.dummyToken,
@@ -413,7 +476,8 @@ contract('ExitGameController', () => {
 
             it('should process the exit when the exitId is set to the exact top of the queue', async () => {
                 const tx = await this.controller.processExits(
-                    VAULT_ID, this.dummyToken, this.dummyExit.exitId, 1,
+                    VAULT_ID, this.dummyToken, this.dummyExit.exitId, 1, web3.utils.keccak256(otherAddress),
+                    { from: otherAddress },
                 );
                 await expectEvent.inLogs(tx.logs, 'ProcessedExitsNum', {
                     processedNum: new BN(1),
@@ -422,7 +486,14 @@ contract('ExitGameController', () => {
             });
 
             it('should call the "processExit" function of the exit processor when processes', async () => {
-                const { receipt } = await this.controller.processExits(VAULT_ID, this.dummyToken, 0, 1);
+                const { receipt } = await this.controller.processExits(
+                    VAULT_ID,
+                    this.dummyToken,
+                    0,
+                    1,
+                    web3.utils.keccak256(otherAddress),
+                    { from: otherAddress },
+                );
 
                 await expectEvent.inTransaction(
                     receipt.transactionHash,
@@ -435,7 +506,14 @@ contract('ExitGameController', () => {
             it('should delete the exit data after processed', async () => {
                 const priority = await this.dummyExitGame.priorityFromEnqueue();
 
-                await this.controller.processExits(VAULT_ID, this.dummyToken, 0, 1);
+                await this.controller.processExits(
+                    VAULT_ID,
+                    this.dummyToken,
+                    0,
+                    1,
+                    web3.utils.keccak256(otherAddress),
+                    { from: otherAddress },
+                );
 
                 const delegationKey = web3.utils.soliditySha3(priority, VAULT_ID, this.dummyExit.token);
                 const exitProcessor = await this.controller.delegations(delegationKey);
@@ -445,7 +523,14 @@ contract('ExitGameController', () => {
             it('should stop to process when queue becomes empty', async () => {
                 const queueSize = 1;
                 const maxExitsToProcess = 2;
-                const tx = await this.controller.processExits(VAULT_ID, this.dummyToken, 0, maxExitsToProcess);
+                const tx = await this.controller.processExits(
+                    VAULT_ID,
+                    this.dummyToken,
+                    0,
+                    maxExitsToProcess,
+                    web3.utils.keccak256(otherAddress),
+                    { from: otherAddress },
+                );
 
                 await expectEvent.inLogs(tx.logs, 'ProcessedExitsNum', {
                     processedNum: new BN(queueSize),
@@ -486,7 +571,14 @@ contract('ExitGameController', () => {
             });
 
             it('should process with the order of priority and delete the processed exit from queue', async () => {
-                await this.controller.processExits(VAULT_ID, this.dummyToken, 0, 1);
+                await this.controller.processExits(
+                    VAULT_ID,
+                    this.dummyToken,
+                    0,
+                    1,
+                    web3.utils.keccak256(otherAddress),
+                    { from: otherAddress },
+                );
 
                 const key = exitQueueKey(VAULT_ID, this.dummyToken);
                 const priorityQueueAddress = await this.controller.exitsQueues(key);
@@ -497,7 +589,14 @@ contract('ExitGameController', () => {
 
             it('should process no more than the "maxExitsToProcess" limit', async () => {
                 const maxExitsToProcess = 1;
-                const tx = await this.controller.processExits(VAULT_ID, this.dummyToken, 0, maxExitsToProcess);
+                const tx = await this.controller.processExits(
+                    VAULT_ID,
+                    this.dummyToken,
+                    0,
+                    maxExitsToProcess,
+                    web3.utils.keccak256(otherAddress),
+                    { from: otherAddress },
+                );
 
                 await expectEvent.inLogs(tx.logs, 'ProcessedExitsNum', {
                     processedNum: new BN(maxExitsToProcess),
@@ -635,7 +734,14 @@ contract('ExitGameController', () => {
             );
 
             await expectRevert(
-                this.controller.processExits(VAULT_ID, this.dummyExit.token, 0, 1),
+                this.controller.processExits(
+                    VAULT_ID,
+                    this.dummyExit.token,
+                    0,
+                    1,
+                    web3.utils.keccak256(otherAddress),
+                    { from: otherAddress },
+                ),
                 'Reentrant call',
             );
         });
