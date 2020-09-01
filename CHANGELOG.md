@@ -5,6 +5,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Pre-Release V2
+
+Process Exit Bounty - [2020-08-31]
+Incentivize calling process Exits by rewarding the caller with a bounty provided for by the exit owner  
+- [Process Exit Bounty] Implement Bounty for Processing Exits consolidated ([#698](https://github.com/omgnetwork/plasma-contracts/pull/698))
+
+- fix: deploy contracts serially and enable CI tests ([#700](https://github.com/omgnetwork/plasma-contracts/pull/700))
+- fix: flaky python test for IFE process ([#695](https://github.com/omgnetwork/plasma-contracts/pull/695))
+
+Enrich Contract Events - [2020-08-28]
+Add more data to contract events
+- docs: update integration docs for changed contract events ([#699](https://github.com/omgnetwork/plasma-contracts/pull/699))
+- feat: enrich contract events to contain data needed by child-chain and watcher ([#686](https://github.com/omgnetwork/plasma-contracts/pull/686))
+
+
+- chore: depbot upgrades ([#687](https://github.com/omgnetwork/plasma-contracts/pull/687), [#688](https://github.com/omgnetwork/plasma-contracts/pull/688), [#692](https://github.com/omgnetwork/plasma-contracts/pull/692), [#689](https://github.com/omgnetwork/plasma-contracts/pull/689))
+
+Multisig - [2020-08-21]
+Add support for deploying contracts with multisig support and vault
+- feat: estimate gas for multisig maintainer transactions ([#693](https://github.com/omgnetwork/plasma-contracts/pull/693))
+- feat: support docker deploy for gnosis and vault ([#690](https://github.com/omgnetwork/plasma-contracts/pull/690))
+- feat: add vault+authority ([#678](https://github.com/omgnetwork/plasma-contracts/pull/678))
+- feat: Add gnosis multisig submodule ([#677](https://github.com/omgnetwork/plasma-contracts/pull/677))
+- feat: remove child chain activation ([#679](https://github.com/omgnetwork/plasma-contracts/pull/679))
+- feat: add start vault ([#676](https://github.com/omgnetwork/plasma-contracts/pull/676))
+- feat: convert to two steps to setup exit game ([#667](https://github.com/omgnetwork/plasma-contracts/pull/667))
+
+- fix: drop trimming of trailing text from linked result ([#669](https://github.com/omgnetwork/plasma-contracts/pull/669))
+- fix: flaky python test ([#662](https://github.com/omgnetwork/plasma-contracts/pull/662))
+- chore: depbot upgrade ([#657](https://github.com/omgnetwork/plasma-contracts/pull/657))
+- chore: hdwallet version upgrade ([#655](https://github.com/omgnetwork/plasma-contracts/pull/655))
+- fix: truffle test failure with dependency issue ([#651](https://github.com/omgnetwork/plasma-contracts/pull/651))
+- feat: remove multi exit game experiment ([#650](https://github.com/omgnetwork/plasma-contracts/pull/650))
+
+New Exit Id format - [2020-06-16]
+Modify the size of exitId from 160 -> 168 bits
+- feat: new exitId format ([#631](https://github.com/omgnetwork/plasma-contracts/pull/631))
+
+- feat: deploy contracts to Rinkeby in CI ([#637](https://github.com/omgnetwork/plasma-contracts/pull/637))
+
+
 ## [1.0.5] - 2020-05-21
 No contract code change, mainly dependency changes, CI improvement and private repo synchronization.
 - chore: upgrade truffle and fix python linter ([#630](https://github.com/omisego/plasma-contracts/pull/630))
