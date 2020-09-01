@@ -31,6 +31,7 @@ struct BondSize.Params internal piggybackBond;
 
 //private members
 contract PlasmaFramework private framework;
+bool private bootDone;
 
 ```
 
@@ -55,7 +56,7 @@ event InFlightExitDeleted(uint168 indexed exitId);
 
 ## Functions
 
-- [(struct PaymentExitGameArgs.Args args)](#)
+- [boot(struct PaymentExitGameArgs.Args paymentExitGameArgs)](#boot)
 - [inFlightExits(uint168[] exitIds)](#inflightexits)
 - [startInFlightExit(struct PaymentInFlightExitRouterArgs.StartExitArgs args)](#startinflightexit)
 - [piggybackInFlightExitOnInput(struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnInputArgs args)](#piggybackinflightexitoninput)
@@ -71,17 +72,19 @@ event InFlightExitDeleted(uint168 indexed exitId);
 - [piggybackBondSize()](#piggybackbondsize)
 - [updatePiggybackBondSize(uint128 newBondSize)](#updatepiggybackbondsize)
 
-### 
+### boot
+
+⤾ overrides [PaymentStandardExitRouter.boot](PaymentStandardExitRouter.md#boot)
 
 ```js
-function (struct PaymentExitGameArgs.Args args) public nonpayable
+function boot(struct PaymentExitGameArgs.Args paymentExitGameArgs) internal nonpayable
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| args | struct PaymentExitGameArgs.Args |  | 
+| paymentExitGameArgs | struct PaymentExitGameArgs.Args |  | 
 
 ### inFlightExits
 
@@ -296,6 +299,7 @@ function updatePiggybackBondSize(uint128 newBondSize) public nonpayable onlyFrom
 * [EthDepositVerifier](EthDepositVerifier.md)
 * [EthVault](EthVault.md)
 * [ExitableTimestamp](ExitableTimestamp.md)
+* [ExitBounty](ExitBounty.md)
 * [ExitGameController](ExitGameController.md)
 * [ExitGameRegistry](ExitGameRegistry.md)
 * [ExitId](ExitId.md)

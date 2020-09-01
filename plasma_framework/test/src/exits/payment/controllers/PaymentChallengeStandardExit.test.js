@@ -112,9 +112,7 @@ contract('PaymentChallengeStandardExit', ([txSender, alice, bob, otherAddress]) 
 
             this.startStandardExitBondSize = await this.exitGame.startStandardExitBondSize();
 
-            this.dummyGasPrice = 1000000000;
-
-            this.processExitBountySize = await this.exitGame.processStandardExitBountySize(this.dummyGasPrice);
+            this.processExitBountySize = await this.exitGame.processStandardExitBountySize();
         });
 
         describe('When spending condition not registered', () => {

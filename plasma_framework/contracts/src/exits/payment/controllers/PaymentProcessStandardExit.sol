@@ -29,7 +29,7 @@ library PaymentProcessStandardExit {
         uint256 amount
     );
 
-    event BountyRewardFailed(
+    event BountyReturnFailed(
         address indexed receiver,
         uint256 amount
     );
@@ -42,13 +42,14 @@ library PaymentProcessStandardExit {
      * @param exitMap The storage of all standard exit data
      * @param exitId The exitId of the standard exit
      * @param token The ERC20 token address of the exit. Uses address(0) to represent ETH.
+     * @param processExitInitiator The processExits() initiator
      */
     function run(
         Controller memory self,
         PaymentExitDataModel.StandardExitMap storage exitMap,
         uint168 exitId,
         address token,
-        address payable processor
+        address payable processExitInitiator
     )
         public
     {
@@ -68,9 +69,9 @@ library PaymentProcessStandardExit {
             emit BondReturnFailed(exit.exitTarget, exit.bondSize);
         }
 
-        bool successBountyReturn = SafeEthTransfer.transferReturnResult(processor, exit.bountySize, self.safeGasStipend);
+        bool successBountyReturn = SafeEthTransfer.transferReturnResult(processExitInitiator, exit.bountySize, self.safeGasStipend);
         if (!successBountyReturn) {
-            emit BountyRewardFailed(processor, exit.bountySize);
+            emit BountyReturnFailed(processExitInitiator, exit.bountySize);
         }
 
         if (token == address(0)) {

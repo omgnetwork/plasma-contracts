@@ -86,6 +86,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
             token: constants.ZERO_ADDRESS,
             amount: 0,
             piggybackBondSize: 0,
+            bountySize: 0,
         };
 
         const inFlightExitData = {
@@ -101,18 +102,21 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
                 token: ETH,
                 amount: TEST_INPUT_AMOUNT,
                 piggybackBondSize: this.piggybackBondSize.toString(),
+                bountySize: this.processExitBountySize.toString(),
             }, {
                 outputId: TEST_OUTPUT_ID_FOR_INPUT_2,
                 exitTarget: inputOwner2,
                 token: ETH,
                 amount: TEST_INPUT_AMOUNT,
                 piggybackBondSize: this.piggybackBondSize.toString(),
+                bountySize: this.processExitBountySize.toString(),
             }, {
                 outputId: TEST_OUTPUT_ID_FOR_INPUT_3,
                 exitTarget: inputOwner3,
                 token: erc20,
                 amount: TEST_INPUT_AMOUNT,
                 piggybackBondSize: this.piggybackBondSize.toString(),
+                bountySize: this.processExitBountySize.toString(),
             }, emptyWithdrawData],
             outputs: [{
                 outputId: TEST_OUTPUT_ID_FOR_OUTPUT_1,
@@ -120,18 +124,21 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
                 token: ETH,
                 amount: TEST_OUTPUT_AMOUNT,
                 piggybackBondSize: this.piggybackBondSize.toString(),
+                bountySize: this.processExitBountySize.toString(),
             }, {
                 outputId: TEST_OUTPUT_ID_FOR_OUTPUT_2,
                 exitTarget: outputOwner2,
                 token: ETH,
                 amount: TEST_OUTPUT_AMOUNT,
                 piggybackBondSize: this.piggybackBondSize.toString(),
+                bountySize: this.processExitBountySize.toString(),
             }, {
                 outputId: TEST_OUTPUT_ID_FOR_OUTPUT_3,
                 exitTarget: outputOwner3,
                 token: erc20,
                 amount: TEST_OUTPUT_AMOUNT,
                 piggybackBondSize: this.piggybackBondSize.toString(),
+                bountySize: this.processExitBountySize.toString(),
             }, emptyWithdrawData],
         };
 
@@ -168,8 +175,11 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
             this.startIFEBondSize = await this.exitGame.startIFEBondSize();
             this.piggybackBondSize = await this.exitGame.piggybackBondSize();
 
+            this.processExitBountySize = await this.exitGame.processInFlightExitBountySize();
+
             const maxNeededBond = this.startIFEBondSize.add(this.piggybackBondSize).muln(4);
-            await this.exitGame.depositFundForTest({ value: maxNeededBond.toString() });
+            const totalAmount = maxNeededBond.add(this.processExitBountySize).muln(2);
+            await this.exitGame.depositFundForTest({ value: totalAmount.toString() });
         });
 
         it('should omit the exit if the exit does not exist', async () => {
@@ -237,8 +247,10 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
 
                     it('should not return piggyback bond', async () => {
                         const postAttackBalance = new BN(await web3.eth.getBalance(this.exitGame.address));
-                        // only start ife bond was returned
-                        const expectedBalance = this.preAttackBalance.sub(new BN(this.startIFEBondSize));
+                        // only start ife bond and exit bounty was returned
+                        const expectedBalance = this.preAttackBalance
+                            .sub(new BN(this.startIFEBondSize))
+                            .sub(new BN(this.processExitBountySize));
                         expect(postAttackBalance).to.be.bignumber.equal(expectedBalance);
                     });
 
@@ -262,8 +274,10 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
 
                     it('should not return piggyback bond', async () => {
                         const postAttackBalance = new BN(await web3.eth.getBalance(this.exitGame.address));
-                        // only start ife bond was returned
-                        const expectedBalance = this.preAttackBalance.sub(new BN(this.startIFEBondSize));
+                        // only start ife bond and exit bounty was returned
+                        const expectedBalance = this.preAttackBalance
+                            .sub(new BN(this.startIFEBondSize))
+                            .sub(new BN(this.processExitBountySize));
                         expect(postAttackBalance).to.be.bignumber.equal(expectedBalance);
                     });
 
@@ -275,6 +289,86 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
                             {
                                 receiver: this.attacker.address,
                                 amount: new BN(this.piggybackBondSize),
+                            },
+                        );
+                    });
+                });
+            });
+        });
+
+        describe('When bounty award call failed', () => {
+            beforeEach(async () => {
+                this.attacker = await Attacker.new();
+
+                this.preAttackBalance = new BN(await web3.eth.getBalance(this.exitGame.address));
+            });
+            describe('on awarding exit bounty', () => {
+                beforeEach(async () => {
+                    this.exit = await buildInFlightExitData();
+                });
+
+                const setExitAndStartProcessing = async (exitMap, isCanonical) => {
+                    this.exit.exitMap = exitMap;
+                    this.exit.isCanonical = isCanonical;
+                    await this.exitGame.setInFlightExit(DUMMY_EXIT_ID, this.exit);
+                    const { receipt } = await this.exitGame.processExit(
+                        DUMMY_EXIT_ID,
+                        VAULT_ID.ETH,
+                        ETH,
+                        this.attacker.address,
+                    );
+                    return receipt;
+                };
+
+                describe('when transaction is non-canonical', () => {
+                    beforeEach(async () => {
+                        this.receipt = await setExitAndStartProcessing(2 ** 0, false);
+                    });
+
+                    it('should not return exit bounty', async () => {
+                        const postAttackBalance = new BN(await web3.eth.getBalance(this.exitGame.address));
+                        // only start ife bond and piggyback bond was returned
+                        const expectedBalance = this.preAttackBalance
+                            .sub(new BN(this.startIFEBondSize))
+                            .sub(new BN(this.piggybackBondSize));
+                        expect(postAttackBalance).to.be.bignumber.equal(expectedBalance);
+                    });
+
+                    it('should publish an event that bounty award failed', async () => {
+                        await expectEvent.inTransaction(
+                            this.receipt.transactionHash,
+                            PaymentProcessInFlightExit,
+                            'InFlightBountyReturnFailed',
+                            {
+                                receiver: this.attacker.address,
+                                amount: new BN(this.processExitBountySize),
+                            },
+                        );
+                    });
+                });
+
+                describe('when transaction is canonical', () => {
+                    beforeEach(async () => {
+                        this.receipt = await setExitAndStartProcessing(2 ** MAX_INPUT_NUM, true);
+                    });
+
+                    it('should not return exit bounty', async () => {
+                        const postAttackBalance = new BN(await web3.eth.getBalance(this.exitGame.address));
+                        // only start ife bond and piggyback bond was returned
+                        const expectedBalance = this.preAttackBalance
+                            .sub(new BN(this.startIFEBondSize))
+                            .sub(new BN(this.piggybackBondSize));
+                        expect(postAttackBalance).to.be.bignumber.equal(expectedBalance);
+                    });
+
+                    it('should publish an event that bounty award failed', async () => {
+                        await expectEvent.inTransaction(
+                            this.receipt.transactionHash,
+                            PaymentProcessInFlightExit,
+                            'InFlightBountyReturnFailed',
+                            {
+                                receiver: this.attacker.address,
+                                amount: new BN(this.processExitBountySize),
                             },
                         );
                     });
@@ -296,7 +390,17 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
                 await this.exitGame.setInFlightExitOutputPiggybacked(DUMMY_EXIT_ID, 0);
                 await this.exitGame.setInFlightExitOutputPiggybacked(DUMMY_EXIT_ID, 2);
 
+                this.preBalanceOtherAddress = new BN(await web3.eth.getBalance(otherAddress));
                 await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH, otherAddress);
+            });
+
+            it('should transfer exit bounty to the process exit initiator of all piggybacked inputs/outputs that are cleaned up', async () => {
+                const postBalanceOtherAddress = new BN(await web3.eth.getBalance(otherAddress));
+                const expectedBalance = this.preBalanceOtherAddress
+                    .add(this.processExitBountySize)
+                    .add(this.processExitBountySize);
+
+                expect(postBalanceOtherAddress).to.be.bignumber.equal(expectedBalance);
             });
 
             it('should transfer exit bond to the IFE bond owner if all piggybacked inputs/outputs are cleaned up', async () => {
@@ -484,6 +588,17 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
                 expect(postBalance).to.be.bignumber.equal(expectedBalance);
             });
 
+            it('should return bounty to the process exit initiator for both input and output', async () => {
+                const preBalanceOtherAddress = new BN(await web3.eth.getBalance(otherAddress));
+                await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ERC20, erc20, otherAddress);
+                const postBalanceOtherAddress = new BN(await web3.eth.getBalance(otherAddress));
+                const expectedBalance = preBalanceOtherAddress
+                    .add(this.processExitBountySize)
+                    .add(this.processExitBountySize);
+
+                expect(postBalanceOtherAddress).to.be.bignumber.equal(expectedBalance);
+            });
+
             it('should only flag piggybacked inputs with the same token as spent', async () => {
                 await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ETH, ETH, otherAddress);
                 // piggybacked input
@@ -614,6 +729,17 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
                 const expectedBalance = this.inputOwner3PreBalance.add(this.piggybackBondSize);
 
                 expect(postBalance).to.be.bignumber.equal(expectedBalance);
+            });
+
+            it('should return bounty to the process exit initiator for both input and output', async () => {
+                const preBalanceOtherAddress = new BN(await web3.eth.getBalance(otherAddress));
+                await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ERC20, erc20, otherAddress);
+                const postBalanceOtherAddress = new BN(await web3.eth.getBalance(otherAddress));
+                const expectedBalance = preBalanceOtherAddress
+                    .add(this.processExitBountySize)
+                    .add(this.processExitBountySize);
+
+                expect(postBalanceOtherAddress).to.be.bignumber.equal(expectedBalance);
             });
 
             it('should flag ALL inputs as spent', async () => {

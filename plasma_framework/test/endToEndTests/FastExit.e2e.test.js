@@ -19,7 +19,7 @@ const config = require('../../config.js');
 
 contract(
     'LiquidityContract - Fast Exits - End to End Tests',
-    ([_deployer, maintainer, authority, bob, richDad]) => {
+    ([_deployer, maintainer, authority, bob, richDad, otherAddress]) => {
         const ETH = constants.ZERO_ADDRESS;
         const OUTPUT_TYPE_PAYMENT = config.registerKeys.outputTypes.payment;
         const INITIAL_ERC20_SUPPLY = 10000000000;
@@ -59,9 +59,7 @@ contract(
 
             this.startStandardExitBondSize = await this.exitGame.startStandardExitBondSize();
 
-            this.dummyGasPrice = 1000000;
-
-            this.processExitBountySize = await this.exitGame.processStandardExitBountySize(this.dummyGasPrice);
+            this.processExitBountySize = await this.exitGame.processStandardExitBountySize();
 
             this.startStandardExitTxValue = this.startStandardExitBondSize.add(this.processExitBountySize);
 
@@ -201,7 +199,6 @@ contract(
                                 {
                                     from: bob,
                                     value: this.startStandardExitTxValue,
-                                    gasPrice: this.dummyGasPrice,
                                 },
                             ),
                             'Was not called by the first Tx owner',
@@ -229,7 +226,6 @@ contract(
                                 {
                                     from: alice,
                                     value: this.startStandardExitTxValue,
-                                    gasPrice: this.dummyGasPrice,
                                 },
                             ),
                             "Provided Transaction isn't finalized or doesn't exist",
@@ -256,7 +252,6 @@ contract(
                             {
                                 from: alice,
                                 value: this.startStandardExitTxValue,
-                                gasPrice: this.dummyGasPrice,
                             },
                         );
                     });
@@ -304,7 +299,6 @@ contract(
                                 {
                                     from: alice,
                                     value: this.startStandardExitTxValue,
-                                    gasPrice: this.dummyGasPrice,
                                 },
                             ),
                             'Exit has already started.',
@@ -344,9 +338,14 @@ contract(
                                     await web3.eth.getBalance(this.liquidity.address),
                                 );
 
-                                await this.framework.processExits(config.registerKeys.vaultId.eth, ETH, 0, 1, {
-                                    from: alice,
-                                });
+                                await this.framework.processExits(
+                                    config.registerKeys.vaultId.eth,
+                                    ETH,
+                                    0,
+                                    1,
+                                    web3.utils.keccak256(alice),
+                                    { from: alice },
+                                );
                             });
 
                             it('should return the output amount plus standard exit bond to the Liquidity Contract', async () => {
@@ -454,7 +453,6 @@ contract(
                             {
                                 from: alice,
                                 value: this.startStandardExitTxValue,
-                                gasPrice: this.dummyGasPrice,
                             },
                         );
                     });
@@ -478,7 +476,14 @@ contract(
                             before(async () => {
                                 await time.increase(time.duration.weeks(2).add(time.duration.seconds(1)));
 
-                                await this.framework.processExits(config.registerKeys.vaultId.eth, ETH, 0, 1);
+                                await this.framework.processExits(
+                                    config.registerKeys.vaultId.eth,
+                                    ETH,
+                                    0,
+                                    1,
+                                    web3.utils.keccak256(otherAddress),
+                                    { from: otherAddress },
+                                );
                             });
 
                             describe('When Alice tries to claim funds back', () => {
@@ -579,7 +584,6 @@ contract(
                             {
                                 from: alice,
                                 value: this.startStandardExitTxValue,
-                                gasPrice: this.dummyGasPrice,
                             },
                         );
                     });
@@ -623,6 +627,8 @@ contract(
                                 this.erc20.address,
                                 0,
                                 1,
+                                web3.utils.keccak256(otherAddress),
+                                { from: otherAddress },
                             );
                         });
 
@@ -718,7 +724,6 @@ contract(
                             {
                                 from: alice,
                                 value: this.startStandardExitTxValue,
-                                gasPrice: this.dummyGasPrice,
                             },
                         );
                     });
@@ -748,7 +753,6 @@ contract(
                                 {
                                     from: bob,
                                     value: this.updatedStandardExitBondSize.add(this.processExitBountySize),
-                                    gasPrice: this.dummyGasPrice,
                                 },
                             );
                         });
@@ -757,7 +761,14 @@ contract(
                             before(async () => {
                                 await time.increase(time.duration.weeks(2).add(time.duration.seconds(1)));
 
-                                await this.framework.processExits(config.registerKeys.vaultId.eth, ETH, 0, 2);
+                                await this.framework.processExits(
+                                    config.registerKeys.vaultId.eth,
+                                    ETH,
+                                    0,
+                                    2,
+                                    web3.utils.keccak256(otherAddress),
+                                    { from: otherAddress },
+                                );
                             });
 
                             describe('When Alice tries to get exit bond back', () => {

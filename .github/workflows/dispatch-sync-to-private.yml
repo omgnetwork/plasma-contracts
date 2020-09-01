@@ -2,7 +2,7 @@ name: Dispatch sync event to plasma-contracts-private
 
 on:
   push:
-    branches: [master]
+    branches: [v2.0.0]
 
 jobs:
   dispatch-sync-event:

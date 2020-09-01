@@ -12,6 +12,7 @@ import "../../src/exits/utils/ExitBounty.sol";
 import "openzeppelin-solidity/contracts/token/ERC721/ERC721Full.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/SafeERC20.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 /**
  * @title Liquidity Contract
@@ -19,6 +20,7 @@ import "openzeppelin-solidity/contracts/token/ERC20/SafeERC20.sol";
 */
 contract Liquidity is ERC721Full {
     using SafeERC20 for IERC20;
+    using SafeMath for uint256;
 
     PaymentExitGame public paymentExitGame;
 
@@ -167,7 +169,7 @@ contract Liquidity is ERC721Full {
         FungibleTokenOutputModel.Output memory outputFromSecondTransaction
         = decodedSecondTx.outputs[0];
         exitData[exitId] = ExitData(
-            msg.value - ExitBounty.processStandardExitBountySize(tx.gasprice),
+            msg.value.sub(paymentExitGame.processStandardExitBountySize()),
             msg.sender,
             outputFromSecondTransaction.amount,
             outputFromSecondTransaction.token

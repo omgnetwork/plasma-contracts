@@ -66,8 +66,7 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
         this.piggybackBondSize = await this.exitGame.piggybackBondSize();
 
         this.framework.addExitQueue(config.registerKeys.vaultId.eth, ETH);
-        this.dummyGasPrice = 1000000;
-        this.processExitBountySize = await this.exitGame.processStandardExitBountySize(this.dummyGasPrice);
+        this.processExitBountySize = await this.exitGame.processStandardExitBountySize();
         this.startStandardExitTxValue = this.startStandardExitBondSize.add(this.processExitBountySize);
     };
 
@@ -148,7 +147,6 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
                     await this.exitGame.startStandardExit(args, {
                         from: alice,
                         value: this.startStandardExitTxValue,
-                        gasPrice: this.dummyGasPrice,
                     });
                 });
 
@@ -195,10 +193,15 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
                         this.aliceBalanceBeforeProcessExit = new BN(await web3.eth.getBalance(alice));
 
                         this.bobBalanceBeforeProcessExit = new BN(await web3.eth.getBalance(bob));
-                        this.tx = await this.framework.processExits(config.registerKeys.vaultId.eth, ETH, 0, 1, {
-                            from: bob,
-                            gasPrice: this.dummyGasPrice,
-                        });
+                        this.tx = await this.framework.processExits(
+                            config.registerKeys.vaultId.eth,
+                            ETH,
+                            0,
+                            1,
+                            web3.utils.keccak256(bob), {
+                                from: bob,
+                            },
+                        );
                     });
 
                     it('should return the fund plus standard exit bond to Alice', async () => {
@@ -210,7 +213,7 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
                         expect(actualAliceBalanceAfterProcessExit).to.be.bignumber.equal(expectedAliceBalance);
                     });
 
-                    it('should return the process exit bounty to the processor', async () => {
+                    it('should return the process exit bounty to the process exit initiator', async () => {
                         const actualBobBalanceAfterProcessExit = new BN(await web3.eth.getBalance(bob));
                         const expectedBobBalance = this.bobBalanceBeforeProcessExit
                             .add(this.processExitBountySize)
@@ -239,7 +242,6 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
                     await this.exitGame.startStandardExit(args, {
                         from: bob,
                         value: this.startStandardExitTxValue,
-                        gasPrice: this.dummyGasPrice,
                     });
                 });
 
@@ -258,9 +260,14 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
 
                         this.bobBalanceBeforeProcessExit = new BN(await web3.eth.getBalance(bob));
 
-                        this.processTx = await this.framework.processExits(config.registerKeys.vaultId.eth, ETH, 0, 1, {
-                            from: bob,
-                        });
+                        this.processTx = await this.framework.processExits(
+                            config.registerKeys.vaultId.eth,
+                            ETH,
+                            0,
+                            1,
+                            web3.utils.keccak256(bob),
+                            { from: bob },
+                        );
                     });
 
                     it('should return the output amount plus standard exit bond plus process exit bounty to Bob', async () => {
@@ -294,7 +301,6 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
                     await this.exitGame.startStandardExit(this.startStandardExitArgs, {
                         from: alice,
                         value: this.startStandardExitTxValue,
-                        gasPrice: this.dummyGasPrice,
                     });
 
                     this.exitId = await this.exitGame.getStandardExitId(
@@ -350,7 +356,6 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
                             this.exitGame.startStandardExit(this.startStandardExitArgs, {
                                 from: alice,
                                 value: this.startStandardExitTxValue,
-                                gasPrice: this.dummyGasPrice,
                             }),
                             'Exit has already started.',
                         );
@@ -366,6 +371,8 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
                                 ETH,
                                 0,
                                 1,
+                                web3.utils.keccak256(bob),
+                                { from: bob },
                             );
                             this.processExitsReceipt = receipt;
                         });
@@ -430,7 +437,6 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
                         await this.exitGame.startStandardExit(args, {
                             from: alice,
                             value: this.startStandardExitTxValue,
-                            gasPrice: this.dummyGasPrice,
                         });
                     });
 
@@ -457,6 +463,7 @@ contract('PaymentExitGame - Standard Exit - End to End Tests', ([_deployer, _mai
                                 this.erc20.address,
                                 0,
                                 1,
+                                web3.utils.keccak256(bob),
                                 { from: bob },
                             );
                         });

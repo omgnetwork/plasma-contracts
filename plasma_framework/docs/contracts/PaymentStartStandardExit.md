@@ -37,7 +37,7 @@ struct StartStandardExitData {
 **Events**
 
 ```js
-event ExitStarted(address indexed owner, uint168  exitId);
+event ExitStarted(address indexed owner, uint168  exitId, uint256  utxoPos);
 ```
 
 ## Functions
@@ -168,6 +168,7 @@ function enqueueStandardExit(struct PaymentStartStandardExit.StartStandardExitDa
 * [EthDepositVerifier](EthDepositVerifier.md)
 * [EthVault](EthVault.md)
 * [ExitableTimestamp](ExitableTimestamp.md)
+* [ExitBounty](ExitBounty.md)
 * [ExitGameController](ExitGameController.md)
 * [ExitGameRegistry](ExitGameRegistry.md)
 * [ExitId](ExitId.md)

@@ -1,0 +1,6 @@
+MultiSigWalletOverride/node_modules
+MultiSigWallet/node_modules
+plasma_framework/node_modules
+MultiSigWalletOverride/build
+MultiSigWallet/build
+plasma_framework/build

@@ -70,9 +70,7 @@ contract('PaymentProcessStandardExit', ([_, alice, bob, otherAddress]) => {
             // prepare the bond that should be set when exit starts
             this.startStandardExitBondSize = await this.exitGame.startStandardExitBondSize();
 
-            this.dummyGasPrice = 1000000000;
-
-            this.processExitBountySize = await this.exitGame.processStandardExitBountySize(this.dummyGasPrice);
+            this.processExitBountySize = await this.exitGame.processStandardExitBountySize();
 
             await this.exitGame.depositFundForTest({
                 value: this.startStandardExitBondSize.add(this.processExitBountySize),
@@ -131,7 +129,7 @@ contract('PaymentProcessStandardExit', ([_, alice, bob, otherAddress]) => {
             });
         });
 
-        describe('when paying out bond fails', () => {
+        describe('when paying out bounty fails', () => {
             beforeEach(async () => {
                 const exitId = 1;
                 this.attacker = await Attacker.new();
@@ -155,7 +153,7 @@ contract('PaymentProcessStandardExit', ([_, alice, bob, otherAddress]) => {
                 await expectEvent.inTransaction(
                     this.receiptAfterAttack.transactionHash,
                     PaymentProcessStandardExit,
-                    'BountyRewardFailed',
+                    'BountyReturnFailed',
                     {
                         receiver: this.attacker.address,
                         amount: new BN(this.processExitBountySize),
@@ -222,7 +220,7 @@ contract('PaymentProcessStandardExit', ([_, alice, bob, otherAddress]) => {
             expect(postBalance).to.be.bignumber.equal(expectBalance);
         });
 
-        it('should return exit bounty to processor when the exit token is ETH', async () => {
+        it('should return exit bounty to the process exit initiator when the exit token is ETH', async () => {
             const exitId = 1;
             const testExitData = getTestExitData(true, ETH);
             await this.exitGame.setExit(exitId, testExitData);
@@ -252,7 +250,7 @@ contract('PaymentProcessStandardExit', ([_, alice, bob, otherAddress]) => {
             expect(postBalance).to.be.bignumber.equal(expectBalance);
         });
 
-        it('should return exit bounty to processor when the exit token is ERC20', async () => {
+        it('should return exit bounty to the process exit initiator when the exit token is ERC20', async () => {
             const exitId = 1;
             const erc20Token = (await ERC20Mintable.new()).address;
             const testExitData = getTestExitData(true, erc20Token);

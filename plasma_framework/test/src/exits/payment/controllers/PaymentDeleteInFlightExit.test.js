@@ -109,6 +109,7 @@ contract('PaymentDeleteInFlightExit', ([_, bondOwner, inputOwner, outputOwner]) 
                 token: constants.ZERO_ADDRESS,
                 amount: 0,
                 piggybackBondSize: 0,
+                bountySize: 0,
             };
 
             const inFlightExitData = {
@@ -123,6 +124,7 @@ contract('PaymentDeleteInFlightExit', ([_, bondOwner, inputOwner, outputOwner]) 
                     token: ETH,
                     amount: 999,
                     piggybackBondSize: 0,
+                    bountySize: 0,
                 }, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData],
                 outputs: [{
                     outputId: web3.utils.sha3('dummy output id'),
@@ -130,6 +132,7 @@ contract('PaymentDeleteInFlightExit', ([_, bondOwner, inputOwner, outputOwner]) 
                     token: ETH,
                     amount: outputAmount,
                     piggybackBondSize: 0,
+                    bountySize: 0,
                 }, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData],
                 bondSize: this.startIFEBondSize.toString(),
             };
