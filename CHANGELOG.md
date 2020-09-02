@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Pre-Release V2
 
 Process Exit Bounty - [2020-08-31]
-Incentivize calling process Exits by rewarding the caller with a bounty provided for by the exit owner  
+Incentivize calling processExit by rewarding the caller with a bounty provided by the exit owner  
 - [Process Exit Bounty] Implement Bounty for Processing Exits consolidated ([#698](https://github.com/omgnetwork/plasma-contracts/pull/698))
 
 
