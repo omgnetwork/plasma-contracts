@@ -11,8 +11,14 @@ Process Exit Bounty - [2020-08-31]
 Incentivize calling process Exits by rewarding the caller with a bounty provided for by the exit owner  
 - [Process Exit Bounty] Implement Bounty for Processing Exits consolidated ([#698](https://github.com/omgnetwork/plasma-contracts/pull/698))
 
+
+---
+
 - fix: deploy contracts serially and enable CI tests ([#700](https://github.com/omgnetwork/plasma-contracts/pull/700))
 - fix: flaky python test for IFE process ([#695](https://github.com/omgnetwork/plasma-contracts/pull/695))
+
+
+---
 
 Enrich Contract Events - [2020-08-28]
 Add more data to contract events
@@ -20,7 +26,12 @@ Add more data to contract events
 - feat: enrich contract events to contain data needed by child-chain and watcher ([#686](https://github.com/omgnetwork/plasma-contracts/pull/686))
 
 
+---
+
 - chore: depbot upgrades ([#687](https://github.com/omgnetwork/plasma-contracts/pull/687), [#688](https://github.com/omgnetwork/plasma-contracts/pull/688), [#692](https://github.com/omgnetwork/plasma-contracts/pull/692), [#689](https://github.com/omgnetwork/plasma-contracts/pull/689))
+
+
+---
 
 Multisig - [2020-08-21]
 Add support for deploying contracts with multisig support and vault
@@ -32,6 +43,9 @@ Add support for deploying contracts with multisig support and vault
 - feat: add start vault ([#676](https://github.com/omgnetwork/plasma-contracts/pull/676))
 - feat: convert to two steps to setup exit game ([#667](https://github.com/omgnetwork/plasma-contracts/pull/667))
 
+
+---
+
 - fix: drop trimming of trailing text from linked result ([#669](https://github.com/omgnetwork/plasma-contracts/pull/669))
 - fix: flaky python test ([#662](https://github.com/omgnetwork/plasma-contracts/pull/662))
 - chore: depbot upgrade ([#657](https://github.com/omgnetwork/plasma-contracts/pull/657))
@@ -39,9 +53,15 @@ Add support for deploying contracts with multisig support and vault
 - fix: truffle test failure with dependency issue ([#651](https://github.com/omgnetwork/plasma-contracts/pull/651))
 - feat: remove multi exit game experiment ([#650](https://github.com/omgnetwork/plasma-contracts/pull/650))
 
+
+---
+
 New Exit Id format - [2020-06-16]
 Modify the size of exitId from 160 -> 168 bits
 - feat: new exitId format ([#631](https://github.com/omgnetwork/plasma-contracts/pull/631))
+
+
+---
 
 - feat: deploy contracts to Rinkeby in CI ([#637](https://github.com/omgnetwork/plasma-contracts/pull/637))
 
