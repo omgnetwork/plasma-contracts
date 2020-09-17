@@ -66,11 +66,24 @@ commands:
 
 jobs:
   Deploy with Vault:
-    machine: true
+    machine:
+      image: ubuntu-1604:201903-01
     working_directory: ~/repo
     steps:
       - checkout
-      - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
+      - run:
+          name: Install GCloud SDK
+          command: |
+            sudo gcloud version
+            echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+            curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
+            sudo apt-get update && sudo apt-get install google-cloud-sdk
+      - run: |
+          echo $GCLOUD_SERVICE_KEY | sudo gcloud auth activate-service-account --key-file=-
+          sudo gcloud auth configure-docker --quiet
+          sudo chown $(whoami):$(whoami) /home/circleci/.docker/config.json
+          sudo chown -R $(whoami):$(whoami) ~/.config/gcloud
+      - run: sudo docker login -u $DOCKER_USER -p $DOCKER_PASS    
       - run:
           name: Start services
           command: docker-compose up -d
@@ -96,12 +109,11 @@ jobs:
           name: Apply Overrides
           command: make init_multisig
           working_directory: ~/repo/MultiSigWalletOverride
+      # node symlink missing if there's not nodejs-legacy
+      - run: sudo apt-get update && sudo apt-get install -y build-essential libhidapi-dev libudev-dev libusb-1.0-0 libusb-1.0-0-dev nodejs-legacy
       - run:
           name: Deploy Gnosis MultiSigWalet
           command: |
-            sudo apt-get update && sudo apt-get install -y libudev-dev libusb-1.0-0 libusb-1.0-0-dev
-            npm install -g npm@latest
-            nvm use node
             npm install
             npx truffle migrate --accounts 0xa508dD875f10C33C52a8abb20E16fc68E981F186 --confirmations 1
           working_directory: ~/repo/MultiSigWallet
@@ -264,7 +276,10 @@ jobs:
           name: Apply Overrides
           command: make init_multisig
           working_directory: ~/repo/MultiSigWalletOverride
-      - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
+      - run: |
+          echo $GCLOUD_SERVICE_KEY | gcloud auth activate-service-account --key-file=-
+          gcloud -q auth configure-docker
+      - run: docker login -u $DOCKER_USER -p $DOCKER_PASS      
       - run:
           name: Start services
           command: docker-compose up -d vault_server

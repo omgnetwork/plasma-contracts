@@ -35,7 +35,7 @@ services:
         fi
       "
   vault_server:
-    image: omisego/immutability-vault-ethereum:latest
+    image: gcr.io/omisego-development/omgnetwork/vault:0.0.6
     ports:
       - "8200:8200"
     depends_on:
