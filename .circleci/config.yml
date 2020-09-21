@@ -72,7 +72,7 @@ jobs:
     steps:
       - checkout
       - run: |
-          echo $GCLOUD_SERVICE_KEY | sudo gcloud auth activate-service-account --key-file=-
+          echo $GCLOUD_SERVICE_KEY | gcloud auth activate-service-account --key-file=-
           gcloud auth configure-docker --quiet
       - run: docker login -u $DOCKER_USER -p $DOCKER_PASS    
       - run:
