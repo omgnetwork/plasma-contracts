@@ -71,18 +71,9 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
-      - run:
-          name: Install GCloud SDK
-          command: |
-            sudo gcloud version
-            echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
-            curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
-            sudo apt-get update && sudo apt-get install google-cloud-sdk
       - run: |
           echo $GCLOUD_SERVICE_KEY | sudo gcloud auth activate-service-account --key-file=-
           sudo gcloud auth configure-docker --quiet
-          sudo chown $(whoami):$(whoami) /home/circleci/.docker/config.json
-          sudo chown -R $(whoami):$(whoami) ~/.config/gcloud
       - run: sudo docker login -u $DOCKER_USER -p $DOCKER_PASS    
       - run:
           name: Start services
