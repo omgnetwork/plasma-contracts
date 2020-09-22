@@ -103,7 +103,7 @@ function gencerts {
 
 	rm openssl.cnf
 
-  chown -R nobody:nobody $CONFIG_DIR && chmod -R 777 $CONFIG_DIR
+#  chown -R nobody:nobody $CONFIG_DIR && chmod -R 777 $CONFIG_DIR
 }
 
 gencerts
