@@ -76,6 +76,10 @@ jobs:
           gcloud auth configure-docker --quiet
       - run: docker login -u $DOCKER_USER -p $DOCKER_PASS    
       - run:
+          name: Setup data dir
+          command: |
+            [ -d data ] || chmod -R 777 MultiSigWalletOverride/docker/immutability/config
+      - run:
           name: Start services
           command: docker-compose up -d
           working_directory: ~/repo/MultiSigWalletOverride
