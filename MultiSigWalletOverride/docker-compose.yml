@@ -18,28 +18,27 @@ services:
       - --hostname
       - '0.0.0.0'
       - --debug
-  gencerts:
-    image: alpine:3.10
-    volumes:
-      - "./docker/immutability/ca:/home/root/ca:rw"
-      - "./docker/immutability/config:/home/root/:rw"
-    entrypoint: >
-      /bin/sh -c "
-        apk add bash openssl
-        chown -R nobody:nobody /home/root/ca && chmod -R 777 /home/root/ca
-        # only gen if they aren't there
-        if [ -f /home/root/ca/certs/my-service.crt ];then
-          exit 0
-        else
-          /home/root/gencerts.sh
-        fi
-      "
+  # gencerts:
+  #   image: alpine:3.10
+  #   volumes:
+  #     - "./docker/immutability/ca:/home/root/ca:rw"
+  #     - "./docker/immutability/config:/home/root/:rw"
+  #   entrypoint: >
+  #     /bin/sh -c "
+  #       apk add bash openssl
+  #       chown -R nobody:nobody /home/root/ca && chmod -R 777 /home/root/ca
+  #       # only gen if they aren't there
+  #       if [ -f /home/root/ca/certs/my-service.crt ];then
+  #         exit 0
+  #       else
+  #         /home/root/gencerts.sh
+  #       fi
+  #     "
   vault_server:
     image: gcr.io/omisego-development/omgnetwork/vault:0.0.6
     ports:
       - "8200:8200"
     depends_on:
-      - "gencerts"
       - "ganache"
     links:
       - "ganache"
@@ -50,9 +49,5 @@ services:
     entrypoint: >
       /bin/sh -c "
         sleep 2
-        while [ ! -f /home/vault/ca/certs/my-service.crt ];do
-          echo Waiting on gencerts...
-          sleep 1
-        done;
         /home/vault/config/entrypoint.sh
       "
