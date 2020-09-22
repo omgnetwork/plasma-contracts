@@ -13,7 +13,7 @@ TLS_CERT="$CONFIG_DIR/my-service.crt"
 CONFIG="$CONFIG_DIR/openssl.cnf"
 CSR="$CONFIG_DIR/my-service.csr"
 
-export VAULT_ADDR="https://127.0.0.1:8900"
+export VAULT_ADDR="https://127.0.0.1:8200"
 export VAULT_CACERT="$CA_CERT"
 
 function create_config {
