@@ -46,7 +46,7 @@ services:
     volumes:
       - "./docker/immutability/ca:/home/vault/ca:rw"
       - "./docker/immutability/ca/certs/:/etc/ssl/certs/"
-      - "./docker/immutability/config:/home/vault/config:ro"
+      - "./docker/immutability/config:/home/vault/config:rw"
     entrypoint: >
       /bin/sh -c "
         sleep 2
