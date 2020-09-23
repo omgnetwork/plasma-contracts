@@ -135,6 +135,11 @@ jobs:
           key: dependencies-machine-v1-{{ checksum "~/repo/plasma_framework/package-lock.json" }}
           paths:
             - ~/repo/plasma_framework/node_modules
+      - run: 
+          name: Docker logs
+          working_directory: ~/repo/MultiSigWalletOverride
+          command: | 
+            docker-compose logs -f
       - run:
           name: Deploy Plasma Contracts
           command: |
