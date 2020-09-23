@@ -101,7 +101,7 @@ function gencerts {
 
 	openssl x509 -in "$TLS_CERT" -noout -text
 
-	rm openssl.cnf
+	# rm openssl.cnf
 
 #  chown -R nobody:nobody $CONFIG_DIR && chmod -R 777 $CONFIG_DIR
 }
