@@ -78,10 +78,11 @@ jobs:
       - run:
           name: Setup data dir
           command: |
-            [ -d data ] || chmod -R 777 MultiSigWalletOverride/docker/immutability/config
+            mkdir -p MultiSigWalletOverride/docker/immutability/config/
+            sudo chown -R 100:1000 MultiSigWalletOverride/docker/immutability/config/ && sudo chmod -R 777 MultiSigWalletOverride/docker/immutability/config/
       - run:
           name: Start services
-          command: docker-compose up -d
+          command: docker-compose up
           working_directory: ~/repo/MultiSigWalletOverride
       - run: |
             echo 'export NVM_DIR="/opt/circleci/.nvm"' >> $BASH_ENV
