@@ -18,22 +18,6 @@ services:
       - --hostname
       - '0.0.0.0'
       - --debug
-  # gencerts:
-  #   image: alpine:3.10
-  #   volumes:
-  #     - "./docker/immutability/ca:/home/root/ca:rw"
-  #     - "./docker/immutability/config:/home/root/:rw"
-  #   entrypoint: >
-  #     /bin/sh -c "
-  #       apk add bash openssl
-  #       chown -R nobody:nobody /home/root/ca && chmod -R 777 /home/root/ca
-  #       # only gen if they aren't there
-  #       if [ -f /home/root/ca/certs/my-service.crt ];then
-  #         exit 0
-  #       else
-  #         /home/root/gencerts.sh
-  #       fi
-  #     "
   vault_server:
     image: gcr.io/omisego-development/omgnetwork/vault:0.0.6
     ports:
