@@ -138,6 +138,7 @@ jobs:
       - run: 
           name: Docker logs
           working_directory: ~/repo/MultiSigWalletOverride
+          background: true
           command: | 
             docker-compose logs -f
       - run:
