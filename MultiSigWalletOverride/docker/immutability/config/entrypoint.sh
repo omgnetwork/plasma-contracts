@@ -155,6 +155,7 @@ if [ -f "$VAULT_CREDENTIALS" ]; then
     vault status
     vault secrets list
 else
+    sleep 10
     VAULT_INIT=$(vault operator init -key-shares=1 -key-threshold=1 -format=json | jq .)
     echo $VAULT_INIT > $VAULT_CREDENTIALS
     unseal
