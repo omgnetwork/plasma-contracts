@@ -2,7 +2,7 @@
 
 This document is a description of the current implementation of exit bonds and process exit bounties which are an integral part of the exit mechanism.
 
-A Process Exit Bounty is a reward which is paid out to the `processExit()` initiator in return of the transaction cost borne by the person. The motive of having a bounty is to remove and extra step of processing exits while exiting funds. This also ensures everyone pays their share of processing contrary to passing on the responsibility to someone else.
+A Process Exit Bounty is a reward which is paid out to the `processExit()` initiator in return of the transaction cost borne by the person. The motive of having a bounty is to remove an extra step of processing exits while exiting funds. This also ensures everyone pays their share of processing contrary to passing on the responsibility to someone else.
 
 The Exit Bounty is paid out as a portion (or whole) of the Exit Bond and the size of the Bond is designed to ideally cover both the cost of challenging an invalid exit or the cost of processing a valid exit 
 
@@ -24,8 +24,8 @@ For an invalid exit, a challenge will transfer the whole bond to the challenger.
 The user who processes an exit, gets the bounty reward for processing an exit. The cost of processing multiple exits from the exit queue at once could be of less cost than processing all those exits individually. However, the bounty amount associated with each exit is given out to the processor.
 
 **_On processing exit:_**
-*Bond - Bounty -> from `Exit Game Contract` to `Exit owner`
-Bounty -> from `Exit Game Contract` to `Exit processor`*
+*Bond - Bounty -> from `Exit Game Contract` to `Exit owner`*\
+*Bounty -> from `Exit Game Contract` to `Exit processor`*
 
 ### For In-Flght Exits
 
@@ -42,15 +42,15 @@ For any Input/Output spent challenge to the exit, the whole piggyback bond is tr
 Both the standard and in-flight exit land on the same exit queue and the process exit bounty associated with each exit (or specifically each input/output) is awarded to the processor.
 
 **_On processing exit:_**
-*Bond - Bounty -> from `Exit Game Contract` to `I/O Owner`
-Bounty -> from `Exit Game Contract` to `Exit processor`*
+*Bond - Bounty -> from `Exit Game Contract` to `I/O Owner`*\
+*Bounty -> from `Exit Game Contract` to `Exit processor`*
 
 ## Bond and Bounty Adjustment Mechanism
 
 
 ### The Updatable Structure
 
-The Exit Bond follows an updatable pattern which allows it to be updated (by the maintainer) and reflect within a time period (2 days from the last update). The size of the Exit Bounty can also be updated as long as it is lower (or equal) than the Exit Bond Size and is within the upper-lower bounds. 
+The Exit Bond follows an updatable pattern which allows it to be updated (by the maintainer) and reflect within a time period (2 days from the last update). The size of the Exit Bounty can also be updated as long as it is lower than (or equal) the Exit Bond Size and is within the upper/lower bounds. 
 
 ```
 struct Params {
@@ -139,8 +139,8 @@ function updatePiggybackBondSize(uint128 newBondSize, uint128 newExitBountySize)
 
 ### Bond Size Update Scenarios
 
-Assume, the present conditions
-*Value of Exit Bond = B*
+Assume, the present conditions\
+*Value of Exit Bond = B*\
 *Value of Exit Bounty = C* (C <= B)
 
 ##### Exit Bond is updated after starting exit
