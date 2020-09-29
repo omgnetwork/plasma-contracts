@@ -10,7 +10,7 @@ The Exit Bounty is paid out as a portion (or whole) of the Exit Bond and the siz
 
 ### For Standard Exits
 
-The Bond is supplied by the Output owner while starting an exit and the main motive is to disincentivize invalid exits while also being able to use a portion of the bond to incentivize processing exits. The Bond is internally disintegrated into two portions. For successful exits, one of them can be returned to the output owner, and the other is a reward for processing the exit.
+The Bond is supplied by the Output owner while starting an exit and the main motive is to disincentivize invalid exits while also being able to use a portion of the bond to incentivize processing exits. The Bond is internally divided into two portions. For successful exits, one of them can be returned to the output owner, and the other is a reward for processing the exit.
 The initiator/owner has to obtaint the correct size of the Exit Bond by calling `startStandardExitBondSize()`.
 
 **_After Starting an Exit:_**
@@ -187,4 +187,3 @@ Assume, the present conditions\
 5. After two days, Malorie piggybacks an output with B'
 6. Processor processes exits from queue and gets C+C' as a reward
 7. Bob gets back (B - C) and Malorie gets back (B' - C')
-
