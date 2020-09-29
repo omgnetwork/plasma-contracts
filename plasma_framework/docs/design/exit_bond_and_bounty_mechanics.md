@@ -2,7 +2,7 @@
 
 This document is a description of the current implementation of exit bonds and process exit bounties which are an integral part of the exit mechanism.
 
-A Process Exit Bounty is a reward which is paid out to the `processExit()` initiator in return of the transaction cost borne by the person. The motive of having a bounty is to remove an extra step of processing exits while exiting funds. This also ensures everyone pays their share of processing contrary to passing on the responsibility to someone else.
+A Process Exit Bounty is a reward which is paid out to the `processExit()` initiator to compensate for the transaction cost. The motive of having a bounty is to remove an extra step of processing exits while exiting funds. This also ensures everyone pays their share of processing contrary to passing on the responsibility to someone else.
 
 The Exit Bounty is paid out as a portion (or whole) of the Exit Bond and the size of the Bond is designed to ideally cover both the cost of challenging an invalid exit or the cost of processing a valid exit 
 
