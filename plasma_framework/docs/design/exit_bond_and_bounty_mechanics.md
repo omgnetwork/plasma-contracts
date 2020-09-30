@@ -23,7 +23,7 @@ The **Exit Initiator** should obtain the correct size of the Exit Bond by callin
 **_After Starting an Exit:_**
 *Bond -> from `Exit Initiator` to `Exit Game Contract`*
 
-For an invalid exit, a challenge will transfer the whole bond to the challenger. Both exitable and non-exitable exits still remain in the exit queue and is deleted when the exits are processed. For a scenario where there are mutliple invalid exits in the queue, the processor is still awarded with some gas reward for deleting non-exitable exits from storage.
+For an invalid exit, a challenge will transfer the whole bond to the challenger. Non-exitable exits would still remain in the exit queue and is deleted when the exits are processed. For a scenario where there are mutliple invalid exits in the queue, the processor is still awarded with some gas reward for deleting non-exitable exits from storage.
 
 **_On succesfull challenge:_**
 *Bond -> from `Exit Game Contract` to `Challenger`*
