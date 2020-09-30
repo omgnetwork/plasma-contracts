@@ -37,8 +37,9 @@ const waitForReceipt = async (whatLog, transaction) => {
     let index;
     const waitFor = 2;
     for (index = transactionReceipt.blockNumber; index <= transactionReceipt.blockNumber + waitFor; index = await web3.eth.getBlockNumber()) {
-        console.log(`Continue from block ${index}`);
+        await sleep(expectedBlockTime);
     }
+    console.log(`Continue from block ${index}`);
     // now lets wait a few blocks
     console.log(`Transaction receipt for ${whatLog}: ${util.inspect(transactionReceipt, { showHidden: false, depth: null })}`);
 };
