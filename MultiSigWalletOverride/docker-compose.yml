@@ -18,6 +18,8 @@ services:
       - --hostname
       - '0.0.0.0'
       - --debug
+      - --blockTime
+      - '15'
   vault_server:
     image: gcr.io/omisego-development/omgnetwork/vault:0.0.6
     ports:
