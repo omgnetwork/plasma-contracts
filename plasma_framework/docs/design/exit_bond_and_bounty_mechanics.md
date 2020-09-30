@@ -1,48 +1,55 @@
 # Exit Bond and Bounty Mechanics
 
 This document is a description of the current implementation of exit bonds and process exit bounties which are an integral part of the exit mechanism.
+### Terminology
 
-A Process Exit Bounty is a reward which is paid out to the `processExit()` initiator to compensate for the transaction cost. The motive of having a bounty is to remove an extra step of processing exits while exiting funds. This also ensures everyone pays their share of processing contrary to passing on the responsibility to someone else.
-
-The Process Exit Bounty is paid out as a portion (or whole) of the Exit Bond and the size of the Bond is designed to ideally cover both the cost of challenging an invalid exit or the cost of processing a valid exit 
+- **Exit Initiator** The person that starts an exit by either calling `startStandardExit()` or piggybacking on an in-flight exit
+- **Challenger** The person challenges a standard exit, an in-flight exit or a piggyback
+- **Exit Processor** The person that calls `processExit()`
+- **Exit Bond** The bond put up by the **Exit Initiator**
+- **Process Exit Bounty** A portion of the **Exit Bond** that is give to the **Exit Processor** as a reward for processing the exit.
+Whenever an exit is started, the **Exit Initiator** must put up an **Exit Bond**.
+If the exit is proven to be invalid the entire **Exit Bond** is awarded to the **Challenger**
+If the exit is valid then after the challenge period it can be **processed** i.e. the funds returned to the **Exit Initiator**. A portion of the **Exit Bond**, called the **Process Exit Bounty**, is awarded to the **Exit Processor**. The remainder of the **Exit Bond** is returned to the **Exit Initiator**.
+Note that the **Exit Initiator** can also be the **Exit Processor**.
 
 ## The Bond Life Cycle
 
 ### For Standard Exits
 
-The Bond is supplied by the Output owner while starting an exit and the main motive is to disincentivize invalid exits while also being able to use a portion of the bond to incentivize processing exits. The Bond is internally divided into two portions. For successful exits, one of them can be returned to the output owner, and the other is a reward for processing the exit.
-The initiator/owner has to obtaint the correct size of the Exit Bond by calling `startStandardExitBondSize()`.
+The **Exit Bond** is supplied by the **Exit Initiator** when starting an exit. Its main motive is to disincentivize invalid exits, but in the case of a valid exit a portion of it is used to incentivize processing the exit by rewarding the **Exit Processor**.
+The **Exit Initiator** should obtain the correct size of the Exit Bond by calling `startStandardExitBondSize()`.
 
 **_After Starting an Exit:_**
-*Bond -> from `Exit owner` to `Exit Game Contract`*
+*Bond -> from `Exit Initiator` to `Exit Game Contract`*
 
 For an invalid exit, a challenge will transfer the whole bond to the challenger. Both exitable and non-exitable exits still remain in the exit queue and is deleted when the exits are processed. For a scenario where there are mutliple invalid exits in the queue, the processor is still awarded with some gas reward for deleting non-exitable exits from storage.
 
 **_On succesfull challenge:_**
 *Bond -> from `Exit Game Contract` to `Challenger`*
 
-The user who processes an exit, gets the bounty reward for processing an exit. The cost of processing multiple exits from the exit queue at once could be of less cost than processing all those exits individually. However, the bounty amount associated with each exit is given out to the processor.
+The **Exit Processor** gets the bounty as a reward for processing an exit. The cost of processing multiple exits from the exit queue at once is less than the cost of processing all those exits individually. However, the **Process Exit Bounty** amount associated with each exit is given out to the **Exit Processor**.
 
 **_On processing exit:_**
-*Bond - Bounty -> from `Exit Game Contract` to `Exit owner`*\
+*Bond - Bounty -> from `Exit Game Contract` to `Exit Initiator`*\
 *Bounty -> from `Exit Game Contract` to `Exit processor`*
 
-### For In-Flght Exits
+### For In-Flight Exits
 
-The Bond/Bounty collection for in-flight exits is similar. However, for an in-flight exit, the Exit Bounty is a poriton of the Piggyback Bond. Since only the piggybacked input/output from an in-flight exit can be exited, it only makes sense to have the bounty for each piggyback from the respective owner. The size of the Piggyback Bond can be obtained by calling `piggybackBondSize()`.
+The situation for in-flight exits is slightly different. Since the piggybacked inputs or outputs of an in-flight exit are exited separately, the **Exit Initiator** is the owner of the piggybacked input or output. In this case the **Exit Bond** is the Piggyback Bond that is put up when piggybacking and the **Process Exit Bounty** is taken from this. The size of the Piggyback Bond can be obtained by calling `piggybackBondSize()`.
 
 **_After Piggybacking an input/output:_**
-*Piggyback Bond -> from `I/O Owner` to `Exit Game Contract`*
+*Piggyback Bond -> from `Exit Initiator` to `Exit Game Contract`*
 
 For any Input/Output spent challenge to the exit, the whole piggyback bond is transferred to the challenger. 
 
 **_On succesfull challenge:_**
 *Piggyback Bonds -> from `Exit Game Contract` to `Challenger`*
 
-Both the standard and in-flight exit land on the same exit queue and the process exit bounty associated with each exit (or specifically each input/output) is awarded to the processor.
+Both standard and in-flight exits are processed from the same exit queue and the **Process Exit Bounty** associated with each exit (or specifically each input/output) is awarded to the **Exit Processor**.
 
 **_On processing exit:_**
-*Bond - Bounty -> from `Exit Game Contract` to `I/O Owner`*\
+*Bond - Bounty -> from `Exit Game Contract` to `Exit Initiator`*\
 *Bounty -> from `Exit Game Contract` to `Exit processor`*
 
 ## Bond and Bounty Adjustment Mechanism
@@ -102,7 +109,7 @@ For cases, when you want to update only one of the two entities, pass in the pre
 
 #### In-Flight Exits
 
-The current size of the In-flight Exit Bond can be retreived by
+The current size of the In-flight Exit Bond can be retrieved by
 
 ```
 function startIFEBondSize() public view returns (uint128) {
@@ -182,8 +189,8 @@ Assume, the present conditions\
 
 1. Alice spends an UTXO to Bob and Malorie
 2. The exit is in-flight and Alice starts an IFE
-3. Bob piggybacks the output with B
+3. Bob piggybacks an output with B
 4. Then, the Piggyback Bond is updated to B' and Bounty to C'
-5. After two days, Malorie piggybacks an output with B'
+5. After two days, Malorie piggybacks a different output with B'
 6. Processor processes exits from queue and gets C+C' as a reward
 7. Bob gets back (B - C) and Malorie gets back (B' - C')
