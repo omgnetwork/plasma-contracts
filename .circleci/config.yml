@@ -66,11 +66,20 @@ commands:
 
 jobs:
   Deploy with Vault:
-    machine: true
+    machine:
+      image: ubuntu-1604:201903-01
     working_directory: ~/repo
     steps:
       - checkout
-      - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
+      - run: |
+          echo $GCLOUD_SERVICE_KEY | gcloud auth activate-service-account --key-file=-
+          gcloud auth configure-docker --quiet
+      - run: docker login -u $DOCKER_USER -p $DOCKER_PASS    
+      - run:
+          name: Setup data dir
+          command: |
+            mkdir -p MultiSigWalletOverride/docker/immutability/config/
+            sudo chown -R 100:1000 MultiSigWalletOverride/docker/immutability/config/ && sudo chmod -R 777 MultiSigWalletOverride/docker/immutability/config/
       - run:
           name: Start services
           command: docker-compose up -d
@@ -96,12 +105,11 @@ jobs:
           name: Apply Overrides
           command: make init_multisig
           working_directory: ~/repo/MultiSigWalletOverride
+      # node symlink missing if there's not nodejs-legacy
+      - run: sudo apt-get update && sudo apt-get install -y build-essential libhidapi-dev libudev-dev libusb-1.0-0 libusb-1.0-0-dev nodejs-legacy
       - run:
           name: Deploy Gnosis MultiSigWalet
           command: |
-            sudo apt-get update && sudo apt-get install -y libudev-dev libusb-1.0-0 libusb-1.0-0-dev
-            npm install -g npm@latest
-            nvm use node
             npm install
             npx truffle migrate --accounts 0xa508dD875f10C33C52a8abb20E16fc68E981F186 --confirmations 1
           working_directory: ~/repo/MultiSigWallet
@@ -127,14 +135,20 @@ jobs:
           key: dependencies-machine-v1-{{ checksum "~/repo/plasma_framework/package-lock.json" }}
           paths:
             - ~/repo/plasma_framework/node_modules
+      - run: 
+          name: Docker logs
+          working_directory: ~/repo/MultiSigWalletOverride
+          background: true
+          command: | 
+            docker-compose logs -f
       - run:
           name: Deploy Plasma Contracts
           command: |
+            export VAULT_TOKEN=$(cat ../MultiSigWalletOverride/docker/immutability/config/unseal.json | jq -r .root_token)
             npx truffle migrate --network local
           environment:
             VAULT: true
             VAULT_ADDR: https://127.0.0.1:8200
-            VAULT_TOKEN: totally-secure
             NODE_TLS_REJECT_UNAUTHORIZED: 0
             VAULT_RPC_REMOTE_URL: http://ganache:8545
           working_directory: ~/repo/plasma_framework
@@ -264,7 +278,10 @@ jobs:
           name: Apply Overrides
           command: make init_multisig
           working_directory: ~/repo/MultiSigWalletOverride
-      - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
+      - run: |
+          echo $GCLOUD_SERVICE_KEY | gcloud auth activate-service-account --key-file=-
+          gcloud -q auth configure-docker
+      - run: docker login -u $DOCKER_USER -p $DOCKER_PASS      
       - run:
           name: Start services
           command: docker-compose up -d vault_server
