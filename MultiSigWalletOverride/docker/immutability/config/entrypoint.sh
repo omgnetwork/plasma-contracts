@@ -151,6 +151,7 @@ function test_banner {
 
 
 if [ -f "$VAULT_CREDENTIALS" ]; then
+    sleep 10
     unseal
     vault status
     vault secrets list
