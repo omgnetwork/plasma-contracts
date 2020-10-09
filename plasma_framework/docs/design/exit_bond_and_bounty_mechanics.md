@@ -7,9 +7,9 @@ This document is a description of the current implementation of exit bonds and p
 - **Challenger** The person challenges a standard exit, an in-flight exit or a piggyback
 - **Exit Processor** The person that calls `processExit()`
 - **Exit Bond** The bond put up by the **Exit Initiator**
-- **Process Exit Bounty** A portion of the **Exit Bond** that is give to the **Exit Processor** as a reward for processing the exit.
+- **Process Exit Bounty** A portion of the **Exit Bond** that is given to the **Exit Processor** as a reward for processing the exit.
 Whenever an exit is started, the **Exit Initiator** must put up an **Exit Bond**.
-If the exit is proven to be invalid the entire **Exit Bond** is awarded to the **Challenger**
+If the exit is proven to be invalid the entire **Exit Bond** is awarded to the **Challenger**.
 If the exit is valid then after the challenge period it can be **processed** i.e. the funds returned to the **Exit Initiator**. A portion of the **Exit Bond**, called the **Process Exit Bounty**, is awarded to the **Exit Processor**. The remainder of the **Exit Bond** is returned to the **Exit Initiator**.
 Note that the **Exit Initiator** can also be the **Exit Processor**.
 
@@ -23,12 +23,12 @@ The **Exit Initiator** should obtain the correct size of the Exit Bond by callin
 **_After Starting an Exit:_**
 *Bond -> from `Exit Initiator` to `Exit Game Contract`*
 
-For an invalid exit, a challenge will transfer the whole bond to the challenger. Non-exitable exits would still remain in the exit queue and is deleted when the exits are processed. For a scenario where there are mutliple invalid exits in the queue, the processor is still awarded with some gas reward for deleting non-exitable exits from storage.
+For an invalid exit, a challenge transfers the whole bond to the challenger. Non-exitable exits still remain in the exit queue and are deleted when the exits are processed. For a scenario where there are mutliple invalid exits in the queue, the processor is still awarded with some gas reward for deleting non-exitable exits from storage.
 
 **_On succesfull challenge:_**
 *Bond -> from `Exit Game Contract` to `Challenger`*
 
-The **Exit Processor** gets the bounty as a reward for processing an exit. The cost of processing multiple exits from the exit queue at once is less than the cost of processing all those exits individually. However, the **Process Exit Bounty** amount associated with each exit is given out to the **Exit Processor**.
+The **Exit Processor** gets the bounty as a reward for processing an exit. The cost of processing multiple exits from the exit queue at once is less than the cost of processing them individually. For simplicity and to save gas however, the **Process Exit Bounty** amount associated with each exit is given out to the **Exit Processor**.
 
 **_On processing exit:_**
 *Bond - Bounty -> from `Exit Game Contract` to `Exit Initiator`*\
