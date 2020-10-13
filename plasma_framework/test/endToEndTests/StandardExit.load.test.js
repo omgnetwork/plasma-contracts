@@ -26,7 +26,7 @@ contract('StandardExit getter Load Test', ([_deployer, _maintainer, richFather])
         alice = await web3.eth.personal.importRawKey(alicePrivateKey, password);
         alice = web3.utils.toChecksumAddress(alice);
         web3.eth.personal.unlockAccount(alice, password, 3600);
-        web3.eth.sendTransaction({ to: alice, from: richFather, value: web3.utils.toWei('4', 'ether') });
+        web3.eth.sendTransaction({ to: alice, from: richFather, value: web3.utils.toWei('2', 'ether') });
     };
 
     before(async () => {
@@ -39,7 +39,6 @@ contract('StandardExit getter Load Test', ([_deployer, _maintainer, richFather])
         this.exitGame = await PaymentExitGame.at(await this.framework.exitGames(config.registerKeys.txTypes.payment));
         this.startStandardExitBondSize = await this.exitGame.startStandardExitBondSize();
         this.framework.addExitQueue(config.registerKeys.vaultId.eth, ETH);
-        this.processExitBountySize = await this.exitGame.processStandardExitBountySize();
     };
 
     const aliceDepositsETH = async () => {
@@ -80,7 +79,7 @@ contract('StandardExit getter Load Test', ([_deployer, _maintainer, richFather])
                         startExits.push(
                             this.exitGame.startStandardExit(args, {
                                 from: alice,
-                                value: this.startStandardExitBondSize.add(this.processExitBountySize),
+                                value: this.startStandardExitBondSize,
                             }),
                         );
                     }

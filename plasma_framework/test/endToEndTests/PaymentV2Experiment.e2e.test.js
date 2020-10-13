@@ -108,7 +108,7 @@ contract('PaymentExitGame - V2 Extension experiment', ([_deployer, _maintainer, 
 
                         await this.exitGame.startStandardExit(args, {
                             from: alice,
-                            value: this.startStandardExitBondSize.add(this.processExitBountySize),
+                            value: this.startStandardExitBondSize,
                         });
                     });
 
@@ -139,10 +139,10 @@ contract('PaymentExitGame - V2 Extension experiment', ([_deployer, _maintainer, 
                             );
                         });
 
-                        it('should return the output amount plus standard exit bond to Alice', async () => {
+                        it('should return the output amount plus remaining exit bond to Alice', async () => {
                             const actualBobBalanceAfterProcessExit = new BN(await web3.eth.getBalance(alice));
                             const expectedBobBalance = this.bobBalanceBeforeProcessExit
-                                .add(this.startStandardExitBondSize)
+                                .add(this.startStandardExitBondSize.sub(this.processExitBountySize))
                                 .add(new BN(this.upgradeTxObject.outputs[0].amount));
 
                             expect(actualBobBalanceAfterProcessExit).to.be.bignumber.equal(expectedBobBalance);
