@@ -9,7 +9,7 @@ import "../../../utils/SafeEthTransfer.sol";
 import "../../../vaults/EthVault.sol";
 import "../../../vaults/Erc20Vault.sol";
 
-import "openzeppelin-solidity/contracts/math/SafeMath.sol"
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 library PaymentProcessInFlightExit {
     using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;

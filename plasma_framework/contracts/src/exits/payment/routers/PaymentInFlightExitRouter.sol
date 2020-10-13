@@ -331,7 +331,7 @@ contract PaymentInFlightExitRouter is
      * @param newBondSize The new bond size
      */
     function updateStartIFEBondSize(uint128 newBondSize) public onlyFrom(framework.getMaintainer()) {
-        startIFEBond.updateBondSize(newBondSize);
+        startIFEBond.updateBondSize(newBondSize, 0);
         emit IFEBondUpdated(newBondSize);
     }
 
