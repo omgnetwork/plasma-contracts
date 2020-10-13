@@ -9,8 +9,11 @@ import "../../../utils/SafeEthTransfer.sol";
 import "../../../vaults/EthVault.sol";
 import "../../../vaults/Erc20Vault.sol";
 
+import "openzeppelin-solidity/contracts/math/SafeMath.sol"
+
 library PaymentProcessInFlightExit {
     using PaymentInFlightExitModelUtils for PaymentExitDataModel.InFlightExit;
+    using SafeMath for uint256;
 
     struct Controller {
         PlasmaFramework framework;
@@ -283,13 +286,17 @@ library PaymentProcessInFlightExit {
 
             // If the input has been challenged, isInputPiggybacked() will return false
             if (token == withdrawal.token && exit.isInputPiggybacked(i)) {
-                bool successBondReturn = SafeEthTransfer.transferReturnResult(
-                    withdrawal.exitTarget, withdrawal.piggybackBondSize, self.safeGasStipend
-                );
 
-                // we do not want to block a queue if bond return is unsuccessful
-                if (!successBondReturn) {
-                    emit InFlightBondReturnFailed(withdrawal.exitTarget, withdrawal.piggybackBondSize);
+                if (withdrawal.piggybackBondSize > withdrawal.bountySize) {
+                    uint256 returnAmount = withdrawal.piggybackBondSize.sub(withdrawal.bountySize);
+                    bool successBondReturn = SafeEthTransfer.transferReturnResult(
+                    withdrawal.exitTarget, returnAmount, self.safeGasStipend
+                    );
+
+                    // we do not want to block a queue if bond return is unsuccessful
+                    if (!successBondReturn) {
+                        emit InFlightBondReturnFailed(withdrawal.exitTarget, returnAmount);
+                    }
                 }
 
                 bool successBountyReturn = SafeEthTransfer.transferReturnResult(
@@ -317,13 +324,17 @@ library PaymentProcessInFlightExit {
 
             // If the output has been challenged, isOutputPiggybacked() will return false
             if (token == withdrawal.token && exit.isOutputPiggybacked(i)) {
-                bool successBondReturn = SafeEthTransfer.transferReturnResult(
-                    withdrawal.exitTarget, withdrawal.piggybackBondSize, self.safeGasStipend
-                );
 
-                // we do not want to block a queue if bond return is unsuccessful
-                if (!successBondReturn) {
-                    emit InFlightBondReturnFailed(withdrawal.exitTarget, withdrawal.piggybackBondSize);
+                if (withdrawal.piggybackBondSize > withdrawal.bountySize) {
+                    uint256 returnAmount = withdrawal.piggybackBondSize.sub(withdrawal.bountySize);
+                    bool successBondReturn = SafeEthTransfer.transferReturnResult(
+                    withdrawal.exitTarget, returnAmount, self.safeGasStipend
+                    );
+
+                    // we do not want to block a queue if bond return is unsuccessful
+                    if (!successBondReturn) {
+                        emit InFlightBondReturnFailed(withdrawal.exitTarget, returnAmount);
+                    }
                 }
 
                 bool successBountyReturn = SafeEthTransfer.transferReturnResult(

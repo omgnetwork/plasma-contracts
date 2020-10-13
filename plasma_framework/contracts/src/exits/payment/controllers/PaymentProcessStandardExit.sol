@@ -8,7 +8,11 @@ import "../../../utils/SafeEthTransfer.sol";
 import "../../../vaults/EthVault.sol";
 import "../../../vaults/Erc20Vault.sol";
 
+import "openzeppelin-solidity/contracts/math/SafeMath.sol"
+
 library PaymentProcessStandardExit {
+    using SafeMath for uint256;
+
     struct Controller {
         PlasmaFramework framework;
         EthVault ethVault;
@@ -64,9 +68,12 @@ library PaymentProcessStandardExit {
         self.framework.flagOutputFinalized(exit.outputId, exitId);
 
         // we do not want to block a queue if bond return is unsuccessful
-        bool successBondReturn = SafeEthTransfer.transferReturnResult(exit.exitTarget, exit.bondSize, self.safeGasStipend);
-        if (!successBondReturn) {
-            emit BondReturnFailed(exit.exitTarget, exit.bondSize);
+        if (exit.bondSize > exit.bountySize) {
+            uint256 returnAmount = exit.bondSize.sub(exit.bountySize);
+            bool successBondReturn = SafeEthTransfer.transferReturnResult(exit.exitTarget, returnAmount, self.safeGasStipend);
+            if (!successBondReturn) {
+                emit BondReturnFailed(exit.exitTarget, returnAmount);
+            }
         }
 
         bool successBountyReturn = SafeEthTransfer.transferReturnResult(processExitInitiator, exit.bountySize, self.safeGasStipend);
