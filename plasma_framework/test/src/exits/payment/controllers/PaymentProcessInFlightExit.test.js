@@ -176,7 +176,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
             this.piggybackBondSize = await this.exitGame.piggybackBondSize();
 
             this.processExitBountySize = await this.exitGame.processInFlightExitBountySize();
-
+            this.piggybackBondReturnValue = this.piggybackBondSize.sub(this.processExitBountySize);
             const maxNeededBond = this.startIFEBondSize.add(this.piggybackBondSize).muln(4);
             const totalAmount = maxNeededBond.add(this.processExitBountySize).muln(2);
             await this.exitGame.depositFundForTest({ value: totalAmount.toString() });
@@ -261,7 +261,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
                             'InFlightBondReturnFailed',
                             {
                                 receiver: this.attacker.address,
-                                amount: new BN(this.piggybackBondSize),
+                                amount: new BN(this.piggybackBondReturnValue),
                             },
                         );
                     });
@@ -288,7 +288,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
                             'InFlightBondReturnFailed',
                             {
                                 receiver: this.attacker.address,
-                                amount: new BN(this.piggybackBondSize),
+                                amount: new BN(this.piggybackBondReturnValue),
                             },
                         );
                     });
@@ -330,7 +330,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
                         // only start ife bond and piggyback bond was returned
                         const expectedBalance = this.preAttackBalance
                             .sub(new BN(this.startIFEBondSize))
-                            .sub(new BN(this.piggybackBondSize));
+                            .sub(new BN(this.piggybackBondReturnValue));
                         expect(postAttackBalance).to.be.bignumber.equal(expectedBalance);
                     });
 
@@ -357,7 +357,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
                         // only start ife bond and piggyback bond was returned
                         const expectedBalance = this.preAttackBalance
                             .sub(new BN(this.startIFEBondSize))
-                            .sub(new BN(this.piggybackBondSize));
+                            .sub(new BN(this.piggybackBondReturnValue));
                         expect(postAttackBalance).to.be.bignumber.equal(expectedBalance);
                     });
 
@@ -572,18 +572,18 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
                 );
             });
 
-            it('should return piggyback bond to the input owner', async () => {
+            it('should return remaining piggyback bond to the input owner', async () => {
                 await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ERC20, erc20, otherAddress);
                 const postBalance = new BN(await web3.eth.getBalance(inputOwner3));
-                const expectedBalance = this.inputOwner3PreBalance.add(this.piggybackBondSize);
+                const expectedBalance = this.inputOwner3PreBalance.add(this.piggybackBondReturnValue);
 
                 expect(postBalance).to.be.bignumber.equal(expectedBalance);
             });
 
-            it('should return piggyback bond to the output owner', async () => {
+            it('should return remaining piggyback bond to the output owner', async () => {
                 await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ERC20, erc20, otherAddress);
                 const postBalance = new BN(await web3.eth.getBalance(outputOwner3));
-                const expectedBalance = this.outputOwner3PreBalance.add(this.piggybackBondSize);
+                const expectedBalance = this.outputOwner3PreBalance.add(this.piggybackBondReturnValue);
 
                 expect(postBalance).to.be.bignumber.equal(expectedBalance);
             });
@@ -715,18 +715,18 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
                 );
             });
 
-            it('should return piggyback bond to the output owner', async () => {
+            it('should return remaining piggyback bond to the output owner', async () => {
                 await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ERC20, erc20, otherAddress);
                 const postBalance = new BN(await web3.eth.getBalance(outputOwner3));
-                const expectedBalance = this.outputOwner3PreBalance.add(this.piggybackBondSize);
+                const expectedBalance = this.outputOwner3PreBalance.add(this.piggybackBondReturnValue);
 
                 expect(postBalance).to.be.bignumber.equal(expectedBalance);
             });
 
-            it('should return piggyback bond to the input owner', async () => {
+            it('should return remaining piggyback bond to the input owner', async () => {
                 await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ERC20, erc20, otherAddress);
                 const postBalance = new BN(await web3.eth.getBalance(inputOwner3));
-                const expectedBalance = this.inputOwner3PreBalance.add(this.piggybackBondSize);
+                const expectedBalance = this.inputOwner3PreBalance.add(this.piggybackBondReturnValue);
 
                 expect(postBalance).to.be.bignumber.equal(expectedBalance);
             });

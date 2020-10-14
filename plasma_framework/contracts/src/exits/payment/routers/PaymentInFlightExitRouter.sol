@@ -40,7 +40,7 @@ contract PaymentInFlightExitRouter is
     uint128 public constant INITIAL_IFE_BOND_SIZE = 37000000000000000 wei;
 
     // Initial piggyback bond size = 140000 (gas cost of challenge) * 20 gwei (current fast gas price) * 10 (safety margin)
-    uint128 public constant INITIAL_PB_BOND_SIZE = 40000000000000000 wei;
+    uint128 public constant INITIAL_PB_BOND_SIZE = 41000000000000000 wei;
 
     // Each bond size upgrade can increase to a maximum of 200% or decrease to 50% of the current bond
     uint16 public constant BOND_LOWER_BOUND_DIVISOR = 2;
