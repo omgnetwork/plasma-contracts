@@ -173,7 +173,10 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
             this.framework.registerExitGame(TX_TYPE.PAYMENT, this.exitGame.address, PROTOCOL.MORE_VP);
 
             this.startIFEBondSize = await this.exitGame.startIFEBondSize();
-            this.piggybackBondSize = await this.exitGame.piggybackBondSize();
+
+            // ensure the piggyback band is slightly higher than the bounty to verify the failed bond return tests
+            const originalPiggybackBond = await this.exitGame.piggybackBondSize();
+            this.piggybackBondSize = originalPiggybackBond.addn(100);
 
             this.processExitBountySize = await this.exitGame.processInFlightExitBountySize();
             this.piggybackBondReturnValue = this.piggybackBondSize.sub(this.processExitBountySize);

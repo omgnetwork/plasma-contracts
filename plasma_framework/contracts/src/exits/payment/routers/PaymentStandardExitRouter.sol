@@ -28,7 +28,7 @@ contract PaymentStandardExitRouter is
     using PaymentProcessStandardExit for PaymentProcessStandardExit.Controller;
     using BondSize for BondSize.Params;
 
-    // Initial bond size = 70000 (gas cost of challenge) * 20 gwei (current fast gas price) * 10 (safety margin)
+    // Initial bond size = 70000 (gas cost of challenge) * 40 gwei (current fast gas price) * 5 (safety margin)
     uint128 public constant INITIAL_BOND_SIZE = 14000000000000000 wei;
 
     // Each bond size upgrade can either at most increase to 200% or decrease to 50% of current bond

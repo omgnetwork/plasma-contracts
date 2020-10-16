@@ -68,7 +68,9 @@ contract('PaymentProcessStandardExit', ([_, alice, bob, otherAddress]) => {
             this.framework.registerExitGame(1, this.exitGame.address, PROTOCOL.MORE_VP);
 
             // prepare the bond that should be set when exit starts
-            this.startStandardExitBondSize = await this.exitGame.startStandardExitBondSize();
+            // ensure the bond is slightly higher than bounty to verify the failed bond return tests
+            const originalStandardExitBondSize = await this.exitGame.startStandardExitBondSize();
+            this.startStandardExitBondSize = originalStandardExitBondSize.addn(1000);
 
             this.processExitBountySize = await this.exitGame.processStandardExitBountySize();
             this.standardExitBondReturnValue = this.startStandardExitBondSize.sub(this.processExitBountySize);
