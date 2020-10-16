@@ -927,7 +927,7 @@ def test_should_not_allow_to_withdraw_from_non_canonical_and_already_spent_input
     assert alice_eth_balance == (
         alice_eth_balance_before
         + amount_eth  # get the ETH from exit output
-        + 2 * (testlang.root_chain.piggybackBond() - testlang.root_chain.processInFlightExitBounty()) # get 2 piggybacks bonds back
+        + 2 * (testlang.root_chain.piggybackBond() - testlang.root_chain.processInFlightExitBounty())  # get 2 piggybacks bonds back
         + testlang.root_chain.inFlightExitBond()  # get start IFE bond from challenge non-canonical
     )
     # but she does not get token back
