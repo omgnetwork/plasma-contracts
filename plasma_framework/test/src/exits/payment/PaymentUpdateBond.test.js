@@ -84,8 +84,13 @@ contract('PaymentExitGame - Update Bond', () => {
             this.exitGame = await PaymentStandardExitRouter.new();
             await this.exitGame.bootInternal(exitGameArgs);
             this.startStandardExitBondSize = await this.exitGame.startStandardExitBondSize();
+            this.processStandardExitBountySize = await this.exitGame.processStandardExitBountySize();
             this.newBondSize = this.startStandardExitBondSize.addn(20);
-            this.updateTx = await this.exitGame.updateStartStandardExitBondSize(this.newBondSize);
+            this.newBountySize = this.processStandardExitBountySize.addn(20);
+            this.updateTx = await this.exitGame.updateStartStandardExitBondSize(
+                this.newBondSize,
+                this.newBountySize,
+            );
         });
 
         it('should emit an event when the standard exit bond size is updated', async () => {
@@ -94,6 +99,7 @@ contract('PaymentExitGame - Update Bond', () => {
                 'StandardExitBondUpdated',
                 {
                     bondSize: this.newBondSize,
+                    exitBountySize: this.newBountySize,
                 },
             );
         });
@@ -101,7 +107,9 @@ contract('PaymentExitGame - Update Bond', () => {
         it('should update the bond value after the waiting period has passed', async () => {
             await time.increase(UPDATE_BOND_WAITING_PERIOD);
             const bondSize = await this.exitGame.startStandardExitBondSize();
+            const bountySize = await this.exitGame.processStandardExitBountySize();
             expect(bondSize).to.be.bignumber.equal(this.newBondSize);
+            expect(bountySize).to.be.bignumber.equal(this.newBountySize);
         });
     });
 
@@ -154,8 +162,13 @@ contract('PaymentExitGame - Update Bond', () => {
             this.exitGame = await PaymentInFlightExitRouter.new();
             await this.exitGame.bootInternal(exitGameArgs);
             this.piggybackBondSize = await this.exitGame.piggybackBondSize();
+            this.processInFlightExitBountySize = await this.exitGame.processInFlightExitBountySize();
             this.newBondSize = this.piggybackBondSize.addn(20);
-            this.updatePiggybackBondTx = await this.exitGame.updatePiggybackBondSize(this.newBondSize);
+            this.newBountySize = this.processInFlightExitBountySize.addn(20);
+            this.updatePiggybackBondTx = await this.exitGame.updatePiggybackBondSize(
+                this.newBondSize,
+                this.newBountySize,
+            );
         });
 
         it('should emit an event when the in-flight exit bond size is updated', async () => {
@@ -164,6 +177,7 @@ contract('PaymentExitGame - Update Bond', () => {
                 'PiggybackBondUpdated',
                 {
                     bondSize: this.newBondSize,
+                    exitBountySize: this.newBountySize,
                 },
             );
         });
@@ -171,7 +185,9 @@ contract('PaymentExitGame - Update Bond', () => {
         it('should update the bond value after the waiting period has passed', async () => {
             await time.increase(UPDATE_BOND_WAITING_PERIOD);
             const bondSize = await this.exitGame.piggybackBondSize();
+            const bountySize = await this.exitGame.processInFlightExitBountySize();
             expect(bondSize).to.be.bignumber.equal(this.newBondSize);
+            expect(bountySize).to.be.bignumber.equal(this.newBountySize);
         });
     });
 });

@@ -15,6 +15,10 @@ contract BondSizeMock {
         return bond.bondSize();
     }
 
+    function bountySize() public view returns (uint128) {
+        return bond.exitBountySize();
+    }
+
     function updateBondSize(uint128 newBondSize, uint128 newExitBountySize) public {
         bond.updateBondSize(newBondSize, newExitBountySize);
     }
