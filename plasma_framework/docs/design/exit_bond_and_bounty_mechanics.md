@@ -3,9 +3,9 @@
 This document is a description of the current implementation of exit bonds and process exit bounties which are an integral part of the exit mechanism.
 ### Terminology
 
-- **Exit Initiator** The person that starts an exit by either calling `startStandardExit()` or piggybacking on an in-flight exit
-- **Challenger** The person challenges a standard exit, an in-flight exit or a piggyback
-- **Exit Processor** The person that calls `processExit()`
+- **Exit Initiator** The user who starts an exit by either calling `startStandardExit()` or piggybacking on an in-flight exit
+- **Challenger** The user who challenges a standard exit, an in-flight exit or a piggyback
+- **Exit Processor** The user who calls `processExit()`
 - **Exit Bond** The bond put up by the **Exit Initiator**
 - **Process Exit Bounty** A portion of the **Exit Bond** that is given to the **Exit Processor** as a reward for processing the exit.
 Whenever an exit is started, the **Exit Initiator** must put up an **Exit Bond**.
