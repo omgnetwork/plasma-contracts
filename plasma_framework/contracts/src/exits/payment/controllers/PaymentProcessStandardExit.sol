@@ -69,10 +69,10 @@ library PaymentProcessStandardExit {
 
         // we do not want to block a queue if bond return is unsuccessful
         if (exit.bondSize > exit.bountySize) {
-            uint256 returnAmount = exit.bondSize.sub(exit.bountySize);
-            bool successBondReturn = SafeEthTransfer.transferReturnResult(exit.exitTarget, returnAmount, self.safeGasStipend);
+            uint256 bondReturnAmount = exit.bondSize.sub(exit.bountySize);
+            bool successBondReturn = SafeEthTransfer.transferReturnResult(exit.exitTarget, bondReturnAmount, self.safeGasStipend);
             if (!successBondReturn) {
-                emit BondReturnFailed(exit.exitTarget, returnAmount);
+                emit BondReturnFailed(exit.exitTarget, bondReturnAmount);
             }
         }
 

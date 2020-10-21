@@ -288,14 +288,14 @@ library PaymentProcessInFlightExit {
             if (token == withdrawal.token && exit.isInputPiggybacked(i)) {
 
                 if (withdrawal.piggybackBondSize > withdrawal.bountySize) {
-                    uint256 returnAmount = withdrawal.piggybackBondSize.sub(withdrawal.bountySize);
+                    uint256 bondReturnAmount = withdrawal.piggybackBondSize.sub(withdrawal.bountySize);
                     bool successBondReturn = SafeEthTransfer.transferReturnResult(
-                    withdrawal.exitTarget, returnAmount, self.safeGasStipend
+                    withdrawal.exitTarget, bondReturnAmount, self.safeGasStipend
                     );
 
                     // we do not want to block a queue if bond return is unsuccessful
                     if (!successBondReturn) {
-                        emit InFlightBondReturnFailed(withdrawal.exitTarget, returnAmount);
+                        emit InFlightBondReturnFailed(withdrawal.exitTarget, bondReturnAmount);
                     }
                 }
 
@@ -326,14 +326,14 @@ library PaymentProcessInFlightExit {
             if (token == withdrawal.token && exit.isOutputPiggybacked(i)) {
 
                 if (withdrawal.piggybackBondSize > withdrawal.bountySize) {
-                    uint256 returnAmount = withdrawal.piggybackBondSize.sub(withdrawal.bountySize);
+                    uint256 bondReturnAmount = withdrawal.piggybackBondSize.sub(withdrawal.bountySize);
                     bool successBondReturn = SafeEthTransfer.transferReturnResult(
-                    withdrawal.exitTarget, returnAmount, self.safeGasStipend
+                    withdrawal.exitTarget, bondReturnAmount, self.safeGasStipend
                     );
 
                     // we do not want to block a queue if bond return is unsuccessful
                     if (!successBondReturn) {
-                        emit InFlightBondReturnFailed(withdrawal.exitTarget, returnAmount);
+                        emit InFlightBondReturnFailed(withdrawal.exitTarget, bondReturnAmount);
                     }
                 }
 
