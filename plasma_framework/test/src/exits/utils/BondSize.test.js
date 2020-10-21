@@ -19,7 +19,7 @@ contract('BondSize', () => {
                     this.lowerBoundDivisor,
                     this.upperBoundMultiplier,
                 ),
-                'Incorrect Exit Bounty Size',
+                'The Bond size should be greater than or equal to the Bounty',
             );
         });
     });
@@ -90,7 +90,7 @@ contract('BondSize', () => {
                 const newBountySize = new BN(this.initialBondSize).addn(1);
                 await expectRevert(
                     this.contract.updateBondSize(this.initialBondSize, newBountySize),
-                    'Incorrect Exit Bounty Size',
+                    'The Bond size should be greater than or equal to the Bounty',
                 );
             });
         });
@@ -107,7 +107,7 @@ contract('BondSize', () => {
                 const newBountySize = newBondSize.addn(1);
                 await expectRevert(
                     this.contract.updateBondSize(newBondSize, newBountySize),
-                    'Incorrect Exit Bounty Size',
+                    'The Bond size should be greater than or equal to the Bounty',
                 );
             });
         });

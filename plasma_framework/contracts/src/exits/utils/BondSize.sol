@@ -36,7 +36,7 @@ library BondSize {
         pure
         returns (Params memory)
     {
-        require(initialBondSize >= initialExitBountySize, "Incorrect Exit Bounty Size");
+        require(initialBondSize >= initialExitBountySize, "The Bond size should be greater than or equal to the Bounty");
         // Set the initial value far into the future
         uint128 initialEffectiveUpdateTime = 2 ** 63;
         return Params({
@@ -91,7 +91,7 @@ library BondSize {
     }
 
     function validateBondSize(Params memory self, uint128 newBondSize, uint128 newExitBountySize) private view {
-        require(newBondSize >= newExitBountySize, "Incorrect Exit Bounty Size");
+        require(newBondSize >= newExitBountySize, "The Bond size should be greater than or equal to the Bounty");
         uint128 currentBondSize = bondSize(self);
         require(newBondSize > 0, "Bond size cannot be zero");
         require(newBondSize >= currentBondSize / self.lowerBoundDivisor, "Bond size is too low");

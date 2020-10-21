@@ -35,7 +35,6 @@ def test_process_exits_standard_exit_should_succeed(testlang, num_outputs, plasm
 
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
     testlang.process_exits(NULL_ADDRESS, 0, 100)
-    print(testlang.get_balance(output_owner))
     assert_events(testlang.flush_events(),
                   [('EthWithdrawn', {'amount': amount, 'receiver': output_owner.address}),
                    ('ExitFinalized', {"exitId": exit_id}),

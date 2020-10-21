@@ -287,6 +287,7 @@ library PaymentProcessInFlightExit {
             // If the input has been challenged, isInputPiggybacked() will return false
             if (token == withdrawal.token && exit.isInputPiggybacked(i)) {
 
+                // skip bond return if the bond is equal to bounty
                 if (withdrawal.piggybackBondSize > withdrawal.bountySize) {
                     uint256 bondReturnAmount = withdrawal.piggybackBondSize.sub(withdrawal.bountySize);
                     bool successBondReturn = SafeEthTransfer.transferReturnResult(
@@ -325,6 +326,7 @@ library PaymentProcessInFlightExit {
             // If the output has been challenged, isOutputPiggybacked() will return false
             if (token == withdrawal.token && exit.isOutputPiggybacked(i)) {
 
+                // skip bond return if the bond is equal to bounty
                 if (withdrawal.piggybackBondSize > withdrawal.bountySize) {
                     uint256 bondReturnAmount = withdrawal.piggybackBondSize.sub(withdrawal.bountySize);
                     bool successBondReturn = SafeEthTransfer.transferReturnResult(

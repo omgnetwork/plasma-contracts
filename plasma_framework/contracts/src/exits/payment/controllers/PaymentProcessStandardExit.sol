@@ -67,10 +67,12 @@ library PaymentProcessStandardExit {
 
         self.framework.flagOutputFinalized(exit.outputId, exitId);
 
-        // we do not want to block a queue if bond return is unsuccessful
+        // skip bond return if the bond is equal to bounty
         if (exit.bondSize > exit.bountySize) {
             uint256 bondReturnAmount = exit.bondSize.sub(exit.bountySize);
             bool successBondReturn = SafeEthTransfer.transferReturnResult(exit.exitTarget, bondReturnAmount, self.safeGasStipend);
+
+            // we do not want to block a queue if bond return is unsuccessful
             if (!successBondReturn) {
                 emit BondReturnFailed(exit.exitTarget, bondReturnAmount);
             }

@@ -36,19 +36,21 @@ contract PaymentInFlightExitRouter is
     using PaymentProcessInFlightExit for PaymentProcessInFlightExit.Controller;
     using BondSize for BondSize.Params;
 
-    // Initial IFE bond size = 185000 (gas cost of challenge) * 20 gwei (current fast gas price) * 10 (safety margin)
-    uint128 public constant INITIAL_IFE_BOND_SIZE = 37000000000000000 wei;
+    // Initial IFE bond size = 269000 (gas cost of challenge) * 50 gwei (current fast gas price) * 8 (safety margin)
+    uint128 public constant INITIAL_IFE_BOND_SIZE = 107600000000000000 wei;
 
-    // Initial piggyback bond size = 140000 (gas cost of challenge) * 40 gwei (current fast gas price) * 5 (safety margin)
-    // higher size to fit in the bounty
-    uint128 public constant INITIAL_PB_BOND_SIZE = 40000000000000000 wei;
+    // Initial piggyback bond size = 309000 (gas cost of challenge) * 50 gwei (current fast gas price) * 8 (safety margin)
+    uint128 public constant INITIAL_PB_BOND_SIZE = 123600000000000000 wei;
 
     // Each bond size upgrade can increase to a maximum of 200% or decrease to 50% of the current bond
     uint16 public constant BOND_LOWER_BOUND_DIVISOR = 2;
     uint16 public constant BOND_UPPER_BOUND_MULTIPLIER = 2;
 
+    // Exit bounty is not reserved from the In Flight Exit Bond
+    uint128 public constant INITIAL_IFE_EXIT_BOUNTY_SIZE = 0;
+
     // Initial exit bounty size = 500000 (approx gas usage for processExit) * 80 gwei (current fast gas price)
-    uint128 public constant INITIAL_IFE_EXIT_BOUNTY_SIZE = 40000000000000000 wei;
+    uint128 public constant INITIAL_PB_BOUNTY_SIZE = 25000000000000000 wei;
 
     PaymentExitDataModel.InFlightExitMap internal inFlightExitMap;
     PaymentStartInFlightExit.Controller internal startInFlightExitController;
@@ -186,8 +188,8 @@ contract PaymentInFlightExitRouter is
             erc20Vault: erc20Vault,
             safeGasStipend: paymentExitGameArgs.safeGasStipend
         });
-        startIFEBond = BondSize.buildParams(INITIAL_IFE_BOND_SIZE, 0, BOND_LOWER_BOUND_DIVISOR, BOND_UPPER_BOUND_MULTIPLIER);
-        piggybackBond = BondSize.buildParams(INITIAL_PB_BOND_SIZE, INITIAL_IFE_EXIT_BOUNTY_SIZE, BOND_LOWER_BOUND_DIVISOR, BOND_UPPER_BOUND_MULTIPLIER);
+        startIFEBond = BondSize.buildParams(INITIAL_IFE_BOND_SIZE, INITIAL_IFE_EXIT_BOUNTY_SIZE, BOND_LOWER_BOUND_DIVISOR, BOND_UPPER_BOUND_MULTIPLIER);
+        piggybackBond = BondSize.buildParams(INITIAL_PB_BOND_SIZE, INITIAL_PB_BOUNTY_SIZE, BOND_LOWER_BOUND_DIVISOR, BOND_UPPER_BOUND_MULTIPLIER);
     }
 
     /**
