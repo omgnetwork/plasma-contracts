@@ -17,7 +17,7 @@ Note that the **Exit Initiator** can also be the **Exit Processor**.
 
 ### For Standard Exits
 
-The **Exit Bond** is supplied by the **Exit Initiator** when starting an exit. Its main motive is to disincentivize invalid exits, but in the case of a valid exit a portion of it is used to incentivize processing the exit by rewarding the **Exit Processor**.
+The **Exit Bond** is supplied by the **Exit Initiator** when starting an exit. Its main motivation is to disincentivize invalid exits, but in the case of a valid exit a portion of it is used to incentivize processing the exit by rewarding the **Exit Processor**.
 The **Exit Initiator** should obtain the correct size of the Exit Bond by calling `startStandardExitBondSize()`.
 
 **_After Starting an Exit:_**
