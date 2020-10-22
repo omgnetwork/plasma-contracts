@@ -26,7 +26,7 @@ contract('StandardExit getter Load Test', ([_deployer, _maintainer, richFather])
         alice = await web3.eth.personal.importRawKey(alicePrivateKey, password);
         alice = web3.utils.toChecksumAddress(alice);
         web3.eth.personal.unlockAccount(alice, password, 3600);
-        web3.eth.sendTransaction({ to: alice, from: richFather, value: web3.utils.toWei('8', 'ether') });
+        web3.eth.sendTransaction({ to: alice, from: richFather, value: web3.utils.toWei('4', 'ether') });
     };
 
     before(async () => {

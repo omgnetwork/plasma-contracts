@@ -36,11 +36,11 @@ contract PaymentInFlightExitRouter is
     using PaymentProcessInFlightExit for PaymentProcessInFlightExit.Controller;
     using BondSize for BondSize.Params;
 
-    // Initial IFE bond size = 269000 (gas cost of challenge) * 50 gwei (current fast gas price) * 8 (safety margin)
-    uint128 public constant INITIAL_IFE_BOND_SIZE = 107600000000000000 wei;
+    // Initial IFE bond size = 269000 (gas cost of challenge) * 50 gwei (current fast gas price) * 2 (safety margin)
+    uint128 public constant INITIAL_IFE_BOND_SIZE = 26900000000000000 wei;
 
-    // Initial piggyback bond size = 309000 (gas cost of challenge) * 50 gwei (current fast gas price) * 8 (safety margin)
-    uint128 public constant INITIAL_PB_BOND_SIZE = 123600000000000000 wei;
+    // Initial piggyback bond size = 309000 (gas cost of challenge) * 50 gwei (current fast gas price) * 2 (safety margin)
+    uint128 public constant INITIAL_PB_BOND_SIZE = 30900000000000000 wei;
 
     // Each bond size upgrade can increase to a maximum of 200% or decrease to 50% of the current bond
     uint16 public constant BOND_LOWER_BOUND_DIVISOR = 2;
@@ -49,7 +49,7 @@ contract PaymentInFlightExitRouter is
     // Exit bounty is not reserved from the In Flight Exit Bond
     uint128 public constant INITIAL_IFE_EXIT_BOUNTY_SIZE = 0;
 
-    // Initial exit bounty size = 500000 (approx gas usage for processExit) * 80 gwei (current fast gas price)
+    // Initial exit bounty size = 500000 (approx gas usage for processExit) * 50 gwei (current fast gas price)
     uint128 public constant INITIAL_PB_BOUNTY_SIZE = 25000000000000000 wei;
 
     PaymentExitDataModel.InFlightExitMap internal inFlightExitMap;
@@ -347,6 +347,7 @@ contract PaymentInFlightExitRouter is
 
     /**
      * @notice Updates the piggyback bond size, taking two days to become effective
+     * @notice Remember to set the bond appropriately higher than the bounty because the bond remaining after bounty is returned
      * @param newBondSize The new bond size
      */
     function updatePiggybackBondSize(uint128 newBondSize, uint128 newExitBountySize) public onlyFrom(framework.getMaintainer()) {
