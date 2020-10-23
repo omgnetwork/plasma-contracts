@@ -297,11 +297,10 @@ contract('PaymentChallengeStandardExit', ([txSender, alice, bob, otherAddress]) 
                     expect(exitData.exitable).to.be.false;
                 });
 
-                it('should transfer the standard exit bond plus exit bounty to challenger when successfully challenged', async () => {
+                it('should transfer the whole standard exit bond to challenger when successfully challenged', async () => {
                     const actualPostBalance = new BN(await web3.eth.getBalance(bob));
                     const expectedPostBalance = this.preBalance
                         .add(this.startStandardExitBondSize)
-                        .add(this.processExitBountySize)
                         .sub(await spentOnGas(this.tx.receipt));
 
                     expect(actualPostBalance).to.be.bignumber.equal(expectedPostBalance);

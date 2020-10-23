@@ -8,7 +8,6 @@ import "../../src/utils/PosLib.sol";
 import "../../src/framework/models/BlockModel.sol";
 import "../../src/utils/Merkle.sol";
 import "../../src/exits/payment/routers/PaymentStandardExitRouter.sol";
-import "../../src/exits/utils/ExitBounty.sol";
 import "openzeppelin-solidity/contracts/token/ERC721/ERC721Full.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/SafeERC20.sol";

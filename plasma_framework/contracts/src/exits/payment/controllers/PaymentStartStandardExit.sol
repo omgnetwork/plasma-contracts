@@ -11,13 +11,10 @@ import "../../../transactions/PaymentTransactionModel.sol";
 import "../../../utils/PosLib.sol";
 import "../../../framework/PlasmaFramework.sol";
 
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-
 library PaymentStartStandardExit {
     using ExitableTimestamp for ExitableTimestamp.Calculator;
     using PosLib for PosLib.Position;
     using PaymentTransactionModel for PaymentTransactionModel.Transaction;
-    using SafeMath for uint256;
 
     struct Controller {
         IExitProcessor exitProcessor;
@@ -179,7 +176,7 @@ library PaymentStartStandardExit {
             outputId: data.outputId,
             exitTarget: msg.sender,
             amount: data.output.amount,
-            bondSize: msg.value.sub(processStandardExitBountySize),
+            bondSize: msg.value,
             bountySize: processStandardExitBountySize
         });
     }
