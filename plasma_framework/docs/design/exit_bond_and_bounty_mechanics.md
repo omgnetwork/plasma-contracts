@@ -121,7 +121,7 @@ Since no portion from the IFE Bond is reserved for the Bounty the values of `pre
 
 ```
 function updateStartIFEBondSize(uint128 newBondSize) public onlyFrom(framework.getMaintainer()) {
-        startIFEBond.updateBondSize(newBondSize, 0);
+        startIFEBond.updateBondSize(newBondSize, INITIAL_IFE_EXIT_BOUNTY_SIZE);
         emit IFEBondUpdated(newBondSize);
     }
 ```
