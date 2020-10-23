@@ -46,7 +46,7 @@ contract PaymentInFlightExitRouter is
     uint16 public constant BOND_LOWER_BOUND_DIVISOR = 2;
     uint16 public constant BOND_UPPER_BOUND_MULTIPLIER = 2;
 
-    // Exit bounty is not reserved from the In Flight Exit Bond
+    // Exit bounty is not reserved from the In Flight Exit Bond. Bounty for IFE is in INITIAL_PB_BOUNTY_SIZE
     uint128 public constant INITIAL_IFE_EXIT_BOUNTY_SIZE = 0;
 
     // Initial exit bounty size = 500000 (approx gas usage for processExit) * 50 gwei (current fast gas price)
@@ -334,7 +334,7 @@ contract PaymentInFlightExitRouter is
      * @param newBondSize The new bond size
      */
     function updateStartIFEBondSize(uint128 newBondSize) public onlyFrom(framework.getMaintainer()) {
-        startIFEBond.updateBondSize(newBondSize, 0);
+        startIFEBond.updateBondSize(newBondSize, INITIAL_IFE_EXIT_BOUNTY_SIZE);
         emit IFEBondUpdated(newBondSize);
     }
 
