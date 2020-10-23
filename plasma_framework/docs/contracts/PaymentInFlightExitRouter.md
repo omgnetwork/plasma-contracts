@@ -16,6 +16,8 @@ uint128 public constant INITIAL_IFE_BOND_SIZE;
 uint128 public constant INITIAL_PB_BOND_SIZE;
 uint16 public constant BOND_LOWER_BOUND_DIVISOR;
 uint16 public constant BOND_UPPER_BOUND_MULTIPLIER;
+uint128 public constant INITIAL_IFE_EXIT_BOUNTY_SIZE;
+uint128 public constant INITIAL_PB_BOUNTY_SIZE;
 
 //internal members
 struct PaymentExitDataModel.InFlightExitMap internal inFlightExitMap;
@@ -39,7 +41,7 @@ bool private bootDone;
 
 ```js
 event IFEBondUpdated(uint128  bondSize);
-event PiggybackBondUpdated(uint128  bondSize);
+event PiggybackBondUpdated(uint128  bondSize, uint128  exitBountySize);
 event InFlightExitStarted(address indexed initiator, bytes32 indexed txHash);
 event InFlightExitInputPiggybacked(address indexed exitTarget, bytes32 indexed txHash, uint16  inputIndex);
 event InFlightExitOmitted(uint168 indexed exitId, address  token);
@@ -66,11 +68,12 @@ event InFlightExitDeleted(uint168 indexed exitId);
 - [challengeInFlightExitInputSpent(struct PaymentInFlightExitRouterArgs.ChallengeInputSpentArgs args)](#challengeinflightexitinputspent)
 - [challengeInFlightExitOutputSpent(struct PaymentInFlightExitRouterArgs.ChallengeOutputSpent args)](#challengeinflightexitoutputspent)
 - [deleteNonPiggybackedInFlightExit(uint168 exitId)](#deletenonpiggybackedinflightexit)
-- [processInFlightExit(uint168 exitId, address token)](#processinflightexit)
+- [processInFlightExit(uint168 exitId, address token, address payable processExitInitiator)](#processinflightexit)
 - [startIFEBondSize()](#startifebondsize)
 - [updateStartIFEBondSize(uint128 newBondSize)](#updatestartifebondsize)
 - [piggybackBondSize()](#piggybackbondsize)
-- [updatePiggybackBondSize(uint128 newBondSize)](#updatepiggybackbondsize)
+- [updatePiggybackBondSize(uint128 newBondSize, uint128 newExitBountySize)](#updatepiggybackbondsize)
+- [processInFlightExitBountySize()](#processinflightexitbountysize)
 
 ### boot
 
@@ -220,7 +223,7 @@ function deleteNonPiggybackedInFlightExit(uint168 exitId) public nonpayable nonR
 Process in-flight exit
 
 ```js
-function processInFlightExit(uint168 exitId, address token) internal nonpayable
+function processInFlightExit(uint168 exitId, address token, address payable processExitInitiator) internal nonpayable
 ```
 
 **Arguments**
@@ -229,6 +232,7 @@ function processInFlightExit(uint168 exitId, address token) internal nonpayable
 | ------------- |------------- | -----|
 | exitId | uint168 | The in-flight exit ID | 
 | token | address | The token (in erc20 address or address(0) for ETH) of the exiting output | 
+| processExitInitiator | address payable | The processExits() initiator | 
 
 ### startIFEBondSize
 
@@ -277,7 +281,7 @@ returns(uint128)
 Updates the piggyback bond size, taking two days to become effective
 
 ```js
-function updatePiggybackBondSize(uint128 newBondSize) public nonpayable onlyFrom 
+function updatePiggybackBondSize(uint128 newBondSize, uint128 newExitBountySize) public nonpayable onlyFrom 
 ```
 
 **Arguments**
@@ -285,6 +289,21 @@ function updatePiggybackBondSize(uint128 newBondSize) public nonpayable onlyFrom
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
 | newBondSize | uint128 | The new bond size | 
+| newExitBountySize | uint128 |  | 
+
+### processInFlightExitBountySize
+
+Retrieves the process IFE bounty size
+
+```js
+function processInFlightExitBountySize() public view
+returns(uint128)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
 
 ## Contracts
 
@@ -299,7 +318,6 @@ function updatePiggybackBondSize(uint128 newBondSize) public nonpayable onlyFrom
 * [EthDepositVerifier](EthDepositVerifier.md)
 * [EthVault](EthVault.md)
 * [ExitableTimestamp](ExitableTimestamp.md)
-* [ExitBounty](ExitBounty.md)
 * [ExitGameController](ExitGameController.md)
 * [ExitGameRegistry](ExitGameRegistry.md)
 * [ExitId](ExitId.md)

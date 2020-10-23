@@ -21,7 +21,7 @@ bool private initDone;
 
 - [(struct PaymentExitGameArgs.Args args)](#)
 - [init()](#init)
-- [processExit(uint168 exitId, uint256 , address token, address payable processor)](#processexit)
+- [processExit(uint168 exitId, uint256 , address token, address payable processExitInitiator)](#processexit)
 - [getStandardExitId(bool _isDeposit, bytes _txBytes, uint256 _utxoPos)](#getstandardexitid)
 - [getInFlightExitId(bytes _txBytes)](#getinflightexitid)
 
@@ -57,7 +57,7 @@ function init() public nonpayable onlyFrom
 Callback processes exit function for the PlasmaFramework to call
 
 ```js
-function processExit(uint168 exitId, uint256 , address token, address payable processor) external nonpayable onlyFrom 
+function processExit(uint168 exitId, uint256 , address token, address payable processExitInitiator) external nonpayable onlyFrom 
 ```
 
 **Arguments**
@@ -67,7 +67,7 @@ function processExit(uint168 exitId, uint256 , address token, address payable pr
 | exitId | uint168 | The exit ID | 
 |  | uint256 | exitId The exit ID | 
 | token | address | Token (ERC20 address or address(0) for ETH) of the exiting output | 
-| processor | address payable | The processExit initiator | 
+| processExitInitiator | address payable | The processExits() initiator | 
 
 ### getStandardExitId
 
@@ -114,7 +114,6 @@ returns(uint168)
 * [EthDepositVerifier](EthDepositVerifier.md)
 * [EthVault](EthVault.md)
 * [ExitableTimestamp](ExitableTimestamp.md)
-* [ExitBounty](ExitBounty.md)
 * [ExitGameController](ExitGameController.md)
 * [ExitGameRegistry](ExitGameRegistry.md)
 * [ExitId](ExitId.md)

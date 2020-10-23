@@ -59,7 +59,7 @@ modifier nonReentrant() internal
 - [hasExitQueue(uint256 vaultId, address token)](#hasexitqueue)
 - [addExitQueue(uint256 vaultId, address token)](#addexitqueue)
 - [enqueue(uint256 vaultId, address token, uint32 exitableAt, struct PosLib.Position txPos, uint168 exitId, IExitProcessor exitProcessor)](#enqueue)
-- [processExits(uint256 vaultId, address token, uint168 topExitId, uint256 maxExitsToProcess)](#processexits)
+- [processExits(uint256 vaultId, address token, uint168 topExitId, uint256 maxExitsToProcess, bytes32 senderData)](#processexits)
 - [isAnyInputFinalizedByOtherExit(bytes32[] _outputIds, uint168 exitId)](#isanyinputfinalizedbyotherexit)
 - [batchFlagOutputsFinalized(bytes32[] outputIds, uint168 exitId)](#batchflagoutputsfinalized)
 - [flagOutputFinalized(bytes32 outputId, uint168 exitId)](#flagoutputfinalized)
@@ -174,7 +174,7 @@ A unique priority number computed for the exit
 Processes any exits that have completed the challenge period. Exits are processed according to the exit priority.
 
 ```js
-function processExits(uint256 vaultId, address token, uint168 topExitId, uint256 maxExitsToProcess) external nonpayable nonReentrant 
+function processExits(uint256 vaultId, address token, uint168 topExitId, uint256 maxExitsToProcess, bytes32 senderData) external nonpayable nonReentrant 
 ```
 
 **Returns**
@@ -189,6 +189,7 @@ Total number of processed exits
 | token | address | The token type to process | 
 | topExitId | uint168 | Unique identifier for prioritizing the first exit to process. Set to zero to skip this check. | 
 | maxExitsToProcess | uint256 | Maximum number of exits to process | 
+| senderData | bytes32 | A keccak256 hash of the sender's address | 
 
 ### isAnyInputFinalizedByOtherExit
 
@@ -320,7 +321,6 @@ returns(bytes32)
 * [EthDepositVerifier](EthDepositVerifier.md)
 * [EthVault](EthVault.md)
 * [ExitableTimestamp](ExitableTimestamp.md)
-* [ExitBounty](ExitBounty.md)
 * [ExitGameController](ExitGameController.md)
 * [ExitGameRegistry](ExitGameRegistry.md)
 * [ExitId](ExitId.md)

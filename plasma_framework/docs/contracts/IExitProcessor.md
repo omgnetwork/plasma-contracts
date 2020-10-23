@@ -11,7 +11,7 @@ An interface that allows custom logic to process exits for different requirement
 
 ## Functions
 
-- [processExit(uint168 exitId, uint256 vaultId, address token, address payable processor)](#processexit)
+- [processExit(uint168 exitId, uint256 vaultId, address token, address payable processExitInitiator)](#processexit)
 
 ### processExit
 
@@ -20,7 +20,7 @@ An interface that allows custom logic to process exits for different requirement
 Function interface for processing exits.
 
 ```js
-function processExit(uint168 exitId, uint256 vaultId, address token, address payable processor) external nonpayable
+function processExit(uint168 exitId, uint256 vaultId, address token, address payable processExitInitiator) external nonpayable
 ```
 
 **Arguments**
@@ -30,7 +30,7 @@ function processExit(uint168 exitId, uint256 vaultId, address token, address pay
 | exitId | uint168 | Unique ID for exit per tx type | 
 | vaultId | uint256 | ID of the vault that funds the exit | 
 | token | address | Address of the token contract | 
-| processor | address payable | Address of the processExit intitiator | 
+| processExitInitiator | address payable | Address of the processExit intitiator | 
 
 ## Contracts
 
@@ -45,7 +45,6 @@ function processExit(uint168 exitId, uint256 vaultId, address token, address pay
 * [EthDepositVerifier](EthDepositVerifier.md)
 * [EthVault](EthVault.md)
 * [ExitableTimestamp](ExitableTimestamp.md)
-* [ExitBounty](ExitBounty.md)
 * [ExitGameController](ExitGameController.md)
 * [ExitGameRegistry](ExitGameRegistry.md)
 * [ExitId](ExitId.md)
