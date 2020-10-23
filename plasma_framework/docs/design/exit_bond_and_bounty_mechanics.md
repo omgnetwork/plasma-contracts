@@ -28,7 +28,7 @@ For an invalid exit, a challenge transfers the whole bond to the challenger. Non
 **_On succesfull challenge:_**
 *Bond -> from `Exit Game Contract` to `Challenger`*
 
-The **Exit Processor** gets the bounty as a reward for processing an exit. The cost of processing multiple exits from the exit queue at once is less than the cumulative cost of processing them individually. Since, the **Process Exit Bounty** amount associated with each exit is given out, the **Exit Processor** can wait for the exit queue to stack up and then process exits together to get higher incentives.
+The **Exit Processor** gets the bounty as a reward for processing an exit. The cost of processing multiple exits from the exit queue at once is less than the cumulative cost of processing them individually. Since the **Process Exit Bounty** is given out for each exit processed, the **Exit Processor** can wait for the exit queue to stack up and then process multiple exits together to get a higher reward.
 
 **_On processing exit:_**
 *Bond - Bounty -> from `Exit Game Contract` to `Exit Initiator`*\
