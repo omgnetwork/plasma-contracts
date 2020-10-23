@@ -39,7 +39,6 @@ contract('StandardExit getter Load Test', ([_deployer, _maintainer, richFather])
         this.exitGame = await PaymentExitGame.at(await this.framework.exitGames(config.registerKeys.txTypes.payment));
         this.startStandardExitBondSize = await this.exitGame.startStandardExitBondSize();
         this.framework.addExitQueue(config.registerKeys.vaultId.eth, ETH);
-        this.processExitBountySize = await this.exitGame.processStandardExitBountySize();
     };
 
     const aliceDepositsETH = async () => {
@@ -80,7 +79,7 @@ contract('StandardExit getter Load Test', ([_deployer, _maintainer, richFather])
                         startExits.push(
                             this.exitGame.startStandardExit(args, {
                                 from: alice,
-                                value: this.startStandardExitBondSize.add(this.processExitBountySize),
+                                value: this.startStandardExitBondSize,
                             }),
                         );
                     }

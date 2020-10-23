@@ -44,12 +44,12 @@ contract('PlasmaFramework - Fee Claim', ([_, _maintainer, authority, richFather,
         alice = await web3.eth.personal.importRawKey(alicePrivateKey, password);
         alice = web3.utils.toChecksumAddress(alice);
         web3.eth.personal.unlockAccount(alice, password, 3600);
-        web3.eth.sendTransaction({ to: alice, from: richFather, value: web3.utils.toWei('2', 'ether') });
+        web3.eth.sendTransaction({ to: alice, from: richFather, value: web3.utils.toWei('1', 'ether') });
 
         operatorFeeAddress = await web3.eth.personal.importRawKey(operatorFeeAddressPrivateKey, password);
         operatorFeeAddress = web3.utils.toChecksumAddress(operatorFeeAddress);
         web3.eth.personal.unlockAccount(operatorFeeAddress, password, 3600);
-        web3.eth.sendTransaction({ to: operatorFeeAddress, from: richFather, value: web3.utils.toWei('2', 'ether') });
+        web3.eth.sendTransaction({ to: operatorFeeAddress, from: richFather, value: web3.utils.toWei('1', 'ether') });
     };
 
     describe('Given contracts deployed, ETH exitQueue added to the framework', () => {
@@ -63,7 +63,6 @@ contract('PlasmaFramework - Fee Claim', ([_, _maintainer, authority, richFather,
             );
 
             this.framework.addExitQueue(config.registerKeys.vaultId.eth, ETH);
-            this.processExitBountySize = await this.paymentExitGame.processStandardExitBountySize();
         });
 
         describe('When Alice deposits ETH to the plasma', () => {
@@ -230,7 +229,7 @@ contract('PlasmaFramework - Fee Claim', ([_, _maintainer, authority, richFather,
                                     const bondSize = await this.paymentExitGame.startStandardExitBondSize();
                                     const { receipt } = await this.paymentExitGame.startStandardExit(args, {
                                         from: operatorFeeAddress,
-                                        value: bondSize.add(this.processExitBountySize),
+                                        value: bondSize,
                                     });
                                     await expectEvent.inTransaction(
                                         receipt.transactionHash,

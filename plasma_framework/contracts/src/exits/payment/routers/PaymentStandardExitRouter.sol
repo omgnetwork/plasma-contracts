@@ -9,7 +9,6 @@ import "../controllers/PaymentProcessStandardExit.sol";
 import "../controllers/PaymentChallengeStandardExit.sol";
 import "../../registries/SpendingConditionRegistry.sol";
 import "../../utils/BondSize.sol";
-import "../../utils/ExitBounty.sol";
 import "../../../vaults/EthVault.sol";
 import "../../../vaults/Erc20Vault.sol";
 import "../../../framework/PlasmaFramework.sol";
@@ -28,34 +27,27 @@ contract PaymentStandardExitRouter is
     using PaymentChallengeStandardExit for PaymentChallengeStandardExit.Controller;
     using PaymentProcessStandardExit for PaymentProcessStandardExit.Controller;
     using BondSize for BondSize.Params;
-    using ExitBounty for ExitBounty.Params;
 
-    // Initial bond size = 70000 (gas cost of challenge) * 20 gwei (current fast gas price) * 10 (safety margin)
-    uint128 public constant INITIAL_BOND_SIZE = 14000000000000000 wei;
+    // Initial bond size = 233000 (gas cost of challenge) * 50 gwei (current fast gas price) * 2 (safety margin)
+    uint128 public constant INITIAL_BOND_SIZE = 23300000000000000 wei;
 
     // Each bond size upgrade can either at most increase to 200% or decrease to 50% of current bond
     uint16 public constant BOND_LOWER_BOUND_DIVISOR = 2;
     uint16 public constant BOND_UPPER_BOUND_MULTIPLIER = 2;
 
-    // Initial exit bounty size = 107000 (approx gas usage for processExit) * 80 gwei (current fast gas price)
-    uint128 public constant INITIAL_EXIT_BOUNTY_SIZE = 8560000000000000 wei;
-
-    // Each bounty size upgrade can either at most increase to 200% or decrease to 50% of current size
-    uint16 public constant EXIT_BOUNTY_LOWER_BOUND_DIVISOR = 2;
-    uint16 public constant EXIT_BOUNTY_UPPER_BOUND_MULTIPLIER = 2;
+    // Initial exit bounty size = 107000 (approx gas usage for processExit) * 50 gwei (current fast gas price)
+    uint128 public constant INITIAL_EXIT_BOUNTY_SIZE = 5350000000000000 wei;
 
     PaymentExitDataModel.StandardExitMap internal standardExitMap;
     PaymentStartStandardExit.Controller internal startStandardExitController;
     PaymentProcessStandardExit.Controller internal processStandardExitController;
     PaymentChallengeStandardExit.Controller internal challengeStandardExitController;
     BondSize.Params internal startStandardExitBond;
-    ExitBounty.Params internal processStandardExitBounty;
 
     PlasmaFramework private framework;
     bool private bootDone = false;
 
-    event StandardExitBondUpdated(uint128 bondSize);
-    event ProcessStandardExitBountyUpdated(uint128 exitBountySize);
+    event StandardExitBondUpdated(uint128 bondSize, uint128 exitBountySize);
 
     event ExitStarted(
         address indexed owner,
@@ -108,8 +100,7 @@ contract PaymentStandardExitRouter is
             paymentExitGameArgs.framework, ethVault, erc20Vault, paymentExitGameArgs.safeGasStipend
         );
 
-        startStandardExitBond = BondSize.buildParams(INITIAL_BOND_SIZE, BOND_LOWER_BOUND_DIVISOR, BOND_UPPER_BOUND_MULTIPLIER);
-        processStandardExitBounty = ExitBounty.buildParams(INITIAL_EXIT_BOUNTY_SIZE, EXIT_BOUNTY_LOWER_BOUND_DIVISOR, EXIT_BOUNTY_UPPER_BOUND_MULTIPLIER);
+        startStandardExitBond = BondSize.buildParams(INITIAL_BOND_SIZE, INITIAL_EXIT_BOUNTY_SIZE, BOND_LOWER_BOUND_DIVISOR, BOND_UPPER_BOUND_MULTIPLIER);
     }
 
     /**
@@ -133,28 +124,21 @@ contract PaymentStandardExitRouter is
     }
 
     /**
-     * @notice Updates the standard exit bond size, taking two days to become effective
+     * @notice Updates the standard exit bond size and/or the exit bounty size, taking two days to become effective
+     * @notice Remember to set the bond appropriately higher than the bounty because the bond remaining after bounty is returned
      * @param newBondSize The new bond size
+     * @param newExitBountySize The new exit bounty size
      */
-    function updateStartStandardExitBondSize(uint128 newBondSize) public onlyFrom(framework.getMaintainer()) {
-        startStandardExitBond.updateBondSize(newBondSize);
-        emit StandardExitBondUpdated(newBondSize);
+    function updateStartStandardExitBondSize(uint128 newBondSize, uint128 newExitBountySize) public onlyFrom(framework.getMaintainer()) {
+        startStandardExitBond.updateBondSize(newBondSize, newExitBountySize);
+        emit StandardExitBondUpdated(newBondSize, newExitBountySize);
     }
 
     /**
      * @notice Retrieves the process standard exit bounty size
      */
     function processStandardExitBountySize() public view returns (uint128) {
-        return processStandardExitBounty.exitBountySize();
-    }
-
-    /**
-     * @notice Updates the process standard exit bounty size, taking two days to become effective
-     * @param newExitBountySize The new exit bounty size
-     */
-    function updateProcessStandardExitBountySize(uint128 newExitBountySize) public onlyFrom(framework.getMaintainer()) {
-        processStandardExitBounty.updateExitBountySize(newExitBountySize);
-        emit ProcessStandardExitBountyUpdated(newExitBountySize);
+        return startStandardExitBond.exitBountySize();
     }
 
     /**
@@ -166,7 +150,7 @@ contract PaymentStandardExitRouter is
         public
         payable
         nonReentrant(framework)
-        onlyWithValue(startStandardExitBondSize() + processStandardExitBountySize())
+        onlyWithValue(startStandardExitBondSize())
     {
         uint128 bountySize = processStandardExitBountySize();
         startStandardExitController.run(standardExitMap, args, bountySize);

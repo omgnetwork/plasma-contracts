@@ -61,8 +61,7 @@ contract(
 
             this.processExitBountySize = await this.exitGame.processStandardExitBountySize();
 
-            this.startStandardExitTxValue = this.startStandardExitBondSize.add(this.processExitBountySize);
-
+            this.standardExitBondReturnValue = this.startStandardExitBondSize.sub(this.processExitBountySize);
             this.framework.addExitQueue(config.registerKeys.vaultId.eth, ETH);
 
             this.liquidity = await Liquidity.new(this.framework.address, { from: authority });
@@ -198,7 +197,7 @@ contract(
                                 depositUtxoPos,
                                 {
                                     from: bob,
-                                    value: this.startStandardExitTxValue,
+                                    value: this.startStandardExitBondSize,
                                 },
                             ),
                             'Was not called by the first Tx owner',
@@ -225,7 +224,7 @@ contract(
                                 depositUtxoPos,
                                 {
                                     from: alice,
-                                    value: this.startStandardExitTxValue,
+                                    value: this.startStandardExitBondSize,
                                 },
                             ),
                             "Provided Transaction isn't finalized or doesn't exist",
@@ -251,7 +250,7 @@ contract(
                             depositUtxoPos,
                             {
                                 from: alice,
-                                value: this.startStandardExitTxValue,
+                                value: this.startStandardExitBondSize,
                             },
                         );
                     });
@@ -298,7 +297,7 @@ contract(
                                 depositUtxoPos,
                                 {
                                     from: alice,
-                                    value: this.startStandardExitTxValue,
+                                    value: this.startStandardExitBondSize,
                                 },
                             ),
                             'Exit has already started.',
@@ -348,12 +347,12 @@ contract(
                                 );
                             });
 
-                            it('should return the output amount plus standard exit bond to the Liquidity Contract', async () => {
+                            it('should return the output amount plus remaining bond amount to the Liquidity Contract', async () => {
                                 const actualLCBalanceAfterProcessExit = new BN(
                                     await web3.eth.getBalance(this.liquidity.address),
                                 );
                                 const expectedLCBalance = this.LCBalanceBeforeProcessExit.add(
-                                    this.startStandardExitBondSize,
+                                    this.standardExitBondReturnValue,
                                 ).add(new BN(this.transferTxObject.outputs[0].amount));
 
                                 expect(actualLCBalanceAfterProcessExit).to.be.bignumber.equal(expectedLCBalance);
@@ -368,10 +367,10 @@ contract(
                                     this.aliceWithdrawalReceipt = receipt;
                                 });
 
-                                it('should return the exit bond to Alice', async () => {
+                                it('should return the exit bond minus the exit bounty to Alice', async () => {
                                     const actualAliceBalanceAfterClaiming = new BN(await web3.eth.getBalance(alice));
                                     const expectedAliceBalance = this.aliceBalanceBeforeClaiming.add(
-                                        this.startStandardExitBondSize,
+                                        this.standardExitBondReturnValue,
                                     ).sub(await spentOnGas(this.aliceWithdrawalReceipt));
 
                                     expect(actualAliceBalanceAfterClaiming).to.be.bignumber.equal(
@@ -452,7 +451,7 @@ contract(
                             depositUtxoPos,
                             {
                                 from: alice,
-                                value: this.startStandardExitTxValue,
+                                value: this.startStandardExitBondSize,
                             },
                         );
                     });
@@ -513,10 +512,10 @@ contract(
                                     this.aliceWithdrawalReceipt = receipt;
                                 });
 
-                                it('should return the exit bond to Alice', async () => {
+                                it('should return the exit bond minus exit bounty to Alice', async () => {
                                     const actualAliceBalanceAfterClaiming = new BN(await web3.eth.getBalance(alice));
                                     const expectedAliceBalance = this.aliceBalanceBeforeClaiming.add(
-                                        this.startStandardExitBondSize,
+                                        this.standardExitBondReturnValue,
                                     ).sub(await spentOnGas(this.aliceWithdrawalReceipt));
 
                                     expect(actualAliceBalanceAfterClaiming).to.be.bignumber.equal(
@@ -583,7 +582,7 @@ contract(
                             depositUtxoPos,
                             {
                                 from: alice,
-                                value: this.startStandardExitTxValue,
+                                value: this.startStandardExitBondSize,
                             },
                         );
                     });
@@ -632,12 +631,12 @@ contract(
                             );
                         });
 
-                        it('should return the ERC20 tokens plus standard exit bond to the Liquidity Contract', async () => {
+                        it('should return the ERC20 tokens plus remaining exit bond to the Liquidity Contract', async () => {
                             const actualLCBalanceAfterProcessExit = new BN(
                                 await web3.eth.getBalance(this.liquidity.address),
                             );
                             const expectedLCBalance = this.LCEthBalanceBeforeProcessExit.add(
-                                this.startStandardExitBondSize,
+                                this.standardExitBondReturnValue,
                             );
 
                             const actualLCErc20BalanceAfterProcessExit = new BN(
@@ -663,7 +662,7 @@ contract(
                             it('should return the exit bond to Alice', async () => {
                                 const actualAliceBalanceAfterClaiming = new BN(await web3.eth.getBalance(alice));
                                 const expectedAliceBalance = this.aliceBalanceBeforeClaiming.add(
-                                    this.startStandardExitBondSize,
+                                    this.standardExitBondReturnValue,
                                 ).sub(await spentOnGas(this.aliceWithdrawalReceipt));
 
                                 expect(actualAliceBalanceAfterClaiming).to.be.bignumber.equal(
@@ -723,17 +722,21 @@ contract(
                             depositUtxoPos,
                             {
                                 from: alice,
-                                value: this.startStandardExitTxValue,
+                                value: this.startStandardExitBondSize,
                             },
                         );
                     });
 
                     describe('And then the bond size is changed, Bob starts exit with new bond size after two days', () => {
                         before(async () => {
-                            this.updatedStandardExitBondSize = new BN(8000000000000000);
-                            await this.exitGame.updateStartStandardExitBondSize(this.updatedStandardExitBondSize, {
-                                from: maintainer,
-                            });
+                            this.updatedStandardExitBondSize = this.startStandardExitBondSize.muln(1.5);
+                            this.updatedProcessExitBountySize = this.startStandardExitBondSize.muln(1.5);
+                            await this.exitGame.updateStartStandardExitBondSize(
+                                this.updatedStandardExitBondSize,
+                                this.updatedProcessExitBountySize, {
+                                    from: maintainer,
+                                },
+                            );
                             await time.increase(time.duration.days(2).add(time.duration.seconds(1)));
 
                             const utxoPos = this.bobTransferUtxoPos;
@@ -752,7 +755,7 @@ contract(
                                 depositUtxoPos,
                                 {
                                     from: bob,
-                                    value: this.updatedStandardExitBondSize.add(this.processExitBountySize),
+                                    value: this.updatedStandardExitBondSize,
                                 },
                             );
                         });
@@ -788,7 +791,7 @@ contract(
                                 it('should return the exit bond with older size to Alice', async () => {
                                     const actualAliceBalanceAfterClaiming = new BN(await web3.eth.getBalance(alice));
                                     const expectedAliceBalance = this.aliceBalanceBeforeClaiming.add(
-                                        this.startStandardExitBondSize,
+                                        this.standardExitBondReturnValue,
                                     ).sub(await spentOnGas(this.aliceWithdrawalReceipt));
 
                                     expect(actualAliceBalanceAfterClaiming).to.be.bignumber.equal(
@@ -814,7 +817,7 @@ contract(
                                 it('should return the exit bond with new size to Bob', async () => {
                                     const actualBobBalanceAfterClaiming = new BN(await web3.eth.getBalance(bob));
                                     const expectedBobBalance = this.bobBalanceBeforeClaiming.add(
-                                        this.updatedStandardExitBondSize,
+                                        this.updatedStandardExitBondSize.sub(this.updatedProcessExitBountySize),
                                     ).sub(await spentOnGas(this.bobWithdrawalReceipt));
 
                                     expect(actualBobBalanceAfterClaiming).to.be.bignumber.equal(
