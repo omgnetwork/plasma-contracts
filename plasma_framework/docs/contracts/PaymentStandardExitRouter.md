@@ -15,6 +15,7 @@ View Source: [contracts/src/exits/payment/routers/PaymentStandardExitRouter.sol]
 uint128 public constant INITIAL_BOND_SIZE;
 uint16 public constant BOND_LOWER_BOUND_DIVISOR;
 uint16 public constant BOND_UPPER_BOUND_MULTIPLIER;
+uint128 public constant INITIAL_EXIT_BOUNTY_SIZE;
 
 //internal members
 struct PaymentExitDataModel.StandardExitMap internal standardExitMap;
@@ -32,7 +33,7 @@ bool private bootDone;
 **Events**
 
 ```js
-event StandardExitBondUpdated(uint128  bondSize);
+event StandardExitBondUpdated(uint128  bondSize, uint128  exitBountySize);
 event ExitStarted(address indexed owner, uint168  exitId);
 event ExitChallenged(uint256 indexed utxoPos);
 event ExitOmitted(uint168 indexed exitId);
@@ -45,11 +46,11 @@ event BondReturnFailed(address indexed receiver, uint256  amount);
 - [boot(struct PaymentExitGameArgs.Args paymentExitGameArgs)](#boot)
 - [standardExits(uint168[] exitIds)](#standardexits)
 - [startStandardExitBondSize()](#startstandardexitbondsize)
-- [updateStartStandardExitBondSize(uint128 newBondSize)](#updatestartstandardexitbondsize)
-- [processStandardExitBountySize(uint256 gasPriceStartExit)](#processstandardexitbountysize)
+- [updateStartStandardExitBondSize(uint128 newBondSize, uint128 newExitBountySize)](#updatestartstandardexitbondsize)
+- [processStandardExitBountySize()](#processstandardexitbountysize)
 - [startStandardExit(struct PaymentStandardExitRouterArgs.StartStandardExitArgs args)](#startstandardexit)
 - [challengeStandardExit(struct PaymentStandardExitRouterArgs.ChallengeStandardExitArgs args)](#challengestandardexit)
-- [processStandardExit(uint168 exitId, address token, address payable processor)](#processstandardexit)
+- [processStandardExit(uint168 exitId, address token, address payable processExitInitiator)](#processstandardexit)
 
 ### boot
 
@@ -96,10 +97,10 @@ returns(uint128)
 
 ### updateStartStandardExitBondSize
 
-Updates the standard exit bond size, taking two days to become effective
+Updates the standard exit bond size and/or the exit bounty size, taking two days to become effective
 
 ```js
-function updateStartStandardExitBondSize(uint128 newBondSize) public nonpayable onlyFrom 
+function updateStartStandardExitBondSize(uint128 newBondSize, uint128 newExitBountySize) public nonpayable onlyFrom 
 ```
 
 **Arguments**
@@ -107,21 +108,21 @@ function updateStartStandardExitBondSize(uint128 newBondSize) public nonpayable 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
 | newBondSize | uint128 | The new bond size | 
+| newExitBountySize | uint128 | The new exit bounty size | 
 
 ### processStandardExitBountySize
 
 Retrieves the process standard exit bounty size
 
 ```js
-function processStandardExitBountySize(uint256 gasPriceStartExit) public view
-returns(uint256)
+function processStandardExitBountySize() public view
+returns(uint128)
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| gasPriceStartExit | uint256 |  | 
 
 ### startStandardExit
 
@@ -156,7 +157,7 @@ function challengeStandardExit(struct PaymentStandardExitRouterArgs.ChallengeSta
 Process standard exit
 
 ```js
-function processStandardExit(uint168 exitId, address token, address payable processor) internal nonpayable
+function processStandardExit(uint168 exitId, address token, address payable processExitInitiator) internal nonpayable
 ```
 
 **Arguments**
@@ -165,7 +166,7 @@ function processStandardExit(uint168 exitId, address token, address payable proc
 | ------------- |------------- | -----|
 | exitId | uint168 | The standard exit ID | 
 | token | address | The token (in erc20 address or address(0) for ETH) of the exiting output | 
-| processor | address payable | The processExit initiator | 
+| processExitInitiator | address payable | The processExits() initiator | 
 
 ## Contracts
 
@@ -180,7 +181,6 @@ function processStandardExit(uint168 exitId, address token, address payable proc
 * [EthDepositVerifier](EthDepositVerifier.md)
 * [EthVault](EthVault.md)
 * [ExitableTimestamp](ExitableTimestamp.md)
-* [ExitBounty](ExitBounty.md)
 * [ExitGameController](ExitGameController.md)
 * [ExitGameRegistry](ExitGameRegistry.md)
 * [ExitId](ExitId.md)

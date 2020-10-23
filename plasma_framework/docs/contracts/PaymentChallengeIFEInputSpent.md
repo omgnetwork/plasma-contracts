@@ -125,7 +125,6 @@ function verifySpendingCondition(struct PaymentChallengeIFEInputSpent.ChallengeI
 * [EthDepositVerifier](EthDepositVerifier.md)
 * [EthVault](EthVault.md)
 * [ExitableTimestamp](ExitableTimestamp.md)
-* [ExitBounty](ExitBounty.md)
 * [ExitGameController](ExitGameController.md)
 * [ExitGameRegistry](ExitGameRegistry.md)
 * [ExitId](ExitId.md)

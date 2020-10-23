@@ -23,19 +23,20 @@ event InFlightExitOmitted(uint168 indexed exitId, address  token);
 event InFlightExitOutputWithdrawn(uint168 indexed exitId, uint16  outputIndex);
 event InFlightExitInputWithdrawn(uint168 indexed exitId, uint16  inputIndex);
 event InFlightBondReturnFailed(address indexed receiver, uint256  amount);
+event InFlightBountyReturnFailed(address indexed receiver, uint256  amount);
 ```
 
 ## Functions
 
-- [run(struct PaymentProcessInFlightExit.Controller self, struct PaymentExitDataModel.InFlightExitMap exitMap, uint168 exitId, address token)](#run)
+- [run(struct PaymentProcessInFlightExit.Controller self, struct PaymentExitDataModel.InFlightExitMap exitMap, uint168 exitId, address token, address payable processExitInitiator)](#run)
 - [isAnyInputFinalizedByOtherExit(PlasmaFramework framework, struct PaymentExitDataModel.InFlightExit exit, uint168 exitId)](#isanyinputfinalizedbyotherexit)
 - [shouldWithdrawInput(struct PaymentProcessInFlightExit.Controller controller, struct PaymentExitDataModel.InFlightExit exit, struct PaymentExitDataModel.WithdrawData withdrawal, address token, uint16 index)](#shouldwithdrawinput)
 - [shouldWithdrawOutput(struct PaymentProcessInFlightExit.Controller controller, struct PaymentExitDataModel.InFlightExit exit, struct PaymentExitDataModel.WithdrawData withdrawal, address token, uint16 index)](#shouldwithdrawoutput)
 - [withdrawFromVault(struct PaymentProcessInFlightExit.Controller self, struct PaymentExitDataModel.WithdrawData withdrawal)](#withdrawfromvault)
 - [flagOutputsWhenNonCanonical(PlasmaFramework framework, struct PaymentExitDataModel.InFlightExit exit, address token, uint168 exitId)](#flagoutputswhennoncanonical)
 - [flagOutputsWhenCanonical(PlasmaFramework framework, struct PaymentExitDataModel.InFlightExit exit, address token, uint168 exitId)](#flagoutputswhencanonical)
-- [returnInputPiggybackBonds(struct PaymentProcessInFlightExit.Controller self, struct PaymentExitDataModel.InFlightExit exit, address token)](#returninputpiggybackbonds)
-- [returnOutputPiggybackBonds(struct PaymentProcessInFlightExit.Controller self, struct PaymentExitDataModel.InFlightExit exit, address token)](#returnoutputpiggybackbonds)
+- [returnInputPiggybackBonds(struct PaymentProcessInFlightExit.Controller self, struct PaymentExitDataModel.InFlightExit exit, address token, address payable processExitInitiator)](#returninputpiggybackbonds)
+- [returnOutputPiggybackBonds(struct PaymentProcessInFlightExit.Controller self, struct PaymentExitDataModel.InFlightExit exit, address token, address payable processExitInitiator)](#returnoutputpiggybackbonds)
 - [clearPiggybackInputFlag(struct PaymentExitDataModel.InFlightExit exit, address token)](#clearpiggybackinputflag)
 - [clearPiggybackOutputFlag(struct PaymentExitDataModel.InFlightExit exit, address token)](#clearpiggybackoutputflag)
 - [allPiggybacksCleared(struct PaymentExitDataModel.InFlightExit exit)](#allpiggybackscleared)
@@ -45,7 +46,7 @@ event InFlightBondReturnFailed(address indexed receiver, uint256  amount);
 Main logic function to process in-flight exit
 
 ```js
-function run(struct PaymentProcessInFlightExit.Controller self, struct PaymentExitDataModel.InFlightExitMap exitMap, uint168 exitId, address token) public nonpayable
+function run(struct PaymentProcessInFlightExit.Controller self, struct PaymentExitDataModel.InFlightExitMap exitMap, uint168 exitId, address token, address payable processExitInitiator) public nonpayable
 ```
 
 **Arguments**
@@ -56,6 +57,7 @@ function run(struct PaymentProcessInFlightExit.Controller self, struct PaymentEx
 | exitMap | struct PaymentExitDataModel.InFlightExitMap | The storage of all in-flight exit data | 
 | exitId | uint168 | The exitId of the in-flight exit | 
 | token | address | The ERC20 token address of the exit; uses address(0) to represent ETH | 
+| processExitInitiator | address payable | The processExits() initiator | 
 
 ### isAnyInputFinalizedByOtherExit
 
@@ -152,7 +154,7 @@ function flagOutputsWhenCanonical(PlasmaFramework framework, struct PaymentExitD
 ### returnInputPiggybackBonds
 
 ```js
-function returnInputPiggybackBonds(struct PaymentProcessInFlightExit.Controller self, struct PaymentExitDataModel.InFlightExit exit, address token) private nonpayable
+function returnInputPiggybackBonds(struct PaymentProcessInFlightExit.Controller self, struct PaymentExitDataModel.InFlightExit exit, address token, address payable processExitInitiator) private nonpayable
 ```
 
 **Arguments**
@@ -162,11 +164,12 @@ function returnInputPiggybackBonds(struct PaymentProcessInFlightExit.Controller 
 | self | struct PaymentProcessInFlightExit.Controller |  | 
 | exit | struct PaymentExitDataModel.InFlightExit |  | 
 | token | address |  | 
+| processExitInitiator | address payable |  | 
 
 ### returnOutputPiggybackBonds
 
 ```js
-function returnOutputPiggybackBonds(struct PaymentProcessInFlightExit.Controller self, struct PaymentExitDataModel.InFlightExit exit, address token) private nonpayable
+function returnOutputPiggybackBonds(struct PaymentProcessInFlightExit.Controller self, struct PaymentExitDataModel.InFlightExit exit, address token, address payable processExitInitiator) private nonpayable
 ```
 
 **Arguments**
@@ -176,6 +179,7 @@ function returnOutputPiggybackBonds(struct PaymentProcessInFlightExit.Controller
 | self | struct PaymentProcessInFlightExit.Controller |  | 
 | exit | struct PaymentExitDataModel.InFlightExit |  | 
 | token | address |  | 
+| processExitInitiator | address payable |  | 
 
 ### clearPiggybackInputFlag
 
@@ -229,7 +233,6 @@ returns(bool)
 * [EthDepositVerifier](EthDepositVerifier.md)
 * [EthVault](EthVault.md)
 * [ExitableTimestamp](ExitableTimestamp.md)
-* [ExitBounty](ExitBounty.md)
 * [ExitGameController](ExitGameController.md)
 * [ExitGameRegistry](ExitGameRegistry.md)
 * [ExitId](ExitId.md)
