@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Pre-Release V2
 
+Simplify Bond and Exit Bounty - [2020-10-23]
+Have the Exit Bounty as a portion from the Exit Bond  
+- docs: add Bond Design doc ([#702](https://github.com/omgnetwork/plasma-contracts/pull/702))
+- [Process Exit Bounty] Bond and Bounty Simplification ([#707](https://github.com/omgnetwork/plasma-contracts/pull/707))
+
+
+---
+
+- chore: bump the vault version to the latest release ([#704](https://github.com/omgnetwork/plasma-contracts/pull/704))
+
+
+---
+
 Process Exit Bounty - [2020-08-31]
 Incentivize calling processExit by rewarding the caller with a bounty provided by the exit owner  
 - [Process Exit Bounty] Implement Bounty for Processing Exits consolidated ([#698](https://github.com/omgnetwork/plasma-contracts/pull/698))
