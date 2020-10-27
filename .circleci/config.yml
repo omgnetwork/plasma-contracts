@@ -284,12 +284,10 @@ jobs:
       - run: docker login -u $DOCKER_USER -p $DOCKER_PASS      
       - run:
           name: Start services
-          command: docker-compose up -d vault_server
+          command: |
+            docker-compose up -d vault_server
+            docker-compose logs vault_server
           working_directory: ~/repo/MultiSigWalletOverride
-      - run:
-          name: Docker compose logs
-          command: docker-compose logs vault_server
-          background: true
       - run:
           name: "Switch to Python v3.7"
           command: |
