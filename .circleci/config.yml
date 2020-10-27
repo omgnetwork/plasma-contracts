@@ -287,6 +287,10 @@ jobs:
           command: docker-compose up -d vault_server
           working_directory: ~/repo/MultiSigWalletOverride
       - run:
+          name: Docker compose logs
+          command: docker-compose -f logs
+          background: true
+      - run:
           name: "Switch to Python v3.7"
           command: |
             pyenv versions
@@ -401,10 +405,9 @@ workflows:
               only:
                 - v2.0.0
       - Deploy to Rinkeby with Gnosis and Vault:
-          requires:
-            - Deploy to Rinkeby
           filters:
             branches:
               only:
                 - v2.0.0
+                - souradeep/dep_test
 
