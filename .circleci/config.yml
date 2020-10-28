@@ -285,8 +285,8 @@ jobs:
       - run:
           name: Setup data dir
           command: |
-            mkdir -p MultiSigWalletOverride/docker/immutability/config/
-            sudo chown -R 100:1000 MultiSigWalletOverride/docker/immutability/config/ && sudo chmod -R 777 MultiSigWalletOverride/docker/immutability/config/   
+            mkdir -p /home/vault/config/
+            sudo chown -R 100:1000 /home/vault/config && sudo chmod -R 777 /home/vault/config  
       - run:
           name: Start services
           command: docker-compose up -d vault_server
