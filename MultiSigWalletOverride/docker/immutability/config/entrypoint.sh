@@ -2,9 +2,9 @@
 
 # Vault running in the container must listen on a different port.
 
-VAULT_CREDENTIALS="/home/vault/config/unseal.json"
+VAULT_CREDENTIALS="/home/root/vault/config/unseal.json"
 
-CONFIG_DIR="/home/vault/config"
+CONFIG_DIR="/home/root/vault/config"
 
 CA_CERT="$CONFIG_DIR/ca.crt"
 CA_KEY="$CONFIG_DIR/ca.key"
@@ -108,7 +108,7 @@ function gencerts {
 
 gencerts
 
-nohup vault server -log-level=debug -config /home/vault/config/vault.hcl &
+nohup vault server -log-level=debug -config /home/root/vault/config/vault.hcl &
 VAULT_PID=$!
 
 function unseal() {
@@ -126,8 +126,8 @@ function configure_plugin {
 
 	# just testing for now
 	plugin_file="${plugin_file}"
-	ls -latr /home/vault/plugins
-	sha256sum=`cat /home/vault/plugins/SHA256SUMS | awk '{print $1}'`
+	ls -latr /home/root/vault/plugins
+	sha256sum=`cat /home/root/vault/plugins/SHA256SUMS | awk '{print $1}'`
 	vault write sys/plugins/catalog/secret/${plugin_file} \
 		  sha_256="$sha256sum" \
 		  command="$plugin_file --ca-cert=$CA_CERT --client-cert=$TLS_CERT --client-key=$TLS_KEY"
