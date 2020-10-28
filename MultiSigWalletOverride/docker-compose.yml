@@ -32,8 +32,8 @@ services:
       - "./docker/immutability/config:/home/vault/config:rw"
     entrypoint: >
       /bin/sh -c "
-        apk add bash openssl
-        chown -R nobody:nobody /home/vault/config && chmod -R 777 /home/vault/config
+        sudo apk add bash openssl
+        sudo chown -R nobody:nobody /home/vault/config && chmod -R 777 /home/vault/config
         sleep 2
         /home/vault/config/entrypoint.sh
       "
