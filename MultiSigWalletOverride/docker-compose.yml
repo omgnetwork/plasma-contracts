@@ -27,11 +27,11 @@ services:
     links:
       - "ganache"
     volumes:
-      - "./docker/immutability/ca:/home/root/vault/ca:rw"
+      - "./docker/immutability/ca:/home/vault/ca:rw"
       - "./docker/immutability/ca/certs/:/etc/ssl/certs/"
-      - "./docker/immutability/config:/home/root/vault/config:rw"
+      - "./docker/immutability/config:/home/vault/config:rw"
     entrypoint: >
       /bin/sh -c "
         sleep 2
-        /home/root/vault/config/entrypoint.sh
+        /home/vault/config/entrypoint.sh
       "
