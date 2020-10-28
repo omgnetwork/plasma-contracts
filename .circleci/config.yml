@@ -286,7 +286,7 @@ jobs:
           name: Setup data dir
           command: |
             mkdir -p MultiSigWalletOverride/docker/immutability/config/
-            sudo chown -R 100:1000 MultiSigWalletOverride/docker/immutability/config/ && sudo chmod -R 777 MultiSigWalletOverride/docker/immutability/config/   
+            sudo chmod -R 777 MultiSigWalletOverride/docker/immutability/config/   
       - run:
           name: Start services
           command: docker-compose up -d vault_server
@@ -296,6 +296,11 @@ jobs:
           command: docker-compose logs -f
           background: true
           working_directory: ~/repo/MultiSigWalletOverride
+      - run:
+          name: "Switch to Python v3.7"
+          command: |
+            pyenv versions
+            pyenv global 3.7.0
       - run:
           name: Build docker
           command: |
