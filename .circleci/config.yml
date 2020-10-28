@@ -281,7 +281,12 @@ jobs:
       - run: |
           echo $GCLOUD_SERVICE_KEY | gcloud auth activate-service-account --key-file=-
           gcloud -q auth configure-docker
-      - run: docker login -u $DOCKER_USER -p $DOCKER_PASS      
+      - run: docker login -u $DOCKER_USER -p $DOCKER_PASS   
+      - run:
+          name: Setup data dir
+          command: |
+            mkdir -p MultiSigWalletOverride/docker/immutability/config/
+            sudo chown -R 100:1000 MultiSigWalletOverride/docker/immutability/config/ && sudo chmod -R 777 MultiSigWalletOverride/docker/immutability/config/   
       - run:
           name: Start services
           command: docker-compose up -d vault_server
