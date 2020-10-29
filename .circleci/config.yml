@@ -285,14 +285,12 @@ jobs:
       - run:
           name: Build docker
           command: |
-            docker build -t omisego/plasma-contracts . --build-arg VAULT=true
-      - run:
-          name: Setup data dir
-          command: |
-            sudo chmod -R 777 MultiSigWalletOverride/docker/immutability/config/   
+            docker build -t omisego/plasma-contracts . --build-arg VAULT=true 
       - run:
           name: Start services
-          command: docker-compose up -d vault_server
+          command: |
+            sudo chmod -R 777 MultiSigWalletOverride/docker/immutability/config/
+            docker-compose up -d vault_server
           working_directory: ~/repo/MultiSigWalletOverride
       - run:
           name: Docker compose logs
