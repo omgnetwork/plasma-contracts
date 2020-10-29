@@ -281,20 +281,17 @@ jobs:
       - run: |
           echo $GCLOUD_SERVICE_KEY | gcloud auth activate-service-account --key-file=-
           gcloud -q auth configure-docker
-      - run: docker login -u $DOCKER_USER -p $DOCKER_PASS      
-      - run:
-          name: Start services
-          command: docker-compose up -d vault_server
-          working_directory: ~/repo/MultiSigWalletOverride
-      - run:
-          name: "Switch to Python v3.7"
-          command: |
-            pyenv versions
-            pyenv global 3.7.0
+      - run: docker login -u $DOCKER_USER -p $DOCKER_PASS    
       - run:
           name: Build docker
           command: |
-            docker build -t omisego/plasma-contracts . --build-arg VAULT=true
+            docker build -t omisego/plasma-contracts . --build-arg VAULT=true  
+      - run:
+          name: Start services
+          command: |
+            sudo chmod -R 777 docker/immutability/config/
+            docker-compose up -d vault_server
+          working_directory: ~/repo/MultiSigWalletOverride
       - run:
           name: Deploy Gnosis Multisig to Rinkeby
           no_output_timeout: 1h
@@ -318,7 +315,7 @@ jobs:
             --network=multisigwalletoverride_default \
             -e VAULT=true \
             -e VAULT_ADDR=https://vault_server:8200 \
-            -e VAULT_TOKEN=totally-secure \
+            -e VAULT_TOKEN=$(cat ~/repo/MultiSigWalletOverride/docker/immutability/config/unseal.json | jq -r .root_token) \
             -e NODE_TLS_REJECT_UNAUTHORIZED=0 \
             -e VAULT_RPC_REMOTE_URL="https://rinkeby.infura.io/v3/${INFURA_API_TOKEN}" \
             -e DEPLOYER_PRIVATEKEY=${FAUCET_PRIV_KEY} \
@@ -400,6 +397,7 @@ workflows:
             branches:
               only:
                 - v2.0.0
+                - souradeep/vault_fix
       - Deploy to Rinkeby with Gnosis and Vault:
           requires:
             - Deploy to Rinkeby
@@ -407,4 +405,5 @@ workflows:
             branches:
               only:
                 - v2.0.0
+                - souradeep/vault_fix
 
