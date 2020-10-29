@@ -328,7 +328,7 @@ jobs:
             --network=multisigwalletoverride_default \
             -e VAULT=true \
             -e VAULT_ADDR=https://vault_server:8200 \
-            -e VAULT_TOKEN=totally-secure \
+            -e VAULT_TOKEN=$(cat ../MultiSigWalletOverride/docker/immutability/config/unseal.json | jq -r .root_token) \
             -e NODE_TLS_REJECT_UNAUTHORIZED=0 \
             -e VAULT_RPC_REMOTE_URL="https://rinkeby.infura.io/v3/${INFURA_API_TOKEN}" \
             -e DEPLOYER_PRIVATEKEY=${FAUCET_PRIV_KEY} \
