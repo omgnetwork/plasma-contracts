@@ -289,7 +289,6 @@ jobs:
       - run:
           name: Setup data dir
           command: |
-            mkdir -p MultiSigWalletOverride/docker/immutability/config/
             sudo chmod -R 777 MultiSigWalletOverride/docker/immutability/config/   
       - run:
           name: Start services
