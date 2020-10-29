@@ -289,7 +289,7 @@ jobs:
       - run:
           name: Start services
           command: |
-            sudo chmod -R 777 MultiSigWalletOverride/docker/immutability/config/
+            sudo chmod -R 777 docker/immutability/config/
             docker-compose up -d vault_server
           working_directory: ~/repo/MultiSigWalletOverride
       - run:
