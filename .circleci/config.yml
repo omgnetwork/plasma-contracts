@@ -283,10 +283,6 @@ jobs:
           gcloud -q auth configure-docker
       - run: docker login -u $DOCKER_USER -p $DOCKER_PASS   
       - run:
-          name: Build docker
-          command: |
-            docker build -t omisego/plasma-contracts . --build-arg VAULT=true 
-      - run:
           name: Start services
           command: |
             sudo chmod -R 777 docker/immutability/config/
@@ -302,6 +298,10 @@ jobs:
           command: |
             pyenv versions
             pyenv global 3.7.0
+      - run:
+          name: Build docker
+          command: |
+            docker build -t omisego/plasma-contracts . --build-arg VAULT=true 
       - run:
           name: Deploy Gnosis Multisig to Rinkeby
           no_output_timeout: 1h
@@ -320,7 +320,6 @@ jobs:
           name: Deploy contract to Rinkeby
           no_output_timeout: 1h
           command: |
-            pwd
             docker run --rm \
             -v /tmp:/home/plasma-contracts/MultiSigWallet/build \
             --network=multisigwalletoverride_default \
@@ -375,32 +374,6 @@ jobs:
 
 workflows:
   version: 2
-  Run python tests:
-    jobs:
-      - Python tests
-      - Python linter
-
-  Run truffle tests:
-    jobs:
-      - Truffle tests
-      - Solidity coverage
-      - Javascript linter
-      - Solidity linter
-  Other:
-    jobs:
-      - Deploy with Vault
-
-  Run python slow tests:
-    jobs:
-      - Python long running tests
-    triggers:
-      - schedule:
-          cron: "0 0 * * 1" # run job every monday at midnight
-          filters:
-            branches:
-              only:
-                - v2.0.0
-
   Deployment checks:
     jobs:
       - Deploy to Rinkeby:
