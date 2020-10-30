@@ -293,6 +293,11 @@ jobs:
             docker-compose up -d vault_server
           working_directory: ~/repo/MultiSigWalletOverride
       - run:
+          name: "Switch to Python v3.7"
+          command: |
+            pyenv versions
+            pyenv global 3.7.0
+      - run:
           name: Deploy Gnosis Multisig to Rinkeby
           no_output_timeout: 1h
           command: |
