@@ -10,7 +10,7 @@ module.exports = async (
     [_deployerAddress, _maintainerAddress, _authorityAddress],
 ) => {
     const authorityExists = fs.existsSync('vault_authority');
-    const vault = process.env.VAULT || false;
+    const vault = process.env.VAULT === 'true';
     if (vault === true && authorityExists === false) {
         const chainId = `${process.env.CHAIN_ID}` || 1;
         const rpcUrl = process.env.VAULT_RPC_REMOTE_URL || 'http://127.0.0.1:8545';

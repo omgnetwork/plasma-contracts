@@ -103,7 +103,7 @@ module.exports = async (
     // eslint-disable-next-line no-unused-vars
     [deployerAddress, maintainerAddress, authorityAddress],
 ) => {
-    const vault = process.env.VAULT || false;
+    const vault = process.env.VAULT === 'true';
     if (vault === true) {
         console.log('Performing final setup with multisig maintainer');
         const plasmaFramework = await PlasmaFramework.deployed();

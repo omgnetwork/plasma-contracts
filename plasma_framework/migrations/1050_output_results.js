@@ -14,7 +14,7 @@ module.exports = async (
     // eslint-disable-next-line no-unused-vars
     [deployerAddress, _maintainerAddress, authorityAddress],
 ) => {
-    const vault = process.env.VAULT || false;
+    const vault = process.env.VAULT === 'true';
     let authority;
     if (vault === true) {
         authority = fs.readFileSync('vault_authority').toString();
