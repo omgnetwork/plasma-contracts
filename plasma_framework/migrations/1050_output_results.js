@@ -16,7 +16,7 @@ module.exports = async (
 ) => {
     const vault = process.env.VAULT === 'true';
     let authority;
-    if (vault === true) {
+    if (vault) {
         authority = fs.readFileSync('vault_authority').toString();
     } else {
         authority = authorityAddress;

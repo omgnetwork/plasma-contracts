@@ -104,7 +104,7 @@ module.exports = async (
     [deployerAddress, maintainerAddress, authorityAddress],
 ) => {
     const vault = process.env.VAULT === 'true';
-    if (vault === true) {
+    if (vault) {
         console.log('Performing final setup with multisig maintainer');
         const plasmaFramework = await PlasmaFramework.deployed();
         const sha = childProcess.execSync('git rev-parse HEAD').toString().trim().substring(0, 7);
