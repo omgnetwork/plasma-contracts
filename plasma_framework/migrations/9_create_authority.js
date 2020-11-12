@@ -11,7 +11,7 @@ module.exports = async (
 ) => {
     const authorityExists = fs.existsSync('vault_authority');
     const vault = process.env.VAULT || false;
-    if (vault && authorityExists === false) {
+    if (vault === true && authorityExists === false) {
         const chainId = `${process.env.CHAIN_ID}` || 1;
         const rpcUrl = process.env.VAULT_RPC_REMOTE_URL || 'http://127.0.0.1:8545';
         const walletName = 'plasma-deployer';

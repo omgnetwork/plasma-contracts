@@ -17,7 +17,7 @@ module.exports = async (
     [deployerAddress, maintainerAddress, authorityAddress],
 ) => {
     const vault = process.env.VAULT || false;
-    if (!vault) {
+    if (vault === false) {
         console.log('Performing final setup');
         const plasmaFramework = await PlasmaFramework.deployed();
         const sha = childProcess.execSync('git rev-parse HEAD').toString().trim().substring(0, 7);
