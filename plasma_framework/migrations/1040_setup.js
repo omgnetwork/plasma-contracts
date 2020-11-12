@@ -16,8 +16,8 @@ module.exports = async (
     // eslint-disable-next-line no-unused-vars
     [deployerAddress, maintainerAddress, authorityAddress],
 ) => {
-    const vault = process.env.VAULT || false;
-    if (!vault) {
+    const vault = process.env.VAULT === 'true';
+    if (vault === false) {
         console.log('Performing final setup');
         const plasmaFramework = await PlasmaFramework.deployed();
         const sha = childProcess.execSync('git rev-parse HEAD').toString().trim().substring(0, 7);

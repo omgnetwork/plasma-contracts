@@ -147,7 +147,7 @@ jobs:
             export VAULT_TOKEN=$(cat ../MultiSigWalletOverride/docker/immutability/config/unseal.json | jq -r .root_token)
             npx truffle migrate --network local
           environment:
-            VAULT: true
+            VAULT: "true"
             VAULT_ADDR: https://127.0.0.1:8200
             NODE_TLS_REJECT_UNAUTHORIZED: 0
             VAULT_RPC_REMOTE_URL: http://ganache:8545
