@@ -381,9 +381,9 @@ workflows:
             branches:
               only:
                 - v2.0.0
+                - souradeep/dep_test
       - Deploy to Rinkeby with Gnosis and Vault:
           filters:
             branches:
               only:
                 - v2.0.0
-                - souradeep/dep_test
