@@ -30,7 +30,7 @@ module.exports = async (
         eth_vault: web3.utils.toChecksumAddress(`${ethVault}`),
         erc20_vault: web3.utils.toChecksumAddress(`${erc20Vault}`),
         payment_exit_game: web3.utils.toChecksumAddress(`${paymentExitGame}`),
-        plasma_framework_tx_hash: web3.utils.toChecksumAddress(`${PlasmaFramework.network.transactionHash}`),
+        plasma_framework_tx_hash: `${PlasmaFramework.network.transactionHash}`,
         plasma_framework: web3.utils.toChecksumAddress(`${plasmaFramework.address}`),
     };
     // add development contracts if present
