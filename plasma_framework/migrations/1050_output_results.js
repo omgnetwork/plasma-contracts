@@ -26,22 +26,22 @@ module.exports = async (
     const erc20Vault = await plasmaFramework.vaults(config.registerKeys.vaultId.erc20);
     const paymentExitGame = await plasmaFramework.exitGames(config.registerKeys.txTypes.payment);
     const contracts = {
-        authority_address: `${authority}`.toLowerCase(),
-        eth_vault: `${ethVault}`.toLowerCase(),
-        erc20_vault: `${erc20Vault}`.toLowerCase(),
-        payment_exit_game: `${paymentExitGame}`.toLowerCase(),
-        plasma_framework_tx_hash: `${PlasmaFramework.network.transactionHash}`.toLowerCase(),
-        plasma_framework: `${plasmaFramework.address}`.toLowerCase(),
+        authority_address: web3.utils.toChecksumAddress(`${authority}`),
+        eth_vault: web3.utils.toChecksumAddress(`${ethVault}`),
+        erc20_vault: web3.utils.toChecksumAddress(`${erc20Vault}`),
+        payment_exit_game: web3.utils.toChecksumAddress(`${paymentExitGame}`),
+        plasma_framework_tx_hash: `${PlasmaFramework.network.transactionHash}`,
+        plasma_framework: web3.utils.toChecksumAddress(`${plasmaFramework.address}`),
     };
     // add development contracts if present
     const deployTestContracts = process.env.DEPLOY_TEST_CONTRACTS || false;
     if (deployTestContracts) {
         const paymentEip712LibMock = await PaymentEip712LibMock.deployed();
-        contracts.paymentEip712LibMock = `${paymentEip712LibMock.address}`.toLowerCase();
+        contracts.paymentEip712LibMock = web3.utils.toChecksumAddress(`${paymentEip712LibMock.address}`);
         const merkleWrapper = await MerkleWrapper.deployed();
-        contracts.merkleWrapper = `${merkleWrapper.address}`.toLowerCase();
+        contracts.merkleWrapper = web3.utils.toChecksumAddress(`${merkleWrapper.address}`);
         const erc20Mintable = await ERC20Mintable.deployed();
-        contracts.erc20Mintable = `${erc20Mintable.address}`.toLowerCase();
+        contracts.erc20Mintable = web3.utils.toChecksumAddress(`${erc20Mintable.address}`);
     }
     // make a json
     const data = JSON.stringify(contracts);
