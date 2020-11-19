@@ -29,7 +29,7 @@
     "child_process": "1.0.2",
     "dotenv": "^8.2.0",
     "ganache-cli": "6.1.8",
-    "solc": "0.5.8",
+    "solc": "^0.7.5",
     "truffle": "^5.1.36"
   },
   "devDependencies": {
@@ -40,6 +40,6 @@
     "eslint-plugin-jsx-a11y": "5.1.1",
     "eslint-plugin-react": "7.8.2",
     "growl": "^1.10.5",
-    "run-with-testrpc": "0.2.1"
+    "run-with-testrpc": "^0.3.1"
   }
 }
