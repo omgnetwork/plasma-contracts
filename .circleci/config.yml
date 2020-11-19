@@ -304,6 +304,8 @@ jobs:
             docker run --rm \
             -v /tmp:/home/plasma-contracts/MultiSigWallet/build \
             -e DEPLOYER_PRIVATEKEY=${FAUCET_PRIV_KEY} \
+            -e MAINTAINER_PRIVATEKEY=${FAUCET_PRIV_KEY} \
+            -e AUTHORITY_PRIVATEKEY=${FAUCET_PRIV_KEY} \
             -e REMOTE_URL="https://rinkeby.infura.io/v3/${INFURA_API_TOKEN}" \
             -w /home/plasma-contracts/MultiSigWallet \
             omisego/plasma-contracts \
@@ -322,6 +324,8 @@ jobs:
             -e NODE_TLS_REJECT_UNAUTHORIZED=0 \
             -e VAULT_RPC_REMOTE_URL="https://rinkeby.infura.io/v3/${INFURA_API_TOKEN}" \
             -e DEPLOYER_PRIVATEKEY=${FAUCET_PRIV_KEY} \
+            -e MAINTAINER_PRIVATEKEY=${FAUCET_PRIV_KEY} \
+            -e AUTHORITY_PRIVATEKEY=${FAUCET_PRIV_KEY} \
             -e REMOTE_URL="https://rinkeby.infura.io/v3/${INFURA_API_TOKEN}" \
             omisego/plasma-contracts \
             npx truffle migrate --reset \
@@ -398,7 +402,6 @@ workflows:
             branches:
               only:
                 - v2.0.0
-                - souradeep/dep_alerts
       - Deploy to Rinkeby with Gnosis and Vault:
           requires:
             - Deploy to Rinkeby
@@ -406,5 +409,4 @@ workflows:
             branches:
               only:
                 - v2.0.0
-                - souradeep/dep_alerts
 
