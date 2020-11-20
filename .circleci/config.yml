@@ -65,7 +65,7 @@ commands:
             - /usr/local/lib/node_modules
 
 jobs:
-  Deploy with Vault:
+  Deploy with Vault using docker-compose:
     machine:
       image: ubuntu-1604:201903-01
     working_directory: ~/repo
@@ -304,15 +304,13 @@ jobs:
             docker run --rm \
             -v /tmp:/home/plasma-contracts/MultiSigWallet/build \
             -e DEPLOYER_PRIVATEKEY=${FAUCET_PRIV_KEY} \
-            -e MAINTAINER_PRIVATEKEY=${FAUCET_PRIV_KEY} \
-            -e AUTHORITY_PRIVATEKEY=${FAUCET_PRIV_KEY} \
             -e REMOTE_URL="https://rinkeby.infura.io/v3/${INFURA_API_TOKEN}" \
             -w /home/plasma-contracts/MultiSigWallet \
             omisego/plasma-contracts \
             npx truffle migrate --accounts ${FAUCET_ADDRESS} --confirmations 1 \
             --network remote
       - run:
-          name: Deploy contract to Rinkeby
+          name: Deploy Plasma contracts to Rinkeby
           no_output_timeout: 1h
           command: |
             docker run --rm \
@@ -324,8 +322,6 @@ jobs:
             -e NODE_TLS_REJECT_UNAUTHORIZED=0 \
             -e VAULT_RPC_REMOTE_URL="https://rinkeby.infura.io/v3/${INFURA_API_TOKEN}" \
             -e DEPLOYER_PRIVATEKEY=${FAUCET_PRIV_KEY} \
-            -e MAINTAINER_PRIVATEKEY=${FAUCET_PRIV_KEY} \
-            -e AUTHORITY_PRIVATEKEY=${FAUCET_PRIV_KEY} \
             -e REMOTE_URL="https://rinkeby.infura.io/v3/${INFURA_API_TOKEN}" \
             omisego/plasma-contracts \
             npx truffle migrate --reset \
@@ -382,7 +378,7 @@ workflows:
       - Solidity linter
   Other:
     jobs:
-      - Deploy with Vault
+      - Deploy with Vault using docker-compose
 
   Run python slow tests:
     jobs:
@@ -409,4 +405,3 @@ workflows:
             branches:
               only:
                 - v2.0.0
-
