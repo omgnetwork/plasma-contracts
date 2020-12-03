@@ -95,7 +95,7 @@ contract Quasar {
         uint256 tokenAmount = ticketData[utxoPos].reservedAmount;
         ticketData[utxoPos].reservedAmount = 0;
         ticketData[utxoPos].validityTimestamp = 0;
-        tokenUsableCapacity[ticketData[utxoPos].token] += tokenAmount;
+        tokenUsableCapacity[ticketData[utxoPos].token] = tokenUsableCapacity[ticketData[utxoPos].token].add(tokenAmount);
         bondReserve = bondReserve.add(ticketData[utxoPos].bondValue); 
     }
 
@@ -103,7 +103,7 @@ contract Quasar {
      * @dev Add Eth Liquid funds to the quasar
     */
     function addEthCapacity() public payable onlyQuasarMaintainer() {
-        tokenUsableCapacity[address(0x0)] += msg.value;
+        tokenUsableCapacity[address(0x0)] = tokenUsableCapacity[address(0x0)].add(msg.value);
         emit QuasarTotalEthCapacityUpdated(tokenUsableCapacity[address(0x0)]);
     }
 
@@ -122,6 +122,7 @@ contract Quasar {
             uint256 residualAlmount = amount.sub(bondReserve);
             bondReserve = 0;
             tokenUsableCapacity[token] = tokenUsableCapacity[token].sub(residualAlmount);
+            emit QuasarTotalEthCapacityUpdated(tokenUsableCapacity[address(0x0)]);
         }
         msg.sender.transfer(amount);
     }
@@ -160,8 +161,8 @@ contract Quasar {
         require(outputData.amount != 0, "The reserved amount cannot be zero");
         require(msg.value == bondValue, "Bond Value incorrect");
 
-        tokenUsableCapacity[outputData.token] -= outputData.amount;
-        ticketData[utxoPos] = Ticket(msg.sender, block.timestamp + 14400, outputData.amount, outputData.token, msg.value, false);
+        tokenUsableCapacity[outputData.token] = tokenUsableCapacity[outputData.token].sub(outputData.amount);
+        ticketData[utxoPos] = Ticket(msg.sender, block.timestamp.add(14400), outputData.amount, outputData.token, msg.value, false);
     }
 
     // for simplicity fee has to be from a seperate input in the tx to quasar
@@ -209,7 +210,7 @@ contract Quasar {
         require(ticketData[utxoPos].reservedAmount == outputData.amount, "Wrong Amount Sent to Quasar Owner");
         require(ticketData[utxoPos].token == outputData.token, "Wrong Token Sent to Quasar Owner");
 
-        claimData[utxoPos] = Claim(rlpTxToQuasarOwner, block.timestamp + waitingPeriod, true);
+        claimData[utxoPos] = Claim(rlpTxToQuasarOwner, block.timestamp.add(waitingPeriod), true);
         ticketData[utxoPos].isClaimed = true;
     }
 
