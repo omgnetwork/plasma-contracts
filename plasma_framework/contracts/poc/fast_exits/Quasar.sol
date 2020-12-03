@@ -254,10 +254,10 @@ contract Quasar {
         claimData[utxoPos].isValid = false;
         Ticket memory ticket = ticketData[utxoPos];
         address token = ticket.token;
-        uint256 bondValue = ticket.bondValue;
+        uint256 ticketBondValue = ticket.bondValue;
         uint256 fundsReserved = ticket.reservedAmount;
         tokenUsableCapacity[token] = tokenUsableCapacity[token].add(fundsReserved);
-        msg.sender.transfer(bondValue);
+        msg.sender.transfer(ticketBondValue);
     }
 
     /**
@@ -278,7 +278,7 @@ contract Quasar {
      * @param output Output Data
      * @param expectedOutputOwner expected owner of the output
     */
-    function verifyOwnership(FungibleTokenOutputModel.Output memory output, address expectedOutputOwner) private view {
+    function verifyOwnership(FungibleTokenOutputModel.Output memory output, address expectedOutputOwner) private pure {
         address outputOwner = PaymentTransactionModel.getOutputOwner(output);
         require(outputOwner == expectedOutputOwner, "Was not called by the Output owner");
     }
