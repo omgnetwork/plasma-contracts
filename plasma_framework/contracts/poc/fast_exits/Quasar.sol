@@ -210,8 +210,8 @@ contract Quasar {
         require(ticketData[utxoPos].reservedAmount == outputData.amount, "Wrong Amount Sent to Quasar Owner");
         require(ticketData[utxoPos].token == outputData.token, "Wrong Token Sent to Quasar Owner");
 
-        claimData[utxoPos] = Claim(rlpTxToQuasarOwner, block.timestamp.add(waitingPeriod), true);
         ticketData[utxoPos].isClaimed = true;
+        claimData[utxoPos] = Claim(rlpTxToQuasarOwner, block.timestamp.add(waitingPeriod), true);
     }
 
     /**
