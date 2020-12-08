@@ -1,5 +1,6 @@
 const PaymentExitGame = artifacts.require('PaymentExitGame');
 const PlasmaFramework = artifacts.require('PlasmaFramework');
+const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry');
 const Quasar = artifacts.require('../Quasar');
 const EthVault = artifacts.require('EthVault');
 const Erc20Vault = artifacts.require('Erc20Vault');
@@ -14,6 +15,8 @@ const { MerkleTree } = require('../helpers/merkle.js');
 const { PaymentTransactionOutput, PaymentTransaction } = require('../helpers/transaction.js');
 const { spentOnGas } = require('../helpers/utils.js');
 const { buildUtxoPos } = require('../helpers/positions.js');
+const { sign } = require('../helpers/sign.js');
+const { hashTx } = require('../helpers/paymentEip712.js');
 const Testlang = require('../helpers/testlang.js');
 const config = require('../../config.js');
 
@@ -47,29 +50,30 @@ contract(
             await Promise.all([setupAccount(), deployStableContracts()]);
         });
 
-        const setupQuasar = async () => {
-            this.waitingPeriod = 14400;
-            this.dummyQuasarBondValue = 500;
-
-            this.quasar = await Quasar.new(
-                this.framework.address,
-                quasarOwner,
-                0,
-                this.waitingPeriod,
-                this.dummyQuasarBondValue,
-                { from: quasarMaintainer },
-            );
-        };
-
         const setupContracts = async () => {
             this.framework = await PlasmaFramework.deployed();
-
+            this.spendingConditionRegistry = await SpendingConditionRegistry.deployed();
             this.ethVault = await EthVault.at(await this.framework.vaults(config.registerKeys.vaultId.eth));
             this.erc20Vault = await Erc20Vault.at(await this.framework.vaults(config.registerKeys.vaultId.erc20));
             this.exitGame = await PaymentExitGame.at(
                 await this.framework.exitGames(
                     config.registerKeys.txTypes.payment,
                 ),
+            );
+        };
+
+        const setupQuasar = async () => {
+            this.waitingPeriod = 14400;
+            this.dummyQuasarBondValue = 500;
+
+            this.quasar = await Quasar.new(
+                this.framework.address,
+                this.spendingConditionRegistry.address,
+                quasarOwner,
+                0,
+                this.waitingPeriod,
+                this.dummyQuasarBondValue,
+                { from: quasarMaintainer },
             );
         };
 
@@ -497,6 +501,7 @@ contract(
                             await aliceTransferEth(bob, DEPOSIT_VALUE);
                             this.bobTransferTxUtxoPos = this.transferUtxoPos;
                             this.bobTransferTx = this.transferTx;
+                            this.bobTransferTxObject = this.transferTxObject;
                             this.bobTransferTxMerkleProof = this.merkleProofForTransferTx;
                             // spends same output in a tx to quasarowner
                             await aliceTransferEth(quasarOwner, DEPOSIT_VALUE);
@@ -528,8 +533,9 @@ contract(
                                     const utxoPos = this.depositUtxoPos;
                                     const rlpChallengeTx = this.bobTransferTx;
                                     const challengeTxInputIndex = 0;
-                                    const challengeTxInclusionProof = this.bobTransferTxMerkleProof;
-                                    const challengeTxPos = this.bobTransferTxUtxoPos;
+                                    const txHash = hashTx(this.bobTransferTxObject, this.framework.address);
+                                    const signature = sign(txHash, alicePrivateKey);
+
                                     this.quasarMaintainerBalanceBeforeChallenge = new BN(
                                         await web3.eth.getBalance(quasarMaintainer),
                                     );
@@ -540,8 +546,7 @@ contract(
                                         utxoPos,
                                         rlpChallengeTx,
                                         challengeTxInputIndex,
-                                        challengeTxInclusionProof,
-                                        challengeTxPos,
+                                        signature,
                                         {
                                             from: quasarMaintainer,
                                         },
