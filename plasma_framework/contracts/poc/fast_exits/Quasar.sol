@@ -2,10 +2,16 @@ pragma solidity 0.5.11;
 pragma experimental ABIEncoderV2;
 
 import "../../src/framework/PlasmaFramework.sol";
+import "../../src/exits/payment/PaymentExitGame.sol";
 import "../../src/utils/PosLib.sol";
 import "../../src/utils/Merkle.sol";
+import "../../src/exits/utils/ExitId.sol";
+import "../../src/exits/payment/routers/PaymentInFlightExitRouter.sol";
 import "../../src/transactions/PaymentTransactionModel.sol";
+import "../../src/transactions/GenericTransaction.sol";
 import "../../src/exits/utils/MoreVpFinalization.sol";
+import "../../src/exits/interfaces/ISpendingCondition.sol";
+import "../../src/exits/registries/SpendingConditionRegistry.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/SafeERC20.sol";
@@ -17,9 +23,15 @@ import "openzeppelin-solidity/contracts/token/ERC20/SafeERC20.sol";
 contract Quasar {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
+    using SafeMath for uint64;
     using PosLib for PosLib.Position;
 
     PlasmaFramework public plasmaFramework;
+    // the contract works with the current exit game
+    // any changes to the exit game would require modifications to this contract
+    // verify the exitGame before interacting
+    PaymentExitGame public paymentExitGame;
+    SpendingConditionRegistry public spendingConditionRegistry;
 
     address public quasarOwner;
     address public quasarMaintainer;
@@ -28,6 +40,7 @@ contract Quasar {
     uint256 public bondValue;
     // bond is added to the reserve only when tickets are flushed, bond is returned every other time
     uint256 private bondReserve;
+    bool public isPaused;
 
     struct Ticket {
         address payable outputOwner;
@@ -35,6 +48,7 @@ contract Quasar {
         uint256 reservedAmount;
         address token;
         uint256 bondValue;
+        bytes rlpOutputCreationTx;
         bool isClaimed;
     }
 
@@ -55,6 +69,11 @@ contract Quasar {
         _;
     }
 
+    modifier onlyWhenNotPaused() {
+        require(!isPaused, "The Quasar contract is paused");
+        _;
+    }
+
     /**
      * @dev Constructor, takes params to set up quasar contract
      * @param plasmaFrameworkContract Plasma Framework contract address
@@ -63,8 +82,10 @@ contract Quasar {
      * @param _waitingPeriod Waiting period from submission to processing claim
      * @param _bondValue bond to obtain tickets
     */
-    constructor (address plasmaFrameworkContract, address _quasarOwner, uint256 _safePlasmaBlockNum, uint256 _waitingPeriod, uint256 _bondValue) public {
+    constructor (address plasmaFrameworkContract, address spendingConditionRegistryContract, address _quasarOwner, uint256 _safePlasmaBlockNum, uint256 _waitingPeriod, uint256 _bondValue) public {
         plasmaFramework = PlasmaFramework(plasmaFrameworkContract);
+        paymentExitGame = PaymentExitGame(plasmaFramework.exitGames(1));
+        spendingConditionRegistry = SpendingConditionRegistry(spendingConditionRegistryContract);
         quasarOwner = _quasarOwner;
         quasarMaintainer = msg.sender;
         safePlasmaBlockNum = _safePlasmaBlockNum;
@@ -73,6 +94,9 @@ contract Quasar {
         bondReserve = 0;
     }
 
+    ////////////////////////////////////////////	
+    // Maintenance methods	
+    ////////////////////////////////////////////
     /**
      * @dev Update the safe blocknum limit
      * @param newSafePlasmaBlockNum new blocknum limit, has to be higher than previous blocknum limit
@@ -97,6 +121,14 @@ contract Quasar {
         ticketData[utxoPos].validityTimestamp = 0;
         tokenUsableCapacity[ticketData[utxoPos].token] = tokenUsableCapacity[ticketData[utxoPos].token].add(tokenAmount);
         bondReserve = bondReserve.add(ticketData[utxoPos].bondValue); 
+    }
+
+    function pauseQuasar() public onlyQuasarMaintainer() {
+        isPaused = true;
+    }
+
+    function resumeQuasar() public onlyQuasarMaintainer() {
+        isPaused = false;
     }
 
     /**
@@ -127,6 +159,9 @@ contract Quasar {
         msg.sender.transfer(amount);
     }
 
+    ////////////////////////////////////////////	
+    // Exit procedure	
+    ////////////////////////////////////////////
     /**
      * @dev Obtain a ticket from the Quasar
      * @notice Ticket is valid for four hours, pay bond here for obtaining ticket
@@ -134,7 +169,7 @@ contract Quasar {
      * @param rlpOutputCreationTx RLP-encoded transaction that created the output
      * @param outputCreationTxInclusionProof Transaction inclusion proof
     */
-    function obtainTicket(uint256 utxoPos, bytes memory rlpOutputCreationTx, bytes memory outputCreationTxInclusionProof) public payable {
+    function obtainTicket(uint256 utxoPos, bytes memory rlpOutputCreationTx, bytes memory outputCreationTxInclusionProof) public payable onlyWhenNotPaused() {
         PosLib.Position memory utxoPosDecoded = PosLib.decode(utxoPos);
 
         require(utxoPosDecoded.blockNum <= safePlasmaBlockNum, "UTXO is from a block over the safe limit");
@@ -162,7 +197,7 @@ contract Quasar {
         require(msg.value == bondValue, "Bond Value incorrect");
 
         tokenUsableCapacity[outputData.token] = tokenUsableCapacity[outputData.token].sub(outputData.amount);
-        ticketData[utxoPos] = Ticket(msg.sender, block.timestamp.add(14400), outputData.amount, outputData.token, msg.value, false);
+        ticketData[utxoPos] = Ticket(msg.sender, block.timestamp.add(14400), outputData.amount, outputData.token, msg.value, rlpOutputCreationTx, false);
     }
 
     // for simplicity fee has to be from a seperate input in the tx to quasar
@@ -179,23 +214,9 @@ contract Quasar {
         bytes memory rlpTxToQuasarOwner,
         bytes memory txToQuasarOwnerInclusionProof
     ) public {
-        require(!ticketData[utxoPos].isClaimed, "Already Claimed");
-        require(ticketData[utxoPos].outputOwner == msg.sender, "Not called by the ticket owner");
-        uint256 expiryTimestamp = ticketData[utxoPos].validityTimestamp;
-        require(expiryTimestamp != 0 && block.timestamp <= expiryTimestamp, "Ticket is not valid");
-
-        PaymentTransactionModel.Transaction memory decodedTx
-        = PaymentTransactionModel.decode(rlpTxToQuasarOwner);
-
-        // first input should be the Utxo with which ticket was obtained
-        require(decodedTx.inputs[0] == bytes32(utxoPos), "Wrong Tx provided");
-
-        // first output should be the utxo for Quasar owner
-        FungibleTokenOutputModel.Output memory outputData
-        = PaymentTransactionModel.getOutput(decodedTx, 0);
-
-        // verify output to Quasar Owner
-        verifyOwnership(outputData, quasarOwner);
+        verifyTicketValidityForClaim(utxoPos);
+        
+        verifyClaimTxCorrectlyFormed(utxoPos, rlpTxToQuasarOwner);
 
         PosLib.Position memory utxoQuasarOwnerDecoded = PosLib.decode(utxoPosQuasarOwner);
         require(MoreVpFinalization.isStandardFinalized(
@@ -205,30 +226,44 @@ contract Quasar {
             txToQuasarOwnerInclusionProof
         ), "Provided Tx doesn't exist");
 
-
-        // considering fee as a separate input
-        require(ticketData[utxoPos].reservedAmount == outputData.amount, "Wrong Amount Sent to Quasar Owner");
-        require(ticketData[utxoPos].token == outputData.token, "Wrong Token Sent to Quasar Owner");
-
         ticketData[utxoPos].isClaimed = true;
         claimData[utxoPos] = Claim(rlpTxToQuasarOwner, block.timestamp.add(waitingPeriod), true);
     }
 
+    function ifeClaim(uint256 utxoPos, bytes memory inFlightClaimTx) public {
+        verifyTicketValidityForClaim(utxoPos);
+
+        verifyClaimTxCorrectlyFormed(utxoPos, inFlightClaimTx);
+
+        //verify IFE started
+        uint168 exitId = ExitId.getInFlightExitId(inFlightClaimTx);
+        uint168[] memory exitIdArr = new uint168[](1);
+        exitIdArr[0] = exitId;
+        PaymentExitDataModel.InFlightExit[] memory ifeData = paymentExitGame.inFlightExits(exitIdArr);
+        require(ifeData[0].exitStartTimestamp != 0, "IFE has not been started");
+        // this might be overriden by the ticket expiry check usually, but if the ticket is obtained later
+        // this check would always make sure there is enought time to piggyback
+        // ifeClaims should start within 8hrs from starting IFE to enable sufficient time to piggyback
+        require(block.timestamp <= ifeData[0].exitStartTimestamp.add(28800), "IFE Claim period has passed");
+
+        ticketData[utxoPos].isClaimed = true;
+        // 7+1 days waiting period for IFE Claims
+        claimData[utxoPos] = Claim(inFlightClaimTx, block.timestamp.add(691200), true);
+    }
+
     /**
-     * @dev Challenge an active claim
+     * @dev Challenge an active claim, can be used to challenge IFEClaims as well
      * @notice A challenge is required only when a tx that spends the same utxo was included previously
      * @param utxoPos pos of the output, which is the ticket identifier
      * @param rlpChallengeTx RLP-encoded challenge transaction
      * @param challengeTxInputIndex index pos of the same utxo in the challenge transaction
-     * @param challengeTxInclusionProof Challenge transaction inclusion proof
-     * @param challengeTxPos Tx pos of the challenge transaction
+     * @param challengeTxWitness Witness for challenging transaction
     */
     function challengeClaim(
         uint256 utxoPos,
         bytes memory rlpChallengeTx,
         uint16 challengeTxInputIndex,
-        bytes memory challengeTxInclusionProof,
-        uint256 challengeTxPos
+        bytes memory challengeTxWitness
     ) public {
         require(ticketData[utxoPos].isClaimed && claimData[utxoPos].isValid, "Not Challengeable");
         require(block.timestamp <= claimData[utxoPos].finalizationTimestamp, "Challenge Period Over");
@@ -237,20 +272,13 @@ contract Quasar {
             "The challenging transaction is the same as the claim transaction"
         );
 
-        PaymentTransactionModel.Transaction memory decodedChallengeTx
-        = PaymentTransactionModel.decode(rlpChallengeTx);
-
-        require(decodedChallengeTx.inputs[challengeTxInputIndex] == bytes32(utxoPos), "Wrong Tx provided");
-        
-        PosLib.Position memory challengeTxPosDecoded = PosLib.decode(challengeTxPos);
-
-        require(MoreVpFinalization.isStandardFinalized(
+        require(MoreVpFinalization.isProtocolFinalized(
             plasmaFramework,
-            rlpChallengeTx,
-            challengeTxPosDecoded,
-            challengeTxInclusionProof
-        ), "Provided Challenge Tx doesn't exist");
-        
+            rlpChallengeTx
+        ), "Provided Challenge Tx is not protocol finalized");
+
+        verifySpendingCondition(utxoPos, rlpChallengeTx, challengeTxInputIndex, challengeTxWitness);
+
         claimData[utxoPos].isValid = false;
         Ticket memory ticket = ticketData[utxoPos];
         address token = ticket.token;
@@ -273,6 +301,9 @@ contract Quasar {
         outputOwner.transfer(totalAmount);
     }
 
+    ////////////////////////////////////////////	
+    // Helper methods	
+    ////////////////////////////////////////////
     /**
      * @dev Verify the owner of the output
      * @param output Output Data
@@ -281,6 +312,52 @@ contract Quasar {
     function verifyOwnership(FungibleTokenOutputModel.Output memory output, address expectedOutputOwner) private pure {
         address outputOwner = PaymentTransactionModel.getOutputOwner(output);
         require(outputOwner == expectedOutputOwner, "Was not called by the Output owner");
+    }
+
+    function verifySpendingCondition(uint256 utxoPos, bytes memory rlpChallengeTx, uint16 challengeTxInputIndex, bytes memory challengeTxWitness) private {
+        GenericTransaction.Transaction memory challengingTx = GenericTransaction.decode(rlpChallengeTx);
+
+        GenericTransaction.Transaction memory inputTx = GenericTransaction.decode(ticketData[utxoPos].rlpOutputCreationTx);
+        PosLib.Position memory utxoPosDecoded = PosLib.decode(utxoPos);
+        GenericTransaction.Output memory output = GenericTransaction.getOutput(inputTx, utxoPosDecoded.outputIndex);
+
+        ISpendingCondition condition = spendingConditionRegistry.spendingConditions(
+            output.outputType, challengingTx.txType
+        );
+        require(address(condition) != address(0), "Spending condition contract not found");
+        bool isSpent = condition.verify(
+            ticketData[utxoPos].rlpOutputCreationTx,
+            utxoPos,
+            rlpChallengeTx,
+            challengeTxInputIndex,
+            challengeTxWitness
+        );
+        require(isSpent, "Spending condition failed");
+    }
+
+    function verifyTicketValidityForClaim(uint256 utxoPos) private {
+        require(!ticketData[utxoPos].isClaimed, "Already Claimed");
+        require(ticketData[utxoPos].outputOwner == msg.sender, "Not called by the ticket owner");
+        uint256 expiryTimestamp = ticketData[utxoPos].validityTimestamp;
+        require(expiryTimestamp != 0 && block.timestamp <= expiryTimestamp, "Ticket is not valid");
+    }
+
+    function verifyClaimTxCorrectlyFormed(uint256 utxoPos, bytes memory claimTx) private {
+        PaymentTransactionModel.Transaction memory decodedTx
+        = PaymentTransactionModel.decode(claimTx);
+
+        // first input should be the Utxo with which ticket was obtained
+        require(decodedTx.inputs[0] == bytes32(utxoPos), "Wrong Tx provided");
+
+        // first output should be the utxo for Quasar owner
+        FungibleTokenOutputModel.Output memory outputData
+        = PaymentTransactionModel.getOutput(decodedTx, 0);
+
+        // verify output to Quasar Owner
+        verifyOwnership(outputData, quasarOwner);
+        // considering fee as a separate input
+        require(ticketData[utxoPos].reservedAmount == outputData.amount, "Wrong Amount Sent to Quasar Owner");
+        require(ticketData[utxoPos].token == outputData.token, "Wrong Token Sent to Quasar Owner");
     }
     
 }
