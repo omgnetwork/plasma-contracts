@@ -65,12 +65,13 @@ contract(
         const setupQuasar = async () => {
             this.waitingPeriod = 14400;
             this.dummyQuasarBondValue = 500;
+            const safePlasmaBlockNum = 0;
 
             this.quasar = await Quasar.new(
                 this.framework.address,
                 this.spendingConditionRegistry.address,
                 quasarOwner,
-                0,
+                safePlasmaBlockNum,
                 this.waitingPeriod,
                 this.dummyQuasarBondValue,
                 { from: quasarMaintainer },

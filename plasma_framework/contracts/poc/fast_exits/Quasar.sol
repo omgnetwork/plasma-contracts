@@ -4,6 +4,7 @@ pragma experimental ABIEncoderV2;
 import "../../src/framework/PlasmaFramework.sol";
 import "../../src/utils/PosLib.sol";
 import "../../src/utils/Merkle.sol";
+import "../../src/utils/SafeEthTransfer.sol";
 import "../../src/transactions/PaymentTransactionModel.sol";
 import "../../src/transactions/GenericTransaction.sol";
 import "../../src/exits/utils/MoreVpFinalization.sol";
@@ -133,7 +134,7 @@ contract Quasar {
             tokenUsableCapacity[token] = tokenUsableCapacity[token].sub(residualAlmount);
             emit QuasarTotalEthCapacityUpdated(tokenUsableCapacity[address(0x0)]);
         }
-        msg.sender.transfer(amount);
+        SafeEthTransfer.transferRevertOnError(msg.sender, amount, 2300);
     }
 
     ////////////////////////////////////////////	
@@ -241,7 +242,7 @@ contract Quasar {
         uint256 ticketBondValue = ticket.bondValue;
         uint256 fundsReserved = ticket.reservedAmount;
         tokenUsableCapacity[token] = tokenUsableCapacity[token].add(fundsReserved);
-        msg.sender.transfer(ticketBondValue);
+        SafeEthTransfer.transferRevertOnError(msg.sender, ticketBondValue, 2300);
     }
 
     /**
@@ -254,7 +255,7 @@ contract Quasar {
         address payable outputOwner = ticketData[utxoPos].outputOwner;
         uint256 totalAmount = ticketData[utxoPos].reservedAmount.add(ticketData[utxoPos].bondValue);
         claimData[utxoPos].isValid = false;
-        outputOwner.transfer(totalAmount);
+        SafeEthTransfer.transferRevertOnError(outputOwner, totalAmount, 2300);
     }
 
     ////////////////////////////////////////////	
