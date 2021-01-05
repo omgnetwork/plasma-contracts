@@ -154,7 +154,7 @@ contract(
                                             value: this.dummyQuasarBondValue,
                                         },
                                     ),
-                                    'UTXO is from a block over the safe limit',
+                                    'The UTXO is from a block later than the safe limit',
                                 );
                             });
                         });
@@ -282,7 +282,7 @@ contract(
                                                 value: this.dummyQuasarBondValue,
                                             },
                                         ),
-                                        'The ticket is still valid or needs to be flushed',
+                                        'This UTXO already has a ticket',
                                     );
                                 });
 
@@ -307,7 +307,7 @@ contract(
                                                     from: alice,
                                                 },
                                             ),
-                                            'Wrong Amount Sent to Quasar Owner',
+                                            'Wrong amount sent to quasar owner',
                                         );
                                     });
                                 });
@@ -404,7 +404,7 @@ contract(
                                                         from: alice,
                                                     },
                                                 ),
-                                                'Already Claimed',
+                                                'Already claimed',
                                             );
                                         });
 
@@ -435,7 +435,7 @@ contract(
                                                     this.quasar.processClaim(
                                                         utxoPos,
                                                     ),
-                                                    'Claim not finalized',
+                                                    'The claim is not finalized yet',
                                                 );
                                             });
 
@@ -467,7 +467,7 @@ contract(
                                                     const utxoPos = this.depositUtxoPos;
                                                     await expectRevert(
                                                         this.quasar.processClaim(utxoPos),
-                                                        'Already claimed or the claim was challenged',
+                                                        'The claim has already been claimed or challenged',
                                                     );
                                                 });
                                             });
@@ -585,7 +585,7 @@ contract(
                                     const utxoPos = this.depositUtxoPos;
                                     await expectRevert(
                                         this.quasar.processClaim(utxoPos),
-                                        'Already claimed or the claim was challenged',
+                                        'The claim has already been claimed or challenged',
                                     );
                                 });
                             });
@@ -686,7 +686,7 @@ contract(
                                     );
                                 });
 
-                                describe('When the Quasar Maintainer tries to withdraw unreserved funds plus the bond reserve', () => {
+                                describe('When the Quasar Maintainer tries to withdraw unreserved funds plus the unclaimed bonds ', () => {
                                     it('should not allow to withdraw if withdrawal amount is more than claimable funds', async () => {
                                         const quasarCapacity = new BN(await this.quasar.tokenUsableCapacity(ETH));
                                         const withdrawableFunds = quasarCapacity.addn(
