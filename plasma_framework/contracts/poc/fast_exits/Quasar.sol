@@ -137,7 +137,7 @@ contract Quasar {
             uint256 residualAlmount = amount.sub(unclaimedBonds);
             unclaimedBonds = 0;
             tokenUsableCapacity[token] = tokenUsableCapacity[token].sub(residualAlmount);
-            emit QuasarTotalEthCapacityUpdated(tokenUsableCapacity[address(0x0)]);
+            emit QuasarTotalEthCapacityUpdated(tokenUsableCapacity[token]);
         }
         SafeEthTransfer.transferRevertOnError(msg.sender, amount, SAFE_GAS_STIPEND);
     }
