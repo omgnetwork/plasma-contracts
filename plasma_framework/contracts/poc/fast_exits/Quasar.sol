@@ -286,11 +286,10 @@ contract Quasar is QuasarPool {
         address payable outputOwner = ticketData[utxoPos].outputOwner;
         claimData[utxoPos].isValid = false;
         address token = ticketData[utxoPos].token;
-        if(token == address(0)) {
+        if (token == address(0)) {
             uint256 totalAmount = ticketData[utxoPos].reservedAmount.add(ticketData[utxoPos].bondValue);
             SafeEthTransfer.transferRevertOnError(outputOwner, totalAmount, SAFE_GAS_STIPEND);
-        }
-        else {
+        } else {
             IERC20(token).safeTransfer(outputOwner, ticketData[utxoPos].reservedAmount);
             SafeEthTransfer.transferRevertOnError(outputOwner, ticketData[utxoPos].bondValue, SAFE_GAS_STIPEND);
         }
