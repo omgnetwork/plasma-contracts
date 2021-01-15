@@ -3,12 +3,10 @@ const BlockController = artifacts.require('BlockControllerMock');
 const SpendingConditionMock = artifacts.require('SpendingConditionMock');
 const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry');
 
-const { BN, expectRevert, constants } = require('openzeppelin-test-helpers');
+const { BN, expectRevert } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
-const { TX_TYPE, OUTPUT_TYPE, DUMMY_INPUT_1 } = require('../../../helpers/constants.js');
-const { MerkleTree } = require('../../../helpers/merkle.js');
+const { TX_TYPE, OUTPUT_TYPE } = require('../../../helpers/constants.js');
 const { buildUtxoPos } = require('../../../helpers/positions.js');
-const { PaymentTransactionOutput, PaymentTransaction } = require('../../../helpers/transaction.js');
 
 
 contract('Quasar', ([authority, quasarOwner, quasarMaintainer, alice]) => {
@@ -30,6 +28,7 @@ contract('Quasar', ([authority, quasarOwner, quasarMaintainer, alice]) => {
         // Submit some blocks to have a safe block margin
         const DUMMY_BLOCK_HASH = web3.utils.sha3('dummy root');
         for (let i = 0; i < SAFE_BLOCK_MARGIN; i++) {
+            // eslint-disable-next-line no-await-in-loop
             await this.plasmaFramework.submitBlock(DUMMY_BLOCK_HASH, { from: authority });
         }
 

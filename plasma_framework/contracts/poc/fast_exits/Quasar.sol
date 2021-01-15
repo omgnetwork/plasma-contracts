@@ -73,12 +73,12 @@ contract Quasar {
      * @param _bondValue bond to obtain tickets
     */
     constructor (
-      address plasmaFrameworkContract, 
-      address spendingConditionRegistryContract, 
-      address _quasarOwner, 
-      uint256 _safeBlockMargin, 
-      uint256 _waitingPeriod, 
-      uint256 _bondValue
+        address plasmaFrameworkContract, 
+        address spendingConditionRegistryContract, 
+        address _quasarOwner, 
+        uint256 _safeBlockMargin, 
+        uint256 _waitingPeriod, 
+        uint256 _bondValue
     ) public {
         plasmaFramework = PlasmaFramework(plasmaFrameworkContract);
         spendingConditionRegistry = SpendingConditionRegistry(spendingConditionRegistryContract);
@@ -94,9 +94,9 @@ contract Quasar {
      * @return  The latest safe block number
     */
     function getLatestSafeBlock() public view returns(uint256) {
-      uint256 childBlockInterval = plasmaFramework.childBlockInterval();
-      uint currentPlasmaBlock = plasmaFramework.nextChildBlock().sub(childBlockInterval);
-      return currentPlasmaBlock.sub(safeBlockMargin.mul(childBlockInterval));
+        uint256 childBlockInterval = plasmaFramework.childBlockInterval();
+        uint currentPlasmaBlock = plasmaFramework.nextChildBlock().sub(childBlockInterval);
+        return currentPlasmaBlock.sub(safeBlockMargin.mul(childBlockInterval));
     }
 
     ////////////////////////////////////////////	

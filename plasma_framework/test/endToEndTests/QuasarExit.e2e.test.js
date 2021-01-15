@@ -52,6 +52,10 @@ contract(
             await Promise.all([setupAccount(), deployStableContracts()]);
         });
 
+        const submitPlasmaBlock = async () => {
+            await this.framework.submitBlock(DUMMY_BLOCK_HASH, { from: authority });
+        };
+
         const setupContracts = async () => {
             this.framework = await PlasmaFramework.deployed();
             this.spendingConditionRegistry = await SpendingConditionRegistry.deployed();
@@ -65,7 +69,7 @@ contract(
 
             // Submit some blocks to have a safe block margin
             for (let i = 0; i < INITIAL_SAFE_BLOCK_MARGIN; i++) {
-                await submitPlasmaBlock();
+                await submitPlasmaBlock(); // eslint-disable-line no-await-in-loop
             }
         };
 
@@ -92,10 +96,6 @@ contract(
             this.merkleProofForDepositTx = this.merkleTreeForDepositTx.getInclusionProof(this.depositTx);
 
             return this.ethVault.deposit(this.depositTx, { from: alice, value: DEPOSIT_VALUE });
-        };
-
-        const submitPlasmaBlock = async () => {
-            await this.framework.submitBlock(DUMMY_BLOCK_HASH, { from: authority });
         };
 
         const aliceTransferEth = async (receiver, transferAmount) => {
