@@ -29,6 +29,8 @@ contract(
         const DEPOSIT_VALUE = 1000000;
         const QUASAR_LIQUID_FUNDS = 3000000;
         const MERKLE_TREE_DEPTH = 16;
+        const INITIAL_SAFE_BLOCK_MARGIN = 5;
+        const DUMMY_BLOCK_HASH = web3.utils.sha3('dummy root');
 
         const alicePrivateKey = '0x7151e5dab6f8e95b5436515b83f423c4df64fe4c6149f864daa209b26adb10ca';
         let alice;
@@ -60,18 +62,22 @@ contract(
                     config.registerKeys.txTypes.payment,
                 ),
             );
+
+            // Submit some blocks to have a safe block margin
+            for (let i = 0; i < INITIAL_SAFE_BLOCK_MARGIN; i++) {
+                await submitPlasmaBlock();
+            }
         };
 
         const setupQuasar = async () => {
             this.waitingPeriod = 14400;
             this.dummyQuasarBondValue = 500;
-            const safePlasmaBlockNum = 0;
 
             this.quasar = await Quasar.new(
                 this.framework.address,
                 this.spendingConditionRegistry.address,
                 quasarOwner,
-                safePlasmaBlockNum,
+                INITIAL_SAFE_BLOCK_MARGIN,
                 this.waitingPeriod,
                 this.dummyQuasarBondValue,
                 { from: quasarMaintainer },
@@ -86,6 +92,10 @@ contract(
             this.merkleProofForDepositTx = this.merkleTreeForDepositTx.getInclusionProof(this.depositTx);
 
             return this.ethVault.deposit(this.depositTx, { from: alice, value: DEPOSIT_VALUE });
+        };
+
+        const submitPlasmaBlock = async () => {
+            await this.framework.submitBlock(DUMMY_BLOCK_HASH, { from: authority });
         };
 
         const aliceTransferEth = async (receiver, transferAmount) => {
@@ -135,6 +145,7 @@ contract(
                 describe('When Alice deposited ETH to Vault', () => {
                     before(async () => {
                         await aliceDepositsETH();
+                        await submitPlasmaBlock();
                     });
 
                     describe('And then Alice tries to obtain a ticket from the Quasar using the output', () => {
@@ -162,17 +173,19 @@ contract(
                         // add check for onlyMaintainer functions
                         describe('If the Quasar maintainer updates the safeblocknum to allow the output', () => {
                             before(async () => {
-                                this.preSafeBlocknum = await this.quasar.safePlasmaBlockNum();
-                                this.dummySafeBlockLimit = (await this.framework.childBlockInterval()).toNumber() * 3;
-                                await this.quasar.updateSafeBlockLimit(
-                                    this.dummySafeBlockLimit,
+                                this.preSafeBlockMargin = await this.quasar.safeBlockMargin();
+                                this.dummySafeBlockMargin = 1;
+                                await this.quasar.setSafeBlockMargin(
+                                    this.dummySafeBlockMargin,
                                     { from: quasarMaintainer },
                                 );
+
+                                await submitPlasmaBlock();
                             });
 
                             it('should update the safeblocknum to the new value', async () => {
-                                const currentSafeBlocknum = await this.quasar.safePlasmaBlockNum();
-                                expect(currentSafeBlocknum).to.be.bignumber.equal(new BN(this.dummySafeBlockLimit));
+                                const safeBlockMargin = await this.quasar.safeBlockMargin();
+                                expect(safeBlockMargin).to.be.bignumber.equal(new BN(this.dummySafeBlockMargin));
                             });
 
                             describe('And then if Alice tries to obtain ticket with fake transaction', () => {
@@ -482,6 +495,10 @@ contract(
                 describe('Given Alice deposited ETH to Vault and obtains a ticket for the output', () => {
                     before(async () => {
                         await aliceDepositsETH();
+                        await submitPlasmaBlock();
+                        await submitPlasmaBlock();
+
+                        // Submit abother block for the safe margin
                         const utxoPos = this.depositUtxoPos;
                         const rlpOutputCreationTx = this.depositTx;
                         const outputCreationTxInclusionProof = this.merkleProofForDepositTx;
@@ -596,11 +613,8 @@ contract(
                 describe('Given Alice deposited ETH and transferred somee to Bob', () => {
                     before(async () => {
                         await aliceDepositsETH();
-                        await this.quasar.updateSafeBlockLimit(
-                            this.dummySafeBlockLimit * 2,
-                            { from: quasarMaintainer },
-                        );
                         await aliceTransferEth(bob, DEPOSIT_VALUE / 2);
+                        await submitPlasmaBlock();
                     });
 
                     describe('When Bob obtains a ticket from the Quasar using the output', () => {

@@ -28,7 +28,7 @@ contract Quasar {
 
     address public quasarOwner;
     address public quasarMaintainer;
-    uint256 public safePlasmaBlockNum;
+    uint256 public safeBlockMargin;
     uint256 public waitingPeriod;
     uint256 constant public TICKET_VALIDITY_PERIOD = 14400;
     uint256 constant internal SAFE_GAS_STIPEND = 2300;
@@ -68,31 +68,46 @@ contract Quasar {
      * @dev Constructor, takes params to set up quasar contract
      * @param plasmaFrameworkContract Plasma Framework contract address
      * @param _quasarOwner Receiver address on Plasma
-     * @param _safePlasmaBlockNum Safe Blocknum limit 
+     * @param _safeBlockMargin The Quasar will not accept exits for outputs younger than the current plasma block minus the safe block margin 
      * @param _waitingPeriod Waiting period from submission to processing claim
      * @param _bondValue bond to obtain tickets
     */
-    constructor (address plasmaFrameworkContract, address spendingConditionRegistryContract, address _quasarOwner, uint256 _safePlasmaBlockNum, uint256 _waitingPeriod, uint256 _bondValue) public {
+    constructor (
+      address plasmaFrameworkContract, 
+      address spendingConditionRegistryContract, 
+      address _quasarOwner, 
+      uint256 _safeBlockMargin, 
+      uint256 _waitingPeriod, 
+      uint256 _bondValue
+    ) public {
         plasmaFramework = PlasmaFramework(plasmaFrameworkContract);
         spendingConditionRegistry = SpendingConditionRegistry(spendingConditionRegistryContract);
         quasarOwner = _quasarOwner;
         quasarMaintainer = msg.sender;
-        safePlasmaBlockNum = _safePlasmaBlockNum;
+        safeBlockMargin = _safeBlockMargin;
         waitingPeriod = _waitingPeriod;
         bondValue = _bondValue;
         unclaimedBonds = 0;
+    }
+
+    /**
+     * @return  The latest safe block number
+    */
+    function getLatestSafeBlock() public view returns(uint256) {
+      uint256 childBlockInterval = plasmaFramework.childBlockInterval();
+      uint currentPlasmaBlock = plasmaFramework.nextChildBlock().sub(childBlockInterval);
+      return currentPlasmaBlock.sub(safeBlockMargin.mul(childBlockInterval));
     }
 
     ////////////////////////////////////////////	
     // Maintenance methods	
     ////////////////////////////////////////////
     /**
-     * @dev Update the safe blocknum limit
-     * @param newSafePlasmaBlockNum new blocknum limit, has to be higher than previous blocknum limit
+     * @dev Set the safe block margin.
+     * @param margin the new safe block margin
     */
-    function updateSafeBlockLimit (uint256 newSafePlasmaBlockNum) public onlyQuasarMaintainer() {
-        require(newSafePlasmaBlockNum > safePlasmaBlockNum, "New limit should be higher than older limit");
-        safePlasmaBlockNum = newSafePlasmaBlockNum;
+    function setSafeBlockMargin (uint256 margin) public onlyQuasarMaintainer() {
+        safeBlockMargin = margin;
     }
 
     /**
@@ -159,7 +174,7 @@ contract Quasar {
 
         PosLib.Position memory utxoPosDecoded = PosLib.decode(utxoPos);
 
-        require(utxoPosDecoded.blockNum <= safePlasmaBlockNum, "The UTXO is from a block later than the safe limit");
+        require(utxoPosDecoded.blockNum <= getLatestSafeBlock(), "The UTXO is from a block later than the safe limit");
 
         PaymentTransactionModel.Transaction memory decodedTx
         = PaymentTransactionModel.decode(rlpOutputCreationTx);
