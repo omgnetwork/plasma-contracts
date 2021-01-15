@@ -128,10 +128,16 @@ contract Quasar is QuasarPool {
         unclaimedBonds = unclaimedBonds.add(ticketData[utxoPos].bondValue); 
     }
 
+    /**
+     * @dev Pause contract in a byzantine state
+    */
     function pauseQuasar() public onlyQuasarMaintainer() {
         isPaused = true;
     }
 
+    /**
+     * @dev Unpause contract and allow tickets
+    */
     function resumeQuasar() public onlyQuasarMaintainer() {
         isPaused = false;
     }
@@ -218,6 +224,11 @@ contract Quasar is QuasarPool {
         claimData[utxoPos] = Claim(rlpTxToQuasarOwner, block.timestamp.add(waitingPeriod), true);
     }
 
+    /**
+     * @dev Submit and IFEclaim for claims without inclusion proof
+     * @param utxoPos pos of the output, which is the ticket identifier
+     * @param inFlightClaimTx in-flight tx that spends the output to quasar owner
+    */
     function ifeClaim(uint256 utxoPos, bytes memory inFlightClaimTx) public {
         verifyTicketValidityForClaim(utxoPos);
 
