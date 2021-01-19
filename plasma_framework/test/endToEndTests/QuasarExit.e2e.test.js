@@ -795,13 +795,8 @@ contract(
                 describe('Given Alice deposited ETH to Vault and obtains a ticket for the output', () => {
                     before(async () => {
                         await aliceDepositsETH();
-                        // update safe-block limit
-                        this.preSafeBlocknum = await this.quasar.safePlasmaBlockNum();
-                        this.dummySafeBlockLimit = (await this.framework.childBlockInterval()).toNumber() * 3;
-                        await this.quasar.updateSafeBlockLimit(
-                            this.preSafeBlocknum.addn(this.dummySafeBlockLimit),
-                            { from: quasarMaintainer },
-                        );
+                        await submitPlasmaBlock();
+                        await submitPlasmaBlock();
                         await this.quasar.addEthCapacity({ from: quasarMaintainer, value: QUASAR_LIQUID_FUNDS });
 
                         const utxoPos = this.depositUtxoPos;
@@ -1001,6 +996,8 @@ contract(
                 describe('Given Alice deposited ETH to Vault and obtains a ticket for the output', () => {
                     before(async () => {
                         await aliceDepositsETH();
+                        await submitPlasmaBlock();
+                        await submitPlasmaBlock();
                         const utxoPos = this.depositUtxoPos;
                         const rlpOutputCreationTx = this.depositTx;
                         const outputCreationTxInclusionProof = this.merkleProofForDepositTx;
@@ -1164,13 +1161,15 @@ contract(
                         describe('And then Alice tries to obtain a ticket from the Quasar using the output', () => {
                             describe('If the Quasar maintainer updates the safeblocknum to allow the output', () => {
                                 before(async () => {
-                                    this.preSafeBlocknum = await this.quasar.safePlasmaBlockNum();
-                                    this.dummySafeBlockLimit = (await this.framework.childBlockInterval())
-                                        .toNumber() * 10;
-                                    await this.quasar.updateSafeBlockLimit(
-                                        this.preSafeBlocknum.addn(this.dummySafeBlockLimit),
+                                    this.preSafeBlockMargin = await this.quasar.safeBlockMargin();
+                                    this.dummySafeBlockMargin = 1;
+                                    await this.quasar.setSafeBlockMargin(
+                                        this.dummySafeBlockMargin,
                                         { from: quasarMaintainer },
                                     );
+
+                                    await submitPlasmaBlock();
+                                    await submitPlasmaBlock();
                                 });
 
                                 describe('When Alice tries to obtain ticket with all valid parameters', () => {
