@@ -96,7 +96,7 @@ library PaymentStartStandardExit {
             owner: msg.sender,
             exitId: data.exitId,
             utxoPos: args.utxoPos,
-            outputTx: data.outputTx
+            outputTx: args.rlpOutputTx
         });
     }
 
