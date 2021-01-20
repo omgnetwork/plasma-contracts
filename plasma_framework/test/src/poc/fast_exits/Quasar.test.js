@@ -1,5 +1,5 @@
 const Quasar = artifacts.require('Quasar');
-const BlockController = artifacts.require('BlockControllerMock');
+const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const SpendingConditionMock = artifacts.require('SpendingConditionMock');
 const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry');
 
@@ -10,21 +10,21 @@ const { buildUtxoPos } = require('../../../helpers/positions.js');
 
 
 contract('Quasar', ([authority, quasarOwner, quasarMaintainer, alice]) => {
-    const CHILD_BLOCK_INTERVAL = 1000;
     const MIN_EXIT_PERIOD = 10;
     const INITIAL_IMMUNE_VAULTS = 1;
+    const INITIAL_IMMUNE_EXIT_GAME = 1;
     const SAFE_BLOCK_MARGIN = 10;
     const WAITING_PERIOD = 3600;
     const BOND_VALUE = 100;
 
     const setupAllContracts = async () => {
-        this.plasmaFramework = await BlockController.new(
-            CHILD_BLOCK_INTERVAL,
+        this.plasmaFramework = await SpyPlasmaFramework.new(
             MIN_EXIT_PERIOD,
             INITIAL_IMMUNE_VAULTS,
-            authority,
+            INITIAL_IMMUNE_EXIT_GAME,
+            { from: authority },
         );
-
+        this.childBlockInterval = await this.plasmaFramework.childBlockInterval();
         // Submit some blocks to have a safe block margin
         const DUMMY_BLOCK_HASH = web3.utils.sha3('dummy root');
         for (let i = 0; i < SAFE_BLOCK_MARGIN; i++) {
@@ -80,7 +80,7 @@ contract('Quasar', ([authority, quasarOwner, quasarMaintainer, alice]) => {
             const dummyProof = '0x0';
 
             const nextPlasmaBlock = await this.plasmaFramework.nextChildBlock();
-            const youngBlockNum = nextPlasmaBlock - CHILD_BLOCK_INTERVAL;
+            const youngBlockNum = nextPlasmaBlock - this.childBlockInterval;
             const utxoPos = buildUtxoPos(youngBlockNum, 0, 0);
 
             await expectRevert(

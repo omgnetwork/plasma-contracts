@@ -34,11 +34,4 @@ contract BlockControllerMock is BlockController {
     function setBlock(uint256 _blockNum, bytes32 _root, uint256 _timestamp) external {
         blocks[_blockNum] = BlockModel.Block(_root, _timestamp);
     }
-
-    /**
-     * this returns the contract address when quasar contract needs the exit game
-     */
-    function exitGames(uint256 _txType) public view returns (address) {
-        return address(this);
-    }
 }
