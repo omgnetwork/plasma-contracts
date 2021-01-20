@@ -294,7 +294,51 @@ contract Quasar is QuasarPool {
             rlpChallengeTx
         ), "The challenging transaction is invalid");
 
-        verifySpendingCondition(utxoPos, rlpChallengeTx, challengeTxInputIndex, challengeTxWitness);
+        Ticket memory ticket = ticketData[utxoPos];
+        
+        verifySpendingCondition(utxoPos, ticket.rlpOutputCreationTx, rlpChallengeTx, challengeTxInputIndex, challengeTxWitness);
+        
+        claimData[utxoPos].isValid = false;
+        tokenUsableCapacity[ticket.token] = tokenUsableCapacity[ticket.token].add(ticket.reservedAmount);
+        SafeEthTransfer.transferRevertOnError(msg.sender, ticket.bondValue, SAFE_GAS_STIPEND);
+    }
+
+    /**
+     * @dev Challenge an active claim, can be used to challenge IFEClaims as well
+     * @notice A challenge is required only when a tx that spends the same utxo was included previously
+     * @param utxoPos pos of the output, which is the ticket identifier
+     * @param rlpChallengeTx RLP-encoded challenge transaction
+     * @param challengeTxInputIndex index pos of the same utxo in the challenge transaction
+     * @param challengeTxWitness Witness for challenging transaction
+     * @param senderData A keccak256 hash of the sender's address
+    */
+    function challengeIFEClaim(
+        uint256 utxoPos,
+        bytes memory rlpChallengeTx,
+        uint16 challengeTxInputIndex,
+        bytes memory challengeTxWitness,
+        uint256 sharedUtxoPosInputIndex,
+        bytes memory sharedOutputCreationTx,
+        bytes32 senderData
+    ) public {
+        require(senderData == keccak256(abi.encodePacked(msg.sender)), "Incorrect SenderData");
+        require(ticketData[utxoPos].isClaimed && claimData[utxoPos].isValid, "The claim is not challengeable");
+        require(block.timestamp <= claimData[utxoPos].finalizationTimestamp, "The challenge period is over");
+        require(
+            keccak256(claimData[utxoPos].rlpClaimTx) != keccak256(rlpChallengeTx),
+            "The challenging transaction is the same as the claim transaction"
+        );
+
+        require(MoreVpFinalization.isProtocolFinalized(
+            plasmaFramework,
+            rlpChallengeTx
+        ), "The challenging transaction is invalid");
+
+        
+        PaymentTransactionModel.Transaction memory decodedTx
+        = PaymentTransactionModel.decode(claimData[utxoPos].rlpClaimTx);
+
+        verifySpendingCondition(decodedTx.inputs[sharedUtxoPosInputIndex], sharedOutputCreationTx, rlpChallengeTx, challengeTxInputIndex, challengeTxWitness);
         
         claimData[utxoPos].isValid = false;
         Ticket memory ticket = ticketData[utxoPos];
@@ -341,10 +385,10 @@ contract Quasar is QuasarPool {
      * @param challengeTxInputIndex index pos of the same utxo in the challenge transaction
      * @param challengeTxWitness Witness for challenging transaction
     */
-    function verifySpendingCondition(uint256 utxoPos, bytes memory rlpChallengeTx, uint16 challengeTxInputIndex, bytes memory challengeTxWitness) private {
+    function verifySpendingCondition(uint256 utxoPos, bytes memory rlpOutputCreationTx, bytes memory rlpChallengeTx, uint16 challengeTxInputIndex, bytes memory challengeTxWitness) private {
         GenericTransaction.Transaction memory challengingTx = GenericTransaction.decode(rlpChallengeTx);
 
-        GenericTransaction.Transaction memory inputTx = GenericTransaction.decode(ticketData[utxoPos].rlpOutputCreationTx);
+        GenericTransaction.Transaction memory inputTx = GenericTransaction.decode(rlpOutputCreationTx);
         PosLib.Position memory utxoPosDecoded = PosLib.decode(utxoPos);
         GenericTransaction.Output memory output = GenericTransaction.getOutput(inputTx, utxoPosDecoded.outputIndex);
 
@@ -353,7 +397,7 @@ contract Quasar is QuasarPool {
         );
         require(address(condition) != address(0), "Spending condition contract not found");
         bool isSpent = condition.verify(
-            ticketData[utxoPos].rlpOutputCreationTx,
+            rlpOutputCreationTx,
             utxoPos,
             rlpChallengeTx,
             challengeTxInputIndex,
