@@ -43,7 +43,8 @@ library PaymentStartStandardExit {
     event ExitStarted(
         address indexed owner,
         uint168 exitId,
-        uint256 utxoPos
+        uint256 utxoPos,
+        bytes outputTx
     );
 
     /**
@@ -94,7 +95,8 @@ library PaymentStartStandardExit {
         emit ExitStarted({
             owner: msg.sender,
             exitId: data.exitId,
-            utxoPos: args.utxoPos
+            utxoPos: args.utxoPos,
+            outputTx: data.outputTx
         });
     }
 
