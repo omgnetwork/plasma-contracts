@@ -1,9 +1,13 @@
 pragma solidity 0.5.11;
 pragma experimental ABIEncoderV2;
 
+import "./QuasarPool.sol";
 import "../../src/framework/PlasmaFramework.sol";
+import "../../src/exits/payment/PaymentExitGame.sol";
 import "../../src/utils/PosLib.sol";
 import "../../src/utils/Merkle.sol";
+import "../../src/exits/utils/ExitId.sol";
+import "../../src/exits/payment/routers/PaymentInFlightExitRouter.sol";
 import "../../src/utils/SafeEthTransfer.sol";
 import "../../src/transactions/PaymentTransactionModel.sol";
 import "../../src/transactions/GenericTransaction.sol";
@@ -18,23 +22,30 @@ import "openzeppelin-solidity/contracts/token/ERC20/SafeERC20.sol";
  * @title Quasar Contract
  * Implementation Doc - https://github.com/omgnetwork/research-workshop/blob/master/Incognito_fast_withdrawals.md
 */
-contract Quasar {
+contract Quasar is QuasarPool {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
+    using SafeMath for uint64;
     using PosLib for PosLib.Position;
 
     PlasmaFramework public plasmaFramework;
+    // the contract works with the current exit game
+    // any changes to the exit game would require modifications to this contract
+    // verify the exitGame before interacting
+    PaymentExitGame public paymentExitGame;
     SpendingConditionRegistry public spendingConditionRegistry;
 
     address public quasarOwner;
-    address public quasarMaintainer;
     uint256 public safeBlockMargin;
     uint256 public waitingPeriod;
     uint256 constant public TICKET_VALIDITY_PERIOD = 14400;
-    uint256 constant internal SAFE_GAS_STIPEND = 2300;
+    uint256 constant public IFE_CLAIM_MARGIN = 28800;
+    // 7+1 days waiting period for IFE Claims
+    uint256 constant public IFE_CLAIM_WAITING_PERIOD = 691200;
     uint256 public bondValue;
     // bond is added to this reserve only when tickets are flushed, bond is returned every other time
-    uint256 private unclaimedBonds;
+    uint256 public unclaimedBonds;
+    bool public isPaused;
 
     struct Ticket {
         address payable outputOwner;
@@ -52,15 +63,19 @@ contract Quasar {
         bool isValid;
     }
 
-    mapping (address => uint256) public tokenUsableCapacity;
     mapping (uint256 => Ticket) public ticketData;
     mapping (uint256 => Claim) private claimData;
 
-    event QuasarTotalEthCapacityUpdated(uint256 balance);
     event NewTicketObtained(uint256 utxoPos);
+    event IFEClaimSubmitted(uint256 utxoPos, uint168 exitId);
     
     modifier onlyQuasarMaintainer() {
         require(msg.sender == quasarMaintainer, "Only the Quasar Maintainer can invoke this method");
+        _;
+    }
+
+    modifier onlyWhenNotPaused() {
+        require(!isPaused, "The Quasar contract is paused");
         _;
     }
 
@@ -81,6 +96,7 @@ contract Quasar {
         uint256 _bondValue
     ) public {
         plasmaFramework = PlasmaFramework(plasmaFrameworkContract);
+        paymentExitGame = PaymentExitGame(plasmaFramework.exitGames(1));
         spendingConditionRegistry = SpendingConditionRegistry(spendingConditionRegistryContract);
         quasarOwner = _quasarOwner;
         quasarMaintainer = msg.sender;
@@ -128,32 +144,25 @@ contract Quasar {
     }
 
     /**
-     * @dev Add Eth Liquid funds to the quasar
+     * @dev Pause contract in a byzantine state
     */
-    function addEthCapacity() public payable onlyQuasarMaintainer() {
-        tokenUsableCapacity[address(0x0)] = tokenUsableCapacity[address(0x0)].add(msg.value);
-        emit QuasarTotalEthCapacityUpdated(tokenUsableCapacity[address(0x0)]);
+    function pauseQuasar() public onlyQuasarMaintainer() {
+        isPaused = true;
     }
 
     /**
-     * @dev Withdraw Unblocked Eth funds from the contract
-     * @param amount amount of Eth(in wei) to withdraw
+     * @dev Unpause contract and allow tickets
     */
-    function withdrawLiquidEthFunds(uint256 amount) public onlyQuasarMaintainer() {
-        address token = address(0x0);
-        uint256 withdrawableFunds = unclaimedBonds.add(tokenUsableCapacity[token]);
-        require(amount <= withdrawableFunds, "Amount should be lower than claimable funds");
+    function resumeQuasar() public onlyQuasarMaintainer() {
+        isPaused = false;
+    }
 
-        // attempt to consume the unclaimed bonds first,
-        // and then withdraw the residual funds from the pool
-        if (amount <= unclaimedBonds) {
-            unclaimedBonds = unclaimedBonds.sub(amount);
-        } else {
-            uint256 residualAlmount = amount.sub(unclaimedBonds);
-            unclaimedBonds = 0;
-            tokenUsableCapacity[token] = tokenUsableCapacity[token].sub(residualAlmount);
-            emit QuasarTotalEthCapacityUpdated(tokenUsableCapacity[token]);
-        }
+    /**
+     * @dev Withdraw Unclaimed bonds from the contract
+    */
+    function withdrawUnclaimedBonds() public onlyQuasarMaintainer() {
+        uint256 amount = unclaimedBonds;
+        unclaimedBonds = 0;
         SafeEthTransfer.transferRevertOnError(msg.sender, amount, SAFE_GAS_STIPEND);
     }
 
@@ -167,7 +176,7 @@ contract Quasar {
      * @param rlpOutputCreationTx RLP-encoded transaction that created the output
      * @param outputCreationTxInclusionProof Transaction inclusion proof
     */
-    function obtainTicket(uint256 utxoPos, bytes memory rlpOutputCreationTx, bytes memory outputCreationTxInclusionProof) public payable {
+    function obtainTicket(uint256 utxoPos, bytes memory rlpOutputCreationTx, bytes memory outputCreationTxInclusionProof) public payable onlyWhenNotPaused() {
         require(msg.value == bondValue, "Bond Value incorrect");
         require(!ticketData[utxoPos].isClaimed, "The UTXO has already been claimed");
         require(ticketData[utxoPos].validityTimestamp == 0, "This UTXO already has a ticket");
@@ -231,19 +240,48 @@ contract Quasar {
     }
 
     /**
+     * @dev Submit and IFEclaim for claims without inclusion proof
+     * @param utxoPos pos of the output, which is the ticket identifier
+     * @param inFlightClaimTx in-flight tx that spends the output to quasar owner
+    */
+    function ifeClaim(uint256 utxoPos, bytes memory inFlightClaimTx) public {
+        verifyTicketValidityForClaim(utxoPos);
+
+        verifyClaimTxCorrectlyFormed(utxoPos, inFlightClaimTx);
+
+        //verify IFE started
+        uint168 exitId = ExitId.getInFlightExitId(inFlightClaimTx);
+        uint168[] memory exitIdArr = new uint168[](1);
+        exitIdArr[0] = exitId;
+        PaymentExitDataModel.InFlightExit[] memory ifeData = paymentExitGame.inFlightExits(exitIdArr);
+        require(ifeData[0].exitStartTimestamp != 0, "IFE has not been started");
+
+        // ifeClaims should start within IFE_CLAIM_MARGIN from starting IFE to enable sufficient time to piggyback
+        // this might be overriden by the ticket expiry check usually, except if the ticket is obtained later
+        require(block.timestamp <= ifeData[0].exitStartTimestamp.add(IFE_CLAIM_MARGIN), "IFE Claim period has passed");
+
+        ticketData[utxoPos].isClaimed = true;
+        claimData[utxoPos] = Claim(inFlightClaimTx, block.timestamp.add(IFE_CLAIM_WAITING_PERIOD), true);
+        emit IFEClaimSubmitted(utxoPos, exitId);
+    }
+
+    /**
      * @dev Challenge an active claim, can be used to challenge IFEClaims as well
      * @notice A challenge is required only when a tx that spends the same utxo was included previously
      * @param utxoPos pos of the output, which is the ticket identifier
      * @param rlpChallengeTx RLP-encoded challenge transaction
      * @param challengeTxInputIndex index pos of the same utxo in the challenge transaction
      * @param challengeTxWitness Witness for challenging transaction
+     * @param senderData A keccak256 hash of the sender's address
     */
     function challengeClaim(
         uint256 utxoPos,
         bytes memory rlpChallengeTx,
         uint16 challengeTxInputIndex,
-        bytes memory challengeTxWitness
+        bytes memory challengeTxWitness,
+        bytes32 senderData
     ) public {
+        require(senderData == keccak256(abi.encodePacked(msg.sender)), "Incorrect SenderData");
         require(ticketData[utxoPos].isClaimed && claimData[utxoPos].isValid, "The claim is not challengeable");
         require(block.timestamp <= claimData[utxoPos].finalizationTimestamp, "The challenge period is over");
         require(
@@ -272,9 +310,15 @@ contract Quasar {
         require(block.timestamp > claimData[utxoPos].finalizationTimestamp, "The claim is not finalized yet");
         require(claimData[utxoPos].isValid, "The claim has already been claimed or challenged");
         address payable outputOwner = ticketData[utxoPos].outputOwner;
-        uint256 totalAmount = ticketData[utxoPos].reservedAmount.add(ticketData[utxoPos].bondValue);
         claimData[utxoPos].isValid = false;
-        SafeEthTransfer.transferRevertOnError(outputOwner, totalAmount, SAFE_GAS_STIPEND);
+        address token = ticketData[utxoPos].token;
+        if (token == address(0)) {
+            uint256 totalAmount = ticketData[utxoPos].reservedAmount.add(ticketData[utxoPos].bondValue);
+            SafeEthTransfer.transferRevertOnError(outputOwner, totalAmount, SAFE_GAS_STIPEND);
+        } else {
+            IERC20(token).safeTransfer(outputOwner, ticketData[utxoPos].reservedAmount);
+            SafeEthTransfer.transferRevertOnError(outputOwner, ticketData[utxoPos].bondValue, SAFE_GAS_STIPEND);
+        }
     }
 
     ////////////////////////////////////////////	

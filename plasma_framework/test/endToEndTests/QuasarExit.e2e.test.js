@@ -66,6 +66,9 @@ contract(
                     config.registerKeys.txTypes.payment,
                 ),
             );
+            this.startIFEBondSize = await this.exitGame.startIFEBondSize();
+            this.piggybackBondSize = await this.exitGame.piggybackBondSize();
+            this.framework.addExitQueue(config.registerKeys.vaultId.eth, ETH);
 
             // Submit some blocks to have a safe block margin
             for (let i = 0; i < INITIAL_SAFE_BLOCK_MARGIN; i++) {
@@ -86,6 +89,7 @@ contract(
                 this.dummyQuasarBondValue,
                 { from: quasarMaintainer },
             );
+            this.ifeWaitingPeriod = await this.quasar.IFE_CLAIM_WAITING_PERIOD();
         };
 
         const aliceDepositsETH = async () => {
@@ -110,6 +114,41 @@ contract(
             );
             const outputAlice = new PaymentTransactionOutput(
                 OUTPUT_TYPE_PAYMENT, DEPOSIT_VALUE - transferAmount, alice, ETH,
+            );
+            if (transferAmount === DEPOSIT_VALUE) {
+                this.transferTxObject = new PaymentTransaction(1, [this.depositUtxoPos], [receiverOutput]);
+            } else {
+                this.transferTxObject = new PaymentTransaction(1, [this.depositUtxoPos], [receiverOutput, outputAlice]);
+            }
+            this.transferTx = web3.utils.bytesToHex(this.transferTxObject.rlpEncoded());
+            this.merkleTreeForTransferTx = new MerkleTree([this.transferTx]);
+            this.merkleProofForTransferTx = this.merkleTreeForTransferTx.getInclusionProof(this.transferTx);
+
+            await this.framework.submitBlock(this.merkleTreeForTransferTx.root, { from: authority });
+        };
+
+        const aliceDepositsErc20 = async () => {
+            const depositBlockNum = (await this.framework.nextDepositBlock()).toNumber();
+            this.depositUtxoPos = buildUtxoPos(depositBlockNum, 0, 0);
+            this.depositTx = Testlang.deposit(OUTPUT_TYPE_PAYMENT, DEPOSIT_VALUE, alice, this.erc20.address);
+            this.merkleTreeForDepositTx = new MerkleTree([this.depositTx], MERKLE_TREE_DEPTH);
+            this.merkleProofForDepositTx = this.merkleTreeForDepositTx.getInclusionProof(this.depositTx);
+
+            return this.erc20Vault.deposit(this.depositTx, { from: alice });
+        };
+
+        const aliceTransferErc20 = async (receiver, transferAmount) => {
+            const tranferTxBlockNum = (await this.framework.nextChildBlock()).toNumber();
+            this.transferUtxoPos = buildUtxoPos(tranferTxBlockNum, 0, 0);
+
+            const receiverOutput = new PaymentTransactionOutput(
+                OUTPUT_TYPE_PAYMENT,
+                transferAmount,
+                receiver,
+                this.erc20.address,
+            );
+            const outputAlice = new PaymentTransactionOutput(
+                OUTPUT_TYPE_PAYMENT, DEPOSIT_VALUE - transferAmount, alice, this.erc20.address,
             );
             if (transferAmount === DEPOSIT_VALUE) {
                 this.transferTxObject = new PaymentTransaction(1, [this.depositUtxoPos], [receiverOutput]);
@@ -170,7 +209,6 @@ contract(
                             });
                         });
 
-                        // add check for onlyMaintainer functions
                         describe('If the Quasar maintainer updates the safeblocknum to allow the output', () => {
                             before(async () => {
                                 this.preSafeBlockMargin = await this.quasar.safeBlockMargin();
@@ -324,8 +362,6 @@ contract(
                                         );
                                     });
                                 });
-
-                                // TO_ADD[erc20]: a test for blocking claim if the output formed is a different token
 
                                 describe('If Alice spends the output correctly in a tx to the quasar owner', () => {
                                     before(async () => {
@@ -565,6 +601,7 @@ contract(
                                         rlpChallengeTx,
                                         challengeTxInputIndex,
                                         signature,
+                                        web3.utils.keccak256(quasarMaintainer),
                                         {
                                             from: quasarMaintainer,
                                         },
@@ -703,11 +740,9 @@ contract(
                                 describe('When the Quasar Maintainer tries to withdraw unreserved funds plus the unclaimed bonds ', () => {
                                     it('should not allow to withdraw if withdrawal amount is more than claimable funds', async () => {
                                         const quasarCapacity = new BN(await this.quasar.tokenUsableCapacity(ETH));
-                                        const withdrawableFunds = quasarCapacity.addn(
-                                            this.dummyQuasarBondValue,
-                                        ).addn(1);
+                                        const withdrawableFunds = quasarCapacity.addn(1);
                                         await expectRevert(
-                                            this.quasar.withdrawLiquidEthFunds(
+                                            this.quasar.withdrawEth(
                                                 withdrawableFunds,
                                                 { from: quasarMaintainer },
                                             ),
@@ -727,22 +762,564 @@ contract(
                                         expect(quasarContractBalance).to.be.bignumber.equal(
                                             quasarCapacity.addn(this.dummyQuasarBondValue),
                                         );
-                                        const withdrawableFunds = quasarCapacity.addn(this.dummyQuasarBondValue);
-                                        const { receipt } = await this.quasar.withdrawLiquidEthFunds(
-                                            withdrawableFunds,
+
+                                        const txUnclaimedBonds = await this.quasar.withdrawUnclaimedBonds(
+                                            { from: quasarMaintainer },
+                                        );
+
+                                        const txEthWithdrawal = await this.quasar.withdrawEth(
+                                            quasarCapacity,
                                             { from: quasarMaintainer },
                                         );
 
                                         const quasarMaintainerBalanceAfterWithdraw = new BN(
                                             await web3.eth.getBalance(quasarMaintainer),
                                         );
+
                                         const expectedQuasarMaintainerBalance = quasarMaintainerBalanceBeforeWithdraw
-                                            .add(withdrawableFunds)
-                                            .sub(await spentOnGas(receipt));
+                                            .add(quasarCapacity)
+                                            .addn(this.dummyQuasarBondValue)
+                                            .sub(await spentOnGas(txUnclaimedBonds.receipt))
+                                            .sub(await spentOnGas(txEthWithdrawal.receipt));
 
                                         expect(quasarMaintainerBalanceAfterWithdraw).to.be.bignumber.equal(
                                             expectedQuasarMaintainerBalance,
                                         );
+                                    });
+                                });
+                            });
+                        });
+                    });
+                });
+
+                describe('Given Alice deposited ETH to Vault and obtains a ticket for the output', () => {
+                    before(async () => {
+                        await aliceDepositsETH();
+                        await submitPlasmaBlock();
+                        await submitPlasmaBlock();
+                        await this.quasar.addEthCapacity({ from: quasarMaintainer, value: QUASAR_LIQUID_FUNDS });
+
+                        const utxoPos = this.depositUtxoPos;
+                        const rlpOutputCreationTx = this.depositTx;
+                        const outputCreationTxInclusionProof = this.merkleProofForDepositTx;
+                        await this.quasar.obtainTicket(
+                            utxoPos,
+                            rlpOutputCreationTx,
+                            outputCreationTxInclusionProof,
+                            {
+                                from: alice,
+                                value: this.dummyQuasarBondValue,
+                            },
+                        );
+                    });
+                    describe('When Alice spends the output in a tx to the Quasar Owner', () => {
+                        before(async () => {
+                            await aliceTransferEth(quasarOwner, DEPOSIT_VALUE);
+                        });
+                        describe('If the operator doesn\'t include the tx and there is no inclusion proof', () => {
+                            describe('Alice starts an IFE Claim', () => {
+                                it('should not allow to start an IFE claim without starting ife first', async () => {
+                                    const utxoPos = this.depositUtxoPos;
+                                    const rlpTxToQuasarOwner = this.transferTx;
+
+                                    await expectRevert(
+                                        this.quasar.ifeClaim(
+                                            utxoPos,
+                                            rlpTxToQuasarOwner,
+                                            {
+                                                from: alice,
+                                            },
+                                        ),
+                                        'IFE has not been started',
+                                    );
+                                });
+                            });
+                            describe('Alice starts an IFE Claim within the claim period after starting an IFE on the tx', () => {
+                                before(async () => {
+                                    const inputTxs = [this.depositTx];
+                                    const inputUtxosPos = [this.depositUtxoPos];
+                                    const inputTxsInclusionProofs = [this.merkleProofForDepositTx];
+
+                                    const txHash = hashTx(this.transferTxObject, this.framework.address);
+                                    const signature = sign(txHash, alicePrivateKey);
+
+                                    const args = {
+                                        inFlightTx: this.transferTx,
+                                        inputTxs,
+                                        inputUtxosPos,
+                                        inputTxsInclusionProofs,
+                                        inFlightTxWitnesses: [signature],
+                                    };
+
+                                    await this.exitGame.startInFlightExit(
+                                        args,
+                                        { from: alice, value: this.startIFEBondSize },
+                                    );
+
+                                    const utxoPos = this.depositUtxoPos;
+                                    const rlpTxToQuasarOwner = this.transferTx;
+
+                                    await this.quasar.ifeClaim(
+                                        utxoPos,
+                                        rlpTxToQuasarOwner,
+                                        {
+                                            from: alice,
+                                        },
+                                    );
+                                });
+
+                                it('should allow Alice to start a claim', async () => {
+                                    const ticketData = await this.quasar.ticketData(this.depositUtxoPos);
+                                    expect(ticketData.isClaimed).to.be.true;
+                                });
+
+                                it('should not allow normal claim same ticket again', async () => {
+                                    const utxoPos = this.depositUtxoPos;
+                                    const utxoPosQuasarOwner = this.transferUtxoPos;
+                                    const rlpTxToQuasarOwner = this.transferTx;
+                                    const txToQuasarOwnerInclusionProof = this.merkleProofForTransferTx;
+
+                                    await expectRevert(
+                                        this.quasar.claim(
+                                            utxoPos,
+                                            utxoPosQuasarOwner,
+                                            rlpTxToQuasarOwner,
+                                            txToQuasarOwnerInclusionProof,
+                                            {
+                                                from: alice,
+                                            },
+                                        ),
+                                        'Already claimed',
+                                    );
+                                });
+
+                                it('should not allow IFE claim same ticket again', async () => {
+                                    const utxoPos = this.depositUtxoPos;
+                                    const rlpTxToQuasarOwner = this.transferTx;
+
+                                    await expectRevert(
+                                        this.quasar.ifeClaim(
+                                            utxoPos,
+                                            rlpTxToQuasarOwner,
+                                            {
+                                                from: alice,
+                                            },
+                                        ),
+                                        'Already claimed',
+                                    );
+                                });
+
+                                it('should not allow to obtain a ticket with same output again', async () => {
+                                    const utxoPos = this.depositUtxoPos;
+                                    const rlpOutputCreationTx = this.depositTx;
+                                    const outputCreationTxInclusionProof = this.merkleProofForDepositTx;
+
+                                    await expectRevert(
+                                        this.quasar.obtainTicket(
+                                            utxoPos,
+                                            rlpOutputCreationTx,
+                                            outputCreationTxInclusionProof,
+                                            {
+                                                from: alice,
+                                                value: this.dummyQuasarBondValue,
+                                            },
+                                        ),
+                                        'The UTXO has already been claimed',
+                                    );
+                                });
+
+                                describe('The Quasar Owner Piggybacks the ouput of the IFE', () => {
+                                    before(async () => {
+                                        this.exitingOutputIndex = 0;
+                                        const args = {
+                                            inFlightTx: this.transferTx,
+                                            outputIndex: this.exitingOutputIndex,
+                                        };
+
+                                        this.piggybackTx = await this.exitGame.piggybackInFlightExitOnOutput(
+                                            args,
+                                            { from: quasarOwner, value: this.piggybackBondSize },
+                                        );
+                                    });
+
+                                    describe('And Then someone processes the claim after the ife waiting period', () => {
+                                        it('should not allow to process before the ife waiting period', async () => {
+                                            const utxoPos = this.depositUtxoPos;
+
+                                            await expectRevert(
+                                                this.quasar.processClaim(
+                                                    utxoPos,
+                                                ),
+                                                'The claim is not finalized yet',
+                                            );
+                                        });
+
+                                        describe('When the waiting period passes', () => {
+                                            before(async () => {
+                                                await time.increase(time.duration.seconds(this.ifeWaitingPeriod).add(
+                                                    time.duration.seconds(1),
+                                                ));
+                                            });
+                                            it('should allow to process claim and return the amount plus bond to Alice', async () => {
+                                                const utxoPos = this.depositUtxoPos;
+                                                const aliceBalanceBeforeProcessClaim = new BN(
+                                                    await web3.eth.getBalance(alice),
+                                                );
+                                                await this.quasar.processClaim(utxoPos);
+                                                const aliceBalanceAfterProcessClaim = new BN(
+                                                    await web3.eth.getBalance(alice),
+                                                );
+                                                const expectedAliceBalance = aliceBalanceBeforeProcessClaim.addn(
+                                                    DEPOSIT_VALUE,
+                                                ).addn(this.dummyQuasarBondValue);
+
+                                                expect(aliceBalanceAfterProcessClaim).to.be.bignumber.equal(
+                                                    expectedAliceBalance,
+                                                );
+                                            });
+
+                                            it('should not allow to process claim again', async () => {
+                                                const utxoPos = this.depositUtxoPos;
+                                                await expectRevert(
+                                                    this.quasar.processClaim(utxoPos),
+                                                    'The claim has already been claimed or challenged',
+                                                );
+                                            });
+                                        });
+                                    });
+                                });
+                            });
+                        });
+                    });
+                });
+
+                describe('Given Alice deposited ETH to Vault and obtains a ticket for the output', () => {
+                    before(async () => {
+                        await aliceDepositsETH();
+                        await submitPlasmaBlock();
+                        await submitPlasmaBlock();
+                        const utxoPos = this.depositUtxoPos;
+                        const rlpOutputCreationTx = this.depositTx;
+                        const outputCreationTxInclusionProof = this.merkleProofForDepositTx;
+                        await this.quasar.obtainTicket(
+                            utxoPos,
+                            rlpOutputCreationTx,
+                            outputCreationTxInclusionProof,
+                            {
+                                from: alice,
+                                value: this.dummyQuasarBondValue,
+                            },
+                        );
+                    });
+
+                    describe('When Alice double spends the output to Bob and the Quasar Owner', () => {
+                        before(async () => {
+                            // spends output in a tx to Bob
+                            await aliceTransferEth(bob, DEPOSIT_VALUE);
+                            this.bobTransferTxUtxoPos = this.transferUtxoPos;
+                            this.bobTransferTx = this.transferTx;
+                            this.bobTransferTxObject = this.transferTxObject;
+                            this.bobTransferTxMerkleProof = this.merkleProofForTransferTx;
+                            // spends same output in a tx to quasarowner
+                            await aliceTransferEth(quasarOwner, DEPOSIT_VALUE);
+                        });
+
+                        describe('and then Alice tries to ife claim with the tx to Quasar owner', () => {
+                            before(async () => {
+                                const inputTxs = [this.depositTx];
+                                const inputUtxosPos = [this.depositUtxoPos];
+                                const inputTxsInclusionProofs = [this.merkleProofForDepositTx];
+
+                                const txHash = hashTx(this.transferTxObject, this.framework.address);
+                                const signature = sign(txHash, alicePrivateKey);
+
+                                const args = {
+                                    inFlightTx: this.transferTx,
+                                    inputTxs,
+                                    inputUtxosPos,
+                                    inputTxsInclusionProofs,
+                                    inFlightTxWitnesses: [signature],
+                                };
+
+                                await this.exitGame.startInFlightExit(
+                                    args,
+                                    { from: alice, value: this.startIFEBondSize },
+                                );
+
+                                const utxoPos = this.depositUtxoPos;
+                                const rlpTxToQuasarOwner = this.transferTx;
+
+                                await this.quasar.ifeClaim(
+                                    utxoPos,
+                                    rlpTxToQuasarOwner,
+                                    {
+                                        from: alice,
+                                    },
+                                );
+                            });
+
+                            describe('and then the Quasar Maintainer challenges the claim within waiting period', () => {
+                                before(async () => {
+                                    await time.increase(time.duration.seconds(this.ifeWaitingPeriod).sub(
+                                        time.duration.seconds(1),
+                                    ));
+                                    const utxoPos = this.depositUtxoPos;
+                                    const rlpChallengeTx = this.bobTransferTx;
+                                    const challengeTxInputIndex = 0;
+
+                                    const txHash = hashTx(this.bobTransferTxObject, this.framework.address);
+                                    const signature = sign(txHash, alicePrivateKey);
+
+                                    this.quasarMaintainerBalanceBeforeChallenge = new BN(
+                                        await web3.eth.getBalance(quasarMaintainer),
+                                    );
+                                    this.quasarCapacityBeforeChallenge = new BN(
+                                        await this.quasar.tokenUsableCapacity(ETH),
+                                    );
+                                    const { receipt } = await this.quasar.challengeClaim(
+                                        utxoPos,
+                                        rlpChallengeTx,
+                                        challengeTxInputIndex,
+                                        signature,
+                                        web3.utils.keccak256(quasarMaintainer),
+                                        {
+                                            from: quasarMaintainer,
+                                        },
+                                    );
+                                    this.challengeTxReceipt = receipt;
+                                });
+
+                                it('should transfer bond to challenger', async () => {
+                                    const quasarMaintainerBalanceAfterChallenge = new BN(
+                                        await web3.eth.getBalance(quasarMaintainer),
+                                    );
+                                    const expectedQuasarMaintainerBalance = this.quasarMaintainerBalanceBeforeChallenge
+                                        .addn(this.dummyQuasarBondValue)
+                                        .sub(await spentOnGas(this.challengeTxReceipt));
+
+                                    expect(quasarMaintainerBalanceAfterChallenge).to.be.bignumber.equal(
+                                        expectedQuasarMaintainerBalance,
+                                    );
+                                });
+
+                                it('should update the capacity of the Quasar', async () => {
+                                    const quasarCapacityAfterChallenge = new BN(
+                                        await this.quasar.tokenUsableCapacity(ETH),
+                                    );
+                                    const quasarExpectedCapacity = this.quasarCapacityBeforeChallenge.addn(
+                                        DEPOSIT_VALUE,
+                                    );
+
+                                    expect(quasarExpectedCapacity).to.be.bignumber.equal(quasarCapacityAfterChallenge);
+                                });
+
+                                it('should not allow processing Claim', async () => {
+                                    // +2 seconds from last increase
+                                    await time.increase(time.duration.seconds(2));
+                                    const utxoPos = this.depositUtxoPos;
+                                    await expectRevert(
+                                        this.quasar.processClaim(utxoPos),
+                                        'The claim has already been claimed or challenged',
+                                    );
+                                });
+                            });
+                        });
+                    });
+                });
+
+                describe('When Quasar maintainer adds liquid erc20 funds to the Quasar', () => {
+                    before(async () => {
+                        await setupQuasar();
+                        this.quasarCapacityBeforeAddingFunds = new BN(
+                            await this.quasar.tokenUsableCapacity(this.erc20.address),
+                        );
+                        await this.erc20.transfer(quasarMaintainer, QUASAR_LIQUID_FUNDS, { from: richDad });
+                        await this.erc20.approve(this.quasar.address, QUASAR_LIQUID_FUNDS, { from: quasarMaintainer });
+                        await this.quasar.addTokenCapacity(
+                            this.erc20.address, QUASAR_LIQUID_FUNDS, { from: quasarMaintainer },
+                        );
+                    });
+
+                    it('should increase the capacity of the Quasar', async () => {
+                        const quasarCapacityAfterAddingFunds = new BN(
+                            await this.quasar.tokenUsableCapacity(this.erc20.address),
+                        );
+                        const quasarExpectedCapacity = this.quasarCapacityBeforeAddingFunds.addn(QUASAR_LIQUID_FUNDS);
+
+                        expect(quasarCapacityAfterAddingFunds).to.be.bignumber.equal(
+                            quasarExpectedCapacity,
+                        );
+                    });
+
+                    describe('When Alice deposited Erc20 to Vault', () => {
+                        before(async () => {
+                            await this.erc20.transfer(alice, DEPOSIT_VALUE, { from: richDad });
+                            await this.erc20.approve(this.erc20Vault.address, DEPOSIT_VALUE, { from: alice });
+                            await aliceDepositsErc20();
+                        });
+
+                        describe('And then Alice tries to obtain a ticket from the Quasar using the output', () => {
+                            describe('If the Quasar maintainer updates the safeblocknum to allow the output', () => {
+                                before(async () => {
+                                    this.preSafeBlockMargin = await this.quasar.safeBlockMargin();
+                                    this.dummySafeBlockMargin = 1;
+                                    await this.quasar.setSafeBlockMargin(
+                                        this.dummySafeBlockMargin,
+                                        { from: quasarMaintainer },
+                                    );
+
+                                    await submitPlasmaBlock();
+                                    await submitPlasmaBlock();
+                                });
+
+                                describe('When Alice tries to obtain ticket with all valid parameters', () => {
+                                    before(async () => {
+                                        const utxoPos = this.depositUtxoPos;
+                                        const rlpOutputCreationTx = this.depositTx;
+                                        const outputCreationTxInclusionProof = this.merkleProofForDepositTx;
+                                        this.quasarCapacityBeforeObtainingTicket = new BN(
+                                            await this.quasar.tokenUsableCapacity(this.erc20.address),
+                                        );
+                                        const { receipt } = await this.quasar.obtainTicket(
+                                            utxoPos,
+                                            rlpOutputCreationTx,
+                                            outputCreationTxInclusionProof,
+                                            {
+                                                from: alice,
+                                                value: this.dummyQuasarBondValue,
+                                            },
+                                        );
+                                        this.txReceipt = receipt;
+                                    });
+
+                                    it('should allow Alice to obtain a ticket', async () => {
+                                        const ticketData = await this.quasar.ticketData(this.depositUtxoPos);
+                                        const blockInfo = await web3.eth.getBlock(this.txReceipt.blockNumber);
+                                        const expectedValidityTimestamp = (new BN(blockInfo.timestamp)).addn(14400);
+                                        expect(ticketData.validityTimestamp).to.be.bignumber.equal(
+                                            expectedValidityTimestamp,
+                                        );
+                                        expect(ticketData.outputOwner).to.be.equal(alice);
+                                        expect(ticketData.reservedAmount).to.be.bignumber.equal(new BN(DEPOSIT_VALUE));
+                                        expect(ticketData.token).to.be.equal(this.erc20.address);
+                                        expect(ticketData.bondValue).to.be.bignumber.equal(
+                                            new BN(this.dummyQuasarBondValue),
+                                        );
+                                        expect(ticketData.isClaimed).to.be.false;
+                                    });
+
+                                    it('should reduce the Quasar capacity for Erc20', async () => {
+                                        const updatedQuasarCapacity = new BN(
+                                            await this.quasar.tokenUsableCapacity(this.erc20.address),
+                                        );
+                                        const expectedQuasarCapacity = this.quasarCapacityBeforeObtainingTicket.subn(
+                                            DEPOSIT_VALUE,
+                                        );
+
+                                        expect(updatedQuasarCapacity).to.be.bignumber.equal(expectedQuasarCapacity);
+                                    });
+
+                                    describe('And then if Alice spends a different output of other token in a tx to the quasar owner', () => {
+                                        before(async () => {
+                                            await aliceTransferEth(quasarOwner, DEPOSIT_VALUE);
+                                        });
+
+                                        it('should not allow Alice to start a claim', async () => {
+                                            const utxoPos = this.depositUtxoPos;
+                                            const utxoPosQuasarOwner = this.transferUtxoPos;
+                                            const rlpTxToQuasarOwner = this.transferTx;
+                                            const txToQuasarOwnerInclusionProof = this.merkleProofForTransferTx;
+
+                                            await expectRevert(
+                                                this.quasar.claim(
+                                                    utxoPos,
+                                                    utxoPosQuasarOwner,
+                                                    rlpTxToQuasarOwner,
+                                                    txToQuasarOwnerInclusionProof,
+                                                    {
+                                                        from: alice,
+                                                    },
+                                                ),
+                                                'Wrong token sent to quasar owner',
+                                            );
+                                        });
+                                    });
+
+                                    describe('If Alice spends the output correctly in a tx to the quasar owner', () => {
+                                        before(async () => {
+                                            await aliceTransferErc20(quasarOwner, DEPOSIT_VALUE);
+                                        });
+
+                                        describe('When Alice tries to start claim with proper parameters', () => {
+                                            before(async () => {
+                                                const utxoPos = this.depositUtxoPos;
+                                                const utxoPosQuasarOwner = this.transferUtxoPos;
+                                                const rlpTxToQuasarOwner = this.transferTx;
+                                                const txToQuasarOwnerInclusionProof = this.merkleProofForTransferTx;
+
+                                                await this.quasar.claim(
+                                                    utxoPos,
+                                                    utxoPosQuasarOwner,
+                                                    rlpTxToQuasarOwner,
+                                                    txToQuasarOwnerInclusionProof,
+                                                    {
+                                                        from: alice,
+                                                    },
+                                                );
+                                            });
+
+                                            it('should allow Alice to start a claim', async () => {
+                                                const ticketData = await this.quasar.ticketData(this.depositUtxoPos);
+                                                expect(ticketData.isClaimed).to.be.true;
+                                            });
+
+                                            describe('And Then someone processes the claim after the waiting period', () => {
+                                                describe('When the waiting period passes', () => {
+                                                    before(async () => {
+                                                        await time.increase(time.duration.seconds(
+                                                            this.waitingPeriod,
+                                                        ).add(
+                                                            time.duration.seconds(1),
+                                                        ));
+                                                    });
+                                                    it('should allow to process claim and return the amount plus bond to Alice', async () => {
+                                                        const utxoPos = this.depositUtxoPos;
+                                                        const ethBalanceBeforeProcessClaim = new BN(
+                                                            await web3.eth.getBalance(alice),
+                                                        );
+                                                        const erc20BalanceBeforeProcessClaim = new BN(
+                                                            await this.erc20.balanceOf(alice),
+                                                        );
+                                                        await this.quasar.processClaim(utxoPos);
+                                                        const ethBalanceAfterProcessClaim = new BN(
+                                                            await web3.eth.getBalance(alice),
+                                                        );
+                                                        const erc20BalanceAfterProcessClaim = new BN(
+                                                            await this.erc20.balanceOf(alice),
+                                                        );
+                                                        const expectedEthBalance = ethBalanceBeforeProcessClaim
+                                                            .addn(this.dummyQuasarBondValue);
+                                                        const expectedErc20Balance = erc20BalanceBeforeProcessClaim
+                                                            .addn(DEPOSIT_VALUE);
+
+                                                        expect(ethBalanceAfterProcessClaim).to.be.bignumber.equal(
+                                                            expectedEthBalance,
+                                                        );
+                                                        expect(erc20BalanceAfterProcessClaim).to.be.bignumber.equal(
+                                                            expectedErc20Balance,
+                                                        );
+                                                    });
+
+                                                    it('should not allow to process claim again', async () => {
+                                                        const utxoPos = this.depositUtxoPos;
+                                                        await expectRevert(
+                                                            this.quasar.processClaim(utxoPos),
+                                                            'The claim has already been claimed or challenged',
+                                                        );
+                                                    });
+                                                });
+                                            });
+                                        });
                                     });
                                 });
                             });
