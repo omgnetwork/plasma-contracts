@@ -370,7 +370,7 @@ contract('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
                     owner: outputOwner,
                     exitId,
                     utxoPos: new BN(args.utxoPos),
-                    outputTx: args.rlpOutputTx
+                    outputTx: args.rlpOutputTx,
                 },
             );
         });
@@ -405,7 +405,7 @@ contract('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
                     owner: outputOwner,
                     exitId: exitId1,
                     utxoPos: new BN(args[0].utxoPos),
-                    outputTx: args[0].rlpOutputTx
+                    outputTx: args[0].rlpOutputTx,
                 },
             );
 
@@ -425,7 +425,7 @@ contract('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
                     owner: outputOwner,
                     exitId: exitId2,
                     utxoPos: new BN(args[1].utxoPos),
-                    outputTx: args[1].rlpOutputTx
+                    outputTx: args[1].rlpOutputTx,
                 },
             );
         });
