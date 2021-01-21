@@ -1166,8 +1166,19 @@ contract(
                     describe('When Alice signs a tx1 spending output A to Quasar Owner and output B as an extra input', () => {
                         before(async () => {
                             const amount = DEPOSIT_VALUE;
-                            const outputQuasarOwner = new PaymentTransactionOutput(OUTPUT_TYPE_PAYMENT, amount, quasarOwner, ETH);
-                            const outputAlice = new PaymentTransactionOutput(OUTPUT_TYPE_PAYMENT, amount, alice, ETH);
+                            const outputQuasarOwner = new PaymentTransactionOutput(
+                                OUTPUT_TYPE_PAYMENT,
+                                amount,
+                                quasarOwner,
+                                ETH,
+                            );
+                            const outputAlice = new PaymentTransactionOutput(
+                                OUTPUT_TYPE_PAYMENT,
+                                amount,
+                                alice,
+                                ETH,
+                            );
+
                             this.tx1 = new PaymentTransaction(
                                 1,
                                 [this.outputADepositUtxoPos, this.outputBDepositUtxoPos],
@@ -1203,7 +1214,7 @@ contract(
                                     const inputTxsInclusionProofs = [
                                         this.outputAInclusionProof, this.outputBInclusionProof,
                                     ];
-    
+
                                     const args = {
                                         inFlightTx: this.tx1RlpEncoded,
                                         inputTxs,
@@ -1212,7 +1223,7 @@ contract(
                                         inputTxsInclusionProofs,
                                         inFlightTxWitnesses: [this.signatureTx1, this.signatureTx1],
                                     };
-    
+
                                     await this.exitGame.startInFlightExit(
                                         args,
                                         { from: bob, value: this.startIFEBondSize },
@@ -1241,7 +1252,7 @@ contract(
                                         const challengeTxInputIndex = 0;
                                         const sharedOutputInputIndex = 1;
                                         const sharedOutputCreationTx = this.outputBDepositTx;
-    
+
                                         this.quasarMaintainerBalanceBeforeChallenge = new BN(
                                             await web3.eth.getBalance(quasarMaintainer),
                                         );
@@ -1262,20 +1273,20 @@ contract(
                                         );
                                         this.challengeTxReceipt = receipt;
                                     });
-    
+
                                     it('should transfer bond to challenger', async () => {
                                         const quasarMaintainerBalanceAfterChallenge = new BN(
                                             await web3.eth.getBalance(quasarMaintainer),
                                         );
-                                        const expectedQuasarMaintainerBalance = this.quasarMaintainerBalanceBeforeChallenge
+                                        const expectedBalance = this.quasarMaintainerBalanceBeforeChallenge
                                             .addn(this.dummyQuasarBondValue)
                                             .sub(await spentOnGas(this.challengeTxReceipt));
-    
+
                                         expect(quasarMaintainerBalanceAfterChallenge).to.be.bignumber.equal(
-                                            expectedQuasarMaintainerBalance,
+                                            expectedBalance,
                                         );
                                     });
-    
+
                                     it('should update the capacity of the Quasar', async () => {
                                         const quasarCapacityAfterChallenge = new BN(
                                             await this.quasar.tokenUsableCapacity(ETH),
@@ -1283,10 +1294,12 @@ contract(
                                         const quasarExpectedCapacity = this.quasarCapacityBeforeChallenge.addn(
                                             DEPOSIT_VALUE,
                                         );
-    
-                                        expect(quasarExpectedCapacity).to.be.bignumber.equal(quasarCapacityAfterChallenge);
+
+                                        expect(quasarExpectedCapacity).to.be.bignumber.equal(
+                                            quasarCapacityAfterChallenge,
+                                        );
                                     });
-    
+
                                     it('should not allow processing Claim', async () => {
                                         // +2 seconds from last increase
                                         await time.increase(time.duration.seconds(2));
