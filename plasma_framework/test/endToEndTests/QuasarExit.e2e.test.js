@@ -589,6 +589,8 @@ contract(
                                     const challengeTxInputIndex = 0;
                                     const txHash = hashTx(this.bobTransferTxObject, this.framework.address);
                                     const signature = sign(txHash, alicePrivateKey);
+                                    const sharedOutputInputIndex = 0;
+                                    const sharedOutputCreationTx = '0x';
 
                                     this.quasarMaintainerBalanceBeforeChallenge = new BN(
                                         await web3.eth.getBalance(quasarMaintainer),
@@ -601,6 +603,8 @@ contract(
                                         rlpChallengeTx,
                                         challengeTxInputIndex,
                                         signature,
+                                        sharedOutputInputIndex,
+                                        sharedOutputCreationTx,
                                         web3.utils.keccak256(quasarMaintainer),
                                         {
                                             from: quasarMaintainer,
@@ -1069,6 +1073,8 @@ contract(
 
                                     const txHash = hashTx(this.bobTransferTxObject, this.framework.address);
                                     const signature = sign(txHash, alicePrivateKey);
+                                    const sharedOutputInputIndex = 0;
+                                    const sharedOutputCreationTx = '0x';
 
                                     this.quasarMaintainerBalanceBeforeChallenge = new BN(
                                         await web3.eth.getBalance(quasarMaintainer),
@@ -1081,6 +1087,8 @@ contract(
                                         rlpChallengeTx,
                                         challengeTxInputIndex,
                                         signature,
+                                        sharedOutputInputIndex,
+                                        sharedOutputCreationTx,
                                         web3.utils.keccak256(quasarMaintainer),
                                         {
                                             from: quasarMaintainer,
@@ -1121,6 +1129,173 @@ contract(
                                         this.quasar.processClaim(utxoPos),
                                         'The claim has already been claimed or challenged',
                                     );
+                                });
+                            });
+                        });
+                    });
+                });
+
+                describe('Given Alice deposited ETH to the Vault two times, and obtains ticket for the first output', () => {
+                    before(async () => {
+                        await aliceDepositsETH();
+                        this.outputADepositUtxoPos = this.depositUtxoPos;
+                        this.outputADepositTx = this.depositTx;
+                        this.outputAInclusionProof = this.merkleProofForDepositTx;
+                        await aliceDepositsETH();
+                        this.outputBDepositUtxoPos = this.depositUtxoPos;
+                        this.outputBDepositTx = this.depositTx;
+                        this.outputBInclusionProof = this.merkleProofForDepositTx;
+
+                        await submitPlasmaBlock();
+                        await submitPlasmaBlock();
+
+                        const utxoPos = this.outputADepositUtxoPos;
+                        const rlpOutputCreationTx = this.outputADepositTx;
+                        const outputCreationTxInclusionProof = this.outputAInclusionProof;
+                        await this.quasar.obtainTicket(
+                            utxoPos,
+                            rlpOutputCreationTx,
+                            outputCreationTxInclusionProof,
+                            {
+                                from: alice,
+                                value: this.dummyQuasarBondValue,
+                            },
+                        );
+                    });
+
+                    describe('When Alice signs a tx1 spending output A to Quasar Owner and output B as an extra input', () => {
+                        before(async () => {
+                            const amount = DEPOSIT_VALUE;
+                            const outputQuasarOwner = new PaymentTransactionOutput(OUTPUT_TYPE_PAYMENT, amount, quasarOwner, ETH);
+                            const outputAlice = new PaymentTransactionOutput(OUTPUT_TYPE_PAYMENT, amount, alice, ETH);
+                            this.tx1 = new PaymentTransaction(
+                                1,
+                                [this.outputADepositUtxoPos, this.outputBDepositUtxoPos],
+                                [outputQuasarOwner, outputAlice],
+                            );
+
+                            const txHash = hashTx(this.tx1, this.framework.address);
+                            this.signatureTx1 = sign(txHash, alicePrivateKey);
+                        });
+
+                        describe('And then Alice also signs another competing tx2 to Bob using output B as input', () => {
+                            before(async () => {
+                                const amount = DEPOSIT_VALUE / 2;
+                                const output = new PaymentTransactionOutput(OUTPUT_TYPE_PAYMENT, amount, bob, ETH);
+                                this.tx2 = new PaymentTransaction(
+                                    1,
+                                    [this.outputBDepositUtxoPos],
+                                    [output],
+                                );
+
+                                const txHash = hashTx(this.tx2, this.framework.address);
+                                this.signatureTx2 = sign(txHash, alicePrivateKey);
+                            });
+
+                            describe('And then Alice starts an IFE on tx1 and starts an IFE claim', () => {
+                                before(async () => {
+                                    this.tx1RlpEncoded = web3.utils.bytesToHex(this.tx1.rlpEncoded());
+                                    const inputTxs = [this.outputADepositTx, this.outputBDepositTx];
+                                    const inputTxTypes = [1, 1];
+                                    const inputUtxosPos = [
+                                        this.outputADepositUtxoPos, this.outputBDepositUtxoPos,
+                                    ];
+                                    const inputTxsInclusionProofs = [
+                                        this.outputAInclusionProof, this.outputBInclusionProof,
+                                    ];
+    
+                                    const args = {
+                                        inFlightTx: this.tx1RlpEncoded,
+                                        inputTxs,
+                                        inputTxTypes,
+                                        inputUtxosPos,
+                                        inputTxsInclusionProofs,
+                                        inFlightTxWitnesses: [this.signatureTx1, this.signatureTx1],
+                                    };
+    
+                                    await this.exitGame.startInFlightExit(
+                                        args,
+                                        { from: bob, value: this.startIFEBondSize },
+                                    );
+
+                                    const utxoPos = this.outputADepositUtxoPos;
+                                    const rlpTxToQuasarOwner = this.tx1RlpEncoded;
+
+                                    await this.quasar.ifeClaim(
+                                        utxoPos,
+                                        rlpTxToQuasarOwner,
+                                        {
+                                            from: alice,
+                                        },
+                                    );
+                                });
+
+                                describe('and then the Quasar Maintainer challenges the claim with tx2 within waiting period', () => {
+                                    before(async () => {
+                                        await time.increase(time.duration.seconds(this.ifeWaitingPeriod).sub(
+                                            time.duration.seconds(1),
+                                        ));
+                                        const utxoPos = this.outputADepositUtxoPos;
+                                        this.tx2RlpEncoded = web3.utils.bytesToHex(this.tx2.rlpEncoded());
+                                        const rlpChallengeTx = this.tx2RlpEncoded;
+                                        const challengeTxInputIndex = 0;
+                                        const sharedOutputInputIndex = 1;
+                                        const sharedOutputCreationTx = this.outputBDepositTx;
+    
+                                        this.quasarMaintainerBalanceBeforeChallenge = new BN(
+                                            await web3.eth.getBalance(quasarMaintainer),
+                                        );
+                                        this.quasarCapacityBeforeChallenge = new BN(
+                                            await this.quasar.tokenUsableCapacity(ETH),
+                                        );
+                                        const { receipt } = await this.quasar.challengeClaim(
+                                            utxoPos,
+                                            rlpChallengeTx,
+                                            challengeTxInputIndex,
+                                            this.signatureTx2,
+                                            sharedOutputInputIndex,
+                                            sharedOutputCreationTx,
+                                            web3.utils.keccak256(quasarMaintainer),
+                                            {
+                                                from: quasarMaintainer,
+                                            },
+                                        );
+                                        this.challengeTxReceipt = receipt;
+                                    });
+    
+                                    it('should transfer bond to challenger', async () => {
+                                        const quasarMaintainerBalanceAfterChallenge = new BN(
+                                            await web3.eth.getBalance(quasarMaintainer),
+                                        );
+                                        const expectedQuasarMaintainerBalance = this.quasarMaintainerBalanceBeforeChallenge
+                                            .addn(this.dummyQuasarBondValue)
+                                            .sub(await spentOnGas(this.challengeTxReceipt));
+    
+                                        expect(quasarMaintainerBalanceAfterChallenge).to.be.bignumber.equal(
+                                            expectedQuasarMaintainerBalance,
+                                        );
+                                    });
+    
+                                    it('should update the capacity of the Quasar', async () => {
+                                        const quasarCapacityAfterChallenge = new BN(
+                                            await this.quasar.tokenUsableCapacity(ETH),
+                                        );
+                                        const quasarExpectedCapacity = this.quasarCapacityBeforeChallenge.addn(
+                                            DEPOSIT_VALUE,
+                                        );
+    
+                                        expect(quasarExpectedCapacity).to.be.bignumber.equal(quasarCapacityAfterChallenge);
+                                    });
+    
+                                    it('should not allow processing Claim', async () => {
+                                        // +2 seconds from last increase
+                                        await time.increase(time.duration.seconds(2));
+                                        const utxoPos = this.outputADepositUtxoPos;
+                                        await expectRevert(
+                                            this.quasar.processClaim(utxoPos),
+                                            'The claim has already been claimed or challenged',
+                                        );
+                                    });
                                 });
                             });
                         });

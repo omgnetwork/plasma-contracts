@@ -272,6 +272,8 @@ contract Quasar is QuasarPool {
      * @param rlpChallengeTx RLP-encoded challenge transaction
      * @param challengeTxInputIndex index pos of the same utxo in the challenge transaction
      * @param challengeTxWitness Witness for challenging transaction
+     * @param sharedOutputInputIndex (optional) index pos of another input from the claimTx that is spent
+     * @param sharedOutputCreationTx (optional) Transaction that created this shared input
      * @param senderData A keccak256 hash of the sender's address
     */
     function challengeClaim(
@@ -279,45 +281,7 @@ contract Quasar is QuasarPool {
         bytes memory rlpChallengeTx,
         uint16 challengeTxInputIndex,
         bytes memory challengeTxWitness,
-        bytes32 senderData
-    ) public {
-        require(senderData == keccak256(abi.encodePacked(msg.sender)), "Incorrect SenderData");
-        require(ticketData[utxoPos].isClaimed && claimData[utxoPos].isValid, "The claim is not challengeable");
-        require(block.timestamp <= claimData[utxoPos].finalizationTimestamp, "The challenge period is over");
-        require(
-            keccak256(claimData[utxoPos].rlpClaimTx) != keccak256(rlpChallengeTx),
-            "The challenging transaction is the same as the claim transaction"
-        );
-
-        require(MoreVpFinalization.isProtocolFinalized(
-            plasmaFramework,
-            rlpChallengeTx
-        ), "The challenging transaction is invalid");
-
-        Ticket memory ticket = ticketData[utxoPos];
-        
-        verifySpendingCondition(utxoPos, ticket.rlpOutputCreationTx, rlpChallengeTx, challengeTxInputIndex, challengeTxWitness);
-        
-        claimData[utxoPos].isValid = false;
-        tokenUsableCapacity[ticket.token] = tokenUsableCapacity[ticket.token].add(ticket.reservedAmount);
-        SafeEthTransfer.transferRevertOnError(msg.sender, ticket.bondValue, SAFE_GAS_STIPEND);
-    }
-
-    /**
-     * @dev Challenge an active claim, can be used to challenge IFEClaims as well
-     * @notice A challenge is required only when a tx that spends the same utxo was included previously
-     * @param utxoPos pos of the output, which is the ticket identifier
-     * @param rlpChallengeTx RLP-encoded challenge transaction
-     * @param challengeTxInputIndex index pos of the same utxo in the challenge transaction
-     * @param challengeTxWitness Witness for challenging transaction
-     * @param senderData A keccak256 hash of the sender's address
-    */
-    function challengeIFEClaim(
-        uint256 utxoPos,
-        bytes memory rlpChallengeTx,
-        uint16 challengeTxInputIndex,
-        bytes memory challengeTxWitness,
-        uint256 sharedUtxoPosInputIndex,
+        uint16 sharedOutputInputIndex,
         bytes memory sharedOutputCreationTx,
         bytes32 senderData
     ) public {
@@ -334,12 +298,15 @@ contract Quasar is QuasarPool {
             rlpChallengeTx
         ), "The challenging transaction is invalid");
 
-        
-        PaymentTransactionModel.Transaction memory decodedTx
-        = PaymentTransactionModel.decode(claimData[utxoPos].rlpClaimTx);
+        if (sharedOutputCreationTx.length == 0) {
+            verifySpendingCondition(utxoPos, ticketData[utxoPos].rlpOutputCreationTx, rlpChallengeTx, challengeTxInputIndex, challengeTxWitness);
+        } else {
+            PaymentTransactionModel.Transaction memory decodedTx
+            = PaymentTransactionModel.decode(claimData[utxoPos].rlpClaimTx);
 
-        verifySpendingCondition(decodedTx.inputs[sharedUtxoPosInputIndex], sharedOutputCreationTx, rlpChallengeTx, challengeTxInputIndex, challengeTxWitness);
-        
+            verifySpendingCondition(uint256(decodedTx.inputs[sharedOutputInputIndex]), sharedOutputCreationTx, rlpChallengeTx, challengeTxInputIndex, challengeTxWitness);
+        }
+
         claimData[utxoPos].isValid = false;
         Ticket memory ticket = ticketData[utxoPos];
         tokenUsableCapacity[ticket.token] = tokenUsableCapacity[ticket.token].add(ticket.reservedAmount);
@@ -380,7 +347,8 @@ contract Quasar is QuasarPool {
 
     /**
      * @dev Verify the challengeTx spends the output
-     * @param utxoPos pos of the output, which is the ticket identifier
+     * @param utxoPos pos of the output
+     * @param rlpOutputCreationTx transaction that created the output
      * @param rlpChallengeTx RLP-encoded challenge transaction
      * @param challengeTxInputIndex index pos of the same utxo in the challenge transaction
      * @param challengeTxWitness Witness for challenging transaction
