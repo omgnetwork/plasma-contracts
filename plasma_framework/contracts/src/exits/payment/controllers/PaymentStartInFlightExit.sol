@@ -35,11 +35,11 @@ library PaymentStartInFlightExit {
     }
 
     event InFlightExitStarted(
-        address indexed initiator,
         bytes32 indexed txHash,
         bytes inFlightTx,
         uint256[] inputUtxosPos,
-        bytes[] inFlightTxWitnesses
+        bytes[] inFlightTxWitnesses,
+        bytes[] inputTxs
     );
 
      /**
@@ -109,11 +109,11 @@ library PaymentStartInFlightExit {
         verifyStart(startExitData, inFlightExitMap);
         startExit(startExitData, inFlightExitMap);
         emit InFlightExitStarted({
-            initiator: msg.sender,
             txHash: startExitData.inFlightTxHash,
             inFlightTx: args.inFlightTx,
             inputUtxosPos: args.inputUtxosPos,
-            inFlightTxWitnesses: args.inFlightTxWitnesses
+            inFlightTxWitnesses: args.inFlightTxWitnesses,
+            inputTxs: args.inputTxs,
         });
     }
 

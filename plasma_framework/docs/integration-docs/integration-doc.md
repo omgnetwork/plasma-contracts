@@ -1101,11 +1101,11 @@ This section describes the events for an in-flight exit.
 - An in-flight exit has started:
 ```
     event InFlightExitStarted(
-        address indexed initiator,
         bytes32 indexed txHash,
         bytes inFlightTx,
         uint256[] inputUtxosPos,
-        bytes[] inFlightTxWitnesses
+        bytes[] inFlightTxWitnesses,
+        bytes[] inputTxs
     );
 ```
 - An input has been piggybacked on an in-flight exit:
