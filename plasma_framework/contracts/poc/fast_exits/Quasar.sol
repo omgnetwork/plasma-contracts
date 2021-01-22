@@ -272,6 +272,8 @@ contract Quasar is QuasarPool {
      * @param rlpChallengeTx RLP-encoded challenge transaction
      * @param challengeTxInputIndex index pos of the same utxo in the challenge transaction
      * @param challengeTxWitness Witness for challenging transaction
+     * @param otherInputIndex (optional) index pos of another input from the claimTx that is spent
+     * @param otherInputCreationTx (optional) Transaction that created this shared input
      * @param senderData A keccak256 hash of the sender's address
     */
     function challengeClaim(
@@ -279,6 +281,8 @@ contract Quasar is QuasarPool {
         bytes memory rlpChallengeTx,
         uint16 challengeTxInputIndex,
         bytes memory challengeTxWitness,
+        uint16 otherInputIndex,
+        bytes memory otherInputCreationTx,
         bytes32 senderData
     ) public {
         require(senderData == keccak256(abi.encodePacked(msg.sender)), "Incorrect SenderData");
@@ -294,8 +298,15 @@ contract Quasar is QuasarPool {
             rlpChallengeTx
         ), "The challenging transaction is invalid");
 
-        verifySpendingCondition(utxoPos, rlpChallengeTx, challengeTxInputIndex, challengeTxWitness);
-        
+        if (otherInputCreationTx.length == 0) {
+            verifySpendingCondition(utxoPos, ticketData[utxoPos].rlpOutputCreationTx, rlpChallengeTx, challengeTxInputIndex, challengeTxWitness);
+        } else {
+            PaymentTransactionModel.Transaction memory decodedTx
+            = PaymentTransactionModel.decode(claimData[utxoPos].rlpClaimTx);
+
+            verifySpendingCondition(uint256(decodedTx.inputs[otherInputIndex]), otherInputCreationTx, rlpChallengeTx, challengeTxInputIndex, challengeTxWitness);
+        }
+
         claimData[utxoPos].isValid = false;
         Ticket memory ticket = ticketData[utxoPos];
         tokenUsableCapacity[ticket.token] = tokenUsableCapacity[ticket.token].add(ticket.reservedAmount);
@@ -336,15 +347,16 @@ contract Quasar is QuasarPool {
 
     /**
      * @dev Verify the challengeTx spends the output
-     * @param utxoPos pos of the output, which is the ticket identifier
+     * @param utxoPos pos of the output
+     * @param rlpOutputCreationTx transaction that created the output
      * @param rlpChallengeTx RLP-encoded challenge transaction
      * @param challengeTxInputIndex index pos of the same utxo in the challenge transaction
      * @param challengeTxWitness Witness for challenging transaction
     */
-    function verifySpendingCondition(uint256 utxoPos, bytes memory rlpChallengeTx, uint16 challengeTxInputIndex, bytes memory challengeTxWitness) private {
+    function verifySpendingCondition(uint256 utxoPos, bytes memory rlpOutputCreationTx, bytes memory rlpChallengeTx, uint16 challengeTxInputIndex, bytes memory challengeTxWitness) private {
         GenericTransaction.Transaction memory challengingTx = GenericTransaction.decode(rlpChallengeTx);
 
-        GenericTransaction.Transaction memory inputTx = GenericTransaction.decode(ticketData[utxoPos].rlpOutputCreationTx);
+        GenericTransaction.Transaction memory inputTx = GenericTransaction.decode(rlpOutputCreationTx);
         PosLib.Position memory utxoPosDecoded = PosLib.decode(utxoPos);
         GenericTransaction.Output memory output = GenericTransaction.getOutput(inputTx, utxoPosDecoded.outputIndex);
 
@@ -353,7 +365,7 @@ contract Quasar is QuasarPool {
         );
         require(address(condition) != address(0), "Spending condition contract not found");
         bool isSpent = condition.verify(
-            ticketData[utxoPos].rlpOutputCreationTx,
+            rlpOutputCreationTx,
             utxoPos,
             rlpChallengeTx,
             challengeTxInputIndex,
