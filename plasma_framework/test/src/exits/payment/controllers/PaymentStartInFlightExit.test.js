@@ -308,7 +308,7 @@ contract('PaymentStartInFlightExit', ([_, alice, richFather, carol]) => {
                     'InFlightExitStarted',
                     {
                         txHash: expectedIfeHash,
-                        inputTxs: this.args.inputTxs
+                        inputTxs: this.args.inputTxs,
                     },
                 );
             });
