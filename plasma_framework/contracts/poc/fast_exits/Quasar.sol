@@ -272,8 +272,8 @@ contract Quasar is QuasarPool {
      * @param rlpChallengeTx RLP-encoded challenge transaction
      * @param challengeTxInputIndex index pos of the same utxo in the challenge transaction
      * @param challengeTxWitness Witness for challenging transaction
-     * @param sharedOutputInputIndex (optional) index pos of another input from the claimTx that is spent
-     * @param sharedOutputCreationTx (optional) Transaction that created this shared input
+     * @param otherInputIndex (optional) index pos of another input from the claimTx that is spent
+     * @param otherInputCreationTx (optional) Transaction that created this shared input
      * @param senderData A keccak256 hash of the sender's address
     */
     function challengeClaim(
@@ -281,8 +281,8 @@ contract Quasar is QuasarPool {
         bytes memory rlpChallengeTx,
         uint16 challengeTxInputIndex,
         bytes memory challengeTxWitness,
-        uint16 sharedOutputInputIndex,
-        bytes memory sharedOutputCreationTx,
+        uint16 otherInputIndex,
+        bytes memory otherInputCreationTx,
         bytes32 senderData
     ) public {
         require(senderData == keccak256(abi.encodePacked(msg.sender)), "Incorrect SenderData");
@@ -298,13 +298,13 @@ contract Quasar is QuasarPool {
             rlpChallengeTx
         ), "The challenging transaction is invalid");
 
-        if (sharedOutputCreationTx.length == 0) {
+        if (otherInputCreationTx.length == 0) {
             verifySpendingCondition(utxoPos, ticketData[utxoPos].rlpOutputCreationTx, rlpChallengeTx, challengeTxInputIndex, challengeTxWitness);
         } else {
             PaymentTransactionModel.Transaction memory decodedTx
             = PaymentTransactionModel.decode(claimData[utxoPos].rlpClaimTx);
 
-            verifySpendingCondition(uint256(decodedTx.inputs[sharedOutputInputIndex]), sharedOutputCreationTx, rlpChallengeTx, challengeTxInputIndex, challengeTxWitness);
+            verifySpendingCondition(uint256(decodedTx.inputs[otherInputIndex]), otherInputCreationTx, rlpChallengeTx, challengeTxInputIndex, challengeTxWitness);
         }
 
         claimData[utxoPos].isValid = false;

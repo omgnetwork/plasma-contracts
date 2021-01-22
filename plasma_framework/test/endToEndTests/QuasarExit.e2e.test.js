@@ -589,8 +589,8 @@ contract(
                                     const challengeTxInputIndex = 0;
                                     const txHash = hashTx(this.bobTransferTxObject, this.framework.address);
                                     const signature = sign(txHash, alicePrivateKey);
-                                    const sharedOutputInputIndex = 0;
-                                    const sharedOutputCreationTx = '0x';
+                                    const otherInputIndex = 0;
+                                    const otherInputCreationTx = '0x';
 
                                     this.quasarMaintainerBalanceBeforeChallenge = new BN(
                                         await web3.eth.getBalance(quasarMaintainer),
@@ -603,8 +603,8 @@ contract(
                                         rlpChallengeTx,
                                         challengeTxInputIndex,
                                         signature,
-                                        sharedOutputInputIndex,
-                                        sharedOutputCreationTx,
+                                        otherInputIndex,
+                                        otherInputCreationTx,
                                         web3.utils.keccak256(quasarMaintainer),
                                         {
                                             from: quasarMaintainer,
@@ -1073,8 +1073,8 @@ contract(
 
                                     const txHash = hashTx(this.bobTransferTxObject, this.framework.address);
                                     const signature = sign(txHash, alicePrivateKey);
-                                    const sharedOutputInputIndex = 0;
-                                    const sharedOutputCreationTx = '0x';
+                                    const otherInputIndex = 0;
+                                    const otherInputCreationTx = '0x';
 
                                     this.quasarMaintainerBalanceBeforeChallenge = new BN(
                                         await web3.eth.getBalance(quasarMaintainer),
@@ -1087,8 +1087,8 @@ contract(
                                         rlpChallengeTx,
                                         challengeTxInputIndex,
                                         signature,
-                                        sharedOutputInputIndex,
-                                        sharedOutputCreationTx,
+                                        otherInputIndex,
+                                        otherInputCreationTx,
                                         web3.utils.keccak256(quasarMaintainer),
                                         {
                                             from: quasarMaintainer,
@@ -1250,8 +1250,8 @@ contract(
                                         this.tx2RlpEncoded = web3.utils.bytesToHex(this.tx2.rlpEncoded());
                                         const rlpChallengeTx = this.tx2RlpEncoded;
                                         const challengeTxInputIndex = 0;
-                                        const sharedOutputInputIndex = 1;
-                                        const sharedOutputCreationTx = this.outputBDepositTx;
+                                        const otherInputIndex = 1;
+                                        const otherInputCreationTx = this.outputBDepositTx;
 
                                         this.quasarMaintainerBalanceBeforeChallenge = new BN(
                                             await web3.eth.getBalance(quasarMaintainer),
@@ -1264,8 +1264,8 @@ contract(
                                             rlpChallengeTx,
                                             challengeTxInputIndex,
                                             this.signatureTx2,
-                                            sharedOutputInputIndex,
-                                            sharedOutputCreationTx,
+                                            otherInputIndex,
+                                            otherInputCreationTx,
                                             web3.utils.keccak256(quasarMaintainer),
                                             {
                                                 from: quasarMaintainer,
