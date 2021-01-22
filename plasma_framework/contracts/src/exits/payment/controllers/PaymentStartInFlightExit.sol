@@ -113,7 +113,7 @@ library PaymentStartInFlightExit {
             inFlightTx: args.inFlightTx,
             inputUtxosPos: args.inputUtxosPos,
             inFlightTxWitnesses: args.inFlightTxWitnesses,
-            inputTxs: args.inputTxs,
+            inputTxs: args.inputTxs
         });
     }
 
