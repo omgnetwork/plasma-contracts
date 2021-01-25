@@ -236,7 +236,16 @@ contract Quasar is QuasarPool {
         ), "Provided Tx doesn't exist");
 
         ticketData[utxoPos].isClaimed = true;
-        claimData[utxoPos] = Claim(rlpTxToQuasarOwner, block.timestamp.add(waitingPeriod), true);
+
+        address payable outputOwner = ticketData[utxoPos].outputOwner;
+        address token = ticketData[utxoPos].token;
+        if (token == address(0)) {
+            uint256 totalAmount = ticketData[utxoPos].reservedAmount.add(ticketData[utxoPos].bondValue);
+            SafeEthTransfer.transferRevertOnError(outputOwner, totalAmount, SAFE_GAS_STIPEND);
+        } else {
+            IERC20(token).safeTransfer(outputOwner, ticketData[utxoPos].reservedAmount);
+            SafeEthTransfer.transferRevertOnError(outputOwner, ticketData[utxoPos].bondValue, SAFE_GAS_STIPEND);
+        }
     }
 
     /**
