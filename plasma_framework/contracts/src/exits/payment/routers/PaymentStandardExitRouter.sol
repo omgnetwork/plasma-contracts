@@ -51,7 +51,9 @@ contract PaymentStandardExitRouter is
 
     event ExitStarted(
         address indexed owner,
-        uint168 exitId
+        uint168 exitId,
+        uint256 utxoPos,
+        bytes outputTx
     );
 
     event ExitChallenged(
@@ -78,8 +80,8 @@ contract PaymentStandardExitRouter is
         require(!bootDone, "Exit game was already initialized");
         EthVault ethVault = EthVault(paymentExitGameArgs.framework.vaults(paymentExitGameArgs.ethVaultId));
         require(address(ethVault) != address(0), "Invalid ETH vault");
-        Erc20Vault erc20Vault = Erc20Vault(paymentExitGameArgs.framework.vaults(paymentExitGameArgs.erc20VaultId));        
-        require(address(erc20Vault) != address(0), "Invalid ERC20 vault");     
+        Erc20Vault erc20Vault = Erc20Vault(paymentExitGameArgs.framework.vaults(paymentExitGameArgs.erc20VaultId));
+        require(address(erc20Vault) != address(0), "Invalid ERC20 vault");
         framework = paymentExitGameArgs.framework;
         bootDone = true;
         startStandardExitController = PaymentStartStandardExit.buildController(
