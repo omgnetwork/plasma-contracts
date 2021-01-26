@@ -138,8 +138,8 @@ library PaymentProcessInFlightExit {
                 emit InFlightBondReturnFailed(exit.bondOwner, exit.bondSize);
             }
 
-            emit InFlightExitFinalized(exitId);
             delete exitMap.exits[exitId];
+            emit InFlightExitFinalized(exitId);
         }
     }
 
