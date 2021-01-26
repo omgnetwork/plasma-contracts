@@ -28,8 +28,8 @@ event InFlightExitOutputPiggybacked(address indexed exitTarget, bytes32 indexed 
 ## Functions
 
 - [buildController(PlasmaFramework framework, IExitProcessor exitProcessor, uint256 ethVaultId, uint256 erc20VaultId)](#buildcontroller)
-- [piggybackInput(struct PaymentPiggybackInFlightExit.Controller self, struct PaymentExitDataModel.InFlightExitMap inFlightExitMap, struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnInputArgs args)](#piggybackinput)
-- [piggybackOutput(struct PaymentPiggybackInFlightExit.Controller self, struct PaymentExitDataModel.InFlightExitMap inFlightExitMap, struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnOutputArgs args)](#piggybackoutput)
+- [piggybackInput(struct PaymentPiggybackInFlightExit.Controller self, struct PaymentExitDataModel.InFlightExitMap inFlightExitMap, struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnInputArgs args, uint128 processInFlightExitBountySize)](#piggybackinput)
+- [piggybackOutput(struct PaymentPiggybackInFlightExit.Controller self, struct PaymentExitDataModel.InFlightExitMap inFlightExitMap, struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnOutputArgs args, uint128 processInFlightExitBountySize)](#piggybackoutput)
 - [enqueue(struct PaymentPiggybackInFlightExit.Controller controller, address token, struct PosLib.Position utxoPos, uint168 exitId)](#enqueue)
 - [isFirstPiggybackOfTheToken(struct PaymentExitDataModel.InFlightExit ife, address token)](#isfirstpiggybackofthetoken)
 
@@ -60,7 +60,7 @@ Controller struct of PaymentPiggybackInFlightExit
 The main controller logic for 'piggybackInFlightExitOnInput'
 
 ```js
-function piggybackInput(struct PaymentPiggybackInFlightExit.Controller self, struct PaymentExitDataModel.InFlightExitMap inFlightExitMap, struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnInputArgs args) public nonpayable
+function piggybackInput(struct PaymentPiggybackInFlightExit.Controller self, struct PaymentExitDataModel.InFlightExitMap inFlightExitMap, struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnInputArgs args, uint128 processInFlightExitBountySize) public nonpayable
 ```
 
 **Arguments**
@@ -70,13 +70,14 @@ function piggybackInput(struct PaymentPiggybackInFlightExit.Controller self, str
 | self | struct PaymentPiggybackInFlightExit.Controller | The controller struct | 
 | inFlightExitMap | struct PaymentExitDataModel.InFlightExitMap | The storage of all in-flight exit data | 
 | args | struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnInputArgs | Arguments of 'piggybackInFlightExitOnInput' function from client | 
+| processInFlightExitBountySize | uint128 |  | 
 
 ### piggybackOutput
 
 The main controller logic for 'piggybackInFlightExitOnOutput'
 
 ```js
-function piggybackOutput(struct PaymentPiggybackInFlightExit.Controller self, struct PaymentExitDataModel.InFlightExitMap inFlightExitMap, struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnOutputArgs args) public nonpayable
+function piggybackOutput(struct PaymentPiggybackInFlightExit.Controller self, struct PaymentExitDataModel.InFlightExitMap inFlightExitMap, struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnOutputArgs args, uint128 processInFlightExitBountySize) public nonpayable
 ```
 
 **Arguments**
@@ -86,6 +87,7 @@ function piggybackOutput(struct PaymentPiggybackInFlightExit.Controller self, st
 | self | struct PaymentPiggybackInFlightExit.Controller | The controller struct | 
 | inFlightExitMap | struct PaymentExitDataModel.InFlightExitMap | The storage of all in-flight exit data | 
 | args | struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnOutputArgs | Arguments of 'piggybackInFlightExitOnOutput' function from client | 
+| processInFlightExitBountySize | uint128 |  | 
 
 ### enqueue
 

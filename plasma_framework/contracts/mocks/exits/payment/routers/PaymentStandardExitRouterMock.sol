@@ -12,16 +12,16 @@ contract PaymentStandardExitRouterMock is PaymentStandardExitRouter {
     PaymentStandardExitRouterArgs.StartStandardExitArgs private startStandardExitArgs;
     PaymentStandardExitRouterArgs.ChallengeStandardExitArgs private challengeStandardExitArgs;
 
-    constructor(PaymentExitGameArgs.Args memory args)
+    function bootInternal(PaymentExitGameArgs.Args memory paymentExitGameArgs)
         public
-        PaymentStandardExitRouter(args)
     {
-        framework = args.framework;
+        PaymentStandardExitRouter.boot(paymentExitGameArgs);
+        framework = paymentExitGameArgs.framework;
     }
 
     /** override and calls processStandardExit for test */
-    function processExit(uint168 exitId, uint256, address ercContract) external {
-        PaymentStandardExitRouter.processStandardExit(exitId, ercContract);
+    function processExit(uint168 exitId, uint256, address ercContract, address payable processExitInitiator) external {
+        PaymentStandardExitRouter.processStandardExit(exitId, ercContract, processExitInitiator);
     }
 
     /** helper functions for testing */

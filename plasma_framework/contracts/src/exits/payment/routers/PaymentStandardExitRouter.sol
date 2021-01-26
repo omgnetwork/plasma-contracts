@@ -28,12 +28,15 @@ contract PaymentStandardExitRouter is
     using PaymentProcessStandardExit for PaymentProcessStandardExit.Controller;
     using BondSize for BondSize.Params;
 
-    // Initial bond size = 70000 (gas cost of challenge) * 20 gwei (current fast gas price) * 10 (safety margin)
-    uint128 public constant INITIAL_BOND_SIZE = 14000000000000000 wei;
+    // Initial bond size = 233000 (gas cost of challenge) * 50 gwei (current fast gas price) * 2 (safety margin)
+    uint128 public constant INITIAL_BOND_SIZE = 23300000000000000 wei;
 
     // Each bond size upgrade can either at most increase to 200% or decrease to 50% of current bond
     uint16 public constant BOND_LOWER_BOUND_DIVISOR = 2;
     uint16 public constant BOND_UPPER_BOUND_MULTIPLIER = 2;
+
+    // Initial exit bounty size = 107000 (approx gas usage for processExit) * 50 gwei (current fast gas price)
+    uint128 public constant INITIAL_EXIT_BOUNTY_SIZE = 5350000000000000 wei;
 
     PaymentExitDataModel.StandardExitMap internal standardExitMap;
     PaymentStartStandardExit.Controller internal startStandardExitController;
@@ -42,12 +45,15 @@ contract PaymentStandardExitRouter is
     BondSize.Params internal startStandardExitBond;
 
     PlasmaFramework private framework;
+    bool private bootDone = false;
 
-    event StandardExitBondUpdated(uint128 bondSize);
+    event StandardExitBondUpdated(uint128 bondSize, uint128 exitBountySize);
 
     event ExitStarted(
         address indexed owner,
-        uint168 exitId
+        uint168 exitId,
+        uint256 utxoPos,
+        bytes outputTx
     );
 
     event ExitChallenged(
@@ -67,36 +73,36 @@ contract PaymentStandardExitRouter is
         uint256 amount
     );
 
-    constructor(PaymentExitGameArgs.Args memory args)
-        public
+    function boot(PaymentExitGameArgs.Args memory paymentExitGameArgs)
+        internal
     {
-        framework = args.framework;
-
-        EthVault ethVault = EthVault(args.framework.vaults(args.ethVaultId));
+        require(msg.sender == paymentExitGameArgs.framework.getMaintainer(), "Only Maintainer can perform this action");
+        require(!bootDone, "Exit game was already initialized");
+        EthVault ethVault = EthVault(paymentExitGameArgs.framework.vaults(paymentExitGameArgs.ethVaultId));
         require(address(ethVault) != address(0), "Invalid ETH vault");
-
-        Erc20Vault erc20Vault = Erc20Vault(args.framework.vaults(args.erc20VaultId));
+        Erc20Vault erc20Vault = Erc20Vault(paymentExitGameArgs.framework.vaults(paymentExitGameArgs.erc20VaultId));
         require(address(erc20Vault) != address(0), "Invalid ERC20 vault");
-
+        framework = paymentExitGameArgs.framework;
+        bootDone = true;
         startStandardExitController = PaymentStartStandardExit.buildController(
             this,
-            args.framework,
-            args.ethVaultId,
-            args.erc20VaultId,
-            args.supportTxType
+            paymentExitGameArgs.framework,
+            paymentExitGameArgs.ethVaultId,
+            paymentExitGameArgs.erc20VaultId,
+            paymentExitGameArgs.supportTxType
         );
 
         challengeStandardExitController = PaymentChallengeStandardExit.buildController(
-            args.framework,
-            args.spendingConditionRegistry,
-            args.safeGasStipend
+            paymentExitGameArgs.framework,
+            paymentExitGameArgs.spendingConditionRegistry,
+            paymentExitGameArgs.safeGasStipend
         );
 
         processStandardExitController = PaymentProcessStandardExit.Controller(
-            args.framework, ethVault, erc20Vault, args.safeGasStipend
+            paymentExitGameArgs.framework, ethVault, erc20Vault, paymentExitGameArgs.safeGasStipend
         );
 
-        startStandardExitBond = BondSize.buildParams(INITIAL_BOND_SIZE, BOND_LOWER_BOUND_DIVISOR, BOND_UPPER_BOUND_MULTIPLIER);
+        startStandardExitBond = BondSize.buildParams(INITIAL_BOND_SIZE, INITIAL_EXIT_BOUNTY_SIZE, BOND_LOWER_BOUND_DIVISOR, BOND_UPPER_BOUND_MULTIPLIER);
     }
 
     /**
@@ -120,12 +126,21 @@ contract PaymentStandardExitRouter is
     }
 
     /**
-     * @notice Updates the standard exit bond size, taking two days to become effective
+     * @notice Updates the standard exit bond size and/or the exit bounty size, taking two days to become effective
+     * @notice Remember to set the bond appropriately higher than the bounty because the bond remaining after bounty is returned
      * @param newBondSize The new bond size
+     * @param newExitBountySize The new exit bounty size
      */
-    function updateStartStandardExitBondSize(uint128 newBondSize) public onlyFrom(framework.getMaintainer()) {
-        startStandardExitBond.updateBondSize(newBondSize);
-        emit StandardExitBondUpdated(newBondSize);
+    function updateStartStandardExitBondSize(uint128 newBondSize, uint128 newExitBountySize) public onlyFrom(framework.getMaintainer()) {
+        startStandardExitBond.updateBondSize(newBondSize, newExitBountySize);
+        emit StandardExitBondUpdated(newBondSize, newExitBountySize);
+    }
+
+    /**
+     * @notice Retrieves the process standard exit bounty size
+     */
+    function processStandardExitBountySize() public view returns (uint128) {
+        return startStandardExitBond.exitBountySize();
     }
 
     /**
@@ -139,7 +154,8 @@ contract PaymentStandardExitRouter is
         nonReentrant(framework)
         onlyWithValue(startStandardExitBondSize())
     {
-        startStandardExitController.run(standardExitMap, args);
+        uint128 bountySize = processStandardExitBountySize();
+        startStandardExitController.run(standardExitMap, args, bountySize);
     }
 
     /**
@@ -157,8 +173,9 @@ contract PaymentStandardExitRouter is
      * @dev This function is designed to be called in the main processExit function, using internal
      * @param exitId The standard exit ID
      * @param token The token (in erc20 address or address(0) for ETH) of the exiting output
+     * @param processExitInitiator The processExits() initiator
      */
-    function processStandardExit(uint168 exitId, address token) internal {
-        processStandardExitController.run(standardExitMap, exitId, token);
+    function processStandardExit(uint168 exitId, address token, address payable processExitInitiator) internal {
+        processStandardExitController.run(standardExitMap, exitId, token, processExitInitiator);
     }
 }

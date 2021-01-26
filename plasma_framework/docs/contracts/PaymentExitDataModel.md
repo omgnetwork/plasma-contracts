@@ -16,7 +16,8 @@ struct StandardExit {
  bytes32 outputId,
  address payable exitTarget,
  uint256 amount,
- uint256 bondSize
+ uint256 bondSize,
+ uint256 bountySize
 }
 ```
 
@@ -36,7 +37,8 @@ struct WithdrawData {
  address payable exitTarget,
  address token,
  uint256 amount,
- uint256 piggybackBondSize
+ uint256 piggybackBondSize,
+ uint256 bountySize
 }
 ```
 

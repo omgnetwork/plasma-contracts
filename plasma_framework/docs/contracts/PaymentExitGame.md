@@ -12,14 +12,16 @@ The exit game contract implementation for Payment Transaction
 **Constants & Variables**
 
 ```js
-contract PlasmaFramework private plasmaFramework;
+struct PaymentExitGameArgs.Args private paymentExitGameArgs;
+bool private initDone;
 
 ```
 
 ## Functions
 
 - [(struct PaymentExitGameArgs.Args args)](#)
-- [processExit(uint168 exitId, uint256 , address token)](#processexit)
+- [init()](#init)
+- [processExit(uint168 exitId, uint256 , address token, address payable processExitInitiator)](#processexit)
 - [getStandardExitId(bool _isDeposit, bytes _txBytes, uint256 _utxoPos)](#getstandardexitid)
 - [getInFlightExitId(bytes _txBytes)](#getinflightexitid)
 
@@ -37,6 +39,17 @@ function (struct PaymentExitGameArgs.Args args) public nonpayable PaymentStandar
 | ------------- |------------- | -----|
 | args | struct PaymentExitGameArgs.Args |  | 
 
+### init
+
+```js
+function init() public nonpayable onlyFrom 
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+
 ### processExit
 
 ⤾ overrides [IExitProcessor.processExit](IExitProcessor.md#processexit)
@@ -44,7 +57,7 @@ function (struct PaymentExitGameArgs.Args args) public nonpayable PaymentStandar
 Callback processes exit function for the PlasmaFramework to call
 
 ```js
-function processExit(uint168 exitId, uint256 , address token) external nonpayable onlyFrom 
+function processExit(uint168 exitId, uint256 , address token, address payable processExitInitiator) external nonpayable onlyFrom 
 ```
 
 **Arguments**
@@ -54,6 +67,7 @@ function processExit(uint168 exitId, uint256 , address token) external nonpayabl
 | exitId | uint168 | The exit ID | 
 |  | uint256 | exitId The exit ID | 
 | token | address | Token (ERC20 address or address(0) for ETH) of the exiting output | 
+| processExitInitiator | address payable | The processExits() initiator | 
 
 ### getStandardExitId
 

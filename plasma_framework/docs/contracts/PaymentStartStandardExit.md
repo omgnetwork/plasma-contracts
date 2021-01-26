@@ -37,17 +37,17 @@ struct StartStandardExitData {
 **Events**
 
 ```js
-event ExitStarted(address indexed owner, uint168  exitId);
+event ExitStarted(address indexed owner, uint168  exitId, uint256  utxoPos bytes outputTx);
 ```
 
 ## Functions
 
 - [buildController(IExitProcessor exitProcessor, PlasmaFramework framework, uint256 ethVaultId, uint256 erc20VaultId, uint256 supportedTxType)](#buildcontroller)
-- [run(struct PaymentStartStandardExit.Controller self, struct PaymentExitDataModel.StandardExitMap exitMap, struct PaymentStandardExitRouterArgs.StartStandardExitArgs args)](#run)
+- [run(struct PaymentStartStandardExit.Controller self, struct PaymentExitDataModel.StandardExitMap exitMap, struct PaymentStandardExitRouterArgs.StartStandardExitArgs args, uint128 processStandardExitBountySize)](#run)
 - [setupStartStandardExitData(struct PaymentStartStandardExit.Controller controller, struct PaymentStandardExitRouterArgs.StartStandardExitArgs args)](#setupstartstandardexitdata)
 - [verifyStartStandardExitData(struct PaymentStartStandardExit.Controller self, struct PaymentStartStandardExit.StartStandardExitData data, struct PaymentExitDataModel.StandardExitMap exitMap)](#verifystartstandardexitdata)
 - [isStandardFinalized(struct PaymentStartStandardExit.StartStandardExitData data)](#isstandardfinalized)
-- [saveStandardExitData(struct PaymentStartStandardExit.StartStandardExitData data, struct PaymentExitDataModel.StandardExitMap exitMap)](#savestandardexitdata)
+- [saveStandardExitData(struct PaymentStartStandardExit.StartStandardExitData data, struct PaymentExitDataModel.StandardExitMap exitMap, uint128 processStandardExitBountySize)](#savestandardexitdata)
 - [enqueueStandardExit(struct PaymentStartStandardExit.StartStandardExitData data)](#enqueuestandardexit)
 
 ### buildController
@@ -67,27 +67,28 @@ Controller struct of PaymentStartStandardExit
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| exitProcessor | IExitProcessor |  | 
-| framework | PlasmaFramework |  | 
-| ethVaultId | uint256 |  | 
-| erc20VaultId | uint256 |  | 
-| supportedTxType | uint256 |  | 
+| exitProcessor | IExitProcessor |  |
+| framework | PlasmaFramework |  |
+| ethVaultId | uint256 |  |
+| erc20VaultId | uint256 |  |
+| supportedTxType | uint256 |  |
 
 ### run
 
 Main logic function to start standard exit
 
 ```js
-function run(struct PaymentStartStandardExit.Controller self, struct PaymentExitDataModel.StandardExitMap exitMap, struct PaymentStandardExitRouterArgs.StartStandardExitArgs args) public nonpayable
+function run(struct PaymentStartStandardExit.Controller self, struct PaymentExitDataModel.StandardExitMap exitMap, struct PaymentStandardExitRouterArgs.StartStandardExitArgs args, uint128 processStandardExitBountySize) public nonpayable
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| self | struct PaymentStartStandardExit.Controller | The controller struct | 
-| exitMap | struct PaymentExitDataModel.StandardExitMap | The storage of all standard exit data | 
-| args | struct PaymentStandardExitRouterArgs.StartStandardExitArgs | Arguments of start standard exit function from client | 
+| self | struct PaymentStartStandardExit.Controller | The controller struct |
+| exitMap | struct PaymentExitDataModel.StandardExitMap | The storage of all standard exit data |
+| args | struct PaymentStandardExitRouterArgs.StartStandardExitArgs | Arguments of start standard exit function from client |
+| processStandardExitBountySize | uint128 |  |
 
 ### setupStartStandardExitData
 
@@ -100,8 +101,8 @@ returns(struct PaymentStartStandardExit.StartStandardExitData)
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| controller | struct PaymentStartStandardExit.Controller |  | 
-| args | struct PaymentStandardExitRouterArgs.StartStandardExitArgs |  | 
+| controller | struct PaymentStartStandardExit.Controller |  |
+| args | struct PaymentStandardExitRouterArgs.StartStandardExitArgs |  |
 
 ### verifyStartStandardExitData
 
@@ -113,9 +114,9 @@ function verifyStartStandardExitData(struct PaymentStartStandardExit.Controller 
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| self | struct PaymentStartStandardExit.Controller |  | 
-| data | struct PaymentStartStandardExit.StartStandardExitData |  | 
-| exitMap | struct PaymentExitDataModel.StandardExitMap |  | 
+| self | struct PaymentStartStandardExit.Controller |  |
+| data | struct PaymentStartStandardExit.StartStandardExitData |  |
+| exitMap | struct PaymentExitDataModel.StandardExitMap |  |
 
 ### isStandardFinalized
 
@@ -128,20 +129,21 @@ returns(bool)
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| data | struct PaymentStartStandardExit.StartStandardExitData |  | 
+| data | struct PaymentStartStandardExit.StartStandardExitData |  |
 
 ### saveStandardExitData
 
 ```js
-function saveStandardExitData(struct PaymentStartStandardExit.StartStandardExitData data, struct PaymentExitDataModel.StandardExitMap exitMap) private nonpayable
+function saveStandardExitData(struct PaymentStartStandardExit.StartStandardExitData data, struct PaymentExitDataModel.StandardExitMap exitMap, uint128 processStandardExitBountySize) private nonpayable
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| data | struct PaymentStartStandardExit.StartStandardExitData |  | 
-| exitMap | struct PaymentExitDataModel.StandardExitMap |  | 
+| data | struct PaymentStartStandardExit.StartStandardExitData |  |
+| exitMap | struct PaymentExitDataModel.StandardExitMap |  |
+| processStandardExitBountySize | uint128 |  |
 
 ### enqueueStandardExit
 
@@ -153,7 +155,7 @@ function enqueueStandardExit(struct PaymentStartStandardExit.StartStandardExitDa
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| data | struct PaymentStartStandardExit.StartStandardExitData |  | 
+| data | struct PaymentStartStandardExit.StartStandardExitData |  |
 
 ## Contracts
 

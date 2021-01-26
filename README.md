@@ -2,7 +2,7 @@
 
 Root chain contracts for The OmiseGO Plasma Framework, a layer 2 scaling solution for Ethereum.
 
-[![Build Status](https://circleci.com/gh/omisego/plasma-contracts.svg?style=svg)](https://circleci.com/gh/omisego/plasma-contracts)
+[![Build Status](https://circleci.com/gh/omgnetwork/plasma-contracts.svg?style=svg)](https://circleci.com/gh/omisego/plasma-contracts)
 [![Coverage Status](https://coveralls.io/repos/github/omisego/plasma-contracts/badge.svg?branch=master)](https://coveralls.io/github/omisego/plasma-contracts?branch=master)
 
 ## Contents
@@ -30,7 +30,7 @@ You can learn more about [OmiseGO](https://omisego.co) and get started developin
 
 ## Getting started
 
-The easiest way to compile and deploy the contracts is with [Truffle](https://www.trufflesuite.com/truffle). 
+The easiest way to compile and deploy the contracts is with [Truffle](https://www.trufflesuite.com/truffle).
 Requires node.js >= 8.
 
 All the code is in the `plasma_framework` directory, so go there first.
@@ -65,9 +65,9 @@ Deploying the contracts requires three accounts:
 2. `AUTHORITY` The account that used by the Child chain to submit blocks. It must not have made any transaction prior to calling the scripts i.e. its nonce must be 0.
 3. `MAINTAINER` The account that can register new vaults, exit games, etc.
 
-Normally you will deploy the contracts using an Ethereum client that you run yourself, such as Geth or Parity. Those Ethereum client would have default accounts on the node itself. For local testing, you can leverage those accounts and deploy with `--network local` flag.
+Normally you will deploy the contracts using an Ethereum client that you run yourself, such as Geth or Parity. Those Ethereum client would have default accounts on the node itself. For local testing, you can leverage those accounts and deploy with `--network local` flag. The first three accounts inside the Ethereum client would be the `DEPLOYER`, `MAINTAINER`, and `AUTHORITY` account with the order.
 
-However, you can also use a remote provider such as Infura that does not have control of the private key and accounts with `--network remote` flag. In this case you'll need to know the private keys for the `DEPLOYER`, `AUTHORITY` and `MAINTAINER` accounts. See [`truffle-config.js`](./plasma_framework/truffle-config.js) for an example.
+You can also use a remote provider such as Infura that does not have control of the private key and accounts with `--network remote` flag. In this case you'll need to know the private keys for the `DEPLOYER`, `AUTHORITY` and `MAINTAINER` accounts. See [`truffle-config.js`](./plasma_framework/truffle-config.js) for an example.
 
 Run truffle, passing in the network e.g.
 ```bash
@@ -77,7 +77,40 @@ npx truffle migrate --network local
 npx truffle migrate --network remote
 ```
 
-For more detail of the deploying scripts, see [deploying.md](./plasma_framework/docs/deploying/deploying.md)
+You can also run within the docker with the provided [Dockerfile](./Dockerfile).
+```bash
+# run the following commands under the repo directory instead of under plasma_framework/
+
+# build the docker image
+docker build -t omisego/plasma-contract .
+
+# deploy the contract
+docker run --rm omisego/plasma-contracts npx truffle migrate --network remote
+```
+
+For more detail of the deploying scripts and the env vars to set, see [deploying.md](./plasma_framework/docs/deploying/deploying.md)
+
+The `MAINTAINER` account can also be a multisignature contract. The example we've built uses Gnosis MultiSigWallet. The project has been added as a git submodule (https://github.com/gnosis/MultiSigWallet/tree/v1.6.0):
+```bash
+git submodule init
+git submodule update --remote
+```
+
+Their deployment scripts were slightly addapted. We can override them by executing:
+```bash
+cd MultiSigWalletOverride/
+make init_multisig
+```
+
+While we're in the directory we can deploy the contract by executing:
+```bash
+truffle migrate <account1,account2,...,accountN> <requiredConfirmations> 
+```
+
+The address of the multisignature contract is exported into:
+```
+MultiSigWallet/build/multisig_instance
+```
 
 ### Building and running the python tests
 We suggest running the following commands with an active python virtual environment ex. `venv`.

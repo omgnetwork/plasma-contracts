@@ -8,7 +8,11 @@ import "../../../utils/SafeEthTransfer.sol";
 import "../../../vaults/EthVault.sol";
 import "../../../vaults/Erc20Vault.sol";
 
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+
 library PaymentProcessStandardExit {
+    using SafeMath for uint256;
+
     struct Controller {
         PlasmaFramework framework;
         EthVault ethVault;
@@ -29,6 +33,11 @@ library PaymentProcessStandardExit {
         uint256 amount
     );
 
+    event BountyReturnFailed(
+        address indexed receiver,
+        uint256 amount
+    );
+
     /**
      * @notice Main logic function to process standard exit
      * @dev emits ExitOmitted event if the exit is omitted
@@ -37,12 +46,14 @@ library PaymentProcessStandardExit {
      * @param exitMap The storage of all standard exit data
      * @param exitId The exitId of the standard exit
      * @param token The ERC20 token address of the exit. Uses address(0) to represent ETH.
+     * @param processExitInitiator The processExits() initiator
      */
     function run(
         Controller memory self,
         PaymentExitDataModel.StandardExitMap storage exitMap,
         uint168 exitId,
-        address token
+        address token,
+        address payable processExitInitiator
     )
         public
     {
@@ -56,10 +67,20 @@ library PaymentProcessStandardExit {
 
         self.framework.flagOutputFinalized(exit.outputId, exitId);
 
-        // we do not want to block a queue if bond return is unsuccessful
-        bool success = SafeEthTransfer.transferReturnResult(exit.exitTarget, exit.bondSize, self.safeGasStipend);
-        if (!success) {
-            emit BondReturnFailed(exit.exitTarget, exit.bondSize);
+        // skip bond return if the bond is equal to bounty
+        if (exit.bondSize > exit.bountySize) {
+            uint256 bondReturnAmount = exit.bondSize.sub(exit.bountySize);
+            bool successBondReturn = SafeEthTransfer.transferReturnResult(exit.exitTarget, bondReturnAmount, self.safeGasStipend);
+
+            // we do not want to block a queue if bond return is unsuccessful
+            if (!successBondReturn) {
+                emit BondReturnFailed(exit.exitTarget, bondReturnAmount);
+            }
+        }
+
+        bool successBountyReturn = SafeEthTransfer.transferReturnResult(processExitInitiator, exit.bountySize, self.safeGasStipend);
+        if (!successBountyReturn) {
+            emit BountyReturnFailed(processExitInitiator, exit.bountySize);
         }
 
         if (token == address(0)) {

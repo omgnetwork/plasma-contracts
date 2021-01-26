@@ -83,8 +83,8 @@ contract('PaymentDeleteInFlightExit', ([_, bondOwner, inputOwner, outputOwner]) 
             PAYMENT_TX_TYPE,
             SAFE_GAS_STIPEND,
         ];
-        this.exitGame = await PaymentInFlightExitRouter.new(exitArgs);
-
+        this.exitGame = await PaymentInFlightExitRouter.new();
+        await this.exitGame.bootInternal(exitArgs);
         await this.framework.registerExitGame(TX_TYPE.PAYMENT, this.exitGame.address, PROTOCOL.MORE_VP);
 
         this.startIFEBondSize = await this.exitGame.startIFEBondSize();
@@ -109,6 +109,7 @@ contract('PaymentDeleteInFlightExit', ([_, bondOwner, inputOwner, outputOwner]) 
                 token: constants.ZERO_ADDRESS,
                 amount: 0,
                 piggybackBondSize: 0,
+                bountySize: 0,
             };
 
             const inFlightExitData = {
@@ -123,6 +124,7 @@ contract('PaymentDeleteInFlightExit', ([_, bondOwner, inputOwner, outputOwner]) 
                     token: ETH,
                     amount: 999,
                     piggybackBondSize: 0,
+                    bountySize: 0,
                 }, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData],
                 outputs: [{
                     outputId: web3.utils.sha3('dummy output id'),
@@ -130,6 +132,7 @@ contract('PaymentDeleteInFlightExit', ([_, bondOwner, inputOwner, outputOwner]) 
                     token: ETH,
                     amount: outputAmount,
                     piggybackBondSize: 0,
+                    bountySize: 0,
                 }, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData],
                 bondSize: this.startIFEBondSize.toString(),
             };

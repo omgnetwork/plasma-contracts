@@ -10,6 +10,7 @@ interface IExitProcessor {
      * @param exitId Unique ID for exit per tx type
      * @param vaultId ID of the vault that funds the exit
      * @param token Address of the token contract
+     * @param processExitInitiator Address of the processExit intitiator
      */
-    function processExit(uint168 exitId, uint256 vaultId, address token) external;
+    function processExit(uint168 exitId, uint256 vaultId, address token, address payable processExitInitiator) external;
 }

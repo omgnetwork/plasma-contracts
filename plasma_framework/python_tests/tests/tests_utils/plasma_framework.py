@@ -1,5 +1,6 @@
 import enum
 
+from eth_utils import keccak
 from plasma_core.constants import CHILD_BLOCK_INTERVAL, EMPTY_BYTES, NULL_ADDRESS
 from plasma_core.transaction import TxOutputTypes, TxTypes, Transaction
 from plasma_core.utils.transactions import decode_utxo_id
@@ -26,8 +27,6 @@ class PlasmaFramework:
             ),
             sender=maintainer
         )
-
-        self.plasma_framework.activateChildChain(**{"from": authority.address})
 
         self._setup_deposit_verifiers(get_contract, maintainer)
         self._setup_vaults(get_contract, maintainer)
@@ -119,10 +118,9 @@ class PlasmaFramework:
             SAFE_GAS_STIPEND,
         )
         payment_exit_game = get_contract("PaymentExitGame",
-                                         sender=maintainer,
                                          args=(payment_exit_game_args,),
                                          libraries=libs_map)
-
+        payment_exit_game.init(**{'from': maintainer.address})
         return payment_exit_game
 
     @staticmethod
@@ -295,14 +293,14 @@ class PlasmaFramework:
         )
         self.payment_exit_game.challengeInFlightExitOutputSpent(args, **kwargs)
 
-    def processExits(self, token, top_exit_id, exits_to_process, vault_id=None):
+    def processExits(self, token, top_exit_id, exits_to_process, sender, vault_id=None):
         if vault_id is None:
             if token == NULL_ADDRESS:
                 vault_id = self.eth_vault_id
             else:
                 vault_id = self.erc20_vault_id
 
-        return self.plasma_framework.processExits(vault_id, token, top_exit_id, exits_to_process)
+        return self.plasma_framework.processExits(vault_id, token, top_exit_id, exits_to_process, keccak(hexstr=sender), **{"from": sender})
 
     def deleteNonPiggybackedInFlightExit(self, exit_id):
         return self.payment_exit_game.deleteNonPiggybackedInFlightExit(exit_id)
@@ -345,6 +343,12 @@ class PlasmaFramework:
 
     def standardExitBond(self):
         return self.payment_exit_game.startStandardExitBondSize()
+
+    def processStandardExitBounty(self):
+        return self.payment_exit_game.processStandardExitBountySize()
+
+    def processInFlightExitBounty(self):
+        return self.payment_exit_game.processInFlightExitBountySize()
 
     def inFlightExitBond(self):
         return self.payment_exit_game.startIFEBondSize()

@@ -4,7 +4,6 @@ const PaymentExitGame = artifacts.require('PaymentExitGame');
 const PaymentTransactionStateTransitionVerifier = artifacts.require('PaymentTransactionStateTransitionVerifier');
 const PlasmaFramework = artifacts.require('PlasmaFramework');
 const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry');
-
 const config = require('../config.js');
 
 module.exports = async (
@@ -14,11 +13,9 @@ module.exports = async (
     [deployerAddress, maintainerAddress, authorityAddress],
 ) => {
     const PAYMENT_TX_TYPE = config.registerKeys.txTypes.payment;
-
     const spendingConditionRegistry = await SpendingConditionRegistry.deployed();
     const stateVerifier = await PaymentTransactionStateTransitionVerifier.deployed();
     const plasmaFramework = await PlasmaFramework.deployed();
-
     const paymentExitGameArgs = [
         plasmaFramework.address,
         config.registerKeys.vaultId.eth,
@@ -28,13 +25,5 @@ module.exports = async (
         PAYMENT_TX_TYPE,
         config.frameworks.safeGasStipend.v1,
     ];
-    const paymentExitGame = await deployer.deploy(PaymentExitGame, paymentExitGameArgs);
-
-    // register the exit game to framework
-    await plasmaFramework.registerExitGame(
-        PAYMENT_TX_TYPE,
-        paymentExitGame.address,
-        config.frameworks.protocols.moreVp,
-        { from: maintainerAddress },
-    );
+    await deployer.deploy(PaymentExitGame, paymentExitGameArgs);
 };

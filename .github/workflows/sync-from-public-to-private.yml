@@ -18,7 +18,7 @@ jobs:
         run: |
           echo "Syncing with sha '${{ github.event.client_payload.sha }}'"
       - name: Sync master branch in between public and private repos
-        if: github.repository == 'omisego/plasma-contracts-private'
+        if: github.repository == 'omgnetwork/plasma-contracts-private'
         run: |
           set -e
           set -o xtrace
@@ -26,8 +26,8 @@ jobs:
           # Credit repo-sync/github-sync for the script used in here
           # https://github.com/repo-sync/github-sync/blob/520596e97177727db1f2a1de14f4ded905624066/github-sync.sh#L23-L33
 
-          readonly SOURCE_REPO="omisego/plasma-contracts"
-          readonly SOURCE_BRANCH="master"
+          readonly SOURCE_REPO="omgnetwork/plasma-contracts"
+          readonly SOURCE_BRANCH="v2.0.0"
           readonly DESTINATION_BRANCH="master"
 
           echo "Syncing ${DESTINATION_BRANCH} from branch ${SOURCE_BRANCH} of ${SOURCE_REPO}..."

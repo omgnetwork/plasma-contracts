@@ -71,7 +71,8 @@ library PaymentPiggybackInFlightExit {
     function piggybackInput(
         Controller memory self,
         PaymentExitDataModel.InFlightExitMap storage inFlightExitMap,
-        PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnInputArgs memory args
+        PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnInputArgs memory args,
+        uint128 processInFlightExitBountySize
     )
         public
     {
@@ -87,6 +88,7 @@ library PaymentPiggybackInFlightExit {
         PaymentExitDataModel.WithdrawData storage withdrawData = exit.inputs[args.inputIndex];
 
         require(withdrawData.exitTarget == msg.sender, "Can be called only by the exit target");
+        withdrawData.bountySize = processInFlightExitBountySize;
         withdrawData.piggybackBondSize = msg.value;
 
         if (isFirstPiggybackOfTheToken(exit, withdrawData.token)) {
@@ -108,7 +110,8 @@ library PaymentPiggybackInFlightExit {
     function piggybackOutput(
         Controller memory self,
         PaymentExitDataModel.InFlightExitMap storage inFlightExitMap,
-        PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnOutputArgs memory args
+        PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnOutputArgs memory args,
+        uint128 processInFlightExitBountySize
     )
         public
     {
@@ -124,6 +127,7 @@ library PaymentPiggybackInFlightExit {
         PaymentExitDataModel.WithdrawData storage withdrawData = exit.outputs[args.outputIndex];
 
         require(withdrawData.exitTarget == msg.sender, "Can be called only by the exit target");
+        withdrawData.bountySize = processInFlightExitBountySize;
         withdrawData.piggybackBondSize = msg.value;
 
         if (isFirstPiggybackOfTheToken(exit, withdrawData.token)) {

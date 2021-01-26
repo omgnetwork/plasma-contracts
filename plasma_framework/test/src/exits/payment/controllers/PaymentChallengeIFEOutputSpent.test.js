@@ -31,6 +31,7 @@ const {
 contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob, otherAddress]) => {
     const DUMMY_IFE_BOND_SIZE = 31415926535; // wei
     const PIGGYBACK_BOND = 31415926535;
+    const PROCESS_EXIT_BOUNTY = 31415926535;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
     const INITIAL_IMMUNE_EXIT_GAME_NUM = 1;
@@ -47,6 +48,7 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob, otherAddress]) => {
         token: constants.ZERO_ADDRESS,
         amount: 0,
         piggybackBondSize: 0,
+        bountySize: 0,
     };
     const BLOCK_NUM = 1000;
     const MAX_NUM_OF_INPUTS = 4;
@@ -109,6 +111,7 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob, otherAddress]) => {
                     token: ETH,
                     amount: AMOUNT,
                     piggybackBondSize: PIGGYBACK_BOND,
+                    bountySize: PROCESS_EXIT_BOUNTY,
                 }, DUMMY_WITHDRAW_DATA, DUMMY_WITHDRAW_DATA, DUMMY_WITHDRAW_DATA],
                 outputs: [{
                     outputId: filler,
@@ -117,6 +120,7 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob, otherAddress]) => {
                     token: ETH,
                     amount: AMOUNT,
                     piggybackBondSize: PIGGYBACK_BOND,
+                    bountySize: PROCESS_EXIT_BOUNTY,
                 }, {
                     outputId: filler,
                     outputGuard: filler,
@@ -124,6 +128,7 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob, otherAddress]) => {
                     token: ETH,
                     amount: AMOUNT,
                     piggybackBondSize: PIGGYBACK_BOND,
+                    bountySize: PIGGYBACK_BOND,
                 }, DUMMY_WITHDRAW_DATA, DUMMY_WITHDRAW_DATA],
             };
 
@@ -165,14 +170,20 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob, otherAddress]) => {
                 IFE_TX_TYPE,
                 SAFE_GAS_STIPEND,
             ];
-            this.exitGame = await PaymentInFlightExitRouter.new(exitGameArgs);
+            this.exitGame = await PaymentInFlightExitRouter.new();
+            await this.exitGame.bootInternal(exitGameArgs);
             await this.framework.registerExitGame(TX_TYPE.PAYMENT, this.exitGame.address, PROTOCOL.MORE_VP);
 
-            const dummyExitGame = await PaymentInFlightExitRouter.new(exitGameArgs);
+            const dummyExitGame = await PaymentInFlightExitRouter.new();
+            await dummyExitGame.bootInternal(exitGameArgs);
             await this.framework.registerExitGame(OTHER_TX_TYPE, dummyExitGame.address, PROTOCOL.MORE_VP);
 
             this.piggybackBondSize = await this.exitGame.piggybackBondSize();
-            this.exitGame.depositFundForTest({ from: alice, value: this.piggybackBondSize.toString() });
+
+            this.exitGame.depositFundForTest({
+                from: alice,
+                value: this.piggybackBondSize,
+            });
 
             const args = await buildValidChallengeOutputArgs();
 
@@ -205,7 +216,7 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob, otherAddress]) => {
             );
         });
 
-        it('should pay out bond to the challenger when challenged successfully', async () => {
+        it('should pay out the whole bond to the challenger when challenged successfully', async () => {
             const challengerPreBalance = new BN(await web3.eth.getBalance(bob));
 
             const { receipt } = await this.exitGame.challengeInFlightExitOutputSpent(

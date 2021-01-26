@@ -36,15 +36,21 @@ contract PaymentInFlightExitRouter is
     using PaymentProcessInFlightExit for PaymentProcessInFlightExit.Controller;
     using BondSize for BondSize.Params;
 
-    // Initial IFE bond size = 185000 (gas cost of challenge) * 20 gwei (current fast gas price) * 10 (safety margin)
-    uint128 public constant INITIAL_IFE_BOND_SIZE = 37000000000000000 wei;
+    // Initial IFE bond size = 269000 (gas cost of challenge) * 50 gwei (current fast gas price) * 2 (safety margin)
+    uint128 public constant INITIAL_IFE_BOND_SIZE = 26900000000000000 wei;
 
-    // Initial piggyback bond size = 140000 (gas cost of challenge) * 20 gwei (current fast gas price) * 10 (safety margin)
-    uint128 public constant INITIAL_PB_BOND_SIZE = 28000000000000000 wei;
+    // Initial piggyback bond size = 309000 (gas cost of challenge) * 50 gwei (current fast gas price) * 2 (safety margin)
+    uint128 public constant INITIAL_PB_BOND_SIZE = 30900000000000000 wei;
 
     // Each bond size upgrade can increase to a maximum of 200% or decrease to 50% of the current bond
     uint16 public constant BOND_LOWER_BOUND_DIVISOR = 2;
     uint16 public constant BOND_UPPER_BOUND_MULTIPLIER = 2;
+
+    // Exit bounty is not reserved from the In Flight Exit Bond. Bounty for IFE is in INITIAL_PB_BOUNTY_SIZE
+    uint128 public constant INITIAL_IFE_EXIT_BOUNTY_SIZE = 0;
+
+    // Initial exit bounty size = 500000 (approx gas usage for processExit) * 50 gwei (current fast gas price)
+    uint128 public constant INITIAL_PB_BOUNTY_SIZE = 25000000000000000 wei;
 
     PaymentExitDataModel.InFlightExitMap internal inFlightExitMap;
     PaymentStartInFlightExit.Controller internal startInFlightExitController;
@@ -58,9 +64,10 @@ contract PaymentInFlightExitRouter is
     BondSize.Params internal piggybackBond;
 
     PlasmaFramework private framework;
+    bool private bootDone = false;
 
     event IFEBondUpdated(uint128 bondSize);
-    event PiggybackBondUpdated(uint128 bondSize);
+    event PiggybackBondUpdated(uint128 bondSize, uint128 exitBountySize);
 
     event InFlightExitStarted(
         address indexed initiator,
@@ -127,62 +134,66 @@ contract PaymentInFlightExitRouter is
         uint168 indexed exitId
     );
 
-    constructor(PaymentExitGameArgs.Args memory args)
-        public
+    event InFlightExitFinalized(
+        uint168 indexed exitId
+    );
+
+    function boot(PaymentExitGameArgs.Args memory paymentExitGameArgs) 
+        internal
     {
-        framework = args.framework;
-
-        EthVault ethVault = EthVault(args.framework.vaults(args.ethVaultId));
+        require(msg.sender == paymentExitGameArgs.framework.getMaintainer(), "Only Maintainer can perform this action");
+        require(!bootDone, "Exit game was already initialized");
+        EthVault ethVault = EthVault(paymentExitGameArgs.framework.vaults(paymentExitGameArgs.ethVaultId));
         require(address(ethVault) != address(0), "Invalid ETH vault");
-
-        Erc20Vault erc20Vault = Erc20Vault(args.framework.vaults(args.erc20VaultId));
+        Erc20Vault erc20Vault = Erc20Vault(paymentExitGameArgs.framework.vaults(paymentExitGameArgs.erc20VaultId));
         require(address(erc20Vault) != address(0), "Invalid ERC20 vault");
-
+        framework = paymentExitGameArgs.framework;
+        bootDone = true;
         startInFlightExitController = PaymentStartInFlightExit.buildController(
-            args.framework,
-            args.spendingConditionRegistry,
-            args.stateTransitionVerifier,
-            args.supportTxType
+            paymentExitGameArgs.framework,
+            paymentExitGameArgs.spendingConditionRegistry,
+            paymentExitGameArgs.stateTransitionVerifier,
+            paymentExitGameArgs.supportTxType
         );
 
         piggybackInFlightExitController = PaymentPiggybackInFlightExit.buildController(
-            args.framework,
+            paymentExitGameArgs.framework,
             this,
-            args.ethVaultId,
-            args.erc20VaultId
+            paymentExitGameArgs.ethVaultId,
+            paymentExitGameArgs.erc20VaultId
         );
 
         challengeCanonicityController = PaymentChallengeIFENotCanonical.buildController(
-            args.framework,
-            args.spendingConditionRegistry,
-            args.supportTxType
+            paymentExitGameArgs.framework,
+            paymentExitGameArgs.spendingConditionRegistry,
+            paymentExitGameArgs.supportTxType
         );
 
         challengeInputSpentController = PaymentChallengeIFEInputSpent.buildController(
-            args.framework,
-            args.spendingConditionRegistry,
-            args.safeGasStipend
+            paymentExitGameArgs.framework,
+            paymentExitGameArgs.spendingConditionRegistry,
+            paymentExitGameArgs.safeGasStipend
         );
 
         challengeOutputSpentController = PaymentChallengeIFEOutputSpent.Controller(
-            args.framework,
-            args.spendingConditionRegistry,
-            args.safeGasStipend
+            paymentExitGameArgs.framework,
+            paymentExitGameArgs.spendingConditionRegistry,
+            paymentExitGameArgs.safeGasStipend
         );
 
         deleteNonPiggybackIFEController = PaymentDeleteInFlightExit.Controller({
-            minExitPeriod: args.framework.minExitPeriod(),
-            safeGasStipend: args.safeGasStipend
+            minExitPeriod: paymentExitGameArgs.framework.minExitPeriod(),
+            safeGasStipend: paymentExitGameArgs.safeGasStipend
         });
 
         processInflightExitController = PaymentProcessInFlightExit.Controller({
-            framework: args.framework,
+            framework: paymentExitGameArgs.framework,
             ethVault: ethVault,
             erc20Vault: erc20Vault,
-            safeGasStipend: args.safeGasStipend
+            safeGasStipend: paymentExitGameArgs.safeGasStipend
         });
-        startIFEBond = BondSize.buildParams(INITIAL_IFE_BOND_SIZE, BOND_LOWER_BOUND_DIVISOR, BOND_UPPER_BOUND_MULTIPLIER);
-        piggybackBond = BondSize.buildParams(INITIAL_PB_BOND_SIZE, BOND_LOWER_BOUND_DIVISOR, BOND_UPPER_BOUND_MULTIPLIER);
+        startIFEBond = BondSize.buildParams(INITIAL_IFE_BOND_SIZE, INITIAL_IFE_EXIT_BOUNTY_SIZE, BOND_LOWER_BOUND_DIVISOR, BOND_UPPER_BOUND_MULTIPLIER);
+        piggybackBond = BondSize.buildParams(INITIAL_PB_BOND_SIZE, INITIAL_PB_BOUNTY_SIZE, BOND_LOWER_BOUND_DIVISOR, BOND_UPPER_BOUND_MULTIPLIER);
     }
 
     /**
@@ -223,7 +234,8 @@ contract PaymentInFlightExitRouter is
         nonReentrant(framework)
         onlyWithValue(piggybackBondSize())
     {
-        piggybackInFlightExitController.piggybackInput(inFlightExitMap, args);
+        uint128 bountySize = processInFlightExitBountySize();
+        piggybackInFlightExitController.piggybackInput(inFlightExitMap, args, bountySize);
     }
 
     /**
@@ -238,7 +250,8 @@ contract PaymentInFlightExitRouter is
         nonReentrant(framework)
         onlyWithValue(piggybackBondSize())
     {
-        piggybackInFlightExitController.piggybackOutput(inFlightExitMap, args);
+        uint128 bountySize = processInFlightExitBountySize();
+        piggybackInFlightExitController.piggybackOutput(inFlightExitMap, args, bountySize);
     }
 
     /**
@@ -307,9 +320,10 @@ contract PaymentInFlightExitRouter is
      * @dev This function is designed to be called in the main processExit function, thus, using internal
      * @param exitId The in-flight exit ID
      * @param token The token (in erc20 address or address(0) for ETH) of the exiting output
+     * @param processExitInitiator The processExits() initiator
      */
-    function processInFlightExit(uint168 exitId, address token) internal {
-        processInflightExitController.run(inFlightExitMap, exitId, token);
+    function processInFlightExit(uint168 exitId, address token, address payable processExitInitiator) internal {
+        processInflightExitController.run(inFlightExitMap, exitId, token, processExitInitiator);
     }
 
     /**
@@ -324,7 +338,7 @@ contract PaymentInFlightExitRouter is
      * @param newBondSize The new bond size
      */
     function updateStartIFEBondSize(uint128 newBondSize) public onlyFrom(framework.getMaintainer()) {
-        startIFEBond.updateBondSize(newBondSize);
+        startIFEBond.updateBondSize(newBondSize, INITIAL_IFE_EXIT_BOUNTY_SIZE);
         emit IFEBondUpdated(newBondSize);
     }
 
@@ -337,10 +351,19 @@ contract PaymentInFlightExitRouter is
 
     /**
      * @notice Updates the piggyback bond size, taking two days to become effective
+     * @notice Remember to set the bond appropriately higher than the bounty because the bond remaining after bounty is returned
      * @param newBondSize The new bond size
      */
-    function updatePiggybackBondSize(uint128 newBondSize) public onlyFrom(framework.getMaintainer()) {
-        piggybackBond.updateBondSize(newBondSize);
-        emit PiggybackBondUpdated(newBondSize);
+    function updatePiggybackBondSize(uint128 newBondSize, uint128 newExitBountySize) public onlyFrom(framework.getMaintainer()) {
+        piggybackBond.updateBondSize(newBondSize, newExitBountySize);
+        emit PiggybackBondUpdated(newBondSize, newExitBountySize);
     }
+
+    /**
+     * @notice Retrieves the process IFE bounty size
+     */
+    function processInFlightExitBountySize() public view returns (uint128) {
+        return piggybackBond.exitBountySize();
+    }
+
 }

@@ -21,18 +21,20 @@ class StandardExit:
         exitable (boolean): whether will exit at processing
         output_id (str): output exit identifier (not exit id)
         bond_size (int): value of paid bond
+        bounty_size (int): value of process exit bounty
     """
 
-    def __init__(self, exitable, utxo_pos, output_id, exit_target, amount, bond_size):
+    def __init__(self, exitable, utxo_pos, output_id, exit_target, amount, bond_size, bounty_size):
         self.owner = exit_target
         self.amount = amount
         self.position = utxo_pos
         self.exitable = exitable
         self.output_id = output_id
         self.bond_size = bond_size
+        self.bounty_size = bounty_size
 
     def to_list(self):
-        return [self.owner, self.amount, self.position, self.exitable, self.output_id, self.bond_size]
+        return [self.owner, self.amount, self.position, self.exitable, self.output_id, self.bond_size, self.bounty_size]
 
     def __str__(self):
         return self.to_list().__str__()
@@ -61,12 +63,13 @@ class PlasmaBlock:
 
 class InFlightExit:
     class WithdrawData:
-        def __init__(self, output_id, exit_target, token, amount, piggyback_bond_size):
+        def __init__(self, output_id, exit_target, token, amount, piggyback_bond_size, bounty_size):
             self.output_id = output_id
             self.exit_target = exit_target
             self.token = token
             self.amount = amount
             self.piggyback_bond_size = piggyback_bond_size
+            self.bounty_size = bounty_size
 
     def __init__(self, root_chain, in_flight_tx,
                  is_canonical,
@@ -272,7 +275,7 @@ class TestingLanguage:
         spend = self.child_chain.get_transaction(spend_id)
         return Utxo(deposit_id, owner, token_address, amount, spend, spend_id)
 
-    def process_exits(self, token, exit_id, count=1, vault_id=None, **kwargs):
+    def process_exits(self, token, exit_id, count=1, vault_id=None, sender=None, **kwargs):
         """Finalizes exits that have completed the exit period.
 
         Args:
@@ -282,7 +285,10 @@ class TestingLanguage:
             vault_id (int): Id of the vault that funds the exit
         """
 
-        return self.root_chain.processExits(token, exit_id, count, vault_id, **kwargs)
+        if sender is None:
+            sender = self.accounts[0].address
+
+        return self.root_chain.processExits(token, exit_id, count, sender, vault_id, **kwargs)
 
     def get_challenge_proof(self, utxo_id, spend_id):
         """Returns information required to submit a challenge.
@@ -454,8 +460,9 @@ class TestingLanguage:
         if forward_time:
             self.forward_timestamp(forward_time)
 
-    def challenge_in_flight_exit_input_spent(self, in_flight_tx_id, spend_tx_id, key):
-        in_flight_tx = self.child_chain.get_transaction(in_flight_tx_id)
+    def challenge_in_flight_exit_input_spent(self, in_flight_tx_id, spend_tx_id, key, in_flight_tx=None):
+        if in_flight_tx is None:
+            in_flight_tx = self.child_chain.get_transaction(in_flight_tx_id)
         spend_tx = self.child_chain.get_transaction(spend_tx_id)
         (in_flight_tx_input_index, spend_tx_input_index) = self.find_shared_input(in_flight_tx, spend_tx)
         signature = spend_tx.signatures[spend_tx_input_index]

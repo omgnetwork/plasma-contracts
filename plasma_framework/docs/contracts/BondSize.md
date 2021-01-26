@@ -13,6 +13,8 @@ Stores an updateable bond size
 struct Params {
  uint128 previousBondSize,
  uint128 updatedBondSize,
+ uint128 previousExitBountySize,
+ uint128 updatedExitBountySize,
  uint128 effectiveUpdateTime,
  uint16 lowerBoundDivisor,
  uint16 upperBoundMultiplier
@@ -29,15 +31,16 @@ uint64 public constant WAITING_PERIOD;
 
 ## Functions
 
-- [buildParams(uint128 initialBondSize, uint16 lowerBoundDivisor, uint16 upperBoundMultiplier)](#buildparams)
-- [updateBondSize(struct BondSize.Params self, uint128 newBondSize)](#updatebondsize)
+- [buildParams(uint128 initialBondSize, uint128 initialExitBountySize, uint16 lowerBoundDivisor, uint16 upperBoundMultiplier)](#buildparams)
+- [updateBondSize(struct BondSize.Params self, uint128 newBondSize, uint128 newExitBountySize)](#updatebondsize)
 - [bondSize(struct BondSize.Params self)](#bondsize)
-- [validateBondSize(struct BondSize.Params self, uint128 newBondSize)](#validatebondsize)
+- [exitBountySize(struct BondSize.Params self)](#exitbountysize)
+- [validateBondSize(struct BondSize.Params self, uint128 newBondSize, uint128 newExitBountySize)](#validatebondsize)
 
 ### buildParams
 
 ```js
-function buildParams(uint128 initialBondSize, uint16 lowerBoundDivisor, uint16 upperBoundMultiplier) internal pure
+function buildParams(uint128 initialBondSize, uint128 initialExitBountySize, uint16 lowerBoundDivisor, uint16 upperBoundMultiplier) internal pure
 returns(struct BondSize.Params)
 ```
 
@@ -46,6 +49,7 @@ returns(struct BondSize.Params)
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
 | initialBondSize | uint128 |  | 
+| initialExitBountySize | uint128 |  | 
 | lowerBoundDivisor | uint16 |  | 
 | upperBoundMultiplier | uint16 |  | 
 
@@ -54,7 +58,7 @@ returns(struct BondSize.Params)
 Updates the bond size
 
 ```js
-function updateBondSize(struct BondSize.Params self, uint128 newBondSize) internal nonpayable
+function updateBondSize(struct BondSize.Params self, uint128 newBondSize, uint128 newExitBountySize) internal nonpayable
 ```
 
 **Arguments**
@@ -63,6 +67,7 @@ function updateBondSize(struct BondSize.Params self, uint128 newBondSize) intern
 | ------------- |------------- | -----|
 | self | struct BondSize.Params |  | 
 | newBondSize | uint128 | The new bond size | 
+| newExitBountySize | uint128 | The new exit bounty size | 
 
 ### bondSize
 
@@ -79,10 +84,25 @@ returns(uint128)
 | ------------- |------------- | -----|
 | self | struct BondSize.Params |  | 
 
+### exitBountySize
+
+Returns the current exit bounty size
+
+```js
+function exitBountySize(struct BondSize.Params self) internal view
+returns(uint128)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| self | struct BondSize.Params |  | 
+
 ### validateBondSize
 
 ```js
-function validateBondSize(struct BondSize.Params self, uint128 newBondSize) private view
+function validateBondSize(struct BondSize.Params self, uint128 newBondSize, uint128 newExitBountySize) private view
 ```
 
 **Arguments**
@@ -91,6 +111,7 @@ function validateBondSize(struct BondSize.Params self, uint128 newBondSize) priv
 | ------------- |------------- | -----|
 | self | struct BondSize.Params |  | 
 | newBondSize | uint128 |  | 
+| newExitBountySize | uint128 |  | 
 
 ## Contracts
 

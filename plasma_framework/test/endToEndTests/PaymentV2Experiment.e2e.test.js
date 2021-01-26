@@ -6,9 +6,7 @@ const ERC20Mintable = artifacts.require('ERC20Mintable');
 const PaymentExitGame = artifacts.require('PaymentExitGame');
 const PlasmaFramework = artifacts.require('PlasmaFramework');
 
-const {
-    BN, constants, time,
-} = require('openzeppelin-test-helpers');
+const { BN, constants, time } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 
 const { MerkleTree } = require('../helpers/merkle.js');
@@ -17,7 +15,7 @@ const { buildUtxoPos } = require('../helpers/positions.js');
 const Testlang = require('../helpers/testlang.js');
 const config = require('../../config.js');
 
-contract('PaymentExitGame - V2 Extension experiment', ([_deployer, _maintainer, authority, richFather]) => {
+contract('PaymentExitGame - V2 Extension experiment', ([_deployer, _maintainer, authority, richFather, otherAddress]) => {
     const ETH = constants.ZERO_ADDRESS;
     const INITIAL_ERC20_SUPPLY = 10000000000;
     const DEPOSIT_VALUE = 1000000;
@@ -61,6 +59,7 @@ contract('PaymentExitGame - V2 Extension experiment', ([_deployer, _maintainer, 
         this.piggybackBondSize = await this.exitGame.piggybackBondSize();
 
         this.framework.addExitQueue(config.registerKeys.vaultId.eth, ETH);
+        this.processExitBountySize = await this.exitGame.processStandardExitBountySize();
     };
 
     const aliceDepositsETH = async () => {
@@ -107,14 +106,17 @@ contract('PaymentExitGame - V2 Extension experiment', ([_deployer, _maintainer, 
                             outputTxInclusionProof: this.merkleProofForUpgradeTx,
                         };
 
-                        await this.exitGame.startStandardExit(
-                            args, { from: alice, value: this.startStandardExitBondSize },
-                        );
+                        await this.exitGame.startStandardExit(args, {
+                            from: alice,
+                            value: this.startStandardExitBondSize,
+                        });
                     });
 
                     it('should start successfully', async () => {
                         const exitId = await this.exitGame.getStandardExitId(
-                            false, this.upgradeTx, this.upgradeUtxoPos,
+                            false,
+                            this.upgradeTx,
+                            this.upgradeUtxoPos,
                         );
                         const exitIds = [exitId];
                         const standardExitData = (await this.exitGame.standardExits(exitIds))[0];
@@ -127,13 +129,20 @@ contract('PaymentExitGame - V2 Extension experiment', ([_deployer, _maintainer, 
 
                             this.bobBalanceBeforeProcessExit = new BN(await web3.eth.getBalance(alice));
 
-                            await this.framework.processExits(config.registerKeys.vaultId.eth, ETH, 0, 1);
+                            await this.framework.processExits(
+                                config.registerKeys.vaultId.eth,
+                                ETH,
+                                0,
+                                1,
+                                web3.utils.keccak256(otherAddress),
+                                { from: otherAddress },
+                            );
                         });
 
-                        it('should return the output amount plus standard exit bond to Alice', async () => {
+                        it('should return the output amount plus remaining exit bond to Alice', async () => {
                             const actualBobBalanceAfterProcessExit = new BN(await web3.eth.getBalance(alice));
                             const expectedBobBalance = this.bobBalanceBeforeProcessExit
-                                .add(this.startStandardExitBondSize)
+                                .add(this.startStandardExitBondSize.sub(this.processExitBountySize))
                                 .add(new BN(this.upgradeTxObject.outputs[0].amount));
 
                             expect(actualBobBalanceAfterProcessExit).to.be.bignumber.equal(expectedBobBalance);

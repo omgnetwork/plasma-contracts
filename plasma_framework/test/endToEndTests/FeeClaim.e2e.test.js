@@ -1,17 +1,19 @@
 const EthVault = artifacts.require('EthVault');
 const PaymentExitGame = artifacts.require('PaymentExitGame');
 const PlasmaFramework = artifacts.require('PlasmaFramework');
+const PaymentStartStandardExit = artifacts.require('PaymentStartStandardExit');
+const PaymentStartInFlightExit = artifacts.require('PaymentStartInFlightExit');
 
-const {
-    constants, expectEvent,
-} = require('openzeppelin-test-helpers');
+const { constants, expectEvent } = require('openzeppelin-test-helpers');
 
 const Testlang = require('../helpers/testlang.js');
 const config = require('../../config.js');
 
 const {
-    PaymentTransactionOutput, PaymentTransaction,
-    FeeTransaction, FeeClaimOutput,
+    PaymentTransactionOutput,
+    PaymentTransaction,
+    FeeTransaction,
+    FeeClaimOutput,
 } = require('../helpers/transaction.js');
 const { sign } = require('../helpers/sign.js');
 const { hashTx } = require('../helpers/paymentEip712.js');
@@ -83,10 +85,13 @@ contract('PlasmaFramework - Fee Claim', ([_, _maintainer, authority, richFather,
 
                 before(async () => {
                     const transferAmount = 1000;
-                    alicePlasmaBalance -= (transferAmount + FEE_AMOUNT);
+                    alicePlasmaBalance -= transferAmount + FEE_AMOUNT;
                     const outputBob = new PaymentTransactionOutput(PAYMENT_OUTPUT_TYPE, transferAmount, bob, ETH);
                     const outputAlice = new PaymentTransactionOutput(
-                        PAYMENT_OUTPUT_TYPE, alicePlasmaBalance, alice, ETH,
+                        PAYMENT_OUTPUT_TYPE,
+                        alicePlasmaBalance,
+                        alice,
+                        ETH,
                     );
 
                     const aliceBalanceOutputIndex = 1;
@@ -108,14 +113,11 @@ contract('PlasmaFramework - Fee Claim', ([_, _maintainer, authority, richFather,
 
                     before(async () => {
                         const nextBlockNum = (await this.framework.nextChildBlock()).toNumber();
-                        const feeOutputs = [
-                            new FeeClaimOutput(FEE_OUTPUT_TYPE, FEE_AMOUNT, operatorFeeAddress, ETH),
-                        ];
+                        const feeOutputs = [new FeeClaimOutput(FEE_OUTPUT_TYPE, FEE_AMOUNT, operatorFeeAddress, ETH)];
 
-                        const nonce = web3.utils.sha3(web3.eth.abi.encodeParameters(
-                            ['uint256', 'address'],
-                            [nextBlockNum, ETH],
-                        ));
+                        const nonce = web3.utils.sha3(
+                            web3.eth.abi.encodeParameters(['uint256', 'address'], [nextBlockNum, ETH]),
+                        );
 
                         const outputIndex = 0;
                         const feeTxIndex = 1;
@@ -138,12 +140,18 @@ contract('PlasmaFramework - Fee Claim', ([_, _maintainer, authority, richFather,
 
                         before(async () => {
                             const transferAmount = 1000;
-                            alicePlasmaBalance -= (transferAmount + FEE_AMOUNT);
+                            alicePlasmaBalance -= transferAmount + FEE_AMOUNT;
                             const outputCarol = new PaymentTransactionOutput(
-                                PAYMENT_OUTPUT_TYPE, transferAmount, carol, ETH,
+                                PAYMENT_OUTPUT_TYPE,
+                                transferAmount,
+                                carol,
+                                ETH,
                             );
                             const outputAlice = new PaymentTransactionOutput(
-                                PAYMENT_OUTPUT_TYPE, alicePlasmaBalance, alice, ETH,
+                                PAYMENT_OUTPUT_TYPE,
+                                alicePlasmaBalance,
+                                alice,
+                                ETH,
                             );
 
                             const txObj = new PaymentTransaction(
@@ -164,10 +172,9 @@ contract('PlasmaFramework - Fee Claim', ([_, _maintainer, authority, richFather,
                                 const feeOutputs = [
                                     new FeeClaimOutput(FEE_OUTPUT_TYPE, FEE_AMOUNT, operatorFeeAddress, ETH),
                                 ];
-                                const nonce = web3.utils.sha3(web3.eth.abi.encodeParameters(
-                                    ['uint256', 'address'],
-                                    [nextBlockNum, ETH],
-                                ));
+                                const nonce = web3.utils.sha3(
+                                    web3.eth.abi.encodeParameters(['uint256', 'address'], [nextBlockNum, ETH]),
+                                );
 
                                 const secondFeeTx = new FeeTransaction(FEE_TX_TYPE, [], feeOutputs, nonce);
                                 secondFeeTxBytes = web3.utils.bytesToHex(secondFeeTx.rlpEncoded());
@@ -220,13 +227,14 @@ contract('PlasmaFramework - Fee Claim', ([_, _maintainer, authority, richFather,
                                     };
 
                                     const bondSize = await this.paymentExitGame.startStandardExitBondSize();
-                                    const tx = await this.paymentExitGame.startStandardExit(
-                                        args, { from: operatorFeeAddress, value: bondSize },
-                                    );
-                                    await expectEvent.inLogs(
-                                        tx.logs,
+                                    const { receipt } = await this.paymentExitGame.startStandardExit(args, {
+                                        from: operatorFeeAddress,
+                                        value: bondSize,
+                                    });
+                                    await expectEvent.inTransaction(
+                                        receipt.transactionHash,
+                                        PaymentStartStandardExit,
                                         'ExitStarted',
-                                        { owner: operatorFeeAddress },
                                     );
                                 });
 
@@ -242,12 +250,13 @@ contract('PlasmaFramework - Fee Claim', ([_, _maintainer, authority, richFather,
                                     };
 
                                     const bondSize = await this.paymentExitGame.startIFEBondSize();
-                                    const tx = await this.paymentExitGame.startInFlightExit(
-                                        args,
-                                        { from: alice, value: bondSize },
-                                    );
-                                    await expectEvent.inLogs(
-                                        tx.logs,
+                                    const { receipt } = await this.paymentExitGame.startInFlightExit(args, {
+                                        from: alice,
+                                        value: bondSize,
+                                    });
+                                    await expectEvent.inTransaction(
+                                        receipt.transactionHash,
+                                        PaymentStartInFlightExit,
                                         'InFlightExitStarted',
                                     );
                                 });

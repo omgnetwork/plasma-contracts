@@ -10,7 +10,6 @@ import "../../utils/MoreVpFinalization.sol";
 import "../../../transactions/PaymentTransactionModel.sol";
 import "../../../utils/PosLib.sol";
 import "../../../framework/PlasmaFramework.sol";
-import "../../utils/ExitableTimestamp.sol";
 
 library PaymentStartStandardExit {
     using ExitableTimestamp for ExitableTimestamp.Calculator;
@@ -43,7 +42,9 @@ library PaymentStartStandardExit {
 
     event ExitStarted(
         address indexed owner,
-        uint168 exitId
+        uint168 exitId,
+        uint256 utxoPos,
+        bytes outputTx
     );
 
     /**
@@ -81,16 +82,22 @@ library PaymentStartStandardExit {
     function run(
         Controller memory self,
         PaymentExitDataModel.StandardExitMap storage exitMap,
-        PaymentStandardExitRouterArgs.StartStandardExitArgs memory args
+        PaymentStandardExitRouterArgs.StartStandardExitArgs memory args,
+        uint128 processStandardExitBountySize
     )
         public
     {
         StartStandardExitData memory data = setupStartStandardExitData(self, args);
         verifyStartStandardExitData(self, data, exitMap);
-        saveStandardExitData(data, exitMap);
+        saveStandardExitData(data, exitMap, processStandardExitBountySize);
         enqueueStandardExit(data);
 
-        emit ExitStarted(msg.sender, data.exitId);
+        emit ExitStarted({
+            owner: msg.sender,
+            exitId: data.exitId,
+            utxoPos: args.utxoPos,
+            outputTx: args.rlpOutputTx
+        });
     }
 
     function setupStartStandardExitData(
@@ -160,7 +167,8 @@ library PaymentStartStandardExit {
 
     function saveStandardExitData(
         StartStandardExitData memory data,
-        PaymentExitDataModel.StandardExitMap storage exitMap
+        PaymentExitDataModel.StandardExitMap storage exitMap,
+        uint128 processStandardExitBountySize
     )
         private
     {
@@ -170,7 +178,8 @@ library PaymentStartStandardExit {
             outputId: data.outputId,
             exitTarget: msg.sender,
             amount: data.output.amount,
-            bondSize: msg.value
+            bondSize: msg.value,
+            bountySize: processStandardExitBountySize
         });
     }
 
