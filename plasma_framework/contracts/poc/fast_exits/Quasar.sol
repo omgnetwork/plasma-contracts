@@ -29,9 +29,9 @@ contract Quasar is QuasarPool {
     using PosLib for PosLib.Position;
 
     PlasmaFramework public plasmaFramework;
-    // the contract works with the current exit game
-    // any changes to the exit game would require modifications to this contract
-    // verify the exitGame before interacting
+    // This contract works with the current exit game
+    // Any changes to the exit game would require modifications to this contract
+    // Verify the exit game before interacting
     PaymentExitGame public paymentExitGame;
     SpendingConditionRegistry public spendingConditionRegistry;
 
@@ -64,7 +64,7 @@ contract Quasar is QuasarPool {
     }
 
     mapping (uint256 => Ticket) public ticketData;
-    mapping (uint256 => Claim) private claimData;
+    mapping (uint256 => Claim) private ifeClaimData;
 
     event NewTicketObtained(uint256 utxoPos);
     event IFEClaimSubmitted(uint256 utxoPos, uint168 exitId);
@@ -127,7 +127,7 @@ contract Quasar is QuasarPool {
     }
 
     /**
-     * @dev Flush an expired ticket to free up reserved space
+     * @dev Flush an expired ticket to free up reserved funds
      * @notice Only an unclaimed ticket can be flushed, bond amount is added to unclaimedBonds
      * @param utxoPos pos of the output, which is the ticket identifier
     */
@@ -249,7 +249,7 @@ contract Quasar is QuasarPool {
     }
 
     /**
-     * @dev Submit and IFEclaim for claims without inclusion proof
+     * @dev Submit an IFE claim for claims without inclusion proof
      * @param utxoPos pos of the output, which is the ticket identifier
      * @param inFlightClaimTx in-flight tx that spends the output to quasar owner
     */
@@ -265,18 +265,18 @@ contract Quasar is QuasarPool {
         PaymentExitDataModel.InFlightExit[] memory ifeData = paymentExitGame.inFlightExits(exitIdArr);
         require(ifeData[0].exitStartTimestamp != 0, "IFE has not been started");
 
-        // ifeClaims should start within IFE_CLAIM_MARGIN from starting IFE to enable sufficient time to piggyback
+        // IFE claims should start within IFE_CLAIM_MARGIN from starting IFE to enable sufficient time to piggyback
         // this might be overriden by the ticket expiry check usually, except if the ticket is obtained later
         require(block.timestamp <= ifeData[0].exitStartTimestamp.add(IFE_CLAIM_MARGIN), "IFE Claim period has passed");
 
         ticketData[utxoPos].isClaimed = true;
-        claimData[utxoPos] = Claim(inFlightClaimTx, block.timestamp.add(IFE_CLAIM_WAITING_PERIOD), true);
+        ifeClaimData[utxoPos] = Claim(inFlightClaimTx, block.timestamp.add(IFE_CLAIM_WAITING_PERIOD), true);
         emit IFEClaimSubmitted(utxoPos, exitId);
     }
 
     /**
-     * @dev Challenge an active claim, can be used to challenge IFEClaims as well
-     * @notice A challenge is required only when a tx that spends the same utxo was included previously
+     * @dev Challenge an IFE claim
+     * @notice A challenge is required if any of the claimTx's inputs are double spent
      * @param utxoPos pos of the output, which is the ticket identifier
      * @param rlpChallengeTx RLP-encoded challenge transaction
      * @param challengeTxInputIndex index pos of the same utxo in the challenge transaction
@@ -285,7 +285,7 @@ contract Quasar is QuasarPool {
      * @param otherInputCreationTx (optional) Transaction that created this shared input
      * @param senderData A keccak256 hash of the sender's address
     */
-    function challengeClaim(
+    function challengeIfeClaim(
         uint256 utxoPos,
         bytes memory rlpChallengeTx,
         uint16 challengeTxInputIndex,
@@ -295,10 +295,10 @@ contract Quasar is QuasarPool {
         bytes32 senderData
     ) public {
         require(senderData == keccak256(abi.encodePacked(msg.sender)), "Incorrect SenderData");
-        require(ticketData[utxoPos].isClaimed && claimData[utxoPos].isValid, "The claim is not challengeable");
-        require(block.timestamp <= claimData[utxoPos].finalizationTimestamp, "The challenge period is over");
+        require(ticketData[utxoPos].isClaimed && ifeClaimData[utxoPos].isValid, "The claim is not challengeable");
+        require(block.timestamp <= ifeClaimData[utxoPos].finalizationTimestamp, "The challenge period is over");
         require(
-            keccak256(claimData[utxoPos].rlpClaimTx) != keccak256(rlpChallengeTx),
+            keccak256(ifeClaimData[utxoPos].rlpClaimTx) != keccak256(rlpChallengeTx),
             "The challenging transaction is the same as the claim transaction"
         );
 
@@ -311,26 +311,26 @@ contract Quasar is QuasarPool {
             verifySpendingCondition(utxoPos, ticketData[utxoPos].rlpOutputCreationTx, rlpChallengeTx, challengeTxInputIndex, challengeTxWitness);
         } else {
             PaymentTransactionModel.Transaction memory decodedTx
-            = PaymentTransactionModel.decode(claimData[utxoPos].rlpClaimTx);
+            = PaymentTransactionModel.decode(ifeClaimData[utxoPos].rlpClaimTx);
 
             verifySpendingCondition(uint256(decodedTx.inputs[otherInputIndex]), otherInputCreationTx, rlpChallengeTx, challengeTxInputIndex, challengeTxWitness);
         }
 
-        claimData[utxoPos].isValid = false;
+        ifeClaimData[utxoPos].isValid = false;
         Ticket memory ticket = ticketData[utxoPos];
         tokenUsableCapacity[ticket.token] = tokenUsableCapacity[ticket.token].add(ticket.reservedAmount);
         SafeEthTransfer.transferRevertOnError(msg.sender, ticket.bondValue, SAFE_GAS_STIPEND);
     }
 
     /**
-     * @dev Process the Claim to get liquid funds
+     * @dev Process the IFE claim to get liquid funds
      * @param utxoPos pos of the output, which is the ticket identifier
     */
-    function processClaim(uint256 utxoPos) public {
-        require(block.timestamp > claimData[utxoPos].finalizationTimestamp, "The claim is not finalized yet");
-        require(claimData[utxoPos].isValid, "The claim has already been claimed or challenged");
+    function processIfeClaim(uint256 utxoPos) public {
+        require(block.timestamp > ifeClaimData[utxoPos].finalizationTimestamp, "The claim is not finalized yet");
+        require(ifeClaimData[utxoPos].isValid, "The claim has already been claimed or challenged");
         address payable outputOwner = ticketData[utxoPos].outputOwner;
-        claimData[utxoPos].isValid = false;
+        ifeClaimData[utxoPos].isValid = false;
         address token = ticketData[utxoPos].token;
         if (token == address(0)) {
             uint256 totalAmount = ticketData[utxoPos].reservedAmount.add(ticketData[utxoPos].bondValue);

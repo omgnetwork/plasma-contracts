@@ -421,7 +421,7 @@ contract(
                                             const rlpTxToQuasarOwner = this.transferTx;
                                             const txToQuasarOwnerInclusionProof = this.merkleProofForTransferTx;
 
-                                            this.aliceBalanceBeforeProcessClaim = new BN(
+                                            this.aliceBalanceBeforeprocessIfeClaim = new BN(
                                                 await web3.eth.getBalance(alice),
                                             );
 
@@ -443,15 +443,15 @@ contract(
                                         });
 
                                         it('should return the amount plus bond to Alice', async () => {
-                                            const aliceBalanceAfterProcessClaim = new BN(
+                                            const aliceBalanceAfterprocessIfeClaim = new BN(
                                                 await web3.eth.getBalance(alice),
                                             );
-                                            const expectedAliceBalance = this.aliceBalanceBeforeProcessClaim
+                                            const expectedAliceBalance = this.aliceBalanceBeforeprocessIfeClaim
                                                 .addn(DEPOSIT_VALUE)
                                                 .addn(this.dummyQuasarBondValue)
                                                 .sub(await spentOnGas(this.claimReceipt));
 
-                                            expect(aliceBalanceAfterProcessClaim).to.be.bignumber.equal(
+                                            expect(aliceBalanceAfterprocessIfeClaim).to.be.bignumber.equal(
                                                 expectedAliceBalance,
                                             );
                                         });
@@ -496,19 +496,12 @@ contract(
                                         });
 
                                         describe('And Then if someone attempts to processes the claim', () => {
-                                            describe('When the waiting period passes', () => {
-                                                before(async () => {
-                                                    await time.increase(time.duration.seconds(this.waitingPeriod).add(
-                                                        time.duration.seconds(1),
-                                                    ));
-                                                });
-                                                it('should not allow to process claim again', async () => {
-                                                    const utxoPos = this.depositUtxoPos;
-                                                    await expectRevert(
-                                                        this.quasar.processClaim(utxoPos),
-                                                        'The claim has already been claimed or challenged',
-                                                    );
-                                                });
+                                            it('should not allow to process claim again', async () => {
+                                                const utxoPos = this.depositUtxoPos;
+                                                await expectRevert(
+                                                    this.quasar.processIfeClaim(utxoPos),
+                                                    'The claim has already been claimed or challenged',
+                                                );
                                             });
                                         });
                                     });
@@ -589,7 +582,7 @@ contract(
                                     this.quasarCapacityBeforeChallenge = new BN(
                                         await this.quasar.tokenUsableCapacity(ETH),
                                     );
-                                    const { receipt } = await this.quasar.challengeClaim(
+                                    const { receipt } = await this.quasar.challengeIfeClaim(
                                         utxoPos,
                                         rlpChallengeTx,
                                         challengeTxInputIndex,
@@ -633,7 +626,7 @@ contract(
                                     await time.increase(time.duration.seconds(2));
                                     const utxoPos = this.depositUtxoPos;
                                     await expectRevert(
-                                        this.quasar.processClaim(utxoPos),
+                                        this.quasar.processIfeClaim(utxoPos),
                                         'The claim has already been claimed or challenged',
                                     );
                                 });
@@ -942,7 +935,7 @@ contract(
                                             const utxoPos = this.depositUtxoPos;
 
                                             await expectRevert(
-                                                this.quasar.processClaim(
+                                                this.quasar.processIfeClaim(
                                                     utxoPos,
                                                 ),
                                                 'The claim is not finalized yet',
@@ -957,18 +950,18 @@ contract(
                                             });
                                             it('should allow to process claim and return the amount plus bond to Alice', async () => {
                                                 const utxoPos = this.depositUtxoPos;
-                                                const aliceBalanceBeforeProcessClaim = new BN(
+                                                const aliceBalanceBeforeprocessIfeClaim = new BN(
                                                     await web3.eth.getBalance(alice),
                                                 );
-                                                await this.quasar.processClaim(utxoPos);
-                                                const aliceBalanceAfterProcessClaim = new BN(
+                                                await this.quasar.processIfeClaim(utxoPos);
+                                                const aliceBalanceAfterprocessIfeClaim = new BN(
                                                     await web3.eth.getBalance(alice),
                                                 );
-                                                const expectedAliceBalance = aliceBalanceBeforeProcessClaim.addn(
+                                                const expectedAliceBalance = aliceBalanceBeforeprocessIfeClaim.addn(
                                                     DEPOSIT_VALUE,
                                                 ).addn(this.dummyQuasarBondValue);
 
-                                                expect(aliceBalanceAfterProcessClaim).to.be.bignumber.equal(
+                                                expect(aliceBalanceAfterprocessIfeClaim).to.be.bignumber.equal(
                                                     expectedAliceBalance,
                                                 );
                                             });
@@ -976,7 +969,7 @@ contract(
                                             it('should not allow to process claim again', async () => {
                                                 const utxoPos = this.depositUtxoPos;
                                                 await expectRevert(
-                                                    this.quasar.processClaim(utxoPos),
+                                                    this.quasar.processIfeClaim(utxoPos),
                                                     'The claim has already been claimed or challenged',
                                                 );
                                             });
@@ -1073,7 +1066,7 @@ contract(
                                     this.quasarCapacityBeforeChallenge = new BN(
                                         await this.quasar.tokenUsableCapacity(ETH),
                                     );
-                                    const { receipt } = await this.quasar.challengeClaim(
+                                    const { receipt } = await this.quasar.challengeIfeClaim(
                                         utxoPos,
                                         rlpChallengeTx,
                                         challengeTxInputIndex,
@@ -1117,7 +1110,7 @@ contract(
                                     await time.increase(time.duration.seconds(2));
                                     const utxoPos = this.depositUtxoPos;
                                     await expectRevert(
-                                        this.quasar.processClaim(utxoPos),
+                                        this.quasar.processIfeClaim(utxoPos),
                                         'The claim has already been claimed or challenged',
                                     );
                                 });
@@ -1250,7 +1243,7 @@ contract(
                                         this.quasarCapacityBeforeChallenge = new BN(
                                             await this.quasar.tokenUsableCapacity(ETH),
                                         );
-                                        const { receipt } = await this.quasar.challengeClaim(
+                                        const { receipt } = await this.quasar.challengeIfeClaim(
                                             utxoPos,
                                             rlpChallengeTx,
                                             challengeTxInputIndex,
@@ -1296,7 +1289,7 @@ contract(
                                         await time.increase(time.duration.seconds(2));
                                         const utxoPos = this.outputADepositUtxoPos;
                                         await expectRevert(
-                                            this.quasar.processClaim(utxoPos),
+                                            this.quasar.processIfeClaim(utxoPos),
                                             'The claim has already been claimed or challenged',
                                         );
                                     });
@@ -1429,17 +1422,17 @@ contract(
                                             await aliceTransferErc20(quasarOwner, DEPOSIT_VALUE);
                                         });
 
-                                        describe('When Alice tries to start claim with proper parameters', () => {
+                                        describe('When Alice tries to claim with proper parameters', () => {
                                             before(async () => {
                                                 const utxoPos = this.depositUtxoPos;
                                                 const utxoPosQuasarOwner = this.transferUtxoPos;
                                                 const rlpTxToQuasarOwner = this.transferTx;
                                                 const txToQuasarOwnerInclusionProof = this.merkleProofForTransferTx;
 
-                                                this.ethBalanceBeforeProcessClaim = new BN(
+                                                this.ethBalanceBeforeprocessIfeClaim = new BN(
                                                     await web3.eth.getBalance(alice),
                                                 );
-                                                this.erc20BalanceBeforeProcessClaim = new BN(
+                                                this.erc20BalanceBeforeprocessIfeClaim = new BN(
                                                     await this.erc20.balanceOf(alice),
                                                 );
 
@@ -1455,33 +1448,33 @@ contract(
                                                 this.claimReceipt = receipt;
                                             });
 
-                                            it('should allow Alice to start a claim', async () => {
+                                            it('should allow Alice to claim', async () => {
                                                 const ticketData = await this.quasar.ticketData(this.depositUtxoPos);
                                                 expect(ticketData.isClaimed).to.be.true;
 
-                                                const ethBalanceAfterProcessClaim = new BN(
+                                                const ethBalanceAfterprocessIfeClaim = new BN(
                                                     await web3.eth.getBalance(alice),
                                                 );
-                                                const erc20BalanceAfterProcessClaim = new BN(
+                                                const erc20BalanceAfterprocessIfeClaim = new BN(
                                                     await this.erc20.balanceOf(alice),
                                                 );
-                                                const expectedEthBalance = this.ethBalanceBeforeProcessClaim
+                                                const expectedEthBalance = this.ethBalanceBeforeprocessIfeClaim
                                                     .addn(this.dummyQuasarBondValue)
                                                     .sub(await spentOnGas(this.claimReceipt));
-                                                const expectedErc20Balance = this.erc20BalanceBeforeProcessClaim
+                                                const expectedErc20Balance = this.erc20BalanceBeforeprocessIfeClaim
                                                     .addn(DEPOSIT_VALUE);
 
-                                                expect(ethBalanceAfterProcessClaim).to.be.bignumber.equal(
+                                                expect(ethBalanceAfterprocessIfeClaim).to.be.bignumber.equal(
                                                     expectedEthBalance,
                                                 );
-                                                expect(erc20BalanceAfterProcessClaim).to.be.bignumber.equal(
+                                                expect(erc20BalanceAfterprocessIfeClaim).to.be.bignumber.equal(
                                                     expectedErc20Balance,
                                                 );
                                             });
                                             it('should not allow to process the claim', async () => {
                                                 const utxoPos = this.depositUtxoPos;
                                                 await expectRevert(
-                                                    this.quasar.processClaim(utxoPos),
+                                                    this.quasar.processIfeClaim(utxoPos),
                                                     'The claim has already been claimed or challenged',
                                                 );
                                             });
