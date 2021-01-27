@@ -47,6 +47,10 @@ library PaymentProcessInFlightExit {
         uint256 amount
     );
 
+    event InFlightExitFinalized(
+        uint168 indexed exitId
+    );
+
     /**
      * @notice Main logic function to process in-flight exit
      * @dev emits InFlightExitOmitted event if the exit is omitted
@@ -133,7 +137,9 @@ library PaymentProcessInFlightExit {
             if (!success) {
                 emit InFlightBondReturnFailed(exit.bondOwner, exit.bondSize);
             }
+
             delete exitMap.exits[exitId];
+            emit InFlightExitFinalized(exitId);
         }
     }
 
