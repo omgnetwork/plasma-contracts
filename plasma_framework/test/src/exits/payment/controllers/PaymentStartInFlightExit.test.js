@@ -225,6 +225,7 @@ contract('PaymentStartInFlightExit', ([_, alice, richFather, carol]) => {
             });
 
             it('should emit InFlightExitStarted event', async () => {
+
                 const { receipt } = await this.exitGame.startInFlightExit(
                     this.args,
                     { from: alice, value: this.startIFEBondSize.toString() },
@@ -240,7 +241,6 @@ contract('PaymentStartInFlightExit', ([_, alice, richFather, carol]) => {
                         initiator: alice,
                         txHash: expectedIfeHash,
                         inFlightTx: this.args.inFlightTx,
-                        inputTxs: this.args.inputTxs,
                     },
                 );
 
@@ -250,6 +250,7 @@ contract('PaymentStartInFlightExit', ([_, alice, richFather, carol]) => {
                 const event = logs.filter(e => e.event === 'InFlightExitStarted')[0];
 
                 expect(event.args.inFlightTxWitnesses).to.have.ordered.members(this.args.inFlightTxWitnesses);
+                expect(event.args.inputTxs).to.have.ordered.members(this.args.inputTxs);
 
                 const inputUtxosPos = this.args.inputUtxosPos.map(utxoPos => new BN(utxoPos));
                 expect(event.args.inputUtxosPos).to.have.lengthOf(inputUtxosPos.length);
@@ -310,7 +311,6 @@ contract('PaymentStartInFlightExit', ([_, alice, richFather, carol]) => {
                     {
                         initiator: richFather,
                         txHash: expectedIfeHash,
-                        inputTxs: this.args.inputTxs,
                     },
                 );
             });
