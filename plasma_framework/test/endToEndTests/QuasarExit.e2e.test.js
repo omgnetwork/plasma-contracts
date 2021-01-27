@@ -1478,7 +1478,7 @@ contract(
                                                     expectedErc20Balance,
                                                 );
                                             });
-                                            it('should not allow to process claim again', async () => {
+                                            it('should not allow to process the claim', async () => {
                                                 const utxoPos = this.depositUtxoPos;
                                                 await expectRevert(
                                                     this.quasar.processClaim(utxoPos),
