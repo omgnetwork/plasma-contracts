@@ -237,6 +237,7 @@ contract('PaymentStartInFlightExit', ([_, alice, richFather, carol]) => {
                     PaymentStartInFlightExit,
                     'InFlightExitStarted',
                     {
+                        initiator: alice,
                         txHash: expectedIfeHash,
                         inFlightTx: this.args.inFlightTx,
                         inputTxs: this.args.inputTxs,
@@ -307,6 +308,7 @@ contract('PaymentStartInFlightExit', ([_, alice, richFather, carol]) => {
                     PaymentStartInFlightExit,
                     'InFlightExitStarted',
                     {
+                        initiator: richFather,
                         txHash: expectedIfeHash,
                         inputTxs: this.args.inputTxs,
                     },

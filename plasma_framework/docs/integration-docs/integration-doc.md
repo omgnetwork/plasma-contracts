@@ -1101,6 +1101,7 @@ This section describes the events for an in-flight exit.
 - An in-flight exit has started:
 ```
     event InFlightExitStarted(
+        address indexed initiator,
         bytes32 indexed txHash,
         bytes inFlightTx,
         uint256[] inputUtxosPos,

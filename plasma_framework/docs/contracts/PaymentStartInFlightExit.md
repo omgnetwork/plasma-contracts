@@ -37,7 +37,7 @@ struct StartExitData {
 **Events**
 
 ```js
-event InFlightExitStarted(bytes32 indexed txHash, bytes  inFlightTx, uint256[]  inputUtxosPos, bytes[]  inFlightTxWitnesses, bytes[] inputTxs);
+event InFlightExitStarted(address indexed initiator, bytes32 indexed txHash, bytes  inFlightTx, uint256[]  inputUtxosPos, bytes[]  inFlightTxWitnesses, bytes[] inputTxs);
 ```
 
 ## Functions

@@ -42,7 +42,7 @@ bool private bootDone;
 ```js
 event IFEBondUpdated(uint128  bondSize);
 event PiggybackBondUpdated(uint128  bondSize, uint128  exitBountySize);
-event InFlightExitStarted(bytes32 indexed txHash, bytes inFlightTx, uint256[] inputUtxosPos, bytes[] inFlightTxWitnesses bytes[] inputTxs);
+event InFlightExitStarted(address indexed initiator, bytes32 indexed txHash, bytes inFlightTx, uint256[] inputUtxosPos, bytes[] inFlightTxWitnesses bytes[] inputTxs);
 event InFlightExitInputPiggybacked(address indexed exitTarget, bytes32 indexed txHash, uint16  inputIndex);
 event InFlightExitOmitted(uint168 indexed exitId, address  token);
 event InFlightBondReturnFailed(address indexed receiver, uint256  amount);
