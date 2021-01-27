@@ -24,6 +24,7 @@ event InFlightExitOutputWithdrawn(uint168 indexed exitId, uint16  outputIndex);
 event InFlightExitInputWithdrawn(uint168 indexed exitId, uint16  inputIndex);
 event InFlightBondReturnFailed(address indexed receiver, uint256  amount);
 event InFlightBountyReturnFailed(address indexed receiver, uint256  amount);
+event InFlightExitFinalized(uint168 indexed exitId);
 ```
 
 ## Functions
