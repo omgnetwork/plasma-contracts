@@ -54,6 +54,7 @@ event InFlightExitChallengeResponded(address indexed challenger, bytes32 indexed
 event InFlightExitInputBlocked(address indexed challenger, bytes32 indexed txHash, uint16  inputIndex);
 event InFlightExitOutputBlocked(address indexed challenger, bytes32 indexed txHash, uint16  outputIndex);
 event InFlightExitDeleted(uint168 indexed exitId);
+event InFlightExitFinalized(uint168 indexed exitId);
 ```
 
 ## Functions

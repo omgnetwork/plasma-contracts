@@ -134,6 +134,10 @@ contract PaymentInFlightExitRouter is
         uint168 indexed exitId
     );
 
+    event InFlightExitFinalized(
+        uint168 indexed exitId
+    );
+
     function boot(PaymentExitGameArgs.Args memory paymentExitGameArgs) 
         internal
     {

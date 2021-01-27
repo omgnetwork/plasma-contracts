@@ -439,7 +439,18 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
 
             describe('When all piggybacks are resolved', () => {
                 beforeEach(async () => {
-                    await this.exitGame.processExit(DUMMY_EXIT_ID, VAULT_ID.ERC20, erc20, otherAddress);
+                    const { logs } = await this.exitGame.processExit(
+                        DUMMY_EXIT_ID, VAULT_ID.ERC20, erc20, otherAddress,
+                    );
+                    this.processedLogs = logs;
+                });
+
+                it('should emit an event that exit is finalized', async () => {
+                    await expectEvent.inLogs(
+                        this.processedLogs,
+                        'InFlightExitFinalized',
+                        { exitId: new BN(DUMMY_EXIT_ID) },
+                    );
                 });
 
                 it('should transfer exit bond to the IFE bond owner', async () => {
