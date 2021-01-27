@@ -495,7 +495,7 @@ contract(
                                             );
                                         });
 
-                                        describe('And Then someone processes the claim after the waiting period', () => {
+                                        describe('And Then if someone attempts to processes the claim', () => {
                                             describe('When the waiting period passes', () => {
                                                 before(async () => {
                                                     await time.increase(time.duration.seconds(this.waitingPeriod).add(
