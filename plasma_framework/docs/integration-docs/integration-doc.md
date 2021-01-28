@@ -1105,7 +1105,8 @@ This section describes the events for an in-flight exit.
         bytes32 indexed txHash,
         bytes inFlightTx,
         uint256[] inputUtxosPos,
-        bytes[] inFlightTxWitnesses
+        bytes[] inFlightTxWitnesses,
+        bytes[] inputTxs
     );
 ```
 - An input has been piggybacked on an in-flight exit:

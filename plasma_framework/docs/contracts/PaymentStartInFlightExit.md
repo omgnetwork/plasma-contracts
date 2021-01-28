@@ -37,7 +37,7 @@ struct StartExitData {
 **Events**
 
 ```js
-event InFlightExitStarted(address indexed initiator, bytes32 indexed txHash, bytes  inFlightTx, uint256[]  inputUtxosPos, bytes[]  inFlightTxWitnesses);
+event InFlightExitStarted(address indexed initiator, bytes32 indexed txHash, bytes  inFlightTx, uint256[]  inputUtxosPos, bytes[]  inFlightTxWitnesses, bytes[] inputTxs);
 ```
 
 ## Functions
@@ -77,10 +77,10 @@ Controller struct of PaymentStartInFlightExit
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| framework | PlasmaFramework |  | 
-| spendingConditionRegistry | SpendingConditionRegistry |  | 
-| transitionVerifier | IStateTransitionVerifier |  | 
-| supportedTxType | uint256 |  | 
+| framework | PlasmaFramework |  |
+| spendingConditionRegistry | SpendingConditionRegistry |  |
+| transitionVerifier | IStateTransitionVerifier |  |
+| supportedTxType | uint256 |  |
 
 ### run
 
@@ -94,9 +94,9 @@ function run(struct PaymentStartInFlightExit.Controller self, struct PaymentExit
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| self | struct PaymentStartInFlightExit.Controller | The controller struct | 
-| inFlightExitMap | struct PaymentExitDataModel.InFlightExitMap | The storage of all in-flight exit data | 
-| args | struct PaymentInFlightExitRouterArgs.StartExitArgs | Arguments of start in-flight exit function from client | 
+| self | struct PaymentStartInFlightExit.Controller | The controller struct |
+| inFlightExitMap | struct PaymentExitDataModel.InFlightExitMap | The storage of all in-flight exit data |
+| args | struct PaymentInFlightExitRouterArgs.StartExitArgs | Arguments of start in-flight exit function from client |
 
 ### createStartExitData
 
@@ -109,8 +109,8 @@ returns(struct PaymentStartInFlightExit.StartExitData)
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| controller | struct PaymentStartInFlightExit.Controller |  | 
-| args | struct PaymentInFlightExitRouterArgs.StartExitArgs |  | 
+| controller | struct PaymentStartInFlightExit.Controller |  |
+| args | struct PaymentInFlightExitRouterArgs.StartExitArgs |  |
 
 ### decodeInputTxsPositions
 
@@ -123,7 +123,7 @@ returns(struct PosLib.Position[])
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| inputUtxosPos | uint256[] |  | 
+| inputUtxosPos | uint256[] |  |
 
 ### getOutputIds
 
@@ -136,9 +136,9 @@ returns(bytes32[])
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| controller | struct PaymentStartInFlightExit.Controller |  | 
-| inputTxs | bytes[] |  | 
-| utxoPos | struct PosLib.Position[] |  | 
+| controller | struct PaymentStartInFlightExit.Controller |  |
+| inputTxs | bytes[] |  |
+| utxoPos | struct PosLib.Position[] |  |
 
 ### verifyStart
 
@@ -150,8 +150,8 @@ function verifyStart(struct PaymentStartInFlightExit.StartExitData exitData, str
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| exitData | struct PaymentStartInFlightExit.StartExitData |  | 
-| inFlightExitMap | struct PaymentExitDataModel.InFlightExitMap |  | 
+| exitData | struct PaymentStartInFlightExit.StartExitData |  |
+| inFlightExitMap | struct PaymentExitDataModel.InFlightExitMap |  |
 
 ### verifyExitNotStarted
 
@@ -163,8 +163,8 @@ function verifyExitNotStarted(uint168 exitId, struct PaymentExitDataModel.InFlig
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| exitId | uint168 |  | 
-| inFlightExitMap | struct PaymentExitDataModel.InFlightExitMap |  | 
+| exitId | uint168 |  |
+| inFlightExitMap | struct PaymentExitDataModel.InFlightExitMap |  |
 
 ### verifyInFlightTxType
 
@@ -176,7 +176,7 @@ function verifyInFlightTxType(struct PaymentStartInFlightExit.StartExitData exit
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| exitData | struct PaymentStartInFlightExit.StartExitData |  | 
+| exitData | struct PaymentStartInFlightExit.StartExitData |  |
 
 ### verifyNumberOfInputsMatchesNumberOfInFlightTransactionInputs
 
@@ -188,7 +188,7 @@ function verifyNumberOfInputsMatchesNumberOfInFlightTransactionInputs(struct Pay
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| exitData | struct PaymentStartInFlightExit.StartExitData |  | 
+| exitData | struct PaymentStartInFlightExit.StartExitData |  |
 
 ### verifyNoInputSpentMoreThanOnce
 
@@ -200,7 +200,7 @@ function verifyNoInputSpentMoreThanOnce(struct PaymentTransactionModel.Transacti
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| inFlightTx | struct PaymentTransactionModel.Transaction |  | 
+| inFlightTx | struct PaymentTransactionModel.Transaction |  |
 
 ### verifyInputTransactionIsStandardFinalized
 
@@ -212,7 +212,7 @@ function verifyInputTransactionIsStandardFinalized(struct PaymentStartInFlightEx
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| exitData | struct PaymentStartInFlightExit.StartExitData |  | 
+| exitData | struct PaymentStartInFlightExit.StartExitData |  |
 
 ### verifyInputsSpent
 
@@ -224,7 +224,7 @@ function verifyInputsSpent(struct PaymentStartInFlightExit.StartExitData exitDat
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| exitData | struct PaymentStartInFlightExit.StartExitData |  | 
+| exitData | struct PaymentStartInFlightExit.StartExitData |  |
 
 ### verifyStateTransition
 
@@ -236,7 +236,7 @@ function verifyStateTransition(struct PaymentStartInFlightExit.StartExitData exi
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| exitData | struct PaymentStartInFlightExit.StartExitData |  | 
+| exitData | struct PaymentStartInFlightExit.StartExitData |  |
 
 ### startExit
 
@@ -248,8 +248,8 @@ function startExit(struct PaymentStartInFlightExit.StartExitData startExitData, 
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| startExitData | struct PaymentStartInFlightExit.StartExitData |  | 
-| inFlightExitMap | struct PaymentExitDataModel.InFlightExitMap |  | 
+| startExitData | struct PaymentStartInFlightExit.StartExitData |  |
+| inFlightExitMap | struct PaymentExitDataModel.InFlightExitMap |  |
 
 ### getYoungestInputUtxoPosition
 
@@ -262,7 +262,7 @@ returns(uint256)
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| inputUtxosPos | struct PosLib.Position[] |  | 
+| inputUtxosPos | struct PosLib.Position[] |  |
 
 ### setInFlightExitInputs
 
@@ -274,8 +274,8 @@ function setInFlightExitInputs(struct PaymentExitDataModel.InFlightExit ife, str
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| ife | struct PaymentExitDataModel.InFlightExit |  | 
-| exitData | struct PaymentStartInFlightExit.StartExitData |  | 
+| ife | struct PaymentExitDataModel.InFlightExit |  |
+| exitData | struct PaymentStartInFlightExit.StartExitData |  |
 
 ### setInFlightExitOutputs
 
@@ -287,8 +287,8 @@ function setInFlightExitOutputs(struct PaymentExitDataModel.InFlightExit ife, st
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| ife | struct PaymentExitDataModel.InFlightExit |  | 
-| exitData | struct PaymentStartInFlightExit.StartExitData |  | 
+| ife | struct PaymentExitDataModel.InFlightExit |  |
+| exitData | struct PaymentStartInFlightExit.StartExitData |  |
 
 ## Contracts
 
