@@ -24,6 +24,7 @@ contract('Quasar', ([authority, quasarOwner, quasarMaintainer, alice]) => {
             INITIAL_IMMUNE_EXIT_GAME,
             { from: authority },
         );
+        this.plasmaFramework.activateChildChain({ from: authority });
         this.childBlockInterval = await this.plasmaFramework.childBlockInterval();
         // Submit some blocks to have a safe block margin
         const DUMMY_BLOCK_HASH = web3.utils.sha3('dummy root');
