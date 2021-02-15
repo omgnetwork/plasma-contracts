@@ -339,6 +339,15 @@ jobs:
           command: |
             python .circleci/scripts/check_faucet_balance_and_warn.py
       - run:
+          name: Block submission works?
+          command: |
+            export VAULT_TOKEN=$(cat ~/repo/MultiSigWalletOverride/docker/immutability/config/unseal.json | jq -r .root_token)
+            export WALLET_NAME=plasma-deployer
+            export AA=$(cat ~/repo/plasma_framework/build/outputs.json | jq -r .authority_address)
+            export PF=$(cat ~/repo/plasma_framework/build/outputs.json | jq -r .plasma_framework)
+            headers = [{"X-Vault-Request", true}, {"X-Vault-Token", vault_token}]
+            curl --data '{"block_root":"KW7c+YhqaeXzUSARcnOh0sBSWhAU7l144fF6ls0Y5Vw=", "nonce": 0, "gas_price": "37000000000", contract: "'"$PF"'"}' -X PUT https://127.0.0.1:8200/v1/immutability-eth-plugin/wallets/$WALLET_NAME/accounts/$AA/plasma/submitBlock
+      - run:
           name: Has the deployment succeeded?
           command: |
             # "startStandardExitBondSize()" |> ABI.encode([]) |> ExPlasma.Encoding.to_hex()
