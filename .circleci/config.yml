@@ -74,7 +74,7 @@ jobs:
       - run: |
           echo $GCLOUD_SERVICE_KEY | gcloud auth activate-service-account --key-file=-
           gcloud auth configure-docker --quiet
-      - run: docker login -u $DOCKER_USER -p $DOCKER_PASS    
+      - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
       - run:
           name: Setup data dir
           command: |
@@ -135,14 +135,15 @@ jobs:
           key: dependencies-machine-v1-{{ checksum "~/repo/plasma_framework/package-lock.json" }}
           paths:
             - ~/repo/plasma_framework/node_modules
-      - run: 
+      - run:
           name: Docker logs
           working_directory: ~/repo/MultiSigWalletOverride
           background: true
-          command: | 
+          command: |
             docker-compose logs -f
       - run:
           name: Deploy Plasma Contracts
+          working_directory: ~/repo/plasma_framework
           command: |
             export VAULT_TOKEN=$(cat ../MultiSigWalletOverride/docker/immutability/config/unseal.json | jq -r .root_token)
             npx truffle migrate --network local
@@ -151,8 +152,13 @@ jobs:
             VAULT_ADDR: https://127.0.0.1:8200
             NODE_TLS_REJECT_UNAUTHORIZED: 0
             VAULT_RPC_REMOTE_URL: http://ganache:8545
-          working_directory: ~/repo/plasma_framework
-      
+      - run:
+          name: Has the deployment succeeded?
+          command: |
+            # "startStandardExitBondSize()" |> ABI.encode([]) |> ExPlasma.Encoding.to_hex()
+            export PEG=$(cat plasma_framework/build/outputs.json | jq -r .payment_exit_game)
+            curl --data '{"jsonrpc":"2.0","method": "eth_call", "params": [{"from": "0xd6858A28aA07A1cd8cA285443e80E2b0A031d50d", "to": "'"$PEG"'", "data": "0xfe32a124"}, "latest"], "id": 8}' http://127.0.0.1:8545 | jq -r '.' | ( ! grep "error" )
+
   Truffle tests:
     executor: truffle_executor
     working_directory: ~/repo
@@ -282,11 +288,11 @@ jobs:
       - run: |
           echo $GCLOUD_SERVICE_KEY | gcloud auth activate-service-account --key-file=-
           gcloud -q auth configure-docker
-      - run: docker login -u $DOCKER_USER -p $DOCKER_PASS    
+      - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
       - run:
           name: Build docker
           command: |
-            docker build -t omisego/plasma-contracts . --build-arg VAULT=true  
+            docker build -t omisego/plasma-contracts . --build-arg VAULT=true
       - run:
           name: Start services
           command: |
@@ -331,6 +337,13 @@ jobs:
           name: Check faucet balance
           command: |
             python .circleci/scripts/check_faucet_balance_and_warn.py
+      - run:
+          name: Has the deployment succeeded?
+          command: |
+            # "startStandardExitBondSize()" |> ABI.encode([]) |> ExPlasma.Encoding.to_hex()
+            export PEG=$(cat plasma_framework/build/outputs.json | jq -r .payment_exit_game)
+            curl --data '{"jsonrpc":"2.0","method": "eth_call", "params": [{"from": "0xd6858A28aA07A1cd8cA285443e80E2b0A031d50d", "to": "'"$PEG"'", "data": "0xfe32a124"}, "latest"], "id": 8}' https://rinkeby.infura.io/v3/${INFURA_API_TOKEN} | jq -r '.' | ( ! grep "error" )
+
 
   Deploy to Rinkeby:
     machine:
@@ -380,7 +393,6 @@ workflows:
   Other:
     jobs:
       - Deploy with Vault using docker-compose
-
   Run python slow tests:
     jobs:
       - Python long running tests
