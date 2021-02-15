@@ -157,7 +157,9 @@ jobs:
           command: |
             # "startStandardExitBondSize()" |> ABI.encode([]) |> ExPlasma.Encoding.to_hex()
             export PEG=$(cat plasma_framework/build/outputs.json | jq -r .payment_exit_game)
-            curl --data '{"jsonrpc":"2.0","method": "eth_call", "params": [{"from": "0xd6858A28aA07A1cd8cA285443e80E2b0A031d50d", "to": "'"$PEG"'", "data": "0xfe32a124"}, "latest"], "id": 8}' http://127.0.0.1:8545 | jq -r '.' | ( ! grep "error" )
+            response=$(curl --data '{"jsonrpc":"2.0","method": "eth_call", "params": [{"from": "0xd6858A28aA07A1cd8cA285443e80E2b0A031d50d", "to": "'"$PEG"'", "data": "0xfe32a124"}, "latest"], "id": 8}' http://127.0.0.1:8545)
+            echo $response | jq -r '.'
+            echo $response | ( ! grep "error" )
 
   Truffle tests:
     executor: truffle_executor
@@ -341,7 +343,10 @@ jobs:
           command: |
             # "startStandardExitBondSize()" |> ABI.encode([]) |> ExPlasma.Encoding.to_hex()
             export PEG=$(cat plasma_framework/build/outputs.json | jq -r .payment_exit_game)
-            curl --data '{"jsonrpc":"2.0","method": "eth_call", "params": [{"from": "0xd6858A28aA07A1cd8cA285443e80E2b0A031d50d", "to": "'"$PEG"'", "data": "0xfe32a124"}, "latest"], "id": 8}' https://rinkeby.infura.io/v3/${INFURA_API_TOKEN} | jq -r '.' | ( ! grep "error" )
+            response=$(curl --data '{"jsonrpc":"2.0","method": "eth_call", "params": [{"from": "0xd6858A28aA07A1cd8cA285443e80E2b0A031d50d", "to": "'"$PEG"'", "data": "0xfe32a124"}, "latest"], "id": 8}' https://rinkeby.infura.io/v3/${INFURA_API_TOKEN})
+            echo $response | jq -r '.'
+            echo $response | ( ! grep "error" )
+
 
 
   Deploy to Rinkeby:
@@ -410,10 +415,11 @@ workflows:
             branches:
               only:
                 - v2.0.0
-      - Deploy to Rinkeby with Gnosis and Vault:
-          requires:
-            - Deploy to Rinkeby
-          filters:
-            branches:
-              only:
-                - v2.0.0
+      - Deploy to Rinkeby with Gnosis and Vault
+      #:
+          # requires:
+          #   - Deploy to Rinkeby
+          # filters:
+          #   branches:
+          #     only:
+          #       - v2.0.0
