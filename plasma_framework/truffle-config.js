@@ -32,6 +32,7 @@ module.exports = {
             ),
             gasPrice: process.env.GAS_PRICE || 20000000000, // default 20 gwei
             network_id: '*',
+            timeoutBlocks: 50000,
         },
     },
 
