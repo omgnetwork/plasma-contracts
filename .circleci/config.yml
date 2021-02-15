@@ -322,10 +322,11 @@ jobs:
           name: Deploy Plasma contracts to Rinkeby
           no_output_timeout: 1h
           command: |
-            mkdir /tmp/build_output/
-            chmod -R 777 /tmp/build_output/
+            mkdir /tmp/plasma_framework_output/
+            sudo chmod -R 777 /tmp/plasma_framework_output/
             docker run --rm \
-            -v /tmp/build_output/:/home/plasma-contracts/ \
+            -v /tmp:/home/plasma-contracts/MultiSigWallet/build \
+            -v /tmp/plasma_framework_output:/home/plasma-contracts/plasma_framework/build/ \
             --network=multisigwalletoverride_default \
             -e VAULT=true \
             -e VAULT_ADDR=https://vault_server:8200 \
@@ -346,14 +347,14 @@ jobs:
           command: |
             export VAULT_TOKEN=$(cat ~/repo/MultiSigWalletOverride/docker/immutability/config/unseal.json | jq -r .root_token)
             export WALLET_NAME=plasma-deployer
-            export AA=$(cat /tmp/build_output/plasma_framework/build/outputs.json | jq -r .authority_address)
-            export PF=$(cat /tmp/build_output/plasma_framework/build/outputs.json | jq -r .plasma_framework)
+            export AA=$(cat /tmp/build_output/outputs.json | jq -r .authority_address)
+            export PF=$(cat /tmp/build_output/outputs.json | jq -r .plasma_framework)
             curl -H "X-Vault-Request: true" -H 'X-Vault-Token: "'"$VAULT_TOKEN"'"' --data '{"block_root":"KW7c+YhqaeXzUSARcnOh0sBSWhAU7l144fF6ls0Y5Vw=", "nonce": 0, "gas_price": "37000000000", contract: "'"$PF"'"}' -X PUT https://127.0.0.1:8200/v1/immutability-eth-plugin/wallets/$WALLET_NAME/accounts/$AA/plasma/submitBlock
       - run:
           name: Has the deployment succeeded?
           command: |
             # "startStandardExitBondSize()" |> ABI.encode([]) |> ExPlasma.Encoding.to_hex()
-            export PEG=$(cat /tmp/build_output/plasma_framework/build/outputs.json | jq -r .payment_exit_game)
+            export PEG=$(cat /tmp/build_output/outputs.json | jq -r .payment_exit_game)
             response=$(curl --data '{"jsonrpc":"2.0","method": "eth_call", "params": [{"from": "0xd6858A28aA07A1cd8cA285443e80E2b0A031d50d", "to": "'"$PEG"'", "data": "0xfe32a124"}, "latest"], "id": 8}' https://rinkeby.infura.io/v3/${INFURA_API_TOKEN})
             echo $response | jq -r '.'
             echo $response | ( ! grep "error" )
