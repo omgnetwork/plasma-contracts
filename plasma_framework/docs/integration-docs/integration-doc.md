@@ -629,7 +629,8 @@ PlasmaFramework.processExits({
   uint256 vaultId,
   address token,
   uint160 topExitId,
-  uint256 maxExitsToProcess
+  uint256 maxExitsToProcess,
+  bytes32 senderData
 })
 ```
 
@@ -656,6 +657,8 @@ If you're trying to process only your own exit, set your exitId here.
 #### maxExitsToProcess (uint256)
 Defines the maximum number of exits you wish to process. Set to `1` to process only your own exit.
 
+#### senderData (bytes32)
+A keccak256 hash of the sender's address.
 
 ### Example: Processing a standard exit
 
@@ -664,7 +667,8 @@ PlasmaFramework.processExits([
   1, # vaultId
   0x0000000000000000000000000000000000000000, # token, ETH
   707372774235521271159305957085057710072500938, # topExitId
-  1 # maxExitsToProcess
+  1, # maxExitsToProcess
+  0x984f41eb67eb23e42139410eade1008a90b01a018ce2577fea44262c6fc16ce3 # senderData
 ])
 ```
 
@@ -1020,7 +1024,8 @@ PlasmaFramework.processExits({
   uint256 vaultId,
   address token,
   uint160 topExitId,
-  uint256 maxExitsToProcess
+  uint256 maxExitsToProcess,
+  bytes32 senderData
 })
 ```
 
@@ -1049,6 +1054,9 @@ Defines the maximum number of exits you wish to process. Set to `1` to process o
 
 ***Note**: `processExits()` will only process exits that have completed their exit period. You can find out which (if any) exits were processed via the `ExitFinalized` or `ProcessedExitsNum` events *
 
+#### senderData (bytes32)
+A keccak256 hash of the sender's address.
+
 ### Example: Processing an in-flight exit
 
 ```
@@ -1056,7 +1064,8 @@ PlasmaFramework.processExits([
   1, # vaultId
   0x0000000000000000000000000000000000000000, # token, ETH
   707372774235521271159305957085057710072500938, # topExitId
-  1 # maxExitsToProcess
+  1, # maxExitsToProcess
+  0x984f41eb67eb23e42139410eade1008a90b01a018ce2577fea44262c6fc16ce3 # senderData
 ])
 ```
 

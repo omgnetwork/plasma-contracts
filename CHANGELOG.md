@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Pre-Release V2
 
+Enrich more contract Events - 
+Add missing in-flight exit finalized event and more data to exisiting contract events
+- feat: emit an event indicating that in-flight exit has finalized ([#647](https://github.com/omgnetwork/plasma-contracts/pull/647))
+- feat: add outputTx to SE event ([#737](https://github.com/omgnetwork/plasma-contracts/pull/737))
+- feat: add inputTx to IFE event ([#740](https://github.com/omgnetwork/plasma-contracts/pull/740))
+
+
+
+---
+
+- chore: cleanup unused accounts, make addresses consistent([#722](https://github.com/omgnetwork/plasma-contracts/pull/722), [#718](https://github.com/omgnetwork/plasma-contracts/pull/718))
+- chore: add TOB audit report([#717](https://github.com/omgnetwork/plasma-contracts/pull/717))
+- fix: migration if/else ([#716](https://github.com/omgnetwork/plasma-contracts/pull/716))
+- chore: depbot upgrades([#715](https://github.com/omgnetwork/plasma-contracts/pull/715), [#721](https://github.com/omgnetwork/plasma-contracts/pull/721), [#727](https://github.com/omgnetwork/plasma-contracts/pull/727), [#725](https://github.com/omgnetwork/plasma-contracts/pull/725))
+- fix: deployment with multisig and vault([#712](https://github.com/omgnetwork/plasma-contracts/pull/712))
+
+
+---
+
 Simplify Bond and Exit Bounty - [2020-10-23]
 Have the Exit Bounty as a portion from the Exit Bond  
 - docs: add Bond Design doc ([#702](https://github.com/omgnetwork/plasma-contracts/pull/702))
