@@ -63,11 +63,14 @@ const registerVault = async (whatLog, plasmaFramework, ethVault, key, gnosisMult
 
 const paymentExitGameInit = async (whatLog, paymentExitGame, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress) => {
     const paymentExitGameInitCall = web3.eth.abi.encodeFunctionCall(paymentExitGame.abi.find(o => o.name === 'init'), []);
+    console.log(`paymentExitGameInitCall: ${util.inspect(paymentExitGameInitCall, { showHidden: false, depth: null })}`);
     const gnosisPaymentExitGameInit = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [paymentExitGame.address, 0, paymentExitGameInitCall]);
+    console.log(`gnosisPaymentExitGameInit: ${util.inspect(gnosisPaymentExitGameInit, { showHidden: false, depth: null })}`);
     const estimateGas = await web3.eth.estimateGas({ to: gnosisMultisigAddress, from: deployerAddress, data: gnosisPaymentExitGameInit });
     const gas = estimateGas * 4;
     console.log(`The amount of gas used for ${whatLog}: ${gas}`);
     const transaction = await web3.eth.sendTransaction({ gas: gas, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisPaymentExitGameInit });
+    console.log(`transaction: ${util.inspect(transaction, { showHidden: false, depth: null })}`);
     console.log(`Submitted transaction with hash for ${whatLog}: ${transaction.transactionHash}`);
     console.log(`Full log for ${whatLog}: ${transaction}`);
     await waitForReceipt(whatLog, transaction);
@@ -128,8 +131,8 @@ module.exports = async (
             name: 'submitTransaction',
             outputs: [{ name: 'transactionId', type: 'uint256' }],
             payable: false,
-            type: 'function',
-            signature: '0xc6427474' };
+            type: 'function' };
+
         await setDepositVerifier('ETH setDepositVerifier', ethVault, ethDepositVerifier, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress);
         await registerVault('ETH registerVault', plasmaFramework, ethVault, config.registerKeys.vaultId.eth, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress);
         await setDepositVerifier('ERC20 setDepositVerifier', erc20Vault, erc20DepositVerifier, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress);
