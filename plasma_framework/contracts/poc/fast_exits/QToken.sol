@@ -5,7 +5,7 @@ import "../../src/utils/OnlyFromAddress.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
 
-contract QToken is ERC20,ERC20Detailed,OnlyFromAddress {
+contract QToken is ERC20, ERC20Detailed, OnlyFromAddress {
 
     address public quasarContract;
 
