@@ -1,9 +1,11 @@
 const Quasar = artifacts.require('Quasar');
+const QToken = artifacts.require('QToken');
+const ERC20Mintable = artifacts.require('ERC20Mintable');
 const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const SpendingConditionMock = artifacts.require('SpendingConditionMock');
 const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry');
 
-const { BN, expectRevert } = require('openzeppelin-test-helpers');
+const { BN, expectRevert, constants } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 const { TX_TYPE, OUTPUT_TYPE } = require('../../../helpers/constants.js');
 const { buildUtxoPos } = require('../../../helpers/positions.js');
@@ -16,6 +18,7 @@ contract('Quasar', ([authority, quasarOwner, quasarMaintainer, alice]) => {
     const SAFE_BLOCK_MARGIN = 10;
     const WAITING_PERIOD = 3600;
     const BOND_VALUE = 100;
+    const ETH = constants.ZERO_ADDRESS;
 
     const setupAllContracts = async () => {
         this.plasmaFramework = await SpyPlasmaFramework.new(
@@ -40,6 +43,8 @@ contract('Quasar', ([authority, quasarOwner, quasarMaintainer, alice]) => {
         await this.spendingConditionRegistry.registerSpendingCondition(
             OUTPUT_TYPE.PAYMENT, TX_TYPE.PAYMENT, this.spendingCondition.address,
         );
+        this.erc20 = await ERC20Mintable.new();
+        await this.erc20.mint(alice, 3000000);
 
         this.quasar = await Quasar.new(
             this.plasmaFramework.address,
@@ -50,9 +55,25 @@ contract('Quasar', ([authority, quasarOwner, quasarMaintainer, alice]) => {
             BOND_VALUE,
             { from: quasarMaintainer },
         );
+
+        this.qEth = await QToken.new('Quasar Ether', 'qETH', 18, this.quasar.address);
+        await this.quasar.registerQToken(
+            ETH,
+            this.qEth.address,
+            5000,
+            { from: quasarMaintainer },
+        );
+
+        this.qErc20 = await QToken.new('Quasar Token', 'qERC', 18, this.quasar.address);
+        await this.quasar.registerQToken(
+            this.erc20.address,
+            this.qErc20.address,
+            5000,
+            { from: quasarMaintainer },
+        );
     };
 
-    describe('deposit', () => {
+    describe('safe block margin', () => {
         beforeEach(setupAllContracts);
 
         it('should set the safe block margin', async () => {
@@ -96,6 +117,191 @@ contract('Quasar', ([authority, quasarOwner, quasarMaintainer, alice]) => {
                 ),
                 'The UTXO is from a block later than the safe limit',
             );
+        });
+    });
+
+    describe('Quasar Capacity', () => {
+        before(setupAllContracts);
+
+        describe('Supply Eth', () => {
+            before(async () => {
+                this.aliceSuppliedAmount = new BN(3000000);
+                await this.quasar.addEthCapacity({ from: alice, value: this.aliceSuppliedAmount });
+            });
+
+            it('should update the pool supply', async () => {
+                const quasarUsableCapacity = await this.quasar.tokenUsableCapacity(ETH);
+                const { poolSupply } = await this.quasar.tokenData(ETH);
+
+                expect(poolSupply).to.be.bignumber.equal(
+                    quasarUsableCapacity,
+                ).equal(this.aliceSuppliedAmount);
+            });
+
+            describe('Withdraw Eth', () => {
+                before(async () => {
+                    const aliceQTokenBalance = await this.qEth.balanceOf(alice);
+                    await this.quasar.withdrawFunds(ETH, aliceQTokenBalance, { from: alice });
+                });
+
+                it('should update the pool supply', async () => {
+                    const quasarUsableCapacity = await this.quasar.tokenUsableCapacity(ETH);
+                    const aliceQTokenBalance = await this.qEth.balanceOf(alice);
+
+                    expect(aliceQTokenBalance).to.be.bignumber.equal(new BN(0));
+                    expect(quasarUsableCapacity).to.be.bignumber.equal(new BN(0));
+                });
+            });
+        });
+
+        describe('Supply Erc20', () => {
+            before(async () => {
+                this.aliceSuppliedAmount = new BN(3000000);
+                await this.erc20.approve(this.quasar.address, this.aliceSuppliedAmount, { from: alice });
+                await this.quasar.addTokenCapacity(this.erc20.address, this.aliceSuppliedAmount, { from: alice });
+            });
+
+            it('should update the pool supply', async () => {
+                const quasarUsableCapacity = await this.quasar.tokenUsableCapacity(this.erc20.address);
+                const { poolSupply } = await this.quasar.tokenData(this.erc20.address);
+
+                expect(poolSupply).to.be.bignumber.equal(
+                    quasarUsableCapacity,
+                ).equal(this.aliceSuppliedAmount);
+            });
+
+            describe('Withdraw Erc20', () => {
+                before(async () => {
+                    const aliceQTokenBalance = await this.qErc20.balanceOf(alice);
+                    await this.quasar.withdrawFunds(this.erc20.address, aliceQTokenBalance, { from: alice });
+                });
+
+                it('should update the pool supply', async () => {
+                    const quasarUsableCapacity = await this.quasar.tokenUsableCapacity(this.erc20.address);
+                    const aliceQTokenBalance = await this.qEth.balanceOf(alice);
+
+                    expect(aliceQTokenBalance).to.be.bignumber.equal(new BN(0));
+                    expect(quasarUsableCapacity).to.be.bignumber.equal(new BN(0));
+                });
+            });
+        });
+    });
+
+    describe('qToken', () => {
+        beforeEach(setupAllContracts);
+
+        it('should register qToken for an erc20', async () => {
+            this.newErc20 = await ERC20Mintable.new();
+            this.newQErc20 = await QToken.new('Quasar New Token', 'qNERC', 18, this.quasar.address);
+            await this.quasar.registerQToken(
+                this.newErc20.address,
+                this.newQErc20.address,
+                5000,
+                { from: quasarMaintainer },
+            );
+
+            const { qTokenAddress } = await this.quasar.tokenData(this.newErc20.address);
+            expect(qTokenAddress).to.be.equal(this.newQErc20.address);
+        });
+
+        it('should not allow to replace registration', async () => {
+            this.newErc20 = await ERC20Mintable.new();
+            this.newQErc20 = await QToken.new('Quasar New Token', 'qNERC', 18, this.quasar.address);
+            await this.quasar.registerQToken(
+                this.newErc20.address,
+                this.newQErc20.address,
+                5000,
+                { from: quasarMaintainer },
+            );
+
+            await expectRevert(
+                this.quasar.registerQToken(
+                    this.newErc20.address,
+                    this.newQErc20.address,
+                    5000,
+                    { from: quasarMaintainer },
+                ),
+                'QToken for the token already exists',
+            );
+        });
+
+        it('should fail to register qToken if not called by the quasar Maintainer', async () => {
+            this.newErc20 = await ERC20Mintable.new();
+            this.newQErc20 = await QToken.new('Quasar New Token', 'qNERC', 18, this.quasar.address);
+
+            await expectRevert(
+                this.quasar.registerQToken(
+                    this.newErc20.address,
+                    this.newQErc20.address,
+                    5000,
+                    { from: alice },
+                ),
+                'Only the Quasar Maintainer can invoke this method',
+            );
+        });
+
+        it('should fail to mint qToken if not called by quasar', async () => {
+            await expectRevert(
+                this.qEth.mint(
+                    quasarMaintainer,
+                    500,
+                    { from: quasarMaintainer },
+                ),
+                'Caller address is unauthorized',
+            );
+        });
+
+        it('should fail to burn qToken if not called by quasar', async () => {
+            await expectRevert(
+                this.qEth.burn(
+                    quasarMaintainer,
+                    500,
+                    { from: quasarMaintainer },
+                ),
+                'Caller address is unauthorized',
+            );
+        });
+    });
+
+    describe('Quasar freeze during Byzantine state', () => {
+        beforeEach(setupAllContracts);
+
+        it('should fail to pause Quasar if not called by the quasar maintainer', async () => {
+            await expectRevert(
+                this.quasar.pauseQuasar(
+                    { from: alice },
+                ),
+                'Only the Quasar Maintainer can invoke this method',
+            );
+        });
+
+        it('should fail to obtain ticket if quasar is paused', async () => {
+            await this.quasar.pauseQuasar({ from: quasarMaintainer });
+            const dummyTx = '0x0';
+            const dummyProof = '0x0';
+
+            const safeBlockNum = await this.quasar.getLatestSafeBlock();
+            const utxoPos = buildUtxoPos(safeBlockNum, 0, 0);
+
+            await expectRevert(
+                this.quasar.obtainTicket(
+                    utxoPos,
+                    dummyTx,
+                    dummyProof,
+                    {
+                        from: alice,
+                        value: BOND_VALUE,
+                    },
+                ),
+                'The Quasar contract is paused',
+            );
+        });
+
+        it('should allow quasar maintainer to un-freeze contract', async () => {
+            await this.quasar.resumeQuasar({ from: quasarMaintainer });
+
+            const pauseStatus = await this.quasar.isPaused();
+            expect(pauseStatus).to.be.false;
         });
     });
 });

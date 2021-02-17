@@ -47,9 +47,12 @@ contract Quasar is QuasarPool {
     uint256 public unclaimedBonds;
     bool public isPaused;
 
+    // outputValue is the size of the output
+    // reservedAmount is the liquid funds withdrawable
     struct Ticket {
         address payable outputOwner;
         uint256 validityTimestamp;
+        uint256 outputValue;
         uint256 reservedAmount;
         address token;
         uint256 bondValue;
@@ -64,15 +67,10 @@ contract Quasar is QuasarPool {
     }
 
     mapping (uint256 => Ticket) public ticketData;
-    mapping (uint256 => Claim) public ifeClaimData;
+    mapping (uint256 => Claim) private ifeClaimData;
 
     event NewTicketObtained(uint256 utxoPos);
     event IFEClaimSubmitted(uint256 utxoPos, uint160 exitId);
-    
-    modifier onlyQuasarMaintainer() {
-        require(msg.sender == quasarMaintainer, "Only the Quasar Maintainer can invoke this method");
-        _;
-    }
 
     modifier onlyWhenNotPaused() {
         require(!isPaused, "The Quasar contract is paused");
@@ -201,11 +199,16 @@ contract Quasar is QuasarPool {
             outputCreationTxInclusionProof
         ), "Provided Tx doesn't exist");
 
-        require(outputData.amount <= tokenUsableCapacity[outputData.token], "Requested amount exceeds the Usable Liqudity");
-        require(outputData.amount != 0, "Requested amount cannot be zero");
+        uint256 quasarFee = tokenData[outputData.token].quasarFee;
 
-        tokenUsableCapacity[outputData.token] = tokenUsableCapacity[outputData.token].sub(outputData.amount);
-        ticketData[utxoPos] = Ticket(msg.sender, block.timestamp.add(TICKET_VALIDITY_PERIOD), outputData.amount, outputData.token, msg.value, rlpOutputCreationTx, false);
+        // can skip this check because tokenUsableCapacity confirms qToken exists
+        // require(tokenData[outputData.token].qTokenAddress != address(0), "QToken is not registered for the token");
+        require(outputData.amount > quasarFee, "Requested amount cannot be zero");
+        uint256 reservedAmount = outputData.amount.sub(quasarFee);
+        require(reservedAmount <= tokenUsableCapacity[outputData.token], "Requested amount exceeds the Usable Liqudity");
+
+        tokenUsableCapacity[outputData.token] = tokenUsableCapacity[outputData.token].sub(reservedAmount);
+        ticketData[utxoPos] = Ticket(msg.sender, block.timestamp.add(TICKET_VALIDITY_PERIOD), outputData.amount, reservedAmount, outputData.token, msg.value, rlpOutputCreationTx, false);
         emit NewTicketObtained(utxoPos);
     }
 
@@ -237,15 +240,9 @@ contract Quasar is QuasarPool {
 
         ticketData[utxoPos].isClaimed = true;
 
-        address payable outputOwner = ticketData[utxoPos].outputOwner;
-        address token = ticketData[utxoPos].token;
-        if (token == address(0)) {
-            uint256 totalAmount = ticketData[utxoPos].reservedAmount.add(ticketData[utxoPos].bondValue);
-            SafeEthTransfer.transferRevertOnError(outputOwner, totalAmount, SAFE_GAS_STIPEND);
-        } else {
-            IERC20(token).safeTransfer(outputOwner, ticketData[utxoPos].reservedAmount);
-            SafeEthTransfer.transferRevertOnError(outputOwner, ticketData[utxoPos].bondValue, SAFE_GAS_STIPEND);
-        }
+        utilize(ticketData[utxoPos].token, ticketData[utxoPos].outputValue);
+        
+        runPayout(utxoPos, ticketData[utxoPos].outputOwner, ticketData[utxoPos].token);
     }
 
     /**
@@ -257,6 +254,7 @@ contract Quasar is QuasarPool {
         verifyTicketValidityForClaim(utxoPos);
 
         verifyClaimTxCorrectlyFormed(utxoPos, inFlightClaimTx);
+
         //verify IFE started
         uint160 exitId = ExitId.getInFlightExitId(inFlightClaimTx);
         uint160[] memory exitIdArr = new uint160[](1);
@@ -271,7 +269,6 @@ contract Quasar is QuasarPool {
         ticketData[utxoPos].isClaimed = true;
         ifeClaimData[utxoPos] = Claim(inFlightClaimTx, block.timestamp.add(IFE_CLAIM_WAITING_PERIOD), true);
         emit IFEClaimSubmitted(utxoPos, exitId);
-        
     }
 
     /**
@@ -329,16 +326,11 @@ contract Quasar is QuasarPool {
     function processIfeClaim(uint256 utxoPos) public {
         require(block.timestamp > ifeClaimData[utxoPos].finalizationTimestamp, "The claim is not finalized yet");
         require(ifeClaimData[utxoPos].isValid, "The claim has already been claimed or challenged");
-        address payable outputOwner = ticketData[utxoPos].outputOwner;
         ifeClaimData[utxoPos].isValid = false;
-        address token = ticketData[utxoPos].token;
-        if (token == address(0)) {
-            uint256 totalAmount = ticketData[utxoPos].reservedAmount.add(ticketData[utxoPos].bondValue);
-            SafeEthTransfer.transferRevertOnError(outputOwner, totalAmount, SAFE_GAS_STIPEND);
-        } else {
-            IERC20(token).safeTransfer(outputOwner, ticketData[utxoPos].reservedAmount);
-            SafeEthTransfer.transferRevertOnError(outputOwner, ticketData[utxoPos].bondValue, SAFE_GAS_STIPEND);
-        }
+
+        utilize(ticketData[utxoPos].token, ticketData[utxoPos].outputValue);
+
+        runPayout(utxoPos, ticketData[utxoPos].outputOwner, ticketData[utxoPos].token);
     }
 
     ////////////////////////////////////////////	
@@ -400,18 +392,59 @@ contract Quasar is QuasarPool {
      * @param claimTx the Claim Tx to the quasar owner
     */
     function verifyClaimTxCorrectlyFormed(uint256 utxoPos, bytes memory claimTx) private {
-        PaymentTransactionModel.Transaction memory decodedTx = PaymentTransactionModel.decode(claimTx);
+        PaymentTransactionModel.Transaction memory decodedTx
+        = PaymentTransactionModel.decode(claimTx);
 
         // first input should be the Utxo with which ticket was obtained
         require(decodedTx.inputs[0] == bytes32(utxoPos), "The claim transaction does not spend the correct output");
 
         // first output should be the utxo for Quasar owner
-        FungibleTokenOutputModel.Output memory outputData = PaymentTransactionModel.getOutput(decodedTx, 0);
+        FungibleTokenOutputModel.Output memory outputData
+        = PaymentTransactionModel.getOutput(decodedTx, 0);
 
         // verify output to Quasar Owner
         require(verifyOwnership(outputData, quasarOwner), "The output is not owned by the quasar owner");
         // considering fee as a separate input
-        require(ticketData[utxoPos].reservedAmount == outputData.amount, "Wrong amount sent to quasar owner");
+        require(ticketData[utxoPos].outputValue == outputData.amount, "Wrong amount sent to quasar owner");
         require(ticketData[utxoPos].token == outputData.token, "Wrong token sent to quasar owner");
+    }
+
+    /**
+     * @dev Payout liquid funds
+     * @param utxoPos pos of the output, which is the ticket identifier
+     * @param outputOwner the recipient of the funds
+     * @param token the token to payout
+    */
+    function runPayout(uint256 utxoPos, address payable outputOwner, address token) private {
+        if (token == address(0)) {
+            uint256 totalAmount = ticketData[utxoPos].reservedAmount.add(ticketData[utxoPos].bondValue);
+            SafeEthTransfer.transferRevertOnError(outputOwner, totalAmount, SAFE_GAS_STIPEND);
+        } else {
+            IERC20(token).safeTransfer(outputOwner, ticketData[utxoPos].reservedAmount);
+            SafeEthTransfer.transferRevertOnError(outputOwner, ticketData[utxoPos].bondValue, SAFE_GAS_STIPEND);
+        }
+    }
+
+    /**
+     * @dev Utilize funds from the pool, update exchange rate
+     * @param token the token to payout
+     * @param amount the value of the output claimed
+    */
+    function utilize(address token, uint256 amount) internal {
+        address qTokenAddress = tokenData[token].qTokenAddress;
+        uint256 totalQTokenSupply = IERC20(qTokenAddress).totalSupply();
+        uint256 quasarFee = tokenData[token].quasarFee;
+        // exchangeRate updates to-
+        // k' = (fee + (k * qTotalSupply)) / qTotalSupply
+        // exchangeRate cannot update to zero,
+        // since poolSupply cannot be reduced to zero between obtaining and claiming ticket
+        // same with qTokenSupply
+        uint256 numerator = quasarFee.add(tokenData[token].poolSupply);
+        require(numerator != 0, "Issue with updating Exchange Rate ");
+        Exp memory exchangeRateScaled = Exponential.getExp(numerator, totalQTokenSupply);
+
+        tokenData[token].owedAmount = tokenData[token].owedAmount.add(amount);
+        tokenData[token].exchangeRate = exchangeRateScaled.mantissa;
+        tokenData[token].poolSupply = tokenData[token].poolSupply.add(quasarFee);
     }
 }
