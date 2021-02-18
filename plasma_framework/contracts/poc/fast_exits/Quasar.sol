@@ -67,7 +67,7 @@ contract Quasar is QuasarPool {
     }
 
     mapping (uint256 => Ticket) public ticketData;
-    mapping (uint256 => Claim) private ifeClaimData;
+    mapping (uint256 => Claim) public ifeClaimData;
 
     event NewTicketObtained(uint256 utxoPos);
     event IFEClaimSubmitted(uint256 utxoPos, uint160 exitId);
