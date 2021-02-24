@@ -180,7 +180,7 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
                 amount: TEST_IFE_OUTPUT_AMOUNT,
                 piggybackBondSize: PIGGYBACK_BOND,
                 bountySize: PROCESS_EXIT_BOUNTY,
-            }, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData],
+            }, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData],
             bondSize: DUMMY_IFE_BOND_SIZE,
         };
 

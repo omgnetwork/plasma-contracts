@@ -146,7 +146,7 @@ contract('PaymentPiggybackInFlightExitOnInput', ([_, alice, inputOwner, nonInput
                     amount: outputAmount,
                     piggybackBondSize: 0,
                     bountySize: 0,
-                }, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData],
+                }, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData],
                 bondSize: this.startIFEBondSize.toString(),
             };
 

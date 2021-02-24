@@ -13,7 +13,7 @@ const OUTPUT = new FungibleTransactionOutput(OUTPUT_TYPE.PAYMENT, 100, OUTPUT_GU
 
 contract('PaymentTransactionModel', ([alice]) => {
     const MAX_INPUT_NUM = 4;
-    const MAX_OUTPUT_NUM = 4;
+    const MAX_OUTPUT_NUM = 5;
 
     before(async () => {
         this.test = await PaymentTransactionModelMock.new();

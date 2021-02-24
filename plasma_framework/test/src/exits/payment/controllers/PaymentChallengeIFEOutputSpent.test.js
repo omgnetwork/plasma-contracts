@@ -129,7 +129,7 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob, otherAddress]) => {
                     amount: AMOUNT,
                     piggybackBondSize: PIGGYBACK_BOND,
                     bountySize: PIGGYBACK_BOND,
-                }, DUMMY_WITHDRAW_DATA, DUMMY_WITHDRAW_DATA],
+                }, DUMMY_WITHDRAW_DATA, DUMMY_WITHDRAW_DATA, DUMMY_WITHDRAW_DATA],
             };
 
             return {

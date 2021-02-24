@@ -133,7 +133,7 @@ contract('PaymentDeleteInFlightExit', ([_, bondOwner, inputOwner, outputOwner]) 
                     amount: outputAmount,
                     piggybackBondSize: 0,
                     bountySize: 0,
-                }, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData],
+                }, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData],
                 bondSize: this.startIFEBondSize.toString(),
             };
 

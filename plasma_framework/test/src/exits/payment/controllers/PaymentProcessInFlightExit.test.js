@@ -140,7 +140,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
                 amount: TEST_OUTPUT_AMOUNT,
                 piggybackBondSize: this.piggybackBondSize.toString(),
                 bountySize,
-            }, emptyWithdrawData],
+            }, emptyWithdrawData, emptyWithdrawData],
         };
 
         return inFlightExitData;

@@ -153,7 +153,7 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                     amount: outputAmount,
                     piggybackBondSize: PIGGYBACK_BOND,
                     bountySize: PROCESS_EXIT_BOUNTY,
-                }, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData],
+                }, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData],
             };
 
             const exitId = await this.exitIdHelper.getInFlightExitId(rlpInFlightTxBytes);
