@@ -822,14 +822,14 @@ contract(
                                         );
 
                                         const expectedQuasarMaintainerBalance = quasarMaintainerBalanceBeforeWithdraw
-                                        .add(this.qMaintainerWithdrawAmount)
-                                        .addn(this.dummyQuasarBondValue)
-                                        .sub(await spentOnGas(txUnclaimedBonds.receipt))
-                                        .sub(await spentOnGas(txEthWithdrawal.receipt));
+                                            .add(this.qMaintainerWithdrawAmount)
+                                            .addn(this.dummyQuasarBondValue)
+                                            .sub(await spentOnGas(txUnclaimedBonds.receipt))
+                                            .sub(await spentOnGas(txEthWithdrawal.receipt));
 
                                         expect(quasarMaintainerBalanceAfterWithdraw).to.be.bignumber.equal(
                                             expectedQuasarMaintainerBalance,
-                                        )
+                                        );
                                     });
                                 });
                             });
@@ -1691,8 +1691,15 @@ contract(
                                             this.carolQTokenBalance = await this.qEth.balanceOf(carol);
 
                                             const { exchangeRate } = await this.quasar.tokenData(ETH);
-                                            this.bobWithdrawAmount = await calculateWithdrawAmount(this.bobQTokenBalance, exchangeRate);
-                                            this.carolWithdrawAmount = await calculateWithdrawAmount(this.carolQTokenBalance, exchangeRate);
+                                            this.bobWithdrawAmount = await calculateWithdrawAmount(
+                                                this.bobQTokenBalance,
+                                                exchangeRate,
+                                            );
+
+                                            this.carolWithdrawAmount = await calculateWithdrawAmount(
+                                                this.carolQTokenBalance,
+                                                exchangeRate,
+                                            );
 
                                             this.bobWithdrawTx = await this.quasar.withdrawFunds(
                                                 ETH,
@@ -1728,7 +1735,8 @@ contract(
                                                 quasarBalance,
                                             ).equal(poolSupply);
 
-                                            // some residue might remain in the pool due to rounding down while withdrawing
+                                            // some residue might remain in the pool
+                                            // due to rounding down while withdrawing
                                             // expect the residue to be very small
                                             expect(quasarBalance).to.be.bignumber.at.most(
                                                 new BN(10),
@@ -1743,14 +1751,18 @@ contract(
                                                 await spentOnGas(this.bobWithdrawTx.receipt),
                                             ).sub(this.bobBalanceBeforeWithdraw).subn(this.bobSuppliedFunds);
 
-                                            const expectedBobReturnProfit = this.bobWithdrawAmount.subn(this.bobSuppliedFunds);
+                                            const expectedBobReturnProfit = this.bobWithdrawAmount.subn(
+                                                this.bobSuppliedFunds,
+                                            );
                                             expect(bobReturnProfit).to.be.bignumber.equal(expectedBobReturnProfit);
 
                                             const carolReturnProfit = carolBalanceAfterWithdraw.add(
                                                 await spentOnGas(this.carolWithdrawTx.receipt),
                                             ).sub(this.carolBalanceBeforeWithdraw).subn(this.carolSuppliedFunds);
 
-                                            const expectedCarolReturnProfit = this.carolWithdrawAmount.subn(this.carolSuppliedFunds);
+                                            const expectedCarolReturnProfit = this.carolWithdrawAmount.subn(
+                                                this.carolSuppliedFunds,
+                                            );
                                             expect(carolReturnProfit).to.be.bignumber.equal(expectedCarolReturnProfit);
 
                                             expect(carolReturnProfit).be.bignumber.above(bobReturnProfit);
@@ -1841,7 +1853,10 @@ contract(
                                     this.bobBalanceBeforeWithdraw = new BN(await web3.eth.getBalance(bob));
 
                                     const { exchangeRate } = await this.quasar.tokenData(ETH);
-                                    this.bobWithdrawAmount = await calculateWithdrawAmount(this.bobQTokenBalance, exchangeRate);
+                                    this.bobWithdrawAmount = await calculateWithdrawAmount(
+                                        this.bobQTokenBalance,
+                                        exchangeRate,
+                                    );
 
                                     this.bobWithdrawTx = await this.quasar.withdrawFunds(
                                         ETH,
@@ -1940,8 +1955,15 @@ contract(
                                                 const daveQTokenBalance = new BN(await this.qEth.balanceOf(dave));
 
                                                 const { exchangeRate } = await this.quasar.tokenData(ETH);
-                                                this.carolWithdrawAmount = await calculateWithdrawAmount(carolQTokenBalance, exchangeRate);
-                                                this.daveWithdrawAmount = await calculateWithdrawAmount(daveQTokenBalance, exchangeRate);
+                                                this.carolWithdrawAmount = await calculateWithdrawAmount(
+                                                    carolQTokenBalance,
+                                                    exchangeRate,
+                                                );
+
+                                                this.daveWithdrawAmount = await calculateWithdrawAmount(
+                                                    daveQTokenBalance,
+                                                    exchangeRate,
+                                                );
 
 
                                                 this.carolWithdrawTx = await this.quasar.withdrawFunds(
@@ -1986,7 +2008,8 @@ contract(
                                                     quasarBalance,
                                                 ).equal(poolSupply);
 
-                                                // some residue might remain in the pool due to rounding down while withdrawing
+                                                // some residue might remain in the pool
+                                                // due to rounding down while withdrawing
                                                 // expect the residue to be very small
                                                 expect(quasarBalance).to.be.bignumber.at.most(
                                                     new BN(10),
@@ -2008,22 +2031,32 @@ contract(
                                                     await spentOnGas(this.bobWithdrawTx.receipt),
                                                 ).sub(this.bobBalanceBeforeWithdraw).subn(this.bobSuppliedFunds);
 
-                                                const expectedBobReturnProfit = this.bobWithdrawAmount.subn(this.bobSuppliedFunds);
+                                                const expectedBobReturnProfit = this.bobWithdrawAmount.subn(
+                                                    this.bobSuppliedFunds,
+                                                );
                                                 expect(bobReturnProfit).to.be.bignumber.equal(expectedBobReturnProfit);
 
                                                 const carolReturnProfit = carolBalanceAfterWithdraw.add(
                                                     await spentOnGas(this.carolWithdrawTx.receipt),
                                                 ).sub(this.carolBalanceBeforeWithdraw).subn(this.carolSuppliedFunds);
 
-                                                const expectedCarolReturnProfit = this.carolWithdrawAmount.subn(this.carolSuppliedFunds);
-                                                expect(carolReturnProfit).to.be.bignumber.equal(expectedCarolReturnProfit);
+                                                const expectedCarolReturnProfit = this.carolWithdrawAmount.subn(
+                                                    this.carolSuppliedFunds,
+                                                );
+                                                expect(carolReturnProfit).to.be.bignumber.equal(
+                                                    expectedCarolReturnProfit,
+                                                );
 
                                                 const daveReturnProfit = daveBalanceAfterWithdraw.add(
                                                     await spentOnGas(this.daveWithdrawTx.receipt),
                                                 ).sub(this.daveBalanceBeforeWithdraw).subn(this.daveSuppliedFunds);
 
-                                                const expectedDaveReturnProfit = this.daveWithdrawAmount.subn(this.daveSuppliedFunds);
-                                                expect(daveReturnProfit).to.be.bignumber.equal(expectedDaveReturnProfit);
+                                                const expectedDaveReturnProfit = this.daveWithdrawAmount.subn(
+                                                    this.daveSuppliedFunds,
+                                                );
+                                                expect(daveReturnProfit).to.be.bignumber.equal(
+                                                    expectedDaveReturnProfit,
+                                                );
 
                                                 expect(carolReturnProfit).be.bignumber.above(bobReturnProfit);
                                                 expect(carolReturnProfit).be.bignumber.above(daveReturnProfit);
@@ -2179,7 +2212,10 @@ contract(
                                     this.withdrawTokens = new BN((this.bobQTokenBalance / 2).toFixed());
 
                                     const { exchangeRate } = await this.quasar.tokenData(this.erc20.address);
-                                    this.bobWithdrawAmountFirstRound = await calculateWithdrawAmount(this.withdrawTokens, exchangeRate);
+                                    this.bobWithdrawAmountFirstRound = await calculateWithdrawAmount(
+                                        this.withdrawTokens,
+                                        exchangeRate,
+                                    );
 
                                     this.bobWithdrawTx = await this.quasar.withdrawFunds(
                                         this.erc20.address,
@@ -2275,8 +2311,13 @@ contract(
 
                                                 const bobQTokenBalance = await this.qErc20.balanceOf(bob);
 
-                                                const { exchangeRate } = await this.quasar.tokenData(this.erc20.address);
-                                                this.bobWithdrawAmountSecondRound = await calculateWithdrawAmount(bobQTokenBalance, exchangeRate);
+                                                const { exchangeRate } = await this.quasar.tokenData(
+                                                    this.erc20.address,
+                                                );
+                                                this.bobWithdrawAmountSecondRound = await calculateWithdrawAmount(
+                                                    bobQTokenBalance,
+                                                    exchangeRate,
+                                                );
 
                                                 this.bobWithdrawTx = await this.quasar.withdrawFunds(
                                                     this.erc20.address,
@@ -2285,7 +2326,10 @@ contract(
                                                 );
                                                 const carolQTokenBalance = await this.qErc20.balanceOf(carol);
 
-                                                this.carolWithdrawAmount = await calculateWithdrawAmount(carolQTokenBalance, exchangeRate);
+                                                this.carolWithdrawAmount = await calculateWithdrawAmount(
+                                                    carolQTokenBalance,
+                                                    exchangeRate,
+                                                );
 
                                                 this.carolWithdrawTx = await this.quasar.withdrawFunds(
                                                     this.erc20.address,
@@ -2297,7 +2341,7 @@ contract(
                                                     quasarMaintainer,
                                                 );
 
-                                                this.quasarMaintainerWithdrawAmount = await calculateWithdrawAmount(
+                                                this.qMaintainerWithdrawAmount = await calculateWithdrawAmount(
                                                     quasarMaintainerQTokenBalance,
                                                     exchangeRate,
                                                 );
@@ -2334,7 +2378,8 @@ contract(
                                                 const { poolSupply } = await this.quasar.tokenData(this.erc20.address);
 
                                                 expect(quasarCapacityAfterWithdraw).to.be.bignumber.equal(poolSupply);
-                                                // some residue might remain in the pool due to rounding down while withdrawing
+                                                // some residue might remain in the pool
+                                                // due to rounding down while withdrawing
                                                 // expect the residue to be very small
                                                 expect(quasarCapacityAfterWithdraw).to.be.bignumber.at.most(
                                                     new BN(10),
@@ -2361,17 +2406,23 @@ contract(
                                                     this.carolBalanceBeforeWithdraw,
                                                 ).subn(this.carolSuppliedERC20Funds);
 
-                                                const expectedCarolReturnProfit = this.carolWithdrawAmount.subn(this.carolSuppliedERC20Funds);
-                                                expect(carolReturnProfit).to.be.bignumber.equal(expectedCarolReturnProfit);
+                                                const expectedCarolReturnProfit = this.carolWithdrawAmount.subn(
+                                                    this.carolSuppliedERC20Funds,
+                                                );
+                                                expect(carolReturnProfit).to.be.bignumber.equal(
+                                                    expectedCarolReturnProfit,
+                                                );
 
                                                 const qMaintainerReturnProfit = qMaintainerBalanceAfterWithdraw.sub(
                                                     this.qMaintainerBalanceBeforeWithdraw,
                                                 ).subn(QUASAR_LIQUID_FUNDS);
 
-                                                const expectedQMaintainerReturnProfit = this.quasarMaintainerWithdrawAmount.subn(
+                                                const expectedQMaintainerReturn = this.qMaintainerWithdrawAmount.subn(
                                                     QUASAR_LIQUID_FUNDS,
                                                 );
-                                                expect(qMaintainerReturnProfit).to.be.bignumber.equal(expectedQMaintainerReturnProfit);
+                                                expect(qMaintainerReturnProfit).to.be.bignumber.equal(
+                                                    expectedQMaintainerReturn,
+                                                );
 
                                                 expect(qMaintainerReturnProfit).to.be.bignumber.above(
                                                     carolReturnProfit,
