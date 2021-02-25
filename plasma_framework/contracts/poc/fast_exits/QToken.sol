@@ -2,10 +2,11 @@ pragma solidity 0.5.11;
 pragma experimental ABIEncoderV2;
 
 import "../../src/utils/OnlyFromAddress.sol";
+import "./interfaces/IQToken.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
 
-contract QToken is ERC20, ERC20Detailed, OnlyFromAddress {
+contract QToken is IQToken, ERC20, ERC20Detailed, OnlyFromAddress {
 
     address public quasarContract;
 

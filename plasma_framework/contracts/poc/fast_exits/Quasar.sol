@@ -201,9 +201,7 @@ contract Quasar is QuasarPool {
 
         uint256 quasarFee = tokenData[outputData.token].quasarFee;
 
-        // can skip this check because tokenUsableCapacity confirms qToken exists
-        // require(tokenData[outputData.token].qTokenAddress != address(0), "QToken is not registered for the token");
-        require(outputData.amount > quasarFee, "Requested amount cannot be zero");
+        require(outputData.amount > quasarFee, "The UTXO isn't enough to cover the fee");
         uint256 reservedAmount = outputData.amount.sub(quasarFee);
         require(reservedAmount <= tokenUsableCapacity[outputData.token], "Requested amount exceeds the Usable Liqudity");
 
