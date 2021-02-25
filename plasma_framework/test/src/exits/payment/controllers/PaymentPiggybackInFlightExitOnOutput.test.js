@@ -37,7 +37,7 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
         ONE: 1, TWO: 2,
     };
     const MAX_INPUT_SIZE = 4;
-    const MAX_OUTPUT_SIZE = 4;
+    const MAX_OUTPUT_SIZE = 5;
     const PAYMENT_TX_TYPE = 1;
 
     before('deploy and link with controller lib', async () => {
