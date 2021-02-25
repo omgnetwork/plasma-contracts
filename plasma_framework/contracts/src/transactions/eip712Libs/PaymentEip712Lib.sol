@@ -29,7 +29,6 @@ library PaymentEip712Lib {
     bytes32 constant internal OUTPUT_TYPE_HASH = keccak256("Output(uint256 outputType,bytes20 outputGuard,address currency,uint256 amount)");
     bytes32 constant internal SALT = 0xfad5c7f626d80f9256ef01929f3beb96e058b8b4b0e3fe52d84f054c0e2a7a83;
 
-
     struct Constants {
         // solhint-disable-next-line var-name-mixedcase
         bytes32 DOMAIN_SEPARATOR;
@@ -73,24 +72,24 @@ library PaymentEip712Lib {
     {
         bytes32[] memory inputs = new bytes32[](_tx.inputs.length);
         for (uint i = 0; i < _tx.inputs.length; i++) {
-          PosLib.Position memory utxo = PosLib.decode(uint256(_tx.inputs[i]));
-          inputs[i] = keccak256(abi.encode(
-            INPUT_TYPE_HASH,
-            utxo.blockNum,
-            utxo.txIndex,
-            uint256(utxo.outputIndex)
-          ));
+            PosLib.Position memory utxo = PosLib.decode(uint256(_tx.inputs[i]));
+            inputs[i] = keccak256(abi.encode(
+                INPUT_TYPE_HASH,
+                utxo.blockNum,
+                utxo.txIndex,
+                uint256(utxo.outputIndex)
+            ));
         }
         
         bytes32[] memory outputs = new bytes32[](_tx.outputs.length);
         for (uint i = 0; i < _tx.outputs.length; i++) {
-          outputs[i] = keccak256(abi.encode(
-            OUTPUT_TYPE_HASH,
-            _tx.outputs[i].outputType,
-            _tx.outputs[i].outputGuard,
-            _tx.outputs[i].token,
-            _tx.outputs[i].amount
-          ));
+            outputs[i] = keccak256(abi.encode(
+                OUTPUT_TYPE_HASH,
+                _tx.outputs[i].outputType,
+                _tx.outputs[i].outputGuard,
+                _tx.outputs[i].token,
+                _tx.outputs[i].amount
+            ));
         }
 
         return keccak256(abi.encode(
