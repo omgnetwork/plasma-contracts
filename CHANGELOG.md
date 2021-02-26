@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Pre-Release V2
 
-Enrich more contract Events
+Enrich more contract Events - 
 Add missing in-flight exit finalized event and more data to exisiting contract events
 - feat: emit an event indicating that in-flight exit has finalized ([#647](https://github.com/omgnetwork/plasma-contracts/pull/647))
 - feat: add outputTx to SE event ([#737](https://github.com/omgnetwork/plasma-contracts/pull/737))
