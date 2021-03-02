@@ -138,7 +138,7 @@ contract('PaymentPiggybackInFlightExitOnInput', ([_, alice, inputOwner, nonInput
                     amount: 998,
                     piggybackBondSize: 0,
                     bountySize: 0,
-                }, emptyWithdrawData, emptyWithdrawData],
+                }, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData],
                 outputs: [{
                     outputId: web3.utils.sha3('dummy output id'),
                     exitTarget: outputOwner,

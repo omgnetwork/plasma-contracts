@@ -4,7 +4,7 @@ pragma solidity 0.5.11;
  * @notice Model library for PaymentExit
  */
 library PaymentExitDataModel {
-    uint8 constant public MAX_INPUT_NUM = 4;
+    uint8 constant public MAX_INPUT_NUM = 5;
     uint8 constant public MAX_OUTPUT_NUM = 5;
 
     /**

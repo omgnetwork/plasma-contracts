@@ -172,7 +172,7 @@ contract('PaymentChallengeIFENotCanonical', ([_, ifeOwner, inputOwner, outputOwn
                 amount: TEST_IFE_INPUT_AMOUNT,
                 piggybackBondSize: PIGGYBACK_BOND,
                 bountySize: PROCESS_EXIT_BOUNTY,
-            }, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData],
+            }, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData],
             outputs: [{
                 outputId: DUMMY_OUTPUT_ID_FOR_OUTPUT,
                 exitTarget: constants.ZERO_ADDRESS, // would not be set during start IFE

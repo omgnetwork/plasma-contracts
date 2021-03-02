@@ -11,7 +11,7 @@ library PaymentTransactionModel {
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;
 
-    uint8 constant private _MAX_INPUT_NUM = 4;
+    uint8 constant private _MAX_INPUT_NUM = 5;
     uint8 constant private _MAX_OUTPUT_NUM = 5;
 
     uint8 constant private ENCODED_LENGTH = 4;
