@@ -132,7 +132,7 @@ contract('PaymentTransactionModel', ([alice]) => {
             await expectRevert(this.test.decode(encoded), 'Output type must not be 0');
         });
 
-        it('should fail when an output amount is zero', async () => {
+        it('should pass when an output amount is zero', async () => {
             const zeroOutputAmount = new FungibleTransactionOutput(
                 OUTPUT_TYPE.PAYMENT, 0, OUTPUT_GUARD, constants.ZERO_ADDRESS,
             );
@@ -140,7 +140,16 @@ contract('PaymentTransactionModel', ([alice]) => {
                 TX_TYPE.PAYMENT, [DUMMY_INPUT_1], [OUTPUT, zeroOutputAmount], EMPTY_BYTES_32,
             );
             const encoded = web3.utils.bytesToHex(transaction.rlpEncoded());
-            await expectRevert(this.test.decode(encoded), 'Output amount must not be 0');
+
+            const actual = await this.test.decode(encoded);
+            const decoded = new PaymentTransaction(
+                parseInt(actual.txType, 10),
+                parseInputs(actual.inputs),
+                parseOutputs(actual.outputs),
+                actual.metaData,
+            );
+
+            expect(JSON.stringify(decoded)).to.equal(JSON.stringify(transaction));
         });
 
         it('should fail when txData is not zero', async () => {
