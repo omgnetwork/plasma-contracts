@@ -50,8 +50,8 @@ struct InFlightExit {
  uint64 exitStartTimestamp,
  uint256 exitMap,
  uint256 position,
- struct PaymentExitDataModel.WithdrawData[4] inputs,
- struct PaymentExitDataModel.WithdrawData[4] outputs,
+ struct PaymentExitDataModel.WithdrawData[5] inputs,
+ struct PaymentExitDataModel.WithdrawData[5] outputs,
  address payable bondOwner,
  uint256 bondSize,
  uint256 oldestCompetitorPosition
