@@ -348,6 +348,9 @@ jobs:
       - run:
           name: Block submission works?
           command: |
+            ls /tmp/plasma_framework_output
+
+            ls /tmp/
             export VAULT_TOKEN=$(cat ~/repo/MultiSigWalletOverride/docker/immutability/config/unseal.json | jq -r .root_token)
             export WALLET_NAME=plasma-deployer
             export AA=$(cat /tmp/plasma_framework_output/outputs.json | jq -r .authority_address)
