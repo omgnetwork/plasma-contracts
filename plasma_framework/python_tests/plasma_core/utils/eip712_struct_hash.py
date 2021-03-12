@@ -49,6 +49,7 @@ data = {
 
 EMPTY_BYTES20 = '0x0000000000000000000000000000000000000000'
 
+
 def hash_struct(tx, verifying_contract=None):
     verifying_address = hex_to_binary(verifying_contract) if verifying_contract else NULL_ADDRESS
 
