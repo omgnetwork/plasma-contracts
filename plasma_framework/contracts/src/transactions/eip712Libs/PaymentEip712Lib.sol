@@ -95,8 +95,8 @@ library PaymentEip712Lib {
         return keccak256(abi.encode(
             TX_TYPE_HASH,
             _tx.txType,
-            inputs,
-            outputs,
+            keccak256(abi.encodePacked(inputs)),
+            keccak256(abi.encodePacked(outputs)),
             _tx.txData,
             _tx.metaData
         ));

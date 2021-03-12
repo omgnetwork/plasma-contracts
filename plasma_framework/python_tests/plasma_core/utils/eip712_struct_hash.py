@@ -1,23 +1,70 @@
-from eip712_structs import EIP712Struct, Address, Uint, Bytes, make_domain
+from eip712_structs import EIP712Struct, Address, Uint, Bytes, make_domain, Array
 from plasma_core.constants import NULL_ADDRESS
 from eth_utils import keccak
 from plasma_core.utils.utils import hex_to_binary
+from collections import namedtuple
+
+from py_eth_sig_utils.eip712 import encode_typed_data
+
+domainSpec = [
+    { 'name': 'name', 'type': 'string' },
+    { 'name': 'version', 'type': 'string' },
+    { 'name': 'verifyingContract', 'type': 'address' },
+    { 'name': 'salt', 'type': 'bytes32' },
+]
+txSpec = [
+    { 'name': 'txType', 'type': 'uint256' },
+    { 'name': 'inputs', 'type': 'Input[]' },
+    { 'name': 'outputs', 'type': 'Output[]' },
+    { 'name': 'txData', 'type': 'uint256' },
+    { 'name': 'metadata', 'type': 'bytes32' },
+]
+
+inputSpec = [
+    { 'name': 'blknum', 'type': 'uint256' },
+    { 'name': 'txindex', 'type': 'uint256' },
+    { 'name': 'oindex', 'type': 'uint256' },
+]
+
+outputSpec = [
+    { 'name': 'outputType', 'type': 'uint256' },
+    { 'name': 'outputGuard', 'type': 'bytes20' },
+    { 'name': 'currency', 'type': 'address' },
+    { 'name': 'amount', 'type': 'uint256' },
+]
+
+data = {
+  'types': {
+    'EIP712Domain': domainSpec,
+    'Transaction': txSpec,
+    'Input': inputSpec,
+    'Output': outputSpec,
+  }, 
+  'domain': {
+    'name': 'OMG Network',
+    'version': '1',
+    'verifyingContract': '0x44de0ec539b8c4a4b530c78620fe8320167f2f74',
+    'salt': bytes.fromhex('fad5c7f626d80f9256ef01929f3beb96e058b8b4b0e3fe52d84f054c0e2a7a83'),
+  }, 
+  'primaryType': 'Transaction',
+}
 
 
-def hash_struct(tx, domain=None, verifying_contract=None):
-    if domain and verifying_contract:
-        raise RuntimeError("verifyingContract supplied but ignored")
+EMPTY_BYTES20 = '0x0000000000000000000000000000000000000000'
 
-    verifying_address = hex_to_binary(verifying_contract.address) if verifying_contract else NULL_ADDRESS
+# INPUT_TYPE_HASH = web3.utils.sha3('Input(uint256 blknum,uint256 txindex,uint256 oindex)')
+# OUTPUT_TYPE_HASH = web3.utils.sha3('Output(uint256 outputType,bytes20 outputGuard,address currency,uint256 amount)')
 
-    domain = domain or make_domain(
-        name='OMG Network',
-        version='1',
-        verifyingContract=verifying_address,
-        salt=hex_to_binary('fad5c7f626d80f9256ef01929f3beb96e058b8b4b0e3fe52d84f054c0e2a7a83')
-    )
 
-    return keccak(b'\x19\x01' + domain.hash_struct() + struct_tx_from_tx(tx).hash_struct())
+def hash_struct(tx, verifying_contract=None):
+    verifying_address = hex_to_binary(verifying_contract) if verifying_contract else NULL_ADDRESS
+
+    data.get('domain')['verifyingContract'] = verifying_address
+    data['message'] = struct_tx_from_tx(tx)
+
+    typedData = encode_typed_data(data)
+    return typedData
+
 
 
 class Input(EIP712Struct):
@@ -35,48 +82,43 @@ class Output(EIP712Struct):
 
 class Transaction(EIP712Struct):
     txType = Uint(256)
-    input0 = Input
-    input1 = Input
-    input2 = Input
-    input3 = Input
-    output0 = Output
-    output1 = Output
-    output2 = Output
-    output3 = Output
+    # inputs = Array(Bytes(), 32)
+    # outputs = Array(Bytes(), 32)
+    inputs = Array(Input)
+    outputs = Array(Output)
     txData = Uint(256)
     metadata = Bytes(32)
+
+    # def __str__(self):  
+    #     return f'Transaction: txType = {txType}, inputs = {inputs},  = {},  = {},  = {}'
 
 
 def struct_tx_from_tx(tx):
     inputs = _map_inputs(tx.inputs)
     outputs = _map_outputs(tx.outputs)
 
+    # for input in inputs:
+    #   print(input)
+
+    # for output in outputs:
+    #   print(output)
+
     return Transaction(
         txType=tx.tx_type,
-        input0=inputs[0],
-        input1=inputs[1],
-        input2=inputs[2],
-        input3=inputs[3],
-        output0=outputs[0],
-        output1=outputs[1],
-        output2=outputs[2],
-        output3=outputs[3],
+        inputs=inputs,
+        outputs=outputs,
         txData=tx.tx_data,
         metadata=tx.metadata,
     )
 
 
 def _map_inputs(inputs):
-    empty_input = Input()
-
     eip712_inputs = [Input(blknum=i.blknum, txindex=i.txindex, oindex=i.oindex) for i in inputs]
-    return eip712_inputs + [empty_input] * (4 - len(inputs))  # pad with empty inputs
+    return eip712_inputs
 
 
 def _map_outputs(outputs):
-    empty_output = Output()
-
     eip712_outputs = []
     for o in outputs:
         eip712_outputs.append(Output(outputType=o.output_type, outputGuard=o.output_guard, currency=o.token, amount=o.amount))
-    return eip712_outputs + [empty_output] * (4 - len(outputs))  # pad with empty outputs
+    return eip712_outputs
