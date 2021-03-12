@@ -209,11 +209,11 @@ class PlasmaFramework:
         self.payment_exit_game.startInFlightExit(args, **kwargs)
 
     def piggybackInFlightExit(self, in_flight_tx, output_index, **kwargs):
-        if output_index < Transaction.NUM_TXOS:
+        if output_index < Transaction.NUM_INPUTS:
             args = (in_flight_tx, output_index)
             self.payment_exit_game.piggybackInFlightExitOnInput(args, **kwargs)
         else:
-            args = (in_flight_tx, output_index - 4, EMPTY_BYTES)
+            args = (in_flight_tx, output_index - Transaction.NUM_INPUTS, EMPTY_BYTES)
             self.payment_exit_game.piggybackInFlightExitOnOutput(args, **kwargs)
 
     def challengeInFlightExitNotCanonical(self, in_flight_tx,

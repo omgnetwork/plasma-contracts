@@ -1,11 +1,12 @@
 import pytest
 from eth_tester.exceptions import TransactionFailed
 from plasma_core.constants import NULL_ADDRESS, NULL_ADDRESS_HEX
+from tests_utils.constants import PAYMENT_TX_MAX_INPUT_SIZE
 
 ETH_ADDRESS_HEX = NULL_ADDRESS_HEX
 
 
-@pytest.mark.parametrize("num_inputs", [1, 2, 3, 4])
+@pytest.mark.parametrize("num_inputs", range(1, PAYMENT_TX_MAX_INPUT_SIZE))
 def test_start_in_flight_exit_should_succeed(testlang, num_inputs):
     amount = 100
     owners = []
@@ -33,13 +34,13 @@ def test_start_in_flight_exit_should_succeed(testlang, num_inputs):
         assert input_info.amount == amount
 
     # Remaining inputs are still unset
-    for i in range(num_inputs, 4):
+    for i in range(num_inputs, PAYMENT_TX_MAX_INPUT_SIZE):
         input_info = in_flight_exit.get_input(i)
         assert input_info.exit_target == NULL_ADDRESS_HEX
         assert input_info.amount == 0
 
 
-@pytest.mark.parametrize("num_inputs", [1, 2, 3, 4])
+@pytest.mark.parametrize("num_inputs", range(1, PAYMENT_TX_MAX_INPUT_SIZE))
 def test_start_in_flight_exit_with_erc20_tokens_should_succeed(testlang, token, num_inputs):
     amount = 100
     owners = []
@@ -67,7 +68,7 @@ def test_start_in_flight_exit_with_erc20_tokens_should_succeed(testlang, token, 
         assert input_info.amount == amount
 
     # Remaining inputs are still unset
-    for i in range(num_inputs, 4):
+    for i in range(num_inputs, PAYMENT_TX_MAX_INPUT_SIZE):
         input_info = in_flight_exit.get_input(i)
         assert input_info.exit_target == NULL_ADDRESS_HEX
         assert input_info.amount == 0
@@ -104,7 +105,7 @@ def test_start_in_flight_exit_with_erc20_token_and_eth_should_succeed(testlang, 
     assert input_info.amount == 110
 
     # Remaining inputs are still unset
-    for i in range(2, 4):
+    for i in range(2, PAYMENT_TX_MAX_INPUT_SIZE):
         input_info = in_flight_exit.get_input(i)
         assert input_info.exit_target == NULL_ADDRESS_HEX
         assert input_info.amount == 0
@@ -121,14 +122,14 @@ def test_start_in_flight_exit_with_an_output_with_a_token_not_from_inputs_should
 
 @pytest.mark.parametrize(
     "output_values", [
-        [401], [400, 1], [50, 50, 301], [100, 100, 100, 101]
+        [501], [500, 1], [100, 100, 301], [100, 100, 100, 201], [100, 100, 100, 100, 101]
     ]
 )
 def test_start_in_flight_exit_that_spends_more_than_value_of_inputs_should_fail(testlang, token, output_values):
     owner, amount = testlang.accounts[0], 100
     outputs = [(owner.address, token.address, value) for value in output_values]
-    deposits = [testlang.deposit_token(owner, token, amount) for _ in range(4)]
-    spend_id = testlang.spend_utxo(deposits, [owner] * 4, outputs, force_invalid=True)
+    deposits = [testlang.deposit_token(owner, token, amount) for _ in range(PAYMENT_TX_MAX_INPUT_SIZE)]
+    spend_id = testlang.spend_utxo(deposits, [owner] * PAYMENT_TX_MAX_INPUT_SIZE, outputs, force_invalid=True)
 
     with pytest.raises(TransactionFailed):
         testlang.start_in_flight_exit(spend_id)
@@ -213,12 +214,12 @@ def test_start_in_flight_exit_spending_the_same_input_twice_should_fail(testlang
         testlang.start_in_flight_exit(spend_id)
 
 
-def test_start_in_flight_exit_with_four_different_tokens_should_succeed(testlang, get_contract):
-    owner, amount, tokens_no = testlang.accounts[0], 100, 4
+def test_start_in_flight_exit_with_max_num_different_tokens_should_succeed(testlang, get_contract):
+    owner, amount, tokens_no = testlang.accounts[0], 100, PAYMENT_TX_MAX_INPUT_SIZE
 
     tokens = [get_contract('ERC20Mintable') for _ in range(tokens_no)]
     deposits = [testlang.deposit_token(owner, tokens[i], amount) for i in range(tokens_no)]
-    outputs = [(owner.address, tokens[i].address, amount) for i in range(4)]
+    outputs = [(owner.address, tokens[i].address, amount) for i in range(PAYMENT_TX_MAX_INPUT_SIZE)]
     spend_id = testlang.spend_utxo(deposits, [owner] * tokens_no, outputs)
 
     testlang.start_in_flight_exit(spend_id, sender=owner)

@@ -6,6 +6,7 @@ from plasma_core.transaction import Transaction, amend_signature
 from plasma_core.utils.eip712_struct_hash import hash_struct
 from plasma_core.utils.transactions import decode_utxo_id, encode_utxo_id
 from testlang.testlang import StandardExit
+from tests_utils.constants import PAYMENT_TX_MAX_OUTPUT_SIZE
 
 
 def test_start_standard_exit_should_succeed(testlang, utxo):
@@ -13,7 +14,7 @@ def test_start_standard_exit_should_succeed(testlang, utxo):
     assert testlang.get_standard_exit(utxo.spend_id) == [utxo.owner.address, utxo.amount, utxo.spend_id, True]
 
 
-@pytest.mark.parametrize("num_outputs", [1, 2, 3, 4])
+@pytest.mark.parametrize("num_outputs", range(1, PAYMENT_TX_MAX_OUTPUT_SIZE))
 def test_start_standard_exit_multiple_outputs_should_succeed(testlang, num_outputs):
     owners, amount, outputs = [], 100, []
     for i in range(0, num_outputs):
@@ -102,7 +103,7 @@ def test_start_standard_exit_wrong_oindex_should_fail(testlang):
 
     spend_tx = Transaction(inputs=[decode_utxo_id(deposit_id)],
                            outputs=[(alice.address, NULL_ADDRESS, alice_money), (bob.address, NULL_ADDRESS, bob_money)])
-    spend_tx.sign(0, alice, verifying_contract=testlang.root_chain)
+    spend_tx.sign(0, alice, verifying_contract=testlang.root_chain.plasma_framework.address)
     blknum = testlang.submit_block([spend_tx])
     alice_utxo = encode_utxo_id(blknum, 0, 0)
     bob_utxo = encode_utxo_id(blknum, 0, 1)
@@ -130,7 +131,7 @@ def test_start_standard_exit_from_deposit_must_be_exitable_in_minimal_finalizati
     assert testlang.get_standard_exit(deposit_id) == [NULL_ADDRESS_HEX, 0, 0, False]
 
 
-@pytest.mark.parametrize("num_outputs", [1, 2, 3, 4])
+@pytest.mark.parametrize("num_outputs", range(1, PAYMENT_TX_MAX_OUTPUT_SIZE))
 def test_start_standard_exit_on_finalized_in_flight_exit_output_should_fail(testlang, num_outputs):
     owner, amount = testlang.accounts[0], 100
     deposit_id = testlang.deposit(owner, amount)
@@ -191,7 +192,7 @@ def test_old_signature_scheme_does_not_work_any_longer(testlang, utxo):
         testlang.root_chain.challengeStandardExit(exit_id, spend_tx.encoded, 0, old_signature, exiting_tx.encoded, keccak(hexstr=testlang.accounts[0].address))
 
     # sanity check: let's provide new schema signature for a challenge
-    new_signature = amend_signature(alice.key.sign_msg_hash(hash_struct(spend_tx, verifying_contract=testlang.root_chain)).to_bytes())
+    new_signature = amend_signature(alice.key.sign_msg_hash(hash_struct(spend_tx, verifying_contract=testlang.root_chain.plasma_framework.address)).to_bytes())
     testlang.root_chain.challengeStandardExit(exit_id, spend_tx.encoded, 0, new_signature, exiting_tx.encoded, keccak(hexstr=testlang.accounts[0].address))
 
 
@@ -213,5 +214,5 @@ def test_signature_scheme_respects_verifying_contract(testlang, utxo):
         testlang.root_chain.challengeStandardExit(exit_id, spend_tx.encoded, 0, bad_contract_signature, exiting_tx.encoded, keccak(hexstr=testlang.accounts[0].address))
 
     # sanity check
-    proper_signature = amend_signature(alice.key.sign_msg_hash(hash_struct(spend_tx, verifying_contract=testlang.root_chain)).to_bytes())
+    proper_signature = amend_signature(alice.key.sign_msg_hash(hash_struct(spend_tx, verifying_contract=testlang.root_chain.address)).to_bytes())
     testlang.root_chain.challengeStandardExit(exit_id, spend_tx.encoded, 0, proper_signature, exiting_tx.encoded, keccak(hexstr=testlang.accounts[0].address))

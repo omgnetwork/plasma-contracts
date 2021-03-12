@@ -1,9 +1,10 @@
 import pytest
 from eth_tester.exceptions import TransactionFailed
 from plasma_core.constants import MIN_EXIT_PERIOD, NULL_ADDRESS
+from tests_utils.constants import PAYMENT_TX_MAX_INPUT_SIZE, PAYMENT_TX_MAX_OUTPUT_SIZE
 
 
-@pytest.mark.parametrize("num_inputs", [1, 2, 3, 4])
+@pytest.mark.parametrize("num_inputs", range(1, PAYMENT_TX_MAX_INPUT_SIZE))
 def test_piggyback_in_flight_exit_valid_input_owner_should_succeed(testlang, num_inputs):
     amount = 100
     owners = []
@@ -23,7 +24,7 @@ def test_piggyback_in_flight_exit_valid_input_owner_should_succeed(testlang, num
     assert in_flight_exit.input_piggybacked(input_index)
 
 
-@pytest.mark.parametrize("num_outputs", [1, 2, 3, 4])
+@pytest.mark.parametrize("num_outputs", range(1, PAYMENT_TX_MAX_OUTPUT_SIZE))
 def test_piggyback_in_flight_exit_valid_output_owner_should_succeed(testlang, num_outputs):
     owner_1, amount = testlang.accounts[0], 100
     deposit_id = testlang.deposit(owner_1, amount)
@@ -115,7 +116,7 @@ def test_piggyback_in_flight_exit_twice_should_fail(testlang):
         testlang.piggyback_in_flight_exit_input(spend_id, input_index, owner)
 
 
-@pytest.mark.parametrize("output", [0, 4])
+@pytest.mark.parametrize("output", [0, PAYMENT_TX_MAX_INPUT_SIZE])
 def test_piggybacking_an_output_of_unsupported_token_should_fail(testlang, no_exit_queue_token, output):
     token = no_exit_queue_token
     owner, amount = testlang.accounts[0], 100
@@ -127,7 +128,7 @@ def test_piggybacking_an_output_of_unsupported_token_should_fail(testlang, no_ex
         testlang.piggyback_in_flight_exit_input(spend_id, output, owner)
 
 
-@pytest.mark.parametrize("output", [0, 4])  # first input and first output
+@pytest.mark.parametrize("output", [0, PAYMENT_TX_MAX_INPUT_SIZE])  # first input and first output
 def test_piggybacking_an_output_of_supported_token_should_succeed(testlang, token, output):
     owner, amount = testlang.accounts[0], 100
     deposit_id = testlang.deposit_token(owner, token, amount)
@@ -140,7 +141,12 @@ def test_piggybacking_an_output_of_supported_token_should_succeed(testlang, toke
     assert in_flight_exit.input_piggybacked(output)
 
 
-@pytest.mark.parametrize("outputs", [[0, 1], [4, 5], [0, 4], [0, 1, 4, 5]])  # inputs and outputs
+@pytest.mark.parametrize("outputs", [
+    [0, 1], 
+    [PAYMENT_TX_MAX_INPUT_SIZE, PAYMENT_TX_MAX_INPUT_SIZE + 1], 
+    [0, PAYMENT_TX_MAX_INPUT_SIZE], 
+    [0, 1, PAYMENT_TX_MAX_INPUT_SIZE, PAYMENT_TX_MAX_INPUT_SIZE + 1]
+])  # inputs and outputs
 def test_piggybacking_outputs_of_different_tokens_should_succeed(testlang, token, outputs):
     owner, amount = testlang.accounts[0], 100
     token_deposit_id = testlang.deposit_token(owner, token, amount)

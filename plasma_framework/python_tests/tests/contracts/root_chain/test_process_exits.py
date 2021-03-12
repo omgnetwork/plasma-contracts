@@ -6,7 +6,7 @@ from plasma_core.constants import NULL_ADDRESS, NULL_ADDRESS_HEX, MIN_EXIT_PERIO
 from plasma_core.transaction import Transaction
 from plasma_core.utils.transactions import decode_utxo_id, encode_utxo_id
 from tests_utils.assertions import assert_events
-
+from tests_utils.constants import PAYMENT_TX_MAX_INPUT_SIZE, PAYMENT_TX_MAX_OUTPUT_SIZE
 
 def prepare_exitable_utxo(testlang, owners, amount, outputs, num_outputs=1):
     for i in range(0, num_outputs):
@@ -22,7 +22,7 @@ def prepare_exitable_utxo(testlang, owners, amount, outputs, num_outputs=1):
     return utxo_pos, output_owner
 
 
-@pytest.mark.parametrize("num_outputs", [1, 2, 3, 4])
+@pytest.mark.parametrize("num_outputs", range(1, PAYMENT_TX_MAX_OUTPUT_SIZE))
 def test_process_exits_standard_exit_should_succeed(testlang, num_outputs, plasma_framework):
     amount = 100
     utxo_pos, output_owner = prepare_exitable_utxo(testlang, [], amount, [], num_outputs)
@@ -75,7 +75,7 @@ def test_process_exits_in_flight_exit_should_succeed(testlang):
     assert in_flight_exit.bond_owner == NULL_ADDRESS_HEX
     assert in_flight_exit.oldest_competitor == 0
 
-    for i in range(4):
+    for i in range(PAYMENT_TX_MAX_INPUT_SIZE):
         input_info = in_flight_exit.get_input(i)
         assert input_info.exit_target == NULL_ADDRESS_HEX
         assert input_info.amount == 0
@@ -239,10 +239,12 @@ def test_finalize_exits_tx_race_short_circuit(testlang, w3, plasma_framework):
     utxo2 = testlang.create_utxo()
     utxo3 = testlang.create_utxo()
     utxo4 = testlang.create_utxo()
+    utxo5 = testlang.create_utxo()
     testlang.start_standard_exit(utxo1.spend_id, utxo1.owner)
     testlang.start_standard_exit(utxo2.spend_id, utxo2.owner)
     testlang.start_standard_exit(utxo3.spend_id, utxo3.owner)
     testlang.start_standard_exit(utxo4.spend_id, utxo4.owner)
+    testlang.start_standard_exit(utxo5.spend_id, utxo5.owner)
 
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
     testlang.process_exits(NULL_ADDRESS, testlang.get_standard_exit_id(utxo1.spend_id), 1)
@@ -267,10 +269,12 @@ def test_finalize_exits_tx_race_normal(testlang, w3):
     utxo2 = testlang.create_utxo()
     utxo3 = testlang.create_utxo()
     utxo4 = testlang.create_utxo()
+    utxo5 = testlang.create_utxo()
     testlang.start_standard_exit(utxo1.spend_id, utxo1.owner)
     testlang.start_standard_exit(utxo2.spend_id, utxo2.owner)
     testlang.start_standard_exit(utxo3.spend_id, utxo3.owner)
     testlang.start_standard_exit(utxo4.spend_id, utxo4.owner)
+    testlang.start_standard_exit(utxo5.spend_id, utxo5.owner)
 
     testlang.forward_timestamp(2 * MIN_EXIT_PERIOD + 1)
     testlang.process_exits(NULL_ADDRESS, testlang.get_standard_exit_id(utxo1.spend_id), 1)
@@ -452,7 +456,7 @@ def test_finalize_in_flight_exit_with_erc20_token_should_succeed(testlang, token
     in_flight_exit = testlang.get_in_flight_exit(spend_id)
 
     assert in_flight_exit.exit_start_timestamp == 0
-    for i in range(4):
+    for i in range(PAYMENT_TX_MAX_INPUT_SIZE):
         tx_input = in_flight_exit.get_input(i)
         assert tx_input.amount == 0
         assert tx_input.exit_target == NULL_ADDRESS_HEX
@@ -700,7 +704,7 @@ def test_processing_ife_and_se_exit_from_same_output_does_not_fail(testlang):
     testlang.process_exits(NULL_ADDRESS, 0, 2)
 
 
-@pytest.mark.parametrize("num_outputs", [1, 2, 3, 4])
+@pytest.mark.parametrize("num_outputs", range(1, PAYMENT_TX_MAX_INPUT_SIZE))
 def test_output_exited_via_ife_and_then_se_withdraws_once(testlang, plasma_framework, num_outputs):
     owner, amount, amount_spent = testlang.accounts[0], 100, 1
     deposit_id = testlang.deposit(owner, amount)
@@ -729,7 +733,7 @@ def test_output_exited_via_ife_and_then_se_withdraws_once(testlang, plasma_frame
     assert post_exit_balance == pre_exit_balance - amount_spent
 
 
-@pytest.mark.parametrize("num_outputs", [1, 2, 3, 4])
+@pytest.mark.parametrize("num_outputs", range(1, PAYMENT_TX_MAX_OUTPUT_SIZE))
 def test_output_exited_via_se_and_then_ife_withdraws_once(testlang, plasma_framework, num_outputs):
     owner, amount, amount_spent = testlang.accounts[0], 100, 1
     deposit_id = testlang.deposit(owner, amount)
@@ -793,7 +797,7 @@ def test_not_canonial_in_flight_exit_processed_successfully(testlang, plasma_fra
     inputs = [decode_utxo_id(deposit_id_1), decode_utxo_id(deposit_id_2)]
     spend_deposits_tx = Transaction(inputs=inputs, outputs=[(owner.address, NULL_ADDRESS, deposit_2_amount + deposit_1_amount)])
     for i in range(0, len(inputs)):
-        spend_deposits_tx.sign(i, owner, verifying_contract=testlang.root_chain.plasma_framework)
+        spend_deposits_tx.sign(i, owner, verifying_contract=testlang.root_chain.plasma_framework.address)
 
     testlang.start_in_flight_exit(None, spend_tx=spend_deposits_tx)
     testlang.piggyback_in_flight_exit_input(None, 0, owner, spend_tx=spend_deposits_tx)
@@ -826,7 +830,7 @@ def test_should_not_allow_to_withdraw_outputs_from_two_ifes_marked_as_canonical_
 
     # in-flight transaction not included in Plasma
     steal_tx = Transaction(inputs=[decode_utxo_id(deposit_id_eth)], outputs=[(caroline.address, NULL_ADDRESS, amount_eth)])
-    steal_tx.sign(0, caroline, verifying_contract=testlang.root_chain.plasma_framework)
+    steal_tx.sign(0, caroline, verifying_contract=testlang.root_chain.plasma_framework.address)
 
     testlang.start_in_flight_exit(swap_tx_id)
     testlang.start_in_flight_exit(None, spend_tx=steal_tx)
@@ -874,7 +878,7 @@ def test_should_not_allow_to_withdraw_from_non_canonical_and_already_spent_input
 
     # in-flight transaction not included in Plasma
     steal_tx = Transaction(inputs=[decode_utxo_id(deposit_id_eth)], outputs=[(caroline.address, NULL_ADDRESS, amount_eth)])
-    steal_tx.sign(0, caroline, verifying_contract=testlang.root_chain.plasma_framework)
+    steal_tx.sign(0, caroline, verifying_contract=testlang.root_chain.plasma_framework.address)
 
     testlang.start_in_flight_exit(swap_tx_id)
     testlang.start_in_flight_exit(None, spend_tx=steal_tx)
