@@ -39,7 +39,7 @@ data = {
     },
     'domain': {
         'name': 'OMG Network',
-        'version': '1',
+        'version': '2',
         'verifyingContract': '0x44de0ec539b8c4a4b530c78620fe8320167f2f74',
         'salt': bytes.fromhex('fad5c7f626d80f9256ef01929f3beb96e058b8b4b0e3fe52d84f054c0e2a7a83'),
     },
@@ -48,10 +48,6 @@ data = {
 
 
 EMPTY_BYTES20 = '0x0000000000000000000000000000000000000000'
-
-# INPUT_TYPE_HASH = web3.utils.sha3('Input(uint256 blknum,uint256 txindex,uint256 oindex)')
-# OUTPUT_TYPE_HASH = web3.utils.sha3('Output(uint256 outputType,bytes20 outputGuard,address currency,uint256 amount)')
-
 
 def hash_struct(tx, verifying_contract=None):
     verifying_address = hex_to_binary(verifying_contract) if verifying_contract else NULL_ADDRESS

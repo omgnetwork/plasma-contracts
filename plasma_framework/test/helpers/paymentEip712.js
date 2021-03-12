@@ -32,7 +32,7 @@ const outputSpec = [
 const SALT = '0xfad5c7f626d80f9256ef01929f3beb96e058b8b4b0e3fe52d84f054c0e2a7a83';
 const domainData = {
     name: 'OMG Network',
-    version: '1',
+    version: '2',
     verifyingContract: '',
     salt: SALT,
 };

@@ -39,7 +39,7 @@ library PaymentEip712Lib {
         bytes32 DOMAIN_SEPARATOR = keccak256(abi.encode(
             EIP712_DOMAIN_HASH,
             keccak256("OMG Network"),
-            keccak256("1"),
+            keccak256("2"),
             address(_verifyingContract),
             SALT
         ));
