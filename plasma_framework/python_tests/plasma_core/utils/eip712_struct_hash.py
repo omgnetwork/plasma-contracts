@@ -1,52 +1,49 @@
-from eip712_structs import EIP712Struct, Address, Uint, Bytes, make_domain, Array
+from eip712_structs import EIP712Struct, Address, Uint, Bytes, Array
 from plasma_core.constants import NULL_ADDRESS
-from eth_utils import keccak
 from plasma_core.utils.utils import hex_to_binary
-from collections import namedtuple
-
 from py_eth_sig_utils.eip712 import encode_typed_data
 
 domainSpec = [
-    { 'name': 'name', 'type': 'string' },
-    { 'name': 'version', 'type': 'string' },
-    { 'name': 'verifyingContract', 'type': 'address' },
-    { 'name': 'salt', 'type': 'bytes32' },
+    {'name': 'name', 'type': 'string'},
+    {'name': 'version', 'type': 'string'},
+    {'name': 'verifyingContract', 'type': 'address'},
+    {'name': 'salt', 'type': 'bytes32'},
 ]
 txSpec = [
-    { 'name': 'txType', 'type': 'uint256' },
-    { 'name': 'inputs', 'type': 'Input[]' },
-    { 'name': 'outputs', 'type': 'Output[]' },
-    { 'name': 'txData', 'type': 'uint256' },
-    { 'name': 'metadata', 'type': 'bytes32' },
+    {'name': 'txType', 'type': 'uint256'},
+    {'name': 'inputs', 'type': 'Input[]'},
+    {'name': 'outputs', 'type': 'Output[]'},
+    {'name': 'txData', 'type': 'uint256'},
+    {'name': 'metadata', 'type': 'bytes32'},
 ]
 
 inputSpec = [
-    { 'name': 'blknum', 'type': 'uint256' },
-    { 'name': 'txindex', 'type': 'uint256' },
-    { 'name': 'oindex', 'type': 'uint256' },
+    {'name': 'blknum', 'type': 'uint256'},
+    {'name': 'txindex', 'type': 'uint256'},
+    {'name': 'oindex', 'type': 'uint256'},
 ]
 
 outputSpec = [
-    { 'name': 'outputType', 'type': 'uint256' },
-    { 'name': 'outputGuard', 'type': 'bytes20' },
-    { 'name': 'currency', 'type': 'address' },
-    { 'name': 'amount', 'type': 'uint256' },
+    {'name': 'outputType', 'type': 'uint256'},
+    {'name': 'outputGuard', 'type': 'bytes20'},
+    {'name': 'currency', 'type': 'address'},
+    {'name': 'amount', 'type': 'uint256'},
 ]
 
 data = {
-  'types': {
-    'EIP712Domain': domainSpec,
-    'Transaction': txSpec,
-    'Input': inputSpec,
-    'Output': outputSpec,
-  }, 
-  'domain': {
-    'name': 'OMG Network',
-    'version': '1',
-    'verifyingContract': '0x44de0ec539b8c4a4b530c78620fe8320167f2f74',
-    'salt': bytes.fromhex('fad5c7f626d80f9256ef01929f3beb96e058b8b4b0e3fe52d84f054c0e2a7a83'),
-  }, 
-  'primaryType': 'Transaction',
+    'types': {
+        'EIP712Domain': domainSpec,
+        'Transaction': txSpec,
+        'Input': inputSpec,
+        'Output': outputSpec,
+    },
+    'domain': {
+        'name': 'OMG Network',
+        'version': '1',
+        'verifyingContract': '0x44de0ec539b8c4a4b530c78620fe8320167f2f74',
+        'salt': bytes.fromhex('fad5c7f626d80f9256ef01929f3beb96e058b8b4b0e3fe52d84f054c0e2a7a83'),
+    },
+    'primaryType': 'Transaction',
 }
 
 
@@ -64,7 +61,6 @@ def hash_struct(tx, verifying_contract=None):
 
     typedData = encode_typed_data(data)
     return typedData
-
 
 
 class Input(EIP712Struct):
@@ -88,9 +84,6 @@ class Transaction(EIP712Struct):
     outputs = Array(Output)
     txData = Uint(256)
     metadata = Bytes(32)
-
-    # def __str__(self):  
-    #     return f'Transaction: txType = {txType}, inputs = {inputs},  = {},  = {},  = {}'
 
 
 def struct_tx_from_tx(tx):

@@ -142,9 +142,9 @@ def test_piggybacking_an_output_of_supported_token_should_succeed(testlang, toke
 
 
 @pytest.mark.parametrize("outputs", [
-    [0, 1], 
-    [PAYMENT_TX_MAX_INPUT_SIZE, PAYMENT_TX_MAX_INPUT_SIZE + 1], 
-    [0, PAYMENT_TX_MAX_INPUT_SIZE], 
+    [0, 1],
+    [PAYMENT_TX_MAX_INPUT_SIZE, PAYMENT_TX_MAX_INPUT_SIZE + 1],
+    [0, PAYMENT_TX_MAX_INPUT_SIZE],
     [0, 1, PAYMENT_TX_MAX_INPUT_SIZE, PAYMENT_TX_MAX_INPUT_SIZE + 1]
 ])  # inputs and outputs
 def test_piggybacking_outputs_of_different_tokens_should_succeed(testlang, token, outputs):

@@ -8,6 +8,7 @@ from plasma_core.utils.transactions import decode_utxo_id, encode_utxo_id
 from tests_utils.assertions import assert_events
 from tests_utils.constants import PAYMENT_TX_MAX_INPUT_SIZE, PAYMENT_TX_MAX_OUTPUT_SIZE
 
+
 def prepare_exitable_utxo(testlang, owners, amount, outputs, num_outputs=1):
     for i in range(0, num_outputs):
         owners.append(testlang.accounts[i + 1])

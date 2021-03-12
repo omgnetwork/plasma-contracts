@@ -2,7 +2,6 @@ import pytest
 
 from plasma_core.constants import NULL_ADDRESS
 from plasma_core.transaction import Transaction
-from eip712_structs import make_domain
 from plasma_core.utils.eip712_struct_hash import hash_struct
 
 
