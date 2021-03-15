@@ -38,13 +38,13 @@ library PaymentTransactionModel {
      * @notice Decodes a encoded byte array into a PaymentTransaction
      * The following rules about the rlp-encoded transaction are enforced:
      *      - `txType` must be an integer value with no leading zeros
-     *      - `inputs` is an list of 0 to 4 elements
+     *      - `inputs` is an list of 0 to _MAX_INPUT_NUM elements
      *      - Each `input` is a 32 byte long array
      *      - An `input` may not be all zeros
-     *      - `outputs` is an list of 0 to 4 elements
+     *      - `outputs` is an list of 0 to _MAX_OUTPUT_NUM elements
      *      - Each `output` is a list of 2 elements: [`outputType`, `data`]
      *      - `output.outputType` must be an integer value with no leading zeros
-     *      - See FungibleTokenOutputModel for deatils on `output.data` encoding.
+     *      - See FungibleTokenOutputModel for details on `output.data` encoding.
      *      - An `output` may not be null; A null output is one whose amount is zero
      * @param _tx An RLP-encoded transaction
      * @return A decoded PaymentTransaction struct

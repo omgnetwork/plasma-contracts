@@ -47,9 +47,6 @@ data = {
 }
 
 
-EMPTY_BYTES20 = '0x0000000000000000000000000000000000000000'
-
-
 def hash_struct(tx, verifying_contract=None):
     verifying_address = hex_to_binary(verifying_contract) if verifying_contract else NULL_ADDRESS
 
@@ -75,8 +72,6 @@ class Output(EIP712Struct):
 
 class Transaction(EIP712Struct):
     txType = Uint(256)
-    # inputs = Array(Bytes(), 32)
-    # outputs = Array(Bytes(), 32)
     inputs = Array(Input)
     outputs = Array(Output)
     txData = Uint(256)
@@ -86,12 +81,6 @@ class Transaction(EIP712Struct):
 def struct_tx_from_tx(tx):
     inputs = _map_inputs(tx.inputs)
     outputs = _map_outputs(tx.outputs)
-
-    # for input in inputs:
-    #   print(input)
-
-    # for output in outputs:
-    #   print(output)
 
     return Transaction(
         txType=tx.tx_type,
