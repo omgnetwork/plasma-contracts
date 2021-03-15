@@ -45,7 +45,6 @@ library PaymentTransactionModel {
      *      - Each `output` is a list of 2 elements: [`outputType`, `data`]
      *      - `output.outputType` must be an integer value with no leading zeros
      *      - See FungibleTokenOutputModel for deatils on `output.data` encoding.
-     *      - An `output` may not be null; A null output is one whose amount is zero
      * @param _tx An RLP-encoded transaction
      * @return A decoded PaymentTransaction struct
      */

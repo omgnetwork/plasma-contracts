@@ -132,7 +132,7 @@ contract('PaymentTransactionModel', ([alice]) => {
             await expectRevert(this.test.decode(encoded), 'Output type must not be 0');
         });
 
-        it('should pass when an output amount is zero', async () => {
+        it('should not fail when an output amount is zero', async () => {
             const zeroOutputAmount = new FungibleTransactionOutput(
                 OUTPUT_TYPE.PAYMENT, 0, OUTPUT_GUARD, constants.ZERO_ADDRESS,
             );

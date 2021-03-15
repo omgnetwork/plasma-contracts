@@ -23,7 +23,7 @@ library FungibleTokenOutputModel {
      *      - It must have 3 elements: [`outputGuard`, `token`, `amount`]
      *      - `outputGuard` is a 20 byte long array
      *      - `token` is a 20 byte long array
-     *      - `amount` must be an integer value with no leading zeros. It may not be zero.
+     *      - `amount` must be an integer value with no leading zeros.
      * @param genericOutput A GenericTransaction.Output
      * @return A fully decoded FungibleTokenOutputModel.Output struct
      */
@@ -42,7 +42,6 @@ library FungibleTokenOutputModel {
             amount: dataList[2].toUint()
         });
 
-        // require(outputData.amount != 0, "Output amount must not be 0");
         require(outputData.outputGuard != bytes20(0), "Output outputGuard must not be 0");
         return outputData;
     }
