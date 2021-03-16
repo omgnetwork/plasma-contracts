@@ -72,11 +72,12 @@ class TransactionOutput(rlp.Serializable):
 
 
 class Transaction(rlp.Serializable):
-    NUM_TXOS = 4
+    NUM_INPUTS = 5
+    NUM_OUTPUTS = 5
     fields = (
         ('tx_type', big_endian_int),
-        ('inputs', CountableList(Binary.fixed_length(32), NUM_TXOS)),
-        ('outputs', CountableList(TransactionOutput, NUM_TXOS)),
+        ('inputs', CountableList(Binary.fixed_length(32), NUM_INPUTS)),
+        ('outputs', CountableList(TransactionOutput, NUM_OUTPUTS)),
         ('tx_data', big_endian_int),
         ('metadata', Binary.fixed_length(32))
     )

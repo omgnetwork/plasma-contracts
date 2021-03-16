@@ -22,15 +22,12 @@ library PaymentEip712Lib {
     );
 
     bytes32 constant internal TX_TYPE_HASH = keccak256(
-        "Transaction(uint256 txType,Input input0,Input input1,Input input2,Input input3,Output output0,Output output1,Output output2,Output output3,uint256 txData,bytes32 metadata)Input(uint256 blknum,uint256 txindex,uint256 oindex)Output(uint256 outputType,bytes20 outputGuard,address currency,uint256 amount)"
+        "Transaction(uint256 txType,Input[] inputs,Output[] outputs,uint256 txData,bytes32 metadata)Input(uint256 blknum,uint256 txindex,uint256 oindex)Output(uint256 outputType,bytes20 outputGuard,address currency,uint256 amount)"
     );
 
     bytes32 constant internal INPUT_TYPE_HASH = keccak256("Input(uint256 blknum,uint256 txindex,uint256 oindex)");
     bytes32 constant internal OUTPUT_TYPE_HASH = keccak256("Output(uint256 outputType,bytes20 outputGuard,address currency,uint256 amount)");
     bytes32 constant internal SALT = 0xfad5c7f626d80f9256ef01929f3beb96e058b8b4b0e3fe52d84f054c0e2a7a83;
-
-    bytes32 constant internal EMPTY_INPUT_HASH = keccak256(abi.encode(INPUT_TYPE_HASH, 0, 0, 0));
-    bytes32 constant internal EMPTY_OUTPUT_HASH = keccak256(abi.encode(OUTPUT_TYPE_HASH, 0, bytes20(0x0), address(0x0), 0));
 
     struct Constants {
         // solhint-disable-next-line var-name-mixedcase
@@ -42,7 +39,7 @@ library PaymentEip712Lib {
         bytes32 DOMAIN_SEPARATOR = keccak256(abi.encode(
             EIP712_DOMAIN_HASH,
             keccak256("OMG Network"),
-            keccak256("1"),
+            keccak256("2"),
             address(_verifyingContract),
             SALT
         ));
@@ -73,64 +70,35 @@ library PaymentEip712Lib {
         pure
         returns (bytes32)
     {
-        // Pad empty value to input array
-        bytes32[] memory inputs = new bytes32[](PaymentTransactionModel.MAX_INPUT_NUM());
+        bytes32[] memory inputs = new bytes32[](_tx.inputs.length);
         for (uint i = 0; i < _tx.inputs.length; i++) {
-            inputs[i] = _tx.inputs[i];
+            PosLib.Position memory utxo = PosLib.decode(uint256(_tx.inputs[i]));
+            inputs[i] = keccak256(abi.encode(
+                INPUT_TYPE_HASH,
+                utxo.blockNum,
+                utxo.txIndex,
+                uint256(utxo.outputIndex)
+            ));
         }
-
-        // Pad empty value to output array
-        FungibleTokenOutputModel.Output[] memory outputs = new FungibleTokenOutputModel.Output[](PaymentTransactionModel.MAX_OUTPUT_NUM());
+        
+        bytes32[] memory outputs = new bytes32[](_tx.outputs.length);
         for (uint i = 0; i < _tx.outputs.length; i++) {
-            outputs[i] = _tx.outputs[i];
+            outputs[i] = keccak256(abi.encode(
+                OUTPUT_TYPE_HASH,
+                _tx.outputs[i].outputType,
+                _tx.outputs[i].outputGuard,
+                _tx.outputs[i].token,
+                _tx.outputs[i].amount
+            ));
         }
 
         return keccak256(abi.encode(
             TX_TYPE_HASH,
             _tx.txType,
-            _hashInput(inputs[0]),
-            _hashInput(inputs[1]),
-            _hashInput(inputs[2]),
-            _hashInput(inputs[3]),
-            _hashOutput(outputs[0]),
-            _hashOutput(outputs[1]),
-            _hashOutput(outputs[2]),
-            _hashOutput(outputs[3]),
+            keccak256(abi.encodePacked(inputs)),
+            keccak256(abi.encodePacked(outputs)),
             _tx.txData,
             _tx.metaData
-        ));
-    }
-
-    function _hashInput(bytes32 _input) private pure returns (bytes32) {
-        uint256 inputUtxoValue = uint256(_input);
-        if (inputUtxoValue == 0) {
-            return EMPTY_INPUT_HASH;
-        }
-
-        PosLib.Position memory utxo = PosLib.decode(inputUtxoValue);
-        return keccak256(abi.encode(
-            INPUT_TYPE_HASH,
-            utxo.blockNum,
-            utxo.txIndex,
-            uint256(utxo.outputIndex)
-        ));
-    }
-
-    function _hashOutput(FungibleTokenOutputModel.Output memory _output)
-        private
-        pure
-        returns (bytes32)
-    {
-        if (_output.amount == 0) {
-            return EMPTY_OUTPUT_HASH;
-        }
-
-        return keccak256(abi.encode(
-            OUTPUT_TYPE_HASH,
-            _output.outputType,
-            _output.outputGuard,
-            _output.token,
-            _output.amount
         ));
     }
 }

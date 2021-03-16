@@ -51,7 +51,7 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob, otherAddress]) => {
         bountySize: 0,
     };
     const BLOCK_NUM = 1000;
-    const MAX_NUM_OF_INPUTS = 4;
+    const MAX_NUM_OF_INPUTS = 5;
 
     before('deploy and link with controller lib', async () => {
         const startInFlightExit = await PaymentStartInFlightExit.new();
@@ -112,7 +112,7 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob, otherAddress]) => {
                     amount: AMOUNT,
                     piggybackBondSize: PIGGYBACK_BOND,
                     bountySize: PROCESS_EXIT_BOUNTY,
-                }, DUMMY_WITHDRAW_DATA, DUMMY_WITHDRAW_DATA, DUMMY_WITHDRAW_DATA],
+                }, DUMMY_WITHDRAW_DATA, DUMMY_WITHDRAW_DATA, DUMMY_WITHDRAW_DATA, DUMMY_WITHDRAW_DATA],
                 outputs: [{
                     outputId: filler,
                     outputGuard: filler,
@@ -129,7 +129,7 @@ contract('PaymentChallengeIFEOutputSpent', ([_, alice, bob, otherAddress]) => {
                     amount: AMOUNT,
                     piggybackBondSize: PIGGYBACK_BOND,
                     bountySize: PIGGYBACK_BOND,
-                }, DUMMY_WITHDRAW_DATA, DUMMY_WITHDRAW_DATA],
+                }, DUMMY_WITHDRAW_DATA, DUMMY_WITHDRAW_DATA, DUMMY_WITHDRAW_DATA],
             };
 
             return {
