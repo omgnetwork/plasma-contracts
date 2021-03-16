@@ -27,7 +27,7 @@ const {
 const { buildUtxoPos } = require('../../../../helpers/positions.js');
 
 contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwner2, inputOwner3, outputOwner1, outputOwner2, outputOwner3, otherAddress]) => {
-    const MAX_INPUT_NUM = 4;
+    const MAX_INPUT_NUM = 5;
     const MIN_EXIT_PERIOD = 60 * 60 * 24 * 7; // 1 week in seconds
     const DUMMY_INITIAL_IMMUNE_VAULTS_NUM = 0;
     const INITIAL_IMMUNE_EXIT_GAME_NUM = 1;
@@ -118,7 +118,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
                 amount: TEST_INPUT_AMOUNT,
                 piggybackBondSize: this.piggybackBondSize.toString(),
                 bountySize,
-            }, emptyWithdrawData],
+            }, emptyWithdrawData, emptyWithdrawData],
             outputs: [{
                 outputId: TEST_OUTPUT_ID_FOR_OUTPUT_1,
                 exitTarget: exitTargetOutput1,
@@ -140,7 +140,7 @@ contract('PaymentProcessInFlightExit', ([_, ifeBondOwner, inputOwner1, inputOwne
                 amount: TEST_OUTPUT_AMOUNT,
                 piggybackBondSize: this.piggybackBondSize.toString(),
                 bountySize,
-            }, emptyWithdrawData],
+            }, emptyWithdrawData, emptyWithdrawData],
         };
 
         return inFlightExitData;

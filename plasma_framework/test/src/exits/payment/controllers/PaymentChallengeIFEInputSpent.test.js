@@ -144,7 +144,7 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                     amount: INPUT_TX_AMOUNT,
                     piggybackBondSize: PIGGYBACK_BOND,
                     bountySize: PROCESS_EXIT_BOUNTY,
-                }, emptyWithdrawData, emptyWithdrawData],
+                }, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData],
                 outputs: [{
                     outputId: web3.utils.sha3('dummy output id'),
                     outputGuard: web3.utils.sha3('dummy output guard'),
@@ -153,7 +153,7 @@ contract('PaymentChallengeIFEInputSpent', ([_, alice, inputOwner, outputOwner, c
                     amount: outputAmount,
                     piggybackBondSize: PIGGYBACK_BOND,
                     bountySize: PROCESS_EXIT_BOUNTY,
-                }, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData],
+                }, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData],
             };
 
             const exitId = await this.exitIdHelper.getInFlightExitId(rlpInFlightTxBytes);

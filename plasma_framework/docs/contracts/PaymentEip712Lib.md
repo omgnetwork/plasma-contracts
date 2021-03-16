@@ -26,8 +26,6 @@ bytes32 internal constant TX_TYPE_HASH;
 bytes32 internal constant INPUT_TYPE_HASH;
 bytes32 internal constant OUTPUT_TYPE_HASH;
 bytes32 internal constant SALT;
-bytes32 internal constant EMPTY_INPUT_HASH;
-bytes32 internal constant EMPTY_OUTPUT_HASH;
 
 ```
 
@@ -36,8 +34,6 @@ bytes32 internal constant EMPTY_OUTPUT_HASH;
 - [initConstants(address _verifyingContract)](#initconstants)
 - [hashTx(struct PaymentEip712Lib.Constants _eip712, struct PaymentTransactionModel.Transaction _tx)](#hashtx)
 - [_hashTx(struct PaymentTransactionModel.Transaction _tx)](#_hashtx)
-- [_hashInput(bytes32 _input)](#_hashinput)
-- [_hashOutput(struct FungibleTokenOutputModel.Output _output)](#_hashoutput)
 
 ### initConstants
 
@@ -78,32 +74,6 @@ returns(bytes32)
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
 | _tx | struct PaymentTransactionModel.Transaction |  | 
-
-### _hashInput
-
-```js
-function _hashInput(bytes32 _input) private pure
-returns(bytes32)
-```
-
-**Arguments**
-
-| Name        | Type           | Description  |
-| ------------- |------------- | -----|
-| _input | bytes32 |  | 
-
-### _hashOutput
-
-```js
-function _hashOutput(struct FungibleTokenOutputModel.Output _output) private pure
-returns(bytes32)
-```
-
-**Arguments**
-
-| Name        | Type           | Description  |
-| ------------- |------------- | -----|
-| _output | struct FungibleTokenOutputModel.Output |  | 
 
 ## Contracts
 

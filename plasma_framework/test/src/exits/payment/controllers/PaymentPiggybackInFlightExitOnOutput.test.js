@@ -36,8 +36,8 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
     const OUTPUT_TYPE = {
         ONE: 1, TWO: 2,
     };
-    const MAX_INPUT_SIZE = 4;
-    const MAX_OUTPUT_SIZE = 4;
+    const MAX_INPUT_SIZE = 5;
+    const MAX_OUTPUT_SIZE = 5;
     const PAYMENT_TX_TYPE = 1;
 
     before('deploy and link with controller lib', async () => {
@@ -132,7 +132,7 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
                     amount: 999,
                     piggybackBondSize: 0,
                     bountySize: 0,
-                }, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData],
+                }, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData],
                 outputs: [{
                     outputId: web3.utils.sha3('dummy output id'),
                     exitTarget: outputOwner,
@@ -147,7 +147,7 @@ contract('PaymentPiggybackInFlightExitOnOutput', ([_, alice, inputOwner, outputO
                     amount: outputAmount2,
                     piggybackBondSize: 0,
                     bountySize: 0,
-                }, emptyWithdrawData, emptyWithdrawData],
+                }, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData],
                 bondSize: this.startIFEBondSize.toString(),
             };
 
