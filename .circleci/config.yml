@@ -174,11 +174,12 @@ jobs:
           command: |
             # Somehow the file output format is best read in shell
             cat ~/repo/plasma_framework/gasReport.rst
-      - run:
-          name: Codechecks for gas usage
-          command: |
-            # Don't submit gas report for forks or private mirror
-            [[ -z "${CC_SECRET}" ]] || npx codechecks
+      # Temporarily disable codechecks as they are currently having issues (2021-03-16)
+      # - run:
+      #     name: Codechecks for gas usage
+      #     command: |
+      #       # Don't submit gas report for forks or private mirror
+      #       [[ -z "${CC_SECRET}" ]] || npx codechecks
           working_directory: ~/repo/plasma_framework
       - store_artifacts:
           path: ~/repo/plasma_framework/gasReporterOutput.json
