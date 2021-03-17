@@ -42,7 +42,7 @@ bool private bootDone;
 ```js
 event IFEBondUpdated(uint128  bondSize);
 event PiggybackBondUpdated(uint128  bondSize, uint128  exitBountySize);
-event InFlightExitStarted(address indexed initiator, bytes32 indexed txHash, bytes inFlightTx, uint256[] inputUtxosPos, bytes[] inFlightTxWitnesses bytes[] inputTxs);
+event InFlightExitStarted(address indexed initiator, bytes32 indexed txHash);
 event InFlightExitInputPiggybacked(address indexed exitTarget, bytes32 indexed txHash, uint16  inputIndex);
 event InFlightExitOmitted(uint168 indexed exitId, address  token);
 event InFlightBondReturnFailed(address indexed receiver, uint256  amount);
@@ -88,7 +88,7 @@ function boot(struct PaymentExitGameArgs.Args paymentExitGameArgs) internal nonp
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| paymentExitGameArgs | struct PaymentExitGameArgs.Args |  |
+| paymentExitGameArgs | struct PaymentExitGameArgs.Args |  | 
 
 ### inFlightExits
 
@@ -103,121 +103,121 @@ returns(struct PaymentExitDataModel.InFlightExit[])
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| exitIds | uint168[] | The exit IDs of the in-flight exits |
+| exitIds | uint168[] | The exit IDs of the in-flight exits | 
 
 ### startInFlightExit
 
 Starts withdrawal from a transaction that may be in-flight
 
 ```js
-function startInFlightExit(struct PaymentInFlightExitRouterArgs.StartExitArgs args) public payable nonReentrant onlyWithValue
+function startInFlightExit(struct PaymentInFlightExitRouterArgs.StartExitArgs args) public payable nonReentrant onlyWithValue 
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| args | struct PaymentInFlightExitRouterArgs.StartExitArgs | Input argument data to challenge (see also struct 'StartExitArgs') |
+| args | struct PaymentInFlightExitRouterArgs.StartExitArgs | Input argument data to challenge (see also struct 'StartExitArgs') | 
 
 ### piggybackInFlightExitOnInput
 
 Piggyback on an input of an in-flight exiting tx. Processed only if the in-flight exit is non-canonical.
 
 ```js
-function piggybackInFlightExitOnInput(struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnInputArgs args) public payable nonReentrant onlyWithValue
+function piggybackInFlightExitOnInput(struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnInputArgs args) public payable nonReentrant onlyWithValue 
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| args | struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnInputArgs | Input argument data to piggyback (see also struct 'PiggybackInFlightExitOnInputArgs') |
+| args | struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnInputArgs | Input argument data to piggyback (see also struct 'PiggybackInFlightExitOnInputArgs') | 
 
 ### piggybackInFlightExitOnOutput
 
 Piggyback on an output of an in-flight exiting tx. Processed only if the in-flight exit is canonical.
 
 ```js
-function piggybackInFlightExitOnOutput(struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnOutputArgs args) public payable nonReentrant onlyWithValue
+function piggybackInFlightExitOnOutput(struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnOutputArgs args) public payable nonReentrant onlyWithValue 
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| args | struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnOutputArgs | Input argument data to piggyback (see also struct 'PiggybackInFlightExitOnOutputArgs') |
+| args | struct PaymentInFlightExitRouterArgs.PiggybackInFlightExitOnOutputArgs | Input argument data to piggyback (see also struct 'PiggybackInFlightExitOnOutputArgs') | 
 
 ### challengeInFlightExitNotCanonical
 
 Challenges an in-flight exit to be non-canonical
 
 ```js
-function challengeInFlightExitNotCanonical(struct PaymentInFlightExitRouterArgs.ChallengeCanonicityArgs args) public nonpayable nonReentrant
+function challengeInFlightExitNotCanonical(struct PaymentInFlightExitRouterArgs.ChallengeCanonicityArgs args) public nonpayable nonReentrant 
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| args | struct PaymentInFlightExitRouterArgs.ChallengeCanonicityArgs | Input argument data to challenge (see also struct 'ChallengeCanonicityArgs') |
+| args | struct PaymentInFlightExitRouterArgs.ChallengeCanonicityArgs | Input argument data to challenge (see also struct 'ChallengeCanonicityArgs') | 
 
 ### respondToNonCanonicalChallenge
 
 Respond to a non-canonical challenge by providing its position and by proving its correctness
 
 ```js
-function respondToNonCanonicalChallenge(bytes inFlightTx, uint256 inFlightTxPos, bytes inFlightTxInclusionProof) public nonpayable nonReentrant
+function respondToNonCanonicalChallenge(bytes inFlightTx, uint256 inFlightTxPos, bytes inFlightTxInclusionProof) public nonpayable nonReentrant 
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| inFlightTx | bytes | The RLP-encoded in-flight transaction |
-| inFlightTxPos | uint256 | The position of the in-flight exiting transaction. The output index within the position is unused and should be set to 0 |
-| inFlightTxInclusionProof | bytes | Proof that the in-flight exiting transaction is included in a Plasma block |
+| inFlightTx | bytes | The RLP-encoded in-flight transaction | 
+| inFlightTxPos | uint256 | The position of the in-flight exiting transaction. The output index within the position is unused and should be set to 0 | 
+| inFlightTxInclusionProof | bytes | Proof that the in-flight exiting transaction is included in a Plasma block | 
 
 ### challengeInFlightExitInputSpent
 
 Challenges an exit from in-flight transaction input
 
 ```js
-function challengeInFlightExitInputSpent(struct PaymentInFlightExitRouterArgs.ChallengeInputSpentArgs args) public nonpayable nonReentrant
+function challengeInFlightExitInputSpent(struct PaymentInFlightExitRouterArgs.ChallengeInputSpentArgs args) public nonpayable nonReentrant 
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| args | struct PaymentInFlightExitRouterArgs.ChallengeInputSpentArgs | Argument data to challenge (see also struct 'ChallengeInputSpentArgs') |
+| args | struct PaymentInFlightExitRouterArgs.ChallengeInputSpentArgs | Argument data to challenge (see also struct 'ChallengeInputSpentArgs') | 
 
 ### challengeInFlightExitOutputSpent
 
 Challenges an exit from in-flight transaction output
 
 ```js
-function challengeInFlightExitOutputSpent(struct PaymentInFlightExitRouterArgs.ChallengeOutputSpent args) public nonpayable nonReentrant
+function challengeInFlightExitOutputSpent(struct PaymentInFlightExitRouterArgs.ChallengeOutputSpent args) public nonpayable nonReentrant 
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| args | struct PaymentInFlightExitRouterArgs.ChallengeOutputSpent | Argument data to challenge (see also struct 'ChallengeOutputSpent') |
+| args | struct PaymentInFlightExitRouterArgs.ChallengeOutputSpent | Argument data to challenge (see also struct 'ChallengeOutputSpent') | 
 
 ### deleteNonPiggybackedInFlightExit
 
 Deletes in-flight exit if the first phase has passed and not being piggybacked
 
 ```js
-function deleteNonPiggybackedInFlightExit(uint168 exitId) public nonpayable nonReentrant
+function deleteNonPiggybackedInFlightExit(uint168 exitId) public nonpayable nonReentrant 
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| exitId | uint168 | The exitId of the in-flight exit |
+| exitId | uint168 | The exitId of the in-flight exit | 
 
 ### processInFlightExit
 
@@ -231,9 +231,9 @@ function processInFlightExit(uint168 exitId, address token, address payable proc
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| exitId | uint168 | The in-flight exit ID |
-| token | address | The token (in erc20 address or address(0) for ETH) of the exiting output |
-| processExitInitiator | address payable | The processExits() initiator |
+| exitId | uint168 | The in-flight exit ID | 
+| token | address | The token (in erc20 address or address(0) for ETH) of the exiting output | 
+| processExitInitiator | address payable | The processExits() initiator | 
 
 ### startIFEBondSize
 
@@ -254,14 +254,14 @@ returns(uint128)
 Updates the in-flight exit bond size, taking two days to become effective.
 
 ```js
-function updateStartIFEBondSize(uint128 newBondSize) public nonpayable onlyFrom
+function updateStartIFEBondSize(uint128 newBondSize) public nonpayable onlyFrom 
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| newBondSize | uint128 | The new bond size |
+| newBondSize | uint128 | The new bond size | 
 
 ### piggybackBondSize
 
@@ -282,15 +282,15 @@ returns(uint128)
 Updates the piggyback bond size, taking two days to become effective
 
 ```js
-function updatePiggybackBondSize(uint128 newBondSize, uint128 newExitBountySize) public nonpayable onlyFrom
+function updatePiggybackBondSize(uint128 newBondSize, uint128 newExitBountySize) public nonpayable onlyFrom 
 ```
 
 **Arguments**
 
 | Name        | Type           | Description  |
 | ------------- |------------- | -----|
-| newBondSize | uint128 | The new bond size |
-| newExitBountySize | uint128 |  |
+| newBondSize | uint128 | The new bond size | 
+| newExitBountySize | uint128 |  | 
 
 ### processInFlightExitBountySize
 

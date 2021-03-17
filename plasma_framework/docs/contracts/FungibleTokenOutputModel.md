@@ -30,7 +30,7 @@ The data field is an RLP list that must satisfy the following conditions:
      - It must have 3 elements: [`outputGuard`, `token`, `amount`]
      - `outputGuard` is a 20 byte long array
      - `token` is a 20 byte long array
-     - `amount` must be an integer value with no leading zeros. It may not be zero.
+     - `amount` must be an integer value with no leading zeros.
 
 ```js
 function decodeOutput(struct GenericTransaction.Output genericOutput) internal pure
