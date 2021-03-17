@@ -12,8 +12,8 @@ const OUTPUT_GUARD = `0x${Array(40).fill(1).join('')}`;
 const OUTPUT = new FungibleTransactionOutput(OUTPUT_TYPE.PAYMENT, 100, OUTPUT_GUARD, constants.ZERO_ADDRESS);
 
 contract('PaymentTransactionModel', ([alice]) => {
-    const MAX_INPUT_NUM = 4;
-    const MAX_OUTPUT_NUM = 4;
+    const MAX_INPUT_NUM = 5;
+    const MAX_OUTPUT_NUM = 5;
 
     before(async () => {
         this.test = await PaymentTransactionModelMock.new();
@@ -37,10 +37,10 @@ contract('PaymentTransactionModel', ([alice]) => {
             expect(JSON.stringify(decoded)).to.equal(JSON.stringify(transaction));
         });
 
-        it('should decode payment transaction with 4 inputs and 4 outputs', async () => {
+        it('should decode payment transaction with 5 inputs and 5 outputs', async () => {
             const transaction = new PaymentTransaction(
                 TX_TYPE.PAYMENT,
-                [DUMMY_INPUT_1, DUMMY_INPUT_1, DUMMY_INPUT_1, DUMMY_INPUT_1],
+                [DUMMY_INPUT_1, DUMMY_INPUT_1, DUMMY_INPUT_1, DUMMY_INPUT_1, DUMMY_INPUT_1],
                 [OUTPUT, OUTPUT, OUTPUT, OUTPUT],
                 EMPTY_BYTES_32,
             );

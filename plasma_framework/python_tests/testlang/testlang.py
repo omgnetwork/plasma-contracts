@@ -103,21 +103,21 @@ class InFlightExit:
         return input_info
 
     def get_output(self, index):
-        assert index in range(4)
-        return self.get_input(index + 4)
+        assert index in range(Transaction.NUM_OUTPUTS)
+        return self.get_input(index + Transaction.NUM_INPUTS)
 
     def input_piggybacked(self, index):
         return (self.exit_map >> index & 1) == 1
 
     def output_piggybacked(self, index):
-        assert index in range(4)
-        return self.input_piggybacked(index + 4)
+        assert index in range(Transaction.NUM_OUTPUTS)
+        return self.input_piggybacked(index + Transaction.NUM_INPUTS)
 
     def input_blocked(self, index):
-        return self.input_piggybacked(index + 8)
+        return self.input_piggybacked(index + Transaction.NUM_INPUTS + Transaction.NUM_OUTPUTS)
 
     def output_blocked(self, index):
-        return self.input_blocked(index + 4)
+        return self.input_blocked(index + Transaction.NUM_INPUTS)
 
 
 class TestingLanguage:
@@ -210,7 +210,7 @@ class TestingLanguage:
         inputs = [decode_utxo_id(input_id) for input_id in input_ids]
         spend_tx = Transaction(inputs=inputs, outputs=outputs, metadata=metadata)
         for i in range(0, len(inputs)):
-            spend_tx.sign(i, accounts[i], verifying_contract=self.root_chain.plasma_framework)
+            spend_tx.sign(i, accounts[i], verifying_contract=self.root_chain.plasma_framework.address)
         blknum = self.submit_block([spend_tx], force_invalid=force_invalid)
         spend_id = encode_utxo_id(blknum, 0, 0)
         return spend_id
@@ -408,8 +408,8 @@ class TestingLanguage:
         self.root_chain.piggybackInFlightExit(spend_tx.encoded, input_index, **{'value': bond, 'from': account.address})
 
     def piggyback_in_flight_exit_output(self, tx_id, output_index, account, bond=None, spend_tx=None):
-        assert output_index in range(4)
-        return self.piggyback_in_flight_exit_input(tx_id, output_index + 4, account, bond, spend_tx)
+        assert output_index in range(Transaction.NUM_OUTPUTS)
+        return self.piggyback_in_flight_exit_input(tx_id, output_index + Transaction.NUM_INPUTS, account, bond, spend_tx)
 
     @staticmethod
     def find_shared_input(tx_a, tx_b):
