@@ -1,4 +1,5 @@
 import plasma_core.constants
+from plasma_core.transaction import Transaction
 
 EXIT_PERIOD = plasma_core.constants.MIN_EXIT_PERIOD
 
@@ -12,5 +13,5 @@ START_GAS = GAS_LIMIT - 1000000
 
 INITIAL_ETH = 10000 * 10 ** 18
 
-PAYMENT_TX_MAX_INPUT_SIZE = 4
-PAYMENT_TX_MAX_OUTPUT_SIZE = 4
+PAYMENT_TX_MAX_INPUT_SIZE = Transaction.NUM_INPUTS
+PAYMENT_TX_MAX_OUTPUT_SIZE = Transaction.NUM_OUTPUTS

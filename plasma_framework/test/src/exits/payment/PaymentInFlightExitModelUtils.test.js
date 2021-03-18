@@ -9,12 +9,12 @@ const { expect } = require('chai');
 const { EMPTY_BYTES_32 } = require('../../../helpers/constants.js');
 
 contract('PaymentInFlightExitModelUtils', () => {
-    const MAX_INPUTS = 4;
-    const MAX_OUTPUTS = 4;
+    const MAX_INPUTS = 5;
+    const MAX_OUTPUTS = 5;
     const MIN_EXIT_PERIOD = 1000;
-    const ALL_INPUTS_PIGGYBACKED = 2 ** 0 | 2 ** 1 | 2 ** 2 | 2 ** 3;
+    const ALL_INPUTS_PIGGYBACKED = 2 ** 0 | 2 ** 1 | 2 ** 2 | 2 ** 3 | 2 ** 4;
     const ALL_OUTPUTS_PIGGYBACKED = 2 ** MAX_INPUTS | 2 ** (MAX_INPUTS + 1)
-    | 2 ** (MAX_INPUTS + 2) | 2 ** (MAX_INPUTS + 3);
+    | 2 ** (MAX_INPUTS + 2) | 2 ** (MAX_INPUTS + 3) | 2 ** (MAX_INPUTS + 4);
     const EMPTY_WITHDRAW_DATA = {
         outputId: EMPTY_BYTES_32,
         exitTarget: constants.ZERO_ADDRESS,

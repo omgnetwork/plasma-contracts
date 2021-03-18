@@ -125,7 +125,7 @@ contract('PaymentDeleteInFlightExit', ([_, bondOwner, inputOwner, outputOwner]) 
                     amount: 999,
                     piggybackBondSize: 0,
                     bountySize: 0,
-                }, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData],
+                }, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData],
                 outputs: [{
                     outputId: web3.utils.sha3('dummy output id'),
                     exitTarget: constants.ZERO_ADDRESS, // would not be set during start IFE
@@ -133,7 +133,7 @@ contract('PaymentDeleteInFlightExit', ([_, bondOwner, inputOwner, outputOwner]) 
                     amount: outputAmount,
                     piggybackBondSize: 0,
                     bountySize: 0,
-                }, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData],
+                }, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData, emptyWithdrawData],
                 bondSize: this.startIFEBondSize.toString(),
             };
 
