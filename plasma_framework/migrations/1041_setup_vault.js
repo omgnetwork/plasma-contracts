@@ -37,12 +37,11 @@ const waitForReceipt = async (whatLog, transaction) => {
     console.log(`Transaction receipt for ${whatLog}: ${util.inspect(transactionReceipt, { showHidden: false, depth: null })}`);
 };
 
+// we use gas = 3000000 because estimating gas with await web3.eth.estimateGas is unreliable
 const setDepositVerifier = async (whatLog, ethVault, ethDepositVerifier, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress) => {
     const setDepositVerifierCall = web3.eth.abi.encodeFunctionCall(ethVault.abi.find(o => o.name === 'setDepositVerifier'), [ethDepositVerifier.address]);
     const gnosisSetDepositVerifier = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [ethVault.address, 0, setDepositVerifierCall]);
-    // const estimateGas = await web3.eth.estimateGas({ to: gnosisMultisigAddress, from: deployerAddress, data: gnosisSetDepositVerifier });
     const gas = 3000000;
-    console.log(`The amount of gas used for ${whatLog}: ${gas}`);
     const transaction = await web3.eth.sendTransaction({ gas: gas, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisSetDepositVerifier });
     console.log(`Submitted transaction with hash for ${whatLog}: ${transaction.transactionHash}`);
     console.log(`Full log for ${whatLog}: ${transaction}`);
@@ -52,9 +51,7 @@ const setDepositVerifier = async (whatLog, ethVault, ethDepositVerifier, gnosisM
 const registerVault = async (whatLog, plasmaFramework, ethVault, key, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress) => {
     const registerVaultCall = web3.eth.abi.encodeFunctionCall(plasmaFramework.abi.find(o => o.name === 'registerVault'), [key, ethVault.address]);
     const gnosisRegisterVault = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [plasmaFramework.address, 0, registerVaultCall]);
-    // const estimateGas = await web3.eth.estimateGas({ to: gnosisMultisigAddress, from: deployerAddress, data: gnosisRegisterVault });
     const gas = 3000000;
-    console.log(`The amount of gas used for ${whatLog}: ${gas}`);
     const transaction = await web3.eth.sendTransaction({ gas: gas, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisRegisterVault });
     console.log(`Submitted transaction with hash for ${whatLog}: ${transaction.transactionHash}`);
     console.log(`Full log for ${whatLog}: ${transaction}`);
@@ -66,9 +63,7 @@ const paymentExitGameInit = async (whatLog, paymentExitGame, gnosisMultisigAbi, 
     console.log(`paymentExitGameInitCall: ${util.inspect(paymentExitGameInitCall, { showHidden: false, depth: null })}`);
     const gnosisPaymentExitGameInit = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [paymentExitGame.address, 0, paymentExitGameInitCall]);
     console.log(`gnosisPaymentExitGameInit: ${util.inspect(gnosisPaymentExitGameInit, { showHidden: false, depth: null })}`);
-    // const estimateGas = await web3.eth.estimateGas({ to: gnosisMultisigAddress, from: deployerAddress, data: gnosisPaymentExitGameInit });
     const gas = 3000000;
-    // console.log(`The amount of gas used for ${whatLog}: ${gas}`);
     const transaction = await web3.eth.sendTransaction({ gas: gas, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisPaymentExitGameInit });
     console.log(`transaction: ${util.inspect(transaction, { showHidden: false, depth: null })}`);
     console.log(`Submitted transaction with hash for ${whatLog}: ${transaction.transactionHash}`);
@@ -79,9 +74,7 @@ const paymentExitGameInit = async (whatLog, paymentExitGame, gnosisMultisigAbi, 
 const registerExitGame = async (whatLog, plasmaFramework, txType, exitGame, id, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress) => {
     const registerFeeExitGameCall = web3.eth.abi.encodeFunctionCall(plasmaFramework.abi.find(o => o.name === 'registerExitGame'), [txType, exitGame.address, id]);
     const gnosisFeeRegisterExitGame = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [plasmaFramework.address, 0, registerFeeExitGameCall]);
-    // const estimateGas = await web3.eth.estimateGas({ to: gnosisMultisigAddress, from: deployerAddress, data: gnosisFeeRegisterExitGame });
     const gas = 3000000;
-    // console.log(`The amount of gas used for ${whatLog}: ${gas}`);
     const transaction = await web3.eth.sendTransaction({ gas: gas, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisFeeRegisterExitGame });
     console.log(`Submitted transaction with hash for ${whatLog}: ${transaction.transactionHash}`);
     console.log(`Full log for ${whatLog}: ${transaction}`);
@@ -91,9 +84,7 @@ const registerExitGame = async (whatLog, plasmaFramework, txType, exitGame, id, 
 const setVersion = async (whatLog, plasmaFramework, sha, gnosisMultisigAbi, gnosisMultisigAddress, deployerAddress) => {
     const setVersionCall = web3.eth.abi.encodeFunctionCall(plasmaFramework.abi.find(o => o.name === 'setVersion'), [`${pck.version}+${sha}`]);
     const gnosisSetVersion = web3.eth.abi.encodeFunctionCall(gnosisMultisigAbi, [plasmaFramework.address, 0, setVersionCall]);
-    // const estimateGas = await web3.eth.estimateGas({ to: gnosisMultisigAddress, from: deployerAddress, data: gnosisSetVersion });
     const gas = 3000000;
-    // console.log(`The amount of gas used for ${whatLog}: ${gas}`);
     const transaction = await web3.eth.sendTransaction({ gas: gas, to: gnosisMultisigAddress, from: deployerAddress, data: gnosisSetVersion });
     console.log(`Submitted transaction with hash for ${whatLog}: ${transaction.transactionHash}`);
     console.log(`Full log for ${whatLog}: ${transaction}`);
