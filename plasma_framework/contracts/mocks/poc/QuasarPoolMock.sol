@@ -10,9 +10,8 @@ contract QuasarPoolMock is Quasar {
         address spendingConditionRegistryContract, 
         address _quasarOwner, 
         uint256 _safeBlockMargin, 
-        uint256 _waitingPeriod, 
         uint256 _bondValue
-    ) public Quasar(plasmaFrameworkContract, spendingConditionRegistryContract, _quasarOwner, _safeBlockMargin, _waitingPeriod, _bondValue) {
+    ) public Quasar(plasmaFrameworkContract, spendingConditionRegistryContract, _quasarOwner, _safeBlockMargin, _bondValue) {
     }
 
     function utilizeQuasarPool(address token, uint256 amount) public payable {

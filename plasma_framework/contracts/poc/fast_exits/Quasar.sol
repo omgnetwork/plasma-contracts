@@ -37,7 +37,6 @@ contract Quasar is QuasarPool {
 
     address public quasarOwner;
     uint256 public safeBlockMargin;
-    uint256 public waitingPeriod;
     uint256 constant public TICKET_VALIDITY_PERIOD = 14400;
     uint256 constant public IFE_CLAIM_MARGIN = 28800;
     // 7+1 days waiting period for IFE Claims
@@ -82,7 +81,6 @@ contract Quasar is QuasarPool {
      * @param plasmaFrameworkContract Plasma Framework contract address
      * @param _quasarOwner Receiver address on Plasma
      * @param _safeBlockMargin The Quasar will not accept exits for outputs younger than the current plasma block minus the safe block margin 
-     * @param _waitingPeriod Waiting period from submission to processing claim
      * @param _bondValue bond to obtain tickets
     */
     constructor (
@@ -90,7 +88,6 @@ contract Quasar is QuasarPool {
         address spendingConditionRegistryContract, 
         address _quasarOwner, 
         uint256 _safeBlockMargin, 
-        uint256 _waitingPeriod, 
         uint256 _bondValue
     ) public {
         plasmaFramework = PlasmaFramework(plasmaFrameworkContract);
@@ -99,7 +96,6 @@ contract Quasar is QuasarPool {
         quasarOwner = _quasarOwner;
         quasarMaintainer = msg.sender;
         safeBlockMargin = _safeBlockMargin;
-        waitingPeriod = _waitingPeriod;
         bondValue = _bondValue;
         unclaimedBonds = 0;
     }

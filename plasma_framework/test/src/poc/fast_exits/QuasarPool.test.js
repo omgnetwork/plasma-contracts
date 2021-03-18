@@ -15,7 +15,6 @@ contract('Quasar Pool', ([authority, quasarOwner, quasarMaintainer, supplierOne,
     const INITIAL_IMMUNE_VAULTS = 1;
     const INITIAL_IMMUNE_EXIT_GAME = 1;
     const SAFE_BLOCK_MARGIN = 10;
-    const WAITING_PERIOD = 3600;
     const BOND_VALUE = 100;
     const ETH = constants.ZERO_ADDRESS;
 
@@ -50,7 +49,6 @@ contract('Quasar Pool', ([authority, quasarOwner, quasarMaintainer, supplierOne,
             this.spendingConditionRegistry.address,
             quasarOwner,
             SAFE_BLOCK_MARGIN,
-            WAITING_PERIOD,
             BOND_VALUE,
             { from: quasarMaintainer },
         );
