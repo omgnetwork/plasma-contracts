@@ -328,6 +328,8 @@ jobs:
           name: Deploy Plasma contracts to Rinkeby
           no_output_timeout: 1h
           command: |
+            // if you see Error:PollingBlockTracker, use WSS or RPC interchangeably
+            // -e REMOTE_URL="http://rinkeby.infura.io/v3/${INFURA_API_TOKEN}" \
             docker run --rm \
             -v /tmp:/home/plasma-contracts/MultiSigWallet/build \
             -v /tmp/plasma_framework_output:/home/plasma-contracts/plasma_framework/build \
@@ -356,7 +358,7 @@ jobs:
             export WALLET_NAME=plasma-deployer
             export AA=$(cat /tmp/plasma_framework_output/outputs.json | jq -r .authority_address)
             export PF=$(cat /tmp/plasma_framework_output/outputs.json | jq -r .plasma_framework)
-            curl --insecure -H "X-Vault-Request: true" -H 'X-Vault-Token: "'"$VAULT_TOKEN"'"' --data '{"block_root":"KW7c+YhqaeXzUSARcnOh0sBSWhAU7l144fF6ls0Y5Vw=", "nonce": 0, "gas_price": "37000000000", contract: "'"$PF"'"}' -X PUT https://127.0.0.1:8200/v1/immutability-eth-plugin/wallets/$WALLET_NAME/accounts/$AA/plasma/submitBlock
+            curl --insecure -H "X-Vault-Request: true" -H 'X-Vault-Token: "'"$VAULT_TOKEN"'"' --data '{"block_root":"KW7c+YhqaeXzUSARcnOh0sBSWhAU7l144fF6ls0Y5Vw=", "nonce": 0, "gas_price": "37000000000", contract: "'"$PF"'"}' -X PUT https://127.0.0.1:8200/v1/immutability-eth-plugin/wallets/${WALLET_NAME}/accounts/${AA}/plasma/submitBlock
       - run:
           name: Has the deployment succeeded?
           command: |
@@ -433,11 +435,10 @@ workflows:
             branches:
               only:
                 - v2.0.0
-      - Deploy to Rinkeby with Gnosis and Vault
-      #:
-          # requires:
-          #   - Deploy to Rinkeby
-          # filters:
-          #   branches:
-          #     only:
-          #       - v2.0.0
+      - Deploy to Rinkeby with Gnosis and Vault:
+          requires:
+            - Deploy to Rinkeby
+          filters:
+            branches:
+              only:
+                - v2.0.0
