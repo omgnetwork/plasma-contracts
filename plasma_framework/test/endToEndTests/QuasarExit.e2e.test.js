@@ -78,7 +78,6 @@ contract(
         };
 
         const setupQuasar = async () => {
-            this.waitingPeriod = 14400;
             this.dummyQuasarBondValue = 500;
 
             this.quasar = await Quasar.new(
@@ -86,7 +85,6 @@ contract(
                 this.spendingConditionRegistry.address,
                 quasarOwner,
                 INITIAL_SAFE_BLOCK_MARGIN,
-                this.waitingPeriod,
                 this.dummyQuasarBondValue,
                 { from: quasarMaintainer },
             );
@@ -596,9 +594,6 @@ contract(
 
                             describe('and then the Quasar Maintainer challenges the claim within waiting period', () => {
                                 before(async () => {
-                                    await time.increase(time.duration.seconds(this.waitingPeriod).sub(
-                                        time.duration.seconds(1),
-                                    ));
                                     const utxoPos = this.depositUtxoPos;
                                     const rlpChallengeTx = this.bobTransferTx;
                                     const challengeTxInputIndex = 0;
