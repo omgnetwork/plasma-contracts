@@ -8,7 +8,7 @@ module.exports = async (
     // eslint-disable-next-line no-unused-vars
     [deployerAddress, maintainerAddress, authorityAddress],
 ) => {
-    const deployQuasar = process.env.DEPLOY_QUASAR || false;
+    const deployQuasar = process.env.DEPLOY_QUASAR === 'true';
     if (deployQuasar) {
         let plasmaFrameworkAddress = process.env.PLASMA_FRAMEWORK_ADDRESS || false;
         let spendingConditionRegistryAddress = process.env.SPENDING_CONDITION_REGISTRY || false;

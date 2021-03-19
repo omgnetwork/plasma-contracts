@@ -7,7 +7,7 @@ module.exports = async (
     // eslint-disable-next-line no-unused-vars
     [deployerAddress, maintainerAddress, authorityAddress],
 ) => {
-    const deployQuasar = process.env.DEPLOY_QUASAR || false;
+    const deployQuasar = process.env.DEPLOY_QUASAR === 'true';
     if (deployQuasar) {
         const quasar = await Quasar.deployed();
         const qEth = await deployer.deploy(QToken, 'Quasar Ether', 'qETH', 18, quasar.address);
