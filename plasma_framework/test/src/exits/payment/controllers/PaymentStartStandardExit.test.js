@@ -147,19 +147,16 @@ contract('PaymentStartStandardExit', ([_, outputOwner, nonOutputOwner]) => {
             );
         });
 
-        it('should fail when exit with amount of 0', async () => {
+        it('should not fail when exit with amount of 0', async () => {
             const testAmountZero = 0;
             const { args, merkleTree } = buildTestData(testAmountZero, outputOwner, this.dummyBlockNum);
 
             await this.framework.setBlock(this.dummyBlockNum, merkleTree.root, this.dummyBlockTimestamp);
 
-            await expectRevert(
-                this.exitGame.startStandardExit(args, {
-                    from: outputOwner,
-                    value: this.startStandardExitBondSize,
-                }),
-                'Output amount must not be 0',
-            );
+            await this.exitGame.startStandardExit(args, {
+                from: outputOwner,
+                value: this.startStandardExitBondSize,
+            });
         });
 
         it('should fail when the exiting tx type is not the supported one', async () => {

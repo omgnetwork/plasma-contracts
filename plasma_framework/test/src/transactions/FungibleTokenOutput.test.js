@@ -61,20 +61,19 @@ contract('FungibleTokenOutputModel', () => {
             );
         });
 
-        it('should fail when amount is 0', async () => {
-            const invalidOutput = rlp.encode([
+        it('should not fail when amount is 0', async () => {
+            const expected = new FungibleTransactionOutput(
                 OUTPUT_TYPE.PAYMENT,
-                [
-                    OUTPUT_GUARD,
-                    constants.ZERO_ADDRESS,
-                    0,
-                ],
-            ]);
-
-            await expectRevert(
-                this.test.decodeOutput(invalidOutput),
-                'Output amount must not be 0',
+                0,
+                OUTPUT_GUARD,
+                constants.ZERO_ADDRESS,
             );
+            const output = await this.test.decodeOutput(expected.rlpEncoded());
+
+            expect(new BN(output.outputType)).to.be.bignumber.equal(new BN(expected.outputType));
+            expect(output.outputGuard).to.equal(expected.outputGuard);
+            expect(new BN(output.amount)).to.be.bignumber.equal(new BN(expected.amount));
+            expect(output.token).to.equal(expected.token);
         });
 
         it('should fail when outputGuard is 0', async () => {
