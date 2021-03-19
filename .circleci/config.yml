@@ -328,8 +328,8 @@ jobs:
           name: Deploy Plasma contracts to Rinkeby
           no_output_timeout: 1h
           command: |
-            // if you see Error:PollingBlockTracker, use WSS or RPC interchangeably
-            // -e REMOTE_URL="http://rinkeby.infura.io/v3/${INFURA_API_TOKEN}" \
+            # if you see Error:PollingBlockTracker, use WSS or RPC interchangeably
+            # -e REMOTE_URL="http://rinkeby.infura.io/v3/${INFURA_API_TOKEN}" \
             docker run --rm \
             -v /tmp:/home/plasma-contracts/MultiSigWallet/build \
             -v /tmp/plasma_framework_output:/home/plasma-contracts/plasma_framework/build \
