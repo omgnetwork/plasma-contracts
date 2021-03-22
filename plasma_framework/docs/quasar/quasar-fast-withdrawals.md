@@ -1,4 +1,4 @@
-# Incognito Fast Withdrawals
+# Quasar Fast Withdrawals
 This is an attempt to reduce the time to get liquid funds to <= 24 hrs.
 The following approach to some extent, combines ideas from the `Atomic Swap` and `Vending Machine way` of Fast Withdrawals. But Unlike the Vending Machine way, this is a trustless way to exchange funds using an on-chain smart contract. Which would enable almost anyone (not only limited to token-issuers or partners) to provide the service for incentives. This approach also pushes for bringing the liquidity providers to the exiters, hence eliminating the requirement of a token market.
 
