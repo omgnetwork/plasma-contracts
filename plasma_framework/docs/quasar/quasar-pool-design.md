@@ -7,8 +7,8 @@ Which explains a trustless model, And this is a continuation, that explains the 
 
 ## The inception of a quasar pool:
 
-This is what a trustless quasar should look like (this just shows the flows of the funds, some steps about quasar interaction eg: ticket, challenges, ifeClaims haven’t been shown)
-![quasar_diagram_without external_pool (2)](https://user-images.githubusercontent.com/26090752/112024138-e5484100-8b59-11eb-979d-2d72e08c6c93.jpg)
+This is what a trustless quasar should look like (this just shows the flows of the funds, some steps about quasar interaction eg: ticket, challenges, ifeClaims haven’t been shown) <br><br>
+![quasar_diagram_without external_pool](https://user-images.githubusercontent.com/26090752/112024138-e5484100-8b59-11eb-979d-2d72e08c6c93.jpg)
 
 Here, the quasar operator would put in funds on the ETH pool, and steps marked # are optional, the quasar owner can do whatever with the funds received on plasma after step 1. 
 
@@ -46,8 +46,8 @@ We went with B)
 This brings to change **-2) quasar pool with multiple suppliers**,
 
 
-The structure now looks like-
-![quasar_diagram_with external_pool (1)](https://user-images.githubusercontent.com/26090752/112024174-ee391280-8b59-11eb-8406-fa7d7d460e98.jpg)
+The structure now looks like- <br><br>
+![quasar_diagram_with external_pool](https://user-images.githubusercontent.com/26090752/112024174-ee391280-8b59-11eb-8406-fa7d7d460e98.jpg)
 
 We tried to make it look similar to Compound ( think the Quasar contract is the compound supply pool). The borrowers are the exiters, but the one who repays is us(the trusted plasma-operator).
 
