@@ -1,7 +1,7 @@
 pragma solidity 0.5.11;
 pragma experimental ABIEncoderV2;
 
-import "../../src/utils/SafeEthTransfer.sol";
+import "../src/utils/SafeEthTransfer.sol";
 import "./utils/Exponential.sol";
 import "./interfaces/IQToken.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";

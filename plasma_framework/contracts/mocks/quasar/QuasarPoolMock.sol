@@ -1,7 +1,7 @@
 pragma solidity 0.5.11;
 pragma experimental ABIEncoderV2;
 
-import "../../poc/fast_exits/Quasar.sol";
+import "../../quasar/Quasar.sol";
 
 contract QuasarPoolMock is Quasar {
 

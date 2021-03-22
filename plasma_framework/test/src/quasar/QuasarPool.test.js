@@ -8,7 +8,7 @@ const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry')
 
 const { BN, constants } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
-const { TX_TYPE, OUTPUT_TYPE } = require('../../../helpers/constants.js');
+const { TX_TYPE, OUTPUT_TYPE } = require('../../helpers/constants.js');
 
 contract('Quasar Pool', ([authority, quasarOwner, quasarMaintainer, supplierOne, supplierTwo, supplierThree, supplierFour, supplierFive]) => {
     const MIN_EXIT_PERIOD = 10;
