@@ -7,8 +7,8 @@ const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry')
 
 const { BN, expectRevert, constants } = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
-const { TX_TYPE, OUTPUT_TYPE } = require('../../../helpers/constants.js');
-const { buildUtxoPos } = require('../../../helpers/positions.js');
+const { TX_TYPE, OUTPUT_TYPE } = require('../../helpers/constants.js');
+const { buildUtxoPos } = require('../../helpers/positions.js');
 
 
 contract('Quasar', ([authority, quasarOwner, quasarMaintainer, alice]) => {
