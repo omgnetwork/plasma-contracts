@@ -165,7 +165,7 @@ contract('Erc20Vault', ([_, erc20Minter, authority, maintainer, alice]) => {
 
                 await expectRevert(
                     this.erc20Vault.deposit(deposit, { from: alice }),
-                    'Invalid output currency (ETH)',
+                    'Invalid output token (ETH)',
                 );
             });
 

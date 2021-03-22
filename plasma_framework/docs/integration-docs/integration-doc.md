@@ -217,7 +217,7 @@ Note that:
 12. `metadata` must be padded to 32 bytes long
 
 ### Payment transaction fees
-Operator collects fees for including a transaction in a block. The transaction fee is implicit i.e. it is the difference between the transaction inputs and outputs, grouped by the token. Operator requires fee to be covered completely with a single currency, but not necessarily by a single input.
+Operator collects fees for including a transaction in a block. The transaction fee is implicit i.e. it is the difference between the transaction inputs and outputs, grouped by the token. Operator requires fee to be covered completely with a single token, but not necessarily by a single input.
 
 For example if the transaction inputs are as follows:
 ```
@@ -296,7 +296,7 @@ The EIP-712 typed data structure is as follows:
     Output: [
         { name: 'outputType', type: 'uint256' },
         { name: 'outputGuard', type: 'bytes20' },
-        { name: 'currency', type: 'address' },
+        { name: 'token', type: 'address' },
         { name: 'amount', type: 'uint256' }
     ]
   },
@@ -512,7 +512,7 @@ This example is a deposit transaction of 1,000,000,000,000,000 Wei, sent from ad
       # owner of the output, for deposit txs, owner = sender
       "0xa013debd703e28af78c2ffd0264ef70f978c5465",
 
-      # The currency, 0x0000000000000000000000000000000000000000 = ether
+      # The token, 0x0000000000000000000000000000000000000000 = ether
       "0x0000000000000000000000000000000000000000", 
 
       # The amount to deposit
@@ -524,7 +524,7 @@ This example is a deposit transaction of 1,000,000,000,000,000 Wei, sent from ad
 ]
 ```
 
-This transaction must be RLP-encoded, using a library of your choice. Before RLP-encoding, ensure you decode the owner address, currency and metadata, from hexadecimal to bytes. Once the transaction is RLP-encoded, encode the result to hexadecimal.
+This transaction must be RLP-encoded, using a library of your choice. Before RLP-encoding, ensure you decode the owner address, token and metadata, from hexadecimal to bytes. Once the transaction is RLP-encoded, encode the result to hexadecimal.
 
 #### outputTxInclusionProof (bytes)
 A Merkle proof showing that the transaction was included. This Merkle proof, which is used to prove the inclusion of a specific hash in a Merkle tree, is a string containing each sibling hash for each level of the Merkle tree, concatenated together.

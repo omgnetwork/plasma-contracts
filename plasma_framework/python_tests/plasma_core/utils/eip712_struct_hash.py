@@ -29,7 +29,7 @@ class Input(EIP712Struct):
 class Output(EIP712Struct):
     outputType = Uint(256)
     outputGuard = Bytes(20)
-    currency = Address()
+    token = Address()
     amount = Uint(256)
 
 
@@ -78,5 +78,5 @@ def _map_outputs(outputs):
 
     eip712_outputs = []
     for o in outputs:
-        eip712_outputs.append(Output(outputType=o.output_type, outputGuard=o.output_guard, currency=o.token, amount=o.amount))
+        eip712_outputs.append(Output(outputType=o.output_type, outputGuard=o.output_guard, token=o.token, amount=o.amount))
     return eip712_outputs + [empty_output] * (4 - len(outputs))  # pad with empty outputs
