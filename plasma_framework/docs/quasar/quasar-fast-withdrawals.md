@@ -23,7 +23,7 @@ The steps-
 1. Deploy the contract, setting the following attributes
 	- The Owner - the account which will receive the funds on Plasma; should be a fresh account with no history of incoming transactions.
 	- Safe blocknum (upper-bound) - This is the latest decided safe block by the owner; to acknowledge tickets for UTXOs from this or older blocks; see [reason](#After-Operator-goes-Byzantine)
-	- Waiting period - the time to wait from the contract receiving inclusion proofs to providing liquid funds; to protect against operator + user collusion only; see [reason](#Operator-allows-a-double-spend-tx-of-Alice)
+	- Waiting period - the time to wait from the contract receiving inclusion proofs to providing liquid funds; to protect against operator + user collusion only; see [reason](#Operator-allows-a-double-spend-transaction-of-Alice)
 
 2. Load the contract with Layer 1 funds for liquidity.
 
