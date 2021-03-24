@@ -30,7 +30,7 @@ The steps-
 ### Using and Withdrawing
 Alice has some PETH, this is the process she has to go through in order to get liquid funds instantly:
 1. Alice takes a note of the UTXO that she wants to exit. She has options to select any Quasar out there, comparing the waiting period and the safe blocknum upper-bounds for each of them.
-2. Alice obtains a ticket from one of these Quasars, specifying her UTXO. The intention of the ticket is to reserve the amount from the contract. The ticket is valid for a certain period of time and can only be obtained for UTXOs which are within limits of the specified blocknum upper-bound; see [reason](#Owner-races-to-clear-liquid-funds)
+2. Alice obtains a ticket from one of these Quasars, specifying her UTXO. The intention of the ticket is to reserve the amount from the contract. The ticket is valid for a certain period of time and can only be obtained for UTXOs which are within limits of the specified blocknum upper-bound; see [reason](#Owner-races-to-empty-liquid-funds)
 3. After successfully obtaining the ticket, Alice spends the UTXO in a transaction to the Owner. The transaction should only include inputs owned by Alice; see [reason](#IFE-Claims)
 4. After the transaction is confirmed, Alice submits a claim to the Quasar with the inclusion proof of the transaction.
 5. The claim gets added to the Quasar's queue with a very short waiting period. The waiting period gives the Quasar Owner an opportunity to challenge in case the Operator colludes with Alice
