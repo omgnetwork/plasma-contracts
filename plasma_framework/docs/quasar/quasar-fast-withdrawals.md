@@ -1,6 +1,6 @@
 # Quasar Fast Withdrawals
 This is an attempt to reduce the time needed to move funds from Layer 2 to Layer 1 to <= 24 hrs.
-It is a trustless way to exchange funds using an Layer 1 smart contract, which would enable almost anyone (i.e. not only limited to token-issuers or partners) to provide the service for incentives. This approach also pushes for bringing the liquidity providers to the exiters, hence eliminating the requirement of a token market.
+It is a trustless way to exchange funds using a Layer 1 smart contract, which would enable almost anyone (i.e. not only limited to token-issuers or partners) to provide the service for incentives. This approach also pushes for bringing the liquidity providers to the exiters, hence eliminating the requirement of a token market.
 
 ## Overview
 Exchanging/Swapping assets is done with the help of transaction inclusion proofs
