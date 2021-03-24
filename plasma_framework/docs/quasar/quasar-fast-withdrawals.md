@@ -59,7 +59,7 @@ If the current state is determined to be Byzantine, the Owner should
 
 The existing active tickets however are valid and IFE-Claims can be used to recover these funds.
 
-Note that freezing the contract has to be done within the Required Exit Period ([unless automatic safe block is set](#Automating_maintainance_of_the_Safe_Blocknum_upper-bound)), hence time-limited to one-week, but should be done sooner by the Owner to reduce the hassle.
+Note that freezing the contract has to be done within the Required Exit Period ([unless automatic safe block is set](#automating-maintainance-of-the-safe-blocknum-upper-bound)), hence time-limited to one-week, but should be done sooner by the Owner to reduce the hassle.
 
 ### IFE-Claims
 
