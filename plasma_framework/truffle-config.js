@@ -9,12 +9,14 @@ module.exports = {
             port: 8545,
             network_id: '*',
             gas: 0xfffffffffff,
+            timeoutBlocks: 100,
         },
         local: {
             host: process.env.ETH_CLIENT_HOST || '127.0.0.1',
             port: process.env.ETH_CLIENT_PORT || 8545,
             from: process.env.DEPLOYER_ADDRESS,
             network_id: '*',
+            timeoutBlocks: 100,
         },
         // Remote means that the remote client does not possess the private keys.
         // Transactions need to be signed locally with the given private keys
@@ -32,6 +34,7 @@ module.exports = {
             ),
             gasPrice: process.env.GAS_PRICE || 20000000000, // default 20 gwei
             network_id: '*',
+            timeoutBlocks: 100, // timeoutBlocks: - if a transaction is not mined, keep waiting for this number of blocks (default is 50)
         },
     },
 
