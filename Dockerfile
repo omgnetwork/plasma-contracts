@@ -1,4 +1,4 @@
-FROM node:10-alpine
+FROM node:12-alpine
 ARG VAULT
 RUN apk update && apk add make git g++ python
 COPY . /home/plasma-contracts
