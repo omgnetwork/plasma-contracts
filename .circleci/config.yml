@@ -342,7 +342,7 @@ jobs:
             -e NODE_TLS_REJECT_UNAUTHORIZED=0 \
             -e VAULT_RPC_REMOTE_URL="https://rinkeby.infura.io/v3/${INFURA_API_TOKEN}" \
             -e DEPLOYER_PRIVATEKEY=${FAUCET_PRIV_KEY} \
-            -e REMOTE_URL="https://rinkeby.infura.io/v3/${INFURA_API_TOKEN}" \
+            -e REMOTE_URL="wss://rinkeby.infura.io/ws/v3/${INFURA_API_TOKEN}" \
             omisego/plasma-contracts \
             /bin/sh -c "npx truffle migrate --reset --network remote && echo "Copy outputs.json" && cp /home/plasma-contracts/plasma_framework/build/outputs.json /tmp/plasma_framework_output"
       - run:
