@@ -34,7 +34,8 @@ module.exports = {
             ),
             gasPrice: process.env.GAS_PRICE || 20000000000, // default 20 gwei
             network_id: '*',
-            timeoutBlocks: 200, // timeoutBlocks: - if a transaction is not mined, keep waiting for this number of blocks (default is 50)
+            // timeoutBlocks: - if a transaction is not mined, keep waiting for this number of blocks (default is 50)
+            timeoutBlocks: 200,
         },
     },
 
