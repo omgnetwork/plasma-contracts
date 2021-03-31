@@ -34,7 +34,7 @@ module.exports = {
                 numberOfAddresses: 3,
                 pollingInterval: 8000,
             }),
-            networkCheckTimeout: 10000,
+            networkCheckTimeout: 20000,
             gasPrice: process.env.GAS_PRICE || 20000000000, // default 20 gwei
             network_id: '*',
         },
