@@ -23,19 +23,19 @@ module.exports = {
         // before getting submitted to the remote client.
         remote: {
             skipDryRun: true,
-            provider: () => new HDWalletProvider(
-                [
+            provider: () => new HDWalletProvider({
+                privateKeys: [
                     process.env.DEPLOYER_PRIVATEKEY || '0'.repeat(64),
                     process.env.MAINTAINER_PRIVATEKEY || '0'.repeat(64),
                     process.env.AUTHORITY_PRIVATEKEY || '0'.repeat(64),
                 ],
-                process.env.REMOTE_URL || 'http://127.0.0.1:8545',
-                0, 3,
-            ),
+                providerOrUrl: process.env.REMOTE_URL || 'http://127.0.0.1:8545',
+                addressIndex: 0,
+                numberOfAddresses: 3,
+                pollingInterval: 8000,
+            }),
             gasPrice: process.env.GAS_PRICE || 20000000000, // default 20 gwei
             network_id: '*',
-            // timeoutBlocks: - if a transaction is not mined, keep waiting for this number of blocks (default is 50)
-            timeoutBlocks: 200,
         },
     },
 
