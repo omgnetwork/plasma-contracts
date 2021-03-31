@@ -6,7 +6,7 @@
     "test": "test"
   },
   "dependencies": {
-    "@truffle/hdwallet-provider": "^1.1.1",
+    "@truffle/hdwallet-provider": "1.2.3",
     "axios": "^0.21.1",
     "dotenv": "^8.0.0",
     "elliptic": ">=6.5.4",

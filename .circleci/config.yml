@@ -314,7 +314,7 @@ jobs:
             docker run --rm \
             -v /tmp:/home/plasma-contracts/MultiSigWallet/build \
             -e DEPLOYER_PRIVATEKEY=${FAUCET_PRIV_KEY} \
-            -e REMOTE_URL="https://rinkeby.infura.io/v3/${INFURA_API_TOKEN}" \
+            -e REMOTE_URL="https://white-red-brook.rinkeby.quiknode.pro/${QUIKNODE_API_TOKEN}"/ \
             -w /home/plasma-contracts/MultiSigWallet \
             omisego/plasma-contracts \
             npx truffle migrate --accounts ${FAUCET_ADDRESS} --confirmations 1 \
@@ -329,7 +329,11 @@ jobs:
           no_output_timeout: 1h
           command: |
             # if you see Error:PollingBlockTracker, use WSS or RPC interchangeably
-            # -e REMOTE_URL="http://rinkeby.infura.io/v3/${INFURA_API_TOKEN}" \
+            # -e REMOTE_URL="https://rinkeby.infura.io/v3/${INFURA_API_TOKEN}"
+            # -e REMOTE_URL="wss://rinkeby.infura.io/ws/v3/${INFURA_API_TOKEN}"
+            # -e REMOTE_URL="https://api.zmok.io/testnet/${ZMOK_API_TOKEN}"
+            # -e REMOTE_URL="https://eth-rinkeby.alchemyapi.io/v2/${ALCHEMY_API_TOKEN}"
+            # -e REMOTE_URL="https://white-red-brook.rinkeby.quiknode.pro/${QUIKNODE_API_TOKEN}/"
             docker run --rm \
             -v /tmp:/home/plasma-contracts/MultiSigWallet/build \
             -v /tmp/plasma_framework_output:/home/plasma-contracts/plasma_framework/build \
@@ -339,7 +343,7 @@ jobs:
             -e VAULT_ADDR=https://vault_server:8200 \
             -e VAULT_TOKEN=$(cat ~/repo/MultiSigWalletOverride/docker/immutability/config/unseal.json | jq -r .root_token) \
             -e NODE_TLS_REJECT_UNAUTHORIZED=0 \
-            -e VAULT_RPC_REMOTE_URL="https://rinkeby.infura.io/v3/${INFURA_API_TOKEN}" \
+            -e VAULT_RPC_REMOTE_URL="https://white-red-brook.rinkeby.quiknode.pro/${QUIKNODE_API_TOKEN}/" \
             -e DEPLOYER_PRIVATEKEY=${FAUCET_PRIV_KEY} \
             -e REMOTE_URL="wss://rinkeby.infura.io/ws/v3/${INFURA_API_TOKEN}" \
             omisego/plasma-contracts \
@@ -435,10 +439,11 @@ workflows:
             branches:
               only:
                 - v2.0.0
-      - Deploy to Rinkeby with Gnosis and Vault:
-          requires:
-            - Deploy to Rinkeby
-          filters:
-            branches:
-              only:
-                - v2.0.0
+      - Deploy to Rinkeby with Gnosis and Vault
+      # :
+      #     requires:
+      #       - Deploy to Rinkeby
+      #     filters:
+      #       branches:
+      #         only:
+      #           - v2.0.0

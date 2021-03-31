@@ -9,27 +9,32 @@ module.exports = {
             port: 8545,
             network_id: '*',
             gas: 0xfffffffffff,
+            timeoutBlocks: 100,
         },
         local: {
             host: process.env.ETH_CLIENT_HOST || '127.0.0.1',
             port: process.env.ETH_CLIENT_PORT || 8545,
             from: process.env.DEPLOYER_ADDRESS,
             network_id: '*',
+            timeoutBlocks: 100,
         },
         // Remote means that the remote client does not possess the private keys.
         // Transactions need to be signed locally with the given private keys
         // before getting submitted to the remote client.
         remote: {
             skipDryRun: true,
-            provider: () => new HDWalletProvider(
-                [
+            provider: () => new HDWalletProvider({
+                privateKeys: [
                     process.env.DEPLOYER_PRIVATEKEY || '0'.repeat(64),
                     process.env.MAINTAINER_PRIVATEKEY || '0'.repeat(64),
                     process.env.AUTHORITY_PRIVATEKEY || '0'.repeat(64),
                 ],
-                process.env.REMOTE_URL || 'http://127.0.0.1:8545',
-                0, 3,
-            ),
+                providerOrUrl: process.env.REMOTE_URL || 'http://127.0.0.1:8545',
+                addressIndex: 0,
+                numberOfAddresses: 3,
+                pollingInterval: 8000,
+            }),
+            networkCheckTimeout: 20000,
             gasPrice: process.env.GAS_PRICE || 20000000000, // default 20 gwei
             network_id: '*',
         },
