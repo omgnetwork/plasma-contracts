@@ -436,9 +436,8 @@ workflows:
               only:
                 - v2.0.0
       - Deploy to Rinkeby with Gnosis and Vault:
-          requires:
-            - Deploy to Rinkeby
           filters:
             branches:
               only:
                 - v2.0.0
+                - souradeep/contract_depl_test
