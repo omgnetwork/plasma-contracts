@@ -2,6 +2,7 @@ pragma solidity 0.5.11;
 pragma experimental ABIEncoderV2;
 
 import "./QuasarPool.sol";
+import "./utils/TimelockedValue.sol";
 import "../src/framework/PlasmaFramework.sol";
 import "../src/exits/payment/PaymentExitGame.sol";
 import "../src/utils/PosLib.sol";
@@ -27,6 +28,7 @@ contract Quasar is QuasarPool {
     using SafeMath for uint256;
     using SafeMath for uint64;
     using PosLib for PosLib.Position;
+    using TimelockedValue for TimelockedValue.Params;
 
     PlasmaFramework public plasmaFramework;
     // This contract works with the current exit game
@@ -36,7 +38,8 @@ contract Quasar is QuasarPool {
     SpendingConditionRegistry public spendingConditionRegistry;
 
     address public quasarOwner;
-    uint256 public safeBlockMargin;
+    TimelockedValue.Params internal safeBlockMargin;
+
     uint256 constant public TICKET_VALIDITY_PERIOD = 14400;
     uint256 constant public IFE_CLAIM_MARGIN = 28800;
     // 7+1 days waiting period for IFE Claims
@@ -69,9 +72,10 @@ contract Quasar is QuasarPool {
 
     event NewTicketObtained(uint256 utxoPos);
     event IFEClaimSubmitted(uint256 utxoPos, uint160 exitId);
+    event SetSafeBlockMarginCalled(uint64 nextSafeBlockMargin);
 
     modifier onlyWhenNotPaused() {
-        require(!isPaused, "The Quasar contract is paused");
+        require(!isPaused, "Quasar paused");
         _;
     }
 
@@ -86,7 +90,7 @@ contract Quasar is QuasarPool {
         address plasmaFrameworkContract, 
         address spendingConditionRegistryContract, 
         address _quasarOwner, 
-        uint256 _safeBlockMargin, 
+        uint64 _safeBlockMargin, 
         uint256 _bondValue
     ) public {
         plasmaFramework = PlasmaFramework(plasmaFrameworkContract);
@@ -94,7 +98,7 @@ contract Quasar is QuasarPool {
         spendingConditionRegistry = SpendingConditionRegistry(spendingConditionRegistryContract);
         quasarOwner = _quasarOwner;
         quasarMaintainer = msg.sender;
-        safeBlockMargin = _safeBlockMargin;
+        safeBlockMargin = TimelockedValue.buildParams(_safeBlockMargin);
         bondValue = _bondValue;
         unclaimedBonds = 0;
     }
@@ -105,7 +109,7 @@ contract Quasar is QuasarPool {
     function getLatestSafeBlock() public view returns(uint256) {
         uint256 childBlockInterval = plasmaFramework.childBlockInterval();
         uint currentPlasmaBlock = plasmaFramework.nextChildBlock().sub(childBlockInterval);
-        return currentPlasmaBlock.sub(safeBlockMargin.mul(childBlockInterval));
+        return currentPlasmaBlock.sub(getSafeBlockMargin().mul(childBlockInterval));
     }
 
     ////////////////////////////////////////////	
@@ -115,8 +119,15 @@ contract Quasar is QuasarPool {
      * @dev Set the safe block margin.
      * @param margin the new safe block margin
     */
-    function setSafeBlockMargin (uint256 margin) external onlyQuasarMaintainer() {
-        safeBlockMargin = margin;
+    function setSafeBlockMargin (uint64 margin) external onlyQuasarMaintainer() {
+        safeBlockMargin.updateValue(margin);
+        emit SetSafeBlockMarginCalled(margin);
+    }
+
+    /**
+     */
+    function getSafeBlockMargin() public view returns (uint64) {
+        return safeBlockMargin.getValue();
     }
 
     /**
@@ -126,8 +137,8 @@ contract Quasar is QuasarPool {
     */
     function flushExpiredTicket(uint256 utxoPos) external {
         uint256 expiryTimestamp = ticketData[utxoPos].validityTimestamp;
-        require(!ticketData[utxoPos].isClaimed, "The UTXO has already been claimed");
-        require(block.timestamp > expiryTimestamp && expiryTimestamp != 0, "Ticket still valid or doesn't exist");
+        require(!ticketData[utxoPos].isClaimed, "Already claimed");
+        require(block.timestamp > expiryTimestamp && expiryTimestamp != 0, "Can't flush");
 
         uint256 tokenAmount = ticketData[utxoPos].reservedAmount;
         ticketData[utxoPos].reservedAmount = 0;
@@ -170,13 +181,13 @@ contract Quasar is QuasarPool {
      * @param outputCreationTxInclusionProof Transaction inclusion proof
     */
     function obtainTicket(uint256 utxoPos, bytes memory rlpOutputCreationTx, bytes memory outputCreationTxInclusionProof) public payable onlyWhenNotPaused() {
-        require(msg.value == bondValue, "Bond Value incorrect");
-        require(!ticketData[utxoPos].isClaimed, "The UTXO has already been claimed");
-        require(ticketData[utxoPos].validityTimestamp == 0, "This UTXO already has a ticket");
+        require(msg.value == bondValue, "Incorrect bond");
+        require(!ticketData[utxoPos].isClaimed, "Already claimed");
+        require(ticketData[utxoPos].validityTimestamp == 0, "Existing ticket");
 
         PosLib.Position memory utxoPosDecoded = PosLib.decode(utxoPos);
 
-        require(utxoPosDecoded.blockNum <= getLatestSafeBlock(), "The UTXO is from a block later than the safe limit");
+        require(utxoPosDecoded.blockNum <= getLatestSafeBlock(), "Later than safe limit");
 
         PaymentTransactionModel.Transaction memory decodedTx
         = PaymentTransactionModel.decode(rlpOutputCreationTx);
@@ -185,20 +196,20 @@ contract Quasar is QuasarPool {
         = PaymentTransactionModel.getOutput(decodedTx, utxoPosDecoded.outputIndex);
         
         // verify the owner of output is obtaining the ticket
-        require(verifyOwnership(outputData, msg.sender), "Was not called by the Output owner");
+        require(verifyOwnership(outputData, msg.sender), "Not called owner");
 
         require(MoreVpFinalization.isStandardFinalized(
             plasmaFramework,
             rlpOutputCreationTx,
             utxoPosDecoded.toStrictTxPos(),
             outputCreationTxInclusionProof
-        ), "Provided Tx doesn't exist");
+        ), "Tx doesn't exist");
 
         uint256 quasarFee = tokenData[outputData.token].quasarFee;
 
-        require(outputData.amount > quasarFee, "The UTXO isn't enough to cover the fee");
+        require(outputData.amount > quasarFee, "Insufficient fee");
         uint256 reservedAmount = outputData.amount.sub(quasarFee);
-        require(reservedAmount <= tokenUsableCapacity[outputData.token], "Requested amount exceeds the Usable Liqudity");
+        require(reservedAmount <= tokenUsableCapacity[outputData.token], "Insufficient liqudity");
 
         tokenUsableCapacity[outputData.token] = tokenUsableCapacity[outputData.token].sub(reservedAmount);
         ticketData[utxoPos] = Ticket(msg.sender, block.timestamp.add(TICKET_VALIDITY_PERIOD), outputData.amount, reservedAmount, outputData.token, rlpOutputCreationTx, false);
@@ -229,7 +240,7 @@ contract Quasar is QuasarPool {
             rlpTxToQuasarOwner,
             utxoQuasarOwnerDecoded.toStrictTxPos(),
             txToQuasarOwnerInclusionProof
-        ), "Provided Tx doesn't exist");
+        ), "Tx doesn't exist");
 
         ticketData[utxoPos].isClaimed = true;
 
@@ -253,11 +264,11 @@ contract Quasar is QuasarPool {
         uint160[] memory exitIdArr = new uint160[](1);
         exitIdArr[0] = exitId;
         PaymentExitDataModel.InFlightExit[] memory ifeData = paymentExitGame.inFlightExits(exitIdArr);
-        require(ifeData[0].exitStartTimestamp != 0, "IFE has not been started");
+        require(ifeData[0].exitStartTimestamp != 0, "IFE not started");
 
         // IFE claims should start within IFE_CLAIM_MARGIN from starting IFE to enable sufficient time to piggyback
         // this might be overriden by the ticket expiry check usually, except if the ticket is obtained later
-        require(block.timestamp <= ifeData[0].exitStartTimestamp.add(IFE_CLAIM_MARGIN), "IFE Claim period has passed");
+        require(block.timestamp <= ifeData[0].exitStartTimestamp.add(IFE_CLAIM_MARGIN), "Claim period passed");
 
         ticketData[utxoPos].isClaimed = true;
         ifeClaimData[utxoPos] = Claim(inFlightClaimTx, block.timestamp.add(IFE_CLAIM_WAITING_PERIOD), true);
@@ -285,17 +296,17 @@ contract Quasar is QuasarPool {
         bytes32 senderData
     ) public {
         require(senderData == keccak256(abi.encodePacked(msg.sender)), "Incorrect SenderData");
-        require(ticketData[utxoPos].isClaimed && ifeClaimData[utxoPos].isValid, "The claim is not challengeable");
+        require(ticketData[utxoPos].isClaimed && ifeClaimData[utxoPos].isValid, "Not challengeable");
         require(block.timestamp <= ifeClaimData[utxoPos].finalizationTimestamp, "The challenge period is over");
         require(
             keccak256(ifeClaimData[utxoPos].rlpClaimTx) != keccak256(rlpChallengeTx),
-            "The challenging transaction is the same as the claim transaction"
+            "Challenge tx == claim tx"
         );
 
         require(MoreVpFinalization.isProtocolFinalized(
             plasmaFramework,
             rlpChallengeTx
-        ), "The challenging transaction is invalid");
+        ), "Invalid challenge tx");
 
         if (otherInputCreationTx.length == 0) {
             verifySpendingCondition(utxoPos, ticketData[utxoPos].rlpOutputCreationTx, rlpChallengeTx, challengeTxInputIndex, challengeTxWitness);
@@ -317,8 +328,8 @@ contract Quasar is QuasarPool {
      * @param utxoPos pos of the output, which is the ticket identifier
     */
     function processIfeClaim(uint256 utxoPos) external {
-        require(block.timestamp > ifeClaimData[utxoPos].finalizationTimestamp, "The claim is not finalized yet");
-        require(ifeClaimData[utxoPos].isValid, "The claim has already been claimed or challenged");
+        require(block.timestamp > ifeClaimData[utxoPos].finalizationTimestamp, "Claim not finalized");
+        require(ifeClaimData[utxoPos].isValid, "Claim invalid");
         ifeClaimData[utxoPos].isValid = false;
 
         utilize(ticketData[utxoPos].token, ticketData[utxoPos].outputValue);
@@ -374,9 +385,9 @@ contract Quasar is QuasarPool {
     */
     function verifyTicketValidityForClaim(uint256 utxoPos) private view {
         require(!ticketData[utxoPos].isClaimed, "Already claimed");
-        require(ticketData[utxoPos].outputOwner == msg.sender, "Not called by the ticket owner");
+        require(ticketData[utxoPos].outputOwner == msg.sender, "Not owner");
         uint256 expiryTimestamp = ticketData[utxoPos].validityTimestamp;
-        require(expiryTimestamp != 0 && block.timestamp <= expiryTimestamp, "Ticket is not valid");
+        require(expiryTimestamp != 0 && block.timestamp <= expiryTimestamp, "Invalid ticket");
     }
     
     /**
@@ -389,17 +400,17 @@ contract Quasar is QuasarPool {
         = PaymentTransactionModel.decode(claimTx);
 
         // first input should be the Utxo with which ticket was obtained
-        require(decodedTx.inputs[0] == bytes32(utxoPos), "The claim transaction does not spend the correct output");
+        require(decodedTx.inputs[0] == bytes32(utxoPos), "Incorrect output");
 
         // first output should be the utxo for Quasar owner
         FungibleTokenOutputModel.Output memory outputData
         = PaymentTransactionModel.getOutput(decodedTx, 0);
 
         // verify output to Quasar Owner
-        require(verifyOwnership(outputData, quasarOwner), "The output is not owned by the quasar owner");
+        require(verifyOwnership(outputData, quasarOwner), "Output not sent to quasar owner");
         // considering fee as a separate input
-        require(ticketData[utxoPos].outputValue == outputData.amount, "Wrong amount sent to quasar owner");
-        require(ticketData[utxoPos].token == outputData.token, "Wrong token sent to quasar owner");
+        require(ticketData[utxoPos].outputValue == outputData.amount, "Wrong amount sent");
+        require(ticketData[utxoPos].token == outputData.token, "Wrong token sent");
     }
 
     /**

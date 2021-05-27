@@ -5,7 +5,9 @@ const SpyPlasmaFramework = artifacts.require('SpyPlasmaFrameworkForExitGame');
 const SpendingConditionMock = artifacts.require('SpendingConditionMock');
 const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry');
 
-const { BN, expectRevert, constants } = require('openzeppelin-test-helpers');
+const {
+    BN, expectRevert, constants, time,
+} = require('openzeppelin-test-helpers');
 const { expect } = require('chai');
 const { TX_TYPE, OUTPUT_TYPE } = require('../../helpers/constants.js');
 const { buildUtxoPos } = require('../../helpers/positions.js');
@@ -74,14 +76,20 @@ contract('Quasar', ([authority, quasarOwner, quasarMaintainer, alice]) => {
     describe('safe block margin', () => {
         beforeEach(setupAllContracts);
 
-        it('should set the safe block margin', async () => {
+        it('should set the safe block margin after the waiting period', async () => {
+            const previousSafeBlockMargin = await this.quasar.getSafeBlockMargin();
             const testSafeBlockMargin = 57;
             await this.quasar.setSafeBlockMargin(
                 testSafeBlockMargin,
                 { from: quasarMaintainer },
             );
 
-            const safeBlockMargin = await this.quasar.safeBlockMargin();
+            let safeBlockMargin = await this.quasar.getSafeBlockMargin();
+            expect(safeBlockMargin).to.be.bignumber.equal(new BN(previousSafeBlockMargin));
+
+            await time.increase(time.duration.weeks(1));
+
+            safeBlockMargin = await this.quasar.getSafeBlockMargin();
             expect(safeBlockMargin).to.be.bignumber.equal(new BN(testSafeBlockMargin));
         });
 
@@ -91,7 +99,7 @@ contract('Quasar', ([authority, quasarOwner, quasarMaintainer, alice]) => {
                     1,
                     { from: alice },
                 ),
-                'Only the Quasar Maintainer can invoke this method',
+                'Maintainer only',
             );
         });
 
@@ -113,7 +121,7 @@ contract('Quasar', ([authority, quasarOwner, quasarMaintainer, alice]) => {
                         value: BOND_VALUE,
                     },
                 ),
-                'The UTXO is from a block later than the safe limit',
+                'Later than safe limit',
             );
         });
     });
@@ -219,7 +227,7 @@ contract('Quasar', ([authority, quasarOwner, quasarMaintainer, alice]) => {
                     5000,
                     { from: quasarMaintainer },
                 ),
-                'QToken for the token already exists',
+                'QToken already exists',
             );
         });
 
@@ -234,7 +242,7 @@ contract('Quasar', ([authority, quasarOwner, quasarMaintainer, alice]) => {
                     5000,
                     { from: alice },
                 ),
-                'Only the Quasar Maintainer can invoke this method',
+                'Maintainer only',
             );
         });
 
@@ -269,7 +277,7 @@ contract('Quasar', ([authority, quasarOwner, quasarMaintainer, alice]) => {
                 this.quasar.pauseQuasar(
                     { from: alice },
                 ),
-                'Only the Quasar Maintainer can invoke this method',
+                'Maintainer only',
             );
         });
 
@@ -291,7 +299,7 @@ contract('Quasar', ([authority, quasarOwner, quasarMaintainer, alice]) => {
                         value: BOND_VALUE,
                     },
                 ),
-                'The Quasar contract is paused',
+                'Quasar paused',
             );
         });
 

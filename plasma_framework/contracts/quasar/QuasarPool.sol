@@ -26,7 +26,7 @@ contract QuasarPool is Exponential, ReentrancyGuard {
     uint256 constant private INITIAL_EXCHANGE_RATE_SCALED = 2e15;
 
     modifier onlyQuasarMaintainer() {
-        require(msg.sender == quasarMaintainer, "Only the Quasar Maintainer can invoke this method");
+        require(msg.sender == quasarMaintainer, "Maintainer only");
         _;
     }
     
@@ -60,7 +60,7 @@ contract QuasarPool is Exponential, ReentrancyGuard {
      * @param amount value to supply
     */
     function mintQTokens(address token, uint256 amount) private {
-        require(tokenData[token].qTokenAddress != address(0), "QToken is not registered for the token");
+        require(tokenData[token].qTokenAddress != address(0), "QToken not registered");
 
         tokenUsableCapacity[token] = tokenUsableCapacity[token].add(amount);
         tokenData[token].poolSupply = tokenData[token].poolSupply.add(amount);
@@ -80,11 +80,11 @@ contract QuasarPool is Exponential, ReentrancyGuard {
     function withdrawFunds(address token, uint256 amount) external  nonReentrant(){
         address qToken = tokenData[token].qTokenAddress;
         uint256 qTokenBalance = IERC20(qToken).balanceOf(msg.sender);
-        require(amount <= qTokenBalance, "Not enough qToken Balance");
+        require(amount <= qTokenBalance, "Not enough qTokens");
 
         // derive amount from number of qTokens
         uint256 tokenWithdrawable = Exponential.mulScalarTruncate(Exp({mantissa: tokenData[token].exchangeRate}), amount);
-        require(tokenWithdrawable <= tokenUsableCapacity[token], "Amount should be lower than claimable funds");
+        require(tokenWithdrawable <= tokenUsableCapacity[token], "Amount over capacity");
 
         tokenUsableCapacity[token] = tokenUsableCapacity[token].sub(tokenWithdrawable);
         tokenData[token].poolSupply = tokenData[token].poolSupply.sub(tokenWithdrawable);
@@ -109,7 +109,7 @@ contract QuasarPool is Exponential, ReentrancyGuard {
      * @param quasarFee amount (in token's denomination) to be used as a fee
     */
     function registerQToken(address token, address qTokenContract, uint256 quasarFee) external onlyQuasarMaintainer() {
-        require(tokenData[token].qTokenAddress == address(0), "QToken for the token already exists");
+        require(tokenData[token].qTokenAddress == address(0), "QToken already exists");
         tokenData[token] = Token(qTokenContract, INITIAL_EXCHANGE_RATE_SCALED, 0, 0, quasarFee);
     }
 
