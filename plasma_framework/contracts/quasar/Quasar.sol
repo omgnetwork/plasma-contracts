@@ -54,7 +54,6 @@ contract Quasar is QuasarPool {
         uint256 outputValue;
         uint256 reservedAmount;
         address token;
-        uint256 bondValue;
         bytes rlpOutputCreationTx;
         bool isClaimed;
     }
@@ -134,7 +133,7 @@ contract Quasar is QuasarPool {
         ticketData[utxoPos].reservedAmount = 0;
         ticketData[utxoPos].validityTimestamp = 0;
         tokenUsableCapacity[ticketData[utxoPos].token] = tokenUsableCapacity[ticketData[utxoPos].token].add(tokenAmount);
-        unclaimedBonds = unclaimedBonds.add(ticketData[utxoPos].bondValue); 
+        unclaimedBonds = unclaimedBonds.add(bondValue); 
     }
 
     /**
@@ -202,7 +201,7 @@ contract Quasar is QuasarPool {
         require(reservedAmount <= tokenUsableCapacity[outputData.token], "Requested amount exceeds the Usable Liqudity");
 
         tokenUsableCapacity[outputData.token] = tokenUsableCapacity[outputData.token].sub(reservedAmount);
-        ticketData[utxoPos] = Ticket(msg.sender, block.timestamp.add(TICKET_VALIDITY_PERIOD), outputData.amount, reservedAmount, outputData.token, msg.value, rlpOutputCreationTx, false);
+        ticketData[utxoPos] = Ticket(msg.sender, block.timestamp.add(TICKET_VALIDITY_PERIOD), outputData.amount, reservedAmount, outputData.token, rlpOutputCreationTx, false);
         emit NewTicketObtained(utxoPos);
     }
 
@@ -310,7 +309,7 @@ contract Quasar is QuasarPool {
         ifeClaimData[utxoPos].isValid = false;
         Ticket memory ticket = ticketData[utxoPos];
         tokenUsableCapacity[ticket.token] = tokenUsableCapacity[ticket.token].add(ticket.reservedAmount);
-        SafeEthTransfer.transferRevertOnError(msg.sender, ticket.bondValue, SAFE_GAS_STIPEND);
+        SafeEthTransfer.transferRevertOnError(msg.sender, bondValue, SAFE_GAS_STIPEND);
     }
 
     /**
@@ -411,11 +410,11 @@ contract Quasar is QuasarPool {
     */
     function runPayout(uint256 utxoPos, address payable outputOwner, address token) private {
         if (token == address(0)) {
-            uint256 totalAmount = ticketData[utxoPos].reservedAmount.add(ticketData[utxoPos].bondValue);
+            uint256 totalAmount = ticketData[utxoPos].reservedAmount.add(bondValue);
             SafeEthTransfer.transferRevertOnError(outputOwner, totalAmount, SAFE_GAS_STIPEND);
         } else {
             IERC20(token).safeTransfer(outputOwner, ticketData[utxoPos].reservedAmount);
-            SafeEthTransfer.transferRevertOnError(outputOwner, ticketData[utxoPos].bondValue, SAFE_GAS_STIPEND);
+            SafeEthTransfer.transferRevertOnError(outputOwner, bondValue, SAFE_GAS_STIPEND);
         }
     }
 

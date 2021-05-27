@@ -319,9 +319,6 @@ contract(
                                     const expectedReservedAmount = new BN(DEPOSIT_VALUE - this.quasarFeeEth);
                                     expect(ticketData.reservedAmount).to.be.bignumber.equal(expectedReservedAmount);
                                     expect(ticketData.token).to.be.equal(ETH);
-                                    expect(ticketData.bondValue).to.be.bignumber.equal(
-                                        new BN(this.dummyQuasarBondValue),
-                                    );
                                     expect(ticketData.isClaimed).to.be.false;
                                 });
 
@@ -1439,9 +1436,6 @@ contract(
                                         const expectedReservedAmount = new BN(DEPOSIT_VALUE - this.quasarFeeErc);
                                         expect(ticketData.reservedAmount).to.be.bignumber.equal(expectedReservedAmount);
                                         expect(ticketData.token).to.be.equal(this.erc20.address);
-                                        expect(ticketData.bondValue).to.be.bignumber.equal(
-                                            new BN(this.dummyQuasarBondValue),
-                                        );
                                         expect(ticketData.isClaimed).to.be.false;
                                     });
 
