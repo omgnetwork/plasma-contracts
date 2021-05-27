@@ -7,8 +7,9 @@ import "./interfaces/IQToken.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/SafeERC20.sol";
+import "openzeppelin-solidity/contracts/utils/ReentrancyGuard.sol";
 
-contract QuasarPool is Exponential {
+contract QuasarPool is Exponential, ReentrancyGuard {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -47,7 +48,7 @@ contract QuasarPool is Exponential {
      * @param token the token
      * @param amount value to supply
     */
-    function addTokenCapacity(address token, uint256 amount) external {
+    function addTokenCapacity(address token, uint256 amount) external nonReentrant() {
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
 
         mintQTokens(token, amount);
@@ -76,7 +77,7 @@ contract QuasarPool is Exponential {
      * @param token the token
      * @param amount amount (in number of qTokens) to withdraw
     */
-    function withdrawFunds(address token, uint256 amount) external {
+    function withdrawFunds(address token, uint256 amount) external  nonReentrant(){
         address qToken = tokenData[token].qTokenAddress;
         uint256 qTokenBalance = IERC20(qToken).balanceOf(msg.sender);
         require(amount <= qTokenBalance, "Not enough qToken Balance");
@@ -117,7 +118,7 @@ contract QuasarPool is Exponential {
      * @param token the token
      * @param amount amount to repay
     */
-    function repayOwedToken(address token, uint256 amount) public payable {
+    function repayOwedToken(address token, uint256 amount) public payable nonReentrant() {
         if (token == address(0)) {
             amount = msg.value;
         } else {
