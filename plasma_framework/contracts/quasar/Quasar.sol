@@ -115,7 +115,7 @@ contract Quasar is QuasarPool {
      * @dev Set the safe block margin.
      * @param margin the new safe block margin
     */
-    function setSafeBlockMargin (uint256 margin) public onlyQuasarMaintainer() {
+    function setSafeBlockMargin (uint256 margin) external onlyQuasarMaintainer() {
         safeBlockMargin = margin;
     }
 
@@ -124,7 +124,7 @@ contract Quasar is QuasarPool {
      * @notice Only an unclaimed ticket can be flushed, bond amount is added to unclaimedBonds
      * @param utxoPos pos of the output, which is the ticket identifier
     */
-    function flushExpiredTicket(uint256 utxoPos) public {
+    function flushExpiredTicket(uint256 utxoPos) external {
         uint256 expiryTimestamp = ticketData[utxoPos].validityTimestamp;
         require(!ticketData[utxoPos].isClaimed, "The UTXO has already been claimed");
         require(block.timestamp > expiryTimestamp && expiryTimestamp != 0, "Ticket still valid or doesn't exist");
@@ -139,21 +139,21 @@ contract Quasar is QuasarPool {
     /**
      * @dev Pause contract in a byzantine state
     */
-    function pauseQuasar() public onlyQuasarMaintainer() {
+    function pauseQuasar() external onlyQuasarMaintainer() {
         isPaused = true;
     }
 
     /**
      * @dev Unpause contract and allow tickets
     */
-    function resumeQuasar() public onlyQuasarMaintainer() {
+    function resumeQuasar() external onlyQuasarMaintainer() {
         isPaused = false;
     }
 
     /**
      * @dev Withdraw Unclaimed bonds from the contract
     */
-    function withdrawUnclaimedBonds() public onlyQuasarMaintainer() {
+    function withdrawUnclaimedBonds() external onlyQuasarMaintainer() {
         uint256 amount = unclaimedBonds;
         unclaimedBonds = 0;
         SafeEthTransfer.transferRevertOnError(msg.sender, amount, SAFE_GAS_STIPEND);
@@ -316,7 +316,7 @@ contract Quasar is QuasarPool {
      * @dev Process the IFE claim to get liquid funds
      * @param utxoPos pos of the output, which is the ticket identifier
     */
-    function processIfeClaim(uint256 utxoPos) public {
+    function processIfeClaim(uint256 utxoPos) external {
         require(block.timestamp > ifeClaimData[utxoPos].finalizationTimestamp, "The claim is not finalized yet");
         require(ifeClaimData[utxoPos].isValid, "The claim has already been claimed or challenged");
         ifeClaimData[utxoPos].isValid = false;
@@ -347,7 +347,7 @@ contract Quasar is QuasarPool {
      * @param challengeTxInputIndex index pos of the same utxo in the challenge transaction
      * @param challengeTxWitness Witness for challenging transaction
     */
-    function verifySpendingCondition(uint256 utxoPos, bytes memory rlpOutputCreationTx, bytes memory rlpChallengeTx, uint16 challengeTxInputIndex, bytes memory challengeTxWitness) private {
+    function verifySpendingCondition(uint256 utxoPos, bytes memory rlpOutputCreationTx, bytes memory rlpChallengeTx, uint16 challengeTxInputIndex, bytes memory challengeTxWitness) private view {
         GenericTransaction.Transaction memory challengingTx = GenericTransaction.decode(rlpChallengeTx);
 
         GenericTransaction.Transaction memory inputTx = GenericTransaction.decode(rlpOutputCreationTx);
@@ -372,7 +372,7 @@ contract Quasar is QuasarPool {
      * @dev Verify the validity of the ticket
      * @param utxoPos pos of the output, which is the ticket identifier
     */
-    function verifyTicketValidityForClaim(uint256 utxoPos) private {
+    function verifyTicketValidityForClaim(uint256 utxoPos) private view {
         require(!ticketData[utxoPos].isClaimed, "Already claimed");
         require(ticketData[utxoPos].outputOwner == msg.sender, "Not called by the ticket owner");
         uint256 expiryTimestamp = ticketData[utxoPos].validityTimestamp;
@@ -384,7 +384,7 @@ contract Quasar is QuasarPool {
      * @param utxoPos pos of the output, which is the ticket identifier
      * @param claimTx the Claim Tx to the quasar owner
     */
-    function verifyClaimTxCorrectlyFormed(uint256 utxoPos, bytes memory claimTx) private {
+    function verifyClaimTxCorrectlyFormed(uint256 utxoPos, bytes memory claimTx) private view {
         PaymentTransactionModel.Transaction memory decodedTx
         = PaymentTransactionModel.decode(claimTx);
 

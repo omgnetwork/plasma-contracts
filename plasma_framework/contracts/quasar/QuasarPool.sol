@@ -37,7 +37,7 @@ contract QuasarPool is Exponential {
      * Verify QToken contract before supplying
      * @dev Add Eth Liquid funds to the quasar
     */
-    function addEthCapacity() public payable {
+    function addEthCapacity() external payable {
         mintQTokens(address(0), msg.value);
     }
 
@@ -47,7 +47,7 @@ contract QuasarPool is Exponential {
      * @param token the token
      * @param amount value to supply
     */
-    function addTokenCapacity(address token, uint256 amount) public {
+    function addTokenCapacity(address token, uint256 amount) external {
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
 
         mintQTokens(token, amount);
@@ -76,7 +76,7 @@ contract QuasarPool is Exponential {
      * @param token the token
      * @param amount amount (in number of qTokens) to withdraw
     */
-    function withdrawFunds(address token, uint256 amount) public {
+    function withdrawFunds(address token, uint256 amount) external {
         address qToken = tokenData[token].qTokenAddress;
         uint256 qTokenBalance = IERC20(qToken).balanceOf(msg.sender);
         require(amount <= qTokenBalance, "Not enough qToken Balance");
@@ -107,7 +107,7 @@ contract QuasarPool is Exponential {
      * @param qTokenContract the address of the qToken contract
      * @param quasarFee amount (in token's denomination) to be used as a fee
     */
-    function registerQToken(address token, address qTokenContract, uint256 quasarFee) public onlyQuasarMaintainer() {
+    function registerQToken(address token, address qTokenContract, uint256 quasarFee) external onlyQuasarMaintainer() {
         require(tokenData[token].qTokenAddress == address(0), "QToken for the token already exists");
         tokenData[token] = Token(qTokenContract, INITIAL_EXCHANGE_RATE_SCALED, 0, 0, quasarFee);
     }
