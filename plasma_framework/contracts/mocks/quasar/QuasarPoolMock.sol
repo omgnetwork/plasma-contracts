@@ -9,7 +9,7 @@ contract QuasarPoolMock is Quasar {
         address plasmaFrameworkContract, 
         address spendingConditionRegistryContract, 
         address _quasarOwner, 
-        uint256 _safeBlockMargin, 
+        uint64 _safeBlockMargin, 
         uint256 _bondValue
     ) public Quasar(plasmaFrameworkContract, spendingConditionRegistryContract, _quasarOwner, _safeBlockMargin, _bondValue) {
     }

@@ -1,7 +1,7 @@
 const PaymentExitGame = artifacts.require('PaymentExitGame');
 const PlasmaFramework = artifacts.require('PlasmaFramework');
 const SpendingConditionRegistry = artifacts.require('SpendingConditionRegistry');
-const Quasar = artifacts.require('../Quasar');
+const Quasar = artifacts.require('Quasar');
 const QToken = artifacts.require('QToken');
 const EthVault = artifacts.require('EthVault');
 const Erc20Vault = artifacts.require('Erc20Vault');
@@ -218,25 +218,32 @@ contract(
                                             value: this.dummyQuasarBondValue,
                                         },
                                     ),
-                                    'The UTXO is from a block later than the safe limit',
+                                    'Later than safe limit.',
                                 );
                             });
                         });
 
                         describe('If the Quasar maintainer updates the safeblocknum to allow the output', () => {
                             before(async () => {
-                                this.preSafeBlockMargin = await this.quasar.safeBlockMargin();
+                                this.preSafeBlockMargin = await this.quasar.getSafeBlockMargin();
                                 this.dummySafeBlockMargin = 1;
                                 await this.quasar.setSafeBlockMargin(
                                     this.dummySafeBlockMargin,
                                     { from: quasarMaintainer },
                                 );
 
+                                // safeBlockMargin should not have updated yet.
+                                const safeBlockMargin = await this.quasar.getSafeBlockMargin();
+                                expect(safeBlockMargin).to.be.bignumber.equal(new BN(this.preSafeBlockMargin));
+
+                                // Wait for the SafeBlockNumber waiting period
+                                await time.increase(time.duration.weeks(1));
+
                                 await submitPlasmaBlock();
                             });
 
                             it('should update the safeblocknum to the new value', async () => {
-                                const safeBlockMargin = await this.quasar.safeBlockMargin();
+                                const safeBlockMargin = await this.quasar.getSafeBlockMargin();
                                 expect(safeBlockMargin).to.be.bignumber.equal(new BN(this.dummySafeBlockMargin));
                             });
 
@@ -260,7 +267,7 @@ contract(
                                                 value: this.dummyQuasarBondValue,
                                             },
                                         ),
-                                        'Provided Tx doesn\'t exist',
+                                        'Tx doesn\'t exist',
                                     );
                                 });
                             });
@@ -282,7 +289,7 @@ contract(
                                                 value: invalidBond,
                                             },
                                         ),
-                                        'Bond Value incorrect',
+                                        'Incorrect bond',
                                     );
                                 });
                             });
@@ -319,9 +326,6 @@ contract(
                                     const expectedReservedAmount = new BN(DEPOSIT_VALUE - this.quasarFeeEth);
                                     expect(ticketData.reservedAmount).to.be.bignumber.equal(expectedReservedAmount);
                                     expect(ticketData.token).to.be.equal(ETH);
-                                    expect(ticketData.bondValue).to.be.bignumber.equal(
-                                        new BN(this.dummyQuasarBondValue),
-                                    );
                                     expect(ticketData.isClaimed).to.be.false;
                                 });
 
@@ -349,7 +353,7 @@ contract(
                                                 value: this.dummyQuasarBondValue,
                                             },
                                         ),
-                                        'This UTXO already has a ticket',
+                                        'Existing ticket',
                                     );
                                 });
 
@@ -374,7 +378,7 @@ contract(
                                                     from: alice,
                                                 },
                                             ),
-                                            'Wrong amount sent to quasar owner',
+                                            'Wrong amount sent',
                                         );
                                     });
                                 });
@@ -401,7 +405,7 @@ contract(
                                                         from: bob,
                                                     },
                                                 ),
-                                                'Not called by the ticket owner',
+                                                'Not owner.',
                                             );
                                         });
                                     });
@@ -425,7 +429,7 @@ contract(
                                                         from: alice,
                                                     },
                                                 ),
-                                                'Provided Tx doesn\'t exist',
+                                                "Tx doesn't exist",
                                             );
                                         });
                                     });
@@ -520,7 +524,7 @@ contract(
                                                         value: this.dummyQuasarBondValue,
                                                     },
                                                 ),
-                                                'The UTXO has already been claimed',
+                                                'Already claimed',
                                             );
                                         });
 
@@ -529,7 +533,7 @@ contract(
                                                 const utxoPos = this.depositUtxoPos;
                                                 await expectRevert(
                                                     this.quasar.processIfeClaim(utxoPos),
-                                                    'The claim has already been claimed or challenged',
+                                                    'Claim invalid',
                                                 );
                                             });
                                         });
@@ -653,7 +657,7 @@ contract(
                                     const utxoPos = this.depositUtxoPos;
                                     await expectRevert(
                                         this.quasar.processIfeClaim(utxoPos),
-                                        'The claim has already been claimed or challenged',
+                                        'Claim invalid',
                                     );
                                 });
                             });
@@ -673,6 +677,7 @@ contract(
                             const utxoPos = this.transferUtxoPos;
                             const rlpOutputCreationTx = this.transferTx;
                             const outputCreationTxInclusionProof = this.merkleProofForTransferTx;
+
                             await this.quasar.obtainTicket(
                                 utxoPos,
                                 rlpOutputCreationTx,
@@ -725,7 +730,7 @@ contract(
                                             from: bob,
                                         },
                                     ),
-                                    'Ticket is not valid',
+                                    'Invalid ticket',
                                 );
                             });
 
@@ -747,7 +752,7 @@ contract(
                                 it('should not allow to flush same ticket again', async () => {
                                     await expectRevert(
                                         this.quasar.flushExpiredTicket(this.bobUtxoPos),
-                                        'Ticket still valid or doesn\'t exist',
+                                        "Can't flush",
                                     );
                                 });
 
@@ -771,7 +776,7 @@ contract(
                                                 withdrawableFunds,
                                                 { from: quasarMaintainer },
                                             ),
-                                            'Not enough qToken Balance',
+                                            'Not enough qTokens',
                                         );
                                     });
 
@@ -870,7 +875,7 @@ contract(
                                                 from: alice,
                                             },
                                         ),
-                                        'IFE has not been started',
+                                        'IFE not started',
                                     );
                                 });
                             });
@@ -964,7 +969,7 @@ contract(
                                                 value: this.dummyQuasarBondValue,
                                             },
                                         ),
-                                        'The UTXO has already been claimed',
+                                        'Already claimed',
                                     );
                                 });
 
@@ -990,7 +995,7 @@ contract(
                                                 this.quasar.processIfeClaim(
                                                     utxoPos,
                                                 ),
-                                                'The claim is not finalized yet',
+                                                'Claim not finalized',
                                             );
                                         });
 
@@ -1023,7 +1028,7 @@ contract(
                                                 const utxoPos = this.depositUtxoPos;
                                                 await expectRevert(
                                                     this.quasar.processIfeClaim(utxoPos),
-                                                    'The claim has already been claimed or challenged',
+                                                    'Claim invalid',
                                                 );
                                             });
                                         });
@@ -1164,7 +1169,7 @@ contract(
                                     const utxoPos = this.depositUtxoPos;
                                     await expectRevert(
                                         this.quasar.processIfeClaim(utxoPos),
-                                        'The claim has already been claimed or challenged',
+                                        'Claim invalid',
                                     );
                                 });
                             });
@@ -1343,7 +1348,7 @@ contract(
                                         const utxoPos = this.outputADepositUtxoPos;
                                         await expectRevert(
                                             this.quasar.processIfeClaim(utxoPos),
-                                            'The claim has already been claimed or challenged',
+                                            'Claim invalid',
                                         );
                                     });
                                 });
@@ -1396,12 +1401,15 @@ contract(
                         describe('And then Alice tries to obtain a ticket from the Quasar using the output', () => {
                             describe('If the Quasar maintainer updates the safeblocknum to allow the output', () => {
                                 before(async () => {
-                                    this.preSafeBlockMargin = await this.quasar.safeBlockMargin();
+                                    this.preSafeBlockMargin = await this.quasar.getSafeBlockMargin();
                                     this.dummySafeBlockMargin = 1;
                                     await this.quasar.setSafeBlockMargin(
                                         this.dummySafeBlockMargin,
                                         { from: quasarMaintainer },
                                     );
+
+                                    // Wait for the SafeBlockNumber waiting period
+                                    await time.increase(time.duration.weeks(1));
 
                                     await submitPlasmaBlock();
                                     await submitPlasmaBlock();
@@ -1439,9 +1447,6 @@ contract(
                                         const expectedReservedAmount = new BN(DEPOSIT_VALUE - this.quasarFeeErc);
                                         expect(ticketData.reservedAmount).to.be.bignumber.equal(expectedReservedAmount);
                                         expect(ticketData.token).to.be.equal(this.erc20.address);
-                                        expect(ticketData.bondValue).to.be.bignumber.equal(
-                                            new BN(this.dummyQuasarBondValue),
-                                        );
                                         expect(ticketData.isClaimed).to.be.false;
                                     });
 
@@ -1477,7 +1482,7 @@ contract(
                                                         from: alice,
                                                     },
                                                 ),
-                                                'Wrong token sent to quasar owner',
+                                                'Wrong token sent',
                                             );
                                         });
                                     });
@@ -1540,7 +1545,7 @@ contract(
                                                 const utxoPos = this.depositUtxoPos;
                                                 await expectRevert(
                                                     this.quasar.processIfeClaim(utxoPos),
-                                                    'The claim has already been claimed or challenged',
+                                                    'Claim invalid',
                                                 );
                                             });
                                         });

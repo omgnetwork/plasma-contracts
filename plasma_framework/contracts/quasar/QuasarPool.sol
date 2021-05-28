@@ -7,8 +7,9 @@ import "./interfaces/IQToken.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/SafeERC20.sol";
+import "openzeppelin-solidity/contracts/utils/ReentrancyGuard.sol";
 
-contract QuasarPool is Exponential {
+contract QuasarPool is Exponential, ReentrancyGuard {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -25,7 +26,7 @@ contract QuasarPool is Exponential {
     uint256 constant private INITIAL_EXCHANGE_RATE_SCALED = 2e15;
 
     modifier onlyQuasarMaintainer() {
-        require(msg.sender == quasarMaintainer, "Only the Quasar Maintainer can invoke this method");
+        require(msg.sender == quasarMaintainer, "Maintainer only");
         _;
     }
     
@@ -37,7 +38,7 @@ contract QuasarPool is Exponential {
      * Verify QToken contract before supplying
      * @dev Add Eth Liquid funds to the quasar
     */
-    function addEthCapacity() public payable {
+    function addEthCapacity() external payable {
         mintQTokens(address(0), msg.value);
     }
 
@@ -47,7 +48,7 @@ contract QuasarPool is Exponential {
      * @param token the token
      * @param amount value to supply
     */
-    function addTokenCapacity(address token, uint256 amount) public {
+    function addTokenCapacity(address token, uint256 amount) external nonReentrant() {
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
 
         mintQTokens(token, amount);
@@ -59,7 +60,7 @@ contract QuasarPool is Exponential {
      * @param amount value to supply
     */
     function mintQTokens(address token, uint256 amount) private {
-        require(tokenData[token].qTokenAddress != address(0), "QToken is not registered for the token");
+        require(tokenData[token].qTokenAddress != address(0), "QToken not registered");
 
         tokenUsableCapacity[token] = tokenUsableCapacity[token].add(amount);
         tokenData[token].poolSupply = tokenData[token].poolSupply.add(amount);
@@ -76,14 +77,14 @@ contract QuasarPool is Exponential {
      * @param token the token
      * @param amount amount (in number of qTokens) to withdraw
     */
-    function withdrawFunds(address token, uint256 amount) public {
+    function withdrawFunds(address token, uint256 amount) external  nonReentrant(){
         address qToken = tokenData[token].qTokenAddress;
         uint256 qTokenBalance = IERC20(qToken).balanceOf(msg.sender);
-        require(amount <= qTokenBalance, "Not enough qToken Balance");
+        require(amount <= qTokenBalance, "Not enough qTokens");
 
         // derive amount from number of qTokens
         uint256 tokenWithdrawable = Exponential.mulScalarTruncate(Exp({mantissa: tokenData[token].exchangeRate}), amount);
-        require(tokenWithdrawable <= tokenUsableCapacity[token], "Amount should be lower than claimable funds");
+        require(tokenWithdrawable <= tokenUsableCapacity[token], "Amount over capacity");
 
         tokenUsableCapacity[token] = tokenUsableCapacity[token].sub(tokenWithdrawable);
         tokenData[token].poolSupply = tokenData[token].poolSupply.sub(tokenWithdrawable);
@@ -107,8 +108,8 @@ contract QuasarPool is Exponential {
      * @param qTokenContract the address of the qToken contract
      * @param quasarFee amount (in token's denomination) to be used as a fee
     */
-    function registerQToken(address token, address qTokenContract, uint256 quasarFee) public onlyQuasarMaintainer() {
-        require(tokenData[token].qTokenAddress == address(0), "QToken for the token already exists");
+    function registerQToken(address token, address qTokenContract, uint256 quasarFee) external onlyQuasarMaintainer() {
+        require(tokenData[token].qTokenAddress == address(0), "QToken already exists");
         tokenData[token] = Token(qTokenContract, INITIAL_EXCHANGE_RATE_SCALED, 0, 0, quasarFee);
     }
 
@@ -117,7 +118,7 @@ contract QuasarPool is Exponential {
      * @param token the token
      * @param amount amount to repay
     */
-    function repayOwedToken(address token, uint256 amount) public payable {
+    function repayOwedToken(address token, uint256 amount) public payable nonReentrant() {
         if (token == address(0)) {
             amount = msg.value;
         } else {
