@@ -131,7 +131,7 @@ contract('EthVault', ([_, authority, maintainer, alice]) => {
 
                 await expectRevert(
                     this.ethVault.deposit(deposit, { from: alice, value: DEPOSIT_VALUE }),
-                    'Output requires correct currency (ETH).',
+                    'Output requires correct token (ETH).',
                 );
             });
 
