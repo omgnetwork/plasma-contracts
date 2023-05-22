@@ -51,7 +51,7 @@ pytest-cache==1.0
 pytest-forked==1.1.1
 pytest-xdist==1.30.0
 pytest-xprocess==0.12.1
-requests==2.22.0
+requests==2.31.0
 rlp==1.1.0
 semantic-version==2.8.2
 six==1.12.0
